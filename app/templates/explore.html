@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">All Discussions</h1>
+            <p class="mt-2 text-sm text-gray-700">Join conversations that matter to you</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-white shadow-sm rounded-lg p-6 mb-8">
+            <form method="GET" class="grid grid-cols-1 gap-4 md:grid-cols-4">
+                <div class="relative">
+                    <label for="search" class="sr-only">Search discussions</label>
+                    <input type="text" name="search" id="search" value="{{ search }}"
+                           class="block w-full rounded-md border-0 py-1.5 pl-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                           placeholder="Search discussions...">
+                </div>
+
+                <div>
+                    <label for="topic" class="sr-only">Filter by topic</label>
+                    <select name="topic" id="topic"
+                            class="block w-full rounded-md border-0 py-1.5 pl-3 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6">
+                        <option value="">Select Topic</option>
+                        {% for topic_option in topics %}
+                        <option value="{{ topic_option }}" {% if topic == topic_option %}selected{% endif %}>
+                            {{ topic_option }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="country" class="sr-only">Filter by country</label>
+                    <input type="text" name="country" id="country" value="{{ country }}"
+                           class="block w-full rounded-md border-0 py-1.5 pl-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
+                           placeholder="Filter by country">
+                </div>
+
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+                    Apply Filters
+                </button>
+            </form>
+        </div>
+
+        <!-- Discussions Grid -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {% for discussion in discussions %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ discussion.title }}</h3>
+                    {% if discussion.description %}
+                    <p class="text-gray-600 mb-4 line-clamp-3">{{ discussion.description }}</p>
+                    {% endif %}
+                    <div class="space-y-2 mb-4">
+                        {% if discussion.country %}
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+                            </svg>
+                            {{ discussion.country }}
+                        </div>
+                        {% endif %}
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                            </svg>
+                            {{ discussion.topic }}
+                        </div>
+                    </div>
+                    <a href="{{ url_for('main.discussion', discussion_id=discussion.polis_id) }}" 
+                       class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md transition-colors duration-300">
+                        Join Discussion
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not discussions %}
+        <div class="text-center py-12">
+            <p class="text-gray-500">No discussions found matching your criteria.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

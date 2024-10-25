@@ -14,26 +14,57 @@ class Discussion(db.Model):
     polis_id = db.Column(db.String(100), nullable=False, unique=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
+
+    # Use string instead of Enum
+    geographic_scope = db.Column(db.String(20), nullable=False, default='country')
     country = db.Column(db.String(100))
     city = db.Column(db.String(100))
+    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
     topic = db.Column(db.String(100))
     is_featured = db.Column(db.Boolean, default=False)
     participant_count = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+    # Constants for geographic scope
+    SCOPE_GLOBAL = 'global'
+    SCOPE_COUNTRY = 'country'
+    SCOPE_CITY = 'city'
 
     # Topic choices for validation
     TOPICS = [
-        'Environment',
-        'Politics',
-        'Technology',
-        'Education',
         'Healthcare',
+        'Environment',
+        'Education',
+        'Technology',
         'Economy',
+        'Politics',
         'Society',
-        'Culture'
+        'Infrastructure'
     ]
+
+    def __init__(self, **kwargs):
+        # Determine geographic scope based on provided fields
+        if 'geographic_scope' not in kwargs:
+            if 'city' in kwargs and kwargs['city']:
+                kwargs['geographic_scope'] = self.SCOPE_CITY
+            elif 'country' in kwargs and kwargs['country']:
+                kwargs['geographic_scope'] = self.SCOPE_COUNTRY
+            else:
+                kwargs['geographic_scope'] = self.SCOPE_GLOBAL
+
+        super(Discussion, self).__init__(**kwargs)
+
+    @property
+    def location_display(self):
+        """Returns formatted location based on geographic scope"""
+        if self.geographic_scope == self.SCOPE_GLOBAL:
+            return "Global Discussion"
+        elif self.geographic_scope == self.SCOPE_COUNTRY:
+            return self.country
+        else:
+            return f"{self.city}, {self.country}"
 
     def to_dict(self):
         return {
@@ -41,6 +72,7 @@ class Discussion(db.Model):
             'polis_id': self.polis_id,
             'title': self.title,
             'description': self.description,
+            'geographic_scope': self.geographic_scope,
             'country': self.country,
             'city': self.city,
             'topic': self.topic,
@@ -58,7 +90,7 @@ class Discussion(db.Model):
                              .all()
 
     @staticmethod
-    def search_discussions(search=None, country=None, city=None, topic=None, page=1, per_page=9):
+    def search_discussions(search=None, country=None, city=None, topic=None, scope=None, page=1, per_page=9):
         query = Discussion.query
 
         if search:
@@ -69,6 +101,9 @@ class Discussion(db.Model):
                     Discussion.description.ilike(search_term)
                 )
             )
+
+        if scope:
+            query = query.filter(Discussion.geographic_scope == scope)
 
         if country:
             query = query.filter(Discussion.country.ilike(f"%{country}%"))

@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify
 from app.models import Discussion
+from app import db
 from datetime import datetime
 
 main_bp = Blueprint('main', __name__)
@@ -45,6 +46,34 @@ def index():
                          city=city,
                          topic=topic)
 
+@main_bp.route('/discussions')
+def discussions():
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '')
+    country = request.args.get('country', '')
+    city = request.args.get('city', '')
+    topic = request.args.get('topic', '')
+
+    # Get filtered discussions with pagination
+    pagination = Discussion.search_discussions(
+        search=search,
+        country=country,
+        city=city,
+        topic=topic,
+        page=page,
+        per_page=12
+    )
+
+    discussions = pagination.items
+
+    return render_template('discussions.html',
+                         discussions=discussions,
+                         pagination=pagination,
+                         search=search,
+                         country=country,
+                         city=city,
+                         topic=topic)
+
 @main_bp.route('/discussion/<discussion_id>')
 def discussion(discussion_id):
     discussion = Discussion.query.filter_by(polis_id=discussion_id).first_or_404()
@@ -75,3 +104,31 @@ def search_discussions():
         'pages': pagination.pages,
         'current_page': pagination.page
     })
+
+@main_bp.route('/explore')
+def explore():
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '')
+    country = request.args.get('country', '')
+    city = request.args.get('city', '')
+    topic = request.args.get('topic', '')
+
+    # Get filtered discussions with pagination
+    pagination = Discussion.search_discussions(
+        search=search,
+        country=country,
+        city=city,
+        topic=topic,
+        page=page,
+        per_page=12
+    )
+
+    discussions = pagination.items if pagination else []
+
+    return render_template('explore.html',
+                         discussions=discussions,
+                         pagination=pagination if pagination else None,
+                         search=search,
+                         country=country,
+                         city=city,
+                         topic=topic)

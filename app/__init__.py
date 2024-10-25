@@ -1,7 +1,8 @@
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
-from flask_sqlalchemy import SQLAlchemy
+import os
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -10,15 +11,25 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Initialize database and migration
+    # Initialize database
     db.init_app(app)
     migrate.init_app(app, db)
 
-    # Import models here, after db and migrate have been initialized
-    from app import models
+    # Ensure the PostgreSQL server is running
+    with app.app_context():
+        try:
+            # Check connection
+            db.engine.connect()
+        except Exception as e:
+            print(f"Database connection error: {e}")
+            # Start PostgreSQL if needed
+            os.system('pg_ctl start -D /workspace/postgres')
 
-    # Register the routes
+    # Register blueprints
     from app.routes import init_routes
     init_routes(app)
+
+    from app.commands import init_commands
+    init_commands(app)
 
     return app
