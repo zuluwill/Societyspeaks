@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <!-- About Header -->
+    <div class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <h2 class="text-4xl font-bold leading-7 text-gray-900 sm:truncate sm:text-5xl sm:tracking-tight">
+                    About SocietySpeaks.io
+                </h2>
+                <p class="mt-4 text-xl text-gray-600">
+                    Participate in discussions that matter. Filter by your country, city, or topic and join the conversation.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- About Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden p-8">
+            <div class="text-lg text-gray-700 leading-relaxed">
+                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Our Mission</h3>
+                <p class="mb-6">
+                    SocietySpeaks.io was created to provide a platform where people can come together to discuss
+                    the most pressing issues facing society today. From local matters in your city to global challenges, 
+                    we offer a space where every voice can be heard, and every opinion matters.
+                </p>
+
+                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Why Use SocietySpeaks?</h3>
+                <ul class="list-disc list-inside mb-6">
+                    <li>Engage in meaningful discussions about important topics that impact your community and beyond.</li>
+                    <li>Share your thoughts, and see how your opinions compare to others globally.</li>
+                    <li>Stay informed with insights from people around the world, all in one place.</li>
+                </ul>
+
+                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Our Vision</h3>
+                <p class="mb-6">
+                    We believe that open discussions can lead to a more connected, informed, and empathetic world. 
+                    With the power of technology, SocietySpeaks.io aims to bridge the gap between people of different 
+                    backgrounds and experiences, giving everyone the opportunity to contribute to the conversation.
+                </p>
+
+                <h3 class="text-2xl font-semibold mb-6 text-gray-900">How It Works</h3>
+                <p class="mb-6">
+                    Simply choose a topic, join a discussion, and share your opinions. You can filter discussions by country, 
+                    city, or topic, ensuring you engage with content that matters to you. Our integration with 
+                    <a href="https://pol.is" target="_blank" class="text-blue-600 hover:underline">Pol.is</a> ensures that
+                    your contributions are analyzed and displayed in a way that fosters deeper understanding and collaboration.
+                </p>
+
+                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Join Us Today</h3>
+                <p>
+                    Whether you're here to listen, learn, or lead, SocietySpeaks.io is the place to start the conversation. 
+                    Join us today and make your voice heard!
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="bg-blue-600 rounded-lg shadow-lg overflow-hidden p-8 text-center">
+            <h3 class="text-2xl font-bold text-white mb-4">Ready to Join the Conversation?</h3>
+            <p class="text-white text-lg mb-6">Sign up today and start participating in discussions that matter.</p>
+            <a href="{{ url_for('main.explore') }}" 
+               class="inline-block bg-white text-blue-600 font-semibold py-3 px-6 rounded-lg shadow hover:bg-gray-100 transition">
+                Sign Up Now
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

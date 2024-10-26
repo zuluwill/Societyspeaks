@@ -1,13 +1,85 @@
 from app import db
 from datetime import datetime
+from slugify import slugify
+from flask_login import UserMixin
 
-class User(db.Model):
+def generate_slug(name):
+    return slugify(name)
+
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), nullable=False, unique=True)
     email = db.Column(db.String(150), nullable=False, unique=True)
     password = db.Column(db.String(200), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # New field to indicate profile type
+    profile_type = db.Column(db.String(50))  # 'individual' or 'company'
+
+    # Relationships to profiles
+    individual_profile = db.relationship('IndividualProfile', backref='user', uselist=False)
+    company_profile = db.relationship('CompanyProfile', backref='user', uselist=False)
+
     discussions_created = db.relationship('Discussion', backref='creator', lazy='dynamic')
+
+    # Flask-Login required methods
+    def is_active(self):
+        # Here, we assume all users are active. Adjust if you have inactive users.
+        return True
+
+    def get_id(self):
+        # Flask-Login needs this to identify users across sessions.
+        return str(self.id)
+
+
+
+class IndividualProfile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    full_name = db.Column(db.String(150), nullable=False)
+    bio = db.Column(db.Text)
+    location = db.Column(db.String(255))  # Optional location
+    email = db.Column(db.String(150), nullable=True)  # Optional public email
+    website = db.Column(db.String(255))  # Optional website link
+    profile_image = db.Column(db.String(255))  # Path to profile image
+    banner_image = db.Column(db.String(255))  # Path to banner image
+    social_links = db.Column(db.JSON)  # Store links like social media, website
+    slug = db.Column(db.String(150), unique=True, nullable=False)
+
+    discussions = db.relationship('Discussion', backref='individual_profile', lazy='dynamic', foreign_keys='Discussion.individual_profile_id')
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.slug:
+            self.slug = generate_slug(self.full_name)
+
+    def update_slug(self):
+        self.slug = generate_slug(self.full_name)
+
+
+class CompanyProfile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    company_name = db.Column(db.String(150), nullable=False)
+    description = db.Column(db.Text)
+    location = db.Column(db.String(255))  # Optional location
+    email = db.Column(db.String(150), nullable=True)  # Optional public email
+    website = db.Column(db.String(255))  # Optional website link
+    logo = db.Column(db.String(255))  # Path to company logo
+    banner_image = db.Column(db.String(255))  # Path to banner image
+    social_links = db.Column(db.JSON)  # Store links like website, social media
+    slug = db.Column(db.String(150), unique=True, nullable=False)
+
+    discussions = db.relationship('Discussion', backref='company_profile', lazy='dynamic', foreign_keys='Discussion.company_profile_id')
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.slug:
+            self.slug = generate_slug(self.company_name)
+
+    def update_slug(self):
+        self.slug = generate_slug(self.company_name)
+
 
 class Discussion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -26,6 +98,10 @@ class Discussion(db.Model):
     participant_count = db.Column(db.Integer, default=0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # New foreign keys to link discussions to profiles
+    individual_profile_id = db.Column(db.Integer, db.ForeignKey('individual_profile.id'), nullable=True)
+    company_profile_id = db.Column(db.Integer, db.ForeignKey('company_profile.id'), nullable=True)
 
     # Constants for geographic scope
     SCOPE_GLOBAL = 'global'

@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto py-10">
+    <form action="{{ url_for('profiles.create_company_profile') }}" method="POST" enctype="multipart/form-data">
+        <!-- Company Name -->
+        <div class="mb-6">
+            <label class="block text-lg font-medium text-gray-700">Company Name</label>
+            <input type="text" name="company_name" class="w-full px-4 py-2 border rounded-md" required>
+        </div>
+        <!-- Banner Upload -->
+        <div class="mb-6">
+            <label class="block text-lg font-medium text-gray-700">Banner Image</label>
+            <input type="file" name="banner_image" class="w-full px-4 py-2 border rounded-md">
+        </div>
+        <!-- Profile Image -->
+        <div class="mb-6">
+            <label class="block text-lg font-medium text-gray-700">Company Logo</label>
+            <input type="file" name="profile_image" class="w-full px-4 py-2 border rounded-md">
+        </div>
+        <!-- Company Description -->
+        <div class="mb-6">
+            <label class="block text-lg font-medium text-gray-700">Company Description</label>
+            <textarea name="bio" rows="4" class="w-full px-4 py-2 border rounded-md"></textarea>
+        </div>
+        <!-- Social Links -->
+        <div class="mb-6">
+            <label class="block text-lg font-medium text-gray-700">Social Links</label>
+            <input type="text" name="social_links[linkedin]" placeholder="LinkedIn URL" class="w-full px-4 py-2 mb-2 border rounded-md">
+            <input type="text" name="social_links[twitter]" placeholder="Twitter URL" class="w-full px-4 py-2 mb-2 border rounded-md">
+        </div>
+        <!-- Submit Button -->
+        <button type="submit" class="px-4 py-2 text-white bg-blue-500 rounded-md">Create Company Profile</button>
+    </form>
+</div>
+{% endblock %}

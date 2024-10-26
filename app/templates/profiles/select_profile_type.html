@@ -1,0 +1,7 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="flex justify-center space-x-4 py-10">
+    <a href="{{ url_for('profiles.create_individual_profile') }}" class="bg-blue-500 text-white py-3 px-6 rounded-lg">Create Individual Profile</a>
+    <a href="{{ url_for('profiles.create_company_profile') }}" class="bg-green-500 text-white py-3 px-6 rounded-lg">Create Company Profile</a>
+</div>
+{% endblock %}

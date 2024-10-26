@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify
 from app.models import Discussion
 from app import db
 from datetime import datetime
+from slugify import slugify
 
 main_bp = Blueprint('main', __name__)
 
@@ -45,6 +46,13 @@ def index():
                          country=country,
                          city=city,
                          topic=topic)
+
+
+
+@main_bp.route('/about')
+def about():
+    return render_template('about.html')
+
 
 @main_bp.route('/discussions')
 def discussions():
@@ -132,3 +140,17 @@ def explore():
                          country=country,
                          city=city,
                          topic=topic)
+
+
+@main_bp.route('/profile/<slug>')
+def view_profile(slug):
+    # Logic to check if slug corresponds to an individual or company
+    individual = IndividualProfile.query.filter_by(slug=slug).first()
+    company = CompanyProfile.query.filter_by(slug=slug).first()
+
+    if individual:
+        return render_template('individual_profile.html', profile=individual)
+    elif company:
+        return render_template('company_profile.html', profile=company)
+    else:
+        abort(404)
