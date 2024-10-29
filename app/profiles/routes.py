@@ -116,14 +116,7 @@ def create_individual_profile():
                 banner_image = f"{current_user.id}_{int(time.time())}_{banner_image}"
                 upload_to_object_storage(banner_image_file, banner_image)
 
-            # Process social links
-            social_links = {}
-            for key in request.form:
-                if key.startswith('social_links['):
-                    platform = key[13:-1]  # Extract name between brackets
-                    if request.form[key].strip():  # Only add non-empty values
-                        social_links[platform] = request.form[key].strip()
-
+            
             # Create profile
             profile = IndividualProfile(
                 user_id=current_user.id,
@@ -255,21 +248,19 @@ def edit_individual_profile(username):
                 profile.banner_image = banner_image
 
 
-            # Update other fields
+            # Update other fields directly
             profile.full_name = form.full_name.data
             profile.bio = form.bio.data
             profile.city = form.city.data
             profile.country = form.country.data
             profile.email = form.email.data
             profile.website = form.website.data
-            # Convert social media fields to JSON
-            profile.social_links = {
-                'linkedin': form.linkedin_url.data,
-                'twitter': form.twitter_url.data,
-                'facebook': form.facebook_url.data,
-                'instagram': form.instagram_url.data,
-                'tiktok': form.tiktok_url.data
-            }
+            profile.linkedin_url = form.linkedin_url.data
+            profile.twitter_url = form.twitter_url.data
+            profile.facebook_url = form.facebook_url.data
+            profile.instagram_url = form.instagram_url.data
+            profile.tiktok_url = form.tiktok_url.data
+            
 
             # Update slug if name changed
             profile.update_slug()
@@ -316,15 +307,14 @@ def edit_company_profile(company_name):
             profile.country = form.country.data
             profile.email = form.email.data
             profile.website = form.website.data
+            profile.linkedin_url = form.linkedin_url.data
+            profile.twitter_url = form.twitter_url.data
+            profile.facebook_url = form.facebook_url.data
+            profile.instagram_url = form.instagram_url.data
+            profile.tiktok_url = form.tiktok_url.data
+            
 
-            # Update individual social media fields
-            profile.social_links = {
-                'linkedin': form.linkedin_url.data,
-                'twitter': form.twitter_url.data,
-                'facebook': form.facebook_url.data,
-                'instagram': form.instagram_url.data,
-                'tiktok': form.tiktok_url.data
-            }
+        
 
             # Update slug if name changed
             profile.update_slug()
