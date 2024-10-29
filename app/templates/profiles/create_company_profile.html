@@ -1,7 +1,5 @@
-{# templates/profiles/create_company_profile.html #}
 {% extends "layout.html" %}
 {% from "profiles/_form_helpers.html" import render_field_with_errors, render_image_upload %}
-
 
 {% block content %}
 <div class="min-h-screen bg-gray-50 py-8">
@@ -20,14 +18,9 @@
                     {% endif %}
                 {% endwith %}
 
-                
-
                 <!-- Logo and Banner -->
-            
                 {{ render_image_upload(form.banner_image, 'banner-preview', 'Choose Banner Image') }}
-
-                {{ render_image_upload(form.profile_image, 'logo-preview', 'Choose Company Logo',
-                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />') }}
+                {{ render_image_upload(form.logo, 'logo-preview', 'Choose Company Logo') }}
 
                 <!-- Company Name -->
                 {{ render_field_with_errors(form.company_name, input_class="text-lg") }}
@@ -43,14 +36,11 @@
                 <div class="mb-8">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Social Media</h3>
                     <div class="space-y-4">
-                        {% for platform in ['linkedin', 'twitter', 'facebook'] %}
-                            <div class="relative">
-                                <input type="url" 
-                                       name="social_links[{{ platform }}]" 
-                                       placeholder="{{ platform|title }} URL"
-                                       class="w-full px-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                        {% endfor %}
+                        {{ render_field_with_errors(form.linkedin_url) }}
+                        {{ render_field_with_errors(form.twitter_url) }}
+                        {{ render_field_with_errors(form.facebook_url) }}
+                        {{ render_field_with_errors(form.instagram_url) }}
+                        {{ render_field_with_errors(form.tiktok_url) }}
                     </div>
                 </div>
 
@@ -66,13 +56,11 @@
 </div>
 
 <script>
-// Same JavaScript as individual profile
 function previewImage(input, previewId) {
     const preview = document.getElementById(previewId);
     const file = input.files[0];
 
     if (file) {
-        // Validate file type
         const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
         if (!validTypes.includes(file.type)) {
             alert('Please upload a valid image file (JPG, JPEG, or PNG)');
@@ -80,7 +68,6 @@ function previewImage(input, previewId) {
             return;
         }
 
-        // Validate file size (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
             alert('File size should not exceed 5MB');
             input.value = '';
@@ -95,7 +82,6 @@ function previewImage(input, previewId) {
     }
 }
 
-// Form validation
 document.getElementById('companyProfileForm').addEventListener('submit', function(e) {
     const companyName = document.querySelector('input[name="company_name"]');
     if (!companyName.value.trim()) {

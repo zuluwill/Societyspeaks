@@ -22,7 +22,7 @@
                     src="{{ url_for('profiles.get_image', filename=profile.logo) if profile.logo else url_for('static', filename='images/default-logo.png') }}" 
                     alt="Company Logo" 
                     class="w-full h-full object-cover"
-                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-logo.png') }}';"
+                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='/images/default-logo.png') }}';"
                 >
             </div>
 

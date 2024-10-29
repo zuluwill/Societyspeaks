@@ -24,8 +24,10 @@ client = Client()
 def upload_to_object_storage(file_data, filename):
     """Upload file to Replit's object storage"""
     try:
-        unique_filename = f"{current_user.id}_{int(time.time())}_{filename}"
-        storage_path = f"profile_images/{unique_filename}"
+        # Avoid adding the unique prefix multiple times
+        if not filename.startswith(f"{current_user.id}_"):
+            filename = f"{current_user.id}_{int(time.time())}_{filename}"
+        storage_path = f"profile_images/{filename}"
 
         # Read file data
         file_content = file_data.read()
@@ -34,11 +36,12 @@ def upload_to_object_storage(file_data, filename):
         client.upload_from_bytes(storage_path, file_content)
 
         current_app.logger.info(f"Successfully uploaded {filename} to object storage")
-        return unique_filename
+        return filename
 
     except Exception as e:
         current_app.logger.error(f"Error uploading file: {str(e)}")
         return None
+
 
 
 def delete_from_object_storage(filename):
@@ -163,18 +166,16 @@ def create_company_profile():
             logo = None
             banner_image = None
 
-            # Handle file uploads
-            if form.profile_image.data:
-                logo_file = form.profile_image.data
-                logo = secure_filename(logo_file.filename)
-                logo = f"{current_user.id}_{int(time.time())}_logo_{logo}"
-                upload_to_object_storage(logo_file, logo)
+            # Handle file uploads without double prefixing
+            if form.logo.data:
+                logo_file = form.logo.data
+                # Just use the file name directly
+                logo = upload_to_object_storage(logo_file, secure_filename(logo_file.filename))
 
             if form.banner_image.data:
                 banner_image_file = form.banner_image.data
-                banner_image = secure_filename(banner_image_file.filename)
-                banner_image = f"{current_user.id}_{int(time.time())}_banner_{banner_image}"
-                upload_to_object_storage(banner_image_file, banner_image)
+                # Just use the file name directly
+                banner_image = upload_to_object_storage(banner_image_file, secure_filename(banner_image_file.filename))
 
             # Create profile
             profile = CompanyProfile(
@@ -218,6 +219,7 @@ def create_company_profile():
             return render_template('profiles/create_company_profile.html', form=form)
 
     return render_template('profiles/create_company_profile.html', form=form)
+
 
 
 
@@ -290,8 +292,8 @@ def edit_company_profile(company_name):
     if form.validate_on_submit():
         try:
             # Handle file uploads for logo and banner images
-            if form.profile_image.data and isinstance(form.profile_image.data, FileStorage):
-                logo_file = form.profile_image.data
+            if form.logo.data and isinstance(form.logo.data, FileStorage):
+                logo_file = form.logo.data
                 logo = upload_to_object_storage(logo_file, secure_filename(logo_file.filename))
                 profile.logo = logo  # Update profile's logo field
 
@@ -312,9 +314,6 @@ def edit_company_profile(company_name):
             profile.facebook_url = form.facebook_url.data
             profile.instagram_url = form.instagram_url.data
             profile.tiktok_url = form.tiktok_url.data
-            
-
-        
 
             # Update slug if name changed
             profile.update_slug()
@@ -329,7 +328,6 @@ def edit_company_profile(company_name):
             flash("Error updating profile. Please try again.", "error")
 
     return render_template('profiles/edit_company_profile.html', form=form, profile=profile)
-
 
 
 
