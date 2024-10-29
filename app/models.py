@@ -66,7 +66,12 @@ class IndividualProfile(db.Model):
     website = db.Column(db.String(255))  # Optional website link
     profile_image = db.Column(db.String(255))  # Path to profile image
     banner_image = db.Column(db.String(255))  # Path to banner image
-    social_links = db.Column(db.JSON)  # Store links like social media, website
+    # Individual social media fields
+    linkedin_url = db.Column(db.String(255))
+    twitter_url = db.Column(db.String(255))
+    facebook_url = db.Column(db.String(255))
+    instagram_url = db.Column(db.String(255))
+    tiktok_url = db.Column(db.String(255))
     slug = db.Column(db.String(150), unique=True, nullable=False)
 
     discussions = db.relationship('Discussion', backref='individual_profile', lazy='dynamic', foreign_keys='Discussion.individual_profile_id')
@@ -94,7 +99,12 @@ class CompanyProfile(db.Model):
     website = db.Column(db.String(255))  # Optional website link
     logo = db.Column(db.String(255))  # Path to company logo
     banner_image = db.Column(db.String(255))  # Path to banner image
-    social_links = db.Column(db.JSON)  # Store links like website, social media
+    # Individual social media fields
+    linkedin_url = db.Column(db.String(255))
+    twitter_url = db.Column(db.String(255))
+    facebook_url = db.Column(db.String(255))
+    instagram_url = db.Column(db.String(255))
+    tiktok_url = db.Column(db.String(255))
     slug = db.Column(db.String(150), unique=True, nullable=False)
 
     discussions = db.relationship('Discussion', backref='company_profile', lazy='dynamic', foreign_keys='Discussion.company_profile_id')

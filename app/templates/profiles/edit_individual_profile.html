@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+{% from "profiles/_form_helpers.html" import render_field_with_errors, render_image_upload %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-6">Edit Profile</h1>
+
+            <form method="POST" enctype="multipart/form-data" class="space-y-6">
+                {{ form.hidden_tag() }}
+
+                <!-- Images Section -->
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Profile Picture Upload -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Profile Picture</label>
+                            <span class="text-xs text-gray-500">Recommended: 400x400px</span>
+                        </div>
+                        <div class="mt-1 relative">
+                            {{ form.profile_image(class="hidden", id=form.profile_image.id, accept="image/*", onchange="handleImageUpload(this, 'profile-preview')") }}
+
+                            <div class="w-32 h-32 rounded-full overflow-hidden bg-gray-100 border border-gray-200 relative group cursor-pointer"
+                                 onclick="document.getElementById('{{ form.profile_image.id }}').click()">
+                                <img id="profile-preview" 
+                                     class="w-full h-full object-cover" 
+                                     src="{{ url_for('profiles.get_image', filename=profile.profile_image) if profile.profile_image else url_for('static', filename='images/default-avatar.png') }}" 
+                                     alt="Profile Picture">
+                                <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <span class="text-white text-xs">Click to change</span>
+                                </div>
+                            </div>
+
+                            <p class="mt-2 text-xs text-gray-500">Click to upload a new profile picture</p>
+                        </div>
+                    </div>
+
+                    <!-- Banner Image Upload -->
+                    <div class="mb-8">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Banner Image</label>
+                            <span class="text-xs text-gray-500">Recommended: 1200x400px</span>
+                        </div>
+                        <div class="mt-1 relative">
+                            {{ form.banner_image(class="hidden", id=form.banner_image.id, accept="image/*", onchange="handleImageUpload(this, 'banner-preview')") }}
+
+                            <div class="w-full h-48 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 relative group cursor-pointer"
+                                 onclick="document.getElementById('{{ form.banner_image.id }}').click()">
+                                <img id="banner-preview" 
+                                     class="w-full h-full object-cover" 
+                                     src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('static', filename='images/default-banner.png') }}" 
+                                     alt="Banner Image">
+                                <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                    <span class="text-white text-sm">Click to change</span>
+                                </div>
+                            </div>
+
+                            <p class="mt-2 text-xs text-gray-500">Click to upload a new banner image</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Basic Information -->
+                <div class="space-y-4">
+                    {{ render_field_with_errors(form.full_name, 
+                        label_class="required",
+                        input_class="bg-white") }}
+
+                    {{ render_field_with_errors(form.bio, 
+                        input_class="bg-white") }}
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{ render_field_with_errors(form.city, 
+                            label_class="required",
+                            input_class="bg-white") }}
+
+                        {{ render_field_with_errors(form.country, 
+                            label_class="required",
+                            input_class="bg-white") }}
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Contact Information</h2>
+                    {{ render_field_with_errors(form.email, input_class="bg-white") }}
+                    {{ render_field_with_errors(form.website, input_class="bg-white") }}
+                </div>
+
+                <!-- Social Media Links -->
+                <div class="space-y-4">
+                    <h2 class="text-lg font-semibold text-gray-900">Social Media</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{ render_field_with_errors(form.linkedin_url, input_class="bg-white") }}
+                        {{ render_field_with_errors(form.twitter_url, input_class="bg-white") }}
+                        {{ render_field_with_errors(form.facebook_url, input_class="bg-white") }}
+                        {{ render_field_with_errors(form.instagram_url, input_class="bg-white") }}
+                        {{ render_field_with_errors(form.tiktok_url, input_class="bg-white") }}
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4 mt-8">
+                    <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) }}" 
+                       class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    {{ form.submit(class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Include necessary JavaScript for image handling -->
+<script src="{{ url_for('static', filename='js/cropper.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/image-upload.js') }}"></script>
+
+{% endblock %}

@@ -7,3 +7,4 @@ flask-login-0.6.3
 python-slugify==8.0.1
 Flask-WTF-1.2.2 wtforms-3.2.1
 replit==3.2.0
+email_validator-2.2.0

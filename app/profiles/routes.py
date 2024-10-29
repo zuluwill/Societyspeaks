@@ -6,6 +6,8 @@ from app.models import IndividualProfile, CompanyProfile, Discussion
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from replit.object_storage import Client
 from werkzeug.utils import secure_filename
+from werkzeug.datastructures import FileStorage
+
 
 import os
 import json
@@ -133,7 +135,12 @@ def create_individual_profile():
                 country=form.country.data,
                 email=form.email.data,
                 website=form.website.data,
-                social_links=social_links
+                # Social links
+                linkedin_url=form.linkedin_url.data,
+                twitter_url=form.twitter_url.data,
+                facebook_url=form.facebook_url.data,
+                instagram_url=form.instagram_url.data,
+                tiktok_url=form.tiktok_url.data
             )
 
             # Update user's profile type
@@ -160,15 +167,15 @@ def create_company_profile():
     form = CompanyProfileForm()
     if form.validate_on_submit():
         try:
-            profile_image = None
+            logo = None
             banner_image = None
 
             # Handle file uploads
             if form.profile_image.data:
-                profile_image_file = form.profile_image.data
-                profile_image = secure_filename(profile_image_file.filename)
-                profile_image = f"{current_user.id}_{int(time.time())}_logo_{profile_image}"
-                upload_to_object_storage(profile_image_file, profile_image)
+                logo_file = form.profile_image.data
+                logo = secure_filename(logo_file.filename)
+                logo = f"{current_user.id}_{int(time.time())}_logo_{logo}"
+                upload_to_object_storage(logo_file, logo)
 
             if form.banner_image.data:
                 banner_image_file = form.banner_image.data
@@ -176,31 +183,25 @@ def create_company_profile():
                 banner_image = f"{current_user.id}_{int(time.time())}_banner_{banner_image}"
                 upload_to_object_storage(banner_image_file, banner_image)
 
-            # Process social links
-            social_links = {}
-            for key in request.form:
-                if key.startswith('social_links['):
-                    platform = key[13:-1]  # Extract name between brackets
-                    if request.form[key].strip():  # Only add non-empty values
-                        social_links[platform] = request.form[key].strip()
-
             # Create profile
             profile = CompanyProfile(
                 user_id=current_user.id,
                 company_name=form.company_name.data,
                 description=form.description.data,
-                profile_image=profile_image,
+                logo=logo,
                 banner_image=banner_image,
                 city=form.city.data,
                 country=form.country.data,
                 email=form.email.data,
                 website=form.website.data,
-                social_links=social_links
+                linkedin_url=form.linkedin_url.data,
+                twitter_url=form.twitter_url.data,
+                facebook_url=form.facebook_url.data,
+                instagram_url=form.instagram_url.data,
+                tiktok_url=form.tiktok_url.data
             )
 
-            # Update user's profile type
             current_user.profile_type = 'company'
-
             db.session.add(profile)
             db.session.commit()
 
@@ -210,10 +211,9 @@ def create_company_profile():
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error creating company profile: {str(e)}")
-            # Clean up any uploaded files if there was an error
-            if profile_image:
+            if logo:
                 try:
-                    delete_from_object_storage(profile_image)
+                    delete_from_object_storage(logo)
                 except:
                     pass
             if banner_image:
@@ -227,11 +227,13 @@ def create_company_profile():
     return render_template('profiles/create_company_profile.html', form=form)
 
 
+
 #routes to edit individual and company profiles once created.
-@profiles_bp.route('/profile/individual/edit/<int:profile_id>', methods=['GET', 'POST'])
+# Change from profile_id parameter to username
+@profiles_bp.route('/profile/individual/<username>/edit', methods=['GET', 'POST'])
 @login_required
-def edit_individual_profile(profile_id):
-    profile = IndividualProfile.query.get_or_404(profile_id)
+def edit_individual_profile(username):
+    profile = IndividualProfile.query.filter_by(slug=username).first_or_404()
     if profile.user_id != current_user.id:
         flash("You do not have permission to edit this profile.", "error")
         return redirect(url_for('main.index'))
@@ -240,28 +242,37 @@ def edit_individual_profile(profile_id):
 
     if form.validate_on_submit():
         try:
-            # Update profile fields
+            
+            # Handle file uploads
+            if form.profile_image.data and isinstance(form.profile_image.data, FileStorage):
+                profile_image_file = form.profile_image.data
+                profile_image = upload_to_object_storage(profile_image_file, secure_filename(profile_image_file.filename))
+                profile.profile_image = profile_image
+
+            if form.banner_image.data and isinstance(form.banner_image.data, FileStorage):
+                banner_image_file = form.banner_image.data
+                banner_image = upload_to_object_storage(banner_image_file, secure_filename(banner_image_file.filename))
+                profile.banner_image = banner_image
+
+
+            # Update other fields
             profile.full_name = form.full_name.data
             profile.bio = form.bio.data
             profile.city = form.city.data
             profile.country = form.country.data
             profile.email = form.email.data
             profile.website = form.website.data
+            # Convert social media fields to JSON
             profile.social_links = {
-                key[13:-1]: request.form[key].strip()
-                for key in request.form if key.startswith('social_links[') and request.form[key].strip()
+                'linkedin': form.linkedin_url.data,
+                'twitter': form.twitter_url.data,
+                'facebook': form.facebook_url.data,
+                'instagram': form.instagram_url.data,
+                'tiktok': form.tiktok_url.data
             }
 
-            # Handle file updates
-            if form.profile_image.data:
-                profile_image_file = form.profile_image.data
-                profile_image = upload_to_object_storage(profile_image_file, profile.profile_image)
-                profile.profile_image = profile_image
-
-            if form.banner_image.data:
-                banner_image_file = form.banner_image.data
-                banner_image = upload_to_object_storage(banner_image_file, profile.banner_image)
-                profile.banner_image = banner_image
+            # Update slug if name changed
+            profile.update_slug()
 
             db.session.commit()
             flash("Profile updated successfully!", "success")
@@ -274,11 +285,11 @@ def edit_individual_profile(profile_id):
 
     return render_template('profiles/edit_individual_profile.html', form=form, profile=profile)
 
-
-@profiles_bp.route('/profile/company/edit/<int:profile_id>', methods=['GET', 'POST'])
+# Similarly for company profiles
+@profiles_bp.route('/profile/company/<company_name>/edit', methods=['GET', 'POST'])
 @login_required
-def edit_company_profile(profile_id):
-    profile = CompanyProfile.query.get_or_404(profile_id)
+def edit_company_profile(company_name):
+    profile = CompanyProfile.query.filter_by(slug=company_name).first_or_404()
     if profile.user_id != current_user.id:
         flash("You do not have permission to edit this profile.", "error")
         return redirect(url_for('main.index'))
@@ -287,28 +298,36 @@ def edit_company_profile(profile_id):
 
     if form.validate_on_submit():
         try:
-            # Update profile fields
+            # Handle file uploads for logo and banner images
+            if form.profile_image.data and isinstance(form.profile_image.data, FileStorage):
+                logo_file = form.profile_image.data
+                logo = upload_to_object_storage(logo_file, secure_filename(logo_file.filename))
+                profile.logo = logo  # Update profile's logo field
+
+            if form.banner_image.data and isinstance(form.banner_image.data, FileStorage):
+                banner_image_file = form.banner_image.data
+                banner_image = upload_to_object_storage(banner_image_file, secure_filename(banner_image_file.filename))
+                profile.banner_image = banner_image
+
+            # Update other fields
             profile.company_name = form.company_name.data
             profile.description = form.description.data
             profile.city = form.city.data
             profile.country = form.country.data
             profile.email = form.email.data
             profile.website = form.website.data
+
+            # Update individual social media fields
             profile.social_links = {
-                key[13:-1]: request.form[key].strip()
-                for key in request.form if key.startswith('social_links[') and request.form[key].strip()
+                'linkedin': form.linkedin_url.data,
+                'twitter': form.twitter_url.data,
+                'facebook': form.facebook_url.data,
+                'instagram': form.instagram_url.data,
+                'tiktok': form.tiktok_url.data
             }
 
-            # Handle file updates
-            if form.profile_image.data:
-                profile_image_file = form.profile_image.data
-                profile_image = upload_to_object_storage(profile_image_file, profile.profile_image)
-                profile.profile_image = profile_image
-
-            if form.banner_image.data:
-                banner_image_file = form.banner_image.data
-                banner_image = upload_to_object_storage(banner_image_file, profile.banner_image)
-                profile.banner_image = banner_image
+            # Update slug if name changed
+            profile.update_slug()
 
             db.session.commit()
             flash("Company profile updated successfully!", "success")
@@ -316,11 +335,10 @@ def edit_company_profile(profile_id):
 
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"Error updating profile: {str(e)}")
+            current_app.logger.error(f"Error updating company profile: {str(e)}")
             flash("Error updating profile. Please try again.", "error")
 
     return render_template('profiles/edit_company_profile.html', form=form, profile=profile)
-
 
 
 

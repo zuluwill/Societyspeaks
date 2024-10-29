@@ -208,7 +208,13 @@ class IndividualProfileForm(FlaskForm):
     country = SelectField('Country', choices=country_choices, validators=[DataRequired()])
     email = StringField('Email', validators=[Optional(), Email()])
     website = URLField('Website', validators=[Optional(), URL()])
-    social_links = TextAreaField('Social Links', validators=[Optional()])
+    # Social Media Fields
+    linkedin_url = URLField('LinkedIn', validators=[Optional(), URL()])
+    twitter_url = URLField('Twitter', validators=[Optional(), URL()])
+    facebook_url = URLField('Facebook', validators=[Optional(), URL()])
+    instagram_url = URLField('Instagram', validators=[Optional(), URL()])
+    tiktok_url = URLField('TikTok', validators=[Optional(), URL()])
+    
     profile_image = FileField('Profile Picture', validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
     banner_image = FileField('Banner Image', validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
     submit = SubmitField('Create Profile')
@@ -220,8 +226,14 @@ class CompanyProfileForm(FlaskForm):
     country = SelectField('Country', choices=country_choices, validators=[DataRequired()])
     email = StringField('Email', validators=[Optional(), Email()])
     website = URLField('Website', validators=[Optional(), URL()])
-    social_links = TextAreaField('Social Links', validators=[Optional()])
-    profile_image = FileField('Company Logo', validators=[Optional(), FileAllowed(['jpg','jpeg', 'png'], 'Images only!')])
+    # Social Media Fields
+    linkedin_url = URLField('LinkedIn', validators=[Optional(), URL()])
+    twitter_url = URLField('Twitter', validators=[Optional(), URL()])
+    facebook_url = URLField('Facebook', validators=[Optional(), URL()])
+    instagram_url = URLField('Instagram', validators=[Optional(), URL()])
+    tiktok_url = URLField('TikTok', validators=[Optional(), URL()])
+    
+    logo = FileField('Company Logo', validators=[Optional(), FileAllowed(['jpg','jpeg', 'png'], 'Images only!')])
     banner_image = FileField('Banner Image', validators=[Optional(), FileAllowed(['jpg', 'jpeg', 'png'], 'Images only!')])
     submit = SubmitField('Create Company Profile')
 
