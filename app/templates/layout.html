@@ -48,7 +48,7 @@
                                     <span class="ml-2">{{ current_user.individual_profile.full_name if current_user.individual_profile else current_user.username }}</span>
                                 {% elif current_user.profile_type == 'company' %}
                                     <img class="h-8 w-8 rounded-lg object-cover" 
-                                         src="{{ url_for('profiles.get_image', filename=current_user.company_profile.profile_image) if current_user.company_profile and current_user.company_profile.profile_image else url_for('static', filename='images/default-logo.png') }}" 
+                                         src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('static', filename='images/default-logo.png') }}" 
                                          alt="Company logo"
                                          onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-logo.png') }}';">
                                     <span class="ml-2">{{ current_user.company_profile.company_name if current_user.company_profile else current_user.username }}</span>
@@ -137,22 +137,26 @@
                             <div class="flex items-center px-5">
                                 <div class="flex-shrink-0">
                                     {% if current_user.profile_type == 'individual' %}
-                                        <img class="h-10 w-10 rounded-full object-cover" 
+                                        <img class="h-8 w-8 rounded-full object-cover" 
                                              src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('static', filename='images/default-avatar.png') }}" 
                                              alt="Profile photo"
                                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}';">
+                                        <span class="ml-2">{{ current_user.individual_profile.full_name if current_user.individual_profile else current_user.username }}</span>
                                     {% elif current_user.profile_type == 'company' %}
-                                        <img class="h-10 w-10 rounded-lg object-cover" 
-                                             src="{{ url_for('profiles.get_image', filename=current_user.company_profile.profile_image) if current_user.company_profile and current_user.company_profile.profile_image else url_for('static', filename='images/default-logo.png') }}" 
+                                        <img class="h-8 w-8 rounded-lg object-cover" 
+                                             src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('static', filename='images/default-logo.png') }}" 
                                              alt="Company logo"
                                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-logo.png') }}';">
+                                        <span class="ml-2">{{ current_user.company_profile.company_name if current_user.company_profile else current_user.username }}</span>
                                     {% else %}
-                                        <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
-                                            <span class="text-base font-medium text-white">
+                                        <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                                            <span class="text-sm font-medium text-white">
                                                 {{ current_user.username[:1].upper() }}
                                             </span>
                                         </div>
+                                        <span class="ml-2">{{ current_user.username }}</span>
                                     {% endif %}
+
                                 </div>
                                 <div class="ml-3">
                                     <div class="text-base font-medium text-white">
