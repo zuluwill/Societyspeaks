@@ -1,0 +1,146 @@
+{# Updated render_image_upload macro with compression #}
+{% macro render_field_with_errors(field, label_class="", input_class="", container_class="mb-6") %}
+<div class="{{ container_class }}">
+    <label for="{{ field.id }}" class="block text-sm font-medium text-gray-700 mb-1 {{ label_class }}">
+        {{ field.label.text }}{% if field.flags.required %}*{% endif %}
+    </label>
+    {{ field(class="w-full px-4 py-2 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 " + input_class) }}
+    {% if field.errors %}
+        {% for error in field.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_image_upload(field, preview_id, button_text, icon_path="") %}
+<div class="mb-8">
+    <div class="flex items-center justify-between mb-2">
+        <label for="{{ field.id }}" class="block text-sm font-medium text-gray-700">{{ field.label.text }}</label>
+        <span class="text-xs text-gray-500">
+            {% if 'profile' in preview_id %}
+                Recommended: 400x400px
+            {% elif 'logo' in preview_id %}
+                Recommended: 400x400px
+            {% else %}
+                Recommended: 1200x400px
+            {% endif %}
+        </span>
+    </div>
+
+    <div class="mt-1 relative">
+        <!-- Single file input with correct ID -->
+        {{ field(class="hidden", 
+                id=field.id, 
+                accept="image/*",
+                onchange="handleImageUpload(this, '" + preview_id + "')",
+                **({'required': ''} if field.flags.required else {})) }}
+
+        <!-- Image preview container -->
+        {% if 'profile' in preview_id or 'logo' in preview_id %}
+            <div class="w-32 h-32 {% if 'profile' in preview_id %}rounded-full{% else %}rounded-lg{% endif %} overflow-hidden bg-gray-100 border border-gray-200 relative group cursor-pointer"
+                 onclick="document.getElementById('{{ field.id }}').click()">
+                <img id="{{ preview_id }}" 
+                     class="w-full h-full object-cover" 
+                     src="{{ url_for('static', filename='images/default-' + ('avatar' if 'profile' in preview_id else 'logo') + '.png') }}" 
+                     alt="{{ field.label.text }} preview">
+                <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span class="text-white text-xs">Click to change</span>
+                </div>
+            </div>
+        {% else %}
+            <div class="w-full h-48 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 relative group cursor-pointer"
+                 onclick="document.getElementById('{{ field.id }}').click()">
+                <img id="{{ preview_id }}" 
+                     class="w-full h-full object-cover" 
+                     src="{{ url_for('static', filename='images/default-banner.png') }}" 
+                     alt="{{ field.label.text }} preview">
+                <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span class="text-white text-sm">Click to change</span>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Progress indicator -->
+        <div id="progress-{{ preview_id }}" class="hidden mt-2">
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progress-bar-{{ preview_id }}" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
+            <div class="mt-1 text-xs text-gray-500 flex justify-between">
+                <span>Processing image...</span>
+                <span id="progress-text-{{ preview_id }}">0%</span>
+            </div>
+        </div>
+
+        <!-- Crop button -->
+        <button type="button" 
+                id="crop-{{ preview_id }}"
+                onclick="openCropModal('{{ preview_id }}')"
+                class="hidden mt-2 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            Adjust Image
+        </button>
+
+        <!-- Help text -->
+        <div class="mt-1 text-xs text-gray-500">
+            {% if 'profile' in preview_id %}
+                Upload a clear, professional headshot or avatar
+            {% elif 'logo' in preview_id %}
+                Upload your company logo in a square format
+            {% else %}
+                Upload a high-quality banner image that represents your brand
+            {% endif %}
+        </div>
+
+        {% if field.errors %}
+            {% for error in field.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Cropper Modal -->
+<div id="crop-modal-{{ preview_id }}" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
+            <div class="absolute top-0 right-0 pt-4 pr-4">
+                <button type="button" onclick="closeCropModal('{{ preview_id }}')" class="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <span class="sr-only">Close</span>
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="sm:flex sm:items-start">
+                <div class="mt-3 w-full">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
+                        Adjust Image
+                    </h3>
+                    <div class="max-h-[60vh] overflow-hidden bg-gray-100 rounded-lg">
+                        <img id="crop-preview-{{ preview_id }}" src="" alt="Crop preview" class="max-w-full">
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <button type="button" 
+                        onclick="applyCrop('{{ preview_id }}')"
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Apply
+                </button>
+                <button type="button" 
+                        onclick="closeCropModal('{{ preview_id }}')"
+                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+

@@ -1,60 +1,102 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="max-w-7xl mx-auto py-8">
-    <!-- Banner -->
     <!-- Banner Image -->
     <div class="relative h-60 bg-gray-200 rounded-lg overflow-hidden">
-        {% if profile.banner_image %}
-            <img src="{{ url_for('profiles.get_image', filename=profile.banner_image) }}" alt="Banner Image" class="w-full h-full object-cover">
-        {% else %}
-            <img src="{{ url_for('static', filename='images/default_banner.png') }}" alt="Default Banner Image" class="w-full h-full object-cover">
-        {% endif %}
+        <img 
+            src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('static', filename='images/default-banner.png') }}" 
+            alt="Banner Image" 
+            class="w-full h-full object-cover"
+            onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-banner.png') }}';"
+        >
     </div>
-
 
     <!-- Profile Picture and Name -->
     <div class="relative -mt-20 px-8">
         <div class="flex items-center">
-            <!-- Individual Profile Template -->
             <div class="w-40 h-40 bg-white rounded-full overflow-hidden border-4 border-white shadow-lg">
-                {% if profile.profile_image %}
-                    <img src="{{ url_for('profiles.get_image', filename=profile.profile_image) }}" alt="Profile Image" class="w-full h-full object-cover">
-                {% else %}
-                    <img src="{{ url_for('static', filename='images/default_profile.png') }}" alt="Default Profile Image" class="w-full h-full object-cover">
-                {% endif %}
+                <img 
+                    src="{{ url_for('profiles.get_image', filename=profile.profile_image) if profile.profile_image else url_for('static', filename='images/default-avatar.png') }}" 
+                    alt="Profile Image" 
+                    class="w-full h-full object-cover"
+                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}';"
+                >
             </div>
-
             <div class="ml-8">
                 <h1 class="text-3xl font-bold">{{ profile.full_name }}</h1>
-                <p class="text-gray-600">{{ profile.bio }}</p>
+                {% if profile.bio %}
+                    <p class="text-gray-600">{{ profile.bio }}</p>
+                {% endif %}
             </div>
         </div>
     </div>
 
+    {% if profile.city or profile.country %}
+        <div class="mt-4 flex items-center text-gray-600">
+            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {{ [profile.city, profile.country]|select('boolean')|join(', ') }}
+        </div>
+    {% endif %}
+
     <!-- Social Links -->
-    <div class="mt-8">
-        <h3 class="text-lg font-bold">Social Links</h3>
-        <ul>
-            {% if profile.social_links %}
+    {% if profile.social_links %}
+        <div class="mt-8">
+            <h3 class="text-lg font-bold mb-4">Social Links</h3>
+            <div class="flex space-x-4">
                 {% for platform, url in profile.social_links.items() %}
-                    <li><a href="{{ url }}" target="_blank" class="text-blue-500 hover:underline">{{ platform | capitalize }}</a></li>
+                    <a href="{{ url }}" 
+                       target="_blank" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        {% if platform == 'linkedin' %}
+                            <svg class="h-5 w-5 mr-2 text-[#0A66C2]" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+                            </svg>
+                        {% elif platform == 'twitter' %}
+                            <svg class="h-5 w-5 mr-2 text-[#1DA1F2]" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
+                            </svg>
+                        {% endif %}
+                        {{ platform|title }}
+                    </a>
                 {% endfor %}
-            {% endif %}
-        </ul>
-    </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if current_user.id == profile.user_id %}
+    <a href="{{ url_for('profiles.edit_individual_profile', profile_id=profile.id) }}" 
+       class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+        Edit Profile
+    </a>
+    {% endif %}
 
     <!-- User's Discussions -->
-    <div class="mt-12">
-        <h2 class="text-2xl font-bold mb-6">Discussions by {{ profile.full_name }}</h2>
-        <ul>
-            {% for discussion in discussions %}
-                <li class="mb-4">
-                    <a href="{{ url_for('main.discussion', discussion_id=discussion.polis_id) }}" class="text-lg text-blue-500 hover:underline">{{ discussion.title }}</a>
-                    <p class="text-sm text-gray-600">{{ discussion.description }}</p>
-                </li>
-            {% endfor %}
-        </ul>
-    </div>
+    {% if discussions %}
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold mb-6">Discussions by {{ profile.full_name }}</h2>
+            <div class="space-y-4">
+                {% for discussion in discussions %}
+                    <div class="bg-white p-6 rounded-lg shadow">
+                        <a href="{{ url_for('main.discussion', discussion_id=discussion.polis_id) }}" 
+                           class="text-lg font-medium text-blue-600 hover:text-blue-800">
+                            {{ discussion.title }}
+                        </a>
+                        {% if discussion.description %}
+                            <p class="mt-2 text-gray-600">{{ discussion.description }}</p>
+                        {% endif %}
+                        <div class="mt-4 text-sm text-gray-500">
+                            Created {{ discussion.created_at.strftime('%B %d, %Y') }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
 </div>
-
 {% endblock %}

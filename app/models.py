@@ -1,10 +1,32 @@
 from app import db
 from datetime import datetime
-from slugify import slugify
+from slugify import slugify as python_slugify
 from flask_login import UserMixin
+from unidecode import unidecode
+import re
+
+
 
 def generate_slug(name):
-    return slugify(name)
+    """Generate a URL-friendly slug from a string."""
+    if not name:
+        return ""
+
+    # Convert to lowercase and normalize unicode characters
+    name = str(name).lower()
+    name = unidecode(name)
+
+    # Replace non-alphanumeric characters with hyphens
+    name = re.sub(r'[^a-z0-9]+', '-', name)
+
+    # Remove leading/trailing hyphens
+    name = name.strip('-')
+
+    # Replace multiple consecutive hyphens with a single hyphen
+    name = re.sub(r'-+', '-', name)
+
+    return name
+
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -38,7 +60,8 @@ class IndividualProfile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     full_name = db.Column(db.String(150), nullable=False)
     bio = db.Column(db.Text)
-    location = db.Column(db.String(255))  # Optional location
+    city = db.Column(db.String(100))  # New field for city
+    country = db.Column(db.String(100))  # New field for country
     email = db.Column(db.String(150), nullable=True)  # Optional public email
     website = db.Column(db.String(255))  # Optional website link
     profile_image = db.Column(db.String(255))  # Path to profile image
@@ -48,21 +71,25 @@ class IndividualProfile(db.Model):
 
     discussions = db.relationship('Discussion', backref='individual_profile', lazy='dynamic', foreign_keys='Discussion.individual_profile_id')
 
+    # Generate URL slug
+    slug = db.Column(db.String(150), unique=True, nullable=False)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        if not self.slug:
+        if not self.slug and self.full_name:
             self.slug = generate_slug(self.full_name)
 
     def update_slug(self):
-        self.slug = generate_slug(self.full_name)
-
+        if self.full_name:
+            self.slug = generate_slug(self.full_name)
 
 class CompanyProfile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     company_name = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text)
-    location = db.Column(db.String(255))  # Optional location
+    city = db.Column(db.String(100))  # New field for city
+    country = db.Column(db.String(100))  # New field for country
     email = db.Column(db.String(150), nullable=True)  # Optional public email
     website = db.Column(db.String(255))  # Optional website link
     logo = db.Column(db.String(255))  # Path to company logo
@@ -72,13 +99,19 @@ class CompanyProfile(db.Model):
 
     discussions = db.relationship('Discussion', backref='company_profile', lazy='dynamic', foreign_keys='Discussion.company_profile_id')
 
+    # Generate URL slug
+    slug = db.Column(db.String(150), unique=True, nullable=False)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        if not self.slug:
+        if not self.slug and self.company_name:
             self.slug = generate_slug(self.company_name)
 
     def update_slug(self):
-        self.slug = generate_slug(self.company_name)
+        if self.company_name:
+            self.slug = generate_slug(self.company_name)
+
+    
 
 
 class Discussion(db.Model):
