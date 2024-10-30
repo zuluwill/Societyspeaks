@@ -12,9 +12,11 @@
                 Join thoughtful discussions on topics that matter. Connect with people worldwide and share your perspective on important issues.
             </p>
             <div class="mt-8 flex items-center gap-x-6">
-                <a href="/explore" class="rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
-                    Browse Discussions
+                <a href="{{ url_for('discussions.search_discussions') }}" 
+                   class="rounded-md bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                   Browse Discussions
                 </a>
+
                 <a href="/about" class="text-sm font-semibold leading-6 text-gray-900">
                     Learn more <span aria-hidden="true">→</span>
                 </a>
@@ -23,51 +25,7 @@
     </div>
 </div>
 
-<!-- Filters Section -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
-    <div class="bg-white shadow-lg rounded-lg p-6">
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <!-- Search Input -->
-            <div class="col-span-1 md:col-span-2">
-                <label for="search" class="sr-only">Search discussions</label>
-                <div class="relative">
-                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                        <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" />
-                        </svg>
-                    </div>
-                    <input type="text" name="search" id="search" 
-                           class="block w-full rounded-md border-0 py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
-                           placeholder="Search discussions...">
-                </div>
-            </div>
 
-            <!-- Country Filter -->
-            <div>
-                <label for="country" class="sr-only">Filter by country</label>
-                <select id="country" name="country" 
-                        class="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-blue-600 sm:text-sm sm:leading-6">
-                    <option value="">Select Country</option>
-                    <option value="us">United States</option>
-                    <option value="uk">United Kingdom</option>
-                    <option value="ca">Canada</option>
-                </select>
-            </div>
-
-            <!-- Topic Filter -->
-            <div>
-                <label for="topic" class="sr-only">Filter by topic</label>
-                <select id="topic" name="topic" 
-                        class="block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-gray-900 ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-blue-600 sm:text-sm sm:leading-6">
-                    <option value="">Select Topic</option>
-                    <option value="environment">Environment</option>
-                    <option value="politics">Politics</option>
-                    <option value="technology">Technology</option>
-                </select>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Featured Discussions -->
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
@@ -97,48 +55,16 @@
                         {% endif %}
                     </div>
                 </div>
-                <a href="{{ url_for('main.discussion', discussion_id=discussion.polis_id) }}" 
+                <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" 
                    class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md transition-colors duration-300">
                     Join Discussion
                 </a>
+
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
 
-<!-- All Discussions -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-12">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">All Discussions</h2>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {% for discussion in discussions %}
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl">
-            <div class="p-6">
-                <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ discussion.title }}</h3>
-                <div class="space-y-2 mb-4">
-                    <div class="flex items-center text-sm text-gray-500">
-                        <svg class="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
-                        </svg>
-                        {% if discussion.geographic_scope.value == 'global' %}
-                            Global Discussion
-                        {% elif discussion.geographic_scope.value == 'country' %}
-                            {{ discussion.country }}
-                        {% else %}
-                            {{ discussion.city }}, {{ discussion.country }}
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="flex items-center justify-between mb-4">
-                    <span class="text-sm text-gray-500">{{ discussion.participant_count }} participants</span>
-                </div>
-                <a href="{{ url_for('main.discussion', discussion_id=discussion.polis_id) }}" 
-                   class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-md transition-colors duration-300">
-                    Join Discussion
-                </a>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</div>
+
 {% endblock %}
