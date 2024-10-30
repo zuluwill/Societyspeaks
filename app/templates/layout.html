@@ -28,7 +28,7 @@
                 <!-- Desktop Navigation -->
                 <div class="hidden lg:flex lg:items-center lg:space-x-6">
                     <a href="/" class="text-base font-medium text-white hover:text-blue-50 transition">Home</a>
-                    <a href="/explore" class="text-base font-medium text-white hover:text-blue-50 transition">Explore Discussions</a>
+                    <a href="/discussions/search" class="text-base font-medium text-white hover:text-blue-50 transition">Explore Discussions</a>
                     <a href="/about" class="text-base font-medium text-white hover:text-blue-50 transition">About</a>
 
                     {% if current_user.is_authenticated %}
@@ -129,7 +129,7 @@
             <div class="lg:hidden hidden" id="mobile-menu">
                 <div class="space-y-1 px-2 pb-3 pt-2">
                     <a href="/" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Home</a>
-                    <a href="/explore" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Explore Discussions</a>
+                    <a href="/discussions/search" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Explore Discussions</a>
                     <a href="/about" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">About</a>
 
                     {% if current_user.is_authenticated %}

@@ -1,0 +1,142 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto py-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">Create a New Discussion</h1>
+            <p class="mt-2 text-gray-600">Start a meaningful conversation and engage with your community.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('discussions.create_discussion') }}" class="space-y-6">
+            {{ form.hidden_tag() }}
+
+            <!-- Title and Description Section -->
+            <div class="space-y-4">
+                <div>
+                    {{ form.title.label(class="block text-sm font-medium text-gray-700 required") }}
+                    <p class="text-xs text-gray-500 mb-1">Give your discussion a clear, descriptive title</p>
+                    {{ form.title(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                    {% if form.title.errors %}
+                        {% for error in form.title.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div>
+                    {{ form.description.label(class="block text-sm font-medium text-gray-700 required") }}
+                    <p class="text-xs text-gray-500 mb-1">Provide context and key points for discussion</p>
+                    {{ form.description(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm", rows="4") }}
+                    {% if form.description.errors %}
+                        {% for error in form.description.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- keywords -->
+            <div>
+                {{ form.keywords.label(class="block text-sm font-medium text-gray-700") }}
+                <p class="text-xs text-gray-500 mb-1">Add relevant keywords for better discoverability (comma-separated)</p>
+                {{ form.keywords(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                {% if form.keywords.errors %}
+                    {% for error in form.keywords.errors %}
+                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+
+            <!-- Topic and Location Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    {{ form.topic.label(class="block text-sm font-medium text-gray-700 required") }}
+                    <p class="text-xs text-gray-500 mb-1">Select the main topic of discussion</p>
+                    {{ form.topic(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                    {% if form.topic.errors %}
+                        {% for error in form.topic.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div>
+                    {{ form.geographic_scope.label(class="block text-sm font-medium text-gray-700 required") }}
+                    <p class="text-xs text-gray-500 mb-1">Choose the geographical reach of your discussion</p>
+                    {{ form.geographic_scope(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                    {% if form.geographic_scope.errors %}
+                        {% for error in form.geographic_scope.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Location Fields (shown/hidden based on geographic scope) -->
+            <div id="location-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    {{ form.country.label(class="block text-sm font-medium text-gray-700") }}
+                    {{ form.country(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                    {% if form.country.errors %}
+                        {% for error in form.country.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <div>
+                    {{ form.city.label(class="block text-sm font-medium text-gray-700") }}
+                    {{ form.city(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                    {% if form.city.errors %}
+                        {% for error in form.city.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-end space-x-4 pt-6">
+                <a href="{{ url_for('main.index') }}" 
+                   class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Create Discussion
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const scopeSelect = document.getElementById('{{ form.geographic_scope.id }}');
+    const locationFields = document.getElementById('location-fields');
+    const countryField = document.getElementById('{{ form.country.id }}').parentElement;
+    const cityField = document.getElementById('{{ form.city.id }}').parentElement;
+
+    function updateLocationFields() {
+        const scope = scopeSelect.value;
+
+        if (scope === 'global') {
+            locationFields.style.display = 'none';
+        } else {
+            locationFields.style.display = 'grid';
+            if (scope === 'country') {
+                countryField.style.display = 'block';
+                cityField.style.display = 'none';
+            } else if (scope === 'city') {
+                countryField.style.display = 'block';
+                cityField.style.display = 'block';
+            }
+        }
+    }
+
+    scopeSelect.addEventListener('change', updateLocationFields);
+    updateLocationFields(); // Initial state
+});
+</script>
+{% endblock %}

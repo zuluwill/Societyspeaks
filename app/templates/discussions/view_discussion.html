@@ -1,0 +1,231 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <!-- Discussion Header -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="max-w-3xl mx-auto">
+            <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold text-gray-900">{{ discussion.title }}</h1>
+
+                <!-- Share Button -->
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" aria-haspopup="true" aria-expanded="false" aria-label="Share Discussion" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                        </svg>
+                        Share Discussion
+                    </button>
+
+                    <!-- Share Menu -->
+                    <!-- Share Button with Dropdown -->
+                                <div class="mt-4 flex md:ml-4 md:mt-0 relative">
+                                    <button type="button" id="shareButton"
+                                        class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                                        <svg class="h-5 w-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                                        </svg>
+                                        Share Discussion
+                                    </button>
+
+                                    <!-- Share Dropdown Menu -->
+                                    <div id="shareButtons" class="hidden absolute top-full mt-2 right-0 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                                        <div class="py-1">
+                                            {% set share_title = discussion.title|urlencode %}
+                                            {% set share_url = url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) %}
+                                            {% set share_text = "Join this important discussion on SocietySpeaks: " + discussion.title %}
+
+                                            <!-- LinkedIn -->
+                                            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url }}&title={{ share_title }}"
+                                                target="_blank"
+                                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="h-5 w-5 mr-3 text-[#0A66C2]" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286z"/>
+                                                </svg>
+                                                LinkedIn
+                                            </a>
+
+                                            <!-- Meta (Facebook) -->
+                                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}&quote={{ share_text|urlencode }}"
+                                                target="_blank"
+                                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="h-5 w-5 mr-3 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                                                </svg>
+                                                Meta (Facebook)
+                                            </a>
+
+                                            <!-- X (Twitter) -->
+                                            <a href="https://twitter.com/intent/tweet?text={{ share_text|urlencode }}&url={{ share_url }}"
+                                                target="_blank"
+                                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="h-5 w-5 mr-3 text-[#1DA1F2]" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M24 4.557a9.83 9.83 0 01-2.828.775 4.932 4.932 0 002.165-2.724 9.865 9.865 0 01-3.127 1.195 4.916 4.916 0 00-8.379 4.482A13.947 13.947 0 011.671 3.149a4.916 4.916 0 001.523 6.574A4.899 4.899 0 01.96 9.307v.063a4.916 4.916 0 003.946 4.812 4.898 4.898 0 01-2.224.085 4.916 4.916 0 004.588 3.417 9.867 9.867 0 01-6.11 2.105c-.398 0-.79-.023-1.177-.069A13.926 13.926 0 007.548 21c9.058 0 14.01-7.512 14.01-14.014 0-.213-.004-.425-.014-.636A10.024 10.024 0 0024 4.557z"/>
+                                                </svg>
+                                                X (Twitter)
+                                            </a>
+
+                                            <!-- BlueSky -->
+                                            <a href="https://bsky.app/intent/compose?text={{ share_text|urlencode }} {{ share_url }}"
+                                                target="_blank"
+                                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="h-5 w-5 mr-3 text-[#0085FF]" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M12 2L2 19.717h20L12 2zm0 4l6.598 11.583H5.402L12 6z"/>
+                                                </svg>
+                                                BlueSky
+                                            </a>
+
+                                            <!-- WhatsApp -->
+                                            <a href="https://wa.me/?text={{ share_text|urlencode }}%20{{ share_url }}"
+                                                target="_blank"
+                                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="h-5 w-5 mr-3 text-[#25D366]" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                                                </svg>
+                                                WhatsApp
+                                            </a>
+
+                                            <!-- Telegram -->
+                                            <a href="https://t.me/share/url?url={{ share_url }}&text={{ share_text|urlencode }}"
+                                                target="_blank"
+                                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="h-5 w-5 mr-3 text-[#0088CC]" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23z"/>
+                                                </svg>
+                                                Telegram
+                                            </a>
+
+                                            <!-- Email -->
+                                            <a href="mailto:?subject={{ share_title }}%20-%20SocietySpeaks%20Discussion&body={{ share_text|urlencode }}%0A%0A{{ share_url }}"
+                                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="h-5 w-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                                </svg>
+                                                Email
+                                            </a>
+
+                                            <!-- Copy Link -->
+                                            <button onclick="copyLink('{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}')"
+                                                    class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                                <svg class="h-5 w-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                                                </svg>
+                                                <span class="copy-text">Copy Link</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+            <!-- Discussion Details -->
+            <div class="mt-4 space-y-4">
+                <p class="text-gray-600">{{ discussion.description }}</p>
+
+                <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                    {% if discussion.topic %}
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                            </svg>
+                            {{ discussion.topic }}
+                        </div>
+                    {% endif %}
+
+                    {% if discussion.city or discussion.country %}
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            {{ [discussion.city, discussion.country]|select('boolean')|join(', ') }}
+                        </div>
+                    {% endif %}
+
+                    <div class="flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Started {{ discussion.created_at.strftime('%B %d, %Y') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pol.is Discussion Embed -->
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="aspect-w-16 aspect-h-9">
+                <iframe 
+                    src="{{ polis_url }}" 
+                    width="100%" 
+                    height="900" 
+                    frameborder="0" 
+                    allow="clipboard-write" 
+                    class="w-full h-full"
+                    onerror="this.style.display='none'; document.getElementById('embed-fallback').style.display='block';">
+                </iframe>
+                <div id="embed-fallback" style="display: none;" class="text-center p-6">
+                    <p class="text-gray-600">The discussion embed could not be loaded. <a href="{{ polis_url }}" target="_blank" class="text-blue-600 hover:underline">Click here</a> to open it in a new tab.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            const toast = document.createElement('div');
+            toast.textContent = 'Link copied to clipboard!';
+            toast.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg';
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    }
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const shareButton = document.getElementById('shareButton');
+        const shareButtons = document.querySelector('#shareButtons');
+
+        shareButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            shareButtons.classList.toggle('hidden');
+        });
+
+        // Close share buttons when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!shareButtons.contains(e.target) && !shareButton.contains(e.target)) {
+                shareButtons.classList.add('hidden');
+            }
+        });
+    });
+
+    async function copyLink(url) {
+        try {
+            await navigator.clipboard.writeText(url);
+            const button = event.currentTarget;
+            const textSpan = button.querySelector('.copy-text');
+            if (textSpan) {
+                const originalText = textSpan.textContent;
+                textSpan.textContent = 'Copied!';
+                setTimeout(() => textSpan.textContent = originalText, 2000);
+            }
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    }
+    
+  
+    
+  
+    
+</script>
+{% endblock %}

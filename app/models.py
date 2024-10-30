@@ -129,13 +129,14 @@ class Discussion(db.Model):
     polis_id = db.Column(db.String(100), nullable=False, unique=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
+    keywords = db.Column(db.String(200))
+    slug = db.Column(db.String(150), unique=True, nullable=False)
 
-    # Use string instead of Enum
+    # Geographic fields and other properties
     geographic_scope = db.Column(db.String(20), nullable=False, default='country')
     country = db.Column(db.String(100))
     city = db.Column(db.String(100))
     creator_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
     topic = db.Column(db.String(100))
     is_featured = db.Column(db.Boolean, default=False)
     participant_count = db.Column(db.Integer, default=0)
@@ -151,29 +152,19 @@ class Discussion(db.Model):
     SCOPE_COUNTRY = 'country'
     SCOPE_CITY = 'city'
 
-    # Topic choices for validation
+    # Define topics for validation
     TOPICS = [
-        'Healthcare',
-        'Environment',
-        'Education',
-        'Technology',
-        'Economy',
-        'Politics',
-        'Society',
-        'Infrastructure'
+        'Healthcare', 'Environment', 'Education', 'Technology', 'Economy', 'Politics', 'Society', 'Infrastructure'
     ]
 
     def __init__(self, **kwargs):
-        # Determine geographic scope based on provided fields
-        if 'geographic_scope' not in kwargs:
-            if 'city' in kwargs and kwargs['city']:
-                kwargs['geographic_scope'] = self.SCOPE_CITY
-            elif 'country' in kwargs and kwargs['country']:
-                kwargs['geographic_scope'] = self.SCOPE_COUNTRY
-            else:
-                kwargs['geographic_scope'] = self.SCOPE_GLOBAL
+        super().__init__(**kwargs)
+        if not self.slug and self.title:
+            self.slug = generate_slug(self.title)
 
-        super(Discussion, self).__init__(**kwargs)
+    def update_slug(self):
+        if self.title:
+            self.slug = generate_slug(self.title)
 
     @property
     def location_display(self):
@@ -191,6 +182,7 @@ class Discussion(db.Model):
             'polis_id': self.polis_id,
             'title': self.title,
             'description': self.description,
+            'slug': self.slug,  # Include slug in dictionary
             'geographic_scope': self.geographic_scope,
             'country': self.country,
             'city': self.city,
@@ -209,7 +201,7 @@ class Discussion(db.Model):
                              .all()
 
     @staticmethod
-    def search_discussions(search=None, country=None, city=None, topic=None, scope=None, page=1, per_page=9):
+    def search_discussions(search=None, country=None, city=None, topic=None, scope=None, keywords=None, page=1, per_page=9):
         query = Discussion.query
 
         if search:
@@ -233,5 +225,9 @@ class Discussion(db.Model):
         if topic:
             query = query.filter(Discussion.topic == topic)
 
+        # New keyword filtering
+        if keywords:
+            query = query.filter(Discussion.keywords.ilike(f"%{keywords}%"))
+
         return query.order_by(Discussion.created_at.desc())\
-                   .paginate(page=page, per_page=per_page, error_out=False)
+                    .paginate(page=page, per_page=per_page, error_out=False)

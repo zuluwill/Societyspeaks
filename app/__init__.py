@@ -46,6 +46,10 @@ def create_app():
     from app.profiles.routes import profiles_bp
     app.register_blueprint(profiles_bp, url_prefix="/profiles")
 
+    from app.discussions.routes import discussions_bp
+    app.register_blueprint(discussions_bp, url_prefix='/discussions')
+
+
     from app.commands import init_commands
     init_commands(app)
 
