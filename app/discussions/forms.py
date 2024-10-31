@@ -221,7 +221,9 @@ class CreateDiscussionForm(FlaskForm):
         ('Infrastructure', 'Infrastructure')
     ], validators=[DataRequired()])
 
-    keywords = StringField('Keywords', validators=[Optional(), Length(max=200)])
+    embed_code = HiddenField('Embed Code', validators=[DataRequired()]) 
+
+    keywords = StringField('Keywords', validators=[Optional(), Length(max=200)])  # Retain or customize length as needed
 
     geographic_scope = SelectField('Geographic Scope', choices=[
         ('global', 'Global'),
@@ -232,13 +234,18 @@ class CreateDiscussionForm(FlaskForm):
     country = SelectField('Country', validators=[Optional()], choices=country_choices)
     city = StringField('City', validators=[Optional()])
 
-    polis_id = HiddenField('Polis ID')  # This will be set after creating the Pol.is discussion
     submit = SubmitField('Create Discussion')
 
-    def validate(self):
-        if not super().validate():
+    def validate(self, **kwargs):
+        if not super().validate(**kwargs):
             return False
 
+        # Validate embed code is present
+        if not self.embed_code.data:
+            self.embed_code.errors.append('Discussion embed code is required')
+            return False
+
+        # Existing geographic validation
         if self.geographic_scope.data == 'country' and not self.country.data:
             self.country.errors.append('Country is required for country-specific discussions')
             return False

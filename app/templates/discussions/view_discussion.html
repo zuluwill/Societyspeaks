@@ -122,20 +122,17 @@
         </div>
     </div>
 
-    <!-- Pol.is Discussion Embed -->
-    <div class="bg-white rounded-lg shadow-lg overflow-hidden min-h-screen">
-        <iframe 
-            src="{{ polis_url }}" 
-            width="100%" 
-            style="height: 90vh;" 
-            frameborder="0" 
-            allow="clipboard-write" 
-            class="w-full"
-            onerror="this.style.display='none'; document.getElementById('embed-fallback').style.display='block';">
-        </iframe>
-        <div id="embed-fallback" style="display: none;" class="text-center p-6">
-            <p class="text-gray-600">The discussion embed could not be loaded. <a href="{{ polis_url }}" target="_blank" class="text-blue-600 hover:underline">Click here</a> to open it in a new tab.</p>
-        </div>
+    <!-- Adjusted Pol.is Discussion Embed without outer container -->
+    <div class="min-h-screen">
+        {% if discussion.embed_code %}
+            <!-- Render the embed code directly from the database -->
+            {{ discussion.embed_code | safe }}
+        {% else %}
+            <!-- Fallback message if no embed code is available -->
+            <div class="text-center p-6">
+                <p class="text-gray-600">The discussion embed is not available. <a href="{{ polis_url }}" target="_blank" class="text-blue-600 hover:underline">Click here</a> to open it in a new tab.</p>
+            </div>
+        {% endif %}
     </div>
 
 

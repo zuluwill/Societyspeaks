@@ -126,7 +126,7 @@ class CompanyProfile(db.Model):
 
 class Discussion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    polis_id = db.Column(db.String(100), nullable=False, unique=True)
+    embed_code = db.Column(db.String(800), nullable=False)  # Store full embed code
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     keywords = db.Column(db.String(200))
@@ -143,7 +143,7 @@ class Discussion(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    # New foreign keys to link discussions to profiles
+    # Foreign keys to link discussions to profiles
     individual_profile_id = db.Column(db.Integer, db.ForeignKey('individual_profile.id'), nullable=True)
     company_profile_id = db.Column(db.Integer, db.ForeignKey('company_profile.id'), nullable=True)
 
@@ -179,10 +179,11 @@ class Discussion(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'polis_id': self.polis_id,
+            'embed_code': self.embed_code,  # Store full embed code in dictionary
             'title': self.title,
             'description': self.description,
-            'slug': self.slug,  # Include slug in dictionary
+            'keywords': self.keywords,  # Include keywords here
+            'slug': self.slug,
             'geographic_scope': self.geographic_scope,
             'country': self.country,
             'city': self.city,
@@ -192,6 +193,7 @@ class Discussion(db.Model):
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
+
 
     @staticmethod
     def get_featured(limit=3):

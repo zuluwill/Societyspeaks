@@ -1,8 +1,10 @@
-from flask import render_template, redirect, url_for, flash, request, Blueprint
+from flask import render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db
 from app.discussions.forms import CreateDiscussionForm
 from app.models import Discussion
+import json
+import os
 
 
 discussions_bp = Blueprint('discussions', __name__)
@@ -14,7 +16,7 @@ def create_discussion():
     if form.validate_on_submit():
         # Create a new discussion
         discussion = Discussion(
-            polis_id=form.polis_id.data,
+            embed_code=form.embed_code.data,
             title=form.title.data,
             description=form.description.data,
             topic=form.topic.data,
@@ -34,13 +36,12 @@ def create_discussion():
 @discussions_bp.route('/<int:discussion_id>/<slug>', methods=['GET'])
 def view_discussion(discussion_id, slug):
     discussion = Discussion.query.get_or_404(discussion_id)
-    # Check if the slug in the URL matches the one from the discussion
+    # Redirect if the slug in the URL doesn't match the discussion's slug
     if discussion.slug != slug:
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
-    polis_url = f"https://pol.is/{discussion.polis_id}"
-    return render_template('discussions/view_discussion.html', discussion=discussion, polis_url=polis_url)
-
+    # Render the page with embed_code directly
+    return render_template('discussions/view_discussion.html', discussion=discussion)
 
 
 
@@ -85,9 +86,210 @@ def api_search_discussions():
         'current_page': pagination.page
     })
 
+country_mapping = {
+    "UK": "United Kingdom",
+    "US": "United States",
+    "AF": "Afghanistan",
+    "AL": "Albania",
+    "DZ": "Algeria",
+    "AD": "Andorra",
+    "AO": "Angola",
+    "AG": "Antigua and Barbuda",
+    "AR": "Argentina",
+    "AM": "Armenia",
+    "AU": "Australia",
+    "AT": "Austria",
+    "AZ": "Azerbaijan",
+    "BS": "Bahamas",
+    "BH": "Bahrain",
+    "BD": "Bangladesh",
+    "BB": "Barbados",
+    "BY": "Belarus",
+    "BE": "Belgium",
+    "BZ": "Belize",
+    "BJ": "Benin",
+    "BT": "Bhutan",
+    "BO": "Bolivia",
+    "BA": "Bosnia and Herzegovina",
+    "BW": "Botswana",
+    "BR": "Brazil",
+    "BN": "Brunei",
+    "BG": "Bulgaria",
+    "BF": "Burkina Faso",
+    "BI": "Burundi",
+    "CV": "Cabo Verde",
+    "KH": "Cambodia",
+    "CM": "Cameroon",
+    "CA": "Canada",
+    "CF": "Central African Republic",
+    "TD": "Chad",
+    "CL": "Chile",
+    "CN": "China",
+    "CO": "Colombia",
+    "KM": "Comoros",
+    "CG": "Congo",
+    "CD": "Congo (DRC)",
+    "CR": "Costa Rica",
+    "CI": "Côte d'Ivoire",
+    "HR": "Croatia",
+    "CU": "Cuba",
+    "CY": "Cyprus",
+    "CZ": "Czech Republic",
+    "DK": "Denmark",
+    "DJ": "Djibouti",
+    "DM": "Dominica",
+    "DO": "Dominican Republic",
+    "EC": "Ecuador",
+    "EG": "Egypt",
+    "SV": "El Salvador",
+    "GQ": "Equatorial Guinea",
+    "ER": "Eritrea",
+    "EE": "Estonia",
+    "SZ": "Eswatini",
+    "ET": "Ethiopia",
+    "FJ": "Fiji",
+    "FI": "Finland",
+    "FR": "France",
+    "GA": "Gabon",
+    "GM": "Gambia",
+    "GE": "Georgia",
+    "DE": "Germany",
+    "GH": "Ghana",
+    "GR": "Greece",
+    "GD": "Grenada",
+    "GT": "Guatemala",
+    "GN": "Guinea",
+    "GW": "Guinea-Bissau",
+    "GY": "Guyana",
+    "HT": "Haiti",
+    "HN": "Honduras",
+    "HU": "Hungary",
+    "IS": "Iceland",
+    "IN": "India",
+    "ID": "Indonesia",
+    "IR": "Iran",
+    "IQ": "Iraq",
+    "IE": "Ireland",
+    "IL": "Israel",
+    "IT": "Italy",
+    "JM": "Jamaica",
+    "JP": "Japan",
+    "JO": "Jordan",
+    "KZ": "Kazakhstan",
+    "KE": "Kenya",
+    "KI": "Kiribati",
+    "KW": "Kuwait",
+    "KG": "Kyrgyzstan",
+    "LA": "Laos",
+    "LV": "Latvia",
+    "LB": "Lebanon",
+    "LS": "Lesotho",
+    "LR": "Liberia",
+    "LY": "Libya",
+    "LI": "Liechtenstein",
+    "LT": "Lithuania",
+    "LU": "Luxembourg",
+    "MG": "Madagascar",
+    "MW": "Malawi",
+    "MY": "Malaysia",
+    "MV": "Maldives",
+    "ML": "Mali",
+    "MT": "Malta",
+    "MH": "Marshall Islands",
+    "MR": "Mauritania",
+    "MU": "Mauritius",
+    "MX": "Mexico",
+    "FM": "Micronesia",
+    "MD": "Moldova",
+    "MC": "Monaco",
+    "MN": "Mongolia",
+    "ME": "Montenegro",
+    "MA": "Morocco",
+    "MZ": "Mozambique",
+    "MM": "Myanmar",
+    "NA": "Namibia",
+    "NR": "Nauru",
+    "NP": "Nepal",
+    "NL": "Netherlands",
+    "NZ": "New Zealand",
+    "NI": "Nicaragua",
+    "NE": "Niger",
+    "NG": "Nigeria",
+    "NO": "Norway",
+    "OM": "Oman",
+    "PK": "Pakistan",
+    "PW": "Palau",
+    "PA": "Panama",
+    "PG": "Papua New Guinea",
+    "PY": "Paraguay",
+    "PE": "Peru",
+    "PH": "Philippines",
+    "PL": "Poland",
+    "PT": "Portugal",
+    "QA": "Qatar",
+    "RO": "Romania",
+    "RU": "Russia",
+    "RW": "Rwanda",
+    "KN": "Saint Kitts and Nevis",
+    "LC": "Saint Lucia",
+    "VC": "Saint Vincent and the Grenadines",
+    "WS": "Samoa",
+    "SM": "San Marino",
+    "ST": "Sao Tome and Principe",
+    "SA": "Saudi Arabia",
+    "SN": "Senegal",
+    "RS": "Serbia",
+    "SC": "Seychelles",
+    "SL": "Sierra Leone",
+    "SG": "Singapore",
+    "SK": "Slovakia",
+    "SI": "Slovenia",
+    "SB": "Solomon Islands",
+    "SO": "Somalia",
+    "ZA": "South Africa",
+    "KR": "South Korea",
+    "SS": "South Sudan",
+    "ES": "Spain",
+    "LK": "Sri Lanka",
+    "SD": "Sudan",
+    "SR": "Suriname",
+    "SE": "Sweden",
+    "CH": "Switzerland",
+    "SY": "Syria",
+    "TW": "Taiwan",
+    "TJ": "Tajikistan",
+    "TZ": "Tanzania",
+    "TH": "Thailand",
+    "TL": "Timor-Leste",
+    "TG": "Togo",
+    "TO": "Tonga",
+    "TT": "Trinidad and Tobago",
+    "TN": "Tunisia",
+    "TR": "Turkey",
+    "TM": "Turkmenistan",
+    "TV": "Tuvalu",
+    "UG": "Uganda",
+    "UA": "Ukraine",
+    "AE": "United Arab Emirates",
+    "UY": "Uruguay",
+    "UZ": "Uzbekistan",
+    "VU": "Vanuatu",
+    "VE": "Venezuela",
+    "VN": "Vietnam",
+    "YE": "Yemen",
+    "ZM": "Zambia",
+    "ZW": "Zimbabwe"
+}
 
 
-
-
-
-
+@discussions_bp.route('/api/cities/<country_code>')
+def get_cities_by_country(country_code):
+    try:
+        # Look up the full country name based on the provided code
+        country_name = country_mapping.get(country_code, country_code)  # Default to the code itself if not found
+        with open(os.path.join(current_app.root_path, 'static/data/cities_by_country.json'), 'r') as f:
+            cities_by_country = json.load(f)
+        cities = cities_by_country.get(country_name, [])
+        return jsonify(cities)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

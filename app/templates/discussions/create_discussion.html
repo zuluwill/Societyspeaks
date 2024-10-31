@@ -1,142 +1,364 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="max-w-4xl mx-auto py-8">
+
+<!-- Include Choices.js CSS and JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<div class="max-w-4xl mx-auto py-8 px-4">
     <div class="bg-white rounded-lg shadow-lg p-6">
-        <div class="mb-6">
-            <h1 class="text-3xl font-bold text-gray-900">Create a New Discussion</h1>
-            <p class="mt-2 text-gray-600">Start a meaningful conversation and engage with your community.</p>
+        <h1 class="text-3xl font-bold text-gray-900 mb-6">Create a New Discussion</h1>
+
+        <!-- Progress Steps -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between relative">
+                <div class="absolute left-0 right-0 top-1/2 h-0.5 bg-gray-200 -z-10"></div>
+                <div id="step1Indicator" class="flex flex-col items-center text-blue-600">
+                    <div class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center">1</div>
+                    <span class="mt-2 text-sm font-medium">Configure</span>
+                </div>
+                <div id="step2Indicator" class="flex flex-col items-center text-gray-400">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">2</div>
+                    <span class="mt-2 text-sm font-medium">Embed</span>
+                </div>
+                <div id="step3Indicator" class="flex flex-col items-center text-gray-400">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">3</div>
+                    <span class="mt-2 text-sm font-medium">Details</span>
+                </div>
+            </div>
         </div>
 
-        <form method="POST" action="{{ url_for('discussions.create_discussion') }}" class="space-y-6">
-            {{ form.hidden_tag() }}
-
-            <!-- Title and Description Section -->
-            <div class="space-y-4">
-                <div>
-                    {{ form.title.label(class="block text-sm font-medium text-gray-700 required") }}
-                    <p class="text-xs text-gray-500 mb-1">Give your discussion a clear, descriptive title</p>
-                    {{ form.title(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
-                    {% if form.title.errors %}
-                        {% for error in form.title.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-
-                <div>
-                    {{ form.description.label(class="block text-sm font-medium text-gray-700 required") }}
-                    <p class="text-xs text-gray-500 mb-1">Provide context and key points for discussion</p>
-                    {{ form.description(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm", rows="4") }}
-                    {% if form.description.errors %}
-                        {% for error in form.description.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
+        <!-- Step Content -->
+        <div class="mt-8">
+            <!-- Step 1: Configure -->
+            <div id="step1" class="space-y-4">
+                <h2 class="text-xl font-semibold text-gray-800">Configure Your Pol.is Discussion</h2>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-blue-800 mb-3">Instructions:</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-blue-700">
+                        <li>Click the button below to open Pol.is in a new tab</li>
+                        <li>Sign in or create a Pol.is account</li>
+                        <li>Create and configure your discussion</li>
+                        <li>Copy the embed code or URL from your new discussion</li>
+                        <li>Return to this tab and click "Next" to continue</li>
+                    </ol>
+                    <div class="mt-6">
+                        <a href="https://pol.is" 
+                           target="_blank" 
+                           rel="noopener noreferrer" 
+                           class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                            Open Pol.is Configuration
+                        </a>
+                    </div>
                 </div>
             </div>
 
-            <!-- keywords -->
-            <div>
-                {{ form.keywords.label(class="block text-sm font-medium text-gray-700") }}
-                <p class="text-xs text-gray-500 mb-1">Add relevant keywords for better discoverability (comma-separated)</p>
-                {{ form.keywords(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
-                {% if form.keywords.errors %}
-                    {% for error in form.keywords.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
-            </div>
-
-
-            <!-- Topic and Location Section -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    {{ form.topic.label(class="block text-sm font-medium text-gray-700 required") }}
-                    <p class="text-xs text-gray-500 mb-1">Select the main topic of discussion</p>
-                    {{ form.topic(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
-                    {% if form.topic.errors %}
-                        {% for error in form.topic.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-
-                <div>
-                    {{ form.geographic_scope.label(class="block text-sm font-medium text-gray-700 required") }}
-                    <p class="text-xs text-gray-500 mb-1">Choose the geographical reach of your discussion</p>
-                    {{ form.geographic_scope(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
-                    {% if form.geographic_scope.errors %}
-                        {% for error in form.geographic_scope.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
+            <!-- Step 2: Embed -->
+            <div id="step2" class="hidden space-y-4">
+                <h2 class="text-xl font-semibold text-gray-800">Add Your Pol.is Discussion</h2>
+                <p class="text-gray-600 mb-4">Paste either the embed code or the Pol.is URL (e.g., https://pol.is/3mpdddmfnn)</p>
+                <div class="space-y-2">
+                    <textarea
+                        id="embedCode"
+                        class="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter embed code or Pol.is URL"
+                    ></textarea>
+                    <div id="embedWarning" class="hidden">
+                        <p class="text-sm text-red-600 flex items-center">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Please enter a valid Pol.is embed code or URL.
+                        </p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Location Fields (shown/hidden based on geographic scope) -->
-            <div id="location-fields" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    {{ form.country.label(class="block text-sm font-medium text-gray-700") }}
-                    {{ form.country(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
-                    {% if form.country.errors %}
-                        {% for error in form.country.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
+            <!-- Step 3: Details -->
+            <div id="step3" class="hidden">
+                <form id="discussionForm" method="POST" action="{{ url_for('discussions.create_discussion') }}" class="space-y-6">
+                    {{ form.csrf_token }}
+                    <input type="hidden" name="embed_code" id="finalEmbedCode">
 
-                <div>
-                    {{ form.city.label(class="block text-sm font-medium text-gray-700") }}
-                    {{ form.city(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
-                    {% if form.city.errors %}
-                        {% for error in form.city.errors %}
-                            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
+                    <h2 class="text-xl font-semibold text-gray-800 mb-6">Add Discussion Details</h2>
+
+                
+                    <!-- Form Fields -->
+                    <div class="grid gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                            {{ form.title(class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="Enter a descriptive title for your discussion") }}
+                            {% if form.title.errors %}
+                                {% for error in form.title.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                            {{ form.description(class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="4", placeholder="Provide context about what you want to discuss") }}
+                            {% if form.description.errors %}
+                                {% for error in form.description.errors %}
+                                    <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+
+                        <!-- Topic and Location Section -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                {{ form.topic.label(class="block text-sm font-medium text-gray-700 required") }}
+                                <p class="text-xs text-gray-500 mb-1">Select the main topic of discussion</p>
+                                {{ form.topic(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                                {% if form.topic.errors %}
+                                    {% for error in form.topic.errors %}
+                                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                            <div>
+                                {{ form.geographic_scope.label(class="block text-sm font-medium text-gray-700 required") }}
+                                <p class="text-xs text-gray-500 mb-1">Choose the geographical reach of your discussion</p>
+                                {{ form.geographic_scope(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm", onchange="handleScopeChange()") }}
+                                {% if form.geographic_scope.errors %}
+                                    {% for error in form.geographic_scope.errors %}
+                                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Location Fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                {{ form.country.label(class="block text-sm font-medium text-gray-700") }}
+                                {{ form.country(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm", onchange="fetchCities()") }}
+                                {% if form.country.errors %}
+                                    {% for error in form.country.errors %}
+                                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                {{ form.city.label(class="block text-sm font-medium text-gray-700") }}
+                                <select id="city" name="city" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    <option value="">Select a city</option>
+                                </select>
+                                {% if form.city.errors %}
+                                    {% for error in form.city.errors %}
+                                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
             </div>
+        </div>
 
-            <!-- Form Actions -->
-            <div class="flex justify-end space-x-4 pt-6">
-                <a href="{{ url_for('main.index') }}" 
-                   class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
-                    Cancel
-                </a>
-                <button type="submit" 
-                        class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                    Create Discussion
+        <!-- Navigation Buttons -->
+        <div class="mt-8 flex justify-between items-center">
+            <button
+                id="backButton"
+                onclick="handleBack()"
+                class="hidden inline-flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                Back
+            </button>
+
+            <div class="ml-auto flex gap-4">
+                <button
+                    id="nextButton"
+                    onclick="handleNext()"
+                    class="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                    Next
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
+
+                <button
+                    id="submitButton"
+                    onclick="handleSubmit()"
+                    class="hidden px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                    Publish Discussion
                 </button>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 
 <script>
+let currentStep = 1;
+let cityChoices;
+let citySelect; // Define citySelect at the top level for reuse
+
 document.addEventListener('DOMContentLoaded', function() {
-    const scopeSelect = document.getElementById('{{ form.geographic_scope.id }}');
-    const locationFields = document.getElementById('location-fields');
-    const countryField = document.getElementById('{{ form.country.id }}').parentElement;
-    const cityField = document.getElementById('{{ form.city.id }}').parentElement;
+    const countrySelect = document.querySelector('[name="country"]');
+    citySelect = document.getElementById('city'); // Initialize citySelect here
 
-    function updateLocationFields() {
-        const scope = scopeSelect.value;
+    // Initialize Choices.js for the city dropdown
+    cityChoices = new Choices(citySelect, {
+        searchEnabled: true,
+        itemSelectText: '',
+        placeholder: true,
+        placeholderValue: 'Select a city',
+        searchPlaceholderValue: 'Type to search cities',
+        removeItemButton: true,
+        classNames: {
+            containerOuter: 'choices'
+        }
+    });
 
-        if (scope === 'global') {
-            locationFields.style.display = 'none';
+    // Initial setup: Disable city select and set up event listeners
+    citySelect.disabled = true;
+    document.querySelector('[name="geographic_scope"]').addEventListener('change', handleScopeChange);
+    countrySelect.addEventListener('change', fetchCities);
+
+    // Initialize visibility and handle scope change at load
+    updateStepVisibility();
+    handleScopeChange();
+});
+
+function handleScopeChange() {
+    const scope = document.querySelector('[name="geographic_scope"]').value;
+    const countryContainer = document.querySelector('[name="country"]').closest('.grid > div');
+    const cityContainer = document.querySelector('#city').closest('.grid > div');
+
+    if (scope === 'global') {
+        countryContainer.classList.add('hidden');
+        cityContainer.classList.add('hidden');
+        document.querySelector('[name="country"]').value = '';
+        if (cityChoices) cityChoices.clearStore();
+    } else if (scope === 'country') {
+        countryContainer.classList.remove('hidden');
+        cityContainer.classList.add('hidden');
+        if (cityChoices) cityChoices.clearStore();
+    } else if (scope === 'city') {
+        // Show both country and city containers for city scope
+        countryContainer.classList.remove('hidden');
+        cityContainer.classList.remove('hidden');
+    }
+}
+
+    function fetchCities() {
+        const countrySelect = document.querySelector('[name="country"]');
+        const countryCode = countrySelect.value;
+
+        // Clear previous city choices
+        cityChoices.clearStore();
+        cityChoices.setChoices([{ value: '', label: 'Select a city', selected: true, disabled: true }], 'value', 'label', false);
+
+        if (countryCode) {
+            console.log(`Fetching cities for: ${countryCode}`); // Debugging line
+
+            fetch(`/discussions/api/cities/${countryCode}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(cities => {
+                    console.log('Cities fetched:', cities); // Debugging line
+
+                    // Enable the city dropdown only if cities are available
+                    citySelect.disabled = false;
+
+                    // Populate cities if data is valid
+                    if (Array.isArray(cities) && cities.length > 0) {
+                        cities.sort((a, b) => a.localeCompare(b)); // Sort alphabetically
+                        const cityOptions = cities.map(city => ({ value: city, label: city }));
+                        cityChoices.setChoices(cityOptions, 'value', 'label', true);
+                    } else {
+                        console.error('No cities found or data is not an array');
+                        cityChoices.setChoices([{ value: '', label: 'No cities available', disabled: true }]);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching cities:', error);
+                    cityChoices.setChoices([{ value: '', label: 'Error loading cities. Please try again.', disabled: true }]);
+                });
         } else {
-            locationFields.style.display = 'grid';
-            if (scope === 'country') {
-                countryField.style.display = 'block';
-                cityField.style.display = 'none';
-            } else if (scope === 'city') {
-                countryField.style.display = 'block';
-                cityField.style.display = 'block';
-            }
+            // Disable city select if no country is chosen
+            citySelect.disabled = true;
         }
     }
 
-    scopeSelect.addEventListener('change', updateLocationFields);
-    updateLocationFields(); // Initial state
-});
+
+
+
+function updateStepVisibility() {
+    document.querySelectorAll('[id^="step"]').forEach(step => step.classList.add('hidden'));
+    document.getElementById(`step${currentStep}`).classList.remove('hidden');
+
+    for (let i = 1; i <= 3; i++) {
+        const indicator = document.getElementById(`step${i}Indicator`);
+        const div = indicator.querySelector('div');
+
+        indicator.classList.toggle('text-blue-600', i <= currentStep);
+        div.classList.toggle('bg-blue-600', i <= currentStep);
+        div.classList.toggle('bg-gray-200', i > currentStep);
+    }
+
+    document.getElementById('backButton').classList.toggle('hidden', currentStep === 1);
+    document.getElementById('nextButton').classList.toggle('hidden', currentStep === 3);
+    document.getElementById('submitButton').classList.toggle('hidden', currentStep !== 3);
+}
+
+function handleNext() {
+    if (currentStep === 2 && !validateAndProcessInput()) return;
+
+    if (currentStep < 3) {
+        currentStep++;
+        updateStepVisibility();
+    }
+}
+
+function handleBack() {
+    if (currentStep > 1) {
+        currentStep--;
+        updateStepVisibility();
+    }
+}
+
+function handleSubmit() {
+    document.getElementById('discussionForm').submit();
+}
+
+function validateAndProcessInput() {
+    const input = document.getElementById('embedCode').value.trim();
+    const warning = document.getElementById('embedWarning');
+    let isValid = false;
+    let processedCode = '';
+
+    if (/^https:\/\/pol\.is\/\w+$/.test(input)) {
+        const conversationId = input.split('/').pop();
+        processedCode = `<div class='polis' data-conversation_id='${conversationId}'></div>
+        <script async src='https://pol.is/embed.js'><\/script>`;
+        isValid = true;
+    } else if (/<div class=['"]polis['"]\s+data-conversation_id=['"]\w+['"]><\/div>\s*<script async src=['"]https:\/\/pol\.is\/embed\.js['"]><\/script>/.test(input)) {
+        processedCode = input;
+        isValid = true;
+    }
+
+    warning.classList.toggle('hidden', isValid);
+
+    if (isValid) {
+        document.getElementById('finalEmbedCode').value = processedCode;
+    }
+
+    return isValid;
+}
 </script>
+
+
 {% endblock %}
+
+
+
