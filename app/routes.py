@@ -24,10 +24,10 @@ def index():
     city = request.args.get('city', '')
     topic = request.args.get('topic', '')
 
-    # Get featured discussions
+    # Get featured discussions - this will now always return up to 6 discussions
     featured_discussions = Discussion.get_featured()
 
-    # Get filtered discussions with pagination
+    # Get filtered discussions with pagination for the rest of the page
     pagination = Discussion.search_discussions(
         search=search,
         country=country,
@@ -35,7 +35,6 @@ def index():
         topic=topic,
         page=page
     )
-
     discussions = pagination.items
 
     return render_template('index.html',
@@ -46,7 +45,6 @@ def index():
                          country=country,
                          city=city,
                          topic=topic)
-
 
 
 @main_bp.route('/about')

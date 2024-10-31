@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timedelta
 from slugify import slugify as python_slugify
 from flask_login import UserMixin
 from unidecode import unidecode
@@ -196,12 +196,80 @@ class Discussion(db.Model):
 
 
     @staticmethod
-    def get_featured(limit=3):
-        return Discussion.query.filter_by(is_featured=True)\
-                             .order_by(Discussion.created_at.desc())\
-                             .limit(limit)\
-                             .all()
+    def get_featured(limit=6):
+        # First get discussions marked as featured
+        featured = Discussion.query\
+            .filter_by(is_featured=True)\
+            .order_by(Discussion.created_at.desc())\
+            .all()
 
+        # If we have fewer than limit (6), add recent non-featured discussions
+        if len(featured) < limit:
+            featured_ids = [d.id for d in featured]
+            additional = Discussion.query\
+                .filter(Discussion.id.notin_(featured_ids))\
+                .order_by(Discussion.created_at.desc())\
+                .limit(limit - len(featured))\
+                .all()
+            featured.extend(additional)
+
+        return featured[:limit]
+
+    @staticmethod
+    def feature_discussion(discussion_id, feature=True):
+        """Manually feature or unfeature a discussion"""
+        discussion = Discussion.query.get_or_404(discussion_id)
+        discussion.is_featured = feature
+        db.session.commit()
+        return discussion
+
+    @classmethod
+    def auto_feature_discussions(cls):
+        """Automatically feature discussions with balanced criteria"""
+        total_count = cls.query.count()
+
+        if total_count <= 6:
+            # If we have 6 or fewer discussions total, feature them all
+            cls.query.update({cls.is_featured: True})
+            db.session.commit()
+            return cls.query.all()
+
+        # If we have more than 6 discussions, use the balanced criteria
+        cls.query.update({cls.is_featured: False})
+        db.session.commit()
+
+        featured = []
+
+        # Get one discussion per topic from the last 30 days
+        for topic in cls.TOPICS:
+            discussion = cls.query\
+                .filter(
+                    cls.topic == topic,
+                    cls.created_at >= (datetime.utcnow() - timedelta(days=30))
+                )\
+                .order_by(cls.created_at.desc())\
+                .first()
+
+            if discussion:
+                discussion.is_featured = True
+                featured.append(discussion)
+
+        # If we need more to reach 6, add most recent discussions
+        if len(featured) < 6:
+            additional = cls.query\
+                .filter(cls.id.notin_([d.id for d in featured]))\
+                .order_by(cls.created_at.desc())\
+                .limit(6 - len(featured))\
+                .all()
+
+            for discussion in additional:
+                discussion.is_featured = True
+
+        db.session.commit()
+        return featured
+
+
+    
     @staticmethod
     def search_discussions(search=None, country=None, city=None, topic=None, scope=None, keywords=None, page=1, per_page=9):
         query = Discussion.query
@@ -233,3 +301,5 @@ class Discussion(db.Model):
 
         return query.order_by(Discussion.created_at.desc())\
                     .paginate(page=page, per_page=per_page, error_out=False)
+
+
