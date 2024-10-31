@@ -1,48 +1,50 @@
-<!-- app/templates/auth/dashboard.html -->
-
 {% extends "layout.html" %}
 
+{% from "components/discussion_card.html" import discussion_card %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto py-8">
-    <h2 class="text-2xl font-bold mb-4">Welcome, {{ current_user.username }}!</h2>
+<div class="max-w-4xl mx-auto py-12 space-y-8">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6">Welcome, {{ current_user.username }}!</h2>
 
-    <div class="grid gap-6">
-        <!-- Profile Section -->
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h3 class="text-xl font-semibold mb-2">Your Profile</h3>
+    <!-- Profile Section -->
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Your Profile</h3>
+        <div class="text-gray-700 text-sm">
             {% if profile %}
-                <p>Profile Type: {{ profile.__class__.__name__.replace('Profile', '') }}</p>
+                <p class="mb-2">Profile Type: <span class="font-medium">{{ profile.__class__.__name__.replace('Profile', '') }}</span></p>
                 <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) if current_user.profile_type == 'individual' else url_for('profiles.view_company_profile', company_name=profile.slug) }}"
-                   class="text-blue-500 hover:underline">View Profile</a>
+                   class="text-blue-600 hover:underline">View Profile</a>
             {% else %}
-                <p>You have not set up a profile yet.</p>
-                <a href="{{ url_for('profiles.select_profile_type') }}" class="btn btn-primary mt-2">Create Profile</a>
+                <p class="mb-2">You have not set up a profile yet.</p>
+                <a href="{{ url_for('profiles.select_profile_type') }}" class="inline-block mt-3 bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-500 transition-colors">
+                    Create Profile
+                </a>
             {% endif %}
         </div>
+    </div>
 
-        <!-- Create New Discussion Section -->
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h3 class="text-xl font-semibold mb-2">Start a New Discussion</h3>
-            <p>Have a new topic to discuss? Start a conversation with your audience.</p>
-            <a href="{{ url_for('discussions.create') }}" class="btn btn-primary mt-2">Create Discussion</a>
-        </div>
+    <!-- Create New Discussion Section -->
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h3 class="text-xl font-semibold text-gray-900 mb-3">Start a New Discussion</h3>
+        <p class="text-gray-700">Have a new topic to discuss? Start a conversation with your audience.</p>
+        <a href="{{ url_for('discussions.create_discussion') }}" class="inline-block mt-3 bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-500 transition-colors">
+            Create Discussion
+        </a>
+    </div>
 
-        <!-- Recent Discussions Section -->
-        <div class="bg-white shadow-md rounded-lg p-6">
-            <h3 class="text-xl font-semibold mb-2">Your Recent Discussions</h3>
-            {% if discussions %}
-                <ul>
-                    {% for discussion in discussions %}
-                        <li class="mb-2">
-                            <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"class="text-blue-500 hover:underline">{{ discussion.title }}</a>
-                            <p class="text-gray-600 text-sm">{{ discussion.description[:100] }}...</p>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>No discussions yet. <a href="{{ url_for('discussions.create') }}" class="text-blue-500 hover:underline">Start one now</a>!</p>
-            {% endif %}
-        </div>
+    <!-- Recent Discussions Section -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Your recent discussions</h2>
+
+        {% if discussions %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for discussion in discussions %}
+                    {{ discussion_card(discussion) }}
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-gray-600">No discussions started yet.Start one now</p>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
