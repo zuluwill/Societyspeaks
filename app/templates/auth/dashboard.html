@@ -34,7 +34,7 @@
                 <ul>
                     {% for discussion in discussions %}
                         <li class="mb-2">
-                            <a href="{{ url_for('main.discussion', discussion_id=discussion.polis_id) }}" class="text-blue-500 hover:underline">{{ discussion.title }}</a>
+                            <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"class="text-blue-500 hover:underline">{{ discussion.title }}</a>
                             <p class="text-gray-600 text-sm">{{ discussion.description[:100] }}...</p>
                         </li>
                     {% endfor %}

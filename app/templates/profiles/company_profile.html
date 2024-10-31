@@ -161,30 +161,17 @@
     {% endif %}
 
     <!-- Company's Discussions -->
-    {% if discussions %}
-        <div class="mt-8">
-            <h2 class="text-2xl font-bold text-gray-900 mb-6">Discussions by {{ profile.company_name }}</h2>
-            <div class="space-y-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Discussions by {{ profile.company_name }}</h2>
+
+        {% if discussions %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for discussion in discussions %}
-                    <div class="bg-white rounded-lg shadow p-6">
-                        <a href="{{ url_for('main.discussion', discussion_id=discussion.polis_id) }}" 
-                           class="text-lg font-medium text-blue-600 hover:text-blue-800">
-                            {{ discussion.title }}
-                        </a>
-                        {% if discussion.description %}
-                            <p class="mt-2 text-gray-600">{{ discussion.description }}</p>
-                        {% endif %}
-                        <div class="mt-4 text-sm text-gray-500">
-                            Created {{ discussion.created_at.strftime('%B %d, %Y') }}
-                        </div>
-                    </div>
+                    {{ discussion_card(discussion) }}
                 {% endfor %}
             </div>
-        </div>
-    {% else %}
-        <div class="mt-8 bg-white rounded-lg shadow p-6 text-center text-gray-500">
-            <p>No discussions started yet</p>
-        </div>
-    {% endif %}
-</div>
-{% endblock %}
+        {% else %}
+            <p class="text-gray-600">No discussions started yet.</p>
+        {% endif %}
+    </div>
+    {% endblock %}

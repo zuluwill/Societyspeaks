@@ -1,0 +1,62 @@
+{% macro discussion_card(discussion, style='default') %}
+<article class="flex flex-col rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden h-full">
+    <div class="p-6 flex-1">
+        <!-- Header: Topic and Status/Date -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex gap-2">
+                {% if discussion.topic %}
+                <span class="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800">
+                    {{ discussion.topic }}
+                </span>
+                {% endif %}
+                {% if discussion.is_featured %}
+                <span class="px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">
+                    Featured
+                </span>
+                {% endif %}
+            </div>
+            <span class="text-sm text-gray-500">
+                {{ discussion.created_at.strftime('%B %d, %Y') }}
+            </span>
+        </div>
+
+        <!-- Title -->
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">
+            <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" 
+               class="hover:text-blue-600">
+                {{ discussion.title }}
+            </a>
+        </h3>
+
+        <!-- Description -->
+        <p class="text-sm text-gray-600 mb-4 line-clamp-3">
+            {{ discussion.description }}
+        </p>
+
+        <!-- Location -->
+        <div class="flex items-center text-sm text-gray-600">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            {% if discussion.geographic_scope == 'global' %}
+                Global
+            {% elif discussion.geographic_scope == 'country' %}
+                {{ discussion.country }}
+            {% else %}
+                {{ discussion.city }}, {{ discussion.country }}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Action Button -->
+    <div class="p-4 bg-gray-50 mt-auto">
+        <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
+           class="block w-full rounded-md bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white shadow hover:bg-blue-500 transition-colors">
+            Join Discussion
+        </a>
+    </div>
+</article>
+{% endmacro %}

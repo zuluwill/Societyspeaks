@@ -22,6 +22,8 @@ def create_discussion():
             topic=form.topic.data,
             country=form.country.data,
             city=form.city.data,
+            keywords=form.keywords.data,
+            geographic_scope=form.geographic_scope.data,
             creator_id=current_user.id,
             individual_profile_id=current_user.individual_profile.id if current_user.profile_type == 'individual' else None,
             company_profile_id=current_user.company_profile.id if current_user.profile_type == 'company' else None
@@ -29,7 +31,10 @@ def create_discussion():
         db.session.add(discussion)
         db.session.commit()
         flash("Discussion created successfully!", "success")
-        return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id))
+
+        # Redirect with both discussion_id and slug
+        return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
+
     return render_template('discussions/create_discussion.html', form=form)
 
 
