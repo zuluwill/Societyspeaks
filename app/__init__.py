@@ -49,6 +49,9 @@ def create_app():
     from app.discussions.routes import discussions_bp
     app.register_blueprint(discussions_bp, url_prefix='/discussions')
 
+    from app.settings.routes import settings_bp  # Ensure you have this path
+    app.register_blueprint(settings_bp, url_prefix='/settings')
+
 
     from app.commands import init_commands
     init_commands(app)

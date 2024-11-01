@@ -1,0 +1,118 @@
+{% extends "layout.html" %}
+{% block content %}
+
+{# Hero Section with Gradient Background #}
+<div class="bg-gradient-to-r from-indigo-500 to-purple-600 pb-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <h1 class="text-3xl font-bold text-white">Account Settings</h1>
+        <p class="mt-2 text-blue-100">Manage your account preferences and security</p>
+    </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
+    {# Settings Card #}
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        {# Password Change Section #}
+        <div class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Change Password</h3>
+            <form action="{{ url_for('settings.change_password') }}" method="POST">
+                {{ form.hidden_tag() }}
+
+                {# Current Password #}
+                <div class="mb-4">
+                    {{ form.current_password.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                    <div class="relative">
+                        {{ form.current_password(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500") }}
+                        {% if form.current_password.errors %}
+                        <div class="text-red-500 text-sm mt-1">
+                            {% for error in form.current_password.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# New Password #}
+                <div class="mb-4">
+                    {{ form.new_password.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                    <div class="relative">
+                        {{ form.new_password(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500") }}
+                        {% if form.new_password.errors %}
+                        <div class="text-red-500 text-sm mt-1">
+                            {% for error in form.new_password.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Confirm Password #}
+                <div class="mb-6">
+                    {{ form.confirm_password.label(class="block text-sm font-medium text-gray-700 mb-1") }}
+                    <div class="relative">
+                        {{ form.confirm_password(class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500") }}
+                        {% if form.confirm_password.errors %}
+                        <div class="text-red-500 text-sm mt-1">
+                            {% for error in form.confirm_password.errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {# Submit Button #}
+                <button type="submit" 
+                        class="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg 
+                               hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    Update Password
+                </button>
+            </form>
+        </div>
+
+        {# Flash Messages #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mt-6">
+            {% for category, message in messages %}
+            <div class="p-4 mb-4 rounded-lg {{ 'bg-green-100 text-green-700' if category == 'success' else 'bg-red-100 text-red-700' }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {# Account Deletion Section #}
+        <div class="mt-12 pt-8 border-t border-gray-200">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Delete Account</h3>
+            <p class="text-gray-600 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+            <button onclick="confirmDelete()" 
+                    class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg 
+                           hover:bg-red-700 transition-colors duration-200 flex items-center">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete Account
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete() {
+    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+        // Add your delete account logic here
+        window.location.href = "{{ url_for('settings.delete_account') }}";
+    }
+}
+</script>
+
+{% endblock %}

@@ -44,6 +44,15 @@ class User(UserMixin, db.Model):
 
     discussions_created = db.relationship('Discussion', backref='creator', lazy='dynamic')
 
+    # Password methods
+    def set_password(self, password):
+        """Hashes and sets the password."""
+        self.password = generate_password_hash(password)
+
+    def check_password(self, password):
+        """Verifies the password against the stored hash."""
+        return check_password_hash(self.password, password)
+
     # Flask-Login required methods
     def is_active(self):
         # Here, we assume all users are active. Adjust if you have inactive users.
@@ -52,6 +61,8 @@ class User(UserMixin, db.Model):
     def get_id(self):
         # Flask-Login needs this to identify users across sessions.
         return str(self.id)
+
+
 
 class ProfileView(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -23,6 +23,10 @@
         <label class="block text-sm font-medium text-gray-700 mt-4">Password</label>
         <input type="password" name="password" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
 
+        <div class="flex items-center justify-between mt-2">
+            <a href="{{ url_for('auth.password_reset_request') }}" class="text-sm text-blue-500 hover:underline">Forgot Password?</a>
+        </div>
+
         <button type="submit" class="w-full mt-6 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition">Login</button>
     </form>
 

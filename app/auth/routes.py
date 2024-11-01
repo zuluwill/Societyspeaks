@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
 from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView
@@ -6,6 +6,8 @@ from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
 from datetime import datetime, timedelta
 from app.utils import get_recent_activity
+from itsdangerous import URLSafeTimedSerializer
+
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -120,8 +122,21 @@ def logout():
     return redirect(url_for('main.index'))
 
 
+def generate_password_reset_token(user_email):
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    return serializer.dumps(user_email, salt='password-reset-salt')
 
-# Password reset request route
+def verify_password_reset_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    try:
+        email = serializer.loads(token, salt='password-reset-salt', max_age=expiration)
+    except:
+        return None
+    return email
+
+
+
+# Password reset request route NEED TO ADD IN EMAIL SENDING
 @auth_bp.route('/password-reset', methods=['GET', 'POST'])
 def password_reset_request():
     if request.method == 'POST':
@@ -132,7 +147,7 @@ def password_reset_request():
 
     return render_template('auth/password_reset_request.html')  # Updated path
 
-# Password reset route
+# Password reset route NEED TO ADD IN EMAIL SENDING
 @auth_bp.route('/password-reset/<token>', methods=['GET', 'POST'])
 def password_reset(token):
     if request.method == 'POST':
@@ -142,3 +157,5 @@ def password_reset(token):
         return redirect(url_for('auth.login'))
 
     return render_template('auth/password_reset.html')  # Updated path
+
+
