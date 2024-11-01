@@ -11,6 +11,7 @@ from itsdangerous import URLSafeTimedSerializer
 
 auth_bp = Blueprint('auth', __name__)
 
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -37,8 +38,12 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
-        flash("Registration successful! You can now log in.", "success")
-        return redirect(url_for('auth.login'))
+        # Log the user in immediately after registration
+        login_user(new_user)
+        flash("Registration successful! You are now logged in.", "success")
+
+        # Redirect to the profile selection page
+        return redirect(url_for('profiles.select_profile_type'))
 
     return render_template('auth/register.html')
 

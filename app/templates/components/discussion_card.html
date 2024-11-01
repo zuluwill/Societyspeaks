@@ -1,60 +1,116 @@
 {% macro discussion_card(discussion, style='default') %}
-<article class="flex flex-col rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden h-full">
+<article class="flex flex-col rounded-lg bg-white shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden h-full border-t-4 
+    {% if discussion.topic == 'Healthcare' %}border-emerald-500
+    {% elif discussion.topic == 'Environment' %}border-green-500
+    {% elif discussion.topic == 'Education' %}border-blue-500
+    {% elif discussion.topic == 'Technology' %}border-purple-500
+    {% elif discussion.topic == 'Economy' %}border-yellow-500
+    {% elif discussion.topic == 'Politics' %}border-red-500
+    {% elif discussion.topic == 'Society' %}border-orange-500
+    {% elif discussion.topic == 'Infrastructure' %}border-gray-500
+    {% else %}border-slate-500{% endif %}">
+
     <div class="p-6 flex-1">
-        <!-- Header: Topic and Status/Date -->
+        <!-- Topic and Status -->
         <div class="flex items-center justify-between mb-4">
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center flex-wrap">
                 {% if discussion.topic %}
-                <span class="px-3 py-1 text-sm font-medium rounded-full bg-gray-100 text-gray-800">
+                <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full
+                    {% if discussion.topic == 'Healthcare' %}bg-emerald-100 text-emerald-800
+                    {% elif discussion.topic == 'Environment' %}bg-green-100 text-green-800
+                    {% elif discussion.topic == 'Education' %}bg-blue-100 text-blue-800
+                    {% elif discussion.topic == 'Technology' %}bg-purple-100 text-purple-800
+                    {% elif discussion.topic == 'Economy' %}bg-yellow-100 text-yellow-800
+                    {% elif discussion.topic == 'Politics' %}bg-red-100 text-red-800
+                    {% elif discussion.topic == 'Society' %}bg-orange-100 text-orange-800
+                    {% elif discussion.topic == 'Infrastructure' %}bg-gray-100 text-gray-800
+                    {% else %}bg-slate-100 text-slate-800{% endif %}">
+                    <!-- Topic Icons -->
+                    <span class="mr-1">
+                        {% if discussion.topic == 'Healthcare' %}🏥
+                        {% elif discussion.topic == 'Environment' %}🌱
+                        {% elif discussion.topic == 'Education' %}📚
+                        {% elif discussion.topic == 'Technology' %}💻
+                        {% elif discussion.topic == 'Economy' %}📈
+                        {% elif discussion.topic == 'Politics' %}🏛️
+                        {% elif discussion.topic == 'Society' %}👥
+                        {% elif discussion.topic == 'Infrastructure' %}🏗️
+                        {% else %}💭{% endif %}
+                    </span>
                     {{ discussion.topic }}
                 </span>
                 {% endif %}
+
                 {% if discussion.is_featured %}
-                <span class="px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800">
+                <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800 whitespace-nowrap">
+                    <svg class="w-4 h-4 mr-1 text-yellow-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                    </svg>
                     Featured
                 </span>
                 {% endif %}
             </div>
-            <span class="text-sm text-gray-500">
+
+            <!-- Date with icon -->
+            <span class="text-sm text-gray-500 flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
                 {{ discussion.created_at.strftime('%B %d, %Y') }}
             </span>
         </div>
 
-        <!-- Title -->
-        <h3 class="text-lg font-semibold text-gray-900 mb-3">
+        <!-- Title with hover effect -->
+        <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
             <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" 
                class="hover:text-blue-600">
                 {{ discussion.title }}
             </a>
         </h3>
 
-        <!-- Description -->
-        <p class="text-sm text-gray-600 mb-4 line-clamp-3">
+        <!-- Description with better typography -->
+        <p class="text-base text-gray-600 mb-4 line-clamp-3 leading-relaxed">
             {{ discussion.description }}
         </p>
 
         <!-- Location -->
         <div class="flex items-center text-sm text-gray-600">
+            {% if discussion.geographic_scope == 'global' %}
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+            </svg>
+            Global
+            {% else %}
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                       d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            {% if discussion.geographic_scope == 'global' %}
-                Global
-            {% elif discussion.geographic_scope == 'country' %}
+            {% if discussion.geographic_scope == 'country' %}
                 {{ discussion.country }}
             {% else %}
                 {{ discussion.city }}, {{ discussion.country }}
             {% endif %}
+            {% endif %}
         </div>
     </div>
 
-    <!-- Action Button -->
-    <div class="p-4 bg-gray-50 mt-auto">
+    <!-- Action Button with enhanced styling -->
+    <div class="p-4 bg-gray-50 mt-auto border-t border-gray-100">
         <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
-           class="block w-full rounded-md bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white shadow hover:bg-blue-500 transition-colors">
+           class="block w-full rounded-md px-4 py-2 text-center text-sm font-semibold text-white shadow transition-all duration-300
+           {% if discussion.topic == 'Healthcare' %}bg-emerald-600 hover:bg-emerald-700
+           {% elif discussion.topic == 'Environment' %}bg-green-600 hover:bg-green-700
+           {% elif discussion.topic == 'Education' %}bg-blue-600 hover:bg-blue-700
+           {% elif discussion.topic == 'Technology' %}bg-purple-600 hover:bg-purple-700
+           {% elif discussion.topic == 'Economy' %}bg-yellow-600 hover:bg-yellow-700
+           {% elif discussion.topic == 'Politics' %}bg-red-600 hover:bg-red-700
+           {% elif discussion.topic == 'Society' %}bg-orange-600 hover:bg-orange-700
+           {% elif discussion.topic == 'Infrastructure' %}bg-gray-600 hover:bg-gray-700
+           {% else %}bg-slate-600 hover:bg-slate-700{% endif %}">
             Join Discussion
         </a>
     </div>
