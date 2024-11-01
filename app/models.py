@@ -53,6 +53,22 @@ class User(UserMixin, db.Model):
         # Flask-Login needs this to identify users across sessions.
         return str(self.id)
 
+class ProfileView(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    # Allow the view to be associated with either type of profile
+    individual_profile_id = db.Column(db.Integer, db.ForeignKey('individual_profile.id'), nullable=True)
+    company_profile_id = db.Column(db.Integer, db.ForeignKey('company_profile.id'), nullable=True)
+    viewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # nullable for anonymous views
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    ip_address = db.Column(db.String(45))  # Store IP address for analytics
+
+
+class DiscussionView(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
+    viewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # nullable for anonymous views
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    ip_address = db.Column(db.String(45))  # Store IP address for analytics
 
 
 class IndividualProfile(db.Model):
@@ -75,9 +91,12 @@ class IndividualProfile(db.Model):
     slug = db.Column(db.String(150), unique=True, nullable=False)
 
     discussions = db.relationship('Discussion', backref='individual_profile', lazy='dynamic', foreign_keys='Discussion.individual_profile_id')
+    views = db.relationship('ProfileView', 
+          foreign_keys=[ProfileView.individual_profile_id],
+          backref='individual_profile', 
+          lazy='dynamic')
 
-    # Generate URL slug
-    slug = db.Column(db.String(150), unique=True, nullable=False)
+    
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -108,9 +127,12 @@ class CompanyProfile(db.Model):
     slug = db.Column(db.String(150), unique=True, nullable=False)
 
     discussions = db.relationship('Discussion', backref='company_profile', lazy='dynamic', foreign_keys='Discussion.company_profile_id')
+    views = db.relationship('ProfileView', 
+          foreign_keys=[ProfileView.company_profile_id],
+          backref='company_profile', 
+          lazy='dynamic')
 
-    # Generate URL slug
-    slug = db.Column(db.String(150), unique=True, nullable=False)
+    
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -146,6 +168,7 @@ class Discussion(db.Model):
     # Foreign keys to link discussions to profiles
     individual_profile_id = db.Column(db.Integer, db.ForeignKey('individual_profile.id'), nullable=True)
     company_profile_id = db.Column(db.Integer, db.ForeignKey('company_profile.id'), nullable=True)
+    views = db.relationship('DiscussionView', backref='discussion', lazy='dynamic')
 
     # Constants for geographic scope
     SCOPE_GLOBAL = 'global'

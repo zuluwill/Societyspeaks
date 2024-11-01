@@ -1,41 +1,132 @@
+{# templates/auth/dashboard.html #}
 {% extends "layout.html" %}
-
 {% from "components/discussion_card.html" import discussion_card %}
-
 {% block content %}
-<div class="max-w-4xl mx-auto py-12 space-y-8">
-    <h2 class="text-3xl font-bold text-gray-800 mb-6">Welcome, {{ current_user.username }}!</h2>
 
-    <!-- Profile Section -->
-    <div class="bg-white shadow-md rounded-lg p-6">
-        <h3 class="text-xl font-semibold text-gray-900 mb-3">Your Profile</h3>
-        <div class="text-gray-700 text-sm">
-            {% if profile %}
-                <p class="mb-2">Profile Type: <span class="font-medium">{{ profile.__class__.__name__.replace('Profile', '') }}</span></p>
-                <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) if current_user.profile_type == 'individual' else url_for('profiles.view_company_profile', company_name=profile.slug) }}"
-                   class="text-blue-600 hover:underline">View Profile</a>
-            {% else %}
-                <p class="mb-2">You have not set up a profile yet.</p>
-                <a href="{{ url_for('profiles.select_profile_type') }}" class="inline-block mt-3 bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-500 transition-colors">
-                    Create Profile
-                </a>
-            {% endif %}
+{# Hero Section with Gradient Background #}
+<div class="bg-gradient-to-r from-purple-900 to-indigo-600 pb-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <h1 class="text-3xl font-bold text-white">Welcome, {{ current_user.username }}!</h1>
+        <p class="mt-2 text-blue-100">Manage your discussions and track engagement</p>
+    </div>
+</div>
+
+{# Main Content #}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
+    {# Stats Grid #}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        {# Total Discussions #}
+        <div class="bg-white rounded-lg shadow p-6 transform hover:scale-105 transition-transform duration-200">
+            <div class="flex items-center">
+                <div class="p-3 bg-blue-100 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-500 text-sm">Total Discussions</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ total_discussions }}</p>
+                </div>
+            </div>
+        </div>
+
+        {# Discussion Views #}
+        <div class="bg-white rounded-lg shadow p-6 transform hover:scale-105 transition-transform duration-200">
+            <div class="flex items-center">
+                <div class="p-3 bg-green-100 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-500 text-sm">Discussion Views</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ discussion_views }}</p>
+                </div>
+            </div>
+        </div>
+
+        {# Profile Views #}
+        <div class="bg-white rounded-lg shadow p-6 transform hover:scale-105 transition-transform duration-200">
+            <div class="flex items-center">
+                <div class="p-3 bg-purple-100 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-500 text-sm">Profile Views</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ profile_views }}</p>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Create New Discussion Section -->
-    <div class="bg-white shadow-md rounded-lg p-6">
-        <h3 class="text-xl font-semibold text-gray-900 mb-3">Start a New Discussion</h3>
-        <p class="text-gray-700">Have a new topic to discuss? Start a conversation with your audience.</p>
-        <a href="{{ url_for('discussions.create_discussion') }}" class="inline-block mt-3 bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-blue-500 transition-colors">
-            Create Discussion
-        </a>
+    {# Profile and Actions Section #}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {# Profile Card #}
+        <div class="bg-white rounded-lg shadow-lg p-6">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Your Profile</h3>
+            {% if profile %}
+                <div class="flex items-center mb-4">
+                    {% if current_user.profile_type == 'individual' %}
+                        <img src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('static', filename='images/default-avatar.png') }}"
+                             alt="Profile photo"
+                             class="w-16 h-16 rounded-full object-cover"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}';">
+                        <div class="ml-4">
+                            <p class="font-medium text-gray-900">{{ current_user.individual_profile.full_name }}</p>
+                            <p class="text-sm text-gray-500">Individual Profile</p>
+                        </div>
+                    {% elif current_user.profile_type == 'company' %}
+                        <img src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('static', filename='images/default-logo.png') }}"
+                             alt="Company logo"
+                             class="w-16 h-16 rounded-lg object-cover"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-logo.png') }}';">
+                        <div class="ml-4">
+                            <p class="font-medium text-gray-900">{{ current_user.company_profile.company_name }}</p>
+                            <p class="text-sm text-gray-500">Company Profile</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) if current_user.profile_type == 'individual' else url_for('profiles.view_company_profile', company_name=profile.slug) }}"
+                   class="text-blue-600 hover:underline text-sm">View Profile</a>
+            {% else %}
+                <div class="text-center py-6">
+                    <p class="text-gray-600 mb-4">Complete your profile to get started</p>
+                    <a href="{{ url_for('profiles.select_profile_type') }}" 
+                       class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                        Create Profile
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        {# Quick Actions #}
+        <div class="bg-white rounded-lg shadow-lg p-6 md:col-span-2">
+            <h3 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <a href="{{ url_for('discussions.create_discussion') }}" 
+                   class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span class="ml-3 font-medium text-blue-600">New Discussion</span>
+                </a>
+                <a href="#" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                    <span class="ml-3 font-medium text-green-600">View Analytics</span>
+                </a>
+            </div>
+        </div>
     </div>
 
-    <!-- Recent Discussions Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">Your recent discussions</h2>
-
+    {# Recent Discussions Section #}
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-6">Your Discussions</h2>
         {% if discussions %}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for discussion in discussions %}
@@ -43,8 +134,31 @@
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-gray-600">No discussions started yet.Start one now</p>
+            <div class="text-center py-12">
+                <p class="text-gray-600 mb-4">No discussions started yet</p>
+                <a href="#" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    Start Your First Discussion
+                </a>
+            </div>
         {% endif %}
     </div>
 </div>
+
 {% endblock %}
+
+
+
+<!-- Recent Discussions Section -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">Your recent discussions</h2>
+
+    {% if discussions %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for discussion in discussions %}
+                {{ discussion_card(discussion) }}
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-gray-600">No discussions started yet.Start one now</p>
+    {% endif %}
+</div>

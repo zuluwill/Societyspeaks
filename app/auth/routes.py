@@ -1,8 +1,11 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
-from app.models import User, Discussion
+from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView
 from flask_login import login_user, login_required, logout_user, current_user
+from sqlalchemy import func
+from datetime import datetime, timedelta
+from app.utils import get_recent_activity
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -38,6 +41,9 @@ def register():
     return render_template('auth/register.html')
 
 
+
+
+
 #user login: New Users without a profile are sent to select_profile_type to create their profile. Returning Users with a profile are redirected to the dashboard.
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -69,8 +75,42 @@ def login():
 @login_required
 def dashboard():
     profile = current_user.individual_profile or current_user.company_profile
-    discussions = Discussion.query.filter_by(creator_id=current_user.id).order_by(Discussion.created_at.desc()).limit(5).all()
-    return render_template('auth/dashboard.html', profile=profile, discussions=discussions)
+
+    # Calculate total discussions
+    total_discussions = Discussion.query.filter_by(creator_id=current_user.id).count()
+
+    # Calculate profile views
+    profile_views = 0
+    if profile:
+        if isinstance(profile, IndividualProfile):
+            profile_views = ProfileView.query.filter_by(individual_profile_id=profile.id).count()
+        elif isinstance(profile, CompanyProfile):
+            profile_views = ProfileView.query.filter_by(company_profile_id=profile.id).count()
+
+    # Get recent discussions
+    discussions = Discussion.query.filter_by(creator_id=current_user.id)\
+        .order_by(Discussion.created_at.desc())\
+        .limit(5)\
+        .all()
+
+    # Get discussion views
+    discussion_views = 0
+    if discussions:
+        discussion_ids = [d.id for d in discussions]
+        discussion_views = DiscussionView.query.filter(
+            DiscussionView.discussion_id.in_(discussion_ids)
+        ).count()
+
+    return render_template(
+        'auth/dashboard.html',
+        profile=profile,
+        discussions=discussions,
+        total_discussions=total_discussions,
+        profile_views=profile_views,
+        discussion_views=discussion_views
+    )
+
+
 
 @auth_bp.route('/logout')
 @login_required

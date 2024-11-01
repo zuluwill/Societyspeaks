@@ -3,6 +3,8 @@ from flask_login import login_required, current_user
 from app import db
 from app.discussions.forms import CreateDiscussionForm
 from app.models import Discussion
+from app.utils import get_recent_activity
+from app.middleware import track_discussion_view 
 import json
 import os
 
@@ -39,12 +41,14 @@ def create_discussion():
 
 
 @discussions_bp.route('/<int:discussion_id>/<slug>', methods=['GET'])
+@track_discussion_view
 def view_discussion(discussion_id, slug):
     discussion = Discussion.query.get_or_404(discussion_id)
     # Redirect if the slug in the URL doesn't match the discussion's slug
     if discussion.slug != slug:
-        return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
-
+        return redirect(url_for('discussions.view_discussion', 
+                              discussion_id=discussion.id, 
+                              slug=discussion.slug))
     # Render the page with embed_code directly
     return render_template('discussions/view_discussion.html', discussion=discussion)
 

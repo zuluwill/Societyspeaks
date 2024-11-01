@@ -7,6 +7,8 @@ from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from replit.object_storage import Client
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
+from app.utils import get_recent_activity
+from app.middleware import track_profile_view
 
 
 import os
@@ -334,13 +336,14 @@ def edit_company_profile(company_name):
 
 
 @profiles_bp.route('/profile/individual/<username>')
+@track_profile_view  # Add this decorator
 def view_individual_profile(username):
     profile = IndividualProfile.query.filter_by(slug=username).first_or_404()
     discussions = Discussion.query.filter_by(creator_id=profile.user_id).all()
     return render_template('profiles/individual_profile.html', profile=profile, discussions=discussions)
 
-
 @profiles_bp.route('/profile/company/<company_name>')
+@track_profile_view  # Add this decorator
 def view_company_profile(company_name):
     profile = CompanyProfile.query.filter_by(slug=company_name).first_or_404()
     discussions = Discussion.query.filter_by(creator_id=profile.user_id).all()
