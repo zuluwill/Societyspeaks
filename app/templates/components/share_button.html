@@ -1,0 +1,129 @@
+{% macro share_button(title, url, description="Join this discussion on SocietySpeaks", button_style="primary") %}
+<div class="relative">
+    <button type="button" 
+            onclick="toggleShareMenu(this)"
+            aria-haspopup="true" 
+            aria-expanded="false" 
+            aria-label="Share"
+            class="inline-flex items-center px-4 py-2 {% if button_style == 'primary' %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50{% endif %} rounded-md transition-colors">
+        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+        </svg>
+        Share
+    </button>
+    <!-- Share Dropdown Menu -->
+    <div class="hidden share-menu absolute top-full mt-2 right-0 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+        <div class="py-1">
+            {% set share_title = title|urlencode %}
+            {% set share_url = url|urlencode %}
+            {% set share_text = description|urlencode %}
+
+            <!-- LinkedIn -->
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url }}&title={{ share_title }}" 
+               target="_blank" 
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/Linkedin_icon.svg') }}" alt="LinkedIn" class="h-5 w-5 mr-3">
+                LinkedIn
+            </a>
+
+            <!-- Meta (Facebook) -->
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}&quote={{ share_text }}"
+               target="_blank"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/facebook.svg') }}" alt="Facebook" class="h-5 w-5 mr-3">
+                Meta (Facebook)
+            </a>
+
+            <!-- X (Twitter) -->
+            <a href="https://twitter.com/intent/tweet?text={{ share_text }}&url={{ share_url }}"
+               target="_blank"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/X_icon.svg') }}" alt="X (Twitter)" class="h-5 w-5 mr-3">
+                X (Twitter)
+            </a>
+
+            <!-- BlueSky -->
+            <a href="https://bsky.app/intent/compose?text={{ share_text }} {{ share_url }}"
+               target="_blank"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/bluesky.svg') }}" alt="Bluesky" class="h-5 w-5 mr-3">
+                BlueSky
+            </a>
+
+            <!-- WhatsApp -->
+            <a href="https://wa.me/?text={{ share_text }}%20{{ share_url }}"
+               target="_blank"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/whatsapp.svg') }}" alt="WhatsApp" class="h-5 w-5 mr-3">
+                WhatsApp
+            </a>
+
+            <!-- Telegram -->
+            <a href="https://t.me/share/url?url={{ share_url }}&text={{ share_text }}"
+               target="_blank"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/telegram.svg') }}" alt="Telegram" class="h-5 w-5 mr-3">
+                Telegram
+            </a>
+
+            <!-- Email -->
+            <a href="mailto:?subject={{ share_title }}%20-%20SocietySpeaks&body={{ share_text }}%0A%0A{{ share_url }}"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <svg class="h-5 w-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Email
+            </a>
+
+            <!-- Copy Link -->
+            <button onclick="copyLink('{{ url }}')"
+                    class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <svg class="h-5 w-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                </svg>
+                <span class="copy-text">Copy Link</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleShareMenu(button) {
+    const menu = button.nextElementSibling;
+    const isHidden = menu.classList.contains('hidden');
+
+    // Hide all other share menus first
+    document.querySelectorAll('.share-menu').forEach(m => m.classList.add('hidden'));
+
+    // Toggle this menu
+    if (isHidden) {
+        menu.classList.remove('hidden');
+    } else {
+        menu.classList.add('hidden');
+    }
+}
+
+function copyLink(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        // Find the copy text span within the button that was clicked
+        const copyText = event.currentTarget.querySelector('.copy-text');
+        const originalText = copyText.textContent;
+
+        // Update text to show copied
+        copyText.textContent = 'Copied!';
+
+        // Reset text after 2 seconds
+        setTimeout(() => {
+            copyText.textContent = originalText;
+        }, 2000);
+    });
+}
+
+// Close share menus when clicking outside
+document.addEventListener('click', (event) => {
+    if (!event.target.closest('.share-menu') && !event.target.closest('button')) {
+        document.querySelectorAll('.share-menu').forEach(menu => menu.classList.add('hidden'));
+    }
+});
+</script>
+{% endmacro %}
