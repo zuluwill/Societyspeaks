@@ -66,3 +66,12 @@ def view_profile(slug):
         return render_template('company_profile.html', profile=company)
     else:
         abort(404)
+
+
+@main_bp.route('/privacy-policy')
+def privacy_policy():
+    return render_template('privacy-policy.html')
+
+@main_bp.route('/terms-and-conditions')
+def terms_and_conditions():
+    return render_template('terms-and-conditions.html')
