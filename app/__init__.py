@@ -6,6 +6,7 @@ from flask_talisman import Talisman
 from config import Config, config_dict
 from datetime import timedelta
 import os
+import json
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from flask_session import Session
@@ -15,11 +16,29 @@ from flask_caching import Cache
 csp = {
     'default-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:", "data:", "blob:"],
     'img-src': ["'self'", "data:", "https:", "blob:"],
-    'connect-src': ["'self'", "https:", "wss:"],
+    'connect-src': ["'self'", "https:", "wss:", "https://cdn.jsdelivr.net"],
     'font-src': ["'self'", "data:", "https:"],
     'frame-src': ["'self'", "https:"],
+    'style-src': [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com"
+    ],
+    'script-src': [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com",
+        "https://www.googletagmanager.com",
+        "https://cdn-cookieyes.com",
+        "https://pol.is"
+    ],
     'object-src': ["'none'"]
 }
+
+
+
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -31,7 +50,23 @@ def create_app():
     app = Flask(__name__, 
         static_url_path='',
         static_folder='static')
+
     app.config.from_object(Config)
+
+    # Load cities data once during app startup and cache it
+    json_path = os.path.join(app.root_path, 'static', 'data', 'cities_by_country.json')
+    try:
+        with open(json_path, 'r') as f:
+            app.config['CITIES_BY_COUNTRY'] = json.load(f)
+    except FileNotFoundError:
+        app.logger.error(f"Could not find cities_by_country.json at {json_path}")
+        app.config['CITIES_BY_COUNTRY'] = {}  # Fallback to empty dict if file not found
+    except json.JSONDecodeError as e:
+        app.logger.error(f"Error decoding JSON file: {str(e)}")
+        app.config['CITIES_BY_COUNTRY'] = {}
+
+
+    
 
     # Add these lines near the top of create_app
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0

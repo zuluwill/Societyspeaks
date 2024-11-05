@@ -54,46 +54,160 @@ def view_discussion(discussion_id, slug):
 
 
 
-def fetch_discussions(search, country, city, topic, keywords, page, per_page=9):
-    return Discussion.search_discussions(
-        search=search, country=country, city=city, topic=topic, keywords=keywords, page=page, per_page=per_page
-    )
+def fetch_discussions(search, country, city, topic, keywords, page, per_page=9, sort='recent'):
+    query = Discussion.query
+
+    # Apply filters if provided
+    if search:
+        query = query.filter(Discussion.title.ilike(f"%{search}%"))
+    if country:
+        query = query.filter_by(country=country)
+    if city:
+        query = query.filter_by(city=city)
+    if topic:
+        query = query.filter_by(topic=topic)
+
+    # Apply sorting
+    if sort == 'recent':
+        query = query.order_by(Discussion.created_at.desc())
+    elif sort == 'popular':
+        query = query.order_by(Discussion.activity_count.desc())  # Example for popular sorting
+
+    return query.paginate(page=page, per_page=per_page)
+
+
 
 
 @discussions_bp.route('/search', methods=['GET'])
 def search_discussions():
-    search_term = request.args.get('q', '')
-    topic = request.args.get('topic')
-    country = request.args.get('country')
-    city = request.args.get('city')
-    keywords = request.args.get('keywords', '')
-    page = request.args.get('page', 1, type=int)
+    try:
+        # Load city and country data
+        json_path = os.path.join(current_app.root_path, 'static', 'data', 'cities_by_country.json')
+        with open(json_path, 'r') as f:
+            cities_by_country = json.load(f)
+        countries = list(cities_by_country.keys())
 
-    discussions = fetch_discussions(search_term, country, city, topic, keywords, page)
+        # Get search parameters
+        search_term = request.args.get('q', '')
+        topic = request.args.get('topic')
+        country = request.args.get('country')
+        city = request.args.get('city')
+        keywords = request.args.get('keywords', '')
+        page = request.args.get('page', 1, type=int)
+        sort = request.args.get('sort', 'recent')  # Default to 'recent' if not specified
 
-    return render_template(
-        'discussions/search_discussions.html', 
-        discussions=discussions, 
-        search_term=search_term
-    )
+        # Use modified fetch_discussions to include sorting
+        discussions = fetch_discussions(
+            search=search_term,
+            country=country,
+            city=city,
+            topic=topic,
+            keywords=keywords,
+            page=page,
+            sort=sort  # Pass sort parameter here
+        )
+
+        return render_template(
+            'discussions/search_discussions.html',
+            discussions=discussions,
+            search_term=search_term,
+            countries=countries,
+            cities_by_country=cities_by_country
+        )
+
+    except FileNotFoundError:
+        current_app.logger.error(f"Could not find cities_by_country.json at {json_path}")
+        return render_template(
+            'discussions/search_discussions.html',
+            discussions=None,
+            search_term='',
+            countries=[],
+            cities_by_country={}
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error in search_discussions: {str(e)}")
+        return render_template(
+            'discussions/search_discussions.html',
+            discussions=None,
+            search_term='',
+            countries=[],
+            cities_by_country={}
+        )
 
 
 
 @discussions_bp.route('/api/search', methods=['GET'])
 def api_search_discussions():
-    search = request.args.get('search', '')
-    country = request.args.get('country', '')
-    city = request.args.get('city', '')
-    topic = request.args.get('topic', '')
-    keywords = request.args.get('keywords', '')
-    page = request.args.get('page', 1, type=int)
-    pagination = fetch_discussions(search, country, city, topic, keywords, page)
-    return jsonify({
-        'discussions': [d.to_dict() for d in pagination.items],
-        'total': pagination.total,
-        'pages': pagination.pages,
-        'current_page': pagination.page
-    })
+    try:
+        # Get search parameters with defaults
+        search = request.args.get('search', '')
+        country = request.args.get('country', '')
+        city = request.args.get('city', '')
+        topic = request.args.get('topic', '')
+        keywords = request.args.get('keywords', '')
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 12, type=int)  # Allow customizable page size
+
+        # Validate page number
+        if page < 1:
+            return jsonify({
+                'error': 'Invalid page number',
+                'message': 'Page number must be greater than 0'
+            }), 400
+
+        # Get paginated discussions
+        pagination = Discussion.search_discussions(
+            search=search,
+            country=country,
+            city=city,
+            topic=topic,
+            keywords=keywords,
+            page=page,
+            per_page=per_page
+        )
+
+        # Prepare response
+        response = {
+            'status': 'success',
+            'data': {
+                'discussions': [d.to_dict() for d in pagination.items],
+                'pagination': {
+                    'total_items': pagination.total,
+                    'total_pages': pagination.pages,
+                    'current_page': pagination.page,
+                    'per_page': per_page,
+                    'has_next': pagination.has_next,
+                    'has_prev': pagination.has_prev
+                }
+            },
+            'meta': {
+                'filters': {
+                    'search': search,
+                    'country': country,
+                    'city': city,
+                    'topic': topic,
+                    'keywords': keywords
+                }
+            }
+        }
+
+        return jsonify(response), 200
+
+    except ValueError as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'error': 'Invalid parameter'
+        }), 400
+
+    except Exception as e:
+        # Log the error here
+        current_app.logger.error(f"Error in API search: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': 'An internal server error occurred',
+            'error': 'Internal server error'
+        }), 500
 
 country_mapping = {
     "UK": "United Kingdom",
@@ -294,11 +408,10 @@ country_mapping = {
 @discussions_bp.route('/api/cities/<country_code>')
 def get_cities_by_country(country_code):
     try:
-        # Look up the full country name based on the provided code
-        country_name = country_mapping.get(country_code, country_code)  # Default to the code itself if not found
-        with open(os.path.join(current_app.root_path, 'static/data/cities_by_country.json'), 'r') as f:
-            cities_by_country = json.load(f)
+        country_name = country_mapping.get(country_code, country_code)
+        cities_by_country = current_app.config.get('CITIES_BY_COUNTRY', {})
         cities = cities_by_country.get(country_name, [])
         return jsonify(cities)
     except Exception as e:
+        current_app.logger.error(f"Error in get_cities_by_country: {str(e)}")
         return jsonify({"error": str(e)}), 500

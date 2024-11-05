@@ -73,8 +73,8 @@
                 <div>
                     <label for="sort" class="block text-sm font-medium text-gray-700">Sort By</label>
                     <select name="sort" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                        <option value="recent">Most Recent</option>
-                        <option value="popular">Most Active</option>
+                        <option value="recent" {% if request.args.get('sort') == 'recent' %}selected{% endif %}>Most Recent</option>
+                        <option value="popular" {% if request.args.get('sort') == 'popular' %}selected{% endif %}>Most Active</option>
                     </select>
                 </div>
             </div>
@@ -166,5 +166,47 @@
             </div>
         </div>
     {% endif %}
+
+    <script>
+        const cityCache = {};
+
+        function fetchCities() {
+            const countrySelect = document.getElementById('country-select');
+            const selectedCountry = countrySelect.value;
+            const citySelect = document.getElementById('city-select');
+
+            // Check if cities for the selected country are already cached
+            if (cityCache[selectedCountry]) {
+                populateCityDropdown(cityCache[selectedCountry]);
+                return;
+            }
+
+            // Fetch cities from the existing endpoint and cache them
+            fetch(`/api/cities/${selectedCountry}`)
+                .then(response => response.json())
+                .then(cities => {
+                    cityCache[selectedCountry] = cities; // Cache the fetched cities
+                    populateCityDropdown(cities);
+                })
+                .catch(error => {
+                    console.error('Error fetching cities:', error);
+                    populateCityDropdown([]); // Clear the dropdown if there's an error
+                });
+        }
+
+        function populateCityDropdown(cities) {
+            const citySelect = document.getElementById('city-select');
+            citySelect.innerHTML = ''; // Clear previous options
+            citySelect.disabled = cities.length === 0;
+
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+        }
+    </script>
+
 </div>
 {% endblock %}
