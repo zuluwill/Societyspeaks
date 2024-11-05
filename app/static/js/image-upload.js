@@ -1,4 +1,7 @@
-let croppers = {};
+// Check if croppers already exists to prevent double declaration
+if (typeof window.croppers === 'undefined') {
+    window.croppers = {};
+}
 
 async function handleImageUpload(input, previewId) {
     const file = input.files[0];
@@ -136,13 +139,13 @@ function openCropModal(previewId) {
         };
 
         // Destroy existing cropper if any
-        if (croppers[previewId]) {
-            croppers[previewId].destroy();
+        if (window.croppers[previewId]) {
+            window.croppers[previewId].destroy();
         }
 
         // Initialize new cropper with slight delay to ensure modal is visible
         setTimeout(() => {
-            croppers[previewId] = new Cropper(cropPreview, options);
+            window.croppers[previewId] = new Cropper(cropPreview, options);
         }, 100);
     }
 }
@@ -151,16 +154,16 @@ function closeCropModal(previewId) {
     const modal = document.getElementById(`crop-modal-${previewId}`);
     modal.classList.add('hidden');
 
-    if (croppers[previewId]) {
-        croppers[previewId].destroy();
-        delete croppers[previewId];
+    if (window.croppers[previewId]) {
+        window.croppers[previewId].destroy();
+        delete window.croppers[previewId];
     }
 }
 
 async function applyCrop(previewId) {
-    if (!croppers[previewId]) return;
+    if (!window.croppers[previewId]) return;
 
-    const cropper = croppers[previewId];
+    const cropper = window.croppers[previewId];
     const canvas = cropper.getCroppedCanvas({
         width: previewId.includes('banner') ? 1200 : 400,
         height: previewId.includes('banner') ? 400 : 400,

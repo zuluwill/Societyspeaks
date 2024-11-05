@@ -1,5 +1,28 @@
 {% extends "layout.html" %}
  {% from "components/discussion_card.html" import discussion_card %}
+
+{% block head %}
+    <title>Explore Discussions on SocietySpeaks{% if search_term %} - Search Results for "{{ search_term }}"{% endif %}</title>
+    <meta name="description" content="Discover and join meaningful discussions on topics that matter. {% if search_term %}Results for '{{ search_term }}'{% endif %}.">
+    <meta name="keywords" content="society discussions, explore discussions{% if search_term %}, {{ search_term }}{% endif %}">
+    <link rel="canonical" href="{{ url_for('discussions.search_discussions', _external=True) }}">
+
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SearchResultsPage",
+      "name": "Explore Discussions",
+      "description": "Search discussions on SocietySpeaks. {% if search_term %}Results for '{{ search_term }}'.{% endif %}",
+      "query": "{{ search_term or '' }}",
+      "about": "Discussions, Society, Community Engagement",
+      "searchTerm": "{{ search_term or '' }}",
+      "totalResults": "{{ discussions.total if discussions else 0 }}",
+      "url": "{{ url_for('discussions.search_discussions', _external=True) }}"
+    }
+    </script>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     <!-- Search Header -->

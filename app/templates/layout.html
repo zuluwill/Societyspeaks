@@ -4,11 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Society Speaks.io - Join the Conversation{% endblock %}</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{% block meta_description %}Empowering communities through meaningful dialogue. Join the conversation on Society Speaks.io.{% endblock %}">
+    <meta name="keywords" content="public discourse, discussions, community engagement, policy, debate, Society Speaks">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph Meta Tags for Social Media Sharing -->
+    <meta property="og:title" content="{% block og_title %}Society Speaks.io - Join the Conversation{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Engage in impactful conversations on Society Speaks. Share your views and explore perspectives on critical topics.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='images/default-og-image.jpg', _external=True) }}{% endblock %}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:type" content="website">
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}Society Speaks.io - Join the Conversation{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Engage in impactful conversations on Society Speaks. Share your views and explore perspectives on critical topics.{% endblock %}">
+    <meta name="twitter:image" content="{% block twitter_image %}{{ url_for('static', filename='images/default-twitter-image.jpg', _external=True) }}{% endblock %}">
+
+
+     <!-- Stylesheets and Scripts -->
     <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.1.1/compressor.min.js"></script>
-    <script src="{{ url_for('static', filename='js/image-upload.js') }}"></script>
+    
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -16,6 +37,26 @@
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-TSWBW6TW');</script>
     <!-- End Google Tag Manager -->
+
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Society Speaks.io",
+      "url": "{{ url_for('main.index', _external=True) }}",
+      "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
+      "sameAs": [
+        "https://www.facebook.com/SocietySpeaks",
+        "https://twitter.com/SocietySpeaks",
+        "https://www.linkedin.com/company/societyspeaks"
+      ],
+      "description": "Empowering communities through meaningful dialogue. Join the conversation and make your voice heard on topics that matter."
+    }
+    </script>
+
+    
 </head>
 <body class="h-full flex flex-col">
     <!-- Google Tag Manager (noscript) -->

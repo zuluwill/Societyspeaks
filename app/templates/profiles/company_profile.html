@@ -1,5 +1,39 @@
 {% extends "layout.html" %}
 {% from "components/discussion_card.html" import discussion_card %}
+
+{% block head %}
+    <title>{{ profile.company_name }} - Profile on SocietySpeaks</title>
+    <meta name="description" content="Explore the profile of {{ profile.company_name }}, a leader in public discourse on SocietySpeaks. Join their discussions on pressing societal issues and policy solutions.">
+    <meta name="keywords" content="company profile, {{ profile.company_name }}, SocietySpeaks{% if profile.city %}, {{ profile.city }}{% endif %}{% if profile.country %}, {{ profile.country }}{% endif %}">
+    <link rel="canonical" href="{{ url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) }}">
+
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "{{ profile.company_name }}",
+      "description": "{{ profile.description | default('An organization on SocietySpeaks contributing to public discourse and meaningful change.') }}",
+      "url": "{{ url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) }}",
+      "logo": "{{ url_for('profiles.get_image', filename=profile.logo, _external=True) }}",
+      {% if profile.city and profile.country %}
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "{{ profile.city }}",
+        "addressCountry": "{{ profile.country }}"
+      },
+      {% endif %}
+      "sameAs": [
+        {% if profile.linkedin_url %}"{{ profile.linkedin_url }}",{% endif %}
+        {% if profile.twitter_url %}"{{ profile.twitter_url }}",{% endif %}
+        {% if profile.facebook_url %}"{{ profile.facebook_url }}",{% endif %}
+        {% if profile.instagram_url %}"{{ profile.instagram_url }}",{% endif %}
+        {% if profile.tiktok_url %}"{{ profile.tiktok_url }}"{% endif %}
+      ]
+    }
+    </script>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-7xl mx-auto py-8">
     <!-- Banner Image -->

@@ -1,4 +1,26 @@
 {% extends "layout.html" %}
+{% block head %}
+    <title>{{ discussion.title }} - SocietySpeaks Discussion</title>
+    <meta name="description" content="{{ discussion.description or 'Join the discussion on SocietySpeaks.' }}">
+    <meta name="keywords" content="{{ discussion.keywords | join(', ') if discussion.keywords else 'discussion, society, topics' }}">
+    <link rel="canonical" href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}">
+
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "DiscussionForumPosting",
+      "headline": "{{ discussion.title }}",
+      "description": "{{ discussion.description or 'Join the discussion on SocietySpeaks.' }}",
+      "datePublished": "{{ discussion.created_at.isoformat() }}",
+      "author": {
+        "@type": "Person",
+        "name": "{{ discussion.creator.name }}"
+      },
+      "discussionUrl": "{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}"
+    }
+    </script>
+{% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     <!-- Discussion Header and Share Button Section -->

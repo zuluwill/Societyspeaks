@@ -1,0 +1,26 @@
+# path: app/static/robots.txt
+
+User-agent: Googlebot
+Allow: /
+Allow: /sitemap.xml
+
+User-agent: *
+Allow: /
+Disallow: /account/settings
+Disallow: /user/settings
+Disallow: /api/
+Disallow: /admin/
+Disallow: /login
+Disallow: /register
+Disallow: /*/*/edit
+Disallow: /*/edit
+
+# Only allow these file types to be indexed
+Allow: /*.html$
+Allow: /*.htm$
+Allow: /*.xml$
+Allow: /*.json$
+
+# Crawl-delay: 10
+
+Sitemap: https://societyspeaks.io/sitemap.xml
