@@ -1,8 +1,12 @@
 from app import db
+from flask import current_app
 from datetime import datetime, timedelta
 from slugify import slugify as python_slugify
 from flask_login import UserMixin
 from unidecode import unidecode
+from itsdangerous import URLSafeTimedSerializer as Serializer
+from werkzeug.security import generate_password_hash, check_password_hash
+
 import re
 
 
@@ -52,6 +56,22 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         """Verifies the password against the stored hash."""
         return check_password_hash(self.password, password)
+
+    # Token generation and verification methods for password reset
+    def get_reset_token(self, expires_sec=1800):
+        """Generates a token valid for `expires_sec` seconds (default: 30 minutes)."""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.id}, salt='password-reset-salt')
+
+    @staticmethod
+    def verify_reset_token(token, expiration=1800):
+        """Verifies the token and returns the user if valid, otherwise None."""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token, salt='password-reset-salt', max_age=expiration)['user_id']
+        except Exception:
+            return None
+        return User.query.get(user_id)
 
     # Flask-Login required methods
     def is_active(self):

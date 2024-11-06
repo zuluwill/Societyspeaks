@@ -1,0 +1,19 @@
+{# errors/405.html #}
+{% extends "layout.html" %}
+{% block content %}
+<div class="min-h-[80vh] bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div class="max-w-lg w-full text-center">
+        <h1 class="text-9xl font-extrabold text-blue-600 tracking-widest">405</h1>
+        <div class="bg-blue-100 px-4 py-2 text-sm rounded-lg text-blue-700 mt-4 inline-block">
+            Method Not Allowed
+        </div>
+        <div class="mt-8">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-4">Invalid Request Method</h2>
+            <p class="text-gray-600 mb-8">The method used to access this resource is not allowed.</p>
+            <button onclick="history.back()" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+                Go Back
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

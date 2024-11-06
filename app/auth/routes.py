@@ -7,6 +7,7 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 from app.utils import get_recent_activity
 from itsdangerous import URLSafeTimedSerializer
+from app.email_utils import send_password_reset_email, send_welcome_email, send_profile_completion_reminder_email, get_missing_individual_profile_fields,get_missing_company_profile_fields
 
 
 auth_bp = Blueprint('auth', __name__)
@@ -38,6 +39,9 @@ def register():
         db.session.add(new_user)
         db.session.commit()
 
+        # Send welcome email to the new user
+        send_welcome_email(new_user)  # Corrected from `user` to `new_user`
+
         # Log the user in immediately after registration
         login_user(new_user)
         flash("Registration successful! You are now logged in.", "success")
@@ -47,11 +51,12 @@ def register():
 
     return render_template('auth/register.html')
 
+    
 
 
 
 
-#user login: New Users without a profile are sent to select_profile_type to create their profile. Returning Users with a profile are redirected to the dashboard.
+# User login: New Users without a profile are sent to select_profile_type to create their profile. Returning Users with a profile are redirected to the dashboard.
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -60,24 +65,42 @@ def login():
 
         user = User.query.filter_by(email=email).first()
 
+        # Check for invalid email or password
         if not user or not check_password_hash(user.password, password):
             flash("Invalid email or password.", "error")
             return redirect(url_for('auth.login'))
 
+        # Log the user in
         login_user(user)
         flash("Logged in successfully!", "success")
 
-        # Redirect to dashboard, check if user has profile or redirect to profile setup
-        if not (user.individual_profile or user.company_profile):
+        # Check if the user has an individual or company profile
+        profile = user.individual_profile or user.company_profile
+
+        if not profile:
+            # Redirect to profile setup if no profile exists
             return redirect(url_for('profiles.select_profile_type'))
 
+        # If the user has a profile, check for missing fields and send reminder if necessary
+        missing_fields = (
+            get_missing_individual_profile_fields(profile)
+            if isinstance(profile, IndividualProfile)
+            else get_missing_company_profile_fields(profile)
+        )
+
+        if missing_fields:
+            send_profile_completion_reminder_email(user)
+
+        # Redirect to the dashboard if the user has a complete or partially complete profile
         return redirect(url_for('auth.dashboard'))
 
     return render_template('auth/login.html')
 
 
 
-#renders the users dashboard
+
+
+# Renders the user's dashboard
 @auth_bp.route('/dashboard')
 @login_required
 def dashboard():
@@ -89,18 +112,17 @@ def dashboard():
     # Calculate profile views
     profile_views = 0
     if profile:
-        if isinstance(profile, IndividualProfile):
-            profile_views = ProfileView.query.filter_by(individual_profile_id=profile.id).count()
-        elif isinstance(profile, CompanyProfile):
-            profile_views = ProfileView.query.filter_by(company_profile_id=profile.id).count()
+        profile_views = ProfileView.query.filter(
+            (ProfileView.individual_profile_id == profile.id) | 
+            (ProfileView.company_profile_id == profile.id)
+        ).count()
 
     # Get recent discussions
     discussions = Discussion.query.filter_by(creator_id=current_user.id)\
         .order_by(Discussion.created_at.desc())\
-        .limit(5)\
         .all()
 
-    # Get discussion views
+    # Get discussion views for recent discussions
     discussion_views = 0
     if discussions:
         discussion_ids = [d.id for d in discussions]
@@ -116,6 +138,7 @@ def dashboard():
         profile_views=profile_views,
         discussion_views=discussion_views
     )
+
 
 
 
@@ -141,26 +164,53 @@ def verify_password_reset_token(token, expiration=3600):
 
 
 
-# Password reset request route NEED TO ADD IN EMAIL SENDING
 @auth_bp.route('/password-reset', methods=['GET', 'POST'])
 def password_reset_request():
     if request.method == 'POST':
         email = request.form.get('email')
-        # Logic to send password reset email goes here
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            # Generate a secure token for resetting the password
+            reset_token = user.get_reset_token()
+
+            # Send the password reset email with the generated token
+            send_password_reset_email(user, reset_token)
+
         flash("Password reset instructions have been sent to your email.", "info")
         return redirect(url_for('auth.login'))
 
-    return render_template('auth/password_reset_request.html')  # Updated path
+    return render_template('auth/password_reset_request.html')
 
-# Password reset route NEED TO ADD IN EMAIL SENDING
+
+
 @auth_bp.route('/password-reset/<token>', methods=['GET', 'POST'])
 def password_reset(token):
+    # Verify the token and retrieve the user
+    user = User.verify_reset_token(token)
+
+    if not user:
+        flash("The password reset link is invalid or has expired.", "danger")
+        return redirect(url_for('auth.password_reset_request'))
+
     if request.method == 'POST':
         new_password = request.form.get('new_password')
-        # Logic to verify token and update password goes here
-        flash("Your password has been reset successfully!", "success")
-        return redirect(url_for('auth.login'))
 
-    return render_template('auth/password_reset.html')  # Updated path
+        # Validate the new password (for example, check minimum length)
+        if not new_password or len(new_password) < 6:
+            flash("Password must be at least 6 characters long.", "error")
+            return render_template('auth/password_reset.html', token=token)
 
+        # Set the new password
+        user.set_password(new_password)
 
+        try:
+            db.session.commit()  # Save changes to the database
+            flash("Your password has been reset successfully!", "success")
+            return redirect(url_for('auth.login'))
+        except Exception as e:
+            db.session.rollback()  # Rollback if commit fails
+            flash("An error occurred while resetting your password. Please try again.", "danger")
+            current_app.logger.error(f"Password reset error: {str(e)}")
+
+    return render_template('auth/password_reset.html', token=token)

@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, render_template, redirect, url_for, flash, request, abort
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, current_user
@@ -47,6 +47,21 @@ sess = Session()
 cache = Cache()
 
 def create_app():
+
+    # Check for production environment and initialize Sentry only in production
+    if os.getenv("FLASK_ENV") == "production":
+        sentry_sdk.init(
+            dsn=os.getenv("SENTRY_DSN"),
+            integrations=[FlaskIntegration()],
+            traces_sample_rate=1.0,
+            profiles_sample_rate=1.0,
+            _experiments={
+                "continuous_profiling_auto_start": True,
+            },
+        )
+
+
+    
     app = Flask(__name__, 
         static_url_path='',
         static_folder='static')
@@ -159,5 +174,61 @@ def create_app():
 
     from app.commands import init_commands
     init_commands(app)
+
+
+    # Error handler for 403 Forbidden
+    @app.errorhandler(403)
+    def forbidden(e):
+        app.logger.warning(f"403 Forbidden: {e}")
+        return render_template('errors/403.html', error_code=403, error_message="You don't have permission to access this resource."), 403
+
+    # Error handler for 404 Not Found
+    @app.errorhandler(404)
+    def page_not_found(e):
+        app.logger.warning(f"404 Page Not Found: {e}")
+        return render_template('errors/404.html', error_code=404, error_message="The page you're looking for doesn't exist."), 404
+
+    # Error handler for 500 Internal Server Error
+    @app.errorhandler(500)
+    def internal_server_error(e):
+        app.logger.error(f"500 Internal Server Error: {e}")
+        return render_template('errors/500.html', error_code=500, error_message="An internal server error occurred. Please try again later."), 500
+
+    # Catch-all error handler for unhandled exceptions
+    @app.errorhandler(Exception)
+    def handle_exception(e):
+        app.logger.error(f"Unhandled Exception: {e}", exc_info=True)  # Logs full stack trace
+        return render_template('errors/general_error.html', error_code=500, error_message="An unexpected error occurred."), 500
+
+    # Error handler for 400 Bad Request
+    @app.errorhandler(400)
+    def bad_request(e):
+        app.logger.warning(f"400 Bad Request: {e}")
+        return render_template('errors/400.html', error_code=400, 
+               error_message="The server couldn't understand your request."), 400
+
+    # Error handler for 401 Unauthorized
+    @app.errorhandler(401)
+    def unauthorized(e):
+        app.logger.warning(f"401 Unauthorized: {e}")
+        return render_template('errors/401.html', error_code=401, 
+               error_message="Authentication is required to access this resource."), 401
+
+    # Error handler for 405 Method Not Allowed
+    @app.errorhandler(405)
+    def method_not_allowed(e):
+        app.logger.warning(f"405 Method Not Allowed: {e}")
+        return render_template('errors/405.html', error_code=405, 
+               error_message="The method used is not allowed for this resource."), 405
+
+    # Error handler for 429 Too Many Requests
+    @app.errorhandler(429)
+    def too_many_requests(e):
+        app.logger.warning(f"429 Too Many Requests: {e}")
+        return render_template('errors/429.html', error_code=429, 
+               error_message="Too many requests. Please try again later."), 429
+
+    
+
 
     return app

@@ -9,11 +9,7 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
 
-    # Dynamic SERVER_NAME based on environment
-    if os.getenv('FLASK_ENV') == 'production':
-        SERVER_NAME = 'societyspeaks.io'
-    else:
-        SERVER_NAME = None 
+    
 
     # Enhanced Database Connection Settings
     SQLALCHEMY_TRACK_MODIFICATIONS = False

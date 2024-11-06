@@ -1136,6 +1136,10 @@ select {
   max-height: 60vh;
 }
 
+.min-h-\[80vh\] {
+  min-height: 80vh;
+}
+
 .min-h-screen {
   min-height: 100vh;
 }
@@ -1218,6 +1222,10 @@ select {
 
 .max-w-full {
   max-width: 100%;
+}
+
+.max-w-lg {
+  max-width: 32rem;
 }
 
 .max-w-md {
@@ -1951,6 +1959,11 @@ select {
   line-height: 2.5rem;
 }
 
+.text-9xl {
+  font-size: 8rem;
+  line-height: 1;
+}
+
 .text-base {
   font-size: 1rem;
   line-height: 1.5rem;
@@ -2018,6 +2031,10 @@ select {
 
 .tracking-tight {
   letter-spacing: -0.025em;
+}
+
+.tracking-widest {
+  letter-spacing: 0.1em;
 }
 
 .text-\[\#0A66C2\] {
@@ -2371,6 +2388,11 @@ select {
 .hover\:bg-gray-100:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(243 244 246 / var(--tw-bg-opacity));
+}
+
+.hover\:bg-gray-300:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(209 213 219 / var(--tw-bg-opacity));
 }
 
 .hover\:bg-gray-50:hover {
