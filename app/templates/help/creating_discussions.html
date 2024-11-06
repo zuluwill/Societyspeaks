@@ -1,0 +1,97 @@
+{# templates/help/creating_discussions.html #}
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-4">Creating Discussions</h1>
+        <p class="text-gray-600">Learn how to create and configure effective discussions using Pol.is</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="space-y-8">
+        <!-- Step by Step Guide -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Step-by-Step Guide</h2>
+
+            <div class="space-y-4">
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-2">1. Create a Pol.is Discussion</h3>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Click the "Create Discussion" button</li>
+                        <li>Sign in or create a Pol.is account</li>
+                        <li>Configure your discussion settings</li>
+                    </ul>
+                </div>
+
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-2">2. Add Seed Comments</h3>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Add at least 10-25 initial comments</li>
+                        <li>Use AI tools to help generate diverse viewpoints</li>
+                        <li><a href="{{ url_for('help.seed_comments') }}" class="text-blue-600 hover:underline">Learn more about seed comments</a></li>
+                    </ul>
+                </div>
+
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-2">3. Configure Settings</h3>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Set geographic scope (Global, Country, or City)</li>
+                        <li>Choose relevant topics</li>
+                        <li>Add description and context</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Best Practices -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Discussion Best Practices</h2>
+            <div class="space-y-4">
+                <p class="text-gray-700">
+                    Creating an effective discussion requires careful thought and preparation:
+                </p>
+                <ul class="list-disc pl-5 text-gray-700">
+                    <li>Choose a clear, specific topic</li>
+                    <li>Write a detailed description that provides context</li>
+                    <li>Add diverse seed comments to encourage participation</li>
+                    <li>Consider your target audience when setting geographic scope</li>
+                    <li>Share your discussion on relevant platforms and communities</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Using Pol.is Effectively -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Using Pol.is Effectively</h2>
+
+            <div class="space-y-4">
+                <p class="text-gray-700">Key features of Pol.is:</p>
+                <ul class="list-disc pl-5 text-gray-700">
+                    <li>Real-time visualization of opinions</li>
+                    <li>Automated clustering of viewpoints</li>
+                    <li>Support for multiple languages</li>
+                    <li>Moderation tools</li>
+                </ul>
+
+                <div class="mt-4">
+                    <a href="https://compdemocracy.org/FAQ/" target="_blank" class="text-blue-600 hover:underline">
+                        View Complete Pol.is Documentation →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Footer -->
+    <div class="mt-8 text-center">
+        <p class="text-gray-600">
+            Still need help? 
+            <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="text-blue-600 hover:underline">
+                Send us feedback
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}

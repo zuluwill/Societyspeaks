@@ -172,6 +172,9 @@ def create_app():
     from app.settings.routes import settings_bp
     app.register_blueprint(settings_bp, url_prefix='/settings')
 
+    from app.help import help_bp
+    app.register_blueprint(help_bp, url_prefix='/help')
+
     from app.commands import init_commands
     init_commands(app)
 

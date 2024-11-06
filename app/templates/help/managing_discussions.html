@@ -1,0 +1,133 @@
+{# templates/help/managing_discussions.html #}
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-4">Managing Discussions</h1>
+        <p class="text-gray-600">Learn how to monitor and maintain engaging discussions</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="space-y-8">
+        <!-- Monitoring Participation -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Monitoring Participation</h2>
+
+            <div class="space-y-4">
+                <p class="text-gray-700">Keep track of your discussion's health and engagement:</p>
+                <ul class="list-disc pl-5 text-gray-700">
+                    <li>Monitor participant count and engagement levels</li>
+                    <li>Review new comments regularly</li>
+                    <li>Observe opinion groups forming</li>
+                    <li>Look for areas of consensus and division</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Promoting Engagement -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Promoting Engagement</h2>
+
+            <div class="space-y-4">
+                <h3 class="font-semibold">Tips for Maintaining Active Discussions:</h3>
+                <ul class="list-disc pl-5 text-gray-700">
+                    <li>Share your discussion on relevant platforms</li>
+                    <li>Engage with participants' comments</li>
+                    <li>Add new seed comments to explore emerging themes</li>
+                    <li>Keep the conversation focused and constructive</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Understanding Results -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Understanding Results</h2>
+
+            <div class="space-y-4">
+                <h3 class="font-semibold">Interpreting Pol.is Visualizations:</h3>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">Opinion Groups</h4>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Groups are formed automatically based on voting patterns</li>
+                        <li>Each color represents a distinct opinion group</li>
+                        <li>Size of groups indicates number of participants</li>
+                        <li>Distance between groups shows opinion difference</li>
+                    </ul>
+                </div>
+
+                <div class="bg-green-50 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">Consensus Statements</h4>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Statements that most groups agree or disagree with</li>
+                        <li>Useful for finding common ground</li>
+                        <li>Can help bridge divides between groups</li>
+                    </ul>
+                </div>
+
+                <div class="bg-yellow-50 p-4 rounded-lg">
+                    <h4 class="font-semibold mb-2">Participation Stats</h4>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Total number of participants</li>
+                        <li>Number of votes cast</li>
+                        <li>Number of comments submitted</li>
+                        <li>Participation rates over time</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Moderation Best Practices -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Moderation Best Practices</h2>
+
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-2">Key Moderation Tasks:</h3>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Regularly review and moderate new comments</li>
+                        <li>Maintain a respectful and constructive environment</li>
+                        <li>Remove inappropriate or off-topic comments</li>
+                        <li>Encourage balanced participation across groups</li>
+                    </ul>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="font-semibold mb-2">Setting Ground Rules:</h3>
+                    <ul class="list-disc pl-5 text-gray-700">
+                        <li>Clear guidelines for participation</li>
+                        <li>Expectations for comment quality</li>
+                        <li>Consequences for rule violations</li>
+                        <li>Process for appealing moderation decisions</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Resources -->
+        <div class="bg-gray-50 rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Additional Resources</h2>
+            <div class="space-y-3">
+                <a href="https://compdemocracy.org/FAQ/" target="_blank" class="block text-blue-600 hover:underline">
+                    Complete Pol.is Documentation →
+                </a>
+            
+                <a href="{{ url_for('help.seed_comments') }}" class="block text-blue-600 hover:underline">
+                    Guide to Seed Comments →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Footer -->
+    <div class="mt-8 text-center">
+        <p class="text-gray-600">
+            Still need help? 
+            <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="text-blue-600 hover:underline">
+                Send us feedback
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}

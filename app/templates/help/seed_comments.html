@@ -1,0 +1,100 @@
+{# templates/help/seed_comments.html #}
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto p-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-4">Understanding Seed Comments</h1>
+        <p class="text-gray-600">Learn how to create effective seed comments for your discussions</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="space-y-8">
+        <!-- What are Seed Comments -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">What are Seed Comments?</h2>
+            <p class="text-gray-700 mb-4">
+                Seed comments are initial statements added by the discussion creator that help kickstart the conversation. 
+                They're crucial for setting the tone and encouraging participation.
+            </p>
+
+            <div class="bg-blue-50 p-6 rounded-lg">
+                <h3 class="font-semibold mb-3">Key Characteristics:</h3>
+                <ul class="list-disc pl-5 space-y-2 text-gray-700">
+                    <li>Not associated with any specific user account</li>
+                    <li>Don't have initial votes associated with them</li>
+                    <li>Added through the Pol.is admin interface</li>
+                    <li>Help map out the landscape of opinions</li>
+                    <li>Teach participants how to write effective comments</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Best Practices -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Best Practices for Seed Comments</h2>
+
+            <div class="bg-green-50 p-6 rounded-lg">
+                <ul class="list-disc pl-5 space-y-2 text-gray-700">
+                    <li><span class="font-semibold">Quantity:</span> Add at least 10 comments, ideally 25-40 for better engagement</li>
+                    <li><span class="font-semibold">Language:</span> Use simple, clear, and concise language</li>
+                    <li><span class="font-semibold">Focus:</span> Restrict each comment to a single point</li>
+                    <li><span class="font-semibold">Diversity:</span> Include various perspectives and viewpoints</li>
+                    <li><span class="font-semibold">Balance:</span> Mix both controversial and potential consensus statements</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Using AI Tools -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-xl font-semibold mb-4">Using AI to Generate Seed Comments</h2>
+
+            <div class="bg-yellow-50 p-6 rounded-lg mb-6">
+                <h3 class="font-semibold mb-3">Example Prompt for AI:</h3>
+                <p class="text-gray-700 italic">
+                    "I'm creating a discussion about [TOPIC]. Can you help me generate 25 seed comments that:
+                    - Represent diverse viewpoints
+                    - Are clear and concise (under 140 characters)
+                    - Cover different aspects of the topic
+                    - Include both potentially controversial and consensus statements"
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="https://chat.openai.com" target="_blank" class="block p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                    <h4 class="font-semibold">ChatGPT</h4>
+                    <p class="text-sm text-gray-600">Good for diverse perspectives</p>
+                </a>
+                <a href="https://claude.ai" target="_blank" class="block p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                    <h4 class="font-semibold">Claude</h4>
+                    <p class="text-sm text-gray-600">Excellent for nuanced viewpoints</p>
+                </a>
+            </div>
+        </div>
+
+        <!-- Additional Resources -->
+        <div class="bg-gray-50 p-6 rounded-lg">
+            <h2 class="text-xl font-semibold mb-4">Additional Resources</h2>
+            <div class="space-y-3">
+                <a href="https://compdemocracy.org/FAQ/" class="block text-blue-600 hover:underline">
+                    Complete Pol.is Documentation →
+                </a>
+                <a href="https://github.com/compdemocracy/polis/issues/745" class="block text-blue-600 hover:underline">
+                    Adding Comments as Yourself →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Footer -->
+    <div class="mt-8 text-center">
+        <p class="text-gray-600">
+            Still need help? 
+            <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="text-blue-600 hover:underline">
+                Send us feedback
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}
