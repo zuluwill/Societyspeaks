@@ -2,7 +2,7 @@
 import os
 import requests
 from flask import current_app, url_for
-from app.models import Discussion
+from app.models import Discussion, IndividualProfile, CompanyProfile
 
 
 #This function is responsible for sending events to Loops
@@ -196,7 +196,8 @@ def send_profile_completion_reminder_email(user):
 
     if missing_fields:
         # Generate profile link
-        profile_link = url_for('profiles.view_profile', user_id=user.id, _external=True)
+        profile_link = url_for('profiles.view_profile', username=user.username, _external=True)
+
 
         # Prepare event properties
         event_properties = {
