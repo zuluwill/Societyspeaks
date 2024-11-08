@@ -115,11 +115,37 @@ def generate_sitemap():
         '  </url>'
     ])
 
+    
     # Add help and resources
     xml_content.extend([
         '  <!-- Help & Resources -->',
         '  <url>',
         f'    <loc>{base_url}/help</loc>',
+        '    <priority>0.6</priority>',
+        '    <changefreq>monthly</changefreq>',
+        '  </url>',
+        '  <url>',
+        f'    <loc>{base_url}/help/getting-started</loc>',
+        '    <priority>0.6</priority>',
+        '    <changefreq>monthly</changefreq>',
+        '  </url>',
+        '  <url>',
+        f'    <loc>{base_url}/help/creating-discussions</loc>',
+        '    <priority>0.6</priority>',
+        '    <changefreq>monthly</changefreq>',
+        '  </url>',
+        '  <url>',
+        f'    <loc>{base_url}/help/managing-discussions</loc>',
+        '    <priority>0.6</priority>',
+        '    <changefreq>monthly</changefreq>',
+        '  </url>',
+        '  <url>',
+        f'    <loc>{base_url}/help/seed-comments</loc>',
+        '    <priority>0.6</priority>',
+        '    <changefreq>monthly</changefreq>',
+        '  </url>',
+        '  <url>',
+        f'    <loc>{base_url}/help/polis-algorithms</loc>',
         '    <priority>0.6</priority>',
         '    <changefreq>monthly</changefreq>',
         '  </url>',

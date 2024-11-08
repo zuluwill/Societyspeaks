@@ -42,3 +42,7 @@ def managing_discussions():
 @help_bp.route('/seed-comments')
 def seed_comments():
     return render_template('help/seed_comments.html')
+
+@help_bp.route('/polis-algorithms')
+def polis_algorithms():
+    return render_template('help/polis_algorithms.html')
