@@ -20,6 +20,9 @@ Society Speaks is open source, and your support helps us keep it alive! If you f
 
 Thank you for your support! 💖
 
+## 📖 Roadmap & Ideas
+To see our future plans and ideas, check out [IDEAS.md](./IDEAS.md).
+
 
 
 ## 🌟 Features
