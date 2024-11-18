@@ -58,13 +58,13 @@ The following ideas aim to amplify citizen participation in democracy through So
 This section provides a roadmap for our most important features. Contributions are welcome—feel free to join us in turning these ideas into reality!
 
 ### 🔹 Near-Term Goals
-- Integrate Pol.is API to enable seamless conversation automation (Q1 2024).
-- Develop profiles for influencers, integrate Pol.is API (Q1 2024).
-- Replace CAPTCHA verification with a discussion prompt (Q2 2024).
+- Integrate Pol.is API to enable seamless conversation automation (Q1 2025).
+- Develop profiles for influencers, integrate Pol.is API (Q1 2025).
+- Replace CAPTCHA verification with a discussion prompt (Q2 2025).
 
 ### 🔷 Mid-Term Goals
-- Build a discussion ad network to serve sponsored discussions (Q3 2024).
-- Run a policy funding lottery mechanism based on user engagement (Q3-Q4 2024).
+- Build a discussion ad network to serve sponsored discussions (Q3 2025).
+- Run a policy funding lottery mechanism based on user engagement (Q3-Q4 2025).
 
 ### 🔵 Long-Term Vision
 - Develop a mobile application for wider accessibility.
@@ -74,9 +74,7 @@ This section provides a roadmap for our most important features. Contributions a
 
 Society Speaks is committed to building a thriving, transparent, and supportive community. We value every contribution, feedback, and use of the platform. We encourage everyone to use the software freely and ethically, and to share back improvements so everyone benefits. Our goal is to align our success with the success of our community. 💡
 
-## 📜 Code of Conduct
 
-Please note that this project is governed by a [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agree to uphold this code to foster a welcoming environment for all contributors and users.
 
 ---
 These ideas are designed to leverage Society Speaks as a tool for real civic engagement, ensuring the community can actively participate in democratic discussions that lead to genuine policy impact. What are your thoughts on these directions? Are there specific ones you feel most excited about or would like to explore further?
