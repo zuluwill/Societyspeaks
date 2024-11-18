@@ -107,8 +107,8 @@ FLASK_ENV=development  # or production
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/society-speaks.git
-cd society-speaks
+git clone https://github.com/zuluwill/Societyspeaks.git
+cd societyspeaks
 ```
 
 2. Set up Python environment:
@@ -135,7 +135,7 @@ cp .env.example .env
 redis-server
 
 # Create PostgreSQL database
-createdb society_speaks
+createdb societyspeaks
 ```
 
 6. Initialize database:
