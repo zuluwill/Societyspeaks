@@ -54,11 +54,26 @@ class Config:
     MAIL_PASSWORD = os.getenv('EMAIL_PASS')
     MAIL_DEFAULT_SENDER = os.getenv('EMAIL_USER')
 
+    # Admin Configuration
+    ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@example.com')
+    ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
+
+    # Admin Security Settings
+    ADMIN_LOGIN_ATTEMPTS = int(os.getenv('ADMIN_LOGIN_ATTEMPTS', '3'))  # Max failed login attempts
+    ADMIN_LOGIN_TIMEOUT = int(os.getenv('ADMIN_LOGIN_TIMEOUT', '1800'))  # Timeout in seconds (30 minutes)
+
+    # Admin Features Control
+    ADMIN_CAN_CREATE_USERS = os.getenv('ADMIN_CAN_CREATE_USERS', 'False').lower() == 'true'
+    ADMIN_CAN_DELETE_USERS = os.getenv('ADMIN_CAN_DELETE_USERS', 'False').lower() == 'true'
+    ADMIN_CAN_EDIT_PROFILES = os.getenv('ADMIN_CAN_EDIT_PROFILES', 'False').lower() == 'true'
+    ADMIN_CAN_DELETE_DISCUSSIONS = os.getenv('ADMIN_CAN_DELETE_DISCUSSIONS', 'False').lower() == 'true'
     
 class DevelopmentConfig(Config):
     FLASK_ENV = 'development'
     DEBUG = True
     SQLALCHEMY_ECHO = True
+    ADMIN_LOGIN_ATTEMPTS = 1000  # Essentially unlimited attempts in development
+    ADMIN_LOGIN_TIMEOUT = 86400  # 24 hours timeout in development
 
 class ProductionConfig(Config):
     FLASK_ENV = 'production'
@@ -71,6 +86,8 @@ class ProductionConfig(Config):
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)  # Shorter session timeout for production
     SENTRY_DSN = os.getenv('SENTRY_DSN')
     CACHE_DEFAULT_TIMEOUT = 300  # 5 minutes
+    ADMIN_LOGIN_ATTEMPTS = int(os.getenv('ADMIN_LOGIN_ATTEMPTS', '3'))
+    ADMIN_LOGIN_TIMEOUT = int(os.getenv('ADMIN_LOGIN_TIMEOUT', '1800'))
 
 
 

@@ -1,0 +1,12 @@
+{# templates/admin/profiles/admin_individual_profile.html #}
+{% extends "profiles/create_individual_profile.html" %}
+{% from "admin/profiles/_profile_form.html" import render_user_assignment_form, render_user_assignment_script %}
+
+{% block pre_form %}
+    {{ render_user_assignment_form(user_form) }}
+{% endblock %}
+
+{% block form_scripts %}
+    {{ super() }}
+    {{ render_user_assignment_script() }}
+{% endblock %}

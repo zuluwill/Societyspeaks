@@ -1,4 +1,13 @@
+# app/utils.py
+from flask import current_app
+from replit.object_storage import Client
+import io
+import time
+from werkzeug.utils import secure_filename
 from app.models import Discussion
+
+
+client = Client()
 
 def get_recent_activity(user_id):
     """
@@ -22,3 +31,50 @@ def get_recent_activity(user_id):
         })
 
     return activity
+
+
+def upload_to_object_storage(file_data, filename, user_id=None):
+    """Upload file to Replit's object storage"""
+    try:
+        if user_id and not filename.startswith(f"{user_id}_"):
+            filename = f"{user_id}_{int(time.time())}_{filename}"
+        storage_path = f"profile_images/{filename}"
+
+        file_content = file_data.read()
+        client.upload_from_bytes(storage_path, file_content)
+
+        current_app.logger.info(f"Successfully uploaded {filename} to object storage")
+        return filename
+    except Exception as e:
+        current_app.logger.error(f"Error uploading file: {str(e)}")
+        return None
+
+def delete_from_object_storage(filename):
+    """Delete a file from Replit's object storage"""
+    try:
+        storage_path = f"profile_images/{filename}"
+        client.delete(storage_path)
+        current_app.logger.info(f"Successfully deleted {filename} from object storage")
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Error deleting {filename}: {str(e)}")
+        return False
+
+def get_image_from_storage(filename):
+    """Retrieve image from Replit's object storage"""
+    try:
+        storage_path = f"profile_images/{filename}"
+        file_data = client.download_as_bytes(storage_path)
+
+        if file_data:
+            file_like = io.BytesIO(file_data)
+            mime_type = 'image/jpeg'
+            if filename.lower().endswith('.png'):
+                mime_type = 'image/png'
+            elif filename.lower().endswith('.gif'):
+                mime_type = 'image/gif'
+            return file_like, mime_type
+        return None, None
+    except Exception as e:
+        current_app.logger.error(f"Error retrieving image {filename}: {str(e)}")
+        return None, None

@@ -5,9 +5,12 @@
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            {% block pre_form %}{% endblock %}
+
             <form method="POST" enctype="multipart/form-data" class="p-8" id="companyProfileForm">
                 {{ form.csrf_token }}
 
+                {% block form_messages %}
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
@@ -17,7 +20,9 @@
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
+                {% endblock %}
 
+                {% block form_content %}
                 <!-- Logo and Banner -->
                 {{ render_image_upload(form.banner_image, 'banner-preview', 'Choose Banner Image') }}
                 {{ render_image_upload(form.logo, 'logo-preview', 'Choose Company Logo') }}
@@ -43,23 +48,26 @@
                         {{ render_field_with_errors(form.tiktok_url) }}
                     </div>
                 </div>
+                {% endblock %}
 
+                {% block form_actions %}
                 <!-- Submit Button -->
                 <div class="flex justify-end">
                     <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Create Company Profile
                     </button>
                 </div>
+                {% endblock %}
             </form>
         </div>
     </div>
 </div>
 
+{% block form_scripts %}
 <script>
 function previewImage(input, previewId) {
     const preview = document.getElementById(previewId);
     const file = input.files[0];
-
     if (file) {
         const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
         if (!validTypes.includes(file.type)) {
@@ -67,13 +75,11 @@ function previewImage(input, previewId) {
             input.value = '';
             return;
         }
-
         if (file.size > 5 * 1024 * 1024) {
             alert('File size should not exceed 5MB');
             input.value = '';
             return;
         }
-
         const reader = new FileReader();
         reader.onload = function(e) {
             preview.src = e.target.result;
@@ -90,4 +96,5 @@ document.getElementById('companyProfileForm').addEventListener('submit', functio
     }
 });
 </script>
+{% endblock %}
 {% endblock %}

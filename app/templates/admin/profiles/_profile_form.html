@@ -1,0 +1,70 @@
+{# templates/admin/profiles/_profile_form.html #}
+{% macro render_user_assignment_form(user_form) %}
+<div class="mb-8 bg-gray-50 rounded-lg p-6 border border-gray-200">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">User Assignment</h3>
+
+    <!-- User Assignment Form -->
+    <div class="space-y-4">
+        <!-- Assignment Type Radio Buttons -->
+        <div class="flex items-center space-x-4">
+            <input type="radio" name="assignment_type" value="existing" id="assignment_type_existing" checked>
+            <label for="assignment_type_existing" class="block text-sm font-medium text-gray-700">Assign to Existing User</label>
+
+            <input type="radio" name="assignment_type" value="new" id="assignment_type_new">
+            <label for="assignment_type_new" class="block text-sm font-medium text-gray-700">Create New User</label>
+        </div>
+
+        <!-- Existing User Selection -->
+        <div id="existing-user-section">
+            {{ user_form.existing_user.label(class="block text-sm font-medium text-gray-700", for="existing_user") }}
+            {{ user_form.existing_user(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", id="existing_user") }}
+        </div>
+
+        <!-- New User Fields -->
+        <div id="new-user-section" class="hidden space-y-4">
+            {{ user_form.username.label(class="block text-sm font-medium text-gray-700", for="new_user_username") }}
+            {{ user_form.username(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", id="new_user_username") }}
+
+            {{ user_form.email.label(class="block text-sm font-medium text-gray-700", for="new_user_email") }}
+            {{ user_form.email(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", id="new_user_email") }}
+
+            {{ user_form.password.label(class="block text-sm font-medium text-gray-700", for="new_user_password") }}
+            {{ user_form.password(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", id="new_user_password") }}
+
+            {{ user_form.confirm_password.label(class="block text-sm font-medium text-gray-700", for="confirm_password") }}
+            {{ user_form.confirm_password(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm", id="confirm_password") }}
+        </div>
+
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_user_assignment_script() %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get all the radio buttons for assignment type
+        const assignmentTypeOptions = document.querySelectorAll('input[name="assignment_type"]');
+        const existingUserSection = document.getElementById('existing-user-section');
+        const newUserSection = document.getElementById('new-user-section');
+
+        function toggleUserSections() {
+            const selectedAssignment = document.querySelector('input[name="assignment_type"]:checked');
+            if (selectedAssignment && selectedAssignment.value === 'existing') {
+                existingUserSection.classList.remove('hidden');
+                newUserSection.classList.add('hidden');
+            } else {
+                existingUserSection.classList.add('hidden');
+                newUserSection.classList.remove('hidden');
+            }
+        }
+
+        // Add event listener for each radio button
+        assignmentTypeOptions.forEach(option => {
+            option.addEventListener('change', toggleUserSections);
+        });
+
+        // Set the initial state based on the selected radio button
+        toggleUserSections();
+    });
+</script>
+{% endmacro %}
