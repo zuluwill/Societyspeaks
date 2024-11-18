@@ -1,6 +1,6 @@
 # Society Speaks 🗣️
 
-![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![Flask](https://img.shields.io/badge/flask-3.0.0-blue.svg)
 
