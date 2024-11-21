@@ -23,6 +23,79 @@
 {% endblock %}
 {% block content %}
 <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+    <!-- Back Button & Research Tools - Add this first -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+            <!-- Back Button -->
+            <a href="{{ url_for('discussions.search_discussions') }}" 
+               class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Discussions
+            </a>
+
+            <!-- Research Tools Dropdown -->
+            <div class="relative" id="researchToolsContainer">
+                <button id="researchToolsBtn" 
+                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        aria-expanded="false"
+                        aria-haspopup="true">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                    Research Tools
+                </button>
+
+                    <div id="researchToolsDropdown" 
+                             class="hidden absolute right-0 mt-2 w-72 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                             role="menu"
+                             aria-orientation="vertical"
+                             aria-labelledby="researchToolsBtn">
+                                    <div class="py-1">
+                                        <!-- Claude AI -->
+                                        <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" 
+                                           class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
+                                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                            </svg>
+                                            <div class="ml-3">
+                                                <p class="text-sm font-medium text-gray-900">Claude AI</p>
+                                                <p class="text-xs text-gray-500">Explore the topic with Anthropic's Claude AI assistant</p>
+                                            </div>
+                                        </a>
+
+                                        <!-- ChatGPT -->
+                                        <a href="https://chat.openai.com" target="_blank" rel="noopener noreferrer" 
+                                           class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
+                                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                                            </svg>
+                                            <div class="ml-3">
+                                                <p class="text-sm font-medium text-gray-900">ChatGPT</p>
+                                                <p class="text-xs text-gray-500">Discuss with OpenAI's ChatGPT</p>
+                                            </div>
+                                        </a>
+
+                                        <!-- Perplexity -->
+                                        <a href="https://perplexity.ai" target="_blank" rel="noopener noreferrer" 
+                                           class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
+                                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                            </svg>
+                                            <div class="ml-3">
+                                                <p class="text-sm font-medium text-gray-900">Perplexity</p>
+                                                <p class="text-xs text-gray-500">Research with real-time web results</p>
+                                            </div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+    
     <!-- Discussion Header and Share Button Section -->
     <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
         <div class="max-w-3xl mx-auto">
@@ -110,7 +183,9 @@
                         </div>
                     </div>
                 </div>
-                    
+
+               
+                
             <!-- Discussion Details -->
 
                 <div class="flex flex-wrap gap-4 text-sm text-gray-500">
@@ -150,6 +225,8 @@
         </div>
     </div>
 
+    
+
     <!-- Adjusted Pol.is Discussion Embed without outer container -->
     <div class="min-h-screen">
         {% if discussion.embed_code %}
@@ -166,6 +243,42 @@
 
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Share Button Logic
+        const shareButton = document.getElementById('shareButton');
+        const shareButtons = document.querySelector('#shareButtons');
+
+        shareButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            shareButtons.classList.toggle('hidden');
+        });
+
+        // Research Tools Dropdown Logic
+        const researchToolsBtn = document.getElementById('researchToolsBtn');
+        const researchToolsDropdown = document.getElementById('researchToolsDropdown');
+
+        if (researchToolsBtn && researchToolsDropdown) {
+            researchToolsBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                researchToolsDropdown.classList.toggle('hidden');
+            });
+        }
+
+        // Global click handler for both dropdowns
+        document.addEventListener('click', function(e) {
+            // Handle share buttons dropdown
+            if (!shareButtons.contains(e.target) && !shareButton.contains(e.target)) {
+                shareButtons.classList.add('hidden');
+            }
+
+            // Handle research tools dropdown
+            if (researchToolsDropdown && !researchToolsDropdown.contains(e.target) && !researchToolsBtn.contains(e.target)) {
+                researchToolsDropdown.classList.add('hidden');
+            }
+        });
+    });
+
+    // Copy to Clipboard function
     function copyToClipboard(text) {
         navigator.clipboard.writeText(text).then(() => {
             const toast = document.createElement('div');
@@ -180,24 +293,7 @@
         });
     }
 
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const shareButton = document.getElementById('shareButton');
-        const shareButtons = document.querySelector('#shareButtons');
-
-        shareButton.addEventListener('click', function(e) {
-            e.stopPropagation();
-            shareButtons.classList.toggle('hidden');
-        });
-
-        // Close share buttons when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!shareButtons.contains(e.target) && !shareButton.contains(e.target)) {
-                shareButtons.classList.add('hidden');
-            }
-        });
-    });
-
+    // Copy Link function
     async function copyLink(url) {
         try {
             await navigator.clipboard.writeText(url);
@@ -212,10 +308,8 @@
             console.error('Failed to copy text: ', err);
         }
     }
+
     
-  
-    
-  
     
 </script>
 {% endblock %}
