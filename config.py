@@ -9,7 +9,14 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
 
-    
+    # At start of Config class
+    if not SQLALCHEMY_DATABASE_URI:
+        raise ValueError("DATABASE_URL environment variable not set")
+
+    # Add near start of Config class
+    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
+        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
+
 
     # Enhanced Database Connection Settings
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -27,24 +34,46 @@ class Config:
             'keepalives_count': 5
         }
     }
+    
+    
+    # Add to Config class
+    LOGGING_CONFIG = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {
+            'console': {
+                'class': 'logging.StreamHandler',
+                'level': 'INFO',
+            },
+        },
+        'root': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        }
+    }
+
+    # Add to Config class 
+    DB_RETRY_ATTEMPTS = 3
+    DB_RETRY_DELAY = 1  # seconds
 
     # Use Redis for session management
     SESSION_TYPE = 'redis'
     SESSION_PERMANENT = True
     SESSION_USE_SIGNER = True  # Adds a layer of security to session cookies
     PERMANENT_SESSION_LIFETIME = timedelta(hours=3)
-    REDIS_URL = os.getenv('REDIS_URL')
+    REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+    SESSION_REDIS_RETRY_ON_TIMEOUT = True
+    SESSION_REDIS_RETRY_NUMBER = 3
+    LOG_TO_STDOUT = os.getenv('LOG_TO_STDOUT', 'False').lower() == 'true'
 
     # Use Redis for session management with connection pooling
     if os.getenv('REDIS_URL'):
         try:
-            redis_pool = redis.ConnectionPool.from_url(os.getenv('REDIS_URL'), max_connections=100)  # Use connection pooling
+            redis_pool = redis.ConnectionPool.from_url(os.getenv('REDIS_URL'), max_connections=100)
             SESSION_REDIS = redis.Redis(connection_pool=redis_pool)
         except Exception as e:
             print(f"Failed to connect to Redis: {e}")
-    else:
-        print("No Redis URL found in environment variables.")
-
+            SESSION_TYPE = 'filesystem'  # Fallback to filesystem sessions
 
     # Mail Configuration
     MAIL_SERVER = 'smtp.googlemail.com'
