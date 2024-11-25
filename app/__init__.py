@@ -7,6 +7,9 @@ from config import Config, config_dict
 from datetime import timedelta
 import os
 import json
+import time
+import logging
+from logging.config import dictConfig
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from flask_session import Session
@@ -46,6 +49,19 @@ login_manager = LoginManager()
 sess = Session()
 cache = Cache()
 
+
+def try_connect_db(app, retries=3):
+    for attempt in range(retries):
+        try:
+            with app.app_context():
+                db.engine.connect()
+                return True
+        except Exception as e:
+            app.logger.error(f"Database connection attempt {attempt + 1} failed: {e}")
+            time.sleep(1)
+    return False
+
+
 def create_app():
 
     # Check for production environment and initialize Sentry only in production
@@ -65,6 +81,8 @@ def create_app():
     app = Flask(__name__, 
         static_url_path='',
         static_folder='static')
+
+    dictConfig(Config.LOGGING_CONFIG)
 
     app.config.from_object(Config)
 
@@ -110,14 +128,22 @@ def create_app():
 
     # Initialize extensions
     if hasattr(Config, 'SESSION_REDIS') and Config.SESSION_REDIS:
-        app.config['SESSION_REDIS'] = Config.SESSION_REDIS
-        sess.init_app(app)
+        try:
+            app.config['SESSION_REDIS'] = Config.SESSION_REDIS
+            sess.init_app(app)
+        except Exception as e:
+            app.logger.error(f"Redis connection error: {e}")
+            app.config['SESSION_TYPE'] = 'filesystem'
 
-    cache.init_app(app, config={
-        'CACHE_TYPE': 'redis',
-        'CACHE_REDIS_URL': Config.REDIS_URL,
-        'CACHE_DEFAULT_TIMEOUT': 300
-    })
+    try:
+        cache.init_app(app, config={
+            'CACHE_TYPE': 'redis',
+            'CACHE_REDIS_URL': Config.REDIS_URL,
+            'CACHE_DEFAULT_TIMEOUT': 300
+        })
+    except Exception as e:
+        app.logger.error(f"Cache initialization error: {e}")
+        cache.init_app(app, config={'CACHE_TYPE': 'simple'})
 
     db.init_app(app)
     migrate.init_app(app, db)
@@ -127,11 +153,12 @@ def create_app():
     app.jinja_env.globals.update(current_user=current_user)
 
     # Database check
-    with app.app_context():
-        try:
-            db.engine.connect()
-        except Exception as e:
-            print(f"Database connection error: {e}")
+    
+    # Replace current database check with:
+    if not try_connect_db(app):
+        raise RuntimeError("Could not establish database connection")
+        
+
 
     # Security settings
     app.config.update(
