@@ -71,7 +71,7 @@ def fetch_discussions(search, country, city, topic, keywords, page, per_page=9, 
     if sort == 'recent':
         query = query.order_by(Discussion.created_at.desc())
     elif sort == 'popular':
-        query = query.order_by(Discussion.activity_count.desc())  # Example for popular sorting
+        query = query.order_by(Discussion.participant_count.desc())  # Example for popular sorting
 
     return query.paginate(page=page, per_page=per_page)
 

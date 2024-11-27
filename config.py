@@ -82,6 +82,7 @@ class Config:
     MAIL_USERNAME = os.getenv('EMAIL_USER')
     MAIL_PASSWORD = os.getenv('EMAIL_PASS')
     MAIL_DEFAULT_SENDER = os.getenv('EMAIL_USER')
+    LOOPS_API_KEY = os.getenv('LOOPS_API_KEY')
 
     # Admin Configuration
     ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@example.com')

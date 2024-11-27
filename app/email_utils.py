@@ -187,31 +187,28 @@ def get_missing_company_profile_fields(profile):
 def send_profile_completion_reminder_email(user):
     profile = user.individual_profile or user.company_profile
 
-    if isinstance(profile, IndividualProfile):
-        missing_fields = get_missing_individual_profile_fields(profile)
-    elif isinstance(profile, CompanyProfile):
-        missing_fields = get_missing_company_profile_fields(profile)
-    else:
+    if not profile:
         return
 
+    missing_fields = (
+        get_missing_individual_profile_fields(profile) 
+        if isinstance(profile, IndividualProfile)
+        else get_missing_company_profile_fields(profile)
+    )
+
     if missing_fields:
-        # Generate profile link
-        profile_link = url_for('profiles.view_profile', username=user.username, _external=True)
+        profile_link = url_for('settings.profile', _external=True)
 
-
-        # Prepare event properties
+        # Simplified event properties
         event_properties = {
-            "profileLink": profile_link,
-            "missingFields": "\n".join(f"- {field}" for field in missing_fields)  # Format as bullet points
+            "profileUrl": profile_link,
+            "incompleteFields": missing_fields
         }
 
-        # Trigger the profile completion reminder event in Loops
         send_loops_event(
             email_address=user.email,
-            event_name="profile_completion_reminder",  # Use the exact event name set up in Loops
-            user_id=user.id,
-            contact_properties={
-                "username": user.username  # Adjust based on whether you have username or first_name
-            },
+            event_name="profile_completion_reminder",
+            user_id=str(user.id),  # Convert to string
+            contact_properties={"name": user.username},
             event_properties=event_properties
         )
