@@ -13,7 +13,13 @@ from app.email_utils import send_password_reset_email, send_welcome_email, send_
 auth_bp = Blueprint('auth', __name__)
 
 
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(key_func=get_remote_address)
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit("5/hour")  # Limit to 5 registrations per IP per hour
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
