@@ -88,7 +88,8 @@ def send_welcome_email(user, verification_url=None):
     # Prepare data variables for the email
     data_variables = {
         "username": user.username or "There",
-        "verificationUrl": verification_url
+        "verificationUrl": verification_url,
+        "verification_url": verification_url  # Adding both formats to ensure compatibility
     }
 
     # Call the send_email function with the transactional ID and data variables
