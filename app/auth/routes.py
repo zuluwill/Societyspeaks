@@ -42,18 +42,19 @@ def register():
         # Hash the password and create the user
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         new_user = User(username=username, email=email, password=hashed_password)
+        new_user.email_verified = False
         db.session.add(new_user)
         db.session.commit()
 
-        # Send welcome email to the new user
-        send_welcome_email(new_user)  # Corrected from `user` to `new_user`
+        # Generate verification token
+        token = new_user.get_reset_token()
+        
+        # Send welcome/verification email using existing welcome email function
+        verification_url = url_for('auth.verify_email', token=token, _external=True)
+        send_welcome_email(new_user, verification_url=verification_url)
 
-        # Log the user in immediately after registration
-        login_user(new_user)
-        flash("Registration successful! You are now logged in.", "success")
-
-        # Redirect to the profile selection page
-        return redirect(url_for('profiles.select_profile_type'))
+        flash("Please check your email to verify your account before logging in.", "info")
+        return redirect(url_for('auth.login'))
 
     return render_template('auth/register.html')
 
