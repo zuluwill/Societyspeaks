@@ -81,13 +81,14 @@ def send_password_reset_email(user, token):
 
 
 #sending a welcome email.
-def send_welcome_email(user):
+def send_welcome_email(user, verification_url=None):
     # Set the transactional ID for the welcome email
-    transactional_id = "cm34nogvo006fxuem1vk61fjd"  # Alternatively, you can fetch this from an environment variable
+    transactional_id = "cm34nogvo006fxuem1vk61fjd"
 
     # Prepare data variables for the email
     data_variables = {
-        "username": user.username or "There"  # Fallback to "There" if first name is not provided
+        "username": user.username or "There",
+        "verificationUrl": verification_url
     }
 
     # Call the send_email function with the transactional ID and data variables
