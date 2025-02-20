@@ -18,6 +18,17 @@ from flask_limiter.util import get_remote_address
 
 limiter = Limiter(key_func=get_remote_address)
 
+@auth_bp.route('/verify-email/<token>', methods=['GET'])
+def verify_email(token):
+    user = User.verify_reset_token(token)
+    if user:
+        user.email_verified = True
+        db.session.commit()
+        flash('Your email has been verified! You can now log in.', 'success')
+    else:
+        flash('That is an invalid or expired token', 'warning')
+    return redirect(url_for('auth.login'))
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 @limiter.limit("5/hour")  # Limit to 5 registrations per IP per hour
 def register():
@@ -48,7 +59,7 @@ def register():
 
         # Generate verification token
         token = new_user.get_reset_token()
-        
+
         # Send welcome/verification email using existing welcome email function
         verification_url = url_for('auth.verify_email', token=token, _external=True)
         send_welcome_email(new_user, verification_url=verification_url)
@@ -58,7 +69,7 @@ def register():
 
     return render_template('auth/register.html')
 
-    
+
 
 
 
