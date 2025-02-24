@@ -70,6 +70,7 @@ from app import db
 from app.models import Discussion
 
 def init_commands(app):
+    app.cli.add_command(clean_spam)
     @app.cli.command('seed-db')
     def seed_database():
         """Seeds the database with initial data."""
