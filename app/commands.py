@@ -20,14 +20,25 @@ def clean_spam():
             )
         ).all()
 
-        for user in spam_users:
+        total = len(spam_users)
+        click.echo(f"Found {total} spam users to delete")
+
+        for i, user in enumerate(spam_users, 1):
+            click.echo(f"Processing {i}/{total}: {user.username} ({user.email})")
             # Delete associated data
             if user.individual_profile:
                 db.session.delete(user.individual_profile)
+                click.echo(f"- Deleted individual profile")
             if user.company_profile:
                 db.session.delete(user.company_profile)
-            Discussion.query.filter_by(creator_id=user.id).delete()
+                click.echo(f"- Deleted company profile")
+            disc_count = Discussion.query.filter_by(creator_id=user.id).delete()
+            if disc_count:
+                click.echo(f"- Deleted {disc_count} discussions")
             db.session.delete(user)
+            if i % 10 == 0:  # Commit every 10 users to avoid timeouts
+                db.session.commit()
+                click.echo(f"Committed changes for batch {i//10}")
 
         db.session.commit()
         click.echo(f"Successfully deleted {len(spam_users)} spam accounts")
