@@ -3,6 +3,38 @@ from flask.cli import with_appcontext
 import click
 from app import db
 from app.models import User, IndividualProfile, CompanyProfile, Discussion
+from datetime import datetime, timedelta
+
+@click.command('clean-spam')
+@with_appcontext
+def clean_spam():
+    """Delete spam accounts based on patterns"""
+    try:
+        # Find users with spam patterns
+        spam_patterns = ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑']
+        
+        spam_users = User.query.filter(
+            db.or_(
+                *[User.username.ilike(f'%{pattern}%') for pattern in spam_patterns],
+                *[User.email.ilike(f'%{pattern}%') for pattern in spam_patterns]
+            )
+        ).all()
+
+        for user in spam_users:
+            # Delete associated data
+            if user.individual_profile:
+                db.session.delete(user.individual_profile)
+            if user.company_profile:
+                db.session.delete(user.company_profile)
+            Discussion.query.filter_by(creator_id=user.id).delete()
+            db.session.delete(user)
+
+        db.session.commit()
+        click.echo(f"Successfully deleted {len(spam_users)} spam accounts")
+        
+    except Exception as e:
+        db.session.rollback()
+        click.echo(f"Error cleaning spam: {str(e)}")
 
 @click.command('delete-spam-users')
 @with_appcontext
