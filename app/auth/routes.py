@@ -30,12 +30,18 @@ def verify_email(token):
     return redirect(url_for('auth.login'))
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
-@limiter.limit("5/hour")  # Limit to 5 registrations per IP per hour
+@limiter.limit("3/hour")  # Reduce to 3 registrations per IP per hour
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+
+        # Spam detection
+        spam_patterns = ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑']
+        if any(pattern.lower() in username.lower() or pattern.lower() in email.lower() for pattern in spam_patterns):
+            flash("Registration denied due to suspicious content", "error")
+            return redirect(url_for('auth.register'))
 
         # Validation checks
         if not username or not email or not password:
