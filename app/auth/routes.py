@@ -38,7 +38,7 @@ def register():
         password = request.form.get('password')
 
         # Spam detection
-        spam_patterns = ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑']
+        spam_patterns = ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑', '📫', '📪', '📬', '📭', '📮', '📯', '📜', '📃', '📄', '📑', '📊', '📈', '📉', '📋', '📌', '📍', '📎', '📏', '📐', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓', '🔔', '🔕']
         if any(pattern.lower() in username.lower() or pattern.lower() in email.lower() for pattern in spam_patterns):
             flash("Registration denied due to suspicious content", "error")
             return redirect(url_for('auth.register'))
