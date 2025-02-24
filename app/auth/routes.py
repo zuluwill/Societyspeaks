@@ -56,6 +56,14 @@ def register():
             flash("Email already registered. Please log in.", "error")
             return redirect(url_for('auth.register'))
 
+        # Verify CAPTCHA
+        verification = request.form.get('verification')
+        expected = request.form.get('expected')
+        
+        if not verification or not expected or int(verification) != int(expected):
+            flash("Incorrect verification answer. Please try again.", "error")
+            return redirect(url_for('auth.register'))
+
         # Hash the password and create the user
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
         new_user = User(username=username, email=email, password=hashed_password)
