@@ -126,14 +126,22 @@ def create_app():
         content_security_policy_nonce_in=None  # Disable nonces
     )
 
-    # Initialize extensions
-    if hasattr(Config, 'SESSION_REDIS') and Config.SESSION_REDIS:
-        try:
-            app.config['SESSION_REDIS'] = Config.SESSION_REDIS
-            sess.init_app(app)
-        except Exception as e:
-            app.logger.error(f"Redis connection error: {e}")
-            app.config['SESSION_TYPE'] = 'filesystem'
+    # Initialize extensions with better session handling
+    try:
+        if hasattr(Config, 'SESSION_REDIS') and Config.SESSION_REDIS:
+            try:
+                # Test connection again right before initialization
+                Config.SESSION_REDIS.ping()
+                app.config['SESSION_REDIS'] = Config.SESSION_REDIS
+            except Exception as e:
+                app.logger.warning(f"Redis connection test failed: {e}, falling back to filesystem")
+                app.config['SESSION_TYPE'] = 'filesystem'
+        
+        sess.init_app(app)
+    except Exception as e:
+        app.logger.error(f"Session initialization error: {e}")
+        app.config['SESSION_TYPE'] = 'filesystem'
+        sess.init_app(app)
 
     try:
         cache.init_app(app, config={

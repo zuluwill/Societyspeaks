@@ -63,14 +63,26 @@ class Config:
     PERMANENT_SESSION_LIFETIME = timedelta(hours=3)
     REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
     SESSION_REDIS_RETRY_ON_TIMEOUT = True
-    SESSION_REDIS_RETRY_NUMBER = 3
+    SESSION_REDIS_RETRY_NUMBER = 5  # Increased retry attempts
     LOG_TO_STDOUT = os.getenv('LOG_TO_STDOUT', 'False').lower() == 'true'
 
-    # Use Redis for session management with connection pooling
+    # Use Redis for session management with connection pooling and better error handling
     if os.getenv('REDIS_URL'):
         try:
-            redis_pool = redis.ConnectionPool.from_url(os.getenv('REDIS_URL'), max_connections=100)
+            # Configure Redis with more resilient settings
+            redis_pool = redis.ConnectionPool.from_url(
+                os.getenv('REDIS_URL'),
+                max_connections=100,
+                socket_timeout=5.0,  # 5 second socket timeout
+                socket_connect_timeout=5.0,  # 5 second connect timeout
+                socket_keepalive=True,
+                health_check_interval=15,  # Check connection health every 15 seconds
+                retry_on_timeout=True
+            )
             SESSION_REDIS = redis.Redis(connection_pool=redis_pool)
+            
+            # Test connection before assigning
+            SESSION_REDIS.ping()  # Will raise an exception if connection fails
         except Exception as e:
             print(f"Failed to connect to Redis: {e}")
             SESSION_TYPE = 'filesystem'  # Fallback to filesystem sessions
