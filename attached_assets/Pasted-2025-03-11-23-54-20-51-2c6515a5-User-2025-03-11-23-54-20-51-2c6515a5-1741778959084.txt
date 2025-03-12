@@ -1,0 +1,132 @@
+2025-03-11 23:54:20.51
+2c6515a5
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-11 23:54:20.51
+2c6515a5
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1270, in process_response
+2025-03-11 23:54:20.51
+2c6515a5
+User
+self.session_interface.save_session(self, ctx.session, response)
+2025-03-11 23:54:20.51
+2c6515a5
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_session/base.py", line 305, in save_session
+2025-03-11 23:54:20.51
+2c6515a5
+User
+self._upsert_session(app.permanent_session_lifetime, session, store_id)
+2025-03-11 23:54:20.51
+2c6515a5
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_session/redis/redis.py", line 81, in _upsert_session
+2025-03-11 23:54:20.51
+2c6515a5
+User
+self.client.set(
+2025-03-11 23:54:20.51
+2c6515a5
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/redis/commands/core.py", line 2335, in set
+2025-03-11 23:54:20.51
+2c6515a5
+User
+return self.execute_command("SET", *pieces, **options)
+2025-03-11 23:54:20.51
+2c6515a5
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-11 23:54:20.51
+2c6515a5
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sentry_sdk/integrations/redis/_sync_common.py", line 103, in sentry_patched_execute_command
+2025-03-11 23:54:20.51
+2c6515a5
+User
+value = old_execute_command(self, name, *args, **kwargs)
+2025-03-11 23:54:20.51
+2c6515a5
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-11 23:54:20.51
+2c6515a5
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/redis/client.py", line 559, in execute_command
+2025-03-11 23:54:20.51
+2c6515a5
+User
+return self._execute_command(*args, **options)
+2025-03-11 23:54:20.51
+2c6515a5
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-11 23:54:20.51
+2c6515a5
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/redis/client.py", line 565, in _execute_command
+2025-03-11 23:54:20.51
+2c6515a5
+User
+conn = self.connection or pool.get_connection(command_name, **options)
+2025-03-11 23:54:20.51
+2c6515a5
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-03-11 23:54:20.51
+2c6515a5
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/redis/connection.py", line 1422, in get_connection
+2025-03-11 23:54:20.51
+2c6515a5
+User
+connection.connect()
+2025-03-11 23:54:20.51
+2c6515a5
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/redis/connection.py", line 363, in connect
+2025-03-11 23:54:20.51
+2c6515a5
+User
+raise ConnectionError(self._error_message(e))
+2025-03-11 23:54:20.51
+2c6515a5
+User
+redis.exceptions.ConnectionError: Error 111 connecting to redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com:10351. Connection refused.
+2025-03-11 23:59:38.77
+2c6515a5
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-03-12 01:05:16.04
+2c6515a5
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-03-12 02:14:41.40
+2c6515a5
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-03-12 02:47:18.71
+2c6515a5
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-03-12 06:42:22.50
+2c6515a5
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-03-12 09:20:09.94
+2c6515a5
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-03-12 10:42:44.82
+2c6515a5
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-03-12 10:46:06.72
+2c6515a5
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+Wrap
+
+Colors
