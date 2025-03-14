@@ -1,0 +1,283 @@
+[2025-03-14 11:25:35 +0000] [799] [INFO] Starting gunicorn 21.2.0
+[2025-03-14 11:25:35 +0000] [799] [INFO] Listening at: http://0.0.0.0:5000 (799)
+[2025-03-14 11:25:35 +0000] [799] [INFO] Using worker: sync
+[2025-03-14 11:25:35 +0000] [814] [INFO] Booting worker with pid: 814
+[2025-03-14 11:25:35 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:35 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:35 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:36 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:36 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:36 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:36 +0000] [799] [INFO] Handling signal: winch
+2025-03-14 11:25:37,045 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+select pg_catalog.version()
+2025-03-14 11:25:37,046 INFO sqlalchemy.engine.Engine [raw sql] {}
+[raw sql] {}
+2025-03-14 11:25:37,115 INFO sqlalchemy.engine.Engine select current_schema()
+select current_schema()
+2025-03-14 11:25:37,115 INFO sqlalchemy.engine.Engine [raw sql] {}
+[raw sql] {}
+2025-03-14 11:25:37,183 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+show standard_conforming_strings
+2025-03-14 11:25:37,183 INFO sqlalchemy.engine.Engine [raw sql] {}
+[raw sql] {}
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+Registering admin blueprint...
+Admin blueprint registered
+All registered routes:
+Map([<Rule '/<filename>' (GET, HEAD, OPTIONS) -> static>,
+ <Rule '/' (GET, HEAD, OPTIONS) -> main.index>,
+ <Rule '/about' (GET, HEAD, OPTIONS) -> main.about>,
+ <Rule '/profile/<slug>' (GET, HEAD, OPTIONS) -> main.view_profile>,
+ <Rule '/privacy-policy' (GET, HEAD, OPTIONS) -> main.privacy_policy>,
+ <Rule '/terms-and-conditions' (GET, HEAD, OPTIONS) -> main.terms_and_conditions>,
+ <Rule '/sitemap.xml' (GET, HEAD, OPTIONS) -> main.sitemap>,
+ <Rule '/test-sitemap' (GET, HEAD, OPTIONS) -> main.test_sitemap>,
+ <Rule '/robots.txt' (GET, HEAD, OPTIONS) -> main.robots>,
+ <Rule '/test-robots' (GET, HEAD, OPTIONS) -> main.test_robots>,
+ <Rule '/auth/verify-email/<token>' (GET, HEAD, OPTIONS) -> auth.verify_email>,
+ <Rule '/auth/register' (POST, HEAD, OPTIONS, GET) -> auth.get_spam_patterns>,
+ <Rule '/auth/login' (POST, HEAD, OPTIONS, GET) -> auth.login>,
+ <Rule '/auth/dashboard' (GET, HEAD, OPTIONS) -> auth.dashboard>,
+ <Rule '/auth/logout' (GET, HEAD, OPTIONS) -> auth.logout>,
+ <Rule '/auth/password-reset' (POST, HEAD, OPTIONS, GET) -> auth.password_reset_request>,
+ <Rule '/auth/password-reset/<token>' (POST, HEAD, OPTIONS, GET) -> auth.password_reset>,
+ <Rule '/profiles/get-image/<filename>' (GET, HEAD, OPTIONS) -> profiles.get_image>,
+ <Rule '/profiles/profile/select' (GET, HEAD, OPTIONS) -> profiles.select_profile_type>,
+ <Rule '/profiles/profile/individual/new' (POST, HEAD, OPTIONS, GET) -> profiles.create_individual_profile>,
+ <Rule '/profiles/profile/company/new' (POST, HEAD, OPTIONS, GET) -> profiles.create_company_profile>,
+ <Rule '/profiles/profile/individual/<username>/edit' (POST, HEAD, OPTIONS, GET) -> profiles.edit_individual_profile>,
+ <Rule '/profiles/profile/company/<company_name>/edit' (POST, HEAD, OPTIONS, GET) -> profiles.edit_company_profile>,
+ <Rule '/profiles/profile/individual/<username>' (GET, HEAD, OPTIONS) -> profiles.view_individual_profile>,
+ <Rule '/profiles/profile/company/<company_name>' (GET, HEAD, OPTIONS) -> profiles.view_company_profile>,
+ <Rule '/profiles/profile/<username>' (GET, HEAD, OPTIONS) -> profiles.view_profile>,
+ <Rule '/discussions/create' (POST, HEAD, OPTIONS, GET) -> discussions.create_discussion>,
+ <Rule '/discussions/<discussion_id>/<slug>' (GET, HEAD, OPTIONS) -> discussions.view_discussion>,
+ <Rule '/discussions/search' (GET, HEAD, OPTIONS) -> discussions.search_discussions>,
+ <Rule '/discussions/api/search' (GET, HEAD, OPTIONS) -> discussions.api_search_discussions>,
+ <Rule '/discussions/api/cities/<country_code>' (GET, HEAD, OPTIONS) -> discussions.get_cities_by_country>,
+ <Rule '/settings/settings' (POST, HEAD, OPTIONS, GET) -> settings.view_settings>,
+ <Rule '/settings/change-password' (POST, OPTIONS) -> settings.change_password>,
+ <Rule '/settings/delete-account' (POST, OPTIONS) -> settings.delete_account>,
+ <Rule '/help/' (GET, HEAD, OPTIONS) -> help.help>,
+ <Rule '/help/getting-started' (GET, HEAD, OPTIONS) -> help.getting_started>,
+ <Rule '/help/creating-discussions' (GET, HEAD, OPTIONS) -> help.creating_discussions>,
+ <Rule '/help/managing-discussions' (GET, HEAD, OPTIONS) -> help.managing_discussions>,
+ <Rule '/help/seed-comments' (GET, HEAD, OPTIONS) -> help.seed_comments>,
+ <Rule '/help/polis-algorithms' (GET, HEAD, OPTIONS) -> help.polis_algorithms>,
+ <Rule '/admin/dashboard' (GET, HEAD, OPTIONS) -> admin.dashboard>,
+ <Rule '/admin/profiles' (GET, HEAD, OPTIONS) -> admin.list_profiles>,
+ <Rule '/admin/profiles/individual/create' (POST, HEAD, OPTIONS, GET) -> admin.create_individual_profile>,
+ <Rule '/admin/profiles/individual/<profile_id>/edit' (POST, HEAD, OPTIONS, GET) -> admin.edit_individual_profile>,
+ <Rule '/admin/profiles/company/create' (POST, HEAD, OPTIONS, GET) -> admin.create_company_profile>,
+ <Rule '/admin/profiles/company/<profile_id>/edit' (POST, HEAD, OPTIONS, GET) -> admin.edit_company_profile>,
+ <Rule '/admin/profiles/<profile_type>/<profile_id>/delete' (POST, OPTIONS) -> admin.delete_profile>])
+[2025-03-14 11:25:37 +0000] [799] [INFO] Handling signal: winch
+2025-03-14 11:25:37,680 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+BEGIN (implicit)
+2025-03-14 11:25:37,684 INFO sqlalchemy.engine.Engine SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion 
+WHERE discussion.is_featured = true ORDER BY discussion.created_at DESC
+SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion 
+WHERE discussion.is_featured = true ORDER BY discussion.created_at DESC
+2025-03-14 11:25:37,684 INFO sqlalchemy.engine.Engine [generated in 0.00024s] {}
+[generated in 0.00024s] {}
+2025-03-14 11:25:37,757 INFO sqlalchemy.engine.Engine SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion 
+WHERE (discussion.id NOT IN (%(id_1_1)s)) ORDER BY discussion.created_at DESC 
+ LIMIT %(param_1)s
+SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion 
+WHERE (discussion.id NOT IN (%(id_1_1)s)) ORDER BY discussion.created_at DESC 
+ LIMIT %(param_1)s
+2025-03-14 11:25:37,757 INFO sqlalchemy.engine.Engine [generated in 0.00031s] {'param_1': 5, 'id_1_1': 1}
+[generated in 0.00031s] {'param_1': 5, 'id_1_1': 1}
+2025-03-14 11:25:37,793 INFO sqlalchemy.engine.Engine SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion ORDER BY discussion.created_at DESC 
+ LIMIT %(param_1)s OFFSET %(param_2)s
+SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion ORDER BY discussion.created_at DESC 
+ LIMIT %(param_1)s OFFSET %(param_2)s
+2025-03-14 11:25:37,793 INFO sqlalchemy.engine.Engine [generated in 0.00020s] {'param_1': 9, 'param_2': 0}
+[generated in 0.00020s] {'param_1': 9, 'param_2': 0}
+2025-03-14 11:25:37,832 INFO sqlalchemy.engine.Engine SELECT count(*) AS count_1 
+FROM (SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion) AS anon_1
+SELECT count(*) AS count_1 
+FROM (SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion) AS anon_1
+2025-03-14 11:25:37,833 INFO sqlalchemy.engine.Engine [generated in 0.00021s] {}
+[generated in 0.00021s] {}
+[2025-03-14 11:25:37,934] ERROR in __init__: Unhandled Exception: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/routes.py", line 50, in index
+    return render_template('index.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 152, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 133, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/runner/workspace/app/templates/index.html", line 2, in top-level template code
+    {% from "components/discussion_card.html" import discussion_card %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/templates/layout.html", line 158, in top-level template code
+    <a href="{{ url_for('auth.register') }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1071, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1060, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/routing/map.py", line 919, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+Unhandled Exception: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/routes.py", line 50, in index
+    return render_template('index.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 152, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 133, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/runner/workspace/app/templates/index.html", line 2, in top-level template code
+    {% from "components/discussion_card.html" import discussion_card %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/templates/layout.html", line 158, in top-level template code
+    <a href="{{ url_for('auth.register') }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1071, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1060, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/routing/map.py", line 919, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+2025-03-14 11:25:37,937 INFO sqlalchemy.engine.Engine ROLLBACK
+ROLLBACK
+[2025-03-14 11:25:37 +0000] [814] [ERROR] Error handling request /
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/routes.py", line 50, in index
+    return render_template('index.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 152, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 133, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/runner/workspace/app/templates/index.html", line 2, in top-level template code
+    {% from "components/discussion_card.html" import discussion_card %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/templates/layout.html", line 158, in top-level template code
+    <a href="{{ url_for('auth.register') }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1071, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1060, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/routing/map.py", line 919, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 135, in handle
+    self.handle_request(listener, req, client, addr)
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/gunicorn/workers/sync.py", line 178, in handle_request
+    respiter = self.wsgi(environ, resp.start_response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1478, in __call__
+    return self.wsgi_app(environ, start_response)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1458, in wsgi_app
+    response = self.handle_exception(e)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1455, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 869, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 759, in handle_user_exception
+    return self.ensure_sync(handler)(e)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/__init__.py", line 248, in handle_exception
+    return render_template('errors/general_error.html', error_code=500, error_message="An unexpected error occurred."), 500
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 152, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 133, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/runner/workspace/app/templates/errors/general_error.html", line 2, in top-level template code
+    {% extends "layout.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/templates/layout.html", line 158, in top-level template code
+    <a href="{{ url_for('auth.register') }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1071, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1060, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/werkzeug/routing/map.py", line 919, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'auth.register'. Did you mean 'auth.login' instead?
