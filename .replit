@@ -17,3 +17,15 @@ externalPort = 80
 
 [objectStorage]
 defaultBucketID = "replit-objstore-14f1b847-9243-4a51-b979-b86c328f7947"
+
+[workflows]
+runButton = "Run Flask"
+
+[[workflows.workflow]]
+name = "Run Flask"
+author = 21777039
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python run.py"
