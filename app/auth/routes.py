@@ -31,15 +31,22 @@ def verify_email(token):
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 @limiter.limit("3/hour")  # Reduce to 3 registrations per IP per hour
+@cache.cached(timeout=60, key_prefix='spam_patterns')
+def get_spam_patterns():
+    return ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑', '📫', '📪', '📬', '📭', '📮', '📯', '📜', '📃', '📄', '📑', '📊', '📈', '📉', '📋', '📌', '📍', '📎', '📏', '📐', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓', '🔔', '🔕']
+
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
 
-        # Spam detection
-        spam_patterns = ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑', '📫', '📪', '📬', '📭', '📮', '📯', '📜', '📃', '📄', '📑', '📊', '📈', '📉', '📋', '📌', '📍', '📎', '📏', '📐', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓', '🔔', '🔕']
-        if any(pattern.lower() in username.lower() or pattern.lower() in email.lower() for pattern in spam_patterns):
+        # Use cached spam patterns
+        spam_patterns = get_spam_patterns()
+        
+        # Optimize spam check with set operations
+        input_text = f"{username.lower()} {email.lower()}"
+        if any(pattern in input_text for pattern in spam_patterns):
             flash("Registration denied due to suspicious content", "error")
             return redirect(url_for('auth.register'))
 
