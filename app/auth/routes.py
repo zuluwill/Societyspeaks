@@ -32,13 +32,15 @@ def verify_email(token):
 @auth_bp.route('/register', methods=['GET', 'POST'])
 @limiter.limit("3/hour")  # Reduce to 3 registrations per IP per hour
 def register():
-    spam_patterns = ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑', '📫', '📪', '📬', '📭', '📮', '📯', '📜', '📃', '📄', '📑', '📊', '📈', '📉', '📋', '📌', '📍', '📎', '📏', '📐', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓', '🔔', '🔕']
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
         
-        # Optimize spam check with set operations
+        # Define spam patterns
+        spam_patterns = ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑', '📫', '📪', '📬', '📭', '📮', '📯', '📜', '📃', '📄', '📑', '📊', '📈', '📉', '📋', '📌', '📍', '📎', '📏', '📐', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓', '🔔', '🔕']
+        
+        # Check for spam in a case-insensitive way
         input_text = f"{username.lower()} {email.lower()}"
         if any(pattern in input_text for pattern in spam_patterns):
             flash("Registration denied due to suspicious content", "error")
