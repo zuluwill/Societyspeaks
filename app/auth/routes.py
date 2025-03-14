@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from werkzeug.security import generate_password_hash, check_password_hash
-from app import db
+from app import db, cache
 from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
