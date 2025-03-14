@@ -31,11 +31,9 @@ def verify_email(token):
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 @limiter.limit("3/hour")  # Reduce to 3 registrations per IP per hour
-@cache.cached(timeout=60, key_prefix='spam_patterns')
-def get_spam_patterns():
-    return ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑', '📫', '📪', '📬', '📭', '📮', '📯', '📜', '📃', '📄', '📑', '📊', '📈', '📉', '📋', '📌', '📍', '📎', '📏', '📐', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓', '🔔', '🔕']
-
 def register():
+    # Move spam patterns inside the function
+    spam_patterns = ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑', '📫', '📪', '📬', '📭', '📮', '📯', '📜', '📃', '📄', '📑', '📊', '📈', '📉', '📋', '📌', '📍', '📎', '📏', '📐', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓', '🔔', '🔕']
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
