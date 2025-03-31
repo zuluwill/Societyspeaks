@@ -333,7 +333,7 @@ class Discussion(db.Model):
     
     @staticmethod
     def search_discussions(search=None, country=None, city=None, topic=None, scope=None, keywords=None, page=1, per_page=9):
-        query = Discussion.query.options(db.joinedload('creator'))
+        query = Discussion.query.options(db.joinedload(Discussion.creator))
 
         if search:
             search_term = f"%{search}%"
