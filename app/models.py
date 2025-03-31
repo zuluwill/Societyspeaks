@@ -1,4 +1,4 @@
-from app import db
+from app import db, cache
 from flask import current_app
 from datetime import datetime, timedelta
 from slugify import slugify as python_slugify
@@ -179,6 +179,11 @@ class CompanyProfile(db.Model):
 
 
 class Discussion(db.Model):
+    __table_args__ = (
+        db.Index('idx_discussion_title_desc', 'title', 'description'),
+        db.Index('idx_discussion_created_at', 'created_at'),
+    )
+    
     id = db.Column(db.Integer, primary_key=True)
     embed_code = db.Column(db.String(800), nullable=False)  # Store full embed code
     title = db.Column(db.String(200), nullable=False)
