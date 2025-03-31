@@ -1,0 +1,215 @@
+ * Running on http://127.0.0.1:5000
+Press CTRL+C to quit
+ * Restarting with stat
+2025-03-31 14:42:55,189 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+select pg_catalog.version()
+2025-03-31 14:42:55,189 INFO sqlalchemy.engine.Engine [raw sql] {}
+[raw sql] {}
+2025-03-31 14:42:55,259 INFO sqlalchemy.engine.Engine select current_schema()
+select current_schema()
+2025-03-31 14:42:55,259 INFO sqlalchemy.engine.Engine [raw sql] {}
+[raw sql] {}
+2025-03-31 14:42:55,334 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+show standard_conforming_strings
+2025-03-31 14:42:55,335 INFO sqlalchemy.engine.Engine [raw sql] {}
+[raw sql] {}
+Registering admin blueprint...
+Admin blueprint registered
+All registered routes:
+Map([<Rule '/<filename>' (OPTIONS, HEAD, GET) -> static>,
+ <Rule '/' (OPTIONS, HEAD, GET) -> main.index>,
+ <Rule '/about' (OPTIONS, HEAD, GET) -> main.about>,
+ <Rule '/profile/<slug>' (OPTIONS, HEAD, GET) -> main.view_profile>,
+ <Rule '/privacy-policy' (OPTIONS, HEAD, GET) -> main.privacy_policy>,
+ <Rule '/terms-and-conditions' (OPTIONS, HEAD, GET) -> main.terms_and_conditions>,
+ <Rule '/sitemap.xml' (OPTIONS, HEAD, GET) -> main.sitemap>,
+ <Rule '/test-sitemap' (OPTIONS, HEAD, GET) -> main.test_sitemap>,
+ <Rule '/robots.txt' (OPTIONS, HEAD, GET) -> main.robots>,
+ <Rule '/test-robots' (OPTIONS, HEAD, GET) -> main.test_robots>,
+ <Rule '/auth/verify-email/<token>' (OPTIONS, HEAD, GET) -> auth.verify_email>,
+ <Rule '/auth/register' (POST, OPTIONS, HEAD, GET) -> auth.register>,
+ <Rule '/auth/login' (POST, OPTIONS, HEAD, GET) -> auth.login>,
+ <Rule '/auth/dashboard' (OPTIONS, HEAD, GET) -> auth.dashboard>,
+ <Rule '/auth/logout' (OPTIONS, HEAD, GET) -> auth.logout>,
+ <Rule '/auth/password-reset' (POST, OPTIONS, HEAD, GET) -> auth.password_reset_request>,
+ <Rule '/auth/password-reset/<token>' (POST, OPTIONS, HEAD, GET) -> auth.password_reset>,
+ <Rule '/profiles/get-image/<filename>' (OPTIONS, HEAD, GET) -> profiles.get_image>,
+ <Rule '/profiles/profile/select' (OPTIONS, HEAD, GET) -> profiles.select_profile_type>,
+ <Rule '/profiles/profile/individual/new' (POST, OPTIONS, HEAD, GET) -> profiles.create_individual_profile>,
+ <Rule '/profiles/profile/company/new' (POST, OPTIONS, HEAD, GET) -> profiles.create_company_profile>,
+ <Rule '/profiles/profile/individual/<username>/edit' (POST, OPTIONS, HEAD, GET) -> profiles.edit_individual_profile>,
+ <Rule '/profiles/profile/company/<company_name>/edit' (POST, OPTIONS, HEAD, GET) -> profiles.edit_company_profile>,
+ <Rule '/profiles/profile/individual/<username>' (OPTIONS, HEAD, GET) -> profiles.view_individual_profile>,
+ <Rule '/profiles/profile/company/<company_name>' (OPTIONS, HEAD, GET) -> profiles.view_company_profile>,
+ <Rule '/profiles/profile/<username>' (OPTIONS, HEAD, GET) -> profiles.view_profile>,
+ <Rule '/discussions/create' (POST, OPTIONS, HEAD, GET) -> discussions.create_discussion>,
+ <Rule '/discussions/<discussion_id>/<slug>' (OPTIONS, HEAD, GET) -> discussions.view_discussion>,
+ <Rule '/discussions/search' (OPTIONS, HEAD, GET) -> discussions.search_discussions>,
+ <Rule '/discussions/api/search' (OPTIONS, HEAD, GET) -> discussions.api_search_discussions>,
+ <Rule '/discussions/api/cities/<country_code>' (OPTIONS, HEAD, GET) -> discussions.get_cities_by_country>,
+ <Rule '/settings/settings' (POST, OPTIONS, HEAD, GET) -> settings.view_settings>,
+ <Rule '/settings/change-password' (POST, OPTIONS) -> settings.change_password>,
+ <Rule '/settings/delete-account' (POST, OPTIONS) -> settings.delete_account>,
+ <Rule '/help/' (OPTIONS, HEAD, GET) -> help.help>,
+ <Rule '/help/getting-started' (OPTIONS, HEAD, GET) -> help.getting_started>,
+ <Rule '/help/creating-discussions' (OPTIONS, HEAD, GET) -> help.creating_discussions>,
+ <Rule '/help/managing-discussions' (OPTIONS, HEAD, GET) -> help.managing_discussions>,
+ <Rule '/help/seed-comments' (OPTIONS, HEAD, GET) -> help.seed_comments>,
+ <Rule '/help/polis-algorithms' (OPTIONS, HEAD, GET) -> help.polis_algorithms>,
+ <Rule '/admin/dashboard' (OPTIONS, HEAD, GET) -> admin.dashboard>,
+ <Rule '/admin/profiles' (OPTIONS, HEAD, GET) -> admin.list_profiles>,
+ <Rule '/admin/profiles/individual/create' (POST, OPTIONS, HEAD, GET) -> admin.create_individual_profile>,
+ <Rule '/admin/profiles/individual/<profile_id>/edit' (POST, OPTIONS, HEAD, GET) -> admin.edit_individual_profile>,
+ <Rule '/admin/profiles/company/create' (POST, OPTIONS, HEAD, GET) -> admin.create_company_profile>,
+ <Rule '/admin/profiles/company/<profile_id>/edit' (POST, OPTIONS, HEAD, GET) -> admin.edit_company_profile>,
+ <Rule '/admin/profiles/<profile_type>/<profile_id>/delete' (POST, OPTIONS) -> admin.delete_profile>])
+ * Debugger is active!
+ * Debugger PIN: 355-462-588
+2025-03-31 14:42:56,624 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+BEGIN (implicit)
+2025-03-31 14:42:56,628 INFO sqlalchemy.engine.Engine SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion 
+WHERE discussion.is_featured = true ORDER BY discussion.created_at DESC
+SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion 
+WHERE discussion.is_featured = true ORDER BY discussion.created_at DESC
+2025-03-31 14:42:56,628 INFO sqlalchemy.engine.Engine [generated in 0.00019s] {}
+[generated in 0.00019s] {}
+2025-03-31 14:42:56,699 INFO sqlalchemy.engine.Engine SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion 
+WHERE (discussion.id NOT IN (%(id_1_1)s)) ORDER BY discussion.created_at DESC 
+ LIMIT %(param_1)s
+SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id, discussion.company_profile_id AS discussion_company_profile_id 
+FROM discussion 
+WHERE (discussion.id NOT IN (%(id_1_1)s)) ORDER BY discussion.created_at DESC 
+ LIMIT %(param_1)s
+2025-03-31 14:42:56,699 INFO sqlalchemy.engine.Engine [generated in 0.00026s] {'param_1': 5, 'id_1_1': 1}
+[generated in 0.00026s] {'param_1': 5, 'id_1_1': 1}
+[2025-03-31 14:42:56,822] ERROR in __init__: Unhandled Exception: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/routes.py", line 41, in index
+    pagination = Discussion.search_discussions(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/models.py", line 336, in search_discussions
+    query = Discussion.query.options(db.joinedload('creator'))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2436, in joinedload
+    return _generate_from_keys(Load.joinedload, keys, False, kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2338, in _generate_from_keys
+    raise sa_exc.ArgumentError(
+sqlalchemy.exc.ArgumentError: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+Unhandled Exception: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/routes.py", line 41, in index
+    pagination = Discussion.search_discussions(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/models.py", line 336, in search_discussions
+    query = Discussion.query.options(db.joinedload('creator'))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2436, in joinedload
+    return _generate_from_keys(Load.joinedload, keys, False, kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2338, in _generate_from_keys
+    raise sa_exc.ArgumentError(
+sqlalchemy.exc.ArgumentError: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+2025-03-31 14:42:56,868 INFO sqlalchemy.engine.Engine ROLLBACK
+ROLLBACK
+127.0.0.1 - - [31/Mar/2025 14:42:56] "GET / HTTP/1.1" 500 -
+127.0.0.1 - - [31/Mar/2025 14:42:57] "GET /css/output.css HTTP/1.1" 200 -
+[2025-03-31 14:42:58,805] ERROR in __init__: Unhandled Exception: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/routes.py", line 41, in index
+    pagination = Discussion.search_discussions(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/models.py", line 336, in search_discussions
+    query = Discussion.query.options(db.joinedload('creator'))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2436, in joinedload
+    return _generate_from_keys(Load.joinedload, keys, False, kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2338, in _generate_from_keys
+    raise sa_exc.ArgumentError(
+sqlalchemy.exc.ArgumentError: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+Unhandled Exception: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/routes.py", line 41, in index
+    pagination = Discussion.search_discussions(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/models.py", line 336, in search_discussions
+    query = Discussion.query.options(db.joinedload('creator'))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2436, in joinedload
+    return _generate_from_keys(Load.joinedload, keys, False, kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2338, in _generate_from_keys
+    raise sa_exc.ArgumentError(
+sqlalchemy.exc.ArgumentError: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+127.0.0.1 - - [31/Mar/2025 14:42:58] "GET / HTTP/1.1" 500 -
+127.0.0.1 - - [31/Mar/2025 14:42:58] "GET /css/output.css HTTP/1.1" 304 -
+[2025-03-31 14:43:06,235] ERROR in __init__: Unhandled Exception: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/routes.py", line 41, in index
+    pagination = Discussion.search_discussions(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/models.py", line 336, in search_discussions
+    query = Discussion.query.options(db.joinedload('creator'))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2436, in joinedload
+    return _generate_from_keys(Load.joinedload, keys, False, kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2338, in _generate_from_keys
+    raise sa_exc.ArgumentError(
+sqlalchemy.exc.ArgumentError: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+Unhandled Exception: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 867, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 852, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/routes.py", line 41, in index
+    pagination = Discussion.search_discussions(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/models.py", line 336, in search_discussions
+    query = Discussion.query.options(db.joinedload('creator'))
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2436, in joinedload
+    return _generate_from_keys(Load.joinedload, keys, False, kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/sqlalchemy/orm/strategy_options.py", line 2338, in _generate_from_keys
+    raise sa_exc.ArgumentError(
+sqlalchemy.exc.ArgumentError: Strings are not accepted for attribute names in loader options; please use class-bound attributes directly.
+127.0.0.1 - - [31/Mar/2025 14:43:06] "GET / HTTP/1.1" 500 -
+127.0.0.1 - - [31/Mar/2025 14:43:06] "GET /css/output.css HTTP/1.1" 304 -
