@@ -1,0 +1,306 @@
+
+All Envs
+
+Since First Seen
+Filter events…
+
+
+Events
+5k
+
+Users
+0
+transaction
+100%
+auth.register
+url
+100%
+https://societyspeaks.io/auth/register
+environment
+100%
+production
+client_os
+40%
+Windows 7
+View all tags
+
+Events
+in this issue
+
+First
+Last
+Recommended
+View More Events
+ID: f543df23
+9 days ago
+|
+JSON
+Jump to:
+Highlights
+Stack Trace
+Replay
+Breadcrumbs
+Trace
+Tags
+Context
+
+
+Chrome
+50.0.2645
+
+Windows
+7
+
+CPython
+3.11.10
+production
+
+Edit
+handled
+handled
+yes
+level
+level
+error
+url
+url
+https://societyspeaks.io/auth/register
+Trace: Trace ID
+8eaec73e444f42da9cc7f7ba6cac909f
+Unhandled Exception: invalid literal for int() with base 10: 'olwel5'
+
+
+
+Newest
+
+ValueError
+invalid literal for int() with base 10: 'olwel5'
+mechanism
+logging
+handled
+true
+Connect with Git Providers
+Install Git providers (GitHub, GitLab…) to enable features like code mapping and stack trace linking.
+Get Started
+
+app/auth/routes.py in register at line 66
+In App
+
+        # Verify CAPTCHA
+        verification = request.form.get('verification')
+        expected = request.form.get('expected')
+        
+        if not verification or not expected or int(verification) != int(expected):
+            flash("Incorrect verification answer. Please try again.", "error")
+            return redirect(url_for('auth.register'))
+        # Hash the password and create the user
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+email	
+"spearnannndira2@gmail.com"
+expected	
+"12"
+input_text	
+"💽 sending a gift from us. gет > https://graph.org/transfer--0519-03-20?wl7 💽 spearnannndira2@gmail.com"
+password	
+[Filtered]
+spam_patterns	
+
+[
+10 items
+]
+username	
+"💽 Sending a gift from us. GЕТ > https://graph.org/Transfer--0519-03-20?wl7 💽"
+verification	
+"olwel5"
+
+Show More
+Called from: flask_limiter/extension.py in __inner
+
+Show 2 more frames
+
+Set up your Flask app with Session Replay
+Watch the errors and latency issues your users face
+
+Set Up Now
+
+
+
+Exception - This event
+error
+12:04:21.000 AM
+ValueError: invalid literal for int() with base 10: 'olwel5'
+Query
+info
+12:04:20.984 AM
+[Filtered]
+subprocess
+info
+02:07:48.555 AM
+git rev-parse HEAD
+
+{
+thread.id: 140324246335168,
+thread.name: MainThread
+}
+redis
+info
+02:07:47.922 AM
+PING
+
+{
+db.operation: PING,
+redis.command: PING,
+redis.is_cluster: false
+}
+View Full Trace
+db
+50%
+http.server
+50%
+0.00ms20.00ms40.00ms60.00ms80.00ms0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s
+
+1
+Trace
+—
+8eaec73e444f42da9cc7f7ba6cac909f
+
+1
+
+http.server
+—
+auth.register
+93ms
+
+db
+—
+SELECT user.id AS user_id, user.username AS user_username, user.email AS user_email, user.pas…
+39.82ms
+
+
+POST/auth/registersocietyspeaks.io
+Body
+email	
+spearnannndira2@gmail.com
+expected	
+12
+password	
+[Filtered]
+username	
+💽 Sending a gift from us. GЕТ > https://graph.org/Transfer--0519-03-20?wl7 💽
+verification	
+olwel5
+Headers
+Accept
+*/*
+Accept-Encoding
+gzip
+Content-Length
+661
+Content-Type
+multipart/form-data; boundary=------------------------5e55c0313306808e
+Host
+societyspeaks.io
+Show more...
+Environment
+SERVER_NAME
+0.0.0.0
+SERVER_PORT
+5000
+
+
+
+
+
+browser
+browser
+Chrome 50.0.2645
+browser.name
+name
+Chrome
+client_os
+client_os
+Windows 7
+client_os.name
+name
+Windows
+environment
+environment
+production
+handled
+handled
+yes
+level
+level
+error
+logger
+logger
+app
+mechanism
+mechanism
+logging
+runtime
+runtime
+CPython 3.11.10
+runtime.name
+name
+CPython
+server_name
+server_name
+localhost
+transaction
+transaction
+auth.register
+url
+url
+https://societyspeaks.io/auth/register
+User
+Geography
+Las Vegas, United States (US)
+Browser
+
+Name
+Chrome
+Version
+50.0.2645
+Operating System
+
+Name
+Windows
+Version
+7
+Runtime
+
+Build
+3.11.10 (main, Sep 7 2024, 01:03:31) [GCC 13.3.0]
+Name
+CPython
+Version
+3.11.10
+Trace Details
+Client Sample Rate
+1
+Data
+
+{
+2 items
+}
+Operation Name
+http.server
+Origin
+auto.http.flask
+Span ID
+a365b11689ee40c6
+Status
+unknown
+Trace ID
+8eaec73e444f42da9cc7f7ba6cac909f
+
+
+sys.argv	
+
+[
+/home/runner/workspace/.pythonlibs/bin/gunicorn,
+--bind,
+0.0.0.0:5000,
+run:app
+]
