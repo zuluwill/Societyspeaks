@@ -251,6 +251,7 @@ class Discussion(db.Model):
 
 
     @staticmethod
+    @cache.memoize(timeout=300)  # Cache for 5 minutes
     def get_featured(limit=6):
         # First get discussions marked as featured
         featured = Discussion.query\
@@ -327,7 +328,7 @@ class Discussion(db.Model):
     
     @staticmethod
     def search_discussions(search=None, country=None, city=None, topic=None, scope=None, keywords=None, page=1, per_page=9):
-        query = Discussion.query
+        query = Discussion.query.options(db.joinedload('creator'))
 
         if search:
             search_term = f"%{search}%"

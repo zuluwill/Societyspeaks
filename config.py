@@ -23,13 +23,13 @@ class Config:
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,
         'pool_recycle': 300,
-        'pool_size': 10,
-        'max_overflow': 20,
+        'pool_size': 5,  # Reduced pool size
+        'max_overflow': 10,  # Reduced max overflow
         'pool_timeout': 30,
         'connect_args': {
             'connect_timeout': 10,
             'keepalives': 1,
-            'keepalives_idle': 30,
+            'keepalives_idle': 60,  # Increased idle time
             'keepalives_interval': 10,
             'keepalives_count': 5
         }
