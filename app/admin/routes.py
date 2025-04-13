@@ -344,6 +344,50 @@ def list_users():
     users = User.query.order_by(User.created_at.desc()).all()
     return render_template('admin/users/list.html', users=users)
 
+@admin_bp.route('/users/<int:user_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user == current_user:
+        flash('You cannot delete your own account.', 'error')
+        return redirect(url_for('admin.list_users'))
+    try:
+        # Delete associated data
+        if user.individual_profile:
+            db.session.delete(user.individual_profile)
+        if user.company_profile:
+            db.session.delete(user.company_profile)
+        # Delete user's discussions
+        for discussion in user.discussions_created:
+            db.session.delete(discussion)
+        db.session.delete(user)
+        db.session.commit()
+        flash('User and associated data deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting user: {str(e)}")
+        flash('Error deleting user. Please try again.', 'error')
+    return redirect(url_for('admin.list_users'))
+
+@admin_bp.route('/users/<int:user_id>/toggle-admin', methods=['POST'])
+@login_required
+@admin_required
+def toggle_admin(user_id):
+    user = User.query.get_or_404(user_id)
+    if user == current_user:
+        flash('You cannot modify your own admin status.', 'error')
+        return redirect(url_for('admin.list_users'))
+    try:
+        user.is_admin = not user.is_admin
+        db.session.commit()
+        flash(f"Admin privileges {'granted to' if user.is_admin else 'removed from'} {user.username}!", 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error toggling admin status: {str(e)}")
+        flash('Error updating admin status. Please try again.', 'error')
+    return redirect(url_for('admin.list_users'))
+
 @admin_bp.before_request
 def log_admin_access():
     if current_user.is_authenticated and current_user.is_admin:
