@@ -10,12 +10,13 @@ def get_base_url():
     return 'https://societyspeaks.io'
 
 def generate_sitemap():
-    """Generate the sitemap XML content"""
+    """Generate the sitemap XML content with optimized priorities"""
     base_url = get_base_url()
+    current_date = datetime.now().strftime("%Y-%m-%d")
 
     xml_content = [
         '<?xml version="1.0" encoding="UTF-8"?>',
-        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
         '  <!-- Main Pages -->',
         '  <url>',
         f'    <loc>{base_url}/</loc>',
