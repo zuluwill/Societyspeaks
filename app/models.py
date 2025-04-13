@@ -258,9 +258,10 @@ class Discussion(db.Model):
     @staticmethod
     @cache.memoize(timeout=300)  # Cache for 5 minutes
     def get_featured(limit=6):
-        # First get discussions marked as featured
+        # First get discussions marked as featured, excluding test discussions
         featured = Discussion.query\
             .filter_by(is_featured=True)\
+            .filter(~Discussion.title.ilike('%test%'))\
             .order_by(Discussion.created_at.desc())\
             .all()
 
@@ -269,6 +270,7 @@ class Discussion(db.Model):
             featured_ids = [d.id for d in featured]
             additional = Discussion.query\
                 .filter(Discussion.id.notin_(featured_ids))\
+                .filter(~Discussion.title.ilike('%test%'))\
                 .order_by(Discussion.created_at.desc())\
                 .limit(limit - len(featured))\
                 .all()
