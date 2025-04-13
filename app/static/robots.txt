@@ -12,20 +12,15 @@ Disallow: /settings/*
 Disallow: /admin/*
 Disallow: /*?*token=
 Disallow: /*/edit
-Disallow: /api/*
 
-# Allow specific file types
+# Allow important content
 Allow: /*.html$
-Allow: /*.json$
-Allow: /*.xml$
-Allow: /static/*.css$
-Allow: /static/*.js$
-Allow: /static/images/*.jpg$
-Allow: /static/images/*.png$
-Allow: /static/images/*.webp$
+Allow: /discussions/*.html$
+Allow: /about.html$
+Allow: /help/*.html$
 
-# Crawl-delay
-Crawl-delay: 5
+# Set crawl rate
+Crawl-delay: 2
 
 # Sitemaps
 Sitemap: https://societyspeaks.io/sitemap.xml
