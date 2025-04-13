@@ -262,6 +262,7 @@ class Discussion(db.Model):
         featured = Discussion.query\
             .filter_by(is_featured=True)\
             .filter(~Discussion.title.ilike('%test%'))\
+            .filter(~Discussion.description.ilike('%test%'))\
             .order_by(Discussion.created_at.desc())\
             .all()
 
@@ -271,6 +272,7 @@ class Discussion(db.Model):
             additional = Discussion.query\
                 .filter(Discussion.id.notin_(featured_ids))\
                 .filter(~Discussion.title.ilike('%test%'))\
+                .filter(~Discussion.description.ilike('%test%'))\
                 .order_by(Discussion.created_at.desc())\
                 .limit(limit - len(featured))\
                 .all()
