@@ -30,6 +30,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex justify-end space-x-2">
+                                <div class="flex justify-end space-x-2">
                                 <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" 
                                    class="text-blue-600 hover:text-blue-900">View</a>
                                 <form action="{{ url_for('admin.delete_discussion', discussion_id=discussion.id) }}" method="POST" class="inline">
