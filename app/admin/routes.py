@@ -313,6 +313,23 @@ def send_welcome_email(email, username, password):
     send_email(email, subject, body)
 
 
+@admin_bp.route('/discussions/<int:discussion_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_discussion(discussion_id):
+    discussion = Discussion.query.get_or_404(discussion_id)
+    try:
+        db.session.delete(discussion)
+        db.session.commit()
+        flash('Discussion deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting discussion: {str(e)}")
+        flash('Error deleting discussion. Please try again.', 'error')
+    
+    return redirect(url_for('admin.list_discussions'))
+
+
 @admin_bp.before_request
 def log_admin_access():
     if current_user.is_authenticated and current_user.is_admin:
