@@ -330,6 +330,20 @@ def delete_discussion(discussion_id):
     return redirect(url_for('admin.list_discussions'))
 
 
+@admin_bp.route('/discussions')
+@login_required
+@admin_required
+def list_discussions():
+    discussions = Discussion.query.order_by(Discussion.created_at.desc()).all()
+    return render_template('admin/discussions/list.html', discussions=discussions)
+
+@admin_bp.route('/users')
+@login_required
+@admin_required
+def list_users():
+    users = User.query.order_by(User.created_at.desc()).all()
+    return render_template('admin/users/list.html', users=users)
+
 @admin_bp.before_request
 def log_admin_access():
     if current_user.is_authenticated and current_user.is_admin:
