@@ -8,8 +8,9 @@ hidden = [".pythonlibs"]
 channel = "stable-24_05"
 
 [deployment]
-run =  ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
-deploymentTarget = "cloudrun"
+run = ["bash", "-c", "FLASK_ENV=production gunicorn --bind=0.0.0.0:5000 --reuse-port --workers=4 run:app"]
+deploymentTarget = "autoscale"
+build = ["pip", "install", "-r", "requirements.txt"]
 
 [[ports]]
 localPort = 5000
