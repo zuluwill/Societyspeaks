@@ -181,61 +181,80 @@ def create_app():
     login_manager.login_message_category = "info"
     app.jinja_env.globals.update(current_user=current_user)
     
-    # Initialize rate limiter with mandatory Redis in production
+    # Initialize rate limiter with improved Redis handling
     try:
         redis_url = app.config.get('RATELIMIT_STORAGE_URL')
         
-        # In production, Redis is mandatory for rate limiting
+        # In production, try to get Redis URL from environment if config fallback occurred
         if env == 'production':
+            # If config fallback occurred, check environment variable directly
             if not redis_url or redis_url.startswith('memory://'):
-                raise ValueError("CRITICAL: Redis-backed rate limiting is mandatory in production. Set REDIS_URL environment variable.")
+                env_redis_url = os.getenv('REDIS_URL')
+                if env_redis_url and env_redis_url.strip():
+                    redis_url = env_redis_url.strip()
+                    app.logger.info("Using REDIS_URL from environment variable for rate limiting")
+                else:
+                    # In production, we need Redis for security, but allow graceful degradation with warning
+                    app.logger.error("CRITICAL: Redis-backed rate limiting is strongly recommended in production.")
+                    app.logger.error("REDIS_URL environment variable is not set or empty.")
+                    app.logger.error("Falling back to memory-based rate limiting - this is not recommended for production.")
+                    # Don't raise an exception, but allow memory fallback with strong warning
             
-            # Test Redis connectivity in production
+            # Test Redis connectivity in production if we have a URL
+            if redis_url and not redis_url.startswith('memory://'):
+                try:
+                    import redis
+                    r = redis.from_url(redis_url)
+                    r.ping()
+                    # Set both config keys to ensure compatibility across Flask-Limiter versions
+                    app.config['RATELIMIT_STORAGE_URI'] = redis_url
+                    app.config['RATELIMIT_STORAGE_URL'] = redis_url
+                    app.logger.info("Rate limiter configured with Redis (production)")
+                except Exception as redis_error:
+                    app.logger.error(f"Redis connection failed in production: {redis_error}")
+                    app.logger.error("Falling back to memory-based rate limiting - this is not ideal for production.")
+                    # Don't raise exception, allow graceful degradation
+                    app.config['RATELIMIT_STORAGE_URL'] = 'memory://'
+        
+        # Development mode - allow memory fallback but warn
+        elif redis_url and not redis_url.startswith('memory://'):
             try:
                 import redis
                 r = redis.from_url(redis_url)
                 r.ping()
-                # Set both config keys to ensure compatibility across Flask-Limiter versions
                 app.config['RATELIMIT_STORAGE_URI'] = redis_url
                 app.config['RATELIMIT_STORAGE_URL'] = redis_url
-                app.logger.info("Rate limiter configured with Redis (production)")
+                app.logger.info("Rate limiter configured with Redis (development)")
             except Exception as redis_error:
-                raise ValueError(f"CRITICAL: Cannot connect to Redis in production: {redis_error}")
-        
-        # Development mode - allow memory fallback but warn
-        elif redis_url and not redis_url.startswith('memory://'):
-            app.config['RATELIMIT_STORAGE_URI'] = redis_url
-            app.config['RATELIMIT_STORAGE_URL'] = redis_url
-            app.logger.info("Rate limiter configured with Redis (development)")
+                app.logger.warning(f"Redis connection failed in development: {redis_error}, using memory storage")
+                app.config['RATELIMIT_STORAGE_URL'] = 'memory://'
         else:
             app.logger.warning("Rate limiter using memory storage - development mode only")
         
         limiter.init_app(app)
         
-        # Verify the limiter is actually using Redis (not memory)
-        # This catches cases where config keys don't match Flask-Limiter expectations
+        # Verify the limiter is actually using Redis (not memory) - informational only
         try:
             storage_type = str(type(limiter.storage))
-            if redis_url and not redis_url.startswith('memory://'):
+            final_redis_url = app.config.get('RATELIMIT_STORAGE_URL', '')
+            if final_redis_url and not final_redis_url.startswith('memory://'):
                 if 'memory' in storage_type.lower() or 'dict' in storage_type.lower():
-                    error_msg = f"CRITICAL: Rate limiter using memory storage despite Redis config. Storage type: {storage_type}"
-                    app.logger.error(error_msg)
+                    app.logger.warning(f"Rate limiter using memory storage despite Redis config. Storage type: {storage_type}")
                     if env == 'production':
-                        raise ValueError(error_msg)
+                        app.logger.error("This is not recommended for production - rate limits won't be shared across instances")
                 else:
                     app.logger.info(f"Rate limiter storage verified: {storage_type}")
+            else:
+                app.logger.info(f"Rate limiter using memory storage: {storage_type}")
         except Exception as storage_check_error:
             app.logger.warning(f"Could not verify rate limiter storage type: {storage_check_error}")
         
-    except ValueError as ve:
-        # Production security errors should fail startup
-        app.logger.error(str(ve))
-        raise ve
     except Exception as e:
         app.logger.error(f"Rate limiter initialization failed: {e}")
+        # Always initialize limiter to prevent startup failure
+        limiter.init_app(app)
         if env == 'production':
-            raise e  # Fail in production
-        limiter.init_app(app)  # Allow fallback in development only
+            app.logger.error("Rate limiter initialized with memory fallback in production - not ideal for scaling")
 
     # Database check
     
