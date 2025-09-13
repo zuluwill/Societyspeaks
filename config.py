@@ -69,15 +69,21 @@ class Config:
     # Use Redis for session management with connection pooling and better error handling
     if os.getenv('REDIS_URL'):
         try:
-            # Configure Redis with more resilient settings
+            # Configure Redis with more resilient settings for Cloud Redis
             redis_pool = redis.ConnectionPool.from_url(
                 os.getenv('REDIS_URL'),
-                max_connections=100,
-                socket_timeout=5.0,  # 5 second socket timeout
-                socket_connect_timeout=5.0,  # 5 second connect timeout
+                max_connections=50,  # Reduced to prevent overwhelming cloud provider
+                socket_timeout=30.0,  # Increased to 30 seconds for cloud latency
+                socket_connect_timeout=10.0,  # Increased connect timeout
                 socket_keepalive=True,
-                health_check_interval=15,  # Check connection health every 15 seconds
-                retry_on_timeout=True
+                socket_keepalive_options={
+                    1: 1,  # TCP_KEEPIDLE - start keepalive after 1 second
+                    2: 10,  # TCP_KEEPINTVL - interval between keepalive probes
+                    3: 5,   # TCP_KEEPCNT - failed keepalive probes before giving up
+                },
+                health_check_interval=30,  # Less frequent health checks for cloud
+                retry_on_timeout=True,
+                retry_on_error=[ConnectionError, TimeoutError]  # Retry on connection errors
             )
             SESSION_REDIS = redis.Redis(connection_pool=redis_pool)
             

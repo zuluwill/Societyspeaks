@@ -143,12 +143,27 @@ def create_app():
         app.config['SESSION_TYPE'] = 'filesystem'
         sess.init_app(app)
 
+    # Initialize cache with Redis connection pooling and resilience
     try:
-        cache.init_app(app, config={
-            'CACHE_TYPE': 'redis',
-            'CACHE_REDIS_URL': Config.REDIS_URL,
-            'CACHE_DEFAULT_TIMEOUT': 300
-        })
+        if hasattr(Config, 'SESSION_REDIS') and Config.SESSION_REDIS:
+            try:
+                # Test Redis connection for cache
+                Config.SESSION_REDIS.ping()
+                cache.init_app(app, config={
+                    'CACHE_TYPE': 'redis',
+                    'CACHE_REDIS': Config.SESSION_REDIS,  # Use the same resilient connection pool
+                    'CACHE_DEFAULT_TIMEOUT': 300,
+                    'CACHE_THRESHOLD': 500,  # Maximum number of items the cache will store
+                    'CACHE_KEY_PREFIX': 'flask_cache_'
+                })
+                app.logger.info("Cache initialized with Redis connection pool")
+            except Exception as e:
+                app.logger.warning(f"Redis cache connection test failed: {e}, falling back to simple cache")
+                cache.init_app(app, config={'CACHE_TYPE': 'simple'})
+        else:
+            # Fallback to simple cache if no Redis available
+            app.logger.warning("No Redis connection available, using simple cache")
+            cache.init_app(app, config={'CACHE_TYPE': 'simple'})
     except Exception as e:
         app.logger.error(f"Cache initialization error: {e}")
         cache.init_app(app, config={'CACHE_TYPE': 'simple'})

@@ -30,3 +30,6 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python run.py"
+
+[agent]
+expertMode = true
