@@ -8,7 +8,7 @@ hidden = [".pythonlibs"]
 channel = "stable-24_05"
 
 [deployment]
-run = ["bash", "-c", "FLASK_ENV=production gunicorn --bind=0.0.0.0:5000 --reuse-port --workers=4 run:app"]
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "run:app"]
 deploymentTarget = "autoscale"
 build = ["pip", "install", "-r", "requirements.txt"]
 
@@ -44,13 +44,13 @@ args = "Flask App"
 name = "Flask App"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python run.py"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "gunicorn --bind=0.0.0.0:5000 --reuse-port run:app"
+waitForPort = 5000
 
 [agent]
 expertMode = true
