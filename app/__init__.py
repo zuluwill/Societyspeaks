@@ -181,24 +181,43 @@ def create_app():
     login_manager.login_message_category = "info"
     app.jinja_env.globals.update(current_user=current_user)
     
-    # Initialize rate limiter with proper configuration
+    # Initialize rate limiter with mandatory Redis in production
     try:
-        # Configure app with rate limiting storage
         redis_url = app.config.get('RATELIMIT_STORAGE_URL')
-        if redis_url and not redis_url.startswith('memory://'):
+        
+        # In production, Redis is mandatory for rate limiting
+        if env == 'production':
+            if not redis_url or redis_url.startswith('memory://'):
+                raise ValueError("CRITICAL: Redis-backed rate limiting is mandatory in production. Set REDIS_URL environment variable.")
+            
+            # Test Redis connectivity in production
+            try:
+                import redis
+                r = redis.from_url(redis_url)
+                r.ping()
+                app.config['RATELIMIT_STORAGE_URI'] = redis_url
+                app.logger.info("Rate limiter configured with Redis (production)")
+            except Exception as redis_error:
+                raise ValueError(f"CRITICAL: Cannot connect to Redis in production: {redis_error}")
+        
+        # Development mode - allow memory fallback but warn
+        elif redis_url and not redis_url.startswith('memory://'):
             app.config['RATELIMIT_STORAGE_URI'] = redis_url
-            app.logger.info("Rate limiter configured with Redis")
+            app.logger.info("Rate limiter configured with Redis (development)")
         else:
-            app.logger.warning("Rate limiter using memory storage - not recommended for production")
-            # In production, warn if using memory storage
-            if env == 'production':
-                app.logger.error("CRITICAL: Rate limiting using memory storage in production")
+            app.logger.warning("Rate limiter using memory storage - development mode only")
         
         limiter.init_app(app)
         
+    except ValueError as ve:
+        # Production security errors should fail startup
+        app.logger.error(str(ve))
+        raise ve
     except Exception as e:
         app.logger.error(f"Rate limiter initialization failed: {e}")
-        limiter.init_app(app)  # Fallback initialization
+        if env == 'production':
+            raise e  # Fail in production
+        limiter.init_app(app)  # Allow fallback in development only
 
     # Database check
     
