@@ -61,8 +61,12 @@ def webhook_required(f):
         webhook_secret = current_app.config.get('WEBHOOK_SECRET')
         
         if not webhook_secret:
-            current_app.logger.error("WEBHOOK_SECRET not configured")
-            abort(500)
+            current_app.logger.error("WEBHOOK_SECRET not configured - webhook verification temporarily disabled")
+            # In production without WEBHOOK_SECRET, return 503 to indicate temporary unavailability
+            if current_app.config.get('FLASK_ENV') == 'production':
+                abort(503)  # Service Unavailable - temporary issue
+            else:
+                abort(500)  # Internal Server Error in development
         
         # For development, allow bypassing signature verification
         if current_app.config.get('DEBUG') and not signature:
@@ -125,8 +129,12 @@ def webhook_with_timestamp(timestamp_header='X-Timestamp', tolerance=300):
             # Get webhook secret
             webhook_secret = current_app.config.get('WEBHOOK_SECRET')
             if not webhook_secret:
-                current_app.logger.error("WEBHOOK_SECRET not configured")
-                abort(500)
+                current_app.logger.error("WEBHOOK_SECRET not configured - webhook verification temporarily disabled")
+                # In production without WEBHOOK_SECRET, return 503 to indicate temporary unavailability
+                if current_app.config.get('FLASK_ENV') == 'production':
+                    abort(503)  # Service Unavailable - temporary issue
+                else:
+                    abort(500)  # Internal Server Error in development
             
             # For development, allow bypassing if no headers provided
             if current_app.config.get('DEBUG') and not (signature and timestamp):

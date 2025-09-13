@@ -65,7 +65,7 @@ class Config:
     SESSION_PERMANENT = True
     SESSION_USE_SIGNER = True  # Adds a layer of security to session cookies
     PERMANENT_SESSION_LIFETIME = timedelta(hours=3)
-    REDIS_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+    # Redis URL will be handled in connection logic below
     SESSION_REDIS_RETRY_ON_TIMEOUT = True
     SESSION_REDIS_RETRY_NUMBER = 5  # Increased retry attempts
     LOG_TO_STDOUT = os.getenv('LOG_TO_STDOUT', 'False').lower() == 'true'
@@ -74,39 +74,54 @@ class Config:
     SESSION_FILE_DIR = './flask_session'
     
     # Use Redis for session management with connection pooling and better error handling
-    if os.getenv('REDIS_URL'):
+    redis_url = os.getenv('REDIS_URL')
+    if redis_url:
         try:
-            # Configure Redis connection pool with proper parameters
+            # Validate and clean up Redis URL
+            redis_url = redis_url.strip()
+            if not redis_url.startswith(('redis://', 'rediss://')):
+                logging.warning(f"Invalid Redis URL format: {redis_url}, falling back to filesystem sessions")
+                raise ValueError("Invalid Redis URL format")
+            
+            # Configure Redis connection pool with more conservative parameters
             redis_pool = redis.ConnectionPool.from_url(
-                os.getenv('REDIS_URL'),
-                max_connections=50,  # Reduced to prevent overwhelming cloud provider
-                socket_timeout=30.0,  # Increased to 30 seconds for cloud latency
-                socket_connect_timeout=10.0,  # Increased connect timeout
+                redis_url,
+                max_connections=20,  # Further reduced to prevent connection issues
+                socket_timeout=10.0,  # Reduced timeout for quicker fallback
+                socket_connect_timeout=5.0,  # Reduced connect timeout
                 socket_keepalive=True,
-                socket_keepalive_options={
-                    1: 1,  # TCP_KEEPIDLE - start keepalive after 1 second
-                    2: 10,  # TCP_KEEPINTVL - interval between keepalive probes
-                    3: 5,   # TCP_KEEPCNT - failed keepalive probes before giving up
-                },
-                health_check_interval=30,  # Less frequent health checks for cloud
+                # Remove socket_keepalive_options to prevent "Invalid argument" errors
+                health_check_interval=60,  # Less frequent health checks to reduce load
+                retry_on_timeout=True
             )
             
-            # Configure Redis client with proper retry mechanism
+            # Configure Redis client with simpler retry mechanism
             SESSION_REDIS = redis.Redis(
                 connection_pool=redis_pool,
-                retry=Retry(ExponentialBackoff(0.5), 5),  # Exponential backoff starting at 0.5s, max 5 retries
+                retry=Retry(ExponentialBackoff(0.1), 3),  # Simpler backoff, fewer retries
                 retry_on_error=[TimeoutError, ConnectionError],  # Retry on these errors
-                socket_timeout=30.0,
-                socket_connect_timeout=10.0
+                socket_timeout=10.0,
+                socket_connect_timeout=5.0
             )
             
-            # Test connection before assigning
+            # Test connection with timeout
             SESSION_REDIS.ping()  # Will raise an exception if connection fails
             logging.info("Redis connection established successfully")
+            # Set Redis URL for rate limiting
+            REDIS_URL = redis_url
+            RATELIMIT_STORAGE_URL = redis_url  # Use validated Redis URL
         except Exception as e:
-            logging.warning(f"Failed to connect to Redis: {e}, falling back to filesystem sessions")
+            logging.warning(f"Failed to connect to Redis ({redis_url}): {e}, falling back to filesystem sessions")
             SESSION_TYPE = 'filesystem'  # Fallback to filesystem sessions
             SESSION_REDIS = None
+            REDIS_URL = None
+            RATELIMIT_STORAGE_URL = 'memory://'  # Use memory fallback for rate limiting
+    else:
+        logging.info("No REDIS_URL provided, using filesystem sessions")
+        SESSION_TYPE = 'filesystem'  # Explicitly set filesystem sessions
+        SESSION_REDIS = None
+        REDIS_URL = None
+        RATELIMIT_STORAGE_URL = 'memory://'  # Use memory fallback for rate limiting
 
     # Mail Configuration
     MAIL_SERVER = 'smtp.googlemail.com'
@@ -131,15 +146,18 @@ class Config:
     ADMIN_CAN_EDIT_PROFILES = os.getenv('ADMIN_CAN_EDIT_PROFILES', 'False').lower() == 'true'
     ADMIN_CAN_DELETE_DISCUSSIONS = os.getenv('ADMIN_CAN_DELETE_DISCUSSIONS', 'False').lower() == 'true'
     
-    # Webhook Security Configuration - REQUIRED in production
+    # Webhook Security Configuration - temporarily optional in production
     WEBHOOK_SECRET = os.getenv('WEBHOOK_SECRET')
     if not WEBHOOK_SECRET and os.getenv('FLASK_ENV') == 'production':
-        raise ValueError("WEBHOOK_SECRET environment variable must be set in production")
+        # Temporarily allow missing WEBHOOK_SECRET in production with warning
+        logging.warning("WEBHOOK_SECRET environment variable not set in production - this is a temporary fallback. Please set it ASAP for security.")
+        WEBHOOK_SECRET = None  # Will be handled gracefully by webhook verification code
     elif not WEBHOOK_SECRET:
         WEBHOOK_SECRET = 'dev-webhook-secret-change-in-production'  # Development only
     
-    # Rate Limiting Configuration
-    RATELIMIT_STORAGE_URL = os.getenv('REDIS_URL', 'memory://')
+    # Rate Limiting Configuration - set after Redis validation above
+    # Will be updated based on actual Redis availability
+    RATELIMIT_STORAGE_URL = 'memory://'  # Default fallback
     RATELIMIT_DEFAULT = "1000 per hour"  # Default rate limit
     
 class DevelopmentConfig(Config):
