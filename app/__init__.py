@@ -195,7 +195,9 @@ def create_app():
                 import redis
                 r = redis.from_url(redis_url)
                 r.ping()
+                # Set both config keys to ensure compatibility across Flask-Limiter versions
                 app.config['RATELIMIT_STORAGE_URI'] = redis_url
+                app.config['RATELIMIT_STORAGE_URL'] = redis_url
                 app.logger.info("Rate limiter configured with Redis (production)")
             except Exception as redis_error:
                 raise ValueError(f"CRITICAL: Cannot connect to Redis in production: {redis_error}")
@@ -203,11 +205,27 @@ def create_app():
         # Development mode - allow memory fallback but warn
         elif redis_url and not redis_url.startswith('memory://'):
             app.config['RATELIMIT_STORAGE_URI'] = redis_url
+            app.config['RATELIMIT_STORAGE_URL'] = redis_url
             app.logger.info("Rate limiter configured with Redis (development)")
         else:
             app.logger.warning("Rate limiter using memory storage - development mode only")
         
         limiter.init_app(app)
+        
+        # Verify the limiter is actually using Redis (not memory)
+        # This catches cases where config keys don't match Flask-Limiter expectations
+        try:
+            storage_type = str(type(limiter.storage))
+            if redis_url and not redis_url.startswith('memory://'):
+                if 'memory' in storage_type.lower() or 'dict' in storage_type.lower():
+                    error_msg = f"CRITICAL: Rate limiter using memory storage despite Redis config. Storage type: {storage_type}"
+                    app.logger.error(error_msg)
+                    if env == 'production':
+                        raise ValueError(error_msg)
+                else:
+                    app.logger.info(f"Rate limiter storage verified: {storage_type}")
+        except Exception as storage_check_error:
+            app.logger.warning(f"Could not verify rate limiter storage type: {storage_check_error}")
         
     except ValueError as ve:
         # Production security errors should fail startup
