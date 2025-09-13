@@ -1,6 +1,8 @@
 # app/email_utils.py
 import os
 import requests
+from concurrent.futures import ThreadPoolExecutor
+from threading import Thread
 from flask import current_app, url_for
 from app.models import Discussion, IndividualProfile, CompanyProfile
 
@@ -22,12 +24,17 @@ def send_loops_event(email_address, event_name, user_id, contact_properties, eve
         'eventProperties': event_properties
     }
 
-    response = requests.post(url, json=payload, headers=headers)
-
-    if response.status_code == 200:
-        current_app.logger.info(f"Loops event '{event_name}' triggered for {email_address}.")
-    else:
-        current_app.logger.error(f"Failed to trigger Loops event '{event_name}' for {email_address}: {response.status_code} - {response.text}")
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        
+        if response.status_code == 200:
+            current_app.logger.info(f"Loops event '{event_name}' triggered for {email_address}.")
+        else:
+            current_app.logger.error(f"Failed to trigger Loops event '{event_name}' for {email_address}: {response.status_code} - {response.text}")
+    except requests.exceptions.Timeout:
+        current_app.logger.error(f"Timeout sending Loops event '{event_name}' for {email_address}")
+    except requests.exceptions.RequestException as e:
+        current_app.logger.error(f"Error sending Loops event '{event_name}' for {email_address}: {e}")
 
 
 
@@ -47,12 +54,21 @@ def send_email(recipient_email, data_variables, transactional_id):
         'dataVariables': data_variables
     }
 
-    response = requests.post(url, json=payload, headers=headers)
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
 
-    if response.status_code == 200:
-        current_app.logger.info(f"Email sent successfully to {recipient_email}.")
-    else:
-        current_app.logger.error(f"Failed to send email to {recipient_email}: {response.status_code} - {response.text}")
+        if response.status_code == 200:
+            current_app.logger.info(f"Email sent successfully to {recipient_email}.")
+            return True
+        else:
+            current_app.logger.error(f"Failed to send email to {recipient_email}: {response.status_code} - {response.text}")
+            return False
+    except requests.exceptions.Timeout:
+        current_app.logger.error(f"Timeout sending email to {recipient_email}")
+        return False
+    except requests.exceptions.RequestException as e:
+        current_app.logger.error(f"Error sending email to {recipient_email}: {e}")
+        return False
 
 
 

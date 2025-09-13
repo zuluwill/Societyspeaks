@@ -14,6 +14,8 @@ import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from flask_session import Session
 from flask_caching import Cache
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 # Simplified CSP that will work with inline scripts
 csp = {
@@ -48,6 +50,10 @@ migrate = Migrate()
 login_manager = LoginManager()
 sess = Session()
 cache = Cache()
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["1000 per hour"]
+)
 
 
 def try_connect_db(app, retries=3):
@@ -174,6 +180,25 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = "info"
     app.jinja_env.globals.update(current_user=current_user)
+    
+    # Initialize rate limiter with proper configuration
+    try:
+        # Configure app with rate limiting storage
+        redis_url = app.config.get('RATELIMIT_STORAGE_URL')
+        if redis_url and not redis_url.startswith('memory://'):
+            app.config['RATELIMIT_STORAGE_URI'] = redis_url
+            app.logger.info("Rate limiter configured with Redis")
+        else:
+            app.logger.warning("Rate limiter using memory storage - not recommended for production")
+            # In production, warn if using memory storage
+            if env == 'production':
+                app.logger.error("CRITICAL: Rate limiting using memory storage in production")
+        
+        limiter.init_app(app)
+        
+    except Exception as e:
+        app.logger.error(f"Rate limiter initialization failed: {e}")
+        limiter.init_app(app)  # Fallback initialization
 
     # Database check
     
