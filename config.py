@@ -1,7 +1,11 @@
 import redis
+from redis.backoff import ExponentialBackoff
+from redis.retry import Retry
+from redis.exceptions import ConnectionError, TimeoutError
 from dotenv import load_dotenv
 from datetime import timedelta
 import os
+import logging
 
 load_dotenv()
 
@@ -66,10 +70,13 @@ class Config:
     SESSION_REDIS_RETRY_NUMBER = 5  # Increased retry attempts
     LOG_TO_STDOUT = os.getenv('LOG_TO_STDOUT', 'False').lower() == 'true'
 
+    # Add session directory for filesystem fallback
+    SESSION_FILE_DIR = './flask_session'
+    
     # Use Redis for session management with connection pooling and better error handling
     if os.getenv('REDIS_URL'):
         try:
-            # Configure Redis with more resilient settings for Cloud Redis
+            # Configure Redis connection pool with proper parameters
             redis_pool = redis.ConnectionPool.from_url(
                 os.getenv('REDIS_URL'),
                 max_connections=50,  # Reduced to prevent overwhelming cloud provider
@@ -82,16 +89,24 @@ class Config:
                     3: 5,   # TCP_KEEPCNT - failed keepalive probes before giving up
                 },
                 health_check_interval=30,  # Less frequent health checks for cloud
-                retry_on_timeout=True,
-                retry_on_error=[ConnectionError, TimeoutError]  # Retry on connection errors
             )
-            SESSION_REDIS = redis.Redis(connection_pool=redis_pool)
+            
+            # Configure Redis client with proper retry mechanism
+            SESSION_REDIS = redis.Redis(
+                connection_pool=redis_pool,
+                retry=Retry(ExponentialBackoff(0.5), 5),  # Exponential backoff starting at 0.5s, max 5 retries
+                retry_on_error=[TimeoutError, ConnectionError],  # Retry on these errors
+                socket_timeout=30.0,
+                socket_connect_timeout=10.0
+            )
             
             # Test connection before assigning
             SESSION_REDIS.ping()  # Will raise an exception if connection fails
+            logging.info("Redis connection established successfully")
         except Exception as e:
-            print(f"Failed to connect to Redis: {e}")
+            logging.warning(f"Failed to connect to Redis: {e}, falling back to filesystem sessions")
             SESSION_TYPE = 'filesystem'  # Fallback to filesystem sessions
+            SESSION_REDIS = None
 
     # Mail Configuration
     MAIL_SERVER = 'smtp.googlemail.com'
