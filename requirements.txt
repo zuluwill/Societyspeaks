@@ -16,3 +16,4 @@ flask-mail==0.10.0
 flask-session==0.8.0
 sentry-sdk==2.17.0
 Flask-Caching==2.3.0
+redis==5.0.0
