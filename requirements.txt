@@ -6,7 +6,7 @@ flask-login==0.6.3
 python-slugify==8.0.1
 Flask-WTF==1.2.2
 wtforms==3.2.1
-replit==3.2.0
+replit>=4.1.0
 email_validator==2.2.0
 flask-limiter==3.8.0
 flask-seasurf==2.0.0
