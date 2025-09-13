@@ -1,11 +1,12 @@
 from flask import render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
 from flask_login import login_required, current_user
-from app import db
+from app import db, limiter
 from app.discussions.forms import CreateDiscussionForm
 from app.models import Discussion, DiscussionParticipant
 from app.utils import get_recent_activity
 from app.middleware import track_discussion_view 
 from app.email_utils import create_discussion_notification
+from app.webhook_security import webhook_required
 import json
 import os
 
@@ -421,6 +422,8 @@ def get_cities_by_country(country_code):
 # Notification and Activity Tracking Endpoints
 
 @discussions_bp.route('/api/discussions/<int:discussion_id>/activity', methods=['POST'])
+@limiter.limit("10 per minute")
+@webhook_required
 def track_discussion_activity(discussion_id):
     """
     Webhook endpoint for Pol.is to report activity
@@ -488,6 +491,8 @@ def track_discussion_activity(discussion_id):
 
 
 @discussions_bp.route('/api/discussions/<int:discussion_id>/participants/track', methods=['POST'])
+@limiter.limit("10 per minute")
+@webhook_required
 def track_new_participant(discussion_id):
     """
     Manually track a new participant in a discussion
@@ -539,6 +544,7 @@ def track_new_participant(discussion_id):
 
 
 @discussions_bp.route('/api/discussions/<int:discussion_id>/simulate-activity', methods=['POST'])
+@limiter.limit("10 per minute")
 def simulate_discussion_activity(discussion_id):
     """
     Simulate discussion activity for testing notifications

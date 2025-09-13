@@ -131,6 +131,17 @@ class Config:
     ADMIN_CAN_EDIT_PROFILES = os.getenv('ADMIN_CAN_EDIT_PROFILES', 'False').lower() == 'true'
     ADMIN_CAN_DELETE_DISCUSSIONS = os.getenv('ADMIN_CAN_DELETE_DISCUSSIONS', 'False').lower() == 'true'
     
+    # Webhook Security Configuration - REQUIRED in production
+    WEBHOOK_SECRET = os.getenv('WEBHOOK_SECRET')
+    if not WEBHOOK_SECRET and os.getenv('FLASK_ENV') == 'production':
+        raise ValueError("WEBHOOK_SECRET environment variable must be set in production")
+    elif not WEBHOOK_SECRET:
+        WEBHOOK_SECRET = 'dev-webhook-secret-change-in-production'  # Development only
+    
+    # Rate Limiting Configuration
+    RATELIMIT_STORAGE_URL = os.getenv('REDIS_URL', 'memory://')
+    RATELIMIT_DEFAULT = "1000 per hour"  # Default rate limit
+    
 class DevelopmentConfig(Config):
     FLASK_ENV = 'development'
     DEBUG = True
