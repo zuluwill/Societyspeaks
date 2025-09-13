@@ -184,6 +184,8 @@ def create_app():
     # Initialize rate limiter with improved Redis handling
     try:
         redis_url = app.config.get('RATELIMIT_STORAGE_URL')
+        app.logger.info(f"Environment detected: {env}")
+        app.logger.info(f"Initial RATELIMIT_STORAGE_URL: {redis_url}")
         
         # In production, try to get Redis URL from environment if config fallback occurred
         if env == 'production':
