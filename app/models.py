@@ -255,9 +255,17 @@ class Discussion(db.Model):
         }
 
 
-    @staticmethod
-    @cache.memoize(timeout=300)  # Cache for 5 minutes
     def get_featured(limit=6):
+        # Try to get from cache first, fallback to direct query if cache fails
+        cache_key = f'featured_discussions_{limit}'
+        try:
+            cached_result = cache.get(cache_key)
+            if cached_result is not None:
+                return cached_result
+        except Exception as e:
+            # Log cache error but continue with database query
+            current_app.logger.warning(f"Cache get failed for featured discussions: {e}")
+        
         # First get discussions marked as featured, excluding test discussions
         featured = Discussion.query\
             .filter_by(is_featured=True)\
@@ -278,7 +286,15 @@ class Discussion(db.Model):
                 .all()
             featured.extend(additional)
 
-        return featured[:limit]
+        result = featured[:limit]
+        
+        # Try to cache the result, but don't fail if caching fails
+        try:
+            cache.set(cache_key, result, timeout=300)  # Cache for 5 minutes
+        except Exception as e:
+            current_app.logger.warning(f"Cache set failed for featured discussions: {e}")
+        
+        return result
 
     @staticmethod
     def feature_discussion(discussion_id, feature=True):
