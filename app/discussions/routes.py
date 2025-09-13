@@ -6,7 +6,7 @@ from app.models import Discussion, DiscussionParticipant
 from app.utils import get_recent_activity
 from app.middleware import track_discussion_view 
 from app.email_utils import create_discussion_notification
-from app.webhook_security import webhook_required
+from app.webhook_security import webhook_required, webhook_with_timestamp
 import json
 import os
 
@@ -423,7 +423,7 @@ def get_cities_by_country(country_code):
 
 @discussions_bp.route('/api/discussions/<int:discussion_id>/activity', methods=['POST'])
 @limiter.limit("10 per minute")
-@webhook_required
+@webhook_with_timestamp('X-Timestamp', 300)
 def track_discussion_activity(discussion_id):
     """
     Webhook endpoint for Pol.is to report activity
@@ -492,7 +492,7 @@ def track_discussion_activity(discussion_id):
 
 @discussions_bp.route('/api/discussions/<int:discussion_id>/participants/track', methods=['POST'])
 @limiter.limit("10 per minute")
-@webhook_required
+@webhook_with_timestamp('X-Timestamp', 300)
 def track_new_participant(discussion_id):
     """
     Manually track a new participant in a discussion

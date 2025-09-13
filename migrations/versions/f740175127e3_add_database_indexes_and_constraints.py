@@ -17,6 +17,18 @@ depends_on = None
 
 
 def upgrade():
+    # Clean up duplicate participants before adding unique constraint
+    # Keep the oldest record for each discussion_id, participant_identifier pair
+    connection = op.get_bind()
+    connection.execute(sa.text("""
+        DELETE FROM discussion_participant 
+        WHERE id NOT IN (
+            SELECT MIN(id) 
+            FROM discussion_participant 
+            GROUP BY discussion_id, participant_identifier
+        );
+    """))
+    
     # Add unique constraint to prevent duplicate participants
     # Note: This includes handling nullable user_id
     op.create_unique_constraint(
