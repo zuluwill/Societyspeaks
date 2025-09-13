@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import db
+from app.models import User
 from .forms import ChangePasswordForm  # Import the form
 
 settings_bp = Blueprint('settings', __name__)
@@ -10,6 +11,22 @@ settings_bp = Blueprint('settings', __name__)
 @login_required
 def view_settings():
     form = ChangePasswordForm()  # Initialize the form
+    
+    # Handle notification settings update
+    if request.method == 'POST' and 'update_notifications' in request.form:
+        try:
+            current_user.email_notifications = 'email_notifications' in request.form
+            current_user.discussion_participant_notifications = 'discussion_participant_notifications' in request.form
+            current_user.discussion_response_notifications = 'discussion_response_notifications' in request.form
+            current_user.weekly_digest_enabled = 'weekly_digest_enabled' in request.form
+            
+            db.session.commit()
+            flash('Notification preferences updated successfully.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('Failed to update notification preferences. Please try again.', 'danger')
+        
+        return redirect(url_for('settings.view_settings'))
 
     return render_template('settings/settings.html', form=form)
 

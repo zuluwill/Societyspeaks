@@ -214,3 +214,200 @@ def send_profile_completion_reminder_email(user):
             contact_properties={"name": user.username},
             event_properties=event_properties
         )
+
+
+def send_discussion_notification_email(user, discussion, notification_type, additional_data=None):
+    """Send real-time discussion notification email"""
+    # Map notification types to transactional IDs (you'll need to create these in Loops)
+    transactional_ids = {
+        'new_participant': "cm34ll2e604fmynht3l8jns9p",  # Replace with actual ID when created
+        'new_response': "cm34ll2e604fmynht3l8jns9p",     # Replace with actual ID when created
+        'discussion_active': "cm34ll2e604fmynht3l8jns9p"  # Replace with actual ID when created
+    }
+    
+    transactional_id = transactional_ids.get(notification_type, transactional_ids['new_participant'])
+    
+    # Generate discussion URL
+    discussion_url = url_for('discussions.view_discussion', 
+                            discussion_id=discussion.id, 
+                            slug=discussion.slug, 
+                            _external=True)
+    
+    # Prepare notification-specific data
+    if notification_type == 'new_participant':
+        title = f"New participant joined your discussion"
+        message = f"Someone new has joined the discussion '{discussion.title}'"
+    elif notification_type == 'new_response':
+        title = f"New response in your discussion"
+        message = f"There's new activity in your discussion '{discussion.title}'"
+    else:
+        title = f"Activity in your discussion"
+        message = f"There's been activity in your discussion '{discussion.title}'"
+    
+    # Prepare data variables for email
+    data_variables = {
+        "username": user.username or "User",
+        "discussionTitle": discussion.title,
+        "discussionUrl": discussion_url,
+        "notificationTitle": title,
+        "notificationMessage": message,
+        "discussionTopic": discussion.topic or "General"
+    }
+    
+    # Add any additional data
+    if additional_data:
+        data_variables.update(additional_data)
+    
+    # Send the notification email
+    send_email(
+        recipient_email=user.email,
+        data_variables=data_variables,
+        transactional_id=transactional_id
+    )
+
+
+def send_weekly_discussion_digest(user):
+    """Send weekly digest of discussion activity"""
+    from app.models import Discussion, DiscussionParticipant, Notification
+    from datetime import datetime, timedelta
+    
+    # Get discussions the user created in the last week
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    
+    user_discussions = Discussion.query.filter_by(creator_id=user.id)\
+        .filter(Discussion.created_at >= week_ago)\
+        .all()
+    
+    # Get activity summary for user's discussions
+    discussion_summaries = []
+    total_new_participants = 0
+    total_new_responses = 0
+    
+    for discussion in user_discussions:
+        # Count new participants this week
+        new_participants = DiscussionParticipant.query.filter_by(discussion_id=discussion.id)\
+            .filter(DiscussionParticipant.joined_at >= week_ago)\
+            .count()
+        
+        # Count notifications (which represent activity)
+        new_activity = Notification.query.filter_by(discussion_id=discussion.id)\
+            .filter(Notification.created_at >= week_ago)\
+            .count()
+        
+        if new_participants > 0 or new_activity > 0:
+            discussion_url = url_for('discussions.view_discussion', 
+                                   discussion_id=discussion.id, 
+                                   slug=discussion.slug, 
+                                   _external=True)
+            
+            discussion_summaries.append({
+                "title": discussion.title,
+                "url": discussion_url,
+                "newParticipants": new_participants,
+                "newActivity": new_activity,
+                "topic": discussion.topic or "General"
+            })
+            
+            total_new_participants += new_participants
+            total_new_responses += new_activity
+    
+    # Only send digest if there's activity to report
+    if discussion_summaries:
+        # Transactional ID for weekly digest (create this in Loops)
+        transactional_id = "cm34ll2e604fmynht3l8jns9p"  # Replace with actual ID
+        
+        # Prepare data variables
+        data_variables = {
+            "username": user.username or "User",
+            "totalNewParticipants": total_new_participants,
+            "totalNewResponses": total_new_responses,
+            "discussionSummaries": discussion_summaries,
+            "weekStart": week_ago.strftime("%B %d, %Y"),
+            "weekEnd": datetime.utcnow().strftime("%B %d, %Y")
+        }
+        
+        # Send the digest email
+        send_email(
+            recipient_email=user.email,
+            data_variables=data_variables,
+            transactional_id=transactional_id
+        )
+        
+        return True
+    
+    return False  # No activity to report
+
+
+def create_discussion_notification(user_id, discussion_id, notification_type, additional_data=None):
+    """Create a notification and optionally send email"""
+    from app.models import Notification, User, Discussion
+    from app import db
+    from flask import current_app
+    
+    try:
+        # Normalize notification type to handle different formats
+        if notification_type:
+            notification_type = notification_type.strip().lower().replace('-', '_')
+        
+        # Validate notification type
+        valid_types = {'new_participant', 'new_response', 'discussion_active'}
+        if notification_type not in valid_types:
+            current_app.logger.warning(f"Unknown notification type: {notification_type}")
+            return None
+        
+        user = User.query.get(user_id)
+        discussion = Discussion.query.get(discussion_id)
+        
+        if not user or not discussion:
+            current_app.logger.warning(f"User {user_id} or discussion {discussion_id} not found")
+            return None
+        
+        # Check user's notification preferences
+        send_email_notification = (
+            user.email_notifications and
+            ((notification_type == 'new_participant' and user.discussion_participant_notifications) or
+             (notification_type == 'new_response' and user.discussion_response_notifications))
+        )
+        
+        # Generate notification content
+        if notification_type == 'new_participant':
+            title = f"New participant in '{discussion.title}'"
+            message = f"Someone new has joined your discussion '{discussion.title}'"
+        elif notification_type == 'new_response':
+            title = f"New response in '{discussion.title}'"
+            message = f"There's new activity in your discussion '{discussion.title}'"
+        else:
+            title = f"Activity in '{discussion.title}'"
+            message = f"There's been activity in your discussion '{discussion.title}'"
+        
+        # Create the notification
+        notification = Notification(
+            user_id=user_id,
+            discussion_id=discussion_id,
+            type=notification_type,
+            title=title,
+            message=message,
+            email_sent=False
+        )
+        
+        db.session.add(notification)
+        db.session.commit()
+        
+        # Send email if user preferences allow
+        if send_email_notification:
+            try:
+                send_discussion_notification_email(user, discussion, notification_type, additional_data)
+                notification.email_sent = True
+                db.session.commit()
+            except Exception as e:
+                current_app.logger.error(f"Failed to send notification email: {e}")
+        
+        return notification
+        
+    except Exception as e:
+        current_app.logger.error(f"Failed to create notification: {e}")
+        try:
+            db.session.rollback()
+        except:
+            pass
+        return None

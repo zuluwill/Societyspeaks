@@ -2,9 +2,10 @@ from flask import render_template, redirect, url_for, flash, request, Blueprint,
 from flask_login import login_required, current_user
 from app import db
 from app.discussions.forms import CreateDiscussionForm
-from app.models import Discussion
+from app.models import Discussion, DiscussionParticipant
 from app.utils import get_recent_activity
 from app.middleware import track_discussion_view 
+from app.email_utils import create_discussion_notification
 import json
 import os
 
@@ -415,3 +416,213 @@ def get_cities_by_country(country_code):
     except Exception as e:
         current_app.logger.error(f"Error in get_cities_by_country: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
+# Notification and Activity Tracking Endpoints
+
+@discussions_bp.route('/api/discussions/<int:discussion_id>/activity', methods=['POST'])
+def track_discussion_activity(discussion_id):
+    """
+    Webhook endpoint for Pol.is to report activity
+    Can be called when there's new participant or response activity
+    """
+    try:
+        discussion = Discussion.query.get_or_404(discussion_id)
+        
+        # Get activity data from request
+        activity_data = request.get_json()
+        activity_type = activity_data.get('type')  # 'new_participant' or 'new_response'
+        participant_id = activity_data.get('participant_id')
+        user_id = activity_data.get('user_id')  # If the participant is a registered user
+        
+        # Track the participant if it's a new participant
+        if activity_type == 'new_participant':
+            participant = DiscussionParticipant.track_participant(
+                discussion_id=discussion_id,
+                user_id=user_id,
+                participant_identifier=participant_id
+            )
+            
+            # Create notification for discussion creator
+            if discussion.creator_id:
+                create_discussion_notification(
+                    user_id=discussion.creator_id,
+                    discussion_id=discussion_id,
+                    notification_type='new_participant',
+                    additional_data={'participant_count': discussion.participant_count}
+                )
+        
+        elif activity_type == 'new_response':
+            # Update participant activity if we can identify them
+            if participant_id:
+                participant = DiscussionParticipant.query.filter_by(
+                    discussion_id=discussion_id,
+                    participant_identifier=participant_id
+                ).first()
+                
+                if participant:
+                    participant.response_count += 1
+                    participant.last_activity = db.session.execute(db.text('SELECT NOW()')).scalar()
+                    db.session.commit()
+            
+            # Create notification for discussion creator
+            if discussion.creator_id:
+                create_discussion_notification(
+                    user_id=discussion.creator_id,
+                    discussion_id=discussion_id,
+                    notification_type='new_response',
+                    additional_data={'response_count': activity_data.get('response_count', 0)}
+                )
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Activity tracked successfully'
+        }), 200
+        
+    except Exception as e:
+        current_app.logger.error(f"Error tracking discussion activity: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to track activity'
+        }), 500
+
+
+@discussions_bp.route('/api/discussions/<int:discussion_id>/participants/track', methods=['POST'])
+def track_new_participant(discussion_id):
+    """
+    Manually track a new participant in a discussion
+    Useful for integration testing or manual triggers
+    """
+    try:
+        discussion = Discussion.query.get_or_404(discussion_id)
+        
+        # Get participant data
+        participant_data = request.get_json()
+        user_id = participant_data.get('user_id')
+        participant_identifier = participant_data.get('participant_identifier')
+        
+        # Track the participant
+        participant = DiscussionParticipant.track_participant(
+            discussion_id=discussion_id,
+            user_id=user_id,
+            participant_identifier=participant_identifier
+        )
+        
+        # Create notification for discussion creator
+        if discussion.creator_id and discussion.creator_id != user_id:
+            notification = create_discussion_notification(
+                user_id=discussion.creator_id,
+                discussion_id=discussion_id,
+                notification_type='new_participant',
+                additional_data={'participant_count': discussion.participant_count}
+            )
+            
+            return jsonify({
+                'status': 'success',
+                'message': 'Participant tracked and notification sent',
+                'participant_id': participant.id,
+                'notification_id': notification.id if notification else None
+            }), 200
+        else:
+            return jsonify({
+                'status': 'success', 
+                'message': 'Participant tracked',
+                'participant_id': participant.id
+            }), 200
+            
+    except Exception as e:
+        current_app.logger.error(f"Error tracking participant: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to track participant'
+        }), 500
+
+
+@discussions_bp.route('/api/discussions/<int:discussion_id>/simulate-activity', methods=['POST'])
+def simulate_discussion_activity(discussion_id):
+    """
+    Simulate discussion activity for testing notifications
+    """
+    try:
+        discussion = Discussion.query.get_or_404(discussion_id)
+        
+        # Get simulation type
+        activity_data = request.get_json()
+        simulation_type = activity_data.get('type', 'new_participant')
+        
+        if simulation_type == 'new_participant':
+            # Simulate a new participant
+            participant = DiscussionParticipant.track_participant(
+                discussion_id=discussion_id,
+                user_id=None,
+                participant_identifier=f"sim_participant_{db.session.execute(db.text('SELECT EXTRACT(EPOCH FROM NOW())')).scalar()}"
+            )
+            
+            # Create notification if discussion has a creator
+            notification_created = False
+            notification_error = None
+            if discussion.creator_id:
+                try:
+                    notification = create_discussion_notification(
+                        user_id=discussion.creator_id,
+                        discussion_id=discussion_id,
+                        notification_type='new_participant',
+                        additional_data={'participant_count': discussion.participant_count}
+                    )
+                    notification_created = notification is not None
+                except Exception as e:
+                    notification_error = str(e)
+                    current_app.logger.error(f"Failed to create notification in simulation: {e}")
+            
+            # Return success for participant creation regardless of notification result
+            response_data = {
+                'status': 'success',
+                'message': 'New participant activity simulated',
+                'participant_created': True,
+                'notification_created': notification_created
+            }
+            
+            if notification_error:
+                response_data['notification_error'] = notification_error
+            
+            return jsonify(response_data), 200
+        
+        elif simulation_type == 'new_response':
+            # Simulate new response activity
+            notification_created = False
+            notification_error = None
+            if discussion.creator_id:
+                try:
+                    notification = create_discussion_notification(
+                        user_id=discussion.creator_id,
+                        discussion_id=discussion_id,
+                        notification_type='new_response',
+                        additional_data={'response_count': 1}
+                    )
+                    notification_created = notification is not None
+                except Exception as e:
+                    notification_error = str(e)
+                    current_app.logger.error(f"Failed to create notification in simulation: {e}")
+            
+            response_data = {
+                'status': 'success',
+                'message': 'New response activity simulated',
+                'notification_created': notification_created
+            }
+            
+            if notification_error:
+                response_data['notification_error'] = notification_error
+                
+            return jsonify(response_data), 200
+        
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid simulation type'
+        }), 400
+        
+    except Exception as e:
+        current_app.logger.error(f"Error simulating activity: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to simulate activity'
+        }), 500
