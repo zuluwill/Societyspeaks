@@ -43,11 +43,18 @@ class User(UserMixin, db.Model):
     # New field to indicate profile type
     profile_type = db.Column(db.String(50))  # 'individual' or 'company'
 
+    # Notification preferences
+    email_notifications = db.Column(db.Boolean, default=True)  # Enable email notifications
+    discussion_participant_notifications = db.Column(db.Boolean, default=True)  # New participants
+    discussion_response_notifications = db.Column(db.Boolean, default=True)  # New responses
+    weekly_digest_enabled = db.Column(db.Boolean, default=True)  # Weekly digest emails
+
     # Relationships to profiles
     individual_profile = db.relationship('IndividualProfile', backref='user', uselist=False)
     company_profile = db.relationship('CompanyProfile', backref='user', uselist=False)
 
     discussions_created = db.relationship('Discussion', backref='creator', lazy='dynamic')
+    notifications = db.relationship('Notification', backref='user', lazy='dynamic')
 
     # Password methods
     def set_password(self, password):
@@ -101,6 +108,65 @@ class DiscussionView(db.Model):
     viewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # nullable for anonymous views
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     ip_address = db.Column(db.String(45))  # Store IP address for analytics
+
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # 'new_participant', 'new_response', etc.
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    email_sent = db.Column(db.Boolean, default=False)
+
+    # Relationships
+    discussion = db.relationship('Discussion', backref='notifications')
+
+    def mark_as_read(self):
+        """Mark notification as read"""
+        self.is_read = True
+        db.session.commit()
+
+
+class DiscussionParticipant(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Can be null for anonymous
+    participant_identifier = db.Column(db.String(255))  # External identifier from Pol.is
+    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_activity = db.Column(db.DateTime, default=datetime.utcnow)
+    response_count = db.Column(db.Integer, default=0)
+
+    # Relationships
+    discussion = db.relationship('Discussion', backref='participants')
+    user = db.relationship('User', backref='discussion_participations')
+
+    @classmethod
+    def track_participant(cls, discussion_id, user_id=None, participant_identifier=None):
+        """Track a new participant in a discussion"""
+        # Check if participant already exists
+        existing = cls.query.filter_by(
+            discussion_id=discussion_id,
+            user_id=user_id,
+            participant_identifier=participant_identifier
+        ).first()
+        
+        if not existing:
+            participant = cls(
+                discussion_id=discussion_id,
+                user_id=user_id,
+                participant_identifier=participant_identifier
+            )
+            db.session.add(participant)
+            db.session.commit()
+            return participant
+        else:
+            # Update last activity
+            existing.last_activity = datetime.utcnow()
+            db.session.commit()
+            return existing
 
 
 class IndividualProfile(db.Model):
