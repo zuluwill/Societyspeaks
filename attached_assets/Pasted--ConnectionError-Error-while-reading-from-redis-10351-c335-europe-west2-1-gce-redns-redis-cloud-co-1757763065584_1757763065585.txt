@@ -1,0 +1,553 @@
+# ConnectionError: Error while reading from redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com:10351 : (104, 'Connection reset by peer')
+
+**Issue ID:** 48370970
+**Project:** python-flask
+**Date:** 04/09/2025, 20:43:19
+
+## Tags
+
+- **browser:** SentryUptimeBot 1.0
+- **browser.name:** SentryUptimeBot
+- **device:** Desktop
+- **device.family:** Spider
+- **environment:** production
+- **handled:** yes
+- **level:** error
+- **logger:** flask_caching
+- **mechanism:** logging
+- **runtime:** CPython 3.11.10
+- **runtime.name:** CPython
+- **server_name:** localhost
+- **transaction:** main.index
+- **url:** https://societyspeaks.io/
+
+## Exceptions
+
+### Exception 1
+**Type:** ConnectionResetError
+**Value:** [Errno 104] Connection reset by peer
+
+#### Stacktrace
+
+```
+ _read_from_socket in redis/_parsers/socket.py [Line 65] (Not in app)
+        buf.seek(0, SEEK_END)
+        if custom_timeout:
+            sock.settimeout(timeout)
+        try:
+            while True:
+                data = self._sock.recv(socket_read_size)  <-- SUSPECT LINE
+                # an empty string indicates the server shutdown the socket
+                if isinstance(data, bytes) and len(data) == 0:
+                    raise ConnectionError(SERVER_CLOSED_CONNECTION_ERROR)
+                buf.write(data)
+                data_length = len(data)
+---
+Variable values:
+{
+  "buf": "<_io.BytesIO object at 0x7feb57bac8b0>",
+  "current_pos": "0",
+  "custom_timeout": "False",
+  "length": "None",
+  "marker": "0",
+  "raise_on_timeout": "True",
+  "self": "<redis._parsers.socket.SocketBuffer object at 0x7feb57c28a90>",
+  "sock": "<socket.socket [closed] fd=-1, family=2, type=1, proto=6>",
+  "socket_read_size": "65536",
+  "timeout": "<object object at 0x7feb5ae826c0>"
+}
+
+=======
+------
+ readline in redis/_parsers/socket.py [Line 115] (Not in app)
+    def readline(self) -> bytes:
+        buf = self._buffer
+        data = buf.readline()
+        while not data.endswith(SYM_CRLF):
+            # there's more data in the socket that we need
+            self._read_from_socket()  <-- SUSPECT LINE
+            data += buf.readline()
+
+        return data[:-2]
+
+    def get_pos(self) -> int:
+---
+Variable values:
+{
+  "buf": "<_io.BytesIO object at 0x7feb57bac8b0>",
+  "data": "b''",
+  "self": "<redis._parsers.socket.SocketBuffer object at 0x7feb57c28a90>"
+}
+
+=======
+------
+ _read_response in redis/_parsers/resp2.py [Line 25] (Not in app)
+        else:
+            self._buffer.purge()
+            return result
+
+    def _read_response(self, disable_decoding=False):
+        raw = self._buffer.readline()  <-- SUSPECT LINE
+        if not raw:
+            raise ConnectionError(SERVER_CLOSED_CONNECTION_ERROR)
+
+        byte, response = raw[:1], raw[1:]
+
+---
+Variable values:
+{
+  "disable_decoding": "False",
+  "self": "<redis._parsers.resp2._RESP2Parser object at 0x7feb58261f50>"
+}
+
+=======
+------
+ read_response in redis/_parsers/resp2.py [Line 15] (Not in app)
+    """RESP2 protocol implementation"""
+
+    def read_response(self, disable_decoding=False):
+        pos = self._buffer.get_pos() if self._buffer else None
+        try:
+            result = self._read_response(disable_decoding=disable_decoding)  <-- SUSPECT LINE
+        except BaseException:
+            if self._buffer:
+                self._buffer.rewind(pos)
+            raise
+        else:
+---
+Variable values:
+{
+  "disable_decoding": "False",
+  "pos": "0",
+  "self": "<redis._parsers.resp2._RESP2Parser object at 0x7feb58261f50>"
+}
+
+=======
+------
+ read_response in redis/connection.py [Line 592] (Not in app)
+            if self.protocol in ["3", 3] and not HIREDIS_AVAILABLE:
+                response = self._parser.read_response(
+                    disable_decoding=disable_decoding, push_request=push_request
+                )
+            else:
+                response = self._parser.read_response(disable_decoding=disable_decoding)  <-- SUSPECT LINE
+        except socket.timeout:
+            if disconnect_on_error:
+                self.disconnect()
+            raise TimeoutError(f"Timeout reading from {host_error}")
+        except OSError as e:
+---
+Variable values:
+{
+  "disable_decoding": "False",
+  "disconnect_on_error": "True",
+  "host_error": "'redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com:10351'",
+  "push_request": "False",
+  "self": "<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>"
+}
+
+=======
+------
+```
+### Exception 2
+**Type:** ConnectionError
+**Value:** Error while reading from redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com:10351 : (104, 'Connection reset by peer')
+
+#### Stacktrace
+
+```
+ read_response in redis/connection.py [Line 600] (Not in app)
+                self.disconnect()
+            raise TimeoutError(f"Timeout reading from {host_error}")
+        except OSError as e:
+            if disconnect_on_error:
+                self.disconnect()
+            raise ConnectionError(  <-- SUSPECT LINE
+                f"Error while reading from {host_error}" f" : {e.args}"
+            )
+        except BaseException:
+            # Also by default close in case of BaseException.  A lot of code
+            # relies on this behaviour when doing Command/Response pairs.
+---
+Variable values:
+{
+  "disable_decoding": "False",
+  "disconnect_on_error": "True",
+  "host_error": "'redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com:10351'",
+  "push_request": "False",
+  "self": "<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>"
+}
+
+=======
+ parse_response in redis/client.py [Line 584] (Not in app)
+        try:
+            if NEVER_DECODE in options:
+                response = connection.read_response(disable_decoding=True)
+                options.pop(NEVER_DECODE)
+            else:
+                response = connection.read_response()  <-- SUSPECT LINE
+        except ResponseError:
+            if EMPTY_RESPONSE in options:
+                return options[EMPTY_RESPONSE]
+            raise
+
+---
+Variable values:
+{
+  "command_name": "'MGET'",
+  "connection": "<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>",
+  "options": {
+    "keys": [
+      "'flask_cache_app.models.Discussion.get_featured_memver'"
+    ]
+  },
+  "self": "<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>)>)>"
+}
+
+=======
+ _send_command_parse_response in redis/client.py [Line 542] (Not in app)
+    def _send_command_parse_response(self, conn, command_name, *args, **options):
+        """
+        Send a command and parse the response
+        """
+        conn.send_command(*args, **options)
+        return self.parse_response(conn, command_name, **options)  <-- SUSPECT LINE
+
+    def _disconnect_raise(self, conn, error):
+        """
+        Close the connection and raise an exception
+        if retry_on_error is not set or the error
+---
+Variable values:
+{
+  "args": [
+    "'MGET'",
+    "'flask_cache_app.models.Discussion.get_featured_memver'"
+  ],
+  "command_name": "'MGET'",
+  "conn": "<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>",
+  "options": {
+    "keys": [
+      "'flask_cache_app.models.Discussion.get_featured_memver'"
+    ]
+  },
+  "self": "<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>)>)>"
+}
+
+=======
+ <lambda> in redis/client.py [Line 568] (Not in app)
+        pool = self.connection_pool
+        command_name = args[0]
+        conn = self.connection or pool.get_connection(command_name, **options)
+        try:
+            return conn.retry.call_with_retry(
+                lambda: self._send_command_parse_response(  <-- SUSPECT LINE
+                    conn, command_name, *args, **options
+                ),
+                lambda error: self._disconnect_raise(conn, error),
+            )
+        finally:
+---
+Variable values:
+{
+  "args": [
+    "'MGET'",
+    "'flask_cache_app.models.Discussion.get_featured_memver'"
+  ],
+  "command_name": "'MGET'",
+  "conn": "<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>",
+  "options": {
+    "keys": [
+      "'flask_cache_app.models.Discussion.get_featured_memver'"
+    ]
+  },
+  "self": "<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>)>)>"
+}
+
+=======
+ call_with_retry in redis/retry.py [Line 62] (Not in app)
+        """
+        self._backoff.reset()
+        failures = 0
+        while True:
+            try:
+                return do()  <-- SUSPECT LINE
+            except self._supported_errors as error:
+                failures += 1
+                fail(error)
+                if self._retries >= 0 and failures > self._retries:
+                    raise error
+---
+Variable values:
+{
+  "do": "<function Redis._execute_command.<locals>.<lambda> at 0x7feb57bd22a0>",
+  "fail": "<function Redis._execute_command.<locals>.<lambda> at 0x7feb57bd2a20>",
+  "failures": "1",
+  "self": "<redis.retry.Retry object at 0x7feb58260710>"
+}
+
+=======
+ _disconnect_raise in redis/client.py [Line 555] (Not in app)
+        conn.disconnect()
+        if (
+            conn.retry_on_error is None
+            or isinstance(error, tuple(conn.retry_on_error)) is False
+        ):
+            raise error  <-- SUSPECT LINE
+
+    # COMMAND EXECUTION AND PROTOCOL PARSING
+    def execute_command(self, *args, **options):
+        return self._execute_command(*args, **options)
+
+---
+Variable values:
+{
+  "conn": "<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>",
+  "error": "ConnectionError(\"Error while reading from redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com:10351 : (104, 'Connection reset by peer')\")",
+  "self": "<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>)>)>"
+}
+
+=======
+ <lambda> in redis/client.py [Line 571] (Not in app)
+        try:
+            return conn.retry.call_with_retry(
+                lambda: self._send_command_parse_response(
+                    conn, command_name, *args, **options
+                ),
+                lambda error: self._disconnect_raise(conn, error),  <-- SUSPECT LINE
+            )
+        finally:
+            if not self.connection:
+                pool.release(conn)
+
+---
+Variable values:
+{
+  "conn": "<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>",
+  "error": "ConnectionError(\"Error while reading from redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com:10351 : (104, 'Connection reset by peer')\")",
+  "self": "<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>)>)>"
+}
+
+=======
+ call_with_retry in redis/retry.py [Line 65] (Not in app)
+        while True:
+            try:
+                return do()
+            except self._supported_errors as error:
+                failures += 1
+                fail(error)  <-- SUSPECT LINE
+                if self._retries >= 0 and failures > self._retries:
+                    raise error
+                backoff = self._backoff.compute(failures)
+                if backoff > 0:
+                    sleep(backoff)
+---
+Variable values:
+{
+  "do": "<function Redis._execute_command.<locals>.<lambda> at 0x7feb57bd22a0>",
+  "fail": "<function Redis._execute_command.<locals>.<lambda> at 0x7feb57bd2a20>",
+  "failures": "1",
+  "self": "<redis.retry.Retry object at 0x7feb58260710>"
+}
+
+=======
+ _execute_command in redis/client.py [Line 567] (Not in app)
+        """Execute a command and return a parsed response"""
+        pool = self.connection_pool
+        command_name = args[0]
+        conn = self.connection or pool.get_connection(command_name, **options)
+        try:
+            return conn.retry.call_with_retry(  <-- SUSPECT LINE
+                lambda: self._send_command_parse_response(
+                    conn, command_name, *args, **options
+                ),
+                lambda error: self._disconnect_raise(conn, error),
+            )
+---
+Variable values:
+{
+  "args": [
+    "'MGET'",
+    "'flask_cache_app.models.Discussion.get_featured_memver'"
+  ],
+  "command_name": "'MGET'",
+  "conn": "<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>",
+  "options": {
+    "keys": [
+      "'flask_cache_app.models.Discussion.get_featured_memver'"
+    ]
+  },
+  "pool": "<redis.connection.ConnectionPool(<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>)>",
+  "self": "<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>)>)>"
+}
+
+=======
+ execute_command in redis/client.py [Line 559] (Not in app)
+        ):
+            raise error
+
+    # COMMAND EXECUTION AND PROTOCOL PARSING
+    def execute_command(self, *args, **options):
+        return self._execute_command(*args, **options)  <-- SUSPECT LINE
+
+    def _execute_command(self, *args, **options):
+        """Execute a command and return a parsed response"""
+        pool = self.connection_pool
+        command_name = args[0]
+---
+Variable values:
+{
+  "args": [
+    "'MGET'",
+    "'flask_cache_app.models.Discussion.get_featured_memver'"
+  ],
+  "options": {
+    "keys": [
+      "'flask_cache_app.models.Discussion.get_featured_memver'"
+    ]
+  },
+  "self": "<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>)>)>"
+}
+
+=======
+ mget in redis/commands/core.py [Line 2009] (Not in app)
+        args = list_or_args(keys, args)
+        options = {}
+        if not args:
+            options[EMPTY_RESPONSE] = []
+        options["keys"] = args
+        return self.execute_command("MGET", *args, **options)  <-- SUSPECT LINE
+
+    def mset(self, mapping: Mapping[AnyKeyT, EncodableT]) -> ResponseT:
+        """
+        Sets key/values based on a mapping. Mapping is a dictionary of
+        key/value pairs. Both keys and values should be strings or types that
+---
+Variable values:
+{
+  "EMPTY_RESPONSE": "'EMPTY_RESPONSE'",
+  "args": [
+    "'flask_cache_app.models.Discussion.get_featured_memver'"
+  ],
+  "keys": [
+    "'flask_cache_app.models.Discussion.get_featured_memver'"
+  ],
+  "options": {
+    "keys": [
+      "'flask_cache_app.models.Discussion.get_featured_memver'"
+    ]
+  },
+  "self": "<redis.client.Redis(<redis.connection.ConnectionPool(<redis.connection.Connection(host=redis-10351.c335.europe-west2-1.gce.redns.redis-cloud.com,port=10351,db=0)>)>)>"
+}
+
+=======
+ get_many in cachelib/redis.py [Line 79] (Not in app)
+    def get_many(self, *keys: str) -> _t.List[_t.Any]:
+        if self.key_prefix:
+            prefixed_keys = [self.key_prefix + key for key in keys]
+        else:
+            prefixed_keys = list(keys)
+        return [self.serializer.loads(x) for x in self._read_client.mget(prefixed_keys)]  <-- SUSPECT LINE
+
+    def set(self, key: str, value: _t.Any, timeout: _t.Optional[int] = None) -> _t.Any:
+        timeout = self._normalize_timeout(timeout)
+        dump = self.serializer.dumps(value)
+        if timeout == -1:
+---
+Variable values:
+{
+  "keys": [
+    "'app.models.Discussion.get_featured_memver'"
+  ],
+  "prefixed_keys": [
+    "'flask_cache_app.models.Discussion.get_featured_memver'"
+  ],
+  "self": "<flask_caching.backends.rediscache.RedisCache object at 0x7feb597b2c90>"
+}
+
+=======
+ _memoize_version in __init__.py [Line 568] (Not in app)
+        # key but not both.
+        if delete:
+            self.cache.delete_many(fetch_keys[-1])
+            return fname, None
+
+        version_data_list = list(self.cache.get_many(*fetch_keys))  <-- SUSPECT LINE
+        dirty = False
+
+        if (
+            callable(forced_update)
+            and (
+---
+Variable values:
+{
+  "args": [],
+  "args_to_ignore": [],
+  "delete": "False",
+  "f": "<function Discussion.get_featured at 0x7feb5941cc20>",
+  "fname": "'app.models.Discussion.get_featured'",
+  "forced_update": "None",
+  "kwargs": {},
+  "reset": "False",
+  "self": "<flask_caching.Cache object at 0x7feb5a66d610>",
+  "timeout": "300"
+}
+
+=======
+ make_cache_key in __init__.py [Line 618] (Not in app)
+    ) -> Callable:
+        """Function used to create the cache_key for memoized functions."""
+
+        def make_cache_key(f, *args, **kwargs):
+            _timeout = getattr(timeout, "cache_timeout", timeout)
+            fname, version_data = self._memoize_version(  <-- SUSPECT LINE
+                f,
+                args=args,
+                kwargs=kwargs,
+                timeout=_timeout,
+                forced_update=forced_update,
+---
+Variable values:
+{
+  "_timeout": "300",
+  "args": [],
+  "args_to_ignore": "None",
+  "f": "<function Discussion.get_featured at 0x7feb5941cc20>",
+  "forced_update": "None",
+  "hash_method": "<built-in function openssl_md5>",
+  "kwargs": {},
+  "make_name": "None",
+  "self": "<flask_caching.Cache object at 0x7feb5a66d610>",
+  "source_check": "None"
+}
+
+=======
+ decorated_function in __init__.py [Line 861] (Not in app)
+                nonlocal source_check
+                if source_check is None:
+                    source_check = self.source_check
+
+                try:
+                    cache_key = decorated_function.make_cache_key(f, *args, **kwargs)  <-- SUSPECT LINE
+
+                    if (
+                        callable(forced_update)
+                        and (
+                            forced_update(*args, **kwargs)
+---
+Variable values:
+{
+  "args": [],
+  "cache_none": "False",
+  "decorated_function": "<function Discussion.get_featured at 0x7feb5941ccc0>",
+  "f": "<function Discussion.get_featured at 0x7feb5941cc20>",
+  "forced_update": "None",
+  "kwargs": {},
+  "response_filter": "None",
+  "self": "<flask_caching.Cache object at 0x7feb5a66d610>",
+  "source_check": "False",
+  "unless": "None"
+}
+
+=======
+```
