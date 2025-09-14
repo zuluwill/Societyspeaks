@@ -43,13 +43,21 @@ def track_discussion_view(f):
     def decorated_function(*args, **kwargs):
         discussion_id = kwargs.get('discussion_id')
         if discussion_id:
-            # Create a new view record
-            discussion_view = DiscussionView(
-                discussion_id=discussion_id,  # We can use the ID directly here
-                viewer_id=current_user.id if current_user.is_authenticated else None,
-                ip_address=request.remote_addr
-            )
-            db.session.add(discussion_view)
-            db.session.commit()
+            # Check if the discussion exists before tracking the view
+            discussion = Discussion.query.get(discussion_id)
+            if discussion:
+                try:
+                    # Create a new view record only if discussion exists
+                    discussion_view = DiscussionView(
+                        discussion_id=discussion_id,
+                        viewer_id=current_user.id if current_user.is_authenticated else None,
+                        ip_address=request.remote_addr
+                    )
+                    db.session.add(discussion_view)
+                    db.session.commit()
+                except Exception as e:
+                    # Log the error but don't crash the application
+                    current_app.logger.error(f"Failed to track discussion view for discussion {discussion_id}: {e}")
+                    db.session.rollback()
         return f(*args, **kwargs)
     return decorated_function

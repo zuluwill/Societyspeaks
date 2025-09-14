@@ -1,0 +1,664 @@
+# IntegrityError: (psycopg2.errors.ForeignKeyViolation) insert or update on table "discussion_view" violates foreign key constraint "discussion_view_discussion_id_fkey"
+
+**Issue ID:** 64073040
+**Project:** python-flask
+**Date:** 14/09/2025, 03:28:25
+
+## Tags
+
+- **browser:** Twitterbot 1.0
+- **browser.name:** Twitterbot
+- **device:** Desktop
+- **device.family:** Spider
+- **environment:** production
+- **handled:** yes
+- **level:** error
+- **logger:** app
+- **mechanism:** logging
+- **runtime:** CPython 3.11.13
+- **runtime.name:** CPython
+- **server_name:** localhost
+- **transaction:** discussions.view_discussion
+- **url:** https://societyspeaks.io/discussions/22/sharing-the-cost-of-global-english-education-a-call-for-uk-and-us-leadership
+
+## Exceptions
+
+### Exception 1
+**Type:** ForeignKeyViolation
+**Value:** insert or update on table "discussion_view" violates foreign key constraint "discussion_view_discussion_id_fkey"
+DETAIL:  Key (discussion_id)=(22) is not present in table "discussion".
+
+
+#### Stacktrace
+
+```
+ do_execute in sqlalchemy/engine/default.py [Line 941] (Not in app)
+
+    def do_executemany(self, cursor, statement, parameters, context=None):
+        cursor.executemany(statement, parameters)
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+        cursor.execute(statement, parameters)  <-- SUSPECT LINE
+
+    def do_execute_no_params(self, cursor, statement, context=None):
+        cursor.execute(statement)
+
+    def is_disconnect(self, e, connection, cursor):
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7f82765edb10>",
+  "cursor": "<cursor object at 0x7f82788b3f10; closed: -1>",
+  "parameters": {
+    "discussion_id": "22",
+    "ip_address": "'127.0.0.1'",
+    "timestamp": "datetime.datetime(2025, 9, 14, 2, 28, 25, 42746)",
+    "viewer_id": "None"
+  },
+  "self": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>",
+  "statement": "'INSERT INTO discussion_view (discussion_id, viewer_id, timestamp, ip_address) VALUES (%(discussion_id)s, %(viewer_id)s, %(timestamp)s, %(ip_address)s) RETURNING discussion_view.id'"
+}
+
+=======
+------
+ _exec_single_context in sqlalchemy/engine/base.py [Line 1967] (Not in app)
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute(  <-- SUSPECT LINE
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+            if self._has_events or self.engine._has_events:
+                self.dispatch.after_cursor_execute(
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7f82765edb10>",
+  "cursor": "<cursor object at 0x7f82788b3f10; closed: -1>",
+  "dialect": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>",
+  "effective_parameters": {
+    "discussion_id": "22",
+    "ip_address": "'127.0.0.1'",
+    "timestamp": "datetime.datetime(2025, 9, 14, 2, 28, 25, 42746)",
+    "viewer_id": "None"
+  },
+  "evt_handled": "False",
+  "fn": "<function ConnectionEvents._listen.<locals>.wrap_before_cursor_execute at 0x7f82783dfec0>",
+  "parameters": [
+    {
+      "discussion_id": "22",
+      "ip_address": "'127.0.0.1'",
+      "timestamp": "datetime.datetime(2025, 9, 14, 2, 28, 25, 42746)",
+      "viewer_id": "None"
+    }
+  ],
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7f8275ed3f50>",
+  "statement": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f82768cacd0>",
+  "str_statement": "'INSERT INTO discussion_view (discussion_id, viewer_id, timestamp, ip_address) VALUES (%(discussion_id)s, %(viewer_id)s, %(timestamp)s, %(ip_address)s) RETURNING discussion_view.id'"
+}
+
+=======
+------
+```
+### Exception 2
+**Type:** IntegrityError
+**Value:** (psycopg2.errors.ForeignKeyViolation) insert or update on table "discussion_view" violates foreign key constraint "discussion_view_discussion_id_fkey"
+DETAIL:  Key (discussion_id)=(22) is not present in table "discussion".
+
+[SQL: INSERT INTO discussion_view (discussion_id, viewer_id, timestamp, ip_address) VALUES (%(discussion_id)s, %(viewer_id)s, %(timestamp)s, %(ip_address)s) RETURNING discussion_view.id]
+[parameters: {'discussion_id': 22, 'viewer_id': None, 'timestamp': datetime.datetime(2025, 9, 14, 2, 28, 25, 42746), 'ip_address': '127.0.0.1'}]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+
+#### Stacktrace
+
+```
+ do_execute in sqlalchemy/engine/default.py [Line 941] (Not in app)
+
+    def do_executemany(self, cursor, statement, parameters, context=None):
+        cursor.executemany(statement, parameters)
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+        cursor.execute(statement, parameters)  <-- SUSPECT LINE
+
+    def do_execute_no_params(self, cursor, statement, context=None):
+        cursor.execute(statement)
+
+    def is_disconnect(self, e, connection, cursor):
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7f82765edb10>",
+  "cursor": "<cursor object at 0x7f82788b3f10; closed: -1>",
+  "parameters": {
+    "discussion_id": "22",
+    "ip_address": "'127.0.0.1'",
+    "timestamp": "datetime.datetime(2025, 9, 14, 2, 28, 25, 42746)",
+    "viewer_id": "None"
+  },
+  "self": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>",
+  "statement": "'INSERT INTO discussion_view (discussion_id, viewer_id, timestamp, ip_address) VALUES (%(discussion_id)s, %(viewer_id)s, %(timestamp)s, %(ip_address)s) RETURNING discussion_view.id'"
+}
+
+=======
+ _exec_single_context in sqlalchemy/engine/base.py [Line 1967] (Not in app)
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute(  <-- SUSPECT LINE
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+            if self._has_events or self.engine._has_events:
+                self.dispatch.after_cursor_execute(
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7f82765edb10>",
+  "cursor": "<cursor object at 0x7f82788b3f10; closed: -1>",
+  "dialect": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>",
+  "effective_parameters": {
+    "discussion_id": "22",
+    "ip_address": "'127.0.0.1'",
+    "timestamp": "datetime.datetime(2025, 9, 14, 2, 28, 25, 42746)",
+    "viewer_id": "None"
+  },
+  "evt_handled": "False",
+  "fn": "<function ConnectionEvents._listen.<locals>.wrap_before_cursor_execute at 0x7f82783dfec0>",
+  "parameters": [
+    {
+      "discussion_id": "22",
+      "ip_address": "'127.0.0.1'",
+      "timestamp": "datetime.datetime(2025, 9, 14, 2, 28, 25, 42746)",
+      "viewer_id": "None"
+    }
+  ],
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7f8275ed3f50>",
+  "statement": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f82768cacd0>",
+  "str_statement": "'INSERT INTO discussion_view (discussion_id, viewer_id, timestamp, ip_address) VALUES (%(discussion_id)s, %(viewer_id)s, %(timestamp)s, %(ip_address)s) RETURNING discussion_view.id'"
+}
+
+=======
+ _handle_dbapi_exception in sqlalchemy/engine/base.py [Line 2355] (Not in app)
+
+            if newraise:
+                raise newraise.with_traceback(exc_info[2]) from e
+            elif should_wrap:
+                assert sqlalchemy_exception is not None
+                raise sqlalchemy_exception.with_traceback(exc_info[2]) from e  <-- SUSPECT LINE
+            else:
+                assert exc_info[1] is not None
+                raise exc_info[1].with_traceback(exc_info[2])
+        finally:
+            del self._reentrant_error
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7f82765edb10>",
+  "cursor": "<cursor object at 0x7f82788b3f10; closed: -1>",
+  "e": "ForeignKeyViolation('insert or update on table \"discussion_view\" violates foreign key constraint \"discussion_view_discussion_id_fkey\"\\nDETAIL:  Key (discussion_id)=(22) is not present in table \"discussion\".\\n')",
+  "exc_info": [
+    "<class 'psycopg2.errors.ForeignKeyViolation'>",
+    "ForeignKeyViolation('insert or update on table \"discussion_view\" violates foreign key constraint \"discussion_view_discussion_id_fkey\"\\nDETAIL:  Key (discussion_id)=(22) is not present in table \"discussion\".\\n')",
+    "<traceback object at 0x7f82765f6f40>"
+  ],
+  "invalidate_pool_on_disconnect": "True",
+  "is_exit_exception": "False",
+  "is_sub_exec": "False",
+  "parameters": {
+    "discussion_id": "22",
+    "ip_address": "'127.0.0.1'",
+    "timestamp": "datetime.datetime(2025, 9, 14, 2, 28, 25, 42746)",
+    "viewer_id": "None"
+  },
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7f8275ed3f50>",
+  "statement": "'INSERT INTO discussion_view (discussion_id, viewer_id, timestamp, ip_address) VALUES (%(discussion_id)s, %(viewer_id)s, %(timestamp)s, %(ip_address)s) RETURNING discussion_view.id'"
+}
+
+=======
+ _exec_single_context in sqlalchemy/engine/base.py [Line 1986] (Not in app)
+            context.post_exec()
+
+            result = context._setup_result_proxy()
+
+        except BaseException as e:
+            self._handle_dbapi_exception(  <-- SUSPECT LINE
+                e, str_statement, effective_parameters, cursor, context
+            )
+
+        return result
+
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7f82765edb10>",
+  "cursor": "<cursor object at 0x7f82788b3f10; closed: -1>",
+  "dialect": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>",
+  "effective_parameters": {
+    "discussion_id": "22",
+    "ip_address": "'127.0.0.1'",
+    "timestamp": "datetime.datetime(2025, 9, 14, 2, 28, 25, 42746)",
+    "viewer_id": "None"
+  },
+  "evt_handled": "False",
+  "fn": "<function ConnectionEvents._listen.<locals>.wrap_before_cursor_execute at 0x7f82783dfec0>",
+  "parameters": [
+    {
+      "discussion_id": "22",
+      "ip_address": "'127.0.0.1'",
+      "timestamp": "datetime.datetime(2025, 9, 14, 2, 28, 25, 42746)",
+      "viewer_id": "None"
+    }
+  ],
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7f8275ed3f50>",
+  "statement": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f82768cacd0>",
+  "str_statement": "'INSERT INTO discussion_view (discussion_id, viewer_id, timestamp, ip_address) VALUES (%(discussion_id)s, %(viewer_id)s, %(timestamp)s, %(ip_address)s) RETURNING discussion_view.id'"
+}
+
+=======
+ _execute_context in sqlalchemy/engine/base.py [Line 1846] (Not in app)
+        context.pre_exec()
+
+        if context.execute_style is ExecuteStyle.INSERTMANYVALUES:
+            return self._exec_insertmany_context(dialect, context)
+        else:
+            return self._exec_single_context(  <-- SUSPECT LINE
+                dialect, context, statement, parameters
+            )
+
+    def _exec_single_context(
+        self,
+---
+Variable values:
+{
+  "args": [
+    "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f82768cacd0>",
+    [
+      {
+        "discussion_id": "22",
+        "ip_address": "'127.0.0.1'",
+        "viewer_id": "None"
+      }
+    ],
+    "<sqlalchemy.sql.dml.Insert object at 0x7f82768cb350>",
+    []
+  ],
+  "conn": "<sqlalchemy.pool.base._ConnectionFairy object at 0x7f827591ccb0>",
+  "constructor": "<bound method DefaultExecutionContext._init_compiled of <class 'sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2'>>",
+  "dialect": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>",
+  "execution_options": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion_view', MetaData(), Column('id', Integer(), table=<discussion_view>, primary_key=True, nullable=False), Column('discussion_id', Integer(), ForeignKey('discussion.id'), table=<discussion_view>, nullable=False), Column('viewer_id', Integer(), ForeignKey('user.id'), table=<discussion_view>), Column('timestamp', DateTime(), table=<discussion_view>, default=CallableColumnDefault(<function datetime.utcnow at 0x7f82777c8a40>)), Column('ip_address', String(length=45), table=<discussion_view>), schema=None),)), ('discussion_id', 'ip_address', 'viewer_id'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f82768cacd0>"
+    }
+  },
+  "kw": {
+    "cache_hit": "<CacheStats.CACHE_HIT: 0>"
+  },
+  "parameters": [
+    {
+      "discussion_id": "22",
+      "ip_address": "'127.0.0.1'",
+      "viewer_id": "None"
+    }
+  ],
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7f8275ed3f50>",
+  "statement": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f82768cacd0>",
+  "yp": "None"
+}
+
+=======
+ _execute_clauseelement in sqlalchemy/engine/base.py [Line 1640] (Not in app)
+            column_keys=keys,
+            for_executemany=for_executemany,
+            schema_translate_map=schema_translate_map,
+            linting=self.dialect.compiler_linting | compiler.WARN_LINTING,
+        )
+        ret = self._execute_context(  <-- SUSPECT LINE
+            dialect,
+            dialect.execution_ctx_cls._init_compiled,
+            compiled_sql,
+            distilled_parameters,
+            execution_options,
+---
+Variable values:
+{
+  "dialect": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>",
+  "distilled_parameters": [
+    {
+      "discussion_id": "22",
+      "ip_address": "'127.0.0.1'",
+      "viewer_id": "None"
+    }
+  ],
+  "elem": "<sqlalchemy.sql.dml.Insert object at 0x7f82768cb350>",
+  "event_multiparams": [],
+  "event_params": {
+    "discussion_id": "22",
+    "ip_address": "'127.0.0.1'",
+    "viewer_id": "None"
+  },
+  "execution_options": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion_view', MetaData(), Column('id', Integer(), table=<discussion_view>, primary_key=True, nullable=False), Column('discussion_id', Integer(), ForeignKey('discussion.id'), table=<discussion_view>, nullable=False), Column('viewer_id', Integer(), ForeignKey('user.id'), table=<discussion_view>), Column('timestamp', DateTime(), table=<discussion_view>, default=CallableColumnDefault(<function datetime.utcnow at 0x7f82777c8a40>)), Column('ip_address', String(length=45), table=<discussion_view>), schema=None),)), ('discussion_id', 'ip_address', 'viewer_id'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f82768cacd0>"
+    }
+  },
+  "for_executemany": "False",
+  "has_events": "True",
+  "keys": [
+    "'discussion_id'",
+    "'ip_address'",
+    "'viewer_id'"
+  ],
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7f8275ed3f50>"
+}
+
+=======
+ _execute_on_connection in sqlalchemy/sql/elements.py [Line 515] (Not in app)
+        execution_options: CoreExecuteOptionsParameter,
+    ) -> Result[Any]:
+        if self.supports_execution:
+            if TYPE_CHECKING:
+                assert isinstance(self, Executable)
+            return connection._execute_clauseelement(  <-- SUSPECT LINE
+                self, distilled_params, execution_options
+            )
+        else:
+            raise exc.ObjectNotExecutableError(self)
+
+---
+Variable values:
+{
+  "connection": "<sqlalchemy.engine.base.Connection object at 0x7f8275ed3f50>",
+  "distilled_params": [
+    {
+      "discussion_id": "22",
+      "ip_address": "'127.0.0.1'",
+      "viewer_id": "None"
+    }
+  ],
+  "execution_options": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion_view', MetaData(), Column('id', Integer(), table=<discussion_view>, primary_key=True, nullable=False), Column('discussion_id', Integer(), ForeignKey('discussion.id'), table=<discussion_view>, nullable=False), Column('viewer_id', Integer(), ForeignKey('user.id'), table=<discussion_view>), Column('timestamp', DateTime(), table=<discussion_view>, default=CallableColumnDefault(<function datetime.utcnow at 0x7f82777c8a40>)), Column('ip_address', String(length=45), table=<discussion_view>), schema=None),)), ('discussion_id', 'ip_address', 'viewer_id'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f82768cacd0>"
+    }
+  },
+  "self": "<sqlalchemy.sql.dml.Insert object at 0x7f82768cb350>"
+}
+
+=======
+ execute in sqlalchemy/engine/base.py [Line 1418] (Not in app)
+        try:
+            meth = statement._execute_on_connection
+        except AttributeError as err:
+            raise exc.ObjectNotExecutableError(statement) from err
+        else:
+            return meth(  <-- SUSPECT LINE
+                self,
+                distilled_parameters,
+                execution_options or NO_OPTIONS,
+            )
+
+---
+Variable values:
+{
+  "distilled_parameters": [
+    {
+      "discussion_id": "22",
+      "ip_address": "'127.0.0.1'",
+      "viewer_id": "None"
+    }
+  ],
+  "execution_options": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion_view', MetaData(), Column('id', Integer(), table=<discussion_view>, primary_key=True, nullable=False), Column('discussion_id', Integer(), ForeignKey('discussion.id'), table=<discussion_view>, nullable=False), Column('viewer_id', Integer(), ForeignKey('user.id'), table=<discussion_view>), Column('timestamp', DateTime(), table=<discussion_view>, default=CallableColumnDefault(<function datetime.utcnow at 0x7f82777c8a40>)), Column('ip_address', String(length=45), table=<discussion_view>), schema=None),)), ('discussion_id', 'ip_address', 'viewer_id'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f82768cacd0>"
+    }
+  },
+  "meth": "<bound method ClauseElement._execute_on_connection of <sqlalchemy.sql.dml.Insert object at 0x7f82768cb350>>",
+  "parameters": {
+    "discussion_id": "22",
+    "ip_address": "'127.0.0.1'",
+    "viewer_id": "None"
+  },
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7f8275ed3f50>",
+  "statement": "<sqlalchemy.sql.dml.Insert object at 0x7f82768cb350>"
+}
+
+=======
+ _emit_insert_statements in sqlalchemy/orm/persistence.py [Line 1233] (Not in app)
+                            statement.values(value_params),
+                            params,
+                            execution_options=execution_options,
+                        )
+                    else:
+                        result = connection.execute(  <-- SUSPECT LINE
+                            statement,
+                            params,
+                            execution_options=execution_options,
+                        )
+
+---
+Variable values:
+{
+  "base_mapper": "<Mapper at 0x7f8277776f90; DiscussionView>",
+  "bookkeeping": "True",
+  "cached_stmt": "<sqlalchemy.sql.dml.Insert object at 0x7f82768cb350>",
+  "exec_opt": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion_view', MetaData(), Column('id', Integer(), table=<discussion_view>, primary_key=True, nullable=False), Column('discussion_id', Integer(), ForeignKey('discussion.id'), table=<discussion_view>, nullable=False), Column('viewer_id', Integer(), ForeignKey('user.id'), table=<discussion_view>), Column('timestamp', DateTime(), table=<discussion_view>, default=CallableColumnDefault(<function datetime.utcnow at 0x7f82777c8a40>)), Column('ip_address', String(length=45), table=<discussion_view>), schema=None),)), ('discussion_id', 'ip_address', 'viewer_id'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f82768cacd0>"
+    }
+  },
+  "execution_options": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8277bd9bd0>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion_view', MetaData(), Column('id', Integer(), table=<discussion_view>, primary_key=True, nullable=False), Column('discussion_id', Integer(), ForeignKey('discussion.id'), table=<discussion_view>, nullable=False), Column('viewer_id', Integer(), ForeignKey('user.id'), table=<discussion_view>), Column('timestamp', DateTime(), table=<discussion_view>, default=CallableColumnDefault(<function datetime.utcnow at 0x7f82777c8a40>)), Column('ip_address', String(length=45), table=<discussion_view>), schema=None),)), ('discussion_id', 'ip_address', 'viewer_id'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f82768cacd0>"
+    }
+  },
+  "insert": "<generator object _collect_insert_commands at 0x7f82769e3880>",
+  "mapper": "<Mapper at 0x7f8277776f90; DiscussionView>",
+  "table": "Table('discussion_view', MetaData(), Column('id', Integer(), table=<discussion_view>, primary_key=True, nullable=False), Column('discussion_id', Integer(), ForeignKey('discussion.id'), table=<discussion_view>, nullable=False), Column('viewer_id', Integer(), ForeignKey('user.id'), table=<discussion_view>), Column('timestamp', DateTime(), table=<discussion_view>, default=CallableColumnDefault(<function datetime.utcnow at 0x7f82777c8a40>)), Column('ip_address', String(length=45), table=<discussion_view>), schema=None)",
+  "uowtransaction": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7f8275fad190>",
+  "use_orm_insert_stmt": "None"
+}
+
+=======
+ save_obj in sqlalchemy/orm/persistence.py [Line 93] (Not in app)
+            mapper,
+            table,
+            update,
+        )
+
+        _emit_insert_statements(  <-- SUSPECT LINE
+            base_mapper,
+            uowtransaction,
+            mapper,
+            table,
+            insert,
+---
+Variable values:
+{
+  "base_mapper": "<Mapper at 0x7f8277776f90; DiscussionView>",
+  "connection": "<sqlalchemy.engine.base.Connection object at 0x7f8275ed3f50>",
+  "dict_": {
+    "_sa_instance_state": "<sqlalchemy.orm.state.InstanceState object at 0x7f827591c650>",
+    "discussion_id": "22",
+    "ip_address": "'127.0.0.1'",
+    "viewer_id": "None"
+  },
+  "mapper": "<Mapper at 0x7f8277776f90; DiscussionView>",
+  "single": "False",
+  "state": "<sqlalchemy.orm.state.InstanceState object at 0x7f827591c650>",
+  "states": "<generator object UOWTransaction.states_for_mapper_hierarchy at 0x7f8276582a40>",
+  "states_to_insert": [
+    [
+      "<sqlalchemy.orm.state.InstanceState object at 0x7f827591c650>",
+      {
+        "_sa_instance_state": "<sqlalchemy.orm.state.InstanceState object at 0x7f827591c650>",
+        "discussion_id": "22",
+        "ip_address": "'127.0.0.1'",
+        "viewer_id": "None"
+      },
+      "<Mapper at 0x7f8277776f90; DiscussionView>",
+      "<sqlalchemy.engine.base.Connection object at 0x7f8275ed3f50>"
+    ]
+  ],
+  "states_to_update": [],
+  "uowtransaction": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7f8275fad190>"
+}
+
+=======
+ execute in sqlalchemy/orm/unitofwork.py [Line 642] (Not in app)
+        self.sort_key = ("SaveUpdateAll", mapper._sort_key)
+        assert mapper is mapper.base_mapper
+
+    @util.preload_module("sqlalchemy.orm.persistence")
+    def execute(self, uow):
+        util.preloaded.orm_persistence.save_obj(  <-- SUSPECT LINE
+            self.mapper,
+            uow.states_for_mapper_hierarchy(self.mapper, False, False),
+            uow,
+        )
+
+---
+Variable values:
+{
+  "self": "SaveUpdateAll(Mapper[DiscussionView(discussion_view)])",
+  "uow": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7f8275fad190>"
+}
+
+=======
+ execute in sqlalchemy/orm/unitofwork.py [Line 466] (Not in app)
+                while set_:
+                    n = set_.pop()
+                    n.execute_aggregate(self, set_)
+        else:
+            for rec in topological.sort(self.dependencies, postsort_actions):
+                rec.execute(self)  <-- SUSPECT LINE
+
+    def finalize_flush_changes(self) -> None:
+        """Mark processed objects as clean / deleted after a successful
+        flush().
+
+---
+Variable values:
+{
+  "postsort_actions": [
+    "DeleteAll(Mapper[DiscussionView(discussion_view)])",
+    "SaveUpdateAll(Mapper[DiscussionView(discussion_view)])"
+  ],
+  "rec": "SaveUpdateAll(Mapper[DiscussionView(discussion_view)])",
+  "self": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7f8275fad190>"
+}
+
+=======
+ _flush in sqlalchemy/orm/session.py [Line 4448] (Not in app)
+
+        flush_context.transaction = transaction = self._autobegin_t()._begin()
+        try:
+            self._warn_on_events = True
+            try:
+                flush_context.execute()  <-- SUSPECT LINE
+            finally:
+                self._warn_on_events = False
+
+            self.dispatch.after_flush(self, flush_context)
+
+---
+Variable values:
+{
+  "deleted": [],
+  "dirty": [],
+  "flush_context": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7f8275fad190>",
+  "new": [
+    "<sqlalchemy.orm.state.InstanceState object at 0x7f827591c650>"
+  ],
+  "objects": "None",
+  "objset": "None",
+  "proc": [],
+  "processed": [
+    "<sqlalchemy.orm.state.InstanceState object at 0x7f827591c650>"
+  ],
+  "self": "<sqlalchemy.orm.session.Session object at 0x7f8275fac210>",
+  "state": "<sqlalchemy.orm.state.InstanceState object at 0x7f827591c650>"
+}
+
+=======
+ __exit__ in sqlalchemy/util/langhelpers.py [Line 146] (Not in app)
+        # see #2703 for notes
+        if type_ is None:
+            exc_type, exc_value, exc_tb = self._exc_info
+            assert exc_value is not None
+            self._exc_info = None  # remove potential circular references
+            raise exc_value.with_traceback(exc_tb)  <-- SUSPECT LINE
+        else:
+            self._exc_info = None  # remove potential circular references
+            assert value is not None
+            raise value.with_traceback(traceback)
+
+---
+Variable values:
+{
+  "exc_tb": "<traceback object at 0x7f82765f0580>",
+  "exc_type": "<class 'sqlalchemy.exc.IntegrityError'>",
+  "exc_value": "IntegrityError('(psycopg2.errors.ForeignKeyViolation) insert or update on table \"discussion_view\" violates foreign key constraint \"discussion_view_discussion_id_fkey\"\\nDETAIL:  Key (discussion_id)=(22) is not present in table \"discussion\".\\n')",
+  "self": "<sqlalchemy.util.langhelpers.safe_reraise object at 0x7f82765e8820>",
+  "traceback": "None",
+  "type_": "None",
+  "value": "None"
+}
+
+=======
+ _flush in sqlalchemy/orm/session.py [Line 4487] (Not in app)
+            self.dispatch.after_flush_postexec(self, flush_context)
+
+            transaction.commit()
+
+        except:
+            with util.safe_reraise():  <-- SUSPECT LINE
+                transaction.rollback(_capture_exception=True)
+
+    def bulk_save_objects(
+        self,
+        objects: Iterable[object],
+---
+Variable values:
+{
+  "deleted": [],
+  "dirty": [],
+  "flush_context": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7f8275fad190>",
+  "new": [
+    "<sqlalchemy.orm.state.InstanceState object at 0x7f827591c650>"
+  ],
+  "objects": "None",
+  "objset": "None",
+  "proc": [],
+  "processed": [
+    "<sqlalchemy.orm.state.InstanceState object at 0x7f827591c650>"
+  ],
+  "self": "<sqlalchemy.orm.session.Session object at 0x7f8275fac210>",
+  "state": "<sqlalchemy.orm.state.InstanceState object at 0x7f827591c650>"
+}
+
+=======
+ flush in sqlalchemy/orm/session.py [Line 4352] (Not in app)
+
+        if self._is_clean():
+            return
+        try:
+            self._flushing = True
+            self._flush(objects)  <-- SUSPECT LINE
+        finally:
+            self._flushing = False
+
+    def _flush_warning(self, method: Any) -> None:
+        util.warn(
+---
+Variable values:
+{
+  "objects": "None",
+  "self": "<sqlalchemy.orm.session.Session object at 0x7f8275fac210>"
+}
+
+=======
+```
