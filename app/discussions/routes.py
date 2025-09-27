@@ -75,16 +75,17 @@ def fetch_discussions(search, country, city, topic, keywords, page, per_page=9, 
     elif sort == 'popular':
         query = query.order_by(Discussion.participant_count.desc())  # Example for popular sorting
 
-    return query.paginate(page=page, per_page=per_page)
+    return query.paginate(page=page, per_page=per_page, error_out=False)
 
 
 
 
 @discussions_bp.route('/search', methods=['GET'])
 def search_discussions():
+    # Load city and country data path first
+    json_path = os.path.join(current_app.root_path, 'static', 'data', 'cities_by_country.json')
+    
     try:
-        # Load city and country data
-        json_path = os.path.join(current_app.root_path, 'static', 'data', 'cities_by_country.json')
         with open(json_path, 'r') as f:
             cities_by_country = json.load(f)
         countries = list(cities_by_country.keys())
