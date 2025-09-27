@@ -1,0 +1,166 @@
+handled
+--
+level
+level
+error
+url
+url
+https://societyspeaks.io/discussions/search
+Trace: Trace ID
+6d4b4931c20c4e8ab3f97f413d9435ca
+
+Message
+Error in search_discussions: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+
+Breadcrumbs
+
+
+Message - This event
+error
+01:41:09.147 AM
+Error in search_discussions: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+Query
+info
+01:41:09.100 AM
+SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code,
+       discussion.title AS discussion_title, discussion.description AS discussion_description,
+       discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug,
+       discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country,
+       discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id,
+       discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured,
+       discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at,
+       discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS discussion_individual_profile_id,
+       discussion.company_profile_id AS discussion_company_profile_id
+FROM discussion
+ORDER BY discussion.created_at DESC
+LIMIT %(param_1)s
+OFFSET %(param_2)s
+redis
+info
+01:41:09.060 AM
+EVALSHA '628bd136a573a06b346879695681af12ccef300f' [Filtered] [Filtered] [Filtered] [Filtered]
+
+{
+db.operation: EVALSHA,
+redis.command: EVALSHA,
+redis.is_cluster: false
+}
+subprocess
+info
+04:41:31.127 AM
+git rev-parse HEAD
+
+{
+thread.id: 139800491850944,
+thread.name: MainThread
+}
+redis
+info
+04:41:30.726 AM
+PING
+
+{
+db.operation: PING,
+redis.command: PING,
+redis.is_cluster: false
+}
+
+View 2 more
+
+Trace Preview
+View Full Trace
+0.00ms100.00ms200.00ms0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s0s
+
+1
+Trace
+—
+6d4b4931c20c4e8ab3f97f413d9435ca
+
+2
+
+http.server
+—
+discussions.search_discussions
+215.20ms
+
+db.redis
+—
+EVALSHA '628bd136a573a06b346879695681af12ccef300f' [Filtered] [Filtered] [Filtered] [Filtered]
+96.12ms
+
+db
+—
+SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.ti…
+41.50ms
+
+HTTP Request
+
+
+GET
+/discussions/search
+societyspeaks.io
+Query String
+page
+3
+q
+Headers
+Accept
+text/html, application/rss+xml, application/atom+xml, text/xml, text/rss+xml, application/xhtml+xml
+Accept-Encoding
+gzip,deflate
+Host
+societyspeaks.io
+Server-Timing
+depproxy;dur=1758933668921,pid1req;dur=1758933668959
+Traceparent
+00-67eb5ca03ec7d467e02761928fbe34c4-9621560f33143a7c-00
+Show more...
+Environment
+SERVER_NAME
+0.0.0.0
+SERVER_PORT
+5000
+
+Tags
+
+
+
+
+
+browser
+browser
+SemrushBot 7
+browser.name
+name
+SemrushBot
+device
+device
+Desktop
+device.family
+family
+Spider
+environment
+environment
+production
+level
+level
+error
+logger
+logger
+app
+runtime
+runtime
+CPython 3.11.13
+runtime.name
+name
+CPython
+server_name
+server_name
+localhost
+transaction
+transaction
+discussions.search_discussions
+url
+url
+https://societyspeaks.io/discussions/search
+
