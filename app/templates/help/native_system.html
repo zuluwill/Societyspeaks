@@ -1,0 +1,471 @@
+{# templates/help/native_system.html #} {% extends "layout.html" %} {% block
+content %}
+<div class="max-w-4xl mx-auto p-6">
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold mb-4">Native Debate System</h1>
+    <p class="text-gray-600">
+      Learn about Society Speaks' advanced native debate features with consensus
+      analysis and real-time voting
+    </p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="space-y-8">
+    <!-- Overview -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">
+        What is the Native Debate System?
+      </h2>
+      <p class="text-gray-700 mb-4">
+        Our Native Debate System is a next-generation deliberation platform
+        built directly into Society Speaks. It combines the proven principles of
+        pol.is with powerful new features like threaded arguments, evidence
+        linking, and optional AI-powered insights.
+      </p>
+      <div class="bg-blue-50 p-4 rounded-lg">
+        <p class="text-blue-900 font-semibold">✨ Key Advantages:</p>
+        <ul class="list-disc pl-5 text-blue-800 mt-2">
+          <li>No separate account needed (fully integrated)</li>
+          <li>Instant real-time voting with AJAX</li>
+          <li>Add detailed pro/con responses with evidence</li>
+          <li>Interactive consensus visualizations</li>
+          <li>Optional AI features (you control the costs)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- How to Participate -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">How to Participate</h2>
+
+      <div class="space-y-4">
+        <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span
+              class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2 text-sm"
+              >1</span
+            >
+            Vote on Statements
+          </h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>
+              <strong class="text-green-600">Agree</strong> - Click if you
+              support the statement
+            </li>
+            <li>
+              <strong class="text-red-600">Disagree</strong> - Click if you
+              oppose the statement
+            </li>
+            <li>
+              <strong class="text-gray-600">Unsure</strong> - Click if you're
+              undecided or need more context
+            </li>
+            <li>Votes update <strong>instantly</strong> without page reload</li>
+            <li>You can change your vote anytime</li>
+          </ul>
+        </div>
+
+        <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span
+              class="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2 text-sm"
+              >2</span
+            >
+            Add Your Own Statements
+          </h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>Click "Add Statement" to contribute</li>
+            <li>Keep it concise (10-500 characters)</li>
+            <li>
+              Choose type: <strong>Claim</strong> (assertion) or
+              <strong>Question</strong>
+            </li>
+            <li>System checks for similar statements to avoid duplicates</li>
+            <li>You have 10 minutes to edit after posting</li>
+          </ul>
+        </div>
+
+        <div class="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span
+              class="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2 text-sm"
+              >3</span
+            >
+            Add Detailed Responses
+          </h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>Click "Add Response" on any statement</li>
+            <li>
+              Choose your position: <strong>Pro</strong>, <strong>Con</strong>,
+              or <strong>Neutral</strong>
+            </li>
+            <li>Write up to 2000 characters</li>
+            <li>Add evidence: citations, URLs, or file uploads</li>
+            <li>Responses can be threaded (reply to replies)</li>
+          </ul>
+        </div>
+
+        <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
+          <h3 class="font-semibold mb-2 flex items-center">
+            <span
+              class="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2 text-sm"
+              >4</span
+            >
+            View Consensus Analysis
+          </h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>
+              After enough participation, consensus analysis becomes available
+            </li>
+            <li>See how different opinion groups formed</li>
+            <li>Discover statements with broad agreement</li>
+            <li>Identify "bridge" statements that unite groups</li>
+            <li>View interactive scatter plot visualization</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statement Sorting -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Sorting Options</h2>
+      <p class="text-gray-700 mb-4">Choose how statements are displayed:</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-blue-600 mb-2">
+            📊 Progressive (pol.is style)
+          </h3>
+          <p class="text-sm text-gray-700">
+            Shows you statements with fewer votes first, ensuring all get
+            attention
+          </p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-green-600 mb-2">⭐ Best</h3>
+          <p class="text-sm text-gray-700">
+            Highest agreement statements first (using Wilson score)
+          </p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-red-600 mb-2">🔥 Controversial</h3>
+          <p class="text-sm text-gray-700">
+            Most divisive statements (close to 50/50 split)
+          </p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-purple-600 mb-2">🕐 Recent</h3>
+          <p class="text-sm text-gray-700">Newest statements first</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Consensus Analysis -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">
+        Understanding Consensus Analysis
+      </h2>
+
+      <div class="space-y-4">
+        <p class="text-gray-700">
+          After enough participation (7+ users, 7+ statements, 50+ votes), the
+          system analyzes voting patterns to:
+        </p>
+
+        <div class="bg-blue-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-blue-900 mb-2">
+            👥 Identify Opinion Groups
+          </h3>
+          <p class="text-gray-700 mb-2">
+            Users are clustered based on <strong>voting similarity</strong>, not
+            demographics. The system uses PCA (Principal Component Analysis) and
+            Agglomerative Clustering to find natural groupings.
+          </p>
+          <p class="text-sm text-gray-600">
+            Example: Group 1 might prioritize environmental concerns, while
+            Group 2 prioritizes economic growth—even if both have mixed
+            political backgrounds.
+          </p>
+        </div>
+
+        <div class="bg-green-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-green-900 mb-2">
+            ✅ Detect Consensus Statements
+          </h3>
+          <p class="text-gray-700 mb-2">
+            Statements with <strong>≥70% overall agreement</strong> and
+            <strong>≥60% in each group</strong> are marked as consensus.
+          </p>
+          <p class="text-sm text-gray-600">
+            These represent common ground across different perspectives.
+          </p>
+        </div>
+
+        <div class="bg-yellow-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-yellow-900 mb-2">
+            🌉 Find Bridge Statements
+          </h3>
+          <p class="text-gray-700 mb-2">
+            Statements with
+            <strong>high agreement across all groups</strong> (≥65% mean, low
+            variance) that unite different perspectives.
+          </p>
+          <p class="text-sm text-gray-600">
+            These are especially valuable for finding solutions that work for
+            everyone.
+          </p>
+        </div>
+
+        <div class="bg-red-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-red-900 mb-2">
+            ⚡ Highlight Divisive Statements
+          </h3>
+          <p class="text-gray-700 mb-2">
+            Statements with <strong>close to 50/50</strong> splits (controversy
+            score ≥0.7) that reveal deep disagreements.
+          </p>
+          <p class="text-sm text-gray-600">
+            These help identify where dialogue and understanding are most
+            needed.
+          </p>
+        </div>
+
+        <div class="bg-purple-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-purple-900 mb-2">
+            📊 Visualize with Interactive Charts
+          </h3>
+          <p class="text-gray-700 mb-2">
+            See a <strong>2D scatter plot</strong> where each dot is a
+            participant, colored by opinion group.
+          </p>
+          <p class="text-sm text-gray-600">
+            Hover over dots to see details. Closer dots = more similar voting
+            patterns.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evidence System -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Adding Evidence</h2>
+      <p class="text-gray-700 mb-4">
+        Strengthen your responses with supporting evidence. You can add three
+        types:
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">📖 Citations</h3>
+          <p class="text-sm text-gray-700">Academic papers, books, reports</p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">🔗 URLs</h3>
+          <p class="text-sm text-gray-700">
+            Links to articles, studies, or websites
+          </p>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">📎 File Uploads</h3>
+          <p class="text-sm text-gray-700">PDFs, images, or documents</p>
+        </div>
+      </div>
+      <p class="text-sm text-gray-600 mt-4">
+        💡 Evidence can be marked as <strong>verified</strong>,
+        <strong>pending</strong>, or <strong>disputed</strong> by moderators.
+      </p>
+    </div>
+
+    <!-- Moderation -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Moderation & Safety</h2>
+      <div class="space-y-4">
+        <p class="text-gray-700">
+          We maintain high-quality discussions through:
+        </p>
+        <ul class="list-disc pl-5 text-gray-700 space-y-2">
+          <li>
+            <strong>User Flagging:</strong> Report spam, offensive content,
+            off-topic posts, or duplicates
+          </li>
+          <li>
+            <strong>Edit Window:</strong> 10-minute grace period to fix typos or
+            clarify, then content becomes immutable
+          </li>
+          <li>
+            <strong>Moderation Queue:</strong> Discussion owners can review
+            flagged content
+          </li>
+          <li>
+            <strong>Rate Limits:</strong> 30 votes per minute, 10 statements per
+            hour
+          </li>
+          <li>
+            <strong>Audit Logs:</strong> All moderation actions are tracked for
+            transparency
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- AI Features (Optional) -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Optional AI Features</h2>
+      <p class="text-gray-700 mb-4">
+        Unlock advanced features with your own AI API key (OpenAI or Anthropic):
+      </p>
+      <div class="space-y-4">
+        <div class="bg-purple-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-purple-900 mb-2">
+            🤖 AI Discussion Summaries
+          </h3>
+          <p class="text-gray-700">
+            Generate human-readable summaries of consensus analysis results,
+            highlighting key agreements and disagreements.
+          </p>
+        </div>
+        <div class="bg-purple-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-purple-900 mb-2">
+            🏷️ Automatic Cluster Labels
+          </h3>
+          <p class="text-gray-700">
+            AI generates descriptive names for opinion groups based on their
+            shared beliefs (e.g., "Environmental Advocates" vs "Economic
+            Pragmatists").
+          </p>
+        </div>
+        <div class="bg-purple-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-purple-900 mb-2">
+            🔍 Semantic Deduplication
+          </h3>
+          <p class="text-gray-700">
+            Prevents semantically similar statements (not just exact
+            duplicates), helping users find and vote on existing statements
+            instead.
+          </p>
+        </div>
+      </div>
+      <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <p class="text-yellow-900 text-sm">
+          <strong>💰 Cost:</strong> ~$0.01-0.05 per analysis.
+          <strong>You control when AI features are used</strong>, and your API
+          keys are <strong>encrypted</strong> before storage.
+        </p>
+        <div class="mt-2">
+          <a
+            href="{{ url_for('api_keys.list_api_keys') }}"
+            class="text-blue-600 hover:underline text-sm"
+          >
+            Manage API Keys →
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison with pol.is -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Native System vs Pol.is</h2>
+      <p class="text-gray-700 mb-4">
+        Both systems are excellent, but they serve different needs:
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2">Feature</th>
+              <th class="px-4 py-2">Pol.is Embed</th>
+              <th class="px-4 py-2">Native System</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm">
+            <tr class="border-t">
+              <td class="px-4 py-2">Account Required</td>
+              <td class="px-4 py-2">Separate pol.is account</td>
+              <td class="px-4 py-2 text-green-600">✓ Society Speaks only</td>
+            </tr>
+            <tr class="border-t bg-gray-50">
+              <td class="px-4 py-2">Real-time Voting</td>
+              <td class="px-4 py-2">Page reload required</td>
+              <td class="px-4 py-2 text-green-600">✓ Instant AJAX updates</td>
+            </tr>
+            <tr class="border-t">
+              <td class="px-4 py-2">Threaded Responses</td>
+              <td class="px-4 py-2">No</td>
+              <td class="px-4 py-2 text-green-600">✓ Pro/con threading</td>
+            </tr>
+            <tr class="border-t bg-gray-50">
+              <td class="px-4 py-2">Evidence Linking</td>
+              <td class="px-4 py-2">No</td>
+              <td class="px-4 py-2 text-green-600">✓ Citations + files</td>
+            </tr>
+            <tr class="border-t">
+              <td class="px-4 py-2">Edit Window</td>
+              <td class="px-4 py-2">Immutable</td>
+              <td class="px-4 py-2 text-green-600">✓ 10-minute grace</td>
+            </tr>
+            <tr class="border-t bg-gray-50">
+              <td class="px-4 py-2">AI Summaries</td>
+              <td class="px-4 py-2">No</td>
+              <td class="px-4 py-2 text-green-600">✓ Optional (user-key)</td>
+            </tr>
+            <tr class="border-t">
+              <td class="px-4 py-2">Mobile UX</td>
+              <td class="px-4 py-2">Good</td>
+              <td class="px-4 py-2 text-green-600">✓ Tailwind optimized</td>
+            </tr>
+            <tr class="border-t bg-gray-50">
+              <td class="px-4 py-2">Best For</td>
+              <td class="px-4 py-2">Quick large-scale polls</td>
+              <td class="px-4 py-2 text-green-600">
+                Deep deliberative discussions
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Getting Started -->
+    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
+      <h2 class="text-2xl font-semibold mb-4">Ready to Get Started?</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <a
+          href="{{ url_for('discussions.create_discussion') }}"
+          class="block p-4 bg-white rounded-lg hover:shadow-lg transition-shadow"
+        >
+          <h3 class="font-semibold text-blue-600 mb-2">
+            Create a Native Discussion →
+          </h3>
+          <p class="text-sm text-gray-600">
+            Start your own consensus-building conversation
+          </p>
+        </a>
+        <a
+          href="{{ url_for('discussions.index') }}"
+          class="block p-4 bg-white rounded-lg hover:shadow-lg transition-shadow"
+        >
+          <h3 class="font-semibold text-purple-600 mb-2">
+            Browse Active Discussions →
+          </h3>
+          <p class="text-sm text-gray-600">
+            Join ongoing conversations and vote
+          </p>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Footer -->
+  <div class="mt-8 text-center">
+    <p class="text-gray-600">
+      Still have questions?
+      <a
+        href="https://forms.gle/g3BQVhJgFLiGjmSP6"
+        target="_blank"
+        class="text-blue-600 hover:underline"
+      >
+        Send us feedback
+      </a>
+    </p>
+  </div>
+</div>
+{% endblock %}

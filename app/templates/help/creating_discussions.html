@@ -1,97 +1,194 @@
-{# templates/help/creating_discussions.html #}
-{% extends "layout.html" %}
-
-{% block content %}
+{# templates/help/creating_discussions.html #} {% extends "layout.html" %} {%
+block content %}
 <div class="max-w-4xl mx-auto p-6">
-    <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-4">Creating Discussions</h1>
-        <p class="text-gray-600">Learn how to create and configure effective discussions using Pol.is</p>
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold mb-4">Creating Discussions</h1>
+    <p class="text-gray-600">
+      Learn how to create effective discussions using our Native System or
+      Pol.is
+    </p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="space-y-8">
+    <!-- Choose Your System -->
+    <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6">
+      <h2 class="text-xl font-semibold mb-4">Choose Your Discussion System</h2>
+      <p class="text-gray-700 mb-4">
+        When creating a discussion, you can choose between two powerful systems:
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="font-semibold text-blue-600 text-lg mb-3">
+            ✨ Native System (Recommended)
+          </h3>
+          <p class="text-gray-700 text-sm mb-3">
+            Best for in-depth deliberation with threaded responses and evidence.
+          </p>
+          <ul class="text-sm text-gray-700 space-y-1 mb-3">
+            <li>✓ Real-time AJAX voting</li>
+            <li>✓ Pro/con threaded responses</li>
+            <li>✓ Evidence linking (citations, files)</li>
+            <li>✓ Consensus visualization</li>
+            <li>✓ Optional AI features</li>
+          </ul>
+          <a
+            href="{{ url_for('help.native_system') }}"
+            class="text-blue-600 hover:underline text-sm"
+          >
+            Learn more →
+          </a>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+          <h3 class="font-semibold text-gray-700 text-lg mb-3">
+            🌐 Pol.is Embed
+          </h3>
+          <p class="text-gray-700 text-sm mb-3">
+            Best for quick large-scale opinion polling.
+          </p>
+          <ul class="text-sm text-gray-700 space-y-1 mb-3">
+            <li>✓ Proven at scale (100,000+ participants)</li>
+            <li>✓ Simple agree/disagree/pass</li>
+            <li>✓ Instant visualization</li>
+            <li>✓ Multilingual support</li>
+          </ul>
+          <a
+            href="{{ url_for('help.polis_algorithms') }}"
+            class="text-blue-600 hover:underline text-sm"
+          >
+            Learn more →
+          </a>
+        </div>
+      </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="space-y-8">
-        <!-- Step by Step Guide -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Step-by-Step Guide</h2>
+    <!-- Native System Guide -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Creating a Native Discussion</h2>
 
-            <div class="space-y-4">
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h3 class="font-semibold mb-2">1. Create a Pol.is Discussion</h3>
-                    <ul class="list-disc pl-5 text-gray-700">
-                        <li>Click the "Create Discussion" button</li>
-                        <li>Sign in or create a Pol.is account</li>
-                        <li>Configure your discussion settings</li>
-                    </ul>
-                </div>
-
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h3 class="font-semibold mb-2">2. Add Seed Comments</h3>
-                    <ul class="list-disc pl-5 text-gray-700">
-                        <li>Add at least 10-25 initial comments</li>
-                        <li>Use AI tools to help generate diverse viewpoints</li>
-                        <li><a href="{{ url_for('help.seed_comments') }}" class="text-blue-600 hover:underline">Learn more about seed comments</a></li>
-                    </ul>
-                </div>
-
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h3 class="font-semibold mb-2">3. Configure Settings</h3>
-                    <ul class="list-disc pl-5 text-gray-700">
-                        <li>Set geographic scope (Global, Country, or City)</li>
-                        <li>Choose relevant topics</li>
-                        <li>Add description and context</li>
-                    </ul>
-                </div>
-            </div>
+      <div class="space-y-4">
+        <div class="bg-blue-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">1. Click "Create Discussion"</h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>Fill in title and description</li>
+            <li>Check "Use Native Statement System"</li>
+            <li>Set geographic scope and topics</li>
+          </ul>
         </div>
 
-        <!-- Best Practices -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Discussion Best Practices</h2>
-            <div class="space-y-4">
-                <p class="text-gray-700">
-                    Creating an effective discussion requires careful thought and preparation:
-                </p>
-                <ul class="list-disc pl-5 text-gray-700">
-                    <li>Choose a clear, specific topic</li>
-                    <li>Write a detailed description that provides context</li>
-                    <li>Add diverse seed comments to encourage participation</li>
-                    <li>Consider your target audience when setting geographic scope</li>
-                    <li>Share your discussion on relevant platforms and communities</li>
-                </ul>
-            </div>
+        <div class="bg-blue-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">
+            2. Add Seed Statements (Optional but Recommended)
+          </h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>Post 3-5 initial statements to start the conversation</li>
+            <li>Include diverse viewpoints</li>
+            <li>Keep statements concise (10-500 characters)</li>
+          </ul>
         </div>
 
-        <!-- Using Pol.is Effectively -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Using Pol.is Effectively</h2>
-
-            <div class="space-y-4">
-                <p class="text-gray-700">Key features of Pol.is:</p>
-                <ul class="list-disc pl-5 text-gray-700">
-                    <li>Real-time visualization of opinions</li>
-                    <li>Automated clustering of viewpoints</li>
-                    <li>Support for multiple languages</li>
-                    <li>Moderation tools</li>
-                </ul>
-
-                <div class="mt-4">
-                    <a href="https://compdemocracy.org/FAQ/" target="_blank" class="text-blue-600 hover:underline">
-                        View Complete Pol.is Documentation →
-                    </a>
-                </div>
-            </div>
+        <div class="bg-blue-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">3. Share & Engage</h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>Share the discussion link</li>
+            <li>Monitor participation</li>
+            <li>Run consensus analysis after 7+ users and 50+ votes</li>
+          </ul>
         </div>
+      </div>
     </div>
 
-    <!-- Help Footer -->
-    <div class="mt-8 text-center">
-        <p class="text-gray-600">
-            Still need help? 
-            <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="text-blue-600 hover:underline">
-                Send us feedback
-            </a>
+    <!-- Pol.is Guide -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Creating a Pol.is Discussion</h2>
+
+      <div class="space-y-4">
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">1. Create on Pol.is</h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>Sign in or create a Pol.is account</li>
+            <li>Configure your discussion settings</li>
+            <li>Copy the embed code</li>
+          </ul>
+        </div>
+
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">2. Add to Society Speaks</h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>Click "Create Discussion" on Society Speaks</li>
+            <li>Leave "Use Native Statement System" unchecked</li>
+            <li>Paste your Pol.is embed code</li>
+            <li>
+              <a
+                href="{{ url_for('help.seed_comments') }}"
+                class="text-blue-600 hover:underline"
+                >Learn about seed comments</a
+              >
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Discussion Best Practices</h2>
+      <div class="space-y-4">
+        <p class="text-gray-700">
+          Creating an effective discussion requires careful thought and
+          preparation:
         </p>
+        <ul class="list-disc pl-5 text-gray-700">
+          <li>Choose a clear, specific topic</li>
+          <li>Write a detailed description that provides context</li>
+          <li>Add diverse seed comments to encourage participation</li>
+          <li>Consider your target audience when setting geographic scope</li>
+          <li>Share your discussion on relevant platforms and communities</li>
+        </ul>
+      </div>
     </div>
+
+    <!-- Using Pol.is Effectively -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Using Pol.is Effectively</h2>
+
+      <div class="space-y-4">
+        <p class="text-gray-700">Key features of Pol.is:</p>
+        <ul class="list-disc pl-5 text-gray-700">
+          <li>Real-time visualization of opinions</li>
+          <li>Automated clustering of viewpoints</li>
+          <li>Support for multiple languages</li>
+          <li>Moderation tools</li>
+        </ul>
+
+        <div class="mt-4">
+          <a
+            href="https://compdemocracy.org/FAQ/"
+            target="_blank"
+            class="text-blue-600 hover:underline"
+          >
+            View Complete Pol.is Documentation →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Footer -->
+  <div class="mt-8 text-center">
+    <p class="text-gray-600">
+      Still need help?
+      <a
+        href="https://forms.gle/g3BQVhJgFLiGjmSP6"
+        target="_blank"
+        class="text-blue-600 hover:underline"
+      >
+        Send us feedback
+      </a>
+    </p>
+  </div>
 </div>
 {% endblock %}
