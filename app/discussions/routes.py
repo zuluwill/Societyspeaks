@@ -16,6 +16,8 @@ discussions_bp = Blueprint('discussions', __name__)
 @discussions_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 def create_discussion():
+    from app.models import Statement
+    
     form = CreateDiscussionForm()
     if form.validate_on_submit():
         # Create a new discussion
@@ -35,8 +37,29 @@ def create_discussion():
             company_profile_id=current_user.company_profile.id if current_user.profile_type == 'company' else None
         )
         db.session.add(discussion)
+        db.session.flush()  # Flush to get discussion.id before creating statements
+        
+        # Handle seed statements for native discussions
+        if form.use_native_statements.data:
+            seed_statements_json = request.form.get('seed_statements')
+            if seed_statements_json:
+                try:
+                    seed_statements = json.loads(seed_statements_json)
+                    for stmt_text in seed_statements:
+                        statement = Statement(
+                            discussion_id=discussion.id,
+                            user_id=current_user.id,
+                            content=stmt_text.strip(),
+                            statement_type='claim'  # Default type for seed statements
+                        )
+                        db.session.add(statement)
+                except (json.JSONDecodeError, ValueError) as e:
+                    current_app.logger.error(f"Error parsing seed statements: {e}")
+        
         db.session.commit()
-        flash("Discussion created successfully!", "success")
+        
+        statement_count = len(seed_statements) if form.use_native_statements.data and seed_statements_json else 0
+        flash(f"Discussion created successfully with {statement_count} seed statements!" if statement_count > 0 else "Discussion created successfully!", "success")
 
         # Redirect with both discussion_id and slug
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
