@@ -64,7 +64,7 @@
           {% for subfield in form.statement_type %}
           <label class="flex items-center space-x-2 cursor-pointer">
             {{ subfield(class="text-blue-600") }}
-            <span class="text-gray-700">{{ subfield.label.text }}</span>
+            <span class="text-gray-700">{{ subfield.label.text.split()[-1] }}</span>
           </label>
           {% endfor %}
         </div>
