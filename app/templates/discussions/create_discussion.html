@@ -52,6 +52,17 @@
           </div>
           <span class="mt-2 text-sm font-medium">Details</span>
         </div>
+        <div
+          id="step4Indicator"
+          class="flex flex-col items-center text-gray-400"
+        >
+          <div
+            class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"
+          >
+            4
+          </div>
+          <span class="mt-2 text-sm font-medium">Seed</span>
+        </div>
       </div>
     </div>
 
@@ -272,6 +283,88 @@
           </div>
         </form>
       </div>
+
+      <!-- Step 4: Seed Statements (Native Only) -->
+      <div id="step4" class="hidden space-y-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-2">
+          Seed Your Discussion with Statements
+        </h2>
+        <p class="text-gray-600 mb-4">
+          Add 3-10 initial statements to frame the discussion and encourage participation. These are the statements people will vote on.
+        </p>
+
+        <!-- Research Tools Help Section -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div class="flex-1">
+              <h3 class="text-sm font-semibold text-blue-900 mb-2">💡 Need Help Writing Statements?</h3>
+              <p class="text-sm text-blue-800 mb-3">Use these AI tools to quickly generate diverse perspectives on your topic:</p>
+              <div class="flex flex-wrap gap-2">
+                <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-blue-700 hover:bg-blue-50 transition-colors">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                  </svg>
+                  Claude AI
+                </a>
+                <a href="https://chat.openai.com" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-blue-700 hover:bg-blue-50 transition-colors">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+                  </svg>
+                  ChatGPT
+                </a>
+                <a href="https://perplexity.ai" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-300 rounded-md text-sm text-blue-700 hover:bg-blue-50 transition-colors">
+                  <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                  Perplexity
+                </a>
+              </div>
+              <p class="text-xs text-blue-700 mt-2">💬 Try asking: "Generate 5-7 diverse viewpoint statements about [your topic]"</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Statement Input Section -->
+        <div id="statementInputSection" class="space-y-4">
+          <div class="flex items-center justify-between">
+            <label class="block text-sm font-medium text-gray-700">
+              Add Statements (3-10 required)
+            </label>
+            <span id="statementCount" class="text-sm text-gray-500">0 / 10</span>
+          </div>
+
+          <!-- Statement Input Form -->
+          <div class="flex gap-2">
+            <input
+              type="text"
+              id="newStatementInput"
+              placeholder="Enter a statement for people to vote on..."
+              class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              maxlength="280"
+            />
+            <button
+              type="button"
+              onclick="addStatement()"
+              class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Add
+            </button>
+          </div>
+          <p class="text-xs text-gray-500">Keep statements clear and concise (max 280 characters)</p>
+
+          <!-- Statement List Preview -->
+          <div id="statementsList" class="space-y-2 mt-4">
+            <!-- Statements will be added here dynamically -->
+          </div>
+
+          <div id="seedStatementsError" class="hidden text-sm text-red-600 mt-2">
+            Please add at least 3 statements to seed your discussion.
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Navigation Buttons -->
@@ -336,6 +429,7 @@
   let cityChoices;
   let citySelect; // Define citySelect at the top level for reuse
   let useNativeStatements = false; // Track native statements mode
+  let seedStatements = []; // Track seed statements for native discussions
 
   document.addEventListener("DOMContentLoaded", function () {
     const countrySelect = document.querySelector('[name="country"]');
@@ -475,7 +569,8 @@
       .forEach((step) => step.classList.add("hidden"));
     document.getElementById(`step${currentStep}`).classList.remove("hidden");
 
-    for (let i = 1; i <= 3; i++) {
+    const maxSteps = useNativeStatements ? 4 : 3;
+    for (let i = 1; i <= 4; i++) {
       const indicator = document.getElementById(`step${i}Indicator`);
       const div = indicator.querySelector("div");
 
@@ -489,23 +584,25 @@
       .classList.toggle("hidden", currentStep === 1);
     document
       .getElementById("nextButton")
-      .classList.toggle("hidden", currentStep === 3);
+      .classList.toggle("hidden", currentStep === maxSteps);
     document
       .getElementById("submitButton")
-      .classList.toggle("hidden", currentStep !== 3);
+      .classList.toggle("hidden", currentStep !== maxSteps);
   }
 
   function handleNext() {
+    const maxSteps = useNativeStatements ? 4 : 3;
+    
     // Phase 1: Skip step 2 if using native statements
     if (currentStep === 1 && useNativeStatements) {
-      currentStep = 3; // Skip directly to step 3
+      currentStep = 3; // Skip directly to step 3 (Details)
       updateStepVisibility();
       return;
     }
 
     if (currentStep === 2 && !validateAndProcessInput()) return;
 
-    if (currentStep < 3) {
+    if (currentStep < maxSteps) {
       currentStep++;
       updateStepVisibility();
     }
@@ -518,6 +615,13 @@
       updateStepVisibility();
       return;
     }
+    
+    // Skip step 2 when going back from step 4 if using native
+    if (currentStep === 4 && useNativeStatements) {
+      currentStep = 3; // Go back to step 3 (Details)
+      updateStepVisibility();
+      return;
+    }
 
     if (currentStep > 1) {
       currentStep--;
@@ -526,8 +630,85 @@
   }
 
   function handleSubmit() {
+    // Validate seed statements if using native system
+    if (useNativeStatements) {
+      if (seedStatements.length < 3) {
+        document.getElementById("seedStatementsError").classList.remove("hidden");
+        return;
+      }
+      
+      // Add seed statements to form as hidden field
+      const form = document.getElementById("discussionForm");
+      const seedInput = document.createElement("input");
+      seedInput.type = "hidden";
+      seedInput.name = "seed_statements";
+      seedInput.value = JSON.stringify(seedStatements);
+      form.appendChild(seedInput);
+    }
+    
     document.getElementById("discussionForm").submit();
   }
+
+  // Statement management functions
+  function addStatement() {
+    const input = document.getElementById("newStatementInput");
+    const statement = input.value.trim();
+    
+    if (!statement) return;
+    
+    if (seedStatements.length >= 10) {
+      alert("Maximum 10 statements allowed");
+      return;
+    }
+    
+    seedStatements.push(statement);
+    input.value = "";
+    renderStatements();
+    document.getElementById("seedStatementsError").classList.add("hidden");
+  }
+
+  function removeStatement(index) {
+    seedStatements.splice(index, 1);
+    renderStatements();
+  }
+
+  function renderStatements() {
+    const container = document.getElementById("statementsList");
+    const count = document.getElementById("statementCount");
+    
+    count.textContent = `${seedStatements.length} / 10`;
+    count.className = seedStatements.length >= 3 
+      ? "text-sm text-green-600 font-semibold"
+      : "text-sm text-gray-500";
+    
+    container.innerHTML = seedStatements.map((stmt, i) => `
+      <div class="flex items-start gap-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+        <div class="flex-1">
+          <p class="text-sm text-gray-900">${stmt}</p>
+        </div>
+        <button
+          type="button"
+          onclick="removeStatement(${i})"
+          class="text-red-600 hover:text-red-800 flex-shrink-0"
+          title="Remove statement"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    `).join("");
+  }
+
+  // Allow Enter key to add statement
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("newStatementInput")?.addEventListener("keypress", function(e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        addStatement();
+      }
+    });
+  });
 
   function validateAndProcessInput() {
     const input = document.getElementById("embedCode").value.trim();
