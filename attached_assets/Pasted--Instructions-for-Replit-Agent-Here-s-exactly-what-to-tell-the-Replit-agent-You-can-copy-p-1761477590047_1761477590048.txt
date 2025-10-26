@@ -1,0 +1,175 @@
+# 📋 **Instructions for Replit Agent**
+
+Here's exactly what to tell the Replit agent. You can copy-paste this entire message:
+
+---
+
+## 🤖 **Message to Replit Agent:**
+
+```
+I've just pushed a major update to my Flask application that adds a native debate system. 
+Please help me deploy it by following these steps in order:
+
+1. PULL CODE FROM GITHUB
+   - Run: git pull origin main
+   - Confirm all new files are present
+
+2. CHECK ENVIRONMENT VARIABLES
+   - Verify these Replit Secrets are set:
+     * DATABASE_URL (PostgreSQL connection string)
+     * SECRET_KEY (Flask secret key)
+     * ENCRYPTION_KEY (Fernet encryption key for API keys)
+   - If ENCRYPTION_KEY is missing, generate one with:
+     python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+   - Add it to Replit Secrets
+
+3. INSTALL NEW DEPENDENCIES
+   - Run: pip install -r requirements.txt
+   - Key new packages: scikit-learn, numpy, APScheduler, cryptography
+   - Confirm installation completes without errors
+
+4. RUN DATABASE MIGRATION
+   - Run: python3 -m flask db upgrade
+   - This creates 7 new tables: statement, statement_vote, response, evidence, 
+     consensus_analysis, statement_flag, user_api_key
+   - Confirm migration succeeds with no errors
+
+5. START THE APPLICATION
+   - Run: python3 run.py
+   - Check for "Running on http://..." message
+   - Verify "Background scheduler started successfully" appears in logs
+
+6. VERIFY DEPLOYMENT
+   - Navigate to /discussions/create
+   - Confirm you see a checkbox for "Use Native Statement System"
+   - This means the new system is live
+
+7. OPTIONAL: GENERATE TEST DATA
+   - Run: python3 scripts/generate_test_data.py
+   - Creates 20 test users and a sample discussion with realistic data
+   - Test credentials: testuser1 through testuser20, password: testpassword123
+
+If any step fails, please show me the exact error message so I can help troubleshoot.
+```
+
+---
+
+## 🔍 **Common Issues & Solutions**
+
+If the Replit agent encounters issues, here are quick fixes:
+
+### **Issue 1: Migration Fails - "DATABASE_URL not set"**
+```bash
+# Solution: Add to Replit Secrets
+DATABASE_URL=postgresql://user:pass@host:5432/db
+```
+
+### **Issue 2: scikit-learn installation fails**
+```bash
+# Solution: Use specific versions with pre-built wheels
+pip install scikit-learn==1.3.2 numpy==1.24.4
+```
+
+### **Issue 3: "No module named 'cryptography'"**
+```bash
+# Solution: Install explicitly
+pip install cryptography==41.0.7
+```
+
+### **Issue 4: Migration shows "Can't locate revision"**
+```bash
+# Solution: Check migration chain
+python3 -m flask db heads
+python3 -m flask db current
+# Then run upgrade again
+python3 -m flask db upgrade
+```
+
+### **Issue 5: Scheduler doesn't start**
+```bash
+# This is OK during migration - scheduler only runs in production mode
+# Check logs for "Scheduler initialized" after starting with run.py
+```
+
+---
+
+## ✅ **Success Indicators**
+
+You'll know everything worked when you see:
+
+1. ✅ **Migration output:**
+   ```
+   INFO  [alembic.runtime.migration] Running upgrade ... -> c1a2b3c4d5e6, add_native_statement_system_phase_1
+   ```
+
+2. ✅ **Server startup:**
+   ```
+   INFO  Scheduler initialized with jobs:
+   INFO  Background scheduler started successfully
+   INFO  Running on http://0.0.0.0:5000
+   ```
+
+3. ✅ **Database check:**
+   ```sql
+   -- Run in Replit database console
+   SELECT table_name FROM information_schema.tables 
+   WHERE table_schema = 'public' 
+   ORDER BY table_name;
+   ```
+   Should show: `consensus_analysis`, `evidence`, `response`, `statement`, `statement_flag`, `statement_vote`, `user_api_key`
+
+4. ✅ **UI verification:**
+   - Visit `/discussions/create`
+   - See green "Use Native Statement System" checkbox
+   - Create a test discussion
+
+---
+
+## 🎯 **Quick Validation Script**
+
+Ask the Replit agent to run this after deployment:
+
+```bash
+# Validation script
+echo "=== Checking Environment ==="
+python3 -c "import os; print('DATABASE_URL:', 'SET' if os.getenv('DATABASE_URL') else 'MISSING'); print('SECRET_KEY:', 'SET' if os.getenv('SECRET_KEY') else 'MISSING'); print('ENCRYPTION_KEY:', 'SET' if os.getenv('ENCRYPTION_KEY') else 'MISSING')"
+
+echo -e "\n=== Checking Dependencies ==="
+python3 -c "import sklearn, numpy, apscheduler, cryptography; print('✓ All core dependencies installed')"
+
+echo -e "\n=== Checking Database Tables ==="
+python3 -c "from app import create_app, db; from app.models import Statement, StatementVote, Response, Evidence, ConsensusAnalysis, StatementFlag, UserAPIKey; app = create_app(); print('✓ All models import successfully')"
+
+echo -e "\n=== Deployment Status ==="
+echo "✅ Ready to run: python3 run.py"
+```
+
+---
+
+## 📞 **If Something Goes Wrong**
+
+Tell the Replit agent:
+
+> "Please show me the complete error message including the stack trace. Also run:
+> 1. `pip list | grep -E 'scikit-learn|numpy|APScheduler|cryptography'`
+> 2. `python3 -m flask db current`
+> 3. Check the last 20 lines of logs"
+
+---
+
+## 🚀 **One-Line Deploy Command** (If Replit Agent is Advanced)
+
+If the Replit agent can handle it, you can try this all-in-one command:
+
+```bash
+git pull origin main && \
+pip install -r requirements.txt && \
+python3 -m flask db upgrade && \
+python3 run.py
+```
+
+But step-by-step is safer for first deployment!
+
+---
+
+**Copy the "Message to Replit Agent" section above and send it to your Replit agent. It has everything needed for a smooth deployment!** 🎯
