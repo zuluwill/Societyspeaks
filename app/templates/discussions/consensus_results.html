@@ -1,0 +1,273 @@
+{% extends 'layout.html' %} {% block title %}Consensus Analysis - {{
+discussion.title }}{% endblock %} {% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold mb-2">Consensus Analysis</h1>
+    <p class="text-gray-600">{{ discussion.title }}</p>
+  </div>
+
+  <!-- Analysis Metadata -->
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div>
+        <div class="text-gray-600 text-sm">Opinion Groups</div>
+        <div class="text-3xl font-bold text-blue-600">
+          {{ analysis.num_clusters }}
+        </div>
+      </div>
+      <div>
+        <div class="text-gray-600 text-sm">Participants</div>
+        <div class="text-3xl font-bold">{{ analysis.participants_count }}</div>
+      </div>
+      <div>
+        <div class="text-gray-600 text-sm">Statements</div>
+        <div class="text-3xl font-bold">{{ analysis.statements_count }}</div>
+      </div>
+      <div>
+        <div class="text-gray-600 text-sm">Cluster Quality</div>
+        <div
+          class="text-3xl font-bold {% if analysis.silhouette_score > 0.5 %}text-green-600{% elif analysis.silhouette_score > 0.3 %}text-yellow-600{% else %}text-red-600{% endif %}"
+        >
+          {{ "%.2f"|format(analysis.silhouette_score) }}
+        </div>
+        <div class="text-xs text-gray-500">Silhouette Score</div>
+      </div>
+    </div>
+    <div class="mt-4 text-sm text-gray-500">
+      Analyzed: {{ analysis.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+    </div>
+  </div>
+
+  <!-- AI Summary (if available) -->
+  {% if analysis.cluster_data.get('ai_summary') %}
+  <div
+    class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg shadow p-6 mb-6 border border-purple-200"
+  >
+    <div class="flex items-center mb-3">
+      <svg
+        class="h-6 w-6 text-purple-600 mr-2"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 10V3L4 14h7v7l9-11h-7z"
+        />
+      </svg>
+      <h2 class="text-xl font-semibold text-purple-900">AI Summary</h2>
+    </div>
+    <div class="text-gray-800 leading-relaxed">
+      {{ analysis.cluster_data.ai_summary }}
+    </div>
+  </div>
+  {% else %} {% if current_user.is_authenticated and current_user.id ==
+  discussion.creator_id %}
+  <div class="bg-blue-50 rounded-lg p-6 mb-6 border border-blue-200">
+    <h3 class="font-semibold text-blue-900 mb-2">
+      💡 Optional: Generate AI Summary
+    </h3>
+    <p class="text-blue-800 mb-3">
+      Get a human-readable summary of this analysis using AI. Requires an API
+      key (free to add in settings).
+    </p>
+    <form
+      method="POST"
+      action="{{ url_for('consensus.generate_summary', discussion_id=discussion.id) }}"
+    >
+      <button
+        type="submit"
+        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        Generate AI Summary
+      </button>
+      <a
+        href="{{ url_for('api_keys.add_api_key') }}"
+        class="ml-3 text-blue-600 hover:underline"
+        >Add API Key</a
+      >
+    </form>
+  </div>
+  {% endif %} {% endif %}
+
+  <!-- Visualization Placeholder -->
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h2 class="text-xl font-semibold mb-4">Opinion Groups Visualization</h2>
+    <div
+      class="bg-gray-100 rounded-lg p-8 text-center"
+      style="min-height: 400px"
+    >
+      <svg
+        class="mx-auto h-16 w-16 text-gray-400 mb-4"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+        />
+      </svg>
+      <p class="text-gray-600">
+        Interactive cluster visualization will appear here.
+      </p>
+      <p class="text-sm text-gray-500 mt-2">
+        Data available at:
+        <a
+          href="{{ url_for('consensus.get_cluster_data', discussion_id=discussion.id) }}"
+          class="text-blue-600 hover:underline"
+          >API Endpoint</a
+        >
+      </p>
+    </div>
+  </div>
+
+  <!-- Consensus Statements -->
+  {% if consensus_statements %}
+  <div class="bg-green-50 rounded-lg shadow p-6 mb-6 border border-green-200">
+    <h2 class="text-xl font-semibold text-green-900 mb-4">
+      🟢 Areas of Consensus ({{ consensus_statements|length }})
+    </h2>
+    <p class="text-green-800 mb-4">
+      These statements have broad agreement across all opinion groups.
+    </p>
+    {% for statement in consensus_statements %}
+    <div class="bg-white rounded-lg p-4 mb-3 border-l-4 border-green-500">
+      <div class="text-gray-900 mb-2">{{ statement.content }}</div>
+      <div class="text-sm text-gray-600">
+        {{ statement.vote_count_agree }} agree · {{
+        statement.vote_count_disagree }} disagree · {{
+        statement.vote_count_unsure }} unsure
+        <span class="ml-3 text-green-700 font-semibold"
+          >{{ "%.0f"|format(statement.agreement_rate * 100) }}% agreement</span
+        >
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Bridge Statements -->
+  {% if bridge_statements %}
+  <div class="bg-yellow-50 rounded-lg shadow p-6 mb-6 border border-yellow-200">
+    <h2 class="text-xl font-semibold text-yellow-900 mb-4">
+      🟡 Bridge Statements ({{ bridge_statements|length }})
+    </h2>
+    <p class="text-yellow-800 mb-4">
+      These statements unite different opinion groups and offer common ground.
+    </p>
+    {% for statement in bridge_statements %}
+    <div class="bg-white rounded-lg p-4 mb-3 border-l-4 border-yellow-500">
+      <div class="text-gray-900 mb-2">{{ statement.content }}</div>
+      <div class="text-sm text-gray-600">
+        {{ statement.vote_count_agree }} agree · {{
+        statement.vote_count_disagree }} disagree · {{
+        statement.vote_count_unsure }} unsure
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Divisive Statements -->
+  {% if divisive_statements %}
+  <div class="bg-red-50 rounded-lg shadow p-6 mb-6 border border-red-200">
+    <h2 class="text-xl font-semibold text-red-900 mb-4">
+      🔴 Points of Division ({{ divisive_statements|length }})
+    </h2>
+    <p class="text-red-800 mb-4">
+      These statements show significant disagreement between opinion groups.
+    </p>
+    {% for statement in divisive_statements %}
+    <div class="bg-white rounded-lg p-4 mb-3 border-l-4 border-red-500">
+      <div class="text-gray-900 mb-2">{{ statement.content }}</div>
+      <div class="text-sm text-gray-600">
+        {{ statement.vote_count_agree }} agree · {{
+        statement.vote_count_disagree }} disagree · {{
+        statement.vote_count_unsure }} unsure
+        <span class="ml-3 text-red-700 font-semibold"
+          >{{ "%.0f"|format(statement.controversy_score * 100) }}%
+          controversy</span
+        >
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Actions -->
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h2 class="text-xl font-semibold mb-4">Export & Share</h2>
+    <div class="flex space-x-4">
+      <a
+        href="{{ url_for('consensus.export_analysis', discussion_id=discussion.id, format='json') }}"
+        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        Download JSON
+      </a>
+      <a
+        href="{{ url_for('consensus.generate_report', discussion_id=discussion.id) }}"
+        class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+      >
+        Generate Report
+      </a>
+      {% if current_user.is_authenticated and current_user.id ==
+      discussion.creator_id %}
+      <form
+        method="POST"
+        action="{{ url_for('consensus.trigger_analysis', discussion_id=discussion.id) }}"
+        class="inline"
+      >
+        <button
+          type="submit"
+          class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+        >
+          Re-run Analysis
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Methodology -->
+  <div class="bg-gray-50 rounded-lg p-6 mb-6">
+    <h2 class="text-xl font-semibold mb-3">📊 Methodology</h2>
+    <div class="text-gray-700 space-y-2 text-sm">
+      <p>
+        <strong>Clustering Method:</strong> {{ analysis.method.title() }}
+        clustering with PCA dimensionality reduction
+      </p>
+      <p>
+        <strong>Consensus Criteria:</strong> ≥70% overall agreement AND ≥60%
+        agreement in each opinion group
+      </p>
+      <p>
+        <strong>Bridge Criteria:</strong> High mean agreement (≥65%) with low
+        variance (<0.15) across groups
+      </p>
+      <p>
+        <strong>Divisive Criteria:</strong> Controversy score ≥0.7 (close to
+        50/50 split)
+      </p>
+      <p>
+        <strong>Silhouette Score:</strong> Measures cluster quality (>0.5 =
+        good, 0.3-0.5 = fair, <0.3 = weak)
+      </p>
+    </div>
+  </div>
+
+  <!-- Back to Discussion -->
+  <div class="mt-8">
+    <a
+      href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
+      class="text-blue-600 hover:underline"
+    >
+      ← Back to Discussion
+    </a>
+  </div>
+</div>
+{% endblock %}

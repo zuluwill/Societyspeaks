@@ -65,6 +65,44 @@ def create_statement(discussion_id):
             flash("This statement already exists in the discussion", "warning")
             return redirect(url_for('statements.view_statement', statement_id=existing.id))
         
+        # Phase 4.4: Semantic deduplication (optional, if user has LLM)
+        from app.models import UserAPIKey
+        has_llm = UserAPIKey.query.filter_by(
+            user_id=current_user.id,
+            is_active=True
+        ).first() is not None
+        
+        if has_llm:
+            try:
+                from app.lib.llm_utils import find_duplicate_statements
+                
+                # Get recent statements for comparison
+                recent_statements = Statement.query.filter_by(
+                    discussion_id=discussion_id,
+                    is_deleted=False
+                ).order_by(Statement.created_at.desc()).limit(50).all()
+                
+                statement_dicts = [{'id': s.id, 'content': s.content} for s in recent_statements]
+                
+                # Check for semantic duplicates
+                similar = find_duplicate_statements(
+                    new_statement=form.content.data.strip(),
+                    existing_statements=statement_dicts,
+                    threshold=0.9,
+                    user_id=current_user.id,
+                    db=db
+                )
+                
+                if similar and len(similar) > 0:
+                    # Found similar statements, warn user
+                    similar_stmt = Statement.query.get(similar[0]['id'])
+                    flash(f"A similar statement already exists: '{similar_stmt.content}'. Consider voting on it instead.", "info")
+                    return redirect(url_for('statements.view_statement', statement_id=similar_stmt.id))
+            
+            except Exception as e:
+                # Don't block statement creation if deduplication fails
+                current_app.logger.warning(f"Semantic deduplication failed: {e}")
+        
         # Create new statement
         statement = Statement(
             discussion_id=discussion_id,
@@ -369,4 +407,394 @@ def get_statement_votes(statement_id):
             'controversy_score': statement.controversy_score
         }
     })
+
+
+# =============================================================================
+# PHASE 2: RESPONSE ROUTES (Threaded Pro/Con Arguments)
+# =============================================================================
+
+@statements_bp.route('/statements/<int:statement_id>/responses/create', methods=['POST'])
+@login_required
+@limiter.limit("20 per minute")
+def create_response(statement_id):
+    """
+    Create a threaded response to a statement or another response
+    Supports pro/con/neutral positioning
+    """
+    statement = Statement.query.get_or_404(statement_id)
+    form = ResponseForm()
+    
+    if form.validate_on_submit():
+        try:
+            response = Response(
+                statement_id=statement.id,
+                user_id=current_user.id,
+                parent_response_id=form.parent_response_id.data if form.parent_response_id.data else None,
+                position=form.position.data,
+                content=form.content.data
+            )
+            db.session.add(response)
+            db.session.commit()
+            
+            flash("Response posted successfully!", "success")
+            return redirect(url_for('statements.view_statement', statement_id=statement.id))
+        except ValueError as e:
+            flash(str(e), "danger")
+        except Exception as e:
+            current_app.logger.error(f"Error creating response: {e}")
+            flash("An error occurred while posting your response", "danger")
+    
+    return redirect(url_for('statements.view_statement', statement_id=statement.id))
+
+
+@statements_bp.route('/responses/<int:response_id>')
+def view_response(response_id):
+    """View a specific response with its thread"""
+    response = Response.query.get_or_404(response_id)
+    
+    if response.is_deleted:
+        flash("This response has been deleted", "info")
+        return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+    
+    # Get the full thread (parent responses up to the root)
+    thread = []
+    current_response = response
+    while current_response:
+        thread.insert(0, current_response)
+        current_response = current_response.parent_response if current_response.parent_response_id else None
+    
+    # Get child responses
+    children = Response.query.filter_by(
+        parent_response_id=response.id,
+        is_deleted=False
+    ).order_by(Response.created_at.asc()).all()
+    
+    return render_template('discussions/view_response.html', 
+                         response=response,
+                         thread=thread,
+                         children=children)
+
+
+@statements_bp.route('/responses/<int:response_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_response(response_id):
+    """
+    Edit a response (within 10-minute window)
+    Only the author can edit
+    """
+    response = Response.query.get_or_404(response_id)
+    
+    # Check ownership
+    if response.user_id != current_user.id:
+        flash("You can only edit your own responses", "danger")
+        return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+    
+    # Check if deleted
+    if response.is_deleted:
+        flash("Cannot edit a deleted response", "danger")
+        return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+    
+    # Check 10-minute edit window
+    edit_deadline = response.created_at + timedelta(minutes=10)
+    if datetime.utcnow() > edit_deadline:
+        flash("Edit window has expired (10 minutes)", "warning")
+        return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+    
+    form = ResponseForm(obj=response)
+    
+    if form.validate_on_submit():
+        try:
+            response.content = form.content.data
+            response.position = form.position.data
+            response.updated_at = datetime.utcnow()
+            db.session.commit()
+            
+            flash("Response updated successfully!", "success")
+            return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+        except ValueError as e:
+            flash(str(e), "danger")
+    
+    return render_template('discussions/edit_response.html', form=form, response=response)
+
+
+@statements_bp.route('/responses/<int:response_id>/delete', methods=['POST'])
+@login_required
+def delete_response(response_id):
+    """
+    Soft-delete a response
+    Only the author or discussion owner can delete
+    """
+    response = Response.query.get_or_404(response_id)
+    discussion = response.statement.discussion
+    
+    # Check permissions
+    if response.user_id != current_user.id and discussion.creator_id != current_user.id:
+        flash("You don't have permission to delete this response", "danger")
+        return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+    
+    response.is_deleted = True
+    db.session.commit()
+    
+    flash("Response deleted successfully", "success")
+    return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+
+
+@statements_bp.route('/statements/<int:statement_id>/responses')
+def list_responses(statement_id):
+    """
+    List all responses for a statement (threaded structure)
+    Returns JSON for AJAX or HTML for direct access
+    """
+    statement = Statement.query.get_or_404(statement_id)
+    
+    # Get top-level responses (no parent)
+    responses = Response.query.filter_by(
+        statement_id=statement_id,
+        parent_response_id=None,
+        is_deleted=False
+    ).order_by(Response.created_at.asc()).all()
+    
+    def build_response_tree(response):
+        """Recursively build response tree"""
+        children = Response.query.filter_by(
+            parent_response_id=response.id,
+            is_deleted=False
+        ).order_by(Response.created_at.asc()).all()
+        
+        return {
+            'id': response.id,
+            'content': response.content,
+            'position': response.position,
+            'user': response.user.name if response.user else 'Unknown',
+            'created_at': response.created_at.isoformat(),
+            'children': [build_response_tree(child) for child in children]
+        }
+    
+    # Return JSON for AJAX requests
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'statement_id': statement.id,
+            'response_count': len(responses),
+            'responses': [build_response_tree(r) for r in responses]
+        })
+    
+    # Return HTML for direct access
+    return render_template('discussions/list_responses.html',
+                         statement=statement,
+                         responses=responses)
+
+
+@statements_bp.route('/api/responses/<int:response_id>/children')
+def get_response_children(response_id):
+    """
+    Get child responses for lazy loading in threaded view
+    Used for expanding/collapsing threads
+    """
+    response = Response.query.get_or_404(response_id)
+    
+    children = Response.query.filter_by(
+        parent_response_id=response_id,
+        is_deleted=False
+    ).order_by(Response.created_at.asc()).all()
+    
+    return jsonify({
+        'response_id': response_id,
+        'children': [{
+            'id': child.id,
+            'content': child.content,
+            'position': child.position,
+            'user': child.user.name if child.user else 'Unknown',
+            'created_at': child.created_at.isoformat(),
+            'has_children': Response.query.filter_by(parent_response_id=child.id, is_deleted=False).count() > 0
+        } for child in children]
+    })
+
+
+# =============================================================================
+# PHASE 2: EVIDENCE ROUTES (Citations & File Uploads)
+# =============================================================================
+
+@statements_bp.route('/responses/<int:response_id>/evidence/add', methods=['POST'])
+@login_required
+@limiter.limit("10 per minute")
+def add_evidence(response_id):
+    """
+    Add evidence to a response (citation, URL, or file upload)
+    Uses Replit Object Storage for file uploads
+    """
+    from app.discussions.statement_forms import EvidenceForm
+    from app.models import Evidence
+    import os
+    
+    response = Response.query.get_or_404(response_id)
+    
+    # Check if user can add evidence (response author or discussion owner)
+    if response.user_id != current_user.id and response.statement.discussion.creator_id != current_user.id:
+        flash("You don't have permission to add evidence to this response", "danger")
+        return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+    
+    form = EvidenceForm()
+    
+    if form.validate_on_submit():
+        try:
+            evidence = Evidence(
+                response_id=response.id,
+                source_title=form.source_title.data,
+                source_url=form.source_url.data,
+                citation=form.citation.data,
+                added_by_user_id=current_user.id
+            )
+            
+            # Handle file upload to Replit Object Storage
+            if 'file' in request.files and request.files['file'].filename:
+                file = request.files['file']
+                
+                # Validate file size (max 10MB)
+                file.seek(0, os.SEEK_END)
+                file_size = file.tell()
+                file.seek(0)
+                
+                if file_size > 10 * 1024 * 1024:  # 10MB
+                    flash("File size must be under 10MB", "danger")
+                    return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+                
+                # Upload to Replit Object Storage
+                try:
+                    from replit.object_storage import Client
+                    storage_client = Client()
+                    
+                    # Generate unique key
+                    import uuid
+                    file_extension = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+                    storage_key = f"evidence/{response.statement.discussion_id}/{response.id}/{uuid.uuid4()}.{file_extension}"
+                    
+                    # Upload file
+                    file_content = file.read()
+                    storage_client.upload_from_bytes(storage_key, file_content)
+                    
+                    # Get public URL
+                    evidence.storage_key = storage_key
+                    evidence.storage_url = f"https://replitstorage.com/{storage_key}"  # Adjust based on Replit's actual URL pattern
+                    
+                except Exception as e:
+                    current_app.logger.error(f"Error uploading to Replit storage: {e}")
+                    flash("Error uploading file. Please try again.", "danger")
+                    return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+            
+            db.session.add(evidence)
+            db.session.commit()
+            
+            flash("Evidence added successfully!", "success")
+            return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+            
+        except ValueError as e:
+            flash(str(e), "danger")
+        except Exception as e:
+            current_app.logger.error(f"Error adding evidence: {e}")
+            flash("An error occurred while adding evidence", "danger")
+    
+    return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+
+
+@statements_bp.route('/evidence/<int:evidence_id>/delete', methods=['POST'])
+@login_required
+def delete_evidence(evidence_id):
+    """
+    Delete evidence (and remove file from Replit Object Storage if applicable)
+    Only the user who added it or discussion owner can delete
+    """
+    from app.models import Evidence
+    
+    evidence = Evidence.query.get_or_404(evidence_id)
+    response = evidence.response
+    discussion = response.statement.discussion
+    
+    # Check permissions
+    if evidence.added_by_user_id != current_user.id and discussion.creator_id != current_user.id:
+        flash("You don't have permission to delete this evidence", "danger")
+        return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+    
+    # Delete file from Replit Object Storage if exists
+    if evidence.storage_key:
+        try:
+            from replit.object_storage import Client
+            storage_client = Client()
+            storage_client.delete(evidence.storage_key)
+        except Exception as e:
+            current_app.logger.error(f"Error deleting file from storage: {e}")
+            # Continue with database deletion even if storage deletion fails
+    
+    db.session.delete(evidence)
+    db.session.commit()
+    
+    flash("Evidence deleted successfully", "success")
+    return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
+
+
+@statements_bp.route('/evidence/<int:evidence_id>/update-quality', methods=['POST'])
+@login_required
+def update_evidence_quality(evidence_id):
+    """
+    Update evidence quality status (pending/verified/disputed)
+    Only discussion owner or moderators can update
+    """
+    from app.models import Evidence
+    
+    evidence = Evidence.query.get_or_404(evidence_id)
+    discussion = evidence.response.statement.discussion
+    
+    # Check permissions (discussion owner only for now)
+    if discussion.creator_id != current_user.id:
+        flash("Only the discussion owner can update evidence quality", "danger")
+        return redirect(url_for('statements.view_statement', statement_id=evidence.response.statement_id))
+    
+    quality_status = request.form.get('quality_status')
+    if quality_status not in ['pending', 'verified', 'disputed']:
+        flash("Invalid quality status", "danger")
+        return redirect(url_for('statements.view_statement', statement_id=evidence.response.statement_id))
+    
+    evidence.quality_status = quality_status
+    db.session.commit()
+    
+    flash(f"Evidence marked as {quality_status}", "success")
+    return redirect(url_for('statements.view_statement', statement_id=evidence.response.statement_id))
+
+
+@statements_bp.route('/api/evidence/<int:evidence_id>/download')
+def download_evidence(evidence_id):
+    """
+    Download evidence file from Replit Object Storage
+    """
+    from app.models import Evidence
+    from flask import send_file
+    import io
+    
+    evidence = Evidence.query.get_or_404(evidence_id)
+    
+    if not evidence.storage_key:
+        flash("No file attached to this evidence", "danger")
+        return redirect(url_for('statements.view_statement', statement_id=evidence.response.statement_id))
+    
+    try:
+        from replit.object_storage import Client
+        storage_client = Client()
+        
+        # Download file from storage
+        file_content = storage_client.download_as_bytes(evidence.storage_key)
+        
+        # Get original filename
+        filename = evidence.storage_key.split('/')[-1]
+        
+        # Return file
+        return send_file(
+            io.BytesIO(file_content),
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/octet-stream'
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"Error downloading evidence file: {e}")
+        flash("Error downloading file", "danger")
+        return redirect(url_for('statements.view_statement', statement_id=evidence.response.statement_id))
 
