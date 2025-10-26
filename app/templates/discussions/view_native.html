@@ -1,239 +1,208 @@
-{# Native Statement System View (Phase 1) #}
-{# Inspired by pol.is progressive disclosure pattern #}
+<!-- Native Statement System UI (Phase 1) -->
+<!-- This template is included within view_discussion.html for native discussions -->
 
-<div class="bg-white rounded-lg shadow-lg p-6">
-    <!-- Statement Submission Section -->
-    {% if current_user.is_authenticated %}
-    <div class="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-100">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Add Your Perspective</h3>
-        <form action="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}" method="POST" class="space-y-4">
-            {{ form.hidden_tag() if form else '' }}
-            <div>
-                <label for="statement-content" class="block text-sm font-medium text-gray-700 mb-2">
-                    Your Statement (10-500 characters)
-                </label>
-                <textarea 
-                    name="content" 
-                    id="statement-content" 
-                    rows="3" 
-                    maxlength="500"
-                    required
-                    class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Share your perspective on this topic..."></textarea>
-                <div class="mt-1 text-sm text-gray-500 text-right">
-                    <span id="char-count">0</span> / 500
-                </div>
-            </div>
-            
-            <div class="flex items-center justify-between">
-                <div>
-                    <label class="inline-flex items-center">
-                        <input type="radio" name="statement_type" value="claim" checked class="mr-2">
-                        <span class="text-sm text-gray-700">Claim</span>
-                    </label>
-                    <label class="inline-flex items-center ml-4">
-                        <input type="radio" name="statement_type" value="question" class="mr-2">
-                        <span class="text-sm text-gray-700">Question</span>
-                    </label>
-                </div>
-                <button 
-                    type="submit" 
-                    class="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                    Post Statement
-                </button>
-            </div>
-        </form>
-    </div>
-    {% else %}
-    <div class="mb-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-        <p class="text-gray-700 text-center">
-            <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:underline font-medium">Log in</a> 
-            or 
-            <a href="{{ url_for('auth.register') }}" class="text-blue-600 hover:underline font-medium">register</a> 
-            to add your perspective
-        </p>
-    </div>
-    {% endif %}
+<div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <!-- Header Actions -->
+    <div class="flex flex-wrap items-center justify-between mb-6 gap-4">
+        <div class="flex items-center space-x-4">
+            <!-- Add Statement Button -->
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}" 
+               class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-semibold inline-flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Statement
+            </a>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" 
+               class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-semibold">
+                Log in to participate
+            </a>
+            {% endif %}
 
-    <!-- Sorting Options -->
-    <div class="mb-6 flex items-center justify-between flex-wrap gap-4">
-        <div>
-            <h3 class="text-xl font-semibold text-gray-900">
-                {{ statements|length if statements else '0' }} Statement{{ 's' if statements|length != 1 else '' }}
-            </h3>
+            <!-- Consensus Analysis Link -->
+            {% if current_user.is_authenticated and current_user.id == discussion.creator_id %}
+            <a href="{{ url_for('consensus.view_results', discussion_id=discussion.id) }}" 
+               class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-semibold inline-flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                Consensus Analysis
+            </a>
+            {% endif %}
         </div>
+
+        <!-- Sorting Options -->
         <div class="flex items-center space-x-2">
-            <label for="sort-select" class="text-sm text-gray-700 font-medium">Sort by:</label>
-            <select 
-                id="sort-select" 
-                onchange="window.location.href='?sort=' + this.value"
-                class="px-3 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
-                <option value="progressive" {{ 'selected' if sort == 'progressive' else '' }}>Progressive (Pol.is style)</option>
-                <option value="best" {{ 'selected' if sort == 'best' else '' }}>Best</option>
-                <option value="controversial" {{ 'selected' if sort == 'controversial' else '' }}>Controversial</option>
-                <option value="recent" {{ 'selected' if sort == 'recent' else '' }}>Recent</option>
-                <option value="most_voted" {{ 'selected' if sort == 'most_voted' else '' }}>Most Voted</option>
+            <label class="text-sm text-gray-600 font-medium">Sort by:</label>
+            <select id="sortSelect" class="border border-gray-300 rounded px-3 py-2 text-sm" onchange="window.location.href='?sort=' + this.value">
+                <option value="progressive" {% if sort == 'progressive' %}selected{% endif %}>Progressive (Pol.is Style)</option>
+                <option value="best" {% if sort == 'best' %}selected{% endif %}>Best (Most Agreed)</option>
+                <option value="controversial" {% if sort == 'controversial' %}selected{% endif %}>Controversial</option>
+                <option value="recent" {% if sort == 'recent' %}selected{% endif %}>Recent</option>
+                <option value="most_voted" {% if sort == 'most_voted' %}selected{% endif %}>Most Voted</option>
             </select>
         </div>
     </div>
 
-    <!-- Statement List -->
-    <div class="space-y-4">
-        {% if statements %}
-            {% for statement in statements %}
-            <div class="p-6 bg-gray-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors" 
-                 data-statement-id="{{ statement.id }}">
-                <!-- Statement Content -->
-                <div class="mb-4">
-                    {% if statement.statement_type == 'question' %}
-                    <span class="inline-block px-2 py-1 text-xs font-semibold text-blue-600 bg-blue-100 rounded-full mb-2">
-                        Question
-                    </span>
-                    {% endif %}
-                    <p class="text-gray-900 text-lg">{{ statement.content }}</p>
-                </div>
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+        <div class="text-center">
+            <div class="text-2xl font-bold text-blue-600">{{ statements|length }}</div>
+            <div class="text-sm text-gray-600">Statements</div>
+        </div>
+        <div class="text-center">
+            <div class="text-2xl font-bold text-green-600">{{ statements|sum(attribute='vote_count_agree') }}</div>
+            <div class="text-sm text-gray-600">Agree Votes</div>
+        </div>
+        <div class="text-center">
+            <div class="text-2xl font-bold text-red-600">{{ statements|sum(attribute='vote_count_disagree') }}</div>
+            <div class="text-sm text-gray-600">Disagree Votes</div>
+        </div>
+        <div class="text-center">
+            <div class="text-2xl font-bold text-gray-600">{{ statements|sum(attribute='vote_count_unsure') }}</div>
+            <div class="text-sm text-gray-600">Unsure Votes</div>
+        </div>
+    </div>
 
-                <!-- Vote Buttons (pol.is style) -->
-                <div class="flex items-center space-x-4">
+    <!-- Statements List -->
+    {% if statements %}
+    <div class="space-y-4">
+        {% for statement in statements %}
+        <div class="border border-gray-200 rounded-lg p-5 hover:border-blue-300 transition-colors" id="statement-{{ statement.id }}">
+            <!-- Statement Header -->
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex-1">
+                    <div class="flex items-center space-x-2 text-sm text-gray-500 mb-2">
+                        <span class="bg-gray-100 px-2 py-1 rounded text-xs font-semibold">{{ statement.statement_type|upper }}</span>
+                        <span>Posted by {{ statement.user.name }}</span>
+                        <span>•</span>
+                        <span>{{ statement.created_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    <div class="text-lg text-gray-900 mb-3">
+                        {{ statement.content }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Voting Buttons -->
+            <div class="flex items-center justify-between">
+                <div class="flex space-x-2">
                     {% if current_user.is_authenticated %}
-                    <div class="flex space-x-2">
-                        <button 
-                            onclick="vote({{ statement.id }}, 1)" 
-                            class="vote-btn px-4 py-2 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors flex items-center"
-                            data-vote="1">
+                    <form method="POST" action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}" class="inline">
+                        <input type="hidden" name="vote" value="1">
+                        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center">
                             <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z"/>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                             </svg>
                             Agree
-                            <span class="ml-2 font-semibold">{{ statement.vote_count_agree }}</span>
+                            <span class="ml-2 bg-green-600 px-2 py-0.5 rounded">{{ statement.vote_count_agree }}</span>
                         </button>
-                        <button 
-                            onclick="vote({{ statement.id }}, -1)" 
-                            class="vote-btn px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors flex items-center"
-                            data-vote="-1">
+                    </form>
+
+                    <form method="POST" action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}" class="inline">
+                        <input type="hidden" name="vote" value="-1">
+                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center">
                             <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M18 9.5a1.5 1.5 0 11-3 0v-6a1.5 1.5 0 013 0v6zM14 9.667v-5.43a2 2 0 00-1.105-1.79l-.05-.025A4 4 0 0011.055 2H5.64a2 2 0 00-1.962 1.608l-1.2 6A2 2 0 004.44 12H8v4a2 2 0 002 2 1 1 0 001-1v-.667a4 4 0 01.8-2.4l1.4-1.866a4 4 0 00.8-2.4z"/>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
                             </svg>
                             Disagree
-                            <span class="ml-2 font-semibold">{{ statement.vote_count_disagree }}</span>
+                            <span class="ml-2 bg-red-600 px-2 py-0.5 rounded">{{ statement.vote_count_disagree }}</span>
                         </button>
-                        <button 
-                            onclick="vote({{ statement.id }}, 0)" 
-                            class="vote-btn px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors flex items-center"
-                            data-vote="0">
+                    </form>
+
+                    <form method="POST" action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}" class="inline">
+                        <input type="hidden" name="vote" value="0">
+                        <button type="submit" class="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center">
                             <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                             </svg>
                             Unsure
-                            <span class="ml-2 font-semibold">{{ statement.vote_count_unsure }}</span>
+                            <span class="ml-2 bg-gray-500 px-2 py-0.5 rounded">{{ statement.vote_count_unsure }}</span>
                         </button>
-                    </div>
+                    </form>
                     {% else %}
-                    <div class="text-sm text-gray-500">
-                        <span class="mr-4">👍 {{ statement.vote_count_agree }}</span>
-                        <span class="mr-4">👎 {{ statement.vote_count_disagree }}</span>
-                        <span>❓ {{ statement.vote_count_unsure }}</span>
+                    <div class="text-gray-500 italic">
+                        <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:underline">Log in</a> to vote
                     </div>
                     {% endif %}
-
-                    <!-- Metadata -->
-                    <div class="ml-auto text-sm text-gray-500">
-                        Posted {{ statement.created_at.strftime('%B %d, %Y') }}
-                    </div>
                 </div>
 
-                <!-- Statement Stats -->
-                {% if statement.total_votes > 5 %}
-                <div class="mt-3 text-sm text-gray-600">
-                    <span class="mr-4">Agreement: {{ (statement.agreement_rate * 100) | round }}%</span>
-                    {% if statement.controversy_score > 0.7 %}
-                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
-                        Controversial
-                    </span>
+                <!-- Statement Actions -->
+                <div class="flex items-center space-x-2 text-sm">
+                    <a href="{{ url_for('statements.view_statement', statement_id=statement.id) }}" class="text-blue-600 hover:underline">
+                        View Details
+                    </a>
+                    {% if current_user.is_authenticated %}
+                    <span class="text-gray-300">|</span>
+                    <a href="{{ url_for('statements.create_response', statement_id=statement.id) }}" class="text-blue-600 hover:underline">
+                        Add Response
+                    </a>
                     {% endif %}
                 </div>
-                {% endif %}
             </div>
-            {% endfor %}
+
+            <!-- Vote Statistics -->
+            <div class="mt-3 pt-3 border-t border-gray-100">
+                <div class="flex items-center justify-between text-sm">
+                    <div class="text-gray-600">
+                        <span class="font-semibold">{{ statement.total_votes }}</span> total votes
+                        {% if statement.total_votes > 0 %}
+                        · <span class="font-semibold">{{ "%.0f"|format(statement.agreement_rate * 100) }}%</span> agreement
+                        {% if statement.controversy_score > 0.7 %}
+                        · <span class="text-red-600 font-semibold">🔥 Controversial</span>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-12 bg-gray-50 rounded-lg">
+        <svg class="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+        </svg>
+        <h3 class="text-xl font-semibold text-gray-700 mb-2">No Statements Yet</h3>
+        <p class="text-gray-600 mb-4">Be the first to contribute to this discussion!</p>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}" 
+           class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold">
+            Post the First Statement
+        </a>
         {% else %}
-            <div class="text-center py-12 text-gray-500">
-                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-                </svg>
-                <p class="text-lg font-medium">No statements yet</p>
-                <p class="mt-2">Be the first to share your perspective!</p>
-            </div>
+        <a href="{{ url_for('auth.login') }}" 
+           class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold">
+            Log In to Post a Statement
+        </a>
         {% endif %}
     </div>
+    {% endif %}
 </div>
 
-<script>
-// Character counter for statement input
-document.addEventListener('DOMContentLoaded', function() {
-    const textarea = document.getElementById('statement-content');
-    const charCount = document.getElementById('char-count');
-    
-    if (textarea && charCount) {
-        textarea.addEventListener('input', function() {
-            charCount.textContent = this.value.length;
-        });
-    }
-});
+<!-- Help Section -->
+<div class="bg-blue-50 rounded-lg p-6 mb-6 border border-blue-200">
+    <h3 class="font-semibold text-blue-900 mb-2">💡 How This Works</h3>
+    <ul class="text-blue-800 space-y-1 text-sm">
+        <li>• <strong>Add Statements:</strong> Post claims or questions (10-500 characters)</li>
+        <li>• <strong>Vote:</strong> Agree, Disagree, or Unsure on each statement</li>
+        <li>• <strong>Respond:</strong> Add detailed pro/con responses with evidence</li>
+        <li>• <strong>Consensus:</strong> After enough participation, analysis reveals opinion groups and areas of agreement</li>
+    </ul>
+</div>
 
-// Vote function (AJAX)
-function vote(statementId, voteValue) {
-    fetch(`/statements/${statementId}/vote`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: `vote=${voteValue}&csrf_token={{ csrf_token() }}`
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Update vote counts
-            const statementDiv = document.querySelector(`[data-statement-id="${statementId}"]`);
-            const buttons = statementDiv.querySelectorAll('.vote-btn');
-            
-            // Update button text with new counts
-            buttons[0].querySelector('span').textContent = data.counts.agree;
-            buttons[1].querySelector('span').textContent = data.counts.disagree;
-            buttons[2].querySelector('span').textContent = data.counts.unsure;
-            
-            // Visual feedback
-            buttons.forEach(btn => btn.classList.remove('ring-2', 'ring-blue-500'));
-            const clickedBtn = statementDiv.querySelector(`.vote-btn[data-vote="${voteValue}"]`);
-            if (clickedBtn) {
-                clickedBtn.classList.add('ring-2', 'ring-blue-500');
-            }
-            
-            // Show success toast
-            showToast('Vote recorded!');
-        } else {
-            showToast('Error recording vote', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Vote error:', error);
-        showToast('Error recording vote', 'error');
-    });
-}
-
-// Toast notification function
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.textContent = message;
-    toast.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg text-white ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
-</script>
-
-<style>
-/* Vote button active state */
-.vote-btn.ring-2 {
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-}
-</style>
-
+<!-- Moderation Link (Owner Only) -->
+{% if current_user.is_authenticated and current_user.id == discussion.creator_id %}
+<div class="text-center mb-6">
+    <a href="{{ url_for('moderation.moderation_queue', discussion_id=discussion.id) }}" 
+       class="text-blue-600 hover:underline inline-flex items-center">
+        <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+        Moderation Queue
+    </a>
+</div>
+{% endif %}

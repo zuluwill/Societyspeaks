@@ -197,6 +197,7 @@ def vote_statement(statement_id):
 def view_statement(statement_id):
     """View a single statement with its responses and votes"""
     statement = Statement.query.get_or_404(statement_id)
+    discussion = statement.discussion
     
     # Get user's vote if logged in
     user_vote = None
@@ -214,6 +215,7 @@ def view_statement(statement_id):
     
     return render_template('discussions/view_statement.html',
                          statement=statement,
+                         discussion=discussion,
                          user_vote=user_vote,
                          responses=responses)
 
