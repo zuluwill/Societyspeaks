@@ -1,0 +1,165 @@
+{% extends 'layout.html' %} {% block title %}Add Statement - {{ discussion.title
+}}{% endblock %} {% block content %}
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+  <!-- Breadcrumb -->
+  <div class="mb-6">
+    <nav class="text-sm">
+      <a
+        href="{{ url_for('discussions.list_discussions') }}"
+        class="text-blue-600 hover:underline"
+        >Discussions</a
+      >
+      <span class="mx-2">/</span>
+      <a
+        href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
+        class="text-blue-600 hover:underline"
+        >{{ discussion.title }}</a
+      >
+      <span class="mx-2">/</span>
+      <span class="text-gray-600">Add Statement</span>
+    </nav>
+  </div>
+
+  <!-- Page Header -->
+  <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <h1 class="text-3xl font-bold mb-2">Add a Statement</h1>
+    <p class="text-gray-600">
+      Contribute to the discussion: {{ discussion.title }}
+    </p>
+  </div>
+
+  <!-- Guidelines -->
+  <div class="bg-blue-50 rounded-lg p-6 mb-6 border border-blue-200">
+    <h3 class="font-semibold text-blue-900 mb-3">✍️ Statement Guidelines</h3>
+    <ul class="text-blue-800 space-y-2 text-sm">
+      <li>• <strong>Be clear and concise:</strong> 10-500 characters</li>
+      <li>
+        • <strong>Make one point:</strong> Each statement should focus on a
+        single idea
+      </li>
+      <li>• <strong>Be specific:</strong> Avoid vague or ambiguous wording</li>
+      <li>
+        • <strong>Be respectful:</strong> No personal attacks or inflammatory
+        language
+      </li>
+      <li>
+        • <strong>Claim or Question:</strong> State a position or ask for input
+      </li>
+    </ul>
+  </div>
+
+  <!-- Statement Form -->
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <form
+      method="POST"
+      action="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}"
+    >
+      {{ form.hidden_tag() }}
+
+      <!-- Statement Type -->
+      <div class="mb-6">
+        {{ form.statement_type.label(class="block text-gray-700 font-semibold
+        mb-2") }}
+        <div class="flex space-x-4">
+          {% for subfield in form.statement_type %}
+          <label class="flex items-center space-x-2 cursor-pointer">
+            {{ subfield(class="text-blue-600") }}
+            <span class="text-gray-700">{{ subfield.label.text }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <p class="text-sm text-gray-500 mt-1">
+          <strong>Claim:</strong> "We should invest more in renewable energy"<br />
+          <strong>Question:</strong> "What's the most effective climate policy?"
+        </p>
+      </div>
+
+      <!-- Statement Content -->
+      <div class="mb-6">
+        {{ form.content.label(class="block text-gray-700 font-semibold mb-2") }}
+        {{ form.content(class="w-full border border-gray-300 rounded-lg px-4
+        py-3 focus:outline-none focus:ring-2 focus:ring-blue-500", rows="4",
+        placeholder="Enter your statement (10-500 characters)...",
+        maxlength="500") }}
+
+        <!-- Character Counter -->
+        <div class="flex justify-between items-center mt-2">
+          <div class="text-sm text-gray-500">
+            {% if form.content.errors %}
+            <span class="text-red-600">{{ form.content.errors[0] }}</span>
+            {% else %} Min: 10 characters | Max: 500 characters {% endif %}
+          </div>
+          <div id="charCount" class="text-sm text-gray-500">
+            <span id="currentCount">0</span> / 500
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Buttons -->
+      <div class="flex space-x-4">
+        {{ form.submit(class="bg-blue-600 text-white px-8 py-3 rounded-lg
+        hover:bg-blue-700 font-semibold cursor-pointer transition-colors") }}
+        <a
+          href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
+          class="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-semibold transition-colors inline-block"
+        >
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Preview Section -->
+  <div class="bg-gray-50 rounded-lg p-6 mt-6 border border-gray-200">
+    <h3 class="font-semibold text-gray-800 mb-3">Preview:</h3>
+    <div
+      id="preview"
+      class="bg-white rounded-lg p-4 border border-gray-200 min-h-[60px]"
+    >
+      <p class="text-gray-400 italic" id="previewText">
+        Your statement will appear here as you type...
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Character Counter & Preview JavaScript -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const textarea = document.querySelector('textarea[name="content"]');
+    const currentCount = document.getElementById("currentCount");
+    const previewText = document.getElementById("previewText");
+
+    if (textarea) {
+      // Update character count
+      textarea.addEventListener("input", function () {
+        const count = this.value.length;
+        currentCount.textContent = count;
+
+        // Color code based on length
+        if (count < 10) {
+          currentCount.className = "text-red-600 font-semibold";
+        } else if (count > 450) {
+          currentCount.className = "text-yellow-600 font-semibold";
+        } else {
+          currentCount.className = "text-green-600 font-semibold";
+        }
+
+        // Update preview
+        if (count > 0) {
+          previewText.textContent = this.value;
+          previewText.className = "text-gray-900";
+        } else {
+          previewText.textContent =
+            "Your statement will appear here as you type...";
+          previewText.className = "text-gray-400 italic";
+        }
+      });
+
+      // Initialize count if there's existing content
+      textarea.dispatchEvent(new Event("input"));
+    }
+  });
+</script>
+
+{% endblock %}
