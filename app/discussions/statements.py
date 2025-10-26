@@ -4,7 +4,7 @@ Routes for Native Statement System (Phase 1)
 
 Adapted from pol.is patterns with Society Speaks enhancements
 """
-from flask import render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
+from flask import render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app, session
 from flask_login import login_required, current_user
 from app import db, limiter
 from app.discussions.statement_forms import StatementForm, VoteForm, ResponseForm, FlagStatementForm
