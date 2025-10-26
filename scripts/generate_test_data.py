@@ -105,7 +105,7 @@ def create_test_users(num_users=20):
             continue
         
         user = User(
-            name=f"Test User {i+1}",
+            username=username,
             email=email,
             profile_type='individual'
         )
