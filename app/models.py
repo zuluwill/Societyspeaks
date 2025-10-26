@@ -470,12 +470,14 @@ class Statement(db.Model):
     __table_args__ = (
         db.Index('idx_statement_discussion', 'discussion_id'),
         db.Index('idx_statement_user', 'user_id'),
+        db.Index('idx_statement_session', 'session_fingerprint'),
         db.UniqueConstraint('discussion_id', 'content', name='uq_discussion_statement'),
     )
     
     id = db.Column(db.Integer, primary_key=True)
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Nullable for anonymous users
+    session_fingerprint = db.Column(db.String(64), nullable=True)  # For anonymous user tracking
     content = db.Column(db.Text, nullable=False)  # Max 500 chars (validated below)
     statement_type = db.Column(db.String(20), default='claim')  # 'claim' or 'question'
     parent_statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=True)
