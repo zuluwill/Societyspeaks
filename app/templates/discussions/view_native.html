@@ -29,7 +29,7 @@
         <!-- Sorting Options -->
         <div class="flex items-center space-x-2 w-full sm:w-auto">
             <label class="text-sm text-gray-600 font-medium whitespace-nowrap">Sort by:</label>
-            <select id="sortSelect" class="flex-1 sm:flex-none border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" onchange="window.location.href='?sort=' + this.value">
+            <select id="sortSelect" class="flex-1 sm:flex-none border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e'); background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.25rem 1.25rem;" onchange="window.location.href='?sort=' + this.value">
                 <option value="progressive" {% if sort == 'progressive' %}selected{% endif %}>Progressive (Pol.is Style)</option>
                 <option value="best" {% if sort == 'best' %}selected{% endif %}>Best (Most Agreed)</option>
                 <option value="controversial" {% if sort == 'controversial' %}selected{% endif %}>Controversial</option>
