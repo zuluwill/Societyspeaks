@@ -7,7 +7,7 @@
         <div class="flex items-center space-x-4">
             <!-- Add Statement Button -->
             {% if current_user.is_authenticated %}
-            <a href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}" 
+            <a href="{{ url_for('statements.create_statement', discussion_id=discussion.id) }}"
                class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-semibold inline-flex items-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -15,9 +15,12 @@
                 Add Statement
             </a>
             {% else %}
-            <a href="{{ url_for('auth.login') }}" 
-               class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-semibold">
-                Log in to participate
+            <a href="{{ url_for('auth.register') }}?next={{ request.path | urlencode }}"
+               class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-semibold inline-flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Sign Up to Add Statements
             </a>
             {% endif %}
 
@@ -46,7 +49,7 @@
         </div>
     </div>
 
-    <!-- Stats Overview -->
+    <!-- Stats Overview with Progress Indicator -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
         <div class="text-center">
             <div class="text-2xl font-bold text-blue-600">{{ statements|length }}</div>
@@ -65,6 +68,67 @@
             <div class="text-sm text-gray-600">Unsure Votes</div>
         </div>
     </div>
+
+    <!-- Consensus Readiness Progress (Visible to All) -->
+    {% set total_votes = statements|sum(attribute='vote_count_agree') + statements|sum(attribute='vote_count_disagree') + statements|sum(attribute='vote_count_unsure') %}
+    {% if total_votes < 50 or statements|length < 7 %}
+    <div class="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-semibold text-gray-700">📊 Progress to Consensus Analysis</span>
+            <span class="text-xs text-gray-500">Need: 7+ statements, 50+ votes</span>
+        </div>
+        <div class="space-y-2">
+            <!-- Statements Progress -->
+            <div>
+                <div class="flex justify-between text-xs text-gray-600 mb-1">
+                    <span>Statements</span>
+                    <span>{{ statements|length }}/7</span>
+                </div>
+                <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div style="background: linear-gradient(to right, #22c55e, #3b82f6); height: 100%; width: {{ [((statements|length) / 7 * 100), 100]|min }}%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+            <!-- Votes Progress -->
+            <div>
+                <div class="flex justify-between text-xs text-gray-600 mb-1">
+                    <span>Total Votes</span>
+                    <span>{{ total_votes }}/50</span>
+                </div>
+                <div style="background: #e5e7eb; height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div style="background: linear-gradient(to right, #22c55e, #3b82f6); height: 100%; width: {{ [(total_votes / 50 * 100), 100]|min }}%; transition: width 0.3s;"></div>
+                </div>
+            </div>
+        </div>
+        {% if total_votes >= 50 and statements|length >= 7 %}
+        <div class="mt-3 text-sm text-green-700 font-semibold">
+            ✅ Ready for consensus analysis!
+        </div>
+        {% else %}
+        <div class="mt-3 text-sm text-gray-600">
+            💡 Keep voting and adding statements to unlock consensus insights
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Anonymous Voter Welcome (Show Once at Top) -->
+    {% if not current_user.is_authenticated and statements %}
+    <div class="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-semibold text-blue-900">You're voting anonymously</h3>
+                <div class="mt-1 text-sm text-blue-800">
+                    <p>Your votes are stored locally in your browser. <a href="{{ url_for('auth.register') }}?next={{ request.path | urlencode }}" class="underline font-semibold hover:text-blue-900">Create an account</a> to have your votes included in consensus analysis.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Statements List -->
     {% if statements %}
@@ -149,9 +213,6 @@
                         </span>
                     </button>
                 </div>
-                <div class="text-center mt-3" style="font-size: 13px; color: #6b7280;">
-                    💡 Your vote is {% if not current_user.is_authenticated %}anonymous (stored in your browser){% else %}saved to your account{% endif %}
-                </div>
             </div>
 
             <!-- Action Buttons with Helpful Descriptions -->
@@ -214,13 +275,21 @@
 
 <!-- Help Section -->
 <div class="bg-blue-50 rounded-lg p-6 mb-6 border border-blue-200">
-    <h3 class="font-semibold text-blue-900 mb-2">💡 How This Works</h3>
-    <ul class="text-blue-800 space-y-1 text-sm">
-        <li>• <strong>Add Statements:</strong> Post claims or questions (10-500 characters)</li>
-        <li>• <strong>Vote:</strong> Agree, Disagree, or Unsure on each statement</li>
-        <li>• <strong>Respond:</strong> Add detailed pro/con responses with evidence</li>
-        <li>• <strong>Consensus:</strong> After enough participation, analysis reveals opinion groups and areas of agreement</li>
-    </ul>
+    <div class="flex items-start justify-between">
+        <div class="flex-1">
+            <h3 class="font-semibold text-blue-900 mb-2">💡 How This Works</h3>
+            <ul class="text-blue-800 space-y-1 text-sm">
+                <li>• <strong>Add Statements:</strong> Post claims or questions (10-500 characters)</li>
+                <li>• <strong>Vote:</strong> Agree, Disagree, or Unsure on each statement</li>
+                <li>• <strong>Respond:</strong> Add detailed pro/con responses with evidence</li>
+                <li>• <strong>Consensus:</strong> After enough participation, analysis reveals opinion groups and areas of agreement</li>
+            </ul>
+        </div>
+        <button onclick="showKeyboardHelp()"
+                class="ml-4 px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors whitespace-nowrap">
+            ⌨️ Shortcuts
+        </button>
+    </div>
 </div>
 
 <!-- Moderation Link (Owner Only) -->
@@ -344,5 +413,67 @@ async function voteOnStatement(statementId, voteValue, confidence = 3) {
         voteContent.classList.remove('hidden');
         buttons.forEach(btn => btn.disabled = false);
     }
+}
+
+// Keyboard Shortcuts for Power Users
+document.addEventListener('keydown', function(e) {
+    // Only activate if not typing in an input/textarea
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    // Get first visible statement (for now - can be enhanced to track focus)
+    const firstStatement = document.querySelector('[data-statement-id]');
+    if (!firstStatement) return;
+
+    const statementId = firstStatement.getAttribute('data-statement-id');
+
+    // Keyboard shortcuts: 1=Agree, 2=Disagree, 3=Unsure
+    if (e.key === '1') {
+        e.preventDefault();
+        voteOnStatement(parseInt(statementId), 1);
+        showToast('⌨️ Voted Agree (keyboard shortcut)', 'success');
+    } else if (e.key === '2') {
+        e.preventDefault();
+        voteOnStatement(parseInt(statementId), -1);
+        showToast('⌨️ Voted Disagree (keyboard shortcut)', 'success');
+    } else if (e.key === '3') {
+        e.preventDefault();
+        voteOnStatement(parseInt(statementId), 0);
+        showToast('⌨️ Voted Unsure (keyboard shortcut)', 'success');
+    } else if (e.key === '?' && e.shiftKey) {
+        e.preventDefault();
+        showKeyboardHelp();
+    }
+});
+
+// Show keyboard shortcuts help
+function showKeyboardHelp() {
+    const helpHTML = `
+        <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); z-index: 1000; max-width: 400px;">
+            <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">⌨️ Keyboard Shortcuts</h3>
+            <div style="space-y: 8px;">
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="font-weight: 600;">1</span>
+                    <span style="color: #22c55e;">Vote Agree</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="font-weight: 600;">2</span>
+                    <span style="color: #ef4444;">Vote Disagree</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
+                    <span style="font-weight: 600;">3</span>
+                    <span style="color: #6b7280;">Vote Unsure</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                    <span style="font-weight: 600;">Shift + ?</span>
+                    <span>Show this help</span>
+                </div>
+            </div>
+            <button onclick="this.parentElement.remove(); document.getElementById('keyboard-overlay').remove();" style="margin-top: 16px; width: 100%; background: #3b82f6; color: white; padding: 8px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;">
+                Got it!
+            </button>
+        </div>
+        <div id="keyboard-overlay" onclick="this.previousElementSibling.remove(); this.remove();" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999;"></div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', helpHTML);
 }
 </script>
