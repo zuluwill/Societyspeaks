@@ -6,6 +6,21 @@ Society Speaks is an open-source public discussion platform that empowers commun
 
 The application integrates with Pol.is to facilitate consensus-building discussions and includes features for user profiles (both individual and company), discussion management, geographic filtering, and comprehensive analytics tracking.
 
+## Recent Changes (October 26, 2025)
+
+### Critical Fixes
+- **Redis Cache Connection**: Fixed critical issue where Flask-Caching was attempting to connect to localhost:6379 instead of cloud Redis. Changed from `CACHE_REDIS_CLIENT` to `CACHE_REDIS_URL` configuration parameter.
+- **Deployment Configuration**: Configured autoscale deployment target with production-ready gunicorn settings
+- **Voting Interface**: Completed redesign with three always-visible voting buttons (AGREE, DISAGREE, UNSURE) with 80px touch targets for mobile
+- **Mobile UX**: Implemented responsive grid layout for vote buttons with proper opacity feedback for anonymous users
+
+### Production Status
+- App is ready for deployment
+- All critical errors resolved
+- Redis caching properly configured and tested
+- Background scheduler operational
+- Rate limiting configured with cloud Redis
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
