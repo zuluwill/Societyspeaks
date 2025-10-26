@@ -1,0 +1,103 @@
+{% extends 'layout.html' %}
+{% block title %}Add Response - {{ statement.content[:50] }}...{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+    <!-- Breadcrumb -->
+    <div class="mb-6">
+        <nav class="text-sm">
+            <a href="{{ url_for('discussions.search_discussions') }}" class="text-blue-600 hover:underline">Discussions</a>
+            <span class="mx-2">/</span>
+            <a href="{{ url_for('discussions.view_discussion', discussion_id=statement.discussion_id, slug=statement.discussion.slug) }}" class="text-blue-600 hover:underline">{{ statement.discussion.title }}</a>
+            <span class="mx-2">/</span>
+            <a href="{{ url_for('statements.view_statement', statement_id=statement.id) }}" class="text-blue-600 hover:underline">Statement</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-600">Add Response</span>
+        </nav>
+    </div>
+
+    <!-- Original Statement -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 class="text-sm font-semibold text-gray-500 mb-2">Responding to:</h2>
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <div class="flex items-start space-x-2 text-sm text-gray-500 mb-2">
+                <span class="bg-gray-200 px-2 py-1 rounded text-xs font-semibold">{{ statement.statement_type|upper }}</span>
+                <span>Posted by {{ statement.user.name }}</span>
+            </div>
+            <p class="text-lg text-gray-900">{{ statement.content }}</p>
+        </div>
+    </div>
+
+    <!-- Guidelines -->
+    <div class="bg-purple-50 rounded-lg p-6 mb-6 border border-purple-200">
+        <h3 class="font-semibold text-purple-900 mb-3">💬 Response Guidelines</h3>
+        <ul class="text-purple-800 space-y-2 text-sm">
+            <li>• <strong>Choose your position:</strong> Pro (supporting), Con (opposing), or Neutral</li>
+            <li>• <strong>Provide reasoning:</strong> Explain why you hold this position</li>
+            <li>• <strong>Add evidence:</strong> Support your argument with facts, sources, or examples</li>
+            <li>• <strong>Be respectful:</strong> Disagree with ideas, not people</li>
+            <li>• <strong>Stay on topic:</strong> Keep your response relevant to the statement</li>
+        </ul>
+    </div>
+
+    <!-- Response Form -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold mb-6">Add Your Response</h1>
+        
+        <form method="POST" action="{{ url_for('statements.create_response', statement_id=statement.id) }}">
+            {{ form.hidden_tag() }}
+            
+            <!-- Position -->
+            <div class="mb-6">
+                {{ form.position.label(class="block text-gray-700 font-semibold mb-2") }}
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {% for subfield in form.position %}
+                    <label class="flex items-center justify-center p-4 border-2 rounded-lg cursor-pointer transition-all hover:border-purple-500 has-[:checked]:border-purple-600 has-[:checked]:bg-purple-50">
+                        {{ subfield(class="sr-only") }}
+                        <div class="text-center">
+                            <span class="block text-lg font-semibold">
+                                {% if subfield.data == 'pro' %}✅ Pro
+                                {% elif subfield.data == 'con' %}❌ Con
+                                {% else %}⚖️ Neutral
+                                {% endif %}
+                            </span>
+                            <span class="text-sm text-gray-600">{{ subfield.label.text }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                </div>
+                {% if form.position.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ form.position.errors[0] }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Content -->
+            <div class="mb-6">
+                {{ form.content.label(class="block text-gray-700 font-semibold mb-2") }}
+                {{ form.content(class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none", rows="8", placeholder="Write your response here... (50-2000 characters)") }}
+                <div class="flex justify-between items-center mt-1">
+                    <span class="text-sm text-gray-500">Min 50 characters, Max 2000</span>
+                    {% if form.content.errors %}
+                    <p class="text-red-600 text-sm">{{ form.content.errors[0] }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Parent Response ID (hidden) -->
+            {{ form.parent_response_id() }}
+
+            <!-- Submit Button -->
+            <div class="flex items-center justify-between">
+                <a href="{{ url_for('statements.view_statement', statement_id=statement.id) }}" 
+                   class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-semibold transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition-colors shadow-md hover:shadow-lg">
+                    Post Response
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

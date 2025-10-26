@@ -420,7 +420,7 @@ def get_statement_votes(statement_id):
 # PHASE 2: RESPONSE ROUTES (Threaded Pro/Con Arguments)
 # =============================================================================
 
-@statements_bp.route('/statements/<int:statement_id>/responses/create', methods=['POST'])
+@statements_bp.route('/statements/<int:statement_id>/responses/create', methods=['GET', 'POST'])
 @login_required
 @limiter.limit("20 per minute")
 def create_response(statement_id):
@@ -451,7 +451,10 @@ def create_response(statement_id):
             current_app.logger.error(f"Error creating response: {e}")
             flash("An error occurred while posting your response", "danger")
     
-    return redirect(url_for('statements.view_statement', statement_id=statement.id))
+    # GET request - show the response form
+    return render_template('discussions/create_response.html', 
+                         statement=statement, 
+                         form=form)
 
 
 @statements_bp.route('/responses/<int:response_id>')
