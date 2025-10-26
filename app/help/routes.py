@@ -17,6 +17,12 @@ def help():
             'icon': 'message-circle',
             'url': url_for('help.creating_discussions')
         },
+        'native-system': {
+            'title': 'Native Debate System',
+            'description': 'Learn about our advanced native debate features',
+            'icon': 'chart',
+            'url': url_for('help.native_system')
+        },
         'managing-discussions': {
             'title': 'Managing Discussions',
             'description': 'Monitor and engage with your discussions',
@@ -46,3 +52,7 @@ def seed_comments():
 @help_bp.route('/polis-algorithms')
 def polis_algorithms():
     return render_template('help/polis_algorithms.html')
+
+@help_bp.route('/native-system')
+def native_system():
+    return render_template('help/native_system.html')

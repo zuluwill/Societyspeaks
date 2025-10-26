@@ -1,103 +1,152 @@
-{# templates/help/getting_started.html #}
-{% extends "layout.html" %}
-
-{% block content %}
+{# templates/help/getting_started.html #} {% extends "layout.html" %} {% block
+content %}
 <div class="max-w-4xl mx-auto p-6">
-    <!-- Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold mb-4">Getting Started with Society Speaks</h1>
-        <p class="text-gray-600">Welcome to Society Speaks! Learn how to participate in meaningful discussions.</p>
+  <!-- Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold mb-4">Getting Started with Society Speaks</h1>
+    <p class="text-gray-600">
+      Welcome to Society Speaks! Learn how to participate in meaningful
+      discussions.
+    </p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="space-y-8">
+    <!-- Overview -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">What is Society Speaks?</h2>
+      <p class="text-gray-700 mb-4">
+        Society Speaks is a platform that enables meaningful public dialogue
+        using two powerful systems:
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div class="bg-blue-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-blue-900 mb-2">
+            ✨ Native Debate System (NEW!)
+          </h3>
+          <p class="text-sm text-gray-700">
+            Our advanced system with real-time voting, threaded responses,
+            evidence linking, and consensus visualization.
+          </p>
+          <a
+            href="{{ url_for('help.native_system') }}"
+            class="text-blue-600 hover:underline text-sm mt-2 inline-block"
+          >
+            Learn more →
+          </a>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-gray-900 mb-2">🌐 Pol.is Embed</h3>
+          <p class="text-sm text-gray-700">
+            Proven technology for large-scale opinion polling with powerful
+            visualization.
+          </p>
+          <a
+            href="{{ url_for('help.polis_algorithms') }}"
+            class="text-blue-600 hover:underline text-sm mt-2 inline-block"
+          >
+            Learn more →
+          </a>
+        </div>
+      </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="space-y-8">
-        <!-- Overview -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">What is Society Speaks?</h2>
-            <p class="text-gray-700 mb-4">
-                Society Speaks is a platform that enables meaningful public dialogue using Pol.is technology. 
-                You can participate in discussions about important topics affecting your community and society at large.
-            </p>
+    <!-- How to Participate -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">How to Participate</h2>
+
+      <div class="space-y-4">
+        <div class="bg-blue-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">1. Join a Discussion</h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>Browse available discussions on the homepage</li>
+            <li>Filter by country, city, or topic</li>
+            <li>Click on any discussion to participate</li>
+          </ul>
         </div>
 
-        <!-- How to Participate -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">How to Participate</h2>
-
-            <div class="space-y-4">
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h3 class="font-semibold mb-2">1. Join a Discussion</h3>
-                    <ul class="list-disc pl-5 text-gray-700">
-                        <li>Browse available discussions on the homepage</li>
-                        <li>Filter by country, city, or topic</li>
-                        <li>Click on any discussion to participate</li>
-                    </ul>
-                </div>
-
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h3 class="font-semibold mb-2">2. Vote on Comments</h3>
-                    <ul class="list-disc pl-5 text-gray-700">
-                        <li>For each comment, you can:</li>
-                        <li>👍 Agree</li>
-                        <li>👎 Disagree</li>
-                        <li>⏭️ Pass (if unsure or the comment isn't relevant to you)</li>
-                    </ul>
-                </div>
-
-                <div class="bg-blue-50 p-4 rounded-lg">
-                    <h3 class="font-semibold mb-2">3. Submit Comments</h3>
-                    <ul class="list-disc pl-5 text-gray-700">
-                        <li>Share your own perspective (keep it under 140 characters)</li>
-                        <li>Focus on one point per comment</li>
-                        <li>Be respectful and constructive</li>
-                    </ul>
-                </div>
-            </div>
+        <div class="bg-blue-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">2. Vote on Comments</h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>For each comment, you can:</li>
+            <li>👍 Agree</li>
+            <li>👎 Disagree</li>
+            <li>⏭️ Pass (if unsure or the comment isn't relevant to you)</li>
+          </ul>
         </div>
 
-        <!-- Creating an Account -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Creating an Account</h2>
-            <p class="text-gray-700 mb-4">
-                While you can browse discussions without an account, creating one allows you to:
-            </p>
-            <ul class="list-disc pl-5 text-gray-700">
-                <li>Create your own discussions</li>
-                <li>Track your participation</li>
-                <li>Build a profile</li>
-                <li>Receive updates on discussions you're interested in</li>
-            </ul>
-            <div class="mt-4">
-                <a href="{{ url_for('auth.register') }}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors">
-                    Create an Account
-                </a>
-            </div>
+        <div class="bg-blue-50 p-4 rounded-lg">
+          <h3 class="font-semibold mb-2">3. Submit Comments</h3>
+          <ul class="list-disc pl-5 text-gray-700">
+            <li>Share your own perspective (keep it under 140 characters)</li>
+            <li>Focus on one point per comment</li>
+            <li>Be respectful and constructive</li>
+          </ul>
         </div>
-
-        <!-- Next Steps -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-xl font-semibold mb-4">Next Steps</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a href="{{ url_for('help.creating_discussions') }}" class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <h3 class="font-semibold">Creating Discussions →</h3>
-                    <p class="text-sm text-gray-600">Learn how to start your own discussions</p>
-                </a>
-                <a href="{{ url_for('help.seed_comments') }}" class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                    <h3 class="font-semibold">Understanding Seed Comments →</h3>
-                    <p class="text-sm text-gray-600">Tips for starting effective discussions</p>
-                </a>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <!-- Help Footer -->
-    <div class="mt-8 text-center">
-        <p class="text-gray-600">
-            Still need help? 
-            <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="text-blue-600 hover:underline">
-                Send us feedback
-            </a>
-        </p>
+    <!-- Creating an Account -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Creating an Account</h2>
+      <p class="text-gray-700 mb-4">
+        While you can browse discussions without an account, creating one allows
+        you to:
+      </p>
+      <ul class="list-disc pl-5 text-gray-700">
+        <li>Create your own discussions</li>
+        <li>Track your participation</li>
+        <li>Build a profile</li>
+        <li>Receive updates on discussions you're interested in</li>
+      </ul>
+      <div class="mt-4">
+        <a
+          href="{{ url_for('auth.register') }}"
+          class="inline-block bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+        >
+          Create an Account
+        </a>
+      </div>
     </div>
+
+    <!-- Next Steps -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Next Steps</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <a
+          href="{{ url_for('help.creating_discussions') }}"
+          class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          <h3 class="font-semibold">Creating Discussions →</h3>
+          <p class="text-sm text-gray-600">
+            Learn how to start your own discussions
+          </p>
+        </a>
+        <a
+          href="{{ url_for('help.seed_comments') }}"
+          class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          <h3 class="font-semibold">Understanding Seed Comments →</h3>
+          <p class="text-sm text-gray-600">
+            Tips for starting effective discussions
+          </p>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Footer -->
+  <div class="mt-8 text-center">
+    <p class="text-gray-600">
+      Still need help?
+      <a
+        href="https://forms.gle/g3BQVhJgFLiGjmSP6"
+        target="_blank"
+        class="text-blue-600 hover:underline"
+      >
+        Send us feedback
+      </a>
+    </p>
+  </div>
 </div>
 {% endblock %}
