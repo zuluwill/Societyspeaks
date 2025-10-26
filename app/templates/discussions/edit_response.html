@@ -1,0 +1,57 @@
+{% extends 'layout.html' %} {% block title %}Edit Response{% endblock %} {%
+block content %}
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold mb-2">Edit Response</h1>
+    <p class="text-gray-600">{{ response.statement.content[:100] }}...</p>
+  </div>
+
+  <!-- Edit Window Warning -->
+  <div class="bg-yellow-50 rounded-lg p-4 mb-6 border border-yellow-200">
+    <p class="text-yellow-800">
+      <strong>⏰ Edit Window:</strong> You have 10 minutes from posting to edit
+      your response.
+    </p>
+  </div>
+
+  <!-- Edit Form -->
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <form
+      method="POST"
+      action="{{ url_for('statements.edit_response', response_id=response.id) }}"
+    >
+      {{ form.hidden_tag() }}
+
+      <!-- Position -->
+      <div class="mb-6">
+        {{ form.position.label(class="block text-gray-700 font-semibold mb-2")
+        }} {{ form.position(class="w-full border border-gray-300 rounded-lg px-4
+        py-3 focus:outline-none focus:ring-2 focus:ring-blue-500") }}
+      </div>
+
+      <!-- Content -->
+      <div class="mb-6">
+        {{ form.content.label(class="block text-gray-700 font-semibold mb-2") }}
+        {{ form.content(class="w-full border border-gray-300 rounded-lg px-4
+        py-3 focus:outline-none focus:ring-2 focus:ring-blue-500", rows="6") }}
+        {% if form.content.errors %}
+        <p class="text-red-600 text-sm mt-1">{{ form.content.errors[0] }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Submit Buttons -->
+      <div class="flex space-x-4">
+        {{ form.submit(class="bg-blue-600 text-white px-8 py-3 rounded-lg
+        hover:bg-blue-700 font-semibold cursor-pointer") }}
+        <a
+          href="{{ url_for('statements.view_response', response_id=response.id) }}"
+          class="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-semibold inline-block"
+        >
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

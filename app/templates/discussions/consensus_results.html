@@ -92,37 +92,20 @@ discussion.title }}{% endblock %} {% block content %}
   </div>
   {% endif %} {% endif %}
 
-  <!-- Visualization Placeholder -->
+  <!-- Cluster Visualization -->
   <div class="bg-white rounded-lg shadow p-6 mb-6">
     <h2 class="text-xl font-semibold mb-4">Opinion Groups Visualization</h2>
-    <div
-      class="bg-gray-100 rounded-lg p-8 text-center"
-      style="min-height: 400px"
-    >
-      <svg
-        class="mx-auto h-16 w-16 text-gray-400 mb-4"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-        />
-      </svg>
-      <p class="text-gray-600">
-        Interactive cluster visualization will appear here.
-      </p>
-      <p class="text-sm text-gray-500 mt-2">
-        Data available at:
-        <a
-          href="{{ url_for('consensus.get_cluster_data', discussion_id=discussion.id) }}"
-          class="text-blue-600 hover:underline"
-          >API Endpoint</a
-        >
-      </p>
+    <div class="bg-gray-50 rounded-lg p-4">
+      <canvas id="clusterChart" width="800" height="500"></canvas>
+    </div>
+    <div class="mt-4 text-sm text-gray-600">
+      <p class="mb-2"><strong>How to read this chart:</strong></p>
+      <ul class="list-disc list-inside space-y-1">
+        <li>Each dot represents a participant</li>
+        <li>Colors show different opinion groups</li>
+        <li>Closer dots = more similar voting patterns</li>
+        <li>Hover over dots to see participant details</li>
+      </ul>
     </div>
   </div>
 
@@ -270,4 +253,161 @@ discussion.title }}{% endblock %} {% block content %}
     </a>
   </div>
 </div>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<!-- Cluster Visualization Script -->
+<script>
+  document.addEventListener("DOMContentLoaded", async function () {
+    const canvas = document.getElementById("clusterChart");
+    if (!canvas) return;
+
+    try {
+      // Fetch cluster data from API
+      const response = await fetch(
+        '{{ url_for("consensus.get_cluster_data", discussion_id=discussion.id) }}'
+      );
+      const data = await response.json();
+
+      if (data.error) {
+        console.error("Error loading cluster data:", data.error);
+        return;
+      }
+
+      const clusterAssignments = data.cluster_assignments;
+      const pcaCoordinates = data.pca_coordinates;
+      const metadata = data.metadata;
+
+      // Prepare data for Chart.js
+      const colors = [
+        "rgba(59, 130, 246, 0.8)", // Blue
+        "rgba(239, 68, 68, 0.8)", // Red
+        "rgba(34, 197, 94, 0.8)", // Green
+        "rgba(251, 146, 60, 0.8)", // Orange
+        "rgba(168, 85, 247, 0.8)", // Purple
+        "rgba(236, 72, 153, 0.8)", // Pink
+        "rgba(14, 165, 233, 0.8)", // Cyan
+        "rgba(234, 179, 8, 0.8)", // Yellow
+      ];
+
+      // Group users by cluster
+      const clusters = {};
+      for (const [userId, clusterId] of Object.entries(clusterAssignments)) {
+        if (!clusters[clusterId]) {
+          clusters[clusterId] = [];
+        }
+        const coords = pcaCoordinates[userId];
+        if (coords) {
+          clusters[clusterId].push({
+            x: coords[0],
+            y: coords[1],
+            userId: userId,
+          });
+        }
+      }
+
+      // Create datasets for each cluster
+      const datasets = Object.keys(clusters)
+        .sort()
+        .map((clusterId, index) => {
+          const clusterNum = parseInt(clusterId);
+          return {
+            label: `Group ${clusterNum + 1}`,
+            data: clusters[clusterId],
+            backgroundColor: colors[clusterNum % colors.length],
+            borderColor: colors[clusterNum % colors.length].replace("0.8", "1"),
+            borderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8,
+          };
+        });
+
+      // Create chart
+      new Chart(canvas, {
+        type: "scatter",
+        data: {
+          datasets: datasets,
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            title: {
+              display: true,
+              text: `${metadata.num_clusters} Opinion Groups (${metadata.participants_count} participants)`,
+              font: {
+                size: 16,
+                weight: "bold",
+              },
+            },
+            legend: {
+              display: true,
+              position: "top",
+              labels: {
+                font: {
+                  size: 12,
+                },
+                padding: 15,
+                usePointStyle: true,
+              },
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  return [
+                    `Group ${context.datasetIndex + 1}`,
+                    `User ID: ${context.raw.userId}`,
+                    `Position: (${context.raw.x.toFixed(
+                      2
+                    )}, ${context.raw.y.toFixed(2)})`,
+                  ];
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: "Principal Component 1",
+                font: {
+                  size: 14,
+                },
+              },
+              grid: {
+                color: "rgba(0, 0, 0, 0.05)",
+              },
+            },
+            y: {
+              title: {
+                display: true,
+                text: "Principal Component 2",
+                font: {
+                  size: 14,
+                },
+              },
+              grid: {
+                color: "rgba(0, 0, 0, 0.05)",
+              },
+            },
+          },
+          interaction: {
+            mode: "point",
+            intersect: true,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Error rendering cluster visualization:", error);
+      canvas.parentElement.innerHTML = `
+            <div class="text-center py-8">
+                <p class="text-red-600">Error loading visualization</p>
+                <p class="text-sm text-gray-500 mt-2">${error.message}</p>
+            </div>
+        `;
+    }
+  });
+</script>
+
 {% endblock %}

@@ -131,9 +131,14 @@ def vote_statement(statement_id):
     """Vote on a statement (agree/disagree/unsure)"""
     statement = Statement.query.get_or_404(statement_id)
     
-    # Get vote value from request
-    vote_value = request.form.get('vote', type=int)
-    confidence = request.form.get('confidence', type=int)
+    # Get vote value from request (support both JSON and form data)
+    if request.is_json:
+        data = request.get_json()
+        vote_value = data.get('vote', type=int)
+        confidence = data.get('confidence', type=int)
+    else:
+        vote_value = request.form.get('vote', type=int)
+        confidence = request.form.get('confidence', type=int)
     
     if vote_value not in [-1, 0, 1]:
         return jsonify({'error': 'Invalid vote value'}), 400

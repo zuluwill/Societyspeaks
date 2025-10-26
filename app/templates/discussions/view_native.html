@@ -88,40 +88,55 @@
 
             <!-- Voting Buttons -->
             <div class="flex items-center justify-between">
-                <div class="flex space-x-2">
+                <div class="flex space-x-2" data-statement-id="{{ statement.id }}">
                     {% if current_user.is_authenticated %}
-                    <form method="POST" action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}" class="inline">
-                        <input type="hidden" name="vote" value="1">
-                        <button type="submit" class="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center">
-                            <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    <button onclick="voteOnStatement({{ statement.id }}, 1)" 
+                            class="vote-btn bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center"
+                            data-vote="1">
+                        <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="vote-loading hidden">
+                            <svg class="animate-spin h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            Agree
-                            <span class="ml-2 bg-green-600 px-2 py-0.5 rounded">{{ statement.vote_count_agree }}</span>
-                        </button>
-                    </form>
+                        </span>
+                        <span class="vote-text">Agree</span>
+                        <span class="ml-2 bg-green-600 px-2 py-0.5 rounded vote-count" data-count-type="agree">{{ statement.vote_count_agree }}</span>
+                    </button>
 
-                    <form method="POST" action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}" class="inline">
-                        <input type="hidden" name="vote" value="-1">
-                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center">
-                            <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    <button onclick="voteOnStatement({{ statement.id }}, -1)" 
+                            class="vote-btn bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center"
+                            data-vote="-1">
+                        <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="vote-loading hidden">
+                            <svg class="animate-spin h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            Disagree
-                            <span class="ml-2 bg-red-600 px-2 py-0.5 rounded">{{ statement.vote_count_disagree }}</span>
-                        </button>
-                    </form>
+                        </span>
+                        <span class="vote-text">Disagree</span>
+                        <span class="ml-2 bg-red-600 px-2 py-0.5 rounded vote-count" data-count-type="disagree">{{ statement.vote_count_disagree }}</span>
+                    </button>
 
-                    <form method="POST" action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}" class="inline">
-                        <input type="hidden" name="vote" value="0">
-                        <button type="submit" class="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center">
-                            <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    <button onclick="voteOnStatement({{ statement.id }}, 0)" 
+                            class="vote-btn bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center"
+                            data-vote="0">
+                        <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="vote-loading hidden">
+                            <svg class="animate-spin h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            Unsure
-                            <span class="ml-2 bg-gray-500 px-2 py-0.5 rounded">{{ statement.vote_count_unsure }}</span>
-                        </button>
-                    </form>
+                        </span>
+                        <span class="vote-text">Unsure</span>
+                        <span class="ml-2 bg-gray-500 px-2 py-0.5 rounded vote-count" data-count-type="unsure">{{ statement.vote_count_unsure }}</span>
+                    </button>
                     {% else %}
                     <div class="text-gray-500 italic">
                         <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:underline">Log in</a> to vote
@@ -206,3 +221,67 @@
     </a>
 </div>
 {% endif %}
+
+<!-- AJAX Voting Script -->
+<script>
+async function voteOnStatement(statementId, voteValue) {
+    const statementDiv = document.querySelector(`[data-statement-id="${statementId}"]`);
+    const buttons = statementDiv.querySelectorAll('.vote-btn');
+    const clickedButton = statementDiv.querySelector(`[data-vote="${voteValue}"]`);
+    
+    // Show loading state
+    clickedButton.querySelector('.vote-loading').classList.remove('hidden');
+    clickedButton.querySelector('.vote-text').classList.add('hidden');
+    clickedButton.disabled = true;
+    
+    try {
+        const response = await fetch(`/statements/${statementId}/vote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ vote: voteValue })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Update vote counts
+            statementDiv.querySelector('[data-count-type="agree"]').textContent = data.vote_count_agree;
+            statementDiv.querySelector('[data-count-type="disagree"]').textContent = data.vote_count_disagree;
+            statementDiv.querySelector('[data-count-type="unsure"]').textContent = data.vote_count_unsure;
+            
+            // Update stats if they exist
+            const statsDiv = document.querySelector(`#statement-${statementId} .text-gray-600`);
+            if (statsDiv && data.total_votes) {
+                const agreementPct = Math.round(data.agreement_rate * 100);
+                let statsHTML = `<span class="font-semibold">${data.total_votes}</span> total votes · <span class="font-semibold">${agreementPct}%</span> agreement`;
+                
+                if (data.controversy_score > 0.7) {
+                    statsHTML += ' · <span class="text-red-600 font-semibold">🔥 Controversial</span>';
+                }
+                
+                statsDiv.innerHTML = statsHTML;
+            }
+            
+            // Visual feedback
+            clickedButton.classList.add('ring-2', 'ring-offset-2');
+            setTimeout(() => {
+                clickedButton.classList.remove('ring-2', 'ring-offset-2');
+            }, 500);
+            
+        } else {
+            alert(data.error || 'Failed to record vote');
+        }
+        
+    } catch (error) {
+        console.error('Vote error:', error);
+        alert('Failed to record vote. Please try again.');
+    } finally {
+        // Hide loading state
+        clickedButton.querySelector('.vote-loading').classList.add('hidden');
+        clickedButton.querySelector('.vote-text').classList.remove('hidden');
+        clickedButton.disabled = false;
+    }
+}
+</script>
