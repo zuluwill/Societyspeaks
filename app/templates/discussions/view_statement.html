@@ -158,7 +158,6 @@
         method="POST"
         action="{{ url_for('statements.create_response', statement_id=statement.id) }}"
       >
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
         <div class="mb-4">
           <label class="block text-gray-700 font-medium mb-2">Position</label>
