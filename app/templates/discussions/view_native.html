@@ -34,9 +34,9 @@
         </div>
 
         <!-- Sorting Options -->
-        <div class="flex items-center space-x-2">
-            <label class="text-sm text-gray-600 font-medium">Sort by:</label>
-            <select id="sortSelect" class="border border-gray-300 rounded px-3 py-2 text-sm" onchange="window.location.href='?sort=' + this.value">
+        <div class="flex items-center space-x-2 w-full sm:w-auto">
+            <label class="text-sm text-gray-600 font-medium whitespace-nowrap">Sort by:</label>
+            <select id="sortSelect" class="flex-1 sm:flex-none border border-gray-300 rounded-lg px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" onchange="window.location.href='?sort=' + this.value">
                 <option value="progressive" {% if sort == 'progressive' %}selected{% endif %}>Progressive (Pol.is Style)</option>
                 <option value="best" {% if sort == 'best' %}selected{% endif %}>Best (Most Agreed)</option>
                 <option value="controversial" {% if sort == 'controversial' %}selected{% endif %}>Controversial</option>
@@ -87,11 +87,11 @@
             </div>
 
             <!-- Voting Buttons -->
-            <div class="flex items-center justify-between">
-                <div class="flex space-x-2" data-statement-id="{{ statement.id }}">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto" data-statement-id="{{ statement.id }}">
                     {% if current_user.is_authenticated %}
                     <button onclick="voteOnStatement({{ statement.id }}, 1)" 
-                            class="vote-btn bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center"
+                            class="vote-btn bg-green-500 hover:bg-green-600 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center min-h-[44px]"
                             data-vote="1">
                         <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
@@ -107,7 +107,7 @@
                     </button>
 
                     <button onclick="voteOnStatement({{ statement.id }}, -1)" 
-                            class="vote-btn bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center"
+                            class="vote-btn bg-red-500 hover:bg-red-600 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center min-h-[44px]"
                             data-vote="-1">
                         <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
@@ -123,7 +123,7 @@
                     </button>
 
                     <button onclick="voteOnStatement({{ statement.id }}, 0)" 
-                            class="vote-btn bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold transition-colors inline-flex items-center"
+                            class="vote-btn bg-gray-400 hover:bg-gray-500 text-white px-4 sm:px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center justify-center min-h-[44px]"
                             data-vote="0">
                         <svg class="w-5 h-5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
@@ -224,15 +224,35 @@
 
 <!-- AJAX Voting Script -->
 <script>
-async function voteOnStatement(statementId, voteValue) {
+// Show toast notification
+function showToast(message, type = 'error') {
+    const toast = document.createElement('div');
+    toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${
+        type === 'success' ? 'bg-green-600' : 'bg-red-600'
+    }`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transition = 'opacity 0.3s';
+        setTimeout(() => document.body.removeChild(toast), 300);
+    }, 3000);
+}
+
+async function voteOnStatement(statementId, voteValue, confidence = 3) {
     const statementDiv = document.querySelector(`[data-statement-id="${statementId}"]`);
     const buttons = statementDiv.querySelectorAll('.vote-btn');
     const clickedButton = statementDiv.querySelector(`[data-vote="${voteValue}"]`);
     
+    // Disable all vote buttons to prevent double-clicking
+    buttons.forEach(btn => btn.disabled = true);
+    
     // Show loading state
-    clickedButton.querySelector('.vote-loading').classList.remove('hidden');
-    clickedButton.querySelector('.vote-text').classList.add('hidden');
-    clickedButton.disabled = true;
+    const loadingSpinner = clickedButton.querySelector('.vote-loading');
+    const voteText = clickedButton.querySelector('.vote-text');
+    loadingSpinner.classList.remove('hidden');
+    voteText.classList.add('hidden');
     
     try {
         const response = await fetch(`/statements/${statementId}/vote`, {
@@ -240,12 +260,31 @@ async function voteOnStatement(statementId, voteValue) {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ vote: voteValue })
+            credentials: 'same-origin',
+            body: JSON.stringify({ 
+                vote: voteValue,
+                confidence: confidence
+            })
         });
         
-        const data = await response.json();
+        // Handle authentication redirect
+        if (response.status === 401 || response.redirected) {
+            showToast('Please log in to vote', 'error');
+            setTimeout(() => {
+                window.location.href = '/auth/login?next=' + encodeURIComponent(window.location.pathname);
+            }, 1000);
+            return;
+        }
         
-        if (data.success) {
+        // Try to parse JSON response
+        let data;
+        try {
+            data = await response.json();
+        } catch (e) {
+            throw new Error('Invalid response from server');
+        }
+        
+        if (response.ok && data.success) {
             // Update vote counts
             statementDiv.querySelector('[data-count-type="agree"]').textContent = data.vote_count_agree;
             statementDiv.querySelector('[data-count-type="disagree"]').textContent = data.vote_count_disagree;
@@ -253,12 +292,16 @@ async function voteOnStatement(statementId, voteValue) {
             
             // Update stats if they exist
             const statsDiv = document.querySelector(`#statement-${statementId} .text-gray-600`);
-            if (statsDiv && data.total_votes) {
+            if (statsDiv && data.total_votes !== undefined) {
                 const agreementPct = Math.round(data.agreement_rate * 100);
-                let statsHTML = `<span class="font-semibold">${data.total_votes}</span> total votes · <span class="font-semibold">${agreementPct}%</span> agreement`;
+                let statsHTML = `<span class="font-semibold">${data.total_votes}</span> total votes`;
                 
-                if (data.controversy_score > 0.7) {
-                    statsHTML += ' · <span class="text-red-600 font-semibold">🔥 Controversial</span>';
+                if (data.total_votes > 0) {
+                    statsHTML += ` · <span class="font-semibold">${agreementPct}%</span> agreement`;
+                    
+                    if (data.controversy_score > 0.7) {
+                        statsHTML += ' · <span class="text-red-600 font-semibold">🔥 Controversial</span>';
+                    }
                 }
                 
                 statsDiv.innerHTML = statsHTML;
@@ -270,18 +313,21 @@ async function voteOnStatement(statementId, voteValue) {
                 clickedButton.classList.remove('ring-2', 'ring-offset-2');
             }, 500);
             
+            showToast('Vote recorded successfully!', 'success');
+            
         } else {
-            alert(data.error || 'Failed to record vote');
+            const errorMsg = data.error || 'Failed to record vote';
+            showToast(errorMsg, 'error');
         }
         
     } catch (error) {
         console.error('Vote error:', error);
-        alert('Failed to record vote. Please try again.');
+        showToast('Unable to connect. Please check your connection and try again.', 'error');
     } finally {
-        // Hide loading state
-        clickedButton.querySelector('.vote-loading').classList.add('hidden');
-        clickedButton.querySelector('.vote-text').classList.remove('hidden');
-        clickedButton.disabled = false;
+        // Hide loading state and re-enable buttons
+        loadingSpinner.classList.add('hidden');
+        voteText.classList.remove('hidden');
+        buttons.forEach(btn => btn.disabled = false);
     }
 }
 </script>
