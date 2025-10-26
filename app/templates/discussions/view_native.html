@@ -91,9 +91,9 @@
                 <div class="grid grid-cols-3 gap-3" data-statement-id="{{ statement.id }}">
                     <!-- Agree Button -->
                     <button 
-                        {% if current_user.is_authenticated %}onclick="voteOnStatement({{ statement.id }}, 1)"{% else %}onclick="alert('Please log in to vote'); window.location.href='/auth/login';"{% endif %}
+                        onclick="voteOnStatement({{ statement.id }}, 1)"
                         class="vote-btn bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors"
-                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7; cursor: pointer;{% endif %}"
+                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7;{% endif %}"
                         data-vote="1">
                         <span class="vote-loading" style="display: none;">
                             <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
@@ -109,9 +109,9 @@
 
                     <!-- Disagree Button -->
                     <button 
-                        {% if current_user.is_authenticated %}onclick="voteOnStatement({{ statement.id }}, -1)"{% else %}onclick="alert('Please log in to vote'); window.location.href='/auth/login';"{% endif %}
+                        onclick="voteOnStatement({{ statement.id }}, -1)"
                         class="vote-btn bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors"
-                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7; cursor: pointer;{% endif %}"
+                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7;{% endif %}"
                         data-vote="-1">
                         <span class="vote-loading" style="display: none;">
                             <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
@@ -127,9 +127,9 @@
 
                     <!-- Unsure Button -->
                     <button 
-                        {% if current_user.is_authenticated %}onclick="voteOnStatement({{ statement.id }}, 0)"{% else %}onclick="alert('Please log in to vote'); window.location.href='/auth/login';"{% endif %}
+                        onclick="voteOnStatement({{ statement.id }}, 0)"
                         class="vote-btn bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition-colors"
-                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7; cursor: pointer;{% endif %}"
+                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7;{% endif %}"
                         data-vote="0">
                         <span class="vote-loading" style="display: none;">
                             <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
