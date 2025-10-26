@@ -20,7 +20,9 @@ def create_discussion():
     if form.validate_on_submit():
         # Create a new discussion
         discussion = Discussion(
-            embed_code=form.embed_code.data,
+            # Phase 1: Support both native statements and pol.is embeds
+            embed_code=form.embed_code.data if not form.use_native_statements.data else None,
+            has_native_statements=form.use_native_statements.data,
             title=form.title.data,
             description=form.description.data,
             topic=form.topic.data,
@@ -45,14 +47,74 @@ def create_discussion():
 @discussions_bp.route('/<int:discussion_id>/<slug>', methods=['GET'])
 @track_discussion_view
 def view_discussion(discussion_id, slug):
+    from app.models import Statement
+    from sqlalchemy import desc, func
+    
     discussion = Discussion.query.get_or_404(discussion_id)
     # Redirect if the slug in the URL doesn't match the discussion's slug
     if discussion.slug != slug:
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id, 
                               slug=discussion.slug))
-    # Render the page with embed_code directly
-    return render_template('discussions/view_discussion.html', discussion=discussion)
+    
+    # For native discussions, fetch statements
+    statements = []
+    sort = 'progressive'
+    form = None
+    
+    if discussion.has_native_statements:
+        from app.discussions.statement_forms import StatementForm
+        form = StatementForm()
+        sort = request.args.get('sort', 'progressive')
+        
+        # Base query
+        query = Statement.query.filter_by(
+            discussion_id=discussion_id,
+            is_deleted=False
+        )
+        
+        # Apply moderation filter for non-owners
+        if not (current_user.is_authenticated and 
+                (current_user.id == discussion.creator_id or current_user.is_admin)):
+            query = query.filter(Statement.mod_status >= 0)
+        
+        # Apply sorting
+        if sort == 'progressive':
+            # Prioritize statements with fewer votes (pol.is pattern)
+            query = query.order_by(
+                (Statement.vote_count_agree + 
+                 Statement.vote_count_disagree + 
+                 Statement.vote_count_unsure).asc(),
+                func.random()
+            )
+        elif sort == 'best':
+            query = query.order_by(desc(Statement.vote_count_agree))
+        elif sort == 'recent':
+            query = query.order_by(desc(Statement.created_at))
+        elif sort == 'most_voted':
+            query = query.order_by(
+                desc(Statement.vote_count_agree + 
+                     Statement.vote_count_disagree + 
+                     Statement.vote_count_unsure))
+        elif sort == 'controversial':
+            # Fetch all and sort by controversy score in Python
+            statements = query.all()
+            statements.sort(key=lambda s: s.controversy_score, reverse=True)
+            return render_template('discussions/view_discussion.html', 
+                                 discussion=discussion,
+                                 statements=statements,
+                                 sort=sort,
+                                 form=form)
+        
+        # Default pagination
+        statements = query.limit(20).all()
+    
+    # Render the page
+    return render_template('discussions/view_discussion.html', 
+                         discussion=discussion,
+                         statements=statements,
+                         sort=sort,
+                         form=form)
 
 
 

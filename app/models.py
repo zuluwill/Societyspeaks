@@ -6,6 +6,7 @@ from flask_login import UserMixin
 from unidecode import unidecode
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.orm import validates
 
 import re
 
@@ -251,7 +252,8 @@ class Discussion(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    embed_code = db.Column(db.String(800), nullable=False)  # Store full embed code
+    embed_code = db.Column(db.String(800), nullable=True)  # Nullable for native discussions
+    has_native_statements = db.Column(db.Boolean, default=False)  # Native vs pol.is embed mode
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     keywords = db.Column(db.String(200))
@@ -448,5 +450,289 @@ class Discussion(db.Model):
 
         return query.order_by(Discussion.created_at.desc())\
                     .paginate(page=page, per_page=per_page, error_out=False)
+
+
+# ============================================================================
+# Native Debate System Models (Phase 1)
+# Adapted from pol.is architecture (AGPL-3.0)
+# ============================================================================
+
+class Statement(db.Model):
+    """
+    Core claim/proposition in native debates (analogous to pol.is 'comments')
+    
+    Based on pol.is data model patterns:
+    - Per-discussion auto-incrementing tid (not global id)
+    - Content limited to 500 chars (pol.is uses 1000)
+    - Unique constraint prevents duplicates per discussion
+    """
+    __tablename__ = 'statement'
+    __table_args__ = (
+        db.Index('idx_statement_discussion', 'discussion_id'),
+        db.Index('idx_statement_user', 'user_id'),
+        db.UniqueConstraint('discussion_id', 'content', name='uq_discussion_statement'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content = db.Column(db.Text, nullable=False)  # Max 500 chars (validated below)
+    statement_type = db.Column(db.String(20), default='claim')  # 'claim' or 'question'
+    parent_statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=True)
+    
+    # Vote counts (denormalized for performance, like pol.is)
+    vote_count_agree = db.Column(db.Integer, default=0)
+    vote_count_disagree = db.Column(db.Integer, default=0)
+    vote_count_unsure = db.Column(db.Integer, default=0)
+    
+    # Moderation (like pol.is mod field)
+    mod_status = db.Column(db.Integer, default=0)  # -1=reject, 0=no action, 1=accept
+    is_deleted = db.Column(db.Boolean, default=False)
+    is_seed = db.Column(db.Boolean, default=False)  # Moderator-created seed statement
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    discussion = db.relationship('Discussion', backref='statements')
+    user = db.relationship('User', backref='statements')
+    parent = db.relationship('Statement', remote_side=[id], backref='replies')
+    
+    @validates('content')
+    def validate_content(self, key, content):
+        """Enforce 10-500 character limit"""
+        if not content or len(content.strip()) < 10:
+            raise ValueError("Statement must be at least 10 characters")
+        if len(content) > 500:
+            raise ValueError("Statement must not exceed 500 characters")
+        return content.strip()
+    
+    @property
+    def total_votes(self):
+        """Total number of votes cast on this statement"""
+        return self.vote_count_agree + self.vote_count_disagree + self.vote_count_unsure
+    
+    @property
+    def agreement_rate(self):
+        """Percentage of agree votes (excluding unsure)"""
+        decisive_votes = self.vote_count_agree + self.vote_count_disagree
+        if decisive_votes == 0:
+            return 0
+        return self.vote_count_agree / decisive_votes
+    
+    @property
+    def controversy_score(self):
+        """
+        Controversy score: 1 - |agree_rate - 0.5| * 2
+        High score (close to 1) = controversial (~50/50 split)
+        Low score (close to 0) = consensus
+        """
+        if self.total_votes < 5:
+            return 0
+        return 1 - abs(self.agreement_rate - 0.5) * 2
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'discussion_id': self.discussion_id,
+            'user_id': self.user_id,
+            'content': self.content,
+            'statement_type': self.statement_type,
+            'parent_statement_id': self.parent_statement_id,
+            'vote_count_agree': self.vote_count_agree,
+            'vote_count_disagree': self.vote_count_disagree,
+            'vote_count_unsure': self.vote_count_unsure,
+            'total_votes': self.total_votes,
+            'agreement_rate': self.agreement_rate,
+            'controversy_score': self.controversy_score,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat()
+        }
+
+
+class StatementVote(db.Model):
+    """
+    User votes on statements - THE CORE DATA FOR CLUSTERING
+    
+    Based on pol.is 'votes' table:
+    - vote values: -1 (disagree), 0 (unsure), 1 (agree)
+    - Users can change votes (history preserved)
+    - Unique constraint on (statement_id, user_id)
+    """
+    __tablename__ = 'statement_vote'
+    __table_args__ = (
+        db.Index('idx_vote_discussion_user', 'discussion_id', 'user_id'),
+        db.Index('idx_vote_discussion_statement', 'discussion_id', 'statement_id'),
+        db.UniqueConstraint('statement_id', 'user_id', name='uq_statement_user_vote'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)  # For fast lookups
+    
+    # Vote value: -1 (disagree), 0 (unsure), 1 (agree) - like pol.is
+    vote = db.Column(db.SmallInteger, nullable=False)
+    
+    # Optional confidence (1-5 scale) for weighted clustering
+    confidence = db.Column(db.SmallInteger, nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    statement = db.relationship('Statement', backref='votes')
+    user = db.relationship('User', backref='statement_votes')
+    discussion = db.relationship('Discussion', backref='statement_votes')
+    
+    @validates('vote')
+    def validate_vote(self, key, vote):
+        """Ensure vote is -1, 0, or 1"""
+        if vote not in [-1, 0, 1]:
+            raise ValueError("Vote must be -1 (disagree), 0 (unsure), or 1 (agree)")
+        return vote
+    
+    @validates('confidence')
+    def validate_confidence(self, key, confidence):
+        """Ensure confidence is 1-5 if provided"""
+        if confidence is not None and (confidence < 1 or confidence > 5):
+            raise ValueError("Confidence must be between 1 and 5")
+        return confidence
+
+
+class Response(db.Model):
+    """
+    Elaborations on why user voted a certain way (our enhancement beyond pol.is)
+    Enables threaded discussions with pro/con structure
+    """
+    __tablename__ = 'response'
+    __table_args__ = (
+        db.Index('idx_response_statement', 'statement_id'),
+        db.Index('idx_response_user', 'user_id'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    parent_response_id = db.Column(db.Integer, db.ForeignKey('response.id'), nullable=True)
+    
+    position = db.Column(db.String(20))  # 'pro', 'con', 'neutral'
+    content = db.Column(db.Text)  # Optional elaboration
+    is_deleted = db.Column(db.Boolean, default=False)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    statement = db.relationship('Statement', backref='responses')
+    user = db.relationship('User', backref='responses')
+    parent = db.relationship('Response', remote_side=[id], backref='replies')
+
+
+class Evidence(db.Model):
+    """
+    Supporting evidence for responses (our enhancement beyond pol.is)
+    """
+    __tablename__ = 'evidence'
+    __table_args__ = (
+        db.Index('idx_evidence_response', 'response_id'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    response_id = db.Column(db.Integer, db.ForeignKey('response.id'), nullable=False)
+    
+    source_title = db.Column(db.String(500))
+    source_url = db.Column(db.String(1000))
+    citation = db.Column(db.Text)
+    quality_status = db.Column(db.String(20), default='pending')  # 'pending', 'verified', 'disputed'
+    
+    # For Replit object storage (Phase 0.6)
+    storage_key = db.Column(db.String(500))  # Replit object storage key
+    storage_url = db.Column(db.String(1000))  # Public URL
+    
+    added_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    response = db.relationship('Response', backref='evidence')
+    added_by = db.relationship('User', backref='added_evidence')
+
+
+class ConsensusAnalysis(db.Model):
+    """
+    Stores clustering results for caching (like pol.is math_main table)
+    """
+    __tablename__ = 'consensus_analysis'
+    __table_args__ = (
+        db.Index('idx_consensus_discussion', 'discussion_id'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
+    
+    # Clustering results stored as JSON
+    cluster_data = db.Column(db.JSON, nullable=False)
+    num_clusters = db.Column(db.Integer)
+    silhouette_score = db.Column(db.Float)
+    
+    # Metadata
+    method = db.Column(db.String(50))  # 'pca_kmeans', 'umap_hdbscan', etc.
+    participants_count = db.Column(db.Integer)
+    statements_count = db.Column(db.Integer)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    discussion = db.relationship('Discussion', backref='consensus_analyses')
+
+
+class StatementFlag(db.Model):
+    """
+    Moderation flags for statements (our enhancement)
+    """
+    __tablename__ = 'statement_flag'
+    __table_args__ = (
+        db.Index('idx_flag_statement', 'statement_id'),
+        db.Index('idx_flag_status', 'status'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=False)
+    flagger_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    flag_reason = db.Column(db.String(50))  # 'spam', 'offensive', 'off_topic', 'duplicate'
+    additional_context = db.Column(db.Text)
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'reviewed', 'dismissed'
+    
+    reviewed_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    reviewed_at = db.Column(db.DateTime)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    statement = db.relationship('Statement', backref='flags')
+    flagger = db.relationship('User', foreign_keys=[flagger_user_id], backref='flags_created')
+    reviewer = db.relationship('User', foreign_keys=[reviewed_by_user_id], backref='flags_reviewed')
+
+
+class UserAPIKey(db.Model):
+    """
+    User-provided API keys for optional LLM features (Phase 4)
+    """
+    __tablename__ = 'user_api_key'
+    __table_args__ = (
+        db.Index('idx_api_key_user', 'user_id'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    provider = db.Column(db.String(50), nullable=False)  # 'openai', 'anthropic'
+    encrypted_api_key = db.Column(db.Text, nullable=False)  # Fernet encrypted
+    is_active = db.Column(db.Boolean, default=True)
+    last_validated = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='api_keys')
 
 

@@ -1,315 +1,524 @@
-{% extends "layout.html" %}
-{% block head %}
-    <title>{{ discussion.title }} - SocietySpeaks Discussion</title>
-    <meta name="description" content="{{ discussion.description or 'Join the discussion on SocietySpeaks.' }}">
-    <meta name="keywords" content="{{ discussion.keywords | join(', ') if discussion.keywords else 'discussion, society, topics' }}">
-    <link rel="canonical" href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}">
+{% extends "layout.html" %} {% block head %}
+<title>{{ discussion.title }} - SocietySpeaks Discussion</title>
+<meta
+  name="description"
+  content="{{ discussion.description or 'Join the discussion on SocietySpeaks.' }}"
+/>
+<meta
+  name="keywords"
+  content="{{ discussion.keywords | join(', ') if discussion.keywords else 'discussion, society, topics' }}"
+/>
+<link
+  rel="canonical"
+  href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}"
+/>
 
-    <!-- Structured Data for SEO -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "DiscussionForumPosting",
-      "headline": "{{ discussion.title }}",
-      "description": "{{ discussion.description or 'Join the discussion on SocietySpeaks.' }}",
-      "datePublished": "{{ discussion.created_at.isoformat() }}",
-      "author": {
-        "@type": "Person",
-        "name": "{{ discussion.creator.name }}"
-      },
-      "discussionUrl": "{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}"
-    }
-    </script>
-{% endblock %}
-{% block content %}
+<!-- Structured Data for SEO -->
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    "headline": "{{ discussion.title }}",
+    "description": "{{ discussion.description or 'Join the discussion on SocietySpeaks.' }}",
+    "datePublished": "{{ discussion.created_at.isoformat() }}",
+    "author": {
+      "@type": "Person",
+      "name": "{{ discussion.creator.name }}"
+    },
+    "discussionUrl": "{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}"
+  }
+</script>
+{% endblock %} {% block content %}
 <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+  <!-- Back Button & Research Tools - Add this first -->
+  <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+    <div
+      class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0"
+    >
+      <!-- Back Button -->
+      <a
+        href="{{ url_for('discussions.search_discussions') }}"
+        class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+      >
+        <svg
+          class="w-5 h-5 mr-2"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"
+          />
+        </svg>
+        Back to Discussions
+      </a>
 
-    <!-- Back Button & Research Tools - Add this first -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-            <!-- Back Button -->
-            <a href="{{ url_for('discussions.search_discussions') }}" 
-               class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-                Back to Discussions
+      <!-- Research Tools Dropdown -->
+      <div class="relative" id="researchToolsContainer">
+        <button
+          id="researchToolsBtn"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          aria-expanded="false"
+          aria-haspopup="true"
+        >
+          <svg
+            class="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+            />
+          </svg>
+          Research Tools
+        </button>
+
+        <div
+          id="researchToolsDropdown"
+          class="hidden absolute right-0 mt-2 w-72 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+          role="menu"
+          aria-orientation="vertical"
+          aria-labelledby="researchToolsBtn"
+        >
+          <div class="py-1">
+            <!-- Claude AI -->
+            <a
+              href="https://claude.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors"
+            >
+              <svg
+                class="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                />
+              </svg>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-gray-900">Claude AI</p>
+                <p class="text-xs text-gray-500">
+                  Explore the topic with Anthropic's Claude AI assistant
+                </p>
+              </div>
             </a>
 
-            <!-- Research Tools Dropdown -->
-            <div class="relative" id="researchToolsContainer">
-                <button id="researchToolsBtn" 
-                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        aria-expanded="false"
-                        aria-haspopup="true">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                    </svg>
-                    Research Tools
-                </button>
+            <!-- ChatGPT -->
+            <a
+              href="https://chat.openai.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors"
+            >
+              <svg
+                class="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                />
+              </svg>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-gray-900">ChatGPT</p>
+                <p class="text-xs text-gray-500">
+                  Discuss with OpenAI's ChatGPT
+                </p>
+              </div>
+            </a>
 
-                    <div id="researchToolsDropdown" 
-                             class="hidden absolute right-0 mt-2 w-72 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
-                             role="menu"
-                             aria-orientation="vertical"
-                             aria-labelledby="researchToolsBtn">
-                                    <div class="py-1">
-                                        <!-- Claude AI -->
-                                        <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" 
-                                           class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
-                                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                                            </svg>
-                                            <div class="ml-3">
-                                                <p class="text-sm font-medium text-gray-900">Claude AI</p>
-                                                <p class="text-xs text-gray-500">Explore the topic with Anthropic's Claude AI assistant</p>
-                                            </div>
-                                        </a>
-
-                                        <!-- ChatGPT -->
-                                        <a href="https://chat.openai.com" target="_blank" rel="noopener noreferrer" 
-                                           class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
-                                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
-                                            </svg>
-                                            <div class="ml-3">
-                                                <p class="text-sm font-medium text-gray-900">ChatGPT</p>
-                                                <p class="text-xs text-gray-500">Discuss with OpenAI's ChatGPT</p>
-                                            </div>
-                                        </a>
-
-                                        <!-- Perplexity -->
-                                        <a href="https://perplexity.ai" target="_blank" rel="noopener noreferrer" 
-                                           class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors">
-                                            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                                            </svg>
-                                            <div class="ml-3">
-                                                <p class="text-sm font-medium text-gray-900">Perplexity</p>
-                                                <p class="text-xs text-gray-500">Research with real-time web results</p>
-                                            </div>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-    
-    <!-- Discussion Header and Share Button Section -->
-    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <div class="max-w-3xl mx-auto">
-            <div class="flex flex-wrap items-start justify-between gap-4">
-                <h1 class="text-3xl font-bold text-gray-900">{{ discussion.title }}</h1>
-
-                <!-- Share Button with Dropdown -->
-                <div class="relative">
-                    <button type="button" id="shareButton" aria-haspopup="true" aria-expanded="false" aria-label="Share Discussion"
-                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
-                        </svg>
-                        Share Discussion
-                    </button>
-                    <!-- Share Dropdown Menu -->
-                    <div id="shareButtons" class="hidden absolute top-full mt-2 right-0 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50">
-                        <div class="py-1">
-                            {% set share_title = discussion.title|urlencode %}
-                            {% set share_url = url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) %}
-                            {% set share_text = "Join this important discussion on SocietySpeaks: " + discussion.title %}
-
-                            <!-- LinkedIn -->
-                            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url }}&title={{ share_title }}" target="_blank" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                 <img src="{{ url_for('static', filename='icons/Linkedin_icon.svg') }}" alt="LinkedIn" class="h-5 w-5 mr-3">
-                                LinkedIn
-                            </a>
-                            <!-- Meta (Facebook) -->
-                            <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}&quote={{ share_text|urlencode }}"
-                                target="_blank"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <img src="{{ url_for('static', filename='icons/facebook.svg') }}" alt="Facebook" class="h-5 w-5 mr-3">
-                                Meta (Facebook)
-                            </a>
-
-                            <!-- X (Twitter) -->
-                            <a href="https://twitter.com/intent/tweet?text={{ share_text|urlencode }}&url={{ share_url }}"
-                                target="_blank"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <img src="{{ url_for('static', filename='icons/X_icon.svg') }}" alt="X (Twitter)" class="h-5 w-5 mr-3">
-                                X (Twitter)
-                            </a>
-
-                            <!-- BlueSky -->
-                            <a href="https://bsky.app/intent/compose?text={{ share_text|urlencode }} {{ share_url }}"
-                                target="_blank"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <img src="{{ url_for('static', filename='icons/bluesky.svg') }}" alt="Bluesky" class="h-5 w-5 mr-3">
-                                BlueSky
-                            </a>
-
-                            <!-- WhatsApp -->
-                            <a href="https://wa.me/?text={{ share_text|urlencode }}%20{{ share_url }}"
-                                target="_blank"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <img src="{{ url_for('static', filename='icons/whatsapp.svg') }}" alt="WhatsApp" class="h-5 w-5 mr-3">
-                                WhatsApp
-                            </a>
-
-                            <!-- Telegram -->
-                            <a href="https://t.me/share/url?url={{ share_url }}&text={{ share_text|urlencode }}"
-                                target="_blank"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <img src="{{ url_for('static', filename='icons/telegram.svg') }}" alt="Telegram" class="h-5 w-5 mr-3">
-                                Telegram
-                            </a>
-
-                            <!-- Email -->
-                            <a href="mailto:?subject={{ share_title }}%20-%20SocietySpeaks%20Discussion&body={{ share_text|urlencode }}%0A%0A{{ share_url }}"
-                                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <svg class="h-5 w-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                </svg>
-                                Email
-                            </a>
-
-                            <!-- Copy Link -->
-                            <button onclick="copyLink('{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}')"
-                                    class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                <svg class="h-5 w-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
-                                </svg>
-                                <span class="copy-text">Copy Link</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-               
-                
-            <!-- Discussion Details -->
-
-                <div class="flex flex-wrap gap-4 text-sm text-gray-500">
-                    {% if discussion.topic %}
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                            </svg>
-                            {{ discussion.topic }}
-                        </div>
-                    {% endif %}
-
-                    <!-- Location -->
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        {% if discussion.geographic_scope == 'global' %}
-                            Global
-                        {% elif discussion.geographic_scope == 'country' %}
-                            {{ discussion.country }}
-                        {% elif discussion.geographic_scope == 'city' %}
-                            {{ discussion.city }}, {{ discussion.country }}
-                        {% endif %}
-                    </div>
-
-
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        Started {{ discussion.created_at.strftime('%B %d, %Y') }}
-                    </div>
-                </div>
-            </div>
+            <!-- Perplexity -->
+            <a
+              href="https://perplexity.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors"
+            >
+              <svg
+                class="w-5 h-5 text-gray-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+              <div class="ml-3">
+                <p class="text-sm font-medium text-gray-900">Perplexity</p>
+                <p class="text-xs text-gray-500">
+                  Research with real-time web results
+                </p>
+              </div>
+            </a>
+          </div>
         </div>
+      </div>
     </div>
+  </div>
 
-    
+  <!-- Discussion Header and Share Button Section -->
+  <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <div class="max-w-3xl mx-auto">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <h1 class="text-3xl font-bold text-gray-900">{{ discussion.title }}</h1>
 
-    <!-- Adjusted Pol.is Discussion Embed without outer container -->
-    <div class="min-h-screen">
-        {% if discussion.embed_code %}
-            <!-- Render the embed code directly from the database -->
-            {{ discussion.embed_code | safe }}
-        {% else %}
-            <!-- Fallback message if no embed code is available -->
-            <div class="text-center p-6">
-                <p class="text-gray-600">The discussion embed is not available. <a href="{{ polis_url }}" target="_blank" class="text-blue-600 hover:underline">Click here</a> to open it in a new tab.</p>
+        <!-- Share Button with Dropdown -->
+        <div class="relative">
+          <button
+            type="button"
+            id="shareButton"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-label="Share Discussion"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <svg
+              class="h-5 w-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
+              />
+            </svg>
+            Share Discussion
+          </button>
+          <!-- Share Dropdown Menu -->
+          <div
+            id="shareButtons"
+            class="hidden absolute top-full mt-2 right-0 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50"
+          >
+            <div class="py-1">
+              {% set share_title = discussion.title|urlencode %} {% set
+              share_url = url_for('discussions.view_discussion',
+              discussion_id=discussion.id, slug=discussion.slug, _external=True)
+              %} {% set share_text = "Join this important discussion on
+              SocietySpeaks: " + discussion.title %}
+
+              <!-- LinkedIn -->
+              <a
+                href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url }}&title={{ share_title }}"
+                target="_blank"
+                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <img
+                  src="{{ url_for('static', filename='icons/Linkedin_icon.svg') }}"
+                  alt="LinkedIn"
+                  class="h-5 w-5 mr-3"
+                />
+                LinkedIn
+              </a>
+              <!-- Meta (Facebook) -->
+              <a
+                href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}&quote={{ share_text|urlencode }}"
+                target="_blank"
+                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <img
+                  src="{{ url_for('static', filename='icons/facebook.svg') }}"
+                  alt="Facebook"
+                  class="h-5 w-5 mr-3"
+                />
+                Meta (Facebook)
+              </a>
+
+              <!-- X (Twitter) -->
+              <a
+                href="https://twitter.com/intent/tweet?text={{ share_text|urlencode }}&url={{ share_url }}"
+                target="_blank"
+                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <img
+                  src="{{ url_for('static', filename='icons/X_icon.svg') }}"
+                  alt="X (Twitter)"
+                  class="h-5 w-5 mr-3"
+                />
+                X (Twitter)
+              </a>
+
+              <!-- BlueSky -->
+              <a
+                href="https://bsky.app/intent/compose?text={{ share_text|urlencode }} {{ share_url }}"
+                target="_blank"
+                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <img
+                  src="{{ url_for('static', filename='icons/bluesky.svg') }}"
+                  alt="Bluesky"
+                  class="h-5 w-5 mr-3"
+                />
+                BlueSky
+              </a>
+
+              <!-- WhatsApp -->
+              <a
+                href="https://wa.me/?text={{ share_text|urlencode }}%20{{ share_url }}"
+                target="_blank"
+                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <img
+                  src="{{ url_for('static', filename='icons/whatsapp.svg') }}"
+                  alt="WhatsApp"
+                  class="h-5 w-5 mr-3"
+                />
+                WhatsApp
+              </a>
+
+              <!-- Telegram -->
+              <a
+                href="https://t.me/share/url?url={{ share_url }}&text={{ share_text|urlencode }}"
+                target="_blank"
+                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <img
+                  src="{{ url_for('static', filename='icons/telegram.svg') }}"
+                  alt="Telegram"
+                  class="h-5 w-5 mr-3"
+                />
+                Telegram
+              </a>
+
+              <!-- Email -->
+              <a
+                href="mailto:?subject={{ share_title }}%20-%20SocietySpeaks%20Discussion&body={{ share_text|urlencode }}%0A%0A{{ share_url }}"
+                class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <svg
+                  class="h-5 w-5 mr-3 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                  />
+                </svg>
+                Email
+              </a>
+
+              <!-- Copy Link -->
+              <button
+                onclick="copyLink('{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}')"
+                class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+              >
+                <svg
+                  class="h-5 w-5 mr-3 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
+                  />
+                </svg>
+                <span class="copy-text">Copy Link</span>
+              </button>
             </div>
-        {% endif %}
+          </div>
+        </div>
+
+        <!-- Discussion Details -->
+
+        <div class="flex flex-wrap gap-4 text-sm text-gray-500">
+          {% if discussion.topic %}
+          <div class="flex items-center">
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+              />
+            </svg>
+            {{ discussion.topic }}
+          </div>
+          {% endif %}
+
+          <!-- Location -->
+          <div class="flex items-center">
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+              />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+            </svg>
+            {% if discussion.geographic_scope == 'global' %} Global {% elif
+            discussion.geographic_scope == 'country' %} {{ discussion.country }}
+            {% elif discussion.geographic_scope == 'city' %} {{ discussion.city
+            }}, {{ discussion.country }} {% endif %}
+          </div>
+
+          <div class="flex items-center">
+            <svg
+              class="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Started {{ discussion.created_at.strftime('%B %d, %Y') }}
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 
+  <!-- Native vs Pol.is Discussion Rendering -->
+  <div class="min-h-screen">
+    {% if discussion.has_native_statements %}
+    <!-- Native Statement System (Phase 1) -->
+    {% include 'discussions/view_native.html' %} {% else %}
+    <!-- Legacy Pol.is Embed -->
+    {% if discussion.embed_code %} {{ discussion.embed_code | safe }} {% else %}
+    <div class="text-center p-6">
+      <p class="text-gray-600">
+        The discussion embed is not available.
+        <a
+          href="{{ polis_url }}"
+          target="_blank"
+          class="text-blue-600 hover:underline"
+          >Click here</a
+        >
+        to open it in a new tab.
+      </p>
+    </div>
+    {% endif %} {% endif %}
+  </div>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Share Button Logic
+      const shareButton = document.getElementById("shareButton");
+      const shareButtons = document.querySelector("#shareButtons");
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Share Button Logic
-        const shareButton = document.getElementById('shareButton');
-        const shareButtons = document.querySelector('#shareButtons');
+      shareButton.addEventListener("click", function (e) {
+        e.stopPropagation();
+        shareButtons.classList.toggle("hidden");
+      });
 
-        shareButton.addEventListener('click', function(e) {
-            e.stopPropagation();
-            shareButtons.classList.toggle('hidden');
+      // Research Tools Dropdown Logic
+      const researchToolsBtn = document.getElementById("researchToolsBtn");
+      const researchToolsDropdown = document.getElementById(
+        "researchToolsDropdown"
+      );
+
+      if (researchToolsBtn && researchToolsDropdown) {
+        researchToolsBtn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          researchToolsDropdown.classList.toggle("hidden");
         });
+      }
 
-        // Research Tools Dropdown Logic
-        const researchToolsBtn = document.getElementById('researchToolsBtn');
-        const researchToolsDropdown = document.getElementById('researchToolsDropdown');
-
-        if (researchToolsBtn && researchToolsDropdown) {
-            researchToolsBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                researchToolsDropdown.classList.toggle('hidden');
-            });
+      // Global click handler for both dropdowns
+      document.addEventListener("click", function (e) {
+        // Handle share buttons dropdown
+        if (
+          !shareButtons.contains(e.target) &&
+          !shareButton.contains(e.target)
+        ) {
+          shareButtons.classList.add("hidden");
         }
 
-        // Global click handler for both dropdowns
-        document.addEventListener('click', function(e) {
-            // Handle share buttons dropdown
-            if (!shareButtons.contains(e.target) && !shareButton.contains(e.target)) {
-                shareButtons.classList.add('hidden');
-            }
-
-            // Handle research tools dropdown
-            if (researchToolsDropdown && !researchToolsDropdown.contains(e.target) && !researchToolsBtn.contains(e.target)) {
-                researchToolsDropdown.classList.add('hidden');
-            }
-        });
+        // Handle research tools dropdown
+        if (
+          researchToolsDropdown &&
+          !researchToolsDropdown.contains(e.target) &&
+          !researchToolsBtn.contains(e.target)
+        ) {
+          researchToolsDropdown.classList.add("hidden");
+        }
+      });
     });
 
     // Copy to Clipboard function
     function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            const toast = document.createElement('div');
-            toast.textContent = 'Link copied to clipboard!';
-            toast.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg';
-            document.body.appendChild(toast);
-            setTimeout(() => {
-                toast.remove();
-            }, 3000);
-        }).catch(err => {
-            console.error('Failed to copy text: ', err);
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          const toast = document.createElement("div");
+          toast.textContent = "Link copied to clipboard!";
+          toast.className =
+            "fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg";
+          document.body.appendChild(toast);
+          setTimeout(() => {
+            toast.remove();
+          }, 3000);
+        })
+        .catch((err) => {
+          console.error("Failed to copy text: ", err);
         });
     }
 
     // Copy Link function
     async function copyLink(url) {
-        try {
-            await navigator.clipboard.writeText(url);
-            const button = event.currentTarget;
-            const textSpan = button.querySelector('.copy-text');
-            if (textSpan) {
-                const originalText = textSpan.textContent;
-                textSpan.textContent = 'Copied!';
-                setTimeout(() => textSpan.textContent = originalText, 2000);
-            }
-        } catch (err) {
-            console.error('Failed to copy text: ', err);
+      try {
+        await navigator.clipboard.writeText(url);
+        const button = event.currentTarget;
+        const textSpan = button.querySelector(".copy-text");
+        if (textSpan) {
+          const originalText = textSpan.textContent;
+          textSpan.textContent = "Copied!";
+          setTimeout(() => (textSpan.textContent = originalText), 2000);
         }
+      } catch (err) {
+        console.error("Failed to copy text: ", err);
+      }
     }
-
-    
-    
-</script>
-{% endblock %}
+  </script>
+  {% endblock %}
+</div>

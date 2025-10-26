@@ -17,3 +17,15 @@ sentry-sdk==2.17.0
 Flask-Caching==2.3.0
 redis==5.2.0
 gunicorn==21.2.0
+
+# Native Statement System (Phase 1 & 3)
+# Note: scipy deferred - Wilson score can be calculated without it
+# scipy will be added later with proper binary wheels
+scikit-learn>=1.3.0
+numpy>=1.24.0
+
+# Background Tasks (Phase 3)
+APScheduler==3.10.4
+
+# Encryption for API keys (Phase 4)
+cryptography>=41.0.0

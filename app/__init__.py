@@ -299,6 +299,10 @@ def create_app():
 
     from app.discussions.routes import discussions_bp
     app.register_blueprint(discussions_bp, url_prefix='/discussions')
+    
+    # Register statements blueprint (Phase 1 - Native Statement System)
+    from app.discussions.statements import statements_bp
+    app.register_blueprint(statements_bp)
 
     from app.settings.routes import settings_bp
     app.register_blueprint(settings_bp, url_prefix='/settings')

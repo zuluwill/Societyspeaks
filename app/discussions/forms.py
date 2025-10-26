@@ -1,6 +1,6 @@
 # app/discussions/forms.py
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectField, HiddenField, SubmitField
+from wtforms import StringField, TextAreaField, SelectField, HiddenField, SubmitField, BooleanField
 from wtforms.validators import DataRequired, Length, Optional
 
 
@@ -221,7 +221,14 @@ class CreateDiscussionForm(FlaskForm):
         ('Infrastructure', 'Infrastructure')
     ], validators=[DataRequired()])
 
-    embed_code = HiddenField('Embed Code', validators=[DataRequired()]) 
+    # Phase 1: Native Statement System
+    use_native_statements = BooleanField(
+        'Use Native Statement System',
+        default=False,
+        description='Enable the new pol.is-inspired debate system with voting and consensus clustering (recommended)'
+    )
+
+    embed_code = HiddenField('Embed Code', validators=[Optional()])  # Now optional when using native statements
 
     keywords = StringField('Keywords', validators=[Optional(), Length(max=200)])  # Retain or customize length as needed
 
@@ -240,9 +247,9 @@ class CreateDiscussionForm(FlaskForm):
         if not super().validate(**kwargs):
             return False
 
-        # Validate embed code is present
-        if not self.embed_code.data:
-            self.embed_code.errors.append('Discussion embed code is required')
+        # Validate either native statements OR embed code is provided
+        if not self.use_native_statements.data and not self.embed_code.data:
+            self.embed_code.errors.append('Either provide a pol.is embed code or enable native statements')
             return False
 
         # Existing geographic validation
