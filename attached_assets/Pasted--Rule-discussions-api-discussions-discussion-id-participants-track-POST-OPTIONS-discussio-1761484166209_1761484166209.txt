@@ -1,0 +1,145 @@
+<Rule '/discussions/api/discussions/<discussion_id>/participants/track' (POST, OPTIONS) -> discussions.track_new_participant>,
+ <Rule '/discussions/api/discussions/<discussion_id>/simulate-activity' (POST, OPTIONS) -> discussions.simulate_discussion_activity>,
+ <Rule '/discussions/<discussion_id>/statements/create' (GET, POST, HEAD, OPTIONS) -> statements.create_statement>,
+ <Rule '/statements/<statement_id>/vote' (POST, OPTIONS) -> statements.vote_statement>,
+ <Rule '/statements/<statement_id>' (GET, HEAD, OPTIONS) -> statements.view_statement>,
+ <Rule '/statements/<statement_id>/edit' (GET, POST, HEAD, OPTIONS) -> statements.edit_statement>,
+ <Rule '/statements/<statement_id>/delete' (POST, OPTIONS) -> statements.delete_statement>,
+ <Rule '/statements/<statement_id>/flag' (GET, POST, HEAD, OPTIONS) -> statements.flag_statement>,
+ <Rule '/discussions/<discussion_id>/statements' (GET, HEAD, OPTIONS) -> statements.list_statements>,
+ <Rule '/api/statements/<statement_id>/votes' (GET, HEAD, OPTIONS) -> statements.get_statement_votes>,
+ <Rule '/statements/<statement_id>/responses/create' (POST, OPTIONS) -> statements.create_response>,
+ <Rule '/responses/<response_id>' (GET, HEAD, OPTIONS) -> statements.view_response>,
+ <Rule '/responses/<response_id>/edit' (GET, POST, HEAD, OPTIONS) -> statements.edit_response>,
+ <Rule '/responses/<response_id>/delete' (POST, OPTIONS) -> statements.delete_response>,
+ <Rule '/statements/<statement_id>/responses' (GET, HEAD, OPTIONS) -> statements.list_responses>,
+ <Rule '/api/responses/<response_id>/children' (GET, HEAD, OPTIONS) -> statements.get_response_children>,
+ <Rule '/responses/<response_id>/evidence/add' (POST, OPTIONS) -> statements.add_evidence>,
+ <Rule '/evidence/<evidence_id>/delete' (POST, OPTIONS) -> statements.delete_evidence>,
+ <Rule '/evidence/<evidence_id>/update-quality' (POST, OPTIONS) -> statements.update_evidence_quality>,
+ <Rule '/api/evidence/<evidence_id>/download' (GET, HEAD, OPTIONS) -> statements.download_evidence>,
+ <Rule '/discussions/<discussion_id>/moderation' (GET, HEAD, OPTIONS) -> moderation.moderation_queue>,
+ <Rule '/discussions/<discussion_id>/moderation/review/<flag_id>' (POST, OPTIONS) -> moderation.review_flag>,
+ <Rule '/discussions/<discussion_id>/moderation/bulk-action' (POST, OPTIONS) -> moderation.bulk_moderation_action>,
+ <Rule '/discussions/<discussion_id>/moderation/stats' (GET, HEAD, OPTIONS) -> moderation.moderation_stats>,
+ <Rule '/api/discussions/<discussion_id>/moderation/summary' (GET, HEAD, OPTIONS) -> moderation.moderation_summary_api>,
+ <Rule '/discussions/<discussion_id>/consensus/analyze' (POST, OPTIONS) -> consensus.trigger_analysis>,
+ <Rule '/discussions/<discussion_id>/consensus' (GET, HEAD, OPTIONS) -> consensus.view_results>,
+ <Rule '/api/discussions/<discussion_id>/consensus/data' (GET, HEAD, OPTIONS) -> consensus.get_cluster_data>,
+ <Rule '/api/discussions/<discussion_id>/consensus/statements' (GET, HEAD, OPTIONS) -> consensus.get_special_statements>,
+ <Rule '/api/discussions/<discussion_id>/consensus/status' (GET, HEAD, OPTIONS) -> consensus.get_analysis_status>,
+ <Rule '/discussions/<discussion_id>/consensus/report' (GET, HEAD, OPTIONS) -> consensus.generate_report>,
+ <Rule '/api/discussions/<discussion_id>/consensus/export' (GET, HEAD, OPTIONS) -> consensus.export_analysis>,
+ <Rule '/discussions/<discussion_id>/consensus/generate-summary' (POST, OPTIONS) -> consensus.generate_summary>,
+ <Rule '/api/discussions/<discussion_id>/consensus/summary' (GET, HEAD, OPTIONS) -> consensus.get_summary_api>,
+ <Rule '/discussions/<discussion_id>/consensus/generate-labels' (POST, OPTIONS) -> consensus.generate_cluster_labels_route>,
+ <Rule '/settings/settings' (GET, POST, HEAD, OPTIONS) -> settings.view_settings>,
+ <Rule '/settings/change-password' (POST, OPTIONS) -> settings.change_password>,
+ <Rule '/settings/delete-account' (POST, OPTIONS) -> settings.delete_account>,
+ <Rule '/settings/api-keys' (GET, HEAD, OPTIONS) -> api_keys.list_api_keys>,
+ <Rule '/settings/api-keys/add' (GET, POST, HEAD, OPTIONS) -> api_keys.add_api_key>,
+ <Rule '/settings/api-keys/<key_id>/delete' (POST, OPTIONS) -> api_keys.delete_api_key>,
+ <Rule '/settings/api-keys/<key_id>/toggle' (POST, OPTIONS) -> api_keys.toggle_api_key>,
+ <Rule '/settings/api-keys/<key_id>/revalidate' (POST, OPTIONS) -> api_keys.revalidate_api_key>,
+ <Rule '/api/user/llm-status' (GET, HEAD, OPTIONS) -> api_keys.llm_status>,
+ <Rule '/help/' (GET, HEAD, OPTIONS) -> help.help>,
+ <Rule '/help/getting-started' (GET, HEAD, OPTIONS) -> help.getting_started>,
+ <Rule '/help/creating-discussions' (GET, HEAD, OPTIONS) -> help.creating_discussions>,
+ <Rule '/help/managing-discussions' (GET, HEAD, OPTIONS) -> help.managing_discussions>,
+ <Rule '/help/seed-comments' (GET, HEAD, OPTIONS) -> help.seed_comments>,
+ <Rule '/help/polis-algorithms' (GET, HEAD, OPTIONS) -> help.polis_algorithms>,
+ <Rule '/help/native-system' (GET, HEAD, OPTIONS) -> help.native_system>,
+ <Rule '/admin/dashboard' (GET, HEAD, OPTIONS) -> admin.dashboard>,
+ <Rule '/admin/profiles' (GET, HEAD, OPTIONS) -> admin.list_profiles>,
+ <Rule '/admin/profiles/individual/create' (GET, POST, HEAD, OPTIONS) -> admin.create_individual_profile>,
+ <Rule '/admin/profiles/individual/<profile_id>/edit' (GET, POST, HEAD, OPTIONS) -> admin.edit_individual_profile>,
+ <Rule '/admin/profiles/company/create' (GET, POST, HEAD, OPTIONS) -> admin.create_company_profile>,
+ <Rule '/admin/profiles/company/<profile_id>/edit' (GET, POST, HEAD, OPTIONS) -> admin.edit_company_profile>,
+ <Rule '/admin/profiles/<profile_type>/<profile_id>/delete' (POST, OPTIONS) -> admin.delete_profile>,
+ <Rule '/admin/discussions/<discussion_id>/delete' (POST, OPTIONS) -> admin.delete_discussion>,
+ <Rule '/admin/discussions' (GET, HEAD, OPTIONS) -> admin.list_discussions>,
+ <Rule '/admin/users' (GET, HEAD, OPTIONS) -> admin.list_users>,
+ <Rule '/admin/users/<user_id>/delete' (POST, OPTIONS) -> admin.delete_user>,
+ <Rule '/admin/users/<user_id>/toggle-admin' (POST, OPTIONS) -> admin.toggle_admin>])
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+Scheduler initialized with jobs:
+  - auto_cluster_discussions: interval[6:00:00]
+  - cleanup_old_analyses: cron[hour='3']
+Added job "init_scheduler.<locals>.auto_cluster_active_discussions" to job store "default"
+Added job "init_scheduler.<locals>.cleanup_old_consensus_analyses" to job store "default"
+Scheduler started
+Scheduler started
+Background scheduler started successfully
+[2025-10-26 13:05:27 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:05:27 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:05:27 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:05:27 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:05:27 +0000] [429] [INFO] Handling signal: winch
+Cache get failed for featured discussions: Error 99 connecting to localhost:6379. Cannot assign requested address.
+Cache set failed for featured discussions: Error 99 connecting to localhost:6379. Cannot assign requested address.
+Unhandled Exception: dict.get() takes no keyword arguments
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_login/utils.py", line 290, in decorated_view
+    return current_app.ensure_sync(func)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_limiter/extension.py", line 1303, in __inner
+    return cast(R, flask.current_app.ensure_sync(obj)(*a, **k))
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/discussions/statements.py", line 137, in vote_statement
+    vote_value = data.get('vote', type=int)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: dict.get() takes no keyword arguments
+Unhandled Exception: 'csrf_token' is undefined
+Traceback (most recent call last):
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/discussions/statements.py", line 221, in view_statement
+    return render_template('discussions/view_statement.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "/home/runner/workspace/app/templates/discussions/view_statement.html", line 1, in top-level template code
+    {% extends 'layout.html' %} {% block title %}Statement - {{ discussion.title
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/templates/layout.html", line 305, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/app/templates/discussions/view_statement.html", line 161, in block 'content'
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/jinja2/utils.py", line 83, in from_obj
+    if hasattr(obj, "jinja_pass_arg"):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.UndefinedError: 'csrf_token' is undefined
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+[2025-10-26 13:08:45 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:08:45 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:08:45 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:08:46 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:08:46 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:08:46 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:08:46 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:08:51 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:08:51 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:08:51 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:08:51 +0000] [429] [INFO] Handling signal: winch
+[2025-10-26 13:08:53 +0000] [429] [INFO] Handling signal: winch

@@ -134,11 +134,11 @@ def vote_statement(statement_id):
     # Get vote value from request (support both JSON and form data)
     if request.is_json:
         data = request.get_json()
-        vote_value = data.get('vote', type=int)
-        confidence = data.get('confidence', type=int)
+        vote_value = int(data.get('vote', 0))
+        confidence = int(data.get('confidence', 50))
     else:
         vote_value = request.form.get('vote', type=int)
-        confidence = request.form.get('confidence', type=int)
+        confidence = request.form.get('confidence', type=int, default=50)
     
     if vote_value not in [-1, 0, 1]:
         return jsonify({'error': 'Invalid vote value'}), 400
