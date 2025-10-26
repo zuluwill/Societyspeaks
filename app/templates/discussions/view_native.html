@@ -86,93 +86,86 @@
                 </div>
             </div>
 
-            <!-- Voting Buttons -->
-            <div class="flex flex-col gap-3">
-                <div class="grid grid-cols-3 gap-2" data-statement-id="{{ statement.id }}">
-                    {% if current_user.is_authenticated %}
-                    <button onclick="voteOnStatement({{ statement.id }}, 1)" 
-                            class="vote-btn bg-green-500 hover:bg-green-600 text-white px-3 py-4 rounded-lg font-semibold transition-colors"
-                            style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70px;"
-                            data-vote="1">
-                        <span class="vote-loading hidden">
-                            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <!-- Quick Vote Section (SIMPLIFIED AND ALWAYS VISIBLE) -->
+            <div class="mb-4" style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
+                <div class="grid grid-cols-3 gap-3" data-statement-id="{{ statement.id }}">
+                    <!-- Agree Button -->
+                    <button 
+                        {% if current_user.is_authenticated %}onclick="voteOnStatement({{ statement.id }}, 1)"{% else %}onclick="alert('Please log in to vote'); window.location.href='/auth/login';"{% endif %}
+                        class="vote-btn bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors"
+                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7; cursor: pointer;{% endif %}"
+                        data-vote="1">
+                        <span class="vote-loading" style="display: none;">
+                            <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
+                                <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         </span>
                         <span class="vote-content">
-                            <svg class="w-5 h-5 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                            </svg>
-                            <div class="text-xs font-bold">Agree</div>
-                            <div class="text-lg font-bold vote-count" data-count-type="agree">{{ statement.vote_count_agree }}</div>
+                            <div style="font-size: 11px; margin-bottom: 4px;">✓ AGREE</div>
+                            <div style="font-size: 24px; font-weight: bold;" class="vote-count" data-count-type="agree">{{ statement.vote_count_agree }}</div>
                         </span>
                     </button>
 
-                    <button onclick="voteOnStatement({{ statement.id }}, -1)" 
-                            class="vote-btn bg-red-500 hover:bg-red-600 text-white px-3 py-4 rounded-lg font-semibold transition-colors"
-                            style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70px;"
-                            data-vote="-1">
-                        <span class="vote-loading hidden">
-                            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <!-- Disagree Button -->
+                    <button 
+                        {% if current_user.is_authenticated %}onclick="voteOnStatement({{ statement.id }}, -1)"{% else %}onclick="alert('Please log in to vote'); window.location.href='/auth/login';"{% endif %}
+                        class="vote-btn bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors"
+                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7; cursor: pointer;{% endif %}"
+                        data-vote="-1">
+                        <span class="vote-loading" style="display: none;">
+                            <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
+                                <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         </span>
                         <span class="vote-content">
-                            <svg class="w-5 h-5 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
-                            </svg>
-                            <div class="text-xs font-bold">Disagree</div>
-                            <div class="text-lg font-bold vote-count" data-count-type="disagree">{{ statement.vote_count_disagree }}</div>
+                            <div style="font-size: 11px; margin-bottom: 4px;">✗ DISAGREE</div>
+                            <div style="font-size: 24px; font-weight: bold;" class="vote-count" data-count-type="disagree">{{ statement.vote_count_disagree }}</div>
                         </span>
                     </button>
 
-                    <button onclick="voteOnStatement({{ statement.id }}, 0)" 
-                            class="vote-btn bg-gray-400 hover:bg-gray-500 text-white px-3 py-4 rounded-lg font-semibold transition-colors"
-                            style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70px;"
-                            data-vote="0">
-                        <span class="vote-loading hidden">
-                            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <!-- Unsure Button -->
+                    <button 
+                        {% if current_user.is_authenticated %}onclick="voteOnStatement({{ statement.id }}, 0)"{% else %}onclick="alert('Please log in to vote'); window.location.href='/auth/login';"{% endif %}
+                        class="vote-btn bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition-colors"
+                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7; cursor: pointer;{% endif %}"
+                        data-vote="0">
+                        <span class="vote-loading" style="display: none;">
+                            <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
+                                <circle style="opacity: 0.25;" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path style="opacity: 0.75;" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         </span>
                         <span class="vote-content">
-                            <svg class="w-5 h-5 mx-auto mb-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                            </svg>
-                            <div class="text-xs font-bold">Unsure</div>
-                            <div class="text-lg font-bold vote-count" data-count-type="unsure">{{ statement.vote_count_unsure }}</div>
+                            <div style="font-size: 11px; margin-bottom: 4px;">? UNSURE</div>
+                            <div style="font-size: 24px; font-weight: bold;" class="vote-count" data-count-type="unsure">{{ statement.vote_count_unsure }}</div>
                         </span>
                     </button>
-                    {% else %}
-                    <div class="col-span-3 text-center py-4 text-gray-500 italic">
-                        <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:underline font-semibold">Log in</a> to vote
-                    </div>
-                    {% endif %}
                 </div>
-
-                <!-- Statement Actions -->
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 mt-3">
-                    <a href="{{ url_for('statements.view_statement', statement_id=statement.id) }}" 
-                       class="inline-flex items-center justify-center px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-medium text-sm transition-colors">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                        View Details
-                    </a>
-                    {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('statements.create_response', statement_id=statement.id) }}" 
-                       class="inline-flex items-center justify-center px-4 py-2 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg font-medium text-sm transition-colors">
-                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"></path>
-                        </svg>
-                        Add Response
-                    </a>
-                    {% endif %}
+                {% if not current_user.is_authenticated %}
+                <div class="text-center mt-3" style="font-size: 13px; color: #6b7280;">
+                    <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:underline font-semibold">Log in</a> to vote on this statement
                 </div>
+                {% endif %}
+            </div>
+
+            <!-- Action Buttons with Helpful Descriptions -->
+            <div class="flex flex-col sm:flex-row gap-2">
+                <a href="{{ url_for('statements.view_statement', statement_id=statement.id) }}" 
+                   class="flex-1 text-center px-4 py-3 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-medium transition-colors"
+                   title="See full discussion thread with all responses">
+                    <div class="font-bold">💬 View Discussion</div>
+                    <div style="font-size: 11px; color: #64748b;">See responses & debate</div>
+                </a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('statements.create_response', statement_id=statement.id) }}" 
+                   class="flex-1 text-center px-4 py-3 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg font-medium transition-colors"
+                   title="Write a detailed argument or counter-argument">
+                    <div class="font-bold">✍️ Add Argument</div>
+                    <div style="font-size: 11px; color: #64748b;">Write detailed response</div>
+                </a>
+                {% endif %}
             </div>
 
             <!-- Vote Statistics -->

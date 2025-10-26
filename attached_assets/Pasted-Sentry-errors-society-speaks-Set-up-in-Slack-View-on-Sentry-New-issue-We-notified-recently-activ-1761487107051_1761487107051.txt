@@ -1,0 +1,269 @@
+Sentry errors society speaks
+
+
+
+
+Set up in Slack
+View on Sentry
+New issue
+We notified recently active members in the python-flask project of this issue
+ISSUE
+BuildError help.help  Could not build url for endpoint 'help.native_system'. Did you mean 'help.getting_started' instead?
+ID: bf1daab426f54019b8355581bda83f53
+Oct. 26, 2025, 12:17:17 p.m. GMT
+Project
+python-flask
+environment
+production
+Level
+error
+Exception
+BuildError: Could not build url for endpoint 'help.native_system'. Did you mean 'help.getting_started' instead?
+(8 additional frame(s) were not displayed)
+...
+  File "app/help/routes.py", line 28, in help
+    'description': 'Monitor and engage with your discussions',
+  File "/home/runner/workspace/app/templates/help/help.html", line 1, in top-level template code
+    {# templates/help/help.html #} {% extends "layout.html" %} {% block content %}
+  File "/home/runner/workspace/app/templates/layout.html", line 305, in top-level template code
+    {% block content %}{% endblock %}
+  File "/home/runner/workspace/app/templates/help/help.html", line 127, in block 'content'
+    href="{{ url_for('help.native_system') }}"
+Request
+URL
+http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-1y6avpaijgqu4.worf.replit.d…
+Method
+GET
+User
+
+Message
+Unhandled Exception: Could not build url for endpoint 'help.native_system'. Did you mean 'help.getting_started' instead?
+Tags
+		browser = Chrome 141 browser.name = Chrome client_os = macOS client_os.name = macOS device = Mac device.family = Mac environment = production handled = yes level = error logger = app mechanism = logging runtime = CPython 3.11.13 runtime.name = CPython release = 44185f364958fb672eff12c9af3485cf2f7248e9 server_name = da03a9fc0bda transaction = help.help url = http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-...
+ISSUE	
+BuildError help.help  Could not build url for endpoint 'help.native_system'. Did you mean 'help.getting_started' instead?	
+Project	python-flask
+environment	production
+Level	error
+URL	http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-1y6avpaijgqu4.worf.replit.d…
+Method	GET
+
+
+New issue
+We notified recently active members in the python-flask project of this issue
+ISSUE
+BuildError help.native_system  Could not build url for endpoint 'discussions.index'. Did you mean 'discussions.view_discussion' ...
+ID: 9789a3267cfa4ce28de6db17695af6c7
+Oct. 26, 2025, 12:17:33 p.m. GMT
+Project
+python-flask
+environment
+production
+Level
+error
+Exception
+BuildError: Could not build url for endpoint 'discussions.index'. Did you mean 'discussions.view_discussion' instead?
+(8 additional frame(s) were not displayed)
+...
+  File "app/help/routes.py", line 58, in native_system
+    return render_template('help/native_system.html')
+  File "/home/runner/workspace/app/templates/help/native_system.html", line 1, in top-level template code
+    {# templates/help/native_system.html #} {% extends "layout.html" %} {% block
+  File "/home/runner/workspace/app/templates/layout.html", line 305, in top-level template code
+    {% block content %}{% endblock %}
+  File "/home/runner/workspace/app/templates/help/native_system.html", line 443, in block 'content'
+    href="{{ url_for('discussions.index') }}"
+Request
+URL
+http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-1y6avpaijgqu4.worf.replit.d…
+Method
+GET
+User
+
+Message
+Unhandled Exception: Could not build url for endpoint 'discussions.index'. Did you mean 'discussions.view_discussion' instead?
+Tags
+		browser = Chrome 141 browser.name = Chrome client_os = macOS client_os.name = macOS device = Mac device.family = Mac environment = production handled = yes level = error logger = app mechanism = logging runtime = CPython 3.11.13 runtime.name = CPython release = 9ec522b974b29972cad3bab7e83b6436b59f1055 server_name = da03a9fc0bda transaction = help.native_system url = http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-...
+Mute this alert
+This email was triggered by Send a notification for high priority issues
+
+
+Home
+ISSUE	
+BuildError help.native_system  Could not build url for endpoint 'discussions.index'. Did you mean 'discussions.view_discussion' ...	
+Project	python-flask
+environment	production
+Level	error
+URL	http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-1y6avpaijgqu4.worf.replit.d…
+Method	GET
+
+
+
+
+Set up in Slack
+View on Sentry
+New issue
+We notified recently active members in the python-flask project of this issue
+ISSUE
+BuildError statements.create_statement  Could not build url for endpoint 'discussions.list_discussions'. Did you mean 'discussions.view_d...
+ID: e321e91f9ae94866b5c4fd5c6fba50b2
+Oct. 26, 2025, 1:03:00 p.m. GMT
+Project
+python-flask
+environment
+production
+Level
+error
+Exception
+BuildError: Could not build url for endpoint 'discussions.list_discussions'. Did you mean 'discussions.view_discussion' instead?
+(10 additional frame(s) were not displayed)
+...
+  File "app/discussions/statements.py", line 122, in create_statement
+    return render_template('discussions/create_statement.html',
+  File "/home/runner/workspace/app/templates/discussions/create_statement.html", line 1, in top-level template code
+    {% extends 'layout.html' %} {% block title %}Add Statement - {{ discussion.title
+  File "/home/runner/workspace/app/templates/layout.html", line 305, in top-level template code
+    {% block content %}{% endblock %}
+  File "/home/runner/workspace/app/templates/discussions/create_statement.html", line 8, in block 'content'
+    href="{{ url_for('discussions.list_discussions') }}"
+Request
+URL
+http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-1y6avpaijgqu4.worf.replit.d…
+Method
+GET
+User
+
+Message
+Unhandled Exception: Could not build url for endpoint 'discussions.list_discussions'. Did you mean 'discussions.view_discussion' instead?
+Tags
+		browser = Chrome 141 browser.name = Chrome client_os = macOS client_os.name = macOS device = Mac device.family = Mac environment = production handled = yes level = error logger = app mechanism = logging runtime = CPython 3.11.13 runtime.name = CPython release = fc36c7d1e7b05e5a8b8e4db52b53fa362bbe51c5 server_name = 001aa5d7f5db transaction = statements.create_statement url = http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-...
+Mute this alert
+This email was triggered by Send a notification for high priority issues
+
+
+Home
+Notification Settings
+ISSUE	
+BuildError statements.create_statement  Could not build url for endpoint 'discussions.list_discussions'. Did you mean 'discussions.view_d...	
+Project	python-flask
+environment	production
+Level	error
+URL	http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-1y6avpaijgqu4.worf.replit.d…
+Method	GET
+
+
+
+
+Set up in Slack
+2 new alerts from python-flask
+Oct. 26, 2025, 1:06 p.m. GMT
+Mute this alert
+This email was triggered by Send a notification for high priority issues
+ISSUE
+ERROR
+UndefinedError  statements.view_statement  'csrf_token' is undefined
+Oct. 26, 2025, 1:06:56 p.m. GMT
+ERROR
+TypeError  statements.vote_statement  dict.get() takes no keyword arguments
+Oct. 26, 2025, 1:06:50 p.m. GMT
+Home
+ISSUE	
+ERROR	UndefinedError  statements.view_statement  'csrf_token' is undefined
+Oct. 26, 2025, 1:06:56 p.m. GMT
+ERROR	TypeError  statements.vote_statement  dict.get() takes no keyword arguments
+Oct. 26, 2025, 1:06:50 p.m. GMT
+
+New issue
+We notified recently active members in the python-flask project of this issue
+ISSUE
+ValueError statements.vote_statement  Confidence must be between 1 and 5
+ID: 52eea456aa35454a9f3b7b19c3e94835
+Oct. 26, 2025, 1:16:33 p.m. GMT
+Project
+python-flask
+environment
+production
+Level
+error
+Exception
+ValueError: Confidence must be between 1 and 5
+(11 additional frame(s) were not displayed)
+...
+  File "app/discussions/statements.py", line 169, in vote_statement
+    existing_vote = StatementVote(
+  File "<string>", line 4, in __init__
+  File "app/models.py", line 599, in validate_confidence
+    raise ValueError("Confidence must be between 1 and 5")
+Request
+URL
+http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-1y6avpaijgqu4.worf.replit.d…
+Method
+POST
+User
+
+Message
+Unhandled Exception: Confidence must be between 1 and 5
+Tags
+		browser = Chrome 141 browser.name = Chrome client_os = macOS client_os.name = macOS device = Mac device.family = Mac environment = production handled = yes level = error logger = app mechanism = logging runtime = CPython 3.11.13 runtime.name = CPython release = 45b7a5ef63a73ced8f6ef8677f944cc1839d80c9 server_name = 001aa5d7f5db transaction = statements.vote_statement url = http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-...
+Mute this alert
+This email was triggered by Send a notification for high priority issues
+
+
+Home
+ISSUE	
+ValueError statements.vote_statement  Confidence must be between 1 and 5	
+Project	python-flask
+environment	production
+Level	error
+URL	http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-1y6avpaijgqu4.worf.replit.d…
+Method	POST
+
+New issue
+We notified recently active members in the python-flask project of this issue
+ISSUE
+UndefinedError statements.create_response  'app. discussion­s. statement_­forms. ResponseFo­rm object' has no attribute 'parent_response_id'
+ID: d49c5234942b42dbb239c151493efc0f
+Oct. 26, 2025, 1:42:22 p.m. GMT
+Project
+python-flask
+environment
+production
+Level
+error
+Exception
+UndefinedError: 'app.discussions.statement_forms.ResponseForm object' has no attribute 'parent_response_id'
+(8 additional frame(s) were not displayed)
+...
+  File "app/discussions/statements.py", line 455, in create_response
+    return render_template('discussions/create_response.html',
+  File "/home/runner/workspace/app/templates/discussions/create_response.html", line 1, in top-level template code
+    {% extends 'layout.html' %}
+  File "/home/runner/workspace/app/templates/layout.html", line 305, in top-level template code
+    {% block content %}{% endblock %}
+  File "/home/runner/workspace/app/templates/discussions/create_response.html", line 87, in block 'content'
+    {{ form.parent_response_id() }}
+Request
+URL
+http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-1y6avpaijgqu4.worf.replit.d…
+Method
+GET
+User
+
+Message
+Unhandled Exception: 'app.discussions.statement_forms.ResponseForm object' has no attribute 'parent_response_id'
+Tags
+		browser = Chrome 141 browser.name = Chrome client_os = macOS client_os.name = macOS device = Mac device.family = Mac environment = production handled = yes level = error logger = app mechanism = logging runtime = CPython 3.11.13 runtime.name = CPython release = ce30a7622b6a6ffcdd7f8338e4c676a07e00cc11 server_name = 001aa5d7f5db transaction = statements.create_response url = http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-...
+Mute this alert
+This email was triggered by Send a notification for high priority issues
+
+
+Home
+Notification Settings
+ISSUE	
+UndefinedError statements.create_response  'app. discussion­s. statement_­forms. ResponseFo­rm object' has no attribute 'parent_response_id'	
+Project	python-flask
+environment	production
+Level	error
+URL	http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-1y6avpaijgqu4.worf.replit.d…
+Method	GET
+
