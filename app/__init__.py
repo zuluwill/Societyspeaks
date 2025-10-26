@@ -149,26 +149,30 @@ def create_app():
         app.config['SESSION_TYPE'] = 'filesystem'
         sess.init_app(app)
 
-    # Initialize cache with Redis connection pooling and resilience
+    # Initialize cache with Redis URL instead of client to avoid connection issues
     try:
-        if hasattr(Config, 'SESSION_REDIS') and Config.SESSION_REDIS:
+        redis_url = os.getenv('REDIS_URL')
+        if redis_url and redis_url.strip():
             try:
-                # Test Redis connection for cache
-                Config.SESSION_REDIS.ping()
+                # Use CACHE_REDIS_URL which is more reliable than CACHE_REDIS_CLIENT
                 cache.init_app(app, config={
                     'CACHE_TYPE': 'RedisCache',
-                    'CACHE_REDIS_CLIENT': Config.SESSION_REDIS,  # Use the same resilient Redis client
+                    'CACHE_REDIS_URL': redis_url,  # Use URL instead of client
                     'CACHE_DEFAULT_TIMEOUT': 300,
-                    'CACHE_THRESHOLD': 500,  # Maximum number of items the cache will store
-                    'CACHE_KEY_PREFIX': 'flask_cache_'
+                    'CACHE_THRESHOLD': 500,
+                    'CACHE_KEY_PREFIX': 'flask_cache_',
+                    'CACHE_OPTIONS': {
+                        'socket_timeout': 5,
+                        'socket_connect_timeout': 5
+                    }
                 })
-                app.logger.info("Cache initialized with Redis client using connection pool and retry logic")
+                app.logger.info("Cache initialized with Redis URL")
             except Exception as e:
-                app.logger.warning(f"Redis cache connection test failed: {e}, falling back to simple cache")
+                app.logger.warning(f"Redis cache initialization failed: {e}, falling back to simple cache")
                 cache.init_app(app, config={'CACHE_TYPE': 'SimpleCache'})
         else:
             # Fallback to simple cache if no Redis available
-            app.logger.warning("No Redis connection available, using simple cache")
+            app.logger.warning("No REDIS_URL available, using simple cache")
             cache.init_app(app, config={'CACHE_TYPE': 'SimpleCache'})
     except Exception as e:
         app.logger.error(f"Cache initialization error: {e}")
