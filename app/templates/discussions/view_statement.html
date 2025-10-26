@@ -41,9 +41,9 @@
 
     <!-- Voting Buttons -->
     <div
-      class="flex items-center justify-between border-t border-gray-200 pt-4"
+      class="flex flex-col sm:flex-row items-stretch sm:items-center sm:justify-between border-t border-gray-200 pt-4 gap-4"
     >
-      <div class="flex space-x-3">
+      <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
         {% if current_user.is_authenticated %}
         <form
           method="POST"
@@ -53,7 +53,7 @@
           <input type="hidden" name="vote" value="1" />
           <button
             type="submit"
-            class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center"
+            class="bg-green-500 hover:bg-green-600 text-white px-4 sm:px-8 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center"
           >
             <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -77,7 +77,7 @@
           <input type="hidden" name="vote" value="-1" />
           <button
             type="submit"
-            class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center"
+            class="bg-red-500 hover:bg-red-600 text-white px-4 sm:px-8 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center"
           >
             <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -101,7 +101,7 @@
           <input type="hidden" name="vote" value="0" />
           <button
             type="submit"
-            class="bg-gray-400 hover:bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center"
+            class="bg-gray-400 hover:bg-gray-500 text-white px-4 sm:px-8 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center"
           >
             <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path
@@ -126,7 +126,7 @@
           <input type="hidden" name="vote" value="1" />
           <button
             type="submit"
-            class="bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center opacity-75 hover:opacity-100"
+            class="bg-green-500 hover:bg-green-600 text-white px-4 sm:px-8 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center opacity-75 hover:opacity-100"
             title="Vote without an account"
           >
             <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -151,7 +151,7 @@
           <input type="hidden" name="vote" value="-1" />
           <button
             type="submit"
-            class="bg-red-500 hover:bg-red-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center opacity-75 hover:opacity-100"
+            class="bg-red-500 hover:bg-red-600 text-white px-4 sm:px-8 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center opacity-75 hover:opacity-100"
             title="Vote without an account"
           >
             <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -176,7 +176,7 @@
           <input type="hidden" name="vote" value="0" />
           <button
             type="submit"
-            class="bg-gray-400 hover:bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-flex items-center opacity-75 hover:opacity-100"
+            class="bg-gray-400 hover:bg-gray-500 text-white px-4 sm:px-8 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center opacity-75 hover:opacity-100"
             title="Vote without an account"
           >
             <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
