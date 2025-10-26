@@ -140,10 +140,23 @@ def vote_statement(statement_id):
     if request.is_json:
         data = request.get_json()
         vote_value = int(data.get('vote', 0))
-        confidence = int(data.get('confidence', 3))  # Default to middle confidence (1-5 scale)
+        confidence = data.get('confidence', 3)  # Default to middle confidence (1-5 scale)
+        # Ensure confidence is an integer and in valid range
+        try:
+            confidence = int(confidence) if confidence is not None else 3
+            if confidence < 1 or confidence > 5:
+                confidence = 3  # Reset to default if out of range
+        except (ValueError, TypeError):
+            confidence = 3
     else:
-        vote_value = request.form.get('vote', type=int)
-        confidence = request.form.get('confidence', type=int, default=3)
+        vote_value = int(request.form.get('vote', 0)) if request.form.get('vote') else 0
+        confidence_raw = request.form.get('confidence', 3)
+        try:
+            confidence = int(confidence_raw) if confidence_raw else 3
+            if confidence < 1 or confidence > 5:
+                confidence = 3
+        except (ValueError, TypeError):
+            confidence = 3
 
     if vote_value not in [-1, 0, 1]:
         return jsonify({'error': 'Invalid vote value'}), 400
