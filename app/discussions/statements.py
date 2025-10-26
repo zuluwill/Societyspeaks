@@ -9,8 +9,9 @@ from flask_login import login_required, current_user
 from app import db, limiter
 from app.discussions.statement_forms import StatementForm, VoteForm, ResponseForm, FlagStatementForm
 from app.models import Discussion, Statement, StatementVote, Response, StatementFlag
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, or_
 from datetime import datetime, timedelta
+import hashlib
 
 statements_bp = Blueprint('statements', __name__)
 
@@ -39,15 +40,97 @@ def calculate_wilson_score(agree, disagree, confidence=0.95):
         return agree / n
 
 
+def get_user_identifier():
+    """
+    Get identifier for current user (authenticated or anonymous)
+    
+    Returns dict with:
+    - user_id: ID if authenticated, None if anonymous
+    - session_fingerprint: Hash of session + IP for anonymous tracking
+    """
+    if current_user.is_authenticated:
+        return {
+            'user_id': current_user.id,
+            'session_fingerprint': None
+        }
+    else:
+        # Create fingerprint from session ID + IP address
+        if 'fingerprint' not in session:
+            # Generate stable fingerprint for this session
+            session_id = session.get('_id', request.remote_addr or 'unknown')
+            ip_addr = request.remote_addr or 'unknown'
+            user_agent = request.headers.get('User-Agent', '')[:100]
+            
+            fingerprint_string = f"{session_id}:{ip_addr}:{user_agent}"
+            fingerprint = hashlib.sha256(fingerprint_string.encode()).hexdigest()
+            session['fingerprint'] = fingerprint
+            session.modified = True
+        
+        return {
+            'user_id': None,
+            'session_fingerprint': session['fingerprint']
+        }
+
+
+def check_statement_rate_limit(identifier):
+    """
+    Check if user has exceeded statement rate limit
+    
+    Rate limits (per hour):
+    - Anonymous users: 5 statements
+    - Authenticated users: 10 statements
+    
+    Returns: (allowed: bool, remaining: int, message: str)
+    """
+    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+    
+    # Build query based on user type
+    if identifier['user_id']:
+        # Authenticated user - 10 per hour
+        rate_limit = 10
+        recent_count = Statement.query.filter(
+            Statement.user_id == identifier['user_id'],
+            Statement.created_at > one_hour_ago
+        ).count()
+    else:
+        # Anonymous user - 5 per hour
+        rate_limit = 5
+        recent_count = Statement.query.filter(
+            Statement.session_fingerprint == identifier['session_fingerprint'],
+            Statement.created_at > one_hour_ago
+        ).count()
+    
+    remaining = rate_limit - recent_count
+    allowed = recent_count < rate_limit
+    
+    if not allowed:
+        user_type = "logged-in users" if identifier['user_id'] else "anonymous users"
+        message = f"Rate limit exceeded. {user_type.capitalize()} can post {rate_limit} statements per hour. Please try again later."
+    else:
+        message = None
+    
+    return allowed, remaining, message
+
+
 @statements_bp.route('/discussions/<int:discussion_id>/statements/create', methods=['GET', 'POST'])
-@login_required
-@limiter.limit("10 per minute")
+@limiter.limit("10 per minute")  # Removed @login_required to allow anonymous statements like pol.is
 def create_statement(discussion_id):
-    """Create a new statement in a native discussion"""
+    """Create a new statement in a native discussion (authenticated or anonymous)"""
     discussion = Discussion.query.get_or_404(discussion_id)
     
     if not discussion.has_native_statements:
         flash("This discussion does not support native statements", "error")
+        return redirect(url_for('discussions.view_discussion', 
+                              discussion_id=discussion.id, 
+                              slug=discussion.slug))
+    
+    # Get user identifier (authenticated or anonymous)
+    identifier = get_user_identifier()
+    
+    # Check rate limits (5/hour for anonymous, 10/hour for authenticated)
+    allowed, remaining, rate_message = check_statement_rate_limit(identifier)
+    if not allowed:
+        flash(rate_message, "error")
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id, 
                               slug=discussion.slug))
@@ -65,14 +148,16 @@ def create_statement(discussion_id):
             flash("This statement already exists in the discussion", "warning")
             return redirect(url_for('statements.view_statement', statement_id=existing.id))
         
-        # Phase 4.4: Semantic deduplication (optional, if user has LLM)
+        # Phase 4.4: Semantic deduplication (optional, only for authenticated users with LLM)
         from app.models import UserAPIKey
-        has_llm = UserAPIKey.query.filter_by(
-            user_id=current_user.id,
-            is_active=True
-        ).first() is not None
+        has_llm = False
+        if current_user.is_authenticated:
+            has_llm = UserAPIKey.query.filter_by(
+                user_id=current_user.id,
+                is_active=True
+            ).first() is not None
         
-        if has_llm:
+        if has_llm and current_user.is_authenticated:
             try:
                 from app.lib.llm_utils import find_duplicate_statements
                 
@@ -103,10 +188,11 @@ def create_statement(discussion_id):
                 # Don't block statement creation if deduplication fails
                 current_app.logger.warning(f"Semantic deduplication failed: {e}")
         
-        # Create new statement
+        # Create new statement (authenticated or anonymous)
         statement = Statement(
             discussion_id=discussion_id,
-            user_id=current_user.id,
+            user_id=identifier['user_id'],
+            session_fingerprint=identifier['session_fingerprint'],
             content=form.content.data.strip(),
             statement_type=form.statement_type.data
         )
@@ -115,6 +201,11 @@ def create_statement(discussion_id):
         db.session.commit()
         
         flash("Statement posted successfully!", "success")
+        
+        # For anonymous users, show upgrade prompt
+        if not current_user.is_authenticated:
+            flash("💡 Create a free account to add detailed responses, link evidence, and track your contributions!", "info")
+        
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id, 
                               slug=discussion.slug))
