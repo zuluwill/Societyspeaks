@@ -303,9 +303,21 @@ def create_app():
     # Register statements blueprint (Phase 1 - Native Statement System)
     from app.discussions.statements import statements_bp
     app.register_blueprint(statements_bp)
+    
+    # Register moderation blueprint (Phase 2.3 - Moderation Queue)
+    from app.discussions.moderation import moderation_bp
+    app.register_blueprint(moderation_bp)
+    
+    # Register consensus blueprint (Phase 3 - Consensus Clustering)
+    from app.discussions.consensus import consensus_bp
+    app.register_blueprint(consensus_bp)
 
     from app.settings.routes import settings_bp
     app.register_blueprint(settings_bp, url_prefix='/settings')
+    
+    # Register API keys blueprint (Phase 4.1 - User LLM API Keys)
+    from app.settings.api_keys import api_keys_bp
+    app.register_blueprint(api_keys_bp)
 
     from app.help import help_bp
     app.register_blueprint(help_bp, url_prefix='/help')
@@ -375,7 +387,16 @@ def create_app():
         return render_template('errors/429.html', error_code=429, 
                error_message="Too many requests. Please try again later."), 429
 
-    
+    # Initialize and start background scheduler (Phase 3.3)
+    # Only runs in production, not during migrations or tests
+    if not app.config.get('TESTING') and not app.config.get('SQLALCHEMY_MIGRATE'):
+        from app.scheduler import init_scheduler, start_scheduler
+        try:
+            init_scheduler(app)
+            start_scheduler()
+            app.logger.info("Background scheduler started successfully")
+        except Exception as e:
+            app.logger.error(f"Failed to start scheduler: {e}")
 
 
     return app

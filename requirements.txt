@@ -29,3 +29,4 @@ APScheduler==3.10.4
 
 # Encryption for API keys (Phase 4)
 cryptography>=41.0.0
+pandas>=2.0.0
