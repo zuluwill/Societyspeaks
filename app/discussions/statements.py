@@ -125,12 +125,17 @@ def create_statement(discussion_id):
 
 
 @statements_bp.route('/statements/<int:statement_id>/vote', methods=['POST'])
-@login_required
-@limiter.limit("30 per minute")
+@limiter.limit("30 per minute")  # Removed @login_required to allow anonymous voting like pol.is
 def vote_statement(statement_id):
-    """Vote on a statement (agree/disagree/unsure)"""
+    """
+    Vote on a statement (agree/disagree/unsure)
+
+    Supports both authenticated and anonymous voting (like pol.is):
+    - Authenticated users: votes stored in DB with user_id
+    - Anonymous users: votes stored in session, tracked for this browser only
+    """
     statement = Statement.query.get_or_404(statement_id)
-    
+
     # Get vote value from request (support both JSON and form data)
     if request.is_json:
         data = request.get_json()
@@ -139,62 +144,96 @@ def vote_statement(statement_id):
     else:
         vote_value = request.form.get('vote', type=int)
         confidence = request.form.get('confidence', type=int, default=3)
-    
+
     if vote_value not in [-1, 0, 1]:
         return jsonify({'error': 'Invalid vote value'}), 400
-    
-    # Check if user already voted (pol.is allows vote changes)
-    existing_vote = StatementVote.query.filter_by(
-        statement_id=statement_id,
-        user_id=current_user.id
-    ).first()
-    
-    if existing_vote:
-        # Update existing vote
-        old_vote = existing_vote.vote
-        existing_vote.vote = vote_value
-        existing_vote.confidence = confidence
-        existing_vote.updated_at = datetime.utcnow()
-        
-        # Update denormalized counts
-        if old_vote == 1:
-            statement.vote_count_agree -= 1
-        elif old_vote == -1:
-            statement.vote_count_disagree -= 1
-        elif old_vote == 0:
-            statement.vote_count_unsure -= 1
-            
-    else:
-        # Create new vote
-        existing_vote = StatementVote(
+
+    # Initialize session votes if not exists
+    if 'statement_votes' not in session:
+        session['statement_votes'] = {}
+
+    # Handle authenticated vs anonymous voting
+    if current_user.is_authenticated:
+        # AUTHENTICATED VOTING - Store in database
+        existing_vote = StatementVote.query.filter_by(
             statement_id=statement_id,
-            user_id=current_user.id,
-            discussion_id=statement.discussion_id,
-            vote=vote_value,
-            confidence=confidence
-        )
-        db.session.add(existing_vote)
-    
-    # Update denormalized counts
-    if vote_value == 1:
-        statement.vote_count_agree += 1
-    elif vote_value == -1:
-        statement.vote_count_disagree += 1
-    elif vote_value == 0:
-        statement.vote_count_unsure += 1
-    
-    db.session.commit()
-    
+            user_id=current_user.id
+        ).first()
+
+        if existing_vote:
+            # Update existing vote
+            old_vote = existing_vote.vote
+            existing_vote.vote = vote_value
+            existing_vote.confidence = confidence
+            existing_vote.updated_at = datetime.utcnow()
+
+            # Update denormalized counts
+            if old_vote == 1:
+                statement.vote_count_agree -= 1
+            elif old_vote == -1:
+                statement.vote_count_disagree -= 1
+            elif old_vote == 0:
+                statement.vote_count_unsure -= 1
+
+        else:
+            # Create new vote
+            existing_vote = StatementVote(
+                statement_id=statement_id,
+                user_id=current_user.id,
+                discussion_id=statement.discussion_id,
+                vote=vote_value,
+                confidence=confidence
+            )
+            db.session.add(existing_vote)
+
+        # Update denormalized counts
+        if vote_value == 1:
+            statement.vote_count_agree += 1
+        elif vote_value == -1:
+            statement.vote_count_disagree += 1
+        elif vote_value == 0:
+            statement.vote_count_unsure += 1
+
+        db.session.commit()
+
+    else:
+        # ANONYMOUS VOTING - Store in session only
+        statement_key = str(statement_id)
+        old_vote = session['statement_votes'].get(statement_key)
+
+        # Update denormalized counts (remove old vote if exists)
+        if old_vote is not None:
+            if old_vote == 1:
+                statement.vote_count_agree -= 1
+            elif old_vote == -1:
+                statement.vote_count_disagree -= 1
+            elif old_vote == 0:
+                statement.vote_count_unsure -= 1
+
+        # Add new vote
+        if vote_value == 1:
+            statement.vote_count_agree += 1
+        elif vote_value == -1:
+            statement.vote_count_disagree += 1
+        elif vote_value == 0:
+            statement.vote_count_unsure += 1
+
+        # Store vote in session
+        session['statement_votes'][statement_key] = vote_value
+        session.modified = True
+
+        db.session.commit()
+
     # Return updated vote counts
     return jsonify({
         'success': True,
         'vote': vote_value,
-        'counts': {
-            'agree': statement.vote_count_agree,
-            'disagree': statement.vote_count_disagree,
-            'unsure': statement.vote_count_unsure,
-            'total': statement.total_votes
-        }
+        'vote_count_agree': statement.vote_count_agree,
+        'vote_count_disagree': statement.vote_count_disagree,
+        'vote_count_unsure': statement.vote_count_unsure,
+        'total_votes': statement.total_votes,
+        'agreement_rate': statement.agreement_rate,
+        'controversy_score': statement.controversy_score
     })
 
 

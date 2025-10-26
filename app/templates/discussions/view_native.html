@@ -86,14 +86,16 @@
                 </div>
             </div>
 
-            <!-- Quick Vote Section (SIMPLIFIED AND ALWAYS VISIBLE) -->
+            <!-- Quick Vote Section (POL.IS STYLE - ANONYMOUS VOTING ENABLED) -->
             <div class="mb-4" style="background: #f8f9fa; padding: 16px; border-radius: 8px;">
-                <div class="grid grid-cols-3 gap-3" data-statement-id="{{ statement.id }}">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;" data-statement-id="{{ statement.id }}">
                     <!-- Agree Button -->
-                    <button 
+                    <button
                         onclick="voteOnStatement({{ statement.id }}, 1)"
-                        class="vote-btn bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors"
-                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7;{% endif %}"
+                        class="vote-btn"
+                        style="background-color: #22c55e; color: white; padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s;"
+                        onmouseover="this.style.backgroundColor='#16a34a'"
+                        onmouseout="this.style.backgroundColor='#22c55e'"
                         data-vote="1">
                         <span class="vote-loading" style="display: none;">
                             <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
@@ -102,16 +104,18 @@
                             </svg>
                         </span>
                         <span class="vote-content">
-                            <div style="font-size: 11px; margin-bottom: 4px;">✓ AGREE</div>
-                            <div style="font-size: 24px; font-weight: bold;" class="vote-count" data-count-type="agree">{{ statement.vote_count_agree }}</div>
+                            <div style="font-size: 11px; margin-bottom: 4px; letter-spacing: 0.5px;">✓ AGREE</div>
+                            <div style="font-size: 28px; font-weight: bold;" class="vote-count" data-count-type="agree">{{ statement.vote_count_agree }}</div>
                         </span>
                     </button>
 
                     <!-- Disagree Button -->
-                    <button 
+                    <button
                         onclick="voteOnStatement({{ statement.id }}, -1)"
-                        class="vote-btn bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors"
-                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7;{% endif %}"
+                        class="vote-btn"
+                        style="background-color: #ef4444; color: white; padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s;"
+                        onmouseover="this.style.backgroundColor='#dc2626'"
+                        onmouseout="this.style.backgroundColor='#ef4444'"
                         data-vote="-1">
                         <span class="vote-loading" style="display: none;">
                             <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
@@ -120,16 +124,18 @@
                             </svg>
                         </span>
                         <span class="vote-content">
-                            <div style="font-size: 11px; margin-bottom: 4px;">✗ DISAGREE</div>
-                            <div style="font-size: 24px; font-weight: bold;" class="vote-count" data-count-type="disagree">{{ statement.vote_count_disagree }}</div>
+                            <div style="font-size: 11px; margin-bottom: 4px; letter-spacing: 0.5px;">✗ DISAGREE</div>
+                            <div style="font-size: 28px; font-weight: bold;" class="vote-count" data-count-type="disagree">{{ statement.vote_count_disagree }}</div>
                         </span>
                     </button>
 
                     <!-- Unsure Button -->
-                    <button 
+                    <button
                         onclick="voteOnStatement({{ statement.id }}, 0)"
-                        class="vote-btn bg-gray-500 hover:bg-gray-600 text-white font-bold rounded-lg transition-colors"
-                        style="padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; {% if not current_user.is_authenticated %}opacity: 0.7;{% endif %}"
+                        class="vote-btn"
+                        style="background-color: #6b7280; color: white; padding: 16px 12px; min-height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s;"
+                        onmouseover="this.style.backgroundColor='#4b5563'"
+                        onmouseout="this.style.backgroundColor='#6b7280'"
                         data-vote="0">
                         <span class="vote-loading" style="display: none;">
                             <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
@@ -138,16 +144,14 @@
                             </svg>
                         </span>
                         <span class="vote-content">
-                            <div style="font-size: 11px; margin-bottom: 4px;">? UNSURE</div>
-                            <div style="font-size: 24px; font-weight: bold;" class="vote-count" data-count-type="unsure">{{ statement.vote_count_unsure }}</div>
+                            <div style="font-size: 11px; margin-bottom: 4px; letter-spacing: 0.5px;">? UNSURE</div>
+                            <div style="font-size: 28px; font-weight: bold;" class="vote-count" data-count-type="unsure">{{ statement.vote_count_unsure }}</div>
                         </span>
                     </button>
                 </div>
-                {% if not current_user.is_authenticated %}
                 <div class="text-center mt-3" style="font-size: 13px; color: #6b7280;">
-                    <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:underline font-semibold">Log in</a> to vote on this statement
+                    💡 Your vote is {% if not current_user.is_authenticated %}anonymous (stored in your browser){% else %}saved to your account{% endif %}
                 </div>
-                {% endif %}
             </div>
 
             <!-- Action Buttons with Helpful Descriptions -->
@@ -279,21 +283,12 @@ async function voteOnStatement(statementId, voteValue, confidence = 3) {
                 'Content-Type': 'application/json',
             },
             credentials: 'same-origin',
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 vote: voteValue,
                 confidence: confidence
             })
         });
-        
-        // Handle authentication redirect
-        if (response.status === 401 || response.redirected) {
-            showToast('Please log in to vote', 'error');
-            setTimeout(() => {
-                window.location.href = '/auth/login?next=' + encodeURIComponent(window.location.pathname);
-            }, 1000);
-            return;
-        }
-        
+
         // Try to parse JSON response
         let data;
         try {
@@ -301,38 +296,40 @@ async function voteOnStatement(statementId, voteValue, confidence = 3) {
         } catch (e) {
             throw new Error('Invalid response from server');
         }
-        
+
         if (response.ok && data.success) {
             // Update vote counts on buttons
             statementDiv.querySelector('[data-count-type="agree"]').textContent = data.vote_count_agree;
             statementDiv.querySelector('[data-count-type="disagree"]').textContent = data.vote_count_disagree;
             statementDiv.querySelector('[data-count-type="unsure"]').textContent = data.vote_count_unsure;
-            
+
             // Update total votes and stats
             const statsContainer = document.querySelector(`#statement-${statementId} .statement-stats`);
             if (statsContainer && data.total_votes !== undefined) {
                 const agreementPct = Math.round(data.agreement_rate * 100);
                 let statsHTML = `<span class="font-semibold total-votes">${data.total_votes}</span> total votes`;
-                
+
                 if (data.total_votes > 0) {
                     statsHTML += ` · <span class="font-semibold agreement-rate">${agreementPct}%</span> agreement`;
-                    
+
                     if (data.controversy_score > 0.7) {
                         statsHTML += ' · <span class="text-red-600 font-semibold">🔥 Controversial</span>';
                     }
                 }
-                
+
                 statsContainer.innerHTML = statsHTML;
             }
-            
-            // Visual feedback
-            clickedButton.classList.add('ring-2', 'ring-offset-2', 'ring-white');
+
+            // Visual feedback with pulse animation
+            clickedButton.style.transform = 'scale(1.05)';
+            clickedButton.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.5)';
             setTimeout(() => {
-                clickedButton.classList.remove('ring-2', 'ring-offset-2', 'ring-white');
-            }, 500);
-            
+                clickedButton.style.transform = 'scale(1)';
+                clickedButton.style.boxShadow = 'none';
+            }, 300);
+
             showToast('Vote recorded!', 'success');
-            
+
         } else {
             const errorMsg = data.error || 'Failed to record vote';
             showToast(errorMsg, 'error');
