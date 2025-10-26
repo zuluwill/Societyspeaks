@@ -8,7 +8,7 @@ hidden = [".pythonlibs"]
 channel = "stable-24_05"
 
 [deployment]
-run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "run:app"]
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port"]
 deploymentTarget = "autoscale"
 build = ["pip", "install", "-r", "requirements.txt"]
 
@@ -23,6 +23,10 @@ externalPort = 3001
 [[ports]]
 localPort = 39315
 externalPort = 3000
+
+[[ports]]
+localPort = 41893
+externalPort = 3002
 
 [objectStorage]
 defaultBucketID = "replit-objstore-14f1b847-9243-4a51-b979-b86c328f7947"
