@@ -1,0 +1,153 @@
+{% extends 'layout.html' %} {% block title %}API Keys - Settings{% endblock %}
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold mb-2">API Keys</h1>
+    <p class="text-gray-600">
+      Manage your LLM API keys for optional AI features
+    </p>
+  </div>
+
+  <!-- Info Banner -->
+  <div class="bg-blue-50 rounded-lg p-6 mb-6 border border-blue-200">
+    <h3 class="font-semibold text-blue-900 mb-2">🔐 Your Keys, Your Control</h3>
+    <ul class="text-blue-800 space-y-1 text-sm">
+      <li>• API keys are encrypted before storage</li>
+      <li>• You control when AI features are used</li>
+      <li>• Keys are never shared with Society Speaks servers</li>
+      <li>• Estimated cost: $0.01-0.05 per analysis</li>
+    </ul>
+  </div>
+
+  <!-- Existing Keys -->
+  {% if keys %}
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h2 class="text-xl font-semibold mb-4">Your API Keys</h2>
+    <div class="space-y-4">
+      {% for key in keys %}
+      <div class="border rounded-lg p-4 flex items-center justify-between">
+        <div class="flex-1">
+          <div class="flex items-center space-x-3">
+            <span class="font-semibold text-lg">{{ key.provider|title }}</span>
+            {% if key.is_active %}
+            <span
+              class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold"
+              >Active</span
+            >
+            {% else %}
+            <span
+              class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-semibold"
+              >Inactive</span
+            >
+            {% endif %}
+          </div>
+          <div class="text-sm text-gray-600 mt-1">
+            Key: ••••••••••••••• {% if key.last_validated %} · Last validated:
+            {{ key.last_validated.strftime('%b %d, %Y') }} {% endif %}
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          <form
+            method="POST"
+            action="{{ url_for('api_keys.revalidate_api_key', key_id=key.id) }}"
+            class="inline"
+          >
+            <button type="submit" class="text-blue-600 hover:underline text-sm">
+              Revalidate
+            </button>
+          </form>
+          <span class="text-gray-300">|</span>
+          <form
+            method="POST"
+            action="{{ url_for('api_keys.toggle_api_key', key_id=key.id) }}"
+            class="inline"
+          >
+            <button type="submit" class="text-gray-600 hover:underline text-sm">
+              {{ 'Disable' if key.is_active else 'Enable' }}
+            </button>
+          </form>
+          <span class="text-gray-300">|</span>
+          <form
+            method="POST"
+            action="{{ url_for('api_keys.delete_api_key', key_id=key.id) }}"
+            class="inline"
+            onsubmit="return confirm('Delete this API key?')"
+          >
+            <button type="submit" class="text-red-600 hover:underline text-sm">
+              Delete
+            </button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% else %}
+  <div class="bg-white rounded-lg shadow p-8 text-center mb-6">
+    <svg
+      class="mx-auto h-16 w-16 text-gray-400 mb-4"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+      />
+    </svg>
+    <h3 class="text-xl font-semibold text-gray-700 mb-2">No API Keys Yet</h3>
+    <p class="text-gray-600 mb-4">
+      Add an API key to unlock optional AI features
+    </p>
+  </div>
+  {% endif %}
+
+  <!-- Add New Key -->
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold mb-4">Add New API Key</h2>
+    <a
+      href="{{ url_for('api_keys.add_api_key') }}"
+      class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold inline-block"
+    >
+      Add API Key
+    </a>
+  </div>
+
+  <!-- Features -->
+  <div class="bg-white rounded-lg shadow p-6 mt-6">
+    <h2 class="text-xl font-semibold mb-4">AI Features (Optional)</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="border rounded-lg p-4">
+        <h3 class="font-semibold text-gray-900 mb-2">📝 AI Summaries</h3>
+        <p class="text-sm text-gray-600">
+          Generate human-readable summaries of consensus analysis results
+        </p>
+      </div>
+      <div class="border rounded-lg p-4">
+        <h3 class="font-semibold text-gray-900 mb-2">🏷️ Cluster Labels</h3>
+        <p class="text-sm text-gray-600">
+          Automatically name opinion groups based on their shared beliefs
+        </p>
+      </div>
+      <div class="border rounded-lg p-4">
+        <h3 class="font-semibold text-gray-900 mb-2">🔍 Smart Deduplication</h3>
+        <p class="text-sm text-gray-600">
+          Prevent similar statements using semantic analysis
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Back Link -->
+  <div class="mt-8">
+    <a
+      href="{{ url_for('settings.settings') }}"
+      class="text-blue-600 hover:underline"
+    >
+      ← Back to Settings
+    </a>
+  </div>
+</div>
+{% endblock %}

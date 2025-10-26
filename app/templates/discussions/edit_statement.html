@@ -1,0 +1,103 @@
+{% extends 'layout.html' %} {% block title %}Edit Statement - {{
+discussion.title }}{% endblock %} {% block content %}
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+  <!-- Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold mb-2">Edit Statement</h1>
+    <p class="text-gray-600">{{ discussion.title }}</p>
+  </div>
+
+  <!-- Edit Window Warning -->
+  <div class="bg-yellow-50 rounded-lg p-4 mb-6 border border-yellow-200">
+    <p class="text-yellow-800">
+      <strong>⏰ Edit Window:</strong> You have 10 minutes from posting to edit
+      your statement. After that, it becomes immutable to preserve discussion
+      integrity.
+    </p>
+  </div>
+
+  <!-- Edit Form -->
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <form
+      method="POST"
+      action="{{ url_for('statements.edit_statement', statement_id=statement.id) }}"
+    >
+      {{ form.hidden_tag() }}
+
+      <!-- Statement Type -->
+      <div class="mb-6">
+        {{ form.statement_type.label(class="block text-gray-700 font-semibold
+        mb-2") }}
+        <div class="flex space-x-4">
+          {% for subfield in form.statement_type %}
+          <label class="flex items-center space-x-2 cursor-pointer">
+            {{ subfield(class="text-blue-600") }}
+            <span class="text-gray-700">{{ subfield.label.text }}</span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Statement Content -->
+      <div class="mb-6">
+        {{ form.content.label(class="block text-gray-700 font-semibold mb-2") }}
+        {{ form.content(class="w-full border border-gray-300 rounded-lg px-4
+        py-3 focus:outline-none focus:ring-2 focus:ring-blue-500", rows="4",
+        maxlength="500") }}
+
+        <!-- Character Counter -->
+        <div class="flex justify-between items-center mt-2">
+          <div class="text-sm text-gray-500">
+            {% if form.content.errors %}
+            <span class="text-red-600">{{ form.content.errors[0] }}</span>
+            {% else %} Min: 10 characters | Max: 500 characters {% endif %}
+          </div>
+          <div id="charCount" class="text-sm text-gray-500">
+            <span id="currentCount"
+              >{{ form.content.data|length if form.content.data else 0 }}</span
+            >
+            / 500
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Buttons -->
+      <div class="flex space-x-4">
+        {{ form.submit(class="bg-blue-600 text-white px-8 py-3 rounded-lg
+        hover:bg-blue-700 font-semibold cursor-pointer transition-colors") }}
+        <a
+          href="{{ url_for('statements.view_statement', statement_id=statement.id) }}"
+          class="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-semibold transition-colors inline-block"
+        >
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const textarea = document.querySelector('textarea[name="content"]');
+    const currentCount = document.getElementById("currentCount");
+
+    if (textarea) {
+      textarea.addEventListener("input", function () {
+        const count = this.value.length;
+        currentCount.textContent = count;
+
+        if (count < 10) {
+          currentCount.className = "text-red-600 font-semibold";
+        } else if (count > 450) {
+          currentCount.className = "text-yellow-600 font-semibold";
+        } else {
+          currentCount.className = "text-green-600 font-semibold";
+        }
+      });
+
+      textarea.dispatchEvent(new Event("input"));
+    }
+  });
+</script>
+
+{% endblock %}

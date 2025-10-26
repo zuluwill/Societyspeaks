@@ -1,0 +1,108 @@
+{% extends 'layout.html' %}
+
+{% block title %}Add API Key - Settings{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold mb-2">Add API Key</h1>
+        <p class="text-gray-600">Enable optional AI features with your own API key</p>
+    </div>
+
+    <!-- Warning Banner -->
+    <div class="bg-yellow-50 rounded-lg p-6 mb-6 border border-yellow-200">
+        <h3 class="font-semibold text-yellow-900 mb-2">⚠️ Important</h3>
+        <ul class="text-yellow-800 space-y-1 text-sm">
+            <li>• Your API key will be encrypted before storage</li>
+            <li>• Keys are validated before saving</li>
+            <li>• You can disable or delete keys anytime</li>
+            <li>• Usage costs are charged by the provider (OpenAI/Anthropic)</li>
+        </ul>
+    </div>
+
+    <!-- Add Key Form -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <form method="POST" action="{{ url_for('api_keys.add_api_key') }}">
+            <!-- Provider Selection -->
+            <div class="mb-6">
+                <label class="block text-gray-700 font-semibold mb-2">Provider</label>
+                <select name="provider" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <option value="">Select a provider...</option>
+                    <option value="openai" {% if provider == 'openai' %}selected{% endif %}>OpenAI (GPT-4o-mini)</option>
+                    <option value="anthropic" {% if provider == 'anthropic' %}selected{% endif %}>Anthropic (Claude Haiku)</option>
+                    <option value="mistral" {% if provider == 'mistral' %}selected{% endif %}>Mistral (Coming Soon)</option>
+                </select>
+                <p class="text-sm text-gray-500 mt-1">Choose which LLM provider you want to use</p>
+            </div>
+
+            <!-- API Key Input -->
+            <div class="mb-6">
+                <label class="block text-gray-700 font-semibold mb-2">API Key</label>
+                <input type="password" name="api_key" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" required placeholder="sk-...">
+                <p class="text-sm text-gray-500 mt-1">
+                    Your API key will be encrypted and validated before storage
+                </p>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex space-x-4">
+                <button type="submit" class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-semibold">
+                    Validate & Save Key
+                </button>
+                <a href="{{ url_for('api_keys.list_api_keys') }}" class="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-semibold inline-block">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- How to Get Keys -->
+    <div class="bg-white rounded-lg shadow p-6 mt-6">
+        <h2 class="text-xl font-semibold mb-4">How to Get an API Key</h2>
+        
+        <div class="space-y-4">
+            <div class="border-l-4 border-blue-500 pl-4">
+                <h3 class="font-semibold text-blue-900 mb-2">OpenAI (Recommended for most users)</h3>
+                <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                    <li>Visit <a href="https://platform.openai.com/api-keys" target="_blank" class="text-blue-600 hover:underline">platform.openai.com/api-keys</a></li>
+                    <li>Sign up or log in to your OpenAI account</li>
+                    <li>Click "Create new secret key"</li>
+                    <li>Copy the key (it starts with "sk-")</li>
+                    <li>Paste it above and save</li>
+                </ol>
+                <p class="text-xs text-gray-500 mt-2">Estimated cost: ~$0.01-0.05 per analysis</p>
+            </div>
+
+            <div class="border-l-4 border-orange-500 pl-4">
+                <h3 class="font-semibold text-orange-900 mb-2">Anthropic Claude</h3>
+                <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                    <li>Visit <a href="https://console.anthropic.com/" target="_blank" class="text-blue-600 hover:underline">console.anthropic.com</a></li>
+                    <li>Create an account or log in</li>
+                    <li>Go to "API Keys" section</li>
+                    <li>Generate a new API key</li>
+                    <li>Copy and paste it above</li>
+                </ol>
+                <p class="text-xs text-gray-500 mt-2">Estimated cost: ~$0.01-0.03 per analysis</p>
+            </div>
+
+            <div class="border-l-4 border-gray-300 pl-4">
+                <h3 class="font-semibold text-gray-900 mb-2">Mistral</h3>
+                <p class="text-sm text-gray-600">Support coming soon</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Privacy Notice -->
+    <div class="bg-gray-50 rounded-lg p-6 mt-6">
+        <h3 class="font-semibold text-gray-900 mb-2">🔒 Privacy & Security</h3>
+        <ul class="text-sm text-gray-700 space-y-1">
+            <li>• Keys are encrypted with Fernet (industry standard)</li>
+            <li>• Keys are never logged or transmitted in plain text</li>
+            <li>• Validation only checks if the key is active</li>
+            <li>• You can delete your key anytime</li>
+            <li>• Open source: <a href="https://github.com/societyspeaks" class="text-blue-600 hover:underline">view the encryption code</a></li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
+
