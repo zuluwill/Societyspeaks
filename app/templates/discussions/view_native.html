@@ -91,7 +91,8 @@
                 <div class="grid grid-cols-3 gap-2" data-statement-id="{{ statement.id }}">
                     {% if current_user.is_authenticated %}
                     <button onclick="voteOnStatement({{ statement.id }}, 1)" 
-                            class="vote-btn bg-green-500 hover:bg-green-600 text-white px-3 py-3 rounded-lg font-semibold transition-colors flex flex-col items-center justify-center min-h-[60px] gap-1"
+                            class="vote-btn bg-green-500 hover:bg-green-600 text-white px-3 py-4 rounded-lg font-semibold transition-colors"
+                            style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70px;"
                             data-vote="1">
                         <span class="vote-loading hidden">
                             <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -109,7 +110,8 @@
                     </button>
 
                     <button onclick="voteOnStatement({{ statement.id }}, -1)" 
-                            class="vote-btn bg-red-500 hover:bg-red-600 text-white px-3 py-3 rounded-lg font-semibold transition-colors flex flex-col items-center justify-center min-h-[60px] gap-1"
+                            class="vote-btn bg-red-500 hover:bg-red-600 text-white px-3 py-4 rounded-lg font-semibold transition-colors"
+                            style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70px;"
                             data-vote="-1">
                         <span class="vote-loading hidden">
                             <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -127,7 +129,8 @@
                     </button>
 
                     <button onclick="voteOnStatement({{ statement.id }}, 0)" 
-                            class="vote-btn bg-gray-400 hover:bg-gray-500 text-white px-3 py-3 rounded-lg font-semibold transition-colors flex flex-col items-center justify-center min-h-[60px] gap-1"
+                            class="vote-btn bg-gray-400 hover:bg-gray-500 text-white px-3 py-4 rounded-lg font-semibold transition-colors"
+                            style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 70px;"
                             data-vote="0">
                         <span class="vote-loading hidden">
                             <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
