@@ -436,7 +436,7 @@ def create_response(statement_id):
             response = Response(
                 statement_id=statement.id,
                 user_id=current_user.id,
-                parent_response_id=form.parent_response_id.data if form.parent_response_id.data else None,
+                parent_response_id=None,  # Top-level response
                 position=form.position.data,
                 content=form.content.data
             )
