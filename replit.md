@@ -8,11 +8,17 @@ The application integrates with Pol.is to facilitate consensus-building discussi
 
 ## Recent Changes (October 26, 2025)
 
+### New Features
+- **Statement Seeding for Native Discussions**: Added Step 4 to discussion creation flow requiring 3-10 seed statements before publishing. Matches Pol.is workflow to ensure discussions launch with engaging content.
+- **AI Research Tools Integration**: Added links to Claude AI, ChatGPT, and Perplexity to help users quickly generate diverse seed statements using copy/paste (no API keys required).
+- **4-Step Discussion Creation**: Enhanced creation flow - (1) Configure type, (2) Pol.is embed (if applicable), (3) Discussion details, (4) Seed statements (native only).
+
 ### Critical Fixes
 - **Redis Cache Connection**: Fixed critical issue where Flask-Caching was attempting to connect to localhost:6379 instead of cloud Redis. Changed from `CACHE_REDIS_CLIENT` to `CACHE_REDIS_URL` configuration parameter.
 - **Deployment Configuration**: Configured autoscale deployment target with production-ready gunicorn settings
 - **Voting Interface**: Completed redesign with three always-visible voting buttons (AGREE, DISAGREE, UNSURE) with 80px touch targets for mobile
 - **Mobile UX**: Implemented responsive grid layout for vote buttons with proper opacity feedback for anonymous users
+- **Research Tools Dropdown**: Fixed mobile display of research tools dropdown - now appears on left side on mobile to prevent cutoff
 
 ### Production Status
 - App is ready for deployment

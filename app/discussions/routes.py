@@ -40,6 +40,7 @@ def create_discussion():
         db.session.flush()  # Flush to get discussion.id before creating statements
         
         # Handle seed statements for native discussions
+        statement_count = 0
         if form.use_native_statements.data:
             seed_statements_json = request.form.get('seed_statements')
             if seed_statements_json:
@@ -53,12 +54,12 @@ def create_discussion():
                             statement_type='claim'  # Default type for seed statements
                         )
                         db.session.add(statement)
+                    statement_count = len(seed_statements)
                 except (json.JSONDecodeError, ValueError) as e:
                     current_app.logger.error(f"Error parsing seed statements: {e}")
         
         db.session.commit()
         
-        statement_count = len(seed_statements) if form.use_native_statements.data and seed_statements_json else 0
         flash(f"Discussion created successfully with {statement_count} seed statements!" if statement_count > 0 else "Discussion created successfully!", "success")
 
         # Redirect with both discussion_id and slug
