@@ -63,7 +63,19 @@ def register():
         verification = request.form.get('verification')
         expected = request.form.get('expected')
         
-        if not verification or not expected or int(verification) != int(expected):
+        # Check if values exist and are numeric before converting
+        if not verification or not expected:
+            flash("Incorrect verification answer. Please try again.", "error")
+            return redirect(url_for('auth.register'))
+        
+        try:
+            verification_int = int(verification)
+            expected_int = int(expected)
+        except (ValueError, TypeError):
+            flash("Incorrect verification answer. Please try again.", "error")
+            return redirect(url_for('auth.register'))
+        
+        if verification_int != expected_int:
             flash("Incorrect verification answer. Please try again.", "error")
             return redirect(url_for('auth.register'))
 
