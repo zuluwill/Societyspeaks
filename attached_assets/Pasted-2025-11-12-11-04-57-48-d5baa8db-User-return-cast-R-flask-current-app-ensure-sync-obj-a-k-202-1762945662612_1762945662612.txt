@@ -1,0 +1,236 @@
+2025-11-12 11:04:57.48
+d5baa8db
+User
+return cast(R, flask.current_app.ensure_sync(obj)(*a, **k))
+2025-11-12 11:04:57.48
+d5baa8db
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-12 11:04:57.48
+d5baa8db
+User
+File "/home/runner/workspace/app/auth/routes.py", line 66, in register
+2025-11-12 11:04:57.48
+d5baa8db
+User
+if not verification or not expected or int(verification) != int(expected):
+2025-11-12 11:04:57.48
+d5baa8db
+User
+^^^^^^^^^^^^^^^^^
+2025-11-12 11:04:57.48
+d5baa8db
+User
+ValueError: invalid literal for int() with base 10: 'kin9mt'
+2025-11-12 11:05:12.77
+d5baa8db
+User
+Unhandled Exception: invalid literal for int() with base 10: 'iv2cqy'
+2025-11-12 11:05:12.77
+d5baa8db
+User
+Traceback (most recent call last):
+2025-11-12 11:05:12.77
+d5baa8db
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1484, in full_dispatch_request
+2025-11-12 11:05:12.77
+d5baa8db
+User
+rv = self.dispatch_request()
+2025-11-12 11:05:12.77
+d5baa8db
+User
+^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-12 11:05:12.77
+d5baa8db
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1469, in dispatch_request
+2025-11-12 11:05:12.77
+d5baa8db
+User
+return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+2025-11-12 11:05:12.77
+d5baa8db
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-12 11:05:12.77
+d5baa8db
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_limiter/extension.py", line 1303, in __inner
+2025-11-12 11:05:12.77
+d5baa8db
+User
+return cast(R, flask.current_app.ensure_sync(obj)(*a, **k))
+2025-11-12 11:05:12.77
+d5baa8db
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-12 11:05:12.77
+d5baa8db
+User
+File "/home/runner/workspace/app/auth/routes.py", line 66, in register
+2025-11-12 11:05:12.77
+d5baa8db
+User
+if not verification or not expected or int(verification) != int(expected):
+2025-11-12 11:05:12.77
+d5baa8db
+User
+^^^^^^^^^^^^^^^^^
+2025-11-12 11:05:12.77
+d5baa8db
+User
+ValueError: invalid literal for int() with base 10: 'iv2cqy'
+2025-11-12 11:05:14.59
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:14.80
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:14.97
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:15.24
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:15.43
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:15.60
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:15.76
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:15.92
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:16.12
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:16.27
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:16.43
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:16.62
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:16.79
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:16.97
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:17.21
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:17.37
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:17.54
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:17.70
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:18.15
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:18.31
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:18.47
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:18.63
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:05:18.79
+d5baa8db
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-11-12 11:06:33.63
+d5baa8db
+User
+Unhandled Exception: invalid literal for int() with base 10: 'svc7ps'
+2025-11-12 11:06:33.63
+d5baa8db
+User
+Traceback (most recent call last):
+2025-11-12 11:06:33.63
+d5baa8db
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1484, in full_dispatch_request
+2025-11-12 11:06:33.63
+d5baa8db
+User
+rv = self.dispatch_request()
+2025-11-12 11:06:33.63
+d5baa8db
+User
+^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-12 11:06:33.63
+d5baa8db
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask/app.py", line 1469, in dispatch_request
+2025-11-12 11:06:33.63
+d5baa8db
+User
+return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+2025-11-12 11:06:33.63
+d5baa8db
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-12 11:06:33.63
+d5baa8db
+User
+File "/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/flask_limiter/extension.py", line 1303, in __inner
+2025-11-12 11:06:33.63
+d5baa8db
+User
+return cast(R, flask.current_app.ensure_sync(obj)(*a, **k))
+2025-11-12 11:06:33.63
+d5baa8db
+User
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2025-11-12 11:06:33.63
+d5baa8db
+User
+File "/home/runner/workspace/app/auth/routes.py", line 66, in register
+2025-11-12 11:06:33.63
+d5baa8db
+User
+if not verification or not expected or int(verification) != int(expected):
+2025-11-12 11:06:33.63
+d5baa8db
+User
+^^^^^^^^^^^^^^^^^
+2025-11-12 11:06:33.63
+d5baa8db
+User
+ValueError: invalid literal for int() with base 10: 'svc7ps'
