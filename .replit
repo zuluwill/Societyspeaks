@@ -1,6 +1,6 @@
 run =  ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
 entrypoint = "run.py"
-modules = ["nodejs-20", "python-3.11", "postgresql-16", "python3"]
+modules = ["nodejs-20", "python-3.11", "python3", "postgresql-16"]
 
 hidden = [".pythonlibs"]
 
@@ -17,6 +17,10 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
+localPort = 34579
+externalPort = 3003
+
+[[ports]]
 localPort = 35933
 externalPort = 3001
 
@@ -27,10 +31,6 @@ externalPort = 3002
 [[ports]]
 localPort = 39315
 externalPort = 3000
-
-[[ports]]
-localPort = 43651
-externalPort = 3003
 
 [objectStorage]
 defaultBucketID = "replit-objstore-14f1b847-9243-4a51-b979-b86c328f7947"
