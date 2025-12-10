@@ -5,7 +5,7 @@ Forms for Native Statement System
 Based on pol.is patterns with enhancements for Society Speaks
 """
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectField, SubmitField, IntegerField
+from wtforms import StringField, TextAreaField, SelectField, RadioField, SubmitField, IntegerField
 from wtforms.validators import DataRequired, Length, Optional, NumberRange
 
 
@@ -40,7 +40,7 @@ class ResponseForm(FlaskForm):
         DataRequired(message="Response is required"),
         Length(min=10, max=2000, message="Response must be 10-2000 characters")
     ])
-    position = SelectField('Position', choices=[
+    position = RadioField('Position', choices=[
         ('pro', 'Supporting'),
         ('con', 'Opposing'),
         ('neutral', 'Neutral/Clarifying')
