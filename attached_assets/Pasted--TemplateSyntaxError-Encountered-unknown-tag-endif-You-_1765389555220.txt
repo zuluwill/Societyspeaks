@@ -1,0 +1,931 @@
+# TemplateSyntaxError: Encountered unknown tag 'endif'. You probably made a nesting mistake. Jinja is expecting this tag, but currently looking for 'endblock'. The innermost block that needs to be closed is 'block'.
+
+**Issue ID:** 82459444
+**Project:** python-flask
+**Date:** 10/12/2025, 17:33:34
+
+## Tags
+
+- **browser:** Chrome 114
+- **browser.name:** Chrome
+- **client_os:** Windows
+- **client_os.name:** Windows
+- **environment:** production
+- **handled:** yes
+- **level:** error
+- **logger:** app
+- **mechanism:** logging
+- **runtime:** CPython 3.11.13
+- **runtime.name:** CPython
+- **server_name:** localhost
+- **transaction:** discussions.search_discussions
+- **url:** https://societyspeaks.io/discussions/search
+
+## Exceptions
+
+### Exception 1
+**Type:** TemplateSyntaxError
+**Value:** Encountered unknown tag 'endif'. You probably made a nesting mistake. Jinja is expecting this tag, but currently looking for 'endblock'. The innermost block that needs to be closed is 'block'.
+
+#### Stacktrace
+
+```
+ template in /home/runner/workspace/app/templates/discussions/search_discussions.html [Line 171] (In app)
+                    </svg>
+                    Start a New Discussion
+                </a>
+            </div>
+        </div>
+    {% endif %}  <-- SUSPECT LINE
+
+    <script>
+        const cityCache = {};
+
+        function fetchCities() {
+---
+Variable values:
+{}
+
+=======
+------
+ handle_exception in jinja2/environment.py [Line 936] (Not in app)
+        """Exception handling helper.  This is used internally to either raise
+        rewritten exceptions or return a rendered traceback for the template.
+        """
+        from .debug import rewrite_traceback_stack
+
+        raise rewrite_traceback_stack(source=source)  <-- SUSPECT LINE
+
+    def join_path(self, template: str, parent: str) -> str:
+        """Join a template with the parent.  By default all the lookups are
+        relative to the loader root so this method returns the `template`
+        parameter unchanged, but if the paths should be relative to the
+---
+Variable values:
+{
+  "rewrite_traceback_stack": "<function rewrite_traceback_stack at 0x7f0915619120>",
+  "self": "<flask.templating.Environment object at 0x7f0933a8d450>",
+  "source": "'{% extends \"layout.html\" %}\\n {% from \"components/discussion_card.html\" import discussion_card %}\\n\\n{% block head %}\\n    <title>Explore Discussions on SocietySpeaks{% if search_term %} - Search Results for \"{{ search_term }}\"{% endif %}</title>\\n    <meta name=\"description\" content=\"Discover and join meaningful discussions on topics that matter. {% if search_term %}Results for \\'{{ search_term }}\\'{% endif %}.\">\\n    <meta name=\"keywords\" content=\"society discussions, explore discussions{% if search_term %}, {{ search_term }}{% endif %}\">\\n    <link rel=\"canonical\" href=\"{{ url_for(\\'discussions.search_discussions\\', _external=True) }}\">\\n\\n    <!-- Structured Data for SEO -->\\n    <script type=\"application/ld+json\">\\n    {\\n      \"@context\": \"https://schema.org\",\\n      \"@type\": \"SearchResultsPage\",\\n      \"name\": \"Explore Discussions\",\\n      \"description\": \"Search discussions on SocietySpeaks. {% if search_term %}Results for \\'{{ search_term }}\\'.{% endif %}\",\\n      \"query\": \"{{ search_term or \\'\\' ..."
+}
+
+=======
+------
+ compile in jinja2/environment.py [Line 768] (Not in app)
+                return source
+            if filename is None:
+                filename = "<template>"
+            return self._compile(source, filename)
+        except TemplateSyntaxError:
+            self.handle_exception(source=source_hint)  <-- SUSPECT LINE
+
+    def compile_expression(
+        self, source: str, undefined_to_none: bool = True
+    ) -> "TemplateExpression":
+        """A handy helper method that returns a callable that accepts keyword
+---
+Variable values:
+{
+  "defer_init": "False",
+  "filename": "'/home/runner/workspace/app/templates/discussions/search_discussions.html'",
+  "name": "'discussions/search_discussions.html'",
+  "raw": "False",
+  "self": "<flask.templating.Environment object at 0x7f0933a8d450>",
+  "source": "'{% extends \"layout.html\" %}\\n {% from \"components/discussion_card.html\" import discussion_card %}\\n\\n{% block head %}\\n    <title>Explore Discussions on SocietySpeaks{% if search_term %} - Search Results for \"{{ search_term }}\"{% endif %}</title>\\n    <meta name=\"description\" content=\"Discover and join meaningful discussions on topics that matter. {% if search_term %}Results for \\'{{ search_term }}\\'{% endif %}.\">\\n    <meta name=\"keywords\" content=\"society discussions, explore discussions{% if search_term %}, {{ search_term }}{% endif %}\">\\n    <link rel=\"canonical\" href=\"{{ url_for(\\'discussions.search_discussions\\', _external=True) }}\">\\n\\n    <!-- Structured Data for SEO -->\\n    <script type=\"application/ld+json\">\\n    {\\n      \"@context\": \"https://schema.org\",\\n      \"@type\": \"SearchResultsPage\",\\n      \"name\": \"Explore Discussions\",\\n      \"description\": \"Search discussions on SocietySpeaks. {% if search_term %}Results for \\'{{ search_term }}\\'.{% endif %}\",\\n      \"query\": \"{{ search_term or \\'\\' ...",
+  "source_hint": "'{% extends \"layout.html\" %}\\n {% from \"components/discussion_card.html\" import discussion_card %}\\n\\n{% block head %}\\n    <title>Explore Discussions on SocietySpeaks{% if search_term %} - Search Results for \"{{ search_term }}\"{% endif %}</title>\\n    <meta name=\"description\" content=\"Discover and join meaningful discussions on topics that matter. {% if search_term %}Results for \\'{{ search_term }}\\'{% endif %}.\">\\n    <meta name=\"keywords\" content=\"society discussions, explore discussions{% if search_term %}, {{ search_term }}{% endif %}\">\\n    <link rel=\"canonical\" href=\"{{ url_for(\\'discussions.search_discussions\\', _external=True) }}\">\\n\\n    <!-- Structured Data for SEO -->\\n    <script type=\"application/ld+json\">\\n    {\\n      \"@context\": \"https://schema.org\",\\n      \"@type\": \"SearchResultsPage\",\\n      \"name..."
+}
+
+=======
+------
+ load in jinja2/loaders.py [Line 138] (Not in app)
+            code = bucket.code
+
+        # if we don't have code so far (not cached, no longer up to
+        # date) etc. we compile the template
+        if code is None:
+            code = environment.compile(source, name, filename)  <-- SUSPECT LINE
+
+        # if the bytecode cache is available and the bucket doesn't
+        # have a code so far, we give the bucket the new code and put
+        # it back to the bytecode cache.
+        if bcc is not None and bucket.code is None:
+---
+Variable values:
+{
+  "bcc": "None",
+  "code": "None",
+  "environment": "<flask.templating.Environment object at 0x7f0933a8d450>",
+  "filename": "'/home/runner/workspace/app/templates/discussions/search_discussions.html'",
+  "globals": {
+    "config": {
+      "APPLICATION_ROOT": "'/'",
+      "DEBUG": "False",
+      "PERMANENT_SESSION_LIFETIME": "datetime.timedelta(days=7)",
+      "PROPAGATE_EXCEPTIONS": "None",
+      "SECRET_KEY": "[Filtered]",
+      "SERVER_NAME": "None",
+      "SESSION_COOKIE_DOMAIN": "None",
+      "SESSION_COOKIE_NAME": "'session'",
+      "TESTING": "False",
+      "USE_X_SENDFILE": "False"
+    },
+    "cycler": "<class 'jinja2.utils.Cycler'>",
+    "dict": "<class 'dict'>",
+    "get_flashed_messages": "<function get_flashed_messages at 0x7f09366b40e0>",
+    "joiner": "<class 'jinja2.utils.Joiner'>",
+    "lipsum": "<function generate_lorem_ipsum at 0x7f09364e84a0>",
+    "namespace": "<class 'jinja2.utils.Namespace'>",
+    "range": "<class 'range'>",
+    "request": "<Request 'https://societyspeaks.io/discussions/search' [GET]>",
+    "url_for": "<bound method Flask.url_for of <Flask 'app'>>"
+  },
+  "name": "'discussions/search_discussions.html'",
+  "self": "<flask.templating.DispatchingJinjaLoader object at 0x7f0933a8d490>",
+  "source": "'{% extends \"layout.html\" %}\\n {% from \"components/discussion_card.html\" import discussion_card %}\\n\\n{% block head %}\\n    <title>Explore Discussions on SocietySpeaks{% if search_term %} - Search Results for \"{{ search_term }}\"{% endif %}</title>\\n    <meta name=\"description\" content=\"Discover and join meaningful discussions on topics that matter. {% if search_term %}Results for \\'{{ search_term }}\\'{% endif %}.\">\\n    <meta name=\"keywords\" content=\"society discussions, explore discussions{% if search_term %}, {{ search_term }}{% endif %}\">\\n    <link rel=\"canonical\" href=\"{{ url_for(\\'discussions.search_discussions\\', _external=True) }}\">\\n\\n    <!-- Structured Data for SEO -->\\n    <script type=\"application/ld+json\">\\n    {\\n      \"@context\": \"https://schema.org\",\\n      \"@type\": \"SearchResultsPage\",\\n      \"name\": \"Explore Discussions\",\\n      \"description\": \"Search discussions on SocietySpeaks. {% if search_term %}Results for \\'{{ search_term }}\\'.{% endif %}\",\\n      \"query\": \"{{ search_term or \\'\\' ...",
+  "uptodate": "<function FileSystemLoader.get_source.<locals>.uptodate at 0x7f091561bb00>"
+}
+
+=======
+------
+ _load_template in jinja2/environment.py [Line 969] (Not in app)
+                if globals:
+                    template.globals.update(globals)
+
+                return template
+
+        template = self.loader.load(self, name, self.make_globals(globals))  <-- SUSPECT LINE
+
+        if self.cache is not None:
+            self.cache[cache_key] = template
+        return template
+
+---
+Variable values:
+{
+  "cache_key": [
+    "<weakref at 0x7f091816c130; to 'DispatchingJinjaLoader' at 0x7f0933a8d490>",
+    "'discussions/search_discussions.html'"
+  ],
+  "globals": "None",
+  "name": "'discussions/search_discussions.html'",
+  "self": "<flask.templating.Environment object at 0x7f0933a8d450>",
+  "template": "None"
+}
+
+=======
+------
+ get_template in jinja2/environment.py [Line 1010] (Not in app)
+        if isinstance(name, Template):
+            return name
+        if parent is not None:
+            name = self.join_path(name, parent)
+
+        return self._load_template(name, globals)  <-- SUSPECT LINE
+
+    @internalcode
+    def select_template(
+        self,
+        names: t.Iterable[t.Union[str, "Template"]],
+---
+Variable values:
+{
+  "globals": "None",
+  "name": "'discussions/search_discussions.html'",
+  "parent": "None",
+  "self": "<flask.templating.Environment object at 0x7f0933a8d450>"
+}
+
+=======
+------
+ get_or_select_template in jinja2/environment.py [Line 1081] (Not in app)
+        is given, or :meth:`get_template` if one name is given.
+
+        .. versionadded:: 2.3
+        """
+        if isinstance(template_name_or_list, (str, Undefined)):
+            return self.get_template(template_name_or_list, parent, globals)  <-- SUSPECT LINE
+        elif isinstance(template_name_or_list, Template):
+            return template_name_or_list
+        return self.select_template(template_name_or_list, parent, globals)
+
+    def from_string(
+---
+Variable values:
+{
+  "globals": "None",
+  "parent": "None",
+  "self": "<flask.templating.Environment object at 0x7f0933a8d450>",
+  "template_name_or_list": "'discussions/search_discussions.html'"
+}
+
+=======
+------
+ render_template in flask/templating.py [Line 150] (Not in app)
+    :param template_name_or_list: The name of the template to render. If
+        a list is given, the first name to exist will be rendered.
+    :param context: The variables to make available in the template.
+    """
+    app = current_app._get_current_object()  # type: ignore[attr-defined]
+    template = app.jinja_env.get_or_select_template(template_name_or_list)  <-- SUSPECT LINE
+    return _render(app, template, context)
+
+
+def render_template_string(source: str, **context: t.Any) -> str:
+    """Render a template from the given source string with the given
+---
+Variable values:
+{
+  "app": "<Flask 'app'>",
+  "context": {
+    "cities_by_country": {
+      "Afghanistan": [
+        "'Herat'",
+        "'Kabul'",
+        "'Kandahar'",
+        "'Molah'",
+        "'Rana'",
+        "'Shar'",
+        "'Sharif'",
+        "'Wazir Akbar Khan'"
+      ],
+      "Albania": [
+        "'Elbasan'",
+        "'Petran'",
+        "'Pogradec'",
+        "'Shkoder'",
+        "'Tirana'",
+        "'Ura Vajgurore'"
+      ],
+      "Algeria": [
+        "'Algiers'",
+        "'Annaba'",
+        "'Azazga'",
+        "'Batna City'",
+        "'Blida'",
+        "'Bordj'",
+        "'Bordj Bou Arreridj'",
+        "'Bougara'",
+        "'Cheraga'",
+        "'Chlef'"
+      ],
+      "Andorra": [
+        "'Andorra la Vella'",
+        "'Canillo'",
+        "'Encamp'",
+        "'Engordany'",
+        "'Escaldes-Engordany'",
+        "'La Massana'",
+        "'Llorts'",
+        "'Ordino'",
+        "'Santa Coloma'",
+        "'Sispony'"
+      ],
+      "Angola": [
+        "'Ambriz'",
+        "'Benguela'",
+        "'Cabinda'",
+        "'Cacole'",
+        "'Camabatela'",
+        "'Cazeta'",
+        "'Huambo'",
+        "'Kuito'",
+        "'Lobito'",
+        "'Luanda'"
+      ],
+      "Antigua and Barbuda": [
+        "'All Saints'",
+        "'Cassada Gardens'",
+        "'Codrington'",
+        "'Old Road'",
+        "'Parham'",
+        "'Woods'"
+      ],
+      "Argentina": [
+        "'28 de Noviembre'",
+        "'Abasto'",
+        "'Acassuso'",
+        "'Acebal'",
+        "'Acevedo'",
+        "'Adelia Maria'",
+        "'Agua de Oro'",
+        "'Albardon'",
+        "'Albarellos'",
+        "'Alberdi'"
+      ],
+      "Armenia": [
+        "'Abovyan'",
+        "'Agarak'",
+        "'Apaga'",
+        "'Aparan'",
+        "'Arabkir'",
+        "'Ashtarak'",
+        "'Erebuni Fortress'",
+        "'Hrazdan'",
+        "'Ijevan'",
+        "'Jermuk'"
+      ],
+      "Aruba": [
+        "'Noord'",
+        "'Oranjestad'",
+        "'Palm Beach'",
+        "'Paradera'",
+        "'Ponton'",
+        "'Sabaneta'",
+        "'San Barbola'",
+        "'Santa Cruz'",
+        "'Sero Blanco'",
+        "'Sint Nicolaas'"
+      ],
+      "Australia": [
+        "'Abbotsford'",
+        "'Abbotsford'",
+        "'Abbotsham'",
+        "'Aberdeen'",
+        "'Aberfoyle'",
+        "'Aberglasslyn'",
+        "'Abermain'",
+        "'Acacia Ridge'",
+        "'Adamstown'",
+        "'Adelaide'"
+      ]
+    },
+    "countries": [
+      "'Afghanistan'",
+      "'Albania'",
+      "'Algeria'",
+      "'Andorra'",
+      "'Angola'",
+      "'Antigua and Barbuda'",
+      "'Argentina'",
+      "'Armenia'",
+      "'Aruba'",
+      "'Australia'"
+    ],
+    "discussions": "<flask_sqlalchemy.pagination.QueryPagination object at 0x7f09156e2410>",
+    "search_term": "''"
+  },
+  "template_name_or_list": "'discussions/search_discussions.html'"
+}
+
+=======
+------
+ search_discussions in app/discussions/routes.py [Line 202] (In app)
+            keywords=keywords,
+            page=page,
+            sort=sort  # Pass sort parameter here
+        )
+
+        return render_template(  <-- SUSPECT LINE
+            'discussions/search_discussions.html',
+            discussions=discussions,
+            search_term=search_term,
+            countries=countries,
+            cities_by_country=cities_by_country
+---
+Variable values:
+{
+  "cities_by_country": {
+    "Afghanistan": [
+      "'Herat'",
+      "'Kabul'",
+      "'Kandahar'",
+      "'Molah'",
+      "'Rana'",
+      "'Shar'",
+      "'Sharif'",
+      "'Wazir Akbar Khan'"
+    ],
+    "Albania": [
+      "'Elbasan'",
+      "'Petran'",
+      "'Pogradec'",
+      "'Shkoder'",
+      "'Tirana'",
+      "'Ura Vajgurore'"
+    ],
+    "Algeria": [
+      "'Algiers'",
+      "'Annaba'",
+      "'Azazga'",
+      "'Batna City'",
+      "'Blida'",
+      "'Bordj'",
+      "'Bordj Bou Arreridj'",
+      "'Bougara'",
+      "'Cheraga'",
+      "'Chlef'"
+    ],
+    "Andorra": [
+      "'Andorra la Vella'",
+      "'Canillo'",
+      "'Encamp'",
+      "'Engordany'",
+      "'Escaldes-Engordany'",
+      "'La Massana'",
+      "'Llorts'",
+      "'Ordino'",
+      "'Santa Coloma'",
+      "'Sispony'"
+    ],
+    "Angola": [
+      "'Ambriz'",
+      "'Benguela'",
+      "'Cabinda'",
+      "'Cacole'",
+      "'Camabatela'",
+      "'Cazeta'",
+      "'Huambo'",
+      "'Kuito'",
+      "'Lobito'",
+      "'Luanda'"
+    ],
+    "Antigua and Barbuda": [
+      "'All Saints'",
+      "'Cassada Gardens'",
+      "'Codrington'",
+      "'Old Road'",
+      "'Parham'",
+      "'Woods'"
+    ],
+    "Argentina": [
+      "'28 de Noviembre'",
+      "'Abasto'",
+      "'Acassuso'",
+      "'Acebal'",
+      "'Acevedo'",
+      "'Adelia Maria'",
+      "'Agua de Oro'",
+      "'Albardon'",
+      "'Albarellos'",
+      "'Alberdi'"
+    ],
+    "Armenia": [
+      "'Abovyan'",
+      "'Agarak'",
+      "'Apaga'",
+      "'Aparan'",
+      "'Arabkir'",
+      "'Ashtarak'",
+      "'Erebuni Fortress'",
+      "'Hrazdan'",
+      "'Ijevan'",
+      "'Jermuk'"
+    ],
+    "Aruba": [
+      "'Noord'",
+      "'Oranjestad'",
+      "'Palm Beach'",
+      "'Paradera'",
+      "'Ponton'",
+      "'Sabaneta'",
+      "'San Barbola'",
+      "'Santa Cruz'",
+      "'Sero Blanco'",
+      "'Sint Nicolaas'"
+    ],
+    "Australia": [
+      "'Abbotsford'",
+      "'Abbotsford'",
+      "'Abbotsham'",
+      "'Aberdeen'",
+      "'Aberfoyle'",
+      "'Aberglasslyn'",
+      "'Abermain'",
+      "'Acacia Ridge'",
+      "'Adamstown'",
+      "'Adelaide'"
+    ]
+  },
+  "city": "None",
+  "countries": [
+    "'Afghanistan'",
+    "'Albania'",
+    "'Algeria'",
+    "'Andorra'",
+    "'Angola'",
+    "'Antigua and Barbuda'",
+    "'Argentina'",
+    "'Armenia'",
+    "'Aruba'",
+    "'Australia'"
+  ],
+  "country": "None",
+  "f": "<_io.TextIOWrapper name='/home/runner/workspace/app/static/data/cities_by_country.json' mode='r' encoding='UTF-8'>",
+  "json_path": "'/home/runner/workspace/app/static/data/cities_by_country.json'",
+  "keywords": "''",
+  "page": "1",
+  "search_term": "''",
+  "topic": "None"
+}
+
+=======
+------
+```
+### Exception 2
+**Type:** TemplateSyntaxError
+**Value:** Encountered unknown tag 'endif'. You probably made a nesting mistake. Jinja is expecting this tag, but currently looking for 'endblock'. The innermost block that needs to be closed is 'block'.
+
+#### Stacktrace
+
+```
+ template in /home/runner/workspace/app/templates/discussions/search_discussions.html [Line 171] (In app)
+                    </svg>
+                    Start a New Discussion
+                </a>
+            </div>
+        </div>
+    {% endif %}  <-- SUSPECT LINE
+
+    <script>
+        const cityCache = {};
+
+        function fetchCities() {
+---
+Variable values:
+{}
+
+=======
+ handle_exception in jinja2/environment.py [Line 936] (Not in app)
+        """Exception handling helper.  This is used internally to either raise
+        rewritten exceptions or return a rendered traceback for the template.
+        """
+        from .debug import rewrite_traceback_stack
+
+        raise rewrite_traceback_stack(source=source)  <-- SUSPECT LINE
+
+    def join_path(self, template: str, parent: str) -> str:
+        """Join a template with the parent.  By default all the lookups are
+        relative to the loader root so this method returns the `template`
+        parameter unchanged, but if the paths should be relative to the
+---
+Variable values:
+{
+  "rewrite_traceback_stack": "<function rewrite_traceback_stack at 0x7f0915619120>",
+  "self": "<flask.templating.Environment object at 0x7f0933a8d450>",
+  "source": "'{% extends \"layout.html\" %}\\n {% from \"components/discussion_card.html\" import discussion_card %}\\n\\n{% block head %}\\n    <title>Explore Discussions on SocietySpeaks{% if search_term %} - Search Results for \"{{ search_term }}\"{% endif %}</title>\\n    <meta name=\"description\" content=\"Discover and join meaningful discussions on topics that matter. {% if search_term %}Results for \\'{{ search_term }}\\'{% endif %}.\">\\n    <meta name=\"keywords\" content=\"society discussions, explore discussions{% if search_term %}, {{ search_term }}{% endif %}\">\\n    <link rel=\"canonical\" href=\"{{ url_for(\\'discussions.search_discussions\\', _external=True) }}\">\\n\\n    <!-- Structured Data for SEO -->\\n    <script type=\"application/ld+json\">\\n    {\\n      \"@context\": \"https://schema.org\",\\n      \"@type\": \"SearchResultsPage\",\\n      \"name\": \"Explore Discussions\",\\n      \"description\": \"Search discussions on SocietySpeaks. {% if search_term %}Results for \\'{{ search_term }}\\'.{% endif %}\",\\n      \"query\": \"{{ search_term or \\'\\' ..."
+}
+
+=======
+ compile in jinja2/environment.py [Line 768] (Not in app)
+                return source
+            if filename is None:
+                filename = "<template>"
+            return self._compile(source, filename)
+        except TemplateSyntaxError:
+            self.handle_exception(source=source_hint)  <-- SUSPECT LINE
+
+    def compile_expression(
+        self, source: str, undefined_to_none: bool = True
+    ) -> "TemplateExpression":
+        """A handy helper method that returns a callable that accepts keyword
+---
+Variable values:
+{
+  "defer_init": "False",
+  "filename": "'/home/runner/workspace/app/templates/discussions/search_discussions.html'",
+  "name": "'discussions/search_discussions.html'",
+  "raw": "False",
+  "self": "<flask.templating.Environment object at 0x7f0933a8d450>",
+  "source": "'{% extends \"layout.html\" %}\\n {% from \"components/discussion_card.html\" import discussion_card %}\\n\\n{% block head %}\\n    <title>Explore Discussions on SocietySpeaks{% if search_term %} - Search Results for \"{{ search_term }}\"{% endif %}</title>\\n    <meta name=\"description\" content=\"Discover and join meaningful discussions on topics that matter. {% if search_term %}Results for \\'{{ search_term }}\\'{% endif %}.\">\\n    <meta name=\"keywords\" content=\"society discussions, explore discussions{% if search_term %}, {{ search_term }}{% endif %}\">\\n    <link rel=\"canonical\" href=\"{{ url_for(\\'discussions.search_discussions\\', _external=True) }}\">\\n\\n    <!-- Structured Data for SEO -->\\n    <script type=\"application/ld+json\">\\n    {\\n      \"@context\": \"https://schema.org\",\\n      \"@type\": \"SearchResultsPage\",\\n      \"name\": \"Explore Discussions\",\\n      \"description\": \"Search discussions on SocietySpeaks. {% if search_term %}Results for \\'{{ search_term }}\\'.{% endif %}\",\\n      \"query\": \"{{ search_term or \\'\\' ...",
+  "source_hint": "'{% extends \"layout.html\" %}\\n {% from \"components/discussion_card.html\" import discussion_card %}\\n\\n{% block head %}\\n    <title>Explore Discussions on SocietySpeaks{% if search_term %} - Search Results for \"{{ search_term }}\"{% endif %}</title>\\n    <meta name=\"description\" content=\"Discover and join meaningful discussions on topics that matter. {% if search_term %}Results for \\'{{ search_term }}\\'{% endif %}.\">\\n    <meta name=\"keywords\" content=\"society discussions, explore discussions{% if search_term %}, {{ search_term }}{% endif %}\">\\n    <link rel=\"canonical\" href=\"{{ url_for(\\'discussions.search_discussions\\', _external=True) }}\">\\n\\n    <!-- Structured Data for SEO -->\\n    <script type=\"application/ld+json\">\\n    {\\n      \"@context\": \"https://schema.org\",\\n      \"@type\": \"SearchResultsPage\",\\n      \"name..."
+}
+
+=======
+ load in jinja2/loaders.py [Line 138] (Not in app)
+            code = bucket.code
+
+        # if we don't have code so far (not cached, no longer up to
+        # date) etc. we compile the template
+        if code is None:
+            code = environment.compile(source, name, filename)  <-- SUSPECT LINE
+
+        # if the bytecode cache is available and the bucket doesn't
+        # have a code so far, we give the bucket the new code and put
+        # it back to the bytecode cache.
+        if bcc is not None and bucket.code is None:
+---
+Variable values:
+{
+  "bcc": "None",
+  "code": "None",
+  "environment": "<flask.templating.Environment object at 0x7f0933a8d450>",
+  "filename": "'/home/runner/workspace/app/templates/discussions/search_discussions.html'",
+  "globals": {
+    "config": {
+      "APPLICATION_ROOT": "'/'",
+      "DEBUG": "False",
+      "PERMANENT_SESSION_LIFETIME": "datetime.timedelta(days=7)",
+      "PROPAGATE_EXCEPTIONS": "None",
+      "SECRET_KEY": "[Filtered]",
+      "SERVER_NAME": "None",
+      "SESSION_COOKIE_DOMAIN": "None",
+      "SESSION_COOKIE_NAME": "'session'",
+      "TESTING": "False",
+      "USE_X_SENDFILE": "False"
+    },
+    "cycler": "<class 'jinja2.utils.Cycler'>",
+    "dict": "<class 'dict'>",
+    "get_flashed_messages": "<function get_flashed_messages at 0x7f09366b40e0>",
+    "joiner": "<class 'jinja2.utils.Joiner'>",
+    "lipsum": "<function generate_lorem_ipsum at 0x7f09364e84a0>",
+    "namespace": "<class 'jinja2.utils.Namespace'>",
+    "range": "<class 'range'>",
+    "request": "<Request 'https://societyspeaks.io/discussions/search' [GET]>",
+    "url_for": "<bound method Flask.url_for of <Flask 'app'>>"
+  },
+  "name": "'discussions/search_discussions.html'",
+  "self": "<flask.templating.DispatchingJinjaLoader object at 0x7f0933a8d490>",
+  "source": "'{% extends \"layout.html\" %}\\n {% from \"components/discussion_card.html\" import discussion_card %}\\n\\n{% block head %}\\n    <title>Explore Discussions on SocietySpeaks{% if search_term %} - Search Results for \"{{ search_term }}\"{% endif %}</title>\\n    <meta name=\"description\" content=\"Discover and join meaningful discussions on topics that matter. {% if search_term %}Results for \\'{{ search_term }}\\'{% endif %}.\">\\n    <meta name=\"keywords\" content=\"society discussions, explore discussions{% if search_term %}, {{ search_term }}{% endif %}\">\\n    <link rel=\"canonical\" href=\"{{ url_for(\\'discussions.search_discussions\\', _external=True) }}\">\\n\\n    <!-- Structured Data for SEO -->\\n    <script type=\"application/ld+json\">\\n    {\\n      \"@context\": \"https://schema.org\",\\n      \"@type\": \"SearchResultsPage\",\\n      \"name\": \"Explore Discussions\",\\n      \"description\": \"Search discussions on SocietySpeaks. {% if search_term %}Results for \\'{{ search_term }}\\'.{% endif %}\",\\n      \"query\": \"{{ search_term or \\'\\' ...",
+  "uptodate": "<function FileSystemLoader.get_source.<locals>.uptodate at 0x7f091775d940>"
+}
+
+=======
+ _load_template in jinja2/environment.py [Line 969] (Not in app)
+                if globals:
+                    template.globals.update(globals)
+
+                return template
+
+        template = self.loader.load(self, name, self.make_globals(globals))  <-- SUSPECT LINE
+
+        if self.cache is not None:
+            self.cache[cache_key] = template
+        return template
+
+---
+Variable values:
+{
+  "cache_key": [
+    "<weakref at 0x7f091816c130; to 'DispatchingJinjaLoader' at 0x7f0933a8d490>",
+    "'discussions/search_discussions.html'"
+  ],
+  "globals": "None",
+  "name": "'discussions/search_discussions.html'",
+  "self": "<flask.templating.Environment object at 0x7f0933a8d450>",
+  "template": "None"
+}
+
+=======
+ get_template in jinja2/environment.py [Line 1010] (Not in app)
+        if isinstance(name, Template):
+            return name
+        if parent is not None:
+            name = self.join_path(name, parent)
+
+        return self._load_template(name, globals)  <-- SUSPECT LINE
+
+    @internalcode
+    def select_template(
+        self,
+        names: t.Iterable[t.Union[str, "Template"]],
+---
+Variable values:
+{
+  "globals": "None",
+  "name": "'discussions/search_discussions.html'",
+  "parent": "None",
+  "self": "<flask.templating.Environment object at 0x7f0933a8d450>"
+}
+
+=======
+ get_or_select_template in jinja2/environment.py [Line 1081] (Not in app)
+        is given, or :meth:`get_template` if one name is given.
+
+        .. versionadded:: 2.3
+        """
+        if isinstance(template_name_or_list, (str, Undefined)):
+            return self.get_template(template_name_or_list, parent, globals)  <-- SUSPECT LINE
+        elif isinstance(template_name_or_list, Template):
+            return template_name_or_list
+        return self.select_template(template_name_or_list, parent, globals)
+
+    def from_string(
+---
+Variable values:
+{
+  "globals": "None",
+  "parent": "None",
+  "self": "<flask.templating.Environment object at 0x7f0933a8d450>",
+  "template_name_or_list": "'discussions/search_discussions.html'"
+}
+
+=======
+ render_template in flask/templating.py [Line 150] (Not in app)
+    :param template_name_or_list: The name of the template to render. If
+        a list is given, the first name to exist will be rendered.
+    :param context: The variables to make available in the template.
+    """
+    app = current_app._get_current_object()  # type: ignore[attr-defined]
+    template = app.jinja_env.get_or_select_template(template_name_or_list)  <-- SUSPECT LINE
+    return _render(app, template, context)
+
+
+def render_template_string(source: str, **context: t.Any) -> str:
+    """Render a template from the given source string with the given
+---
+Variable values:
+{
+  "app": "<Flask 'app'>",
+  "context": {
+    "cities_by_country": {},
+    "countries": [],
+    "discussions": "None",
+    "search_term": "''"
+  },
+  "template_name_or_list": "'discussions/search_discussions.html'"
+}
+
+=======
+ search_discussions in app/discussions/routes.py [Line 221] (In app)
+            countries=[],
+            cities_by_country={}
+        )
+    except Exception as e:
+        current_app.logger.error(f"Error in search_discussions: {str(e)}")
+        return render_template(  <-- SUSPECT LINE
+            'discussions/search_discussions.html',
+            discussions=None,
+            search_term='',
+            countries=[],
+            cities_by_country={}
+---
+Variable values:
+{
+  "cities_by_country": {
+    "Afghanistan": [
+      "'Herat'",
+      "'Kabul'",
+      "'Kandahar'",
+      "'Molah'",
+      "'Rana'",
+      "'Shar'",
+      "'Sharif'",
+      "'Wazir Akbar Khan'"
+    ],
+    "Albania": [
+      "'Elbasan'",
+      "'Petran'",
+      "'Pogradec'",
+      "'Shkoder'",
+      "'Tirana'",
+      "'Ura Vajgurore'"
+    ],
+    "Algeria": [
+      "'Algiers'",
+      "'Annaba'",
+      "'Azazga'",
+      "'Batna City'",
+      "'Blida'",
+      "'Bordj'",
+      "'Bordj Bou Arreridj'",
+      "'Bougara'",
+      "'Cheraga'",
+      "'Chlef'"
+    ],
+    "Andorra": [
+      "'Andorra la Vella'",
+      "'Canillo'",
+      "'Encamp'",
+      "'Engordany'",
+      "'Escaldes-Engordany'",
+      "'La Massana'",
+      "'Llorts'",
+      "'Ordino'",
+      "'Santa Coloma'",
+      "'Sispony'"
+    ],
+    "Angola": [
+      "'Ambriz'",
+      "'Benguela'",
+      "'Cabinda'",
+      "'Cacole'",
+      "'Camabatela'",
+      "'Cazeta'",
+      "'Huambo'",
+      "'Kuito'",
+      "'Lobito'",
+      "'Luanda'"
+    ],
+    "Antigua and Barbuda": [
+      "'All Saints'",
+      "'Cassada Gardens'",
+      "'Codrington'",
+      "'Old Road'",
+      "'Parham'",
+      "'Woods'"
+    ],
+    "Argentina": [
+      "'28 de Noviembre'",
+      "'Abasto'",
+      "'Acassuso'",
+      "'Acebal'",
+      "'Acevedo'",
+      "'Adelia Maria'",
+      "'Agua de Oro'",
+      "'Albardon'",
+      "'Albarellos'",
+      "'Alberdi'"
+    ],
+    "Armenia": [
+      "'Abovyan'",
+      "'Agarak'",
+      "'Apaga'",
+      "'Aparan'",
+      "'Arabkir'",
+      "'Ashtarak'",
+      "'Erebuni Fortress'",
+      "'Hrazdan'",
+      "'Ijevan'",
+      "'Jermuk'"
+    ],
+    "Aruba": [
+      "'Noord'",
+      "'Oranjestad'",
+      "'Palm Beach'",
+      "'Paradera'",
+      "'Ponton'",
+      "'Sabaneta'",
+      "'San Barbola'",
+      "'Santa Cruz'",
+      "'Sero Blanco'",
+      "'Sint Nicolaas'"
+    ],
+    "Australia": [
+      "'Abbotsford'",
+      "'Abbotsford'",
+      "'Abbotsham'",
+      "'Aberdeen'",
+      "'Aberfoyle'",
+      "'Aberglasslyn'",
+      "'Abermain'",
+      "'Acacia Ridge'",
+      "'Adamstown'",
+      "'Adelaide'"
+    ]
+  },
+  "city": "None",
+  "countries": [
+    "'Afghanistan'",
+    "'Albania'",
+    "'Algeria'",
+    "'Andorra'",
+    "'Angola'",
+    "'Antigua and Barbuda'",
+    "'Argentina'",
+    "'Armenia'",
+    "'Aruba'",
+    "'Australia'"
+  ],
+  "country": "None",
+  "f": "<_io.TextIOWrapper name='/home/runner/workspace/app/static/data/cities_by_country.json' mode='r' encoding='UTF-8'>",
+  "json_path": "'/home/runner/workspace/app/static/data/cities_by_country.json'",
+  "keywords": "''",
+  "page": "1",
+  "search_term": "''",
+  "topic": "None"
+}
+
+=======
+ dispatch_request in flask/app.py [Line 1469] (Not in app)
+            and req.method == "OPTIONS"
+        ):
+            return self.make_default_options_response()
+        # otherwise dispatch to the handler for that endpoint
+        view_args: dict[str, t.Any] = req.view_args  # type: ignore[assignment]
+        return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  <-- SUSPECT LINE
+
+    def full_dispatch_request(self) -> Response:
+        """Dispatches the request and on top of that performs request
+        pre and postprocessing as well as HTTP exception catching and
+        error handling.
+---
+Variable values:
+{
+  "req": "<Request 'https://societyspeaks.io/discussions/search' [GET]>",
+  "rule": "<Rule '/discussions/search' (HEAD, GET, OPTIONS) -> discussions.search_discussions>",
+  "self": "<Flask 'app'>",
+  "view_args": {}
+}
+
+=======
+ full_dispatch_request in flask/app.py [Line 1484] (Not in app)
+
+        try:
+            request_started.send(self, _async_wrapper=self.ensure_sync)
+            rv = self.preprocess_request()
+            if rv is None:
+                rv = self.dispatch_request()  <-- SUSPECT LINE
+        except Exception as e:
+            rv = self.handle_user_exception(e)
+        return self.finalize_request(rv)
+
+    def finalize_request(
+---
+Variable values:
+{
+  "e": "TemplateSyntaxError(\"Encountered unknown tag 'endif'. You probably made a nesting mistake. Jinja is expecting this tag, but currently looking for 'endblock'. The innermost block that needs to be closed is 'block'.\")",
+  "rv": "None",
+  "self": "<Flask 'app'>"
+}
+
+=======
+```
