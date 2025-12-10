@@ -8,10 +8,19 @@ The application integrates with Pol.is to facilitate consensus-building discussi
 
 ## Recent Changes (December 10, 2025)
 
-### Fixes Today
-- **N+1 Query Fix in view_discussion**: Added eager loading with `joinedload(Statement.user)` to fetch user data in single query instead of one-per-statement. Resolves Sentry issues #82444121 and #73094553.
+### Fixes & UX/UI Improvements (December 10, 2025)
+- **N+1 Query Fix in view_discussion**: Added eager loading with `joinedload(Statement.user)` to fetch user data in single query. Resolves Sentry issues #82444121 and #73094553.
 - **Duplicate Statement Type Options**: Fixed form field displaying "Claim Claim Question Question" by changing SelectField to RadioField in StatementForm
 - **CSS Loading**: Verified output.css loads correctly
+
+### UX/UI Enhancements
+- **Toast Notifications System**: Created reusable toast component for success/error/warning messages with auto-dismiss (3-5 seconds)
+- **Form Error Handling**: Improved visual feedback with error messages and color-coded validation states
+- **Mobile Button Sizing**: Ensured all interactive elements meet 44x44px minimum touch target for mobile accessibility
+- **Empty State Component**: Reusable empty state template for no-results scenarios with helpful context
+- **Loading Spinner Component**: Reusable spinner component for async operations
+- **Better Form Labels**: Improved hover states and cursor feedback on radio buttons
+- **Enhanced Accessibility**: Added proper ARIA labels and sr-only text for screen readers
 
 ### Content Seeding
 - **20 Engaging Discussions Created**: Seeded platform with discussions across all topics with diverse perspectives:

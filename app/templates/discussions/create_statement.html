@@ -62,12 +62,15 @@
         mb-2") }}
         <div class="flex space-x-4">
           {% for subfield in form.statement_type %}
-          <label class="flex items-center space-x-2 cursor-pointer">
-            {{ subfield(class="text-blue-600") }}
-            <span class="text-gray-700">{{ subfield.label.text.split()[-1] }}</span>
+          <label class="flex items-center space-x-2 cursor-pointer p-2 rounded hover:bg-gray-50">
+            {{ subfield(class="text-blue-600 cursor-pointer") }}
+            <span class="text-gray-700 cursor-pointer">{{ subfield.label.text.split()[-1] }}</span>
           </label>
           {% endfor %}
         </div>
+        {% if form.statement_type.errors %}
+          <p class="text-red-600 text-sm mt-2">{{ form.statement_type.errors[0] }}</p>
+        {% endif %}
         <p class="text-sm text-gray-500 mt-1">
           <strong>Claim:</strong> "We should invest more in renewable energy"<br />
           <strong>Question:</strong> "What's the most effective climate policy?"
@@ -97,11 +100,10 @@
 
       <!-- Submit Buttons -->
       <div class="flex space-x-4">
-        {{ form.submit(class="bg-blue-600 text-white px-8 py-3 rounded-lg
-        hover:bg-blue-700 font-semibold cursor-pointer transition-colors") }}
+        {{ form.submit(class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold cursor-pointer transition-colors min-h-11 min-w-11") }}
         <a
           href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
-          class="bg-gray-200 text-gray-700 px-8 py-3 rounded-lg hover:bg-gray-300 font-semibold transition-colors inline-block"
+          class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 font-semibold transition-colors inline-block min-h-11 min-w-11"
         >
           Cancel
         </a>
