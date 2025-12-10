@@ -1,0 +1,61 @@
+{# Toast notification component #}
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-3 max-w-sm"></div>
+
+<script>
+function showToast(message, type = 'success', duration = 3000) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  
+  const bgColor = {
+    success: 'bg-green-50 border-green-200',
+    error: 'bg-red-50 border-red-200',
+    warning: 'bg-yellow-50 border-yellow-200',
+    info: 'bg-blue-50 border-blue-200'
+  }[type];
+  
+  const textColor = {
+    success: 'text-green-800',
+    error: 'text-red-800',
+    warning: 'text-yellow-800',
+    info: 'text-blue-800'
+  }[type];
+  
+  const iconColor = {
+    success: 'text-green-600',
+    error: 'text-red-600',
+    warning: 'text-yellow-600',
+    info: 'text-blue-600'
+  }[type];
+  
+  const icon = {
+    success: '✓',
+    error: '✕',
+    warning: '⚠',
+    info: 'ℹ'
+  }[type];
+  
+  toast.className = `flex items-center gap-3 p-4 rounded-lg border ${bgColor} ${textColor} animate-in slide-in-from-right-2 duration-300`;
+  toast.innerHTML = `
+    <span class="font-bold text-lg ${iconColor}">${icon}</span>
+    <span>${message}</span>
+    <button onclick="this.parentElement.remove()" class="ml-auto text-sm opacity-60 hover:opacity-100">
+      ✕
+    </button>
+  `;
+  
+  container.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add('animate-out', 'slide-out-to-right-2');
+    setTimeout(() => toast.remove(), 300);
+  }, duration);
+}
+
+// Show toast on form error
+document.addEventListener('DOMContentLoaded', function() {
+  const formErrors = document.querySelectorAll('[data-form-error]');
+  formErrors.forEach(el => {
+    showToast(el.getAttribute('data-form-error'), 'error', 5000);
+  });
+});
+</script>
