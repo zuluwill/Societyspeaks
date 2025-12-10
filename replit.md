@@ -38,7 +38,10 @@ The application integrates with Pol.is to facilitate consensus-building discussi
   - Water and Resource Wars: Who Owns the Commons? (Environment)
   - Pandemic Prevention: Are We Ready for the Next One? (Healthcare)
 
-- **100 Seed Statements**: Each discussion includes 5 diverse, perspective-rich statements to generate genuine debate
+- **164 Seed Statements**: Discussions now have 7-9 statements each with diverse perspectives
+  - 2 discussions with 7 statements
+  - 5 discussions with 8 statements  
+  - 13 discussions with 9 statements
 - Created admin user for seeding operations
 
 ### Previous Fixes (November 2025)
