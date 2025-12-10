@@ -1,0 +1,143 @@
+# ValueError: invalid literal for int() with base 10: '5uszjk'
+
+**Issue ID:** 76482380
+**Project:** python-flask
+**Date:** 12/11/2025, 11:15:19
+## Issue Summary
+CAPTCHA Verification Failed: Non-integer input '5uszjk'
+**What's wrong:** The `int()` conversion failed on the **'verification'** input, which was **'5uszjk'** instead of an integer.
+**In the trace:** The username contains **unique characters** and a **URL**, which may indicate **malicious input** or a **bot**.
+**Possible cause:** The CAPTCHA verification input **'verification'** is not a number, likely due to **user error** or a **bot submitting invalid data**.
+
+## Tags
+
+- **browser:** Chrome Mobile 81.0.4044
+- **browser.name:** Chrome Mobile
+- **client_os:** Android 10
+- **client_os.name:** Android
+- **device:** SM-A505G
+- **device.family:** Samsung SM-A505G
+- **environment:** production
+- **handled:** yes
+- **level:** error
+- **logger:** app
+- **mechanism:** logging
+- **runtime:** CPython 3.11.13
+- **runtime.name:** CPython
+- **server_name:** localhost
+- **transaction:** auth.register
+- **url:** https://societyspeaks.io/auth/register
+
+## Exception
+
+### Exception 1
+**Type:** ValueError
+**Value:** invalid literal for int() with base 10: '5uszjk'
+
+#### Stacktrace
+
+```
+ register in app/auth/routes.py [Line 66] (In app)
+
+        # Verify CAPTCHA
+        verification = request.form.get('verification')
+        expected = request.form.get('expected')
+        
+        if not verification or not expected or int(verification) != int(expected):  <-- SUSPECT LINE
+            flash("Incorrect verification answer. Please try again.", "error")
+            return redirect(url_for('auth.register'))
+
+        # Hash the password and create the user
+        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
+---
+Variable values:
+{
+  "email": "'asoluatalimalie698@gmail.com'",
+  "expected": "'7'",
+  "input_text": "'💿 2 messages from bianca. next > yandex.com/poll/xx9c6zkucnpbs8solq9r54?9a8k message № 5823 💿 asoluatalimalie698@gmail.com'",
+  "password": "[Filtered]",
+  "spam_patterns": [
+    "'bitcoin'",
+    "'btc'",
+    "'binance'",
+    "'crypto'",
+    "'telegra.ph'",
+    "'📍'",
+    "'📌'",
+    "'🔑'",
+    "'📫'",
+    "'📪'"
+  ],
+  "username": "'💿 2 Messages from Bianca. Next > yandex.com/poll/Xx9C6zkucNPbs8SoLQ9R54?9a8k Message № 5823 💿'",
+  "verification": "'5uszjk'"
+}
+
+=======
+ __inner in flask_limiter/extension.py [Line 1303] (Not in app)
+
+                    self.limiter._check_request_limit(
+                        in_middleware=False, callable_name=name
+                    )
+
+                return cast(R, flask.current_app.ensure_sync(obj)(*a, **k))  <-- SUSPECT LINE
+
+            # mark this wrapper as wrapped by a decorator from the limiter
+            # from which the decorator was created. This ensures that stacked
+            # decorations only trigger rate limiting from the inner most
+            # decorator from each limiter instance (the weird need for
+---
+Variable values:
+{
+  "a": [],
+  "identity": "''",
+  "k": {},
+  "name": "[Filtered]",
+  "obj": "<function register at 0x7fb626cd7420>",
+  "self": "<flask_limiter.extension.LimitDecorator object at 0x7fb6274252d0>"
+}
+
+=======
+ dispatch_request in flask/app.py [Line 1469] (Not in app)
+            and req.method == "OPTIONS"
+        ):
+            return self.make_default_options_response()
+        # otherwise dispatch to the handler for that endpoint
+        view_args: dict[str, t.Any] = req.view_args  # type: ignore[assignment]
+        return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  <-- SUSPECT LINE
+
+    def full_dispatch_request(self) -> Response:
+        """Dispatches the request and on top of that performs request
+        pre and postprocessing as well as HTTP exception catching and
+        error handling.
+---
+Variable values:
+{
+  "req": "[Filtered]",
+  "rule": "[Filtered]",
+  "self": "<Flask 'app'>",
+  "view_args": {}
+}
+
+=======
+ full_dispatch_request in flask/app.py [Line 1484] (Not in app)
+
+        try:
+            request_started.send(self, _async_wrapper=self.ensure_sync)
+            rv = self.preprocess_request()
+            if rv is None:
+                rv = self.dispatch_request()  <-- SUSPECT LINE
+        except Exception as e:
+            rv = self.handle_user_exception(e)
+        return self.finalize_request(rv)
+
+    def finalize_request(
+---
+Variable values:
+{
+  "e": "ValueError(\"invalid literal for int() with base 10: '5uszjk'\")",
+  "rv": "None",
+  "self": "<Flask 'app'>"
+}
+
+=======
+```
