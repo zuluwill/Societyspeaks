@@ -7,6 +7,7 @@ from app.utils import get_recent_activity
 from app.middleware import track_discussion_view 
 from app.email_utils import create_discussion_notification
 from app.webhook_security import webhook_required, webhook_with_timestamp
+from sqlalchemy.orm import joinedload
 import json
 import os
 
@@ -91,8 +92,10 @@ def view_discussion(discussion_id, slug):
         form = StatementForm()
         sort = request.args.get('sort', 'progressive')
         
-        # Base query
-        query = Statement.query.filter_by(
+        # Base query with eager loading of user data to prevent N+1 queries
+        query = Statement.query.options(
+            joinedload(Statement.user)
+        ).filter_by(
             discussion_id=discussion_id,
             is_deleted=False
         )
