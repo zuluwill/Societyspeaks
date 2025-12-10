@@ -8,8 +8,10 @@ The application integrates with Pol.is to facilitate consensus-building discussi
 
 ## Recent Changes (December 10, 2025)
 
-### Performance Optimizations
+### Fixes Today
 - **N+1 Query Fix in view_discussion**: Added eager loading with `joinedload(Statement.user)` to fetch user data in single query instead of one-per-statement. Resolves Sentry issues #82444121 and #73094553.
+- **Duplicate Statement Type Options**: Fixed form field displaying "Claim Claim Question Question" by changing SelectField to RadioField in StatementForm
+- **CSS Loading**: Verified output.css loads correctly
 
 ### Content Seeding
 - **20 Engaging Discussions Created**: Seeded platform with discussions across all topics with diverse perspectives:
