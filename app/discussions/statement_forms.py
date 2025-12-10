@@ -15,10 +15,10 @@ class StatementForm(FlaskForm):
         DataRequired(message="Statement is required"),
         Length(min=10, max=500, message="Statement must be 10-500 characters")
     ])
-    statement_type = SelectField('Type', choices=[
+    statement_type = RadioField('Type', choices=[
         ('claim', 'Claim'),
         ('question', 'Question')
-    ], default='claim')
+    ], default='claim', validators=[DataRequired()])
     submit = SubmitField('Post Statement')
 
 
