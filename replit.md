@@ -12,7 +12,9 @@ The application integrates with Pol.is to facilitate consensus-building discussi
 - **N+1 Query Fix in view_discussion**: Added eager loading with `joinedload(Statement.user)` to fetch user data in single query instead of one-per-statement. Resolves Sentry issues #82444121 and #73094553.
 
 ### Content Seeding
-- **9 Engaging Discussions Created**: Seeded platform with discussions across all topics:
+- **20 Engaging Discussions Created**: Seeded platform with discussions across all topics with diverse perspectives:
+  
+  **Global Foundation Discussions (9):**
   - The Future of Remote Work (Technology)
   - Solving Global Housing Crisis (Economy)
   - Climate Action: Individual vs Government (Environment)
@@ -22,7 +24,21 @@ The application integrates with Pol.is to facilitate consensus-building discussi
   - Immigration and Cultural Diversity (Society)
   - Infrastructure Investment (Infrastructure)
   - Democracy in Crisis (Politics)
-- **45 Seed Statements**: Each discussion includes 5 diverse, engagement-worthy statements to kickstart debate
+
+  **Pressing Global Issues (11):**
+  - Geopolitical Tensions: Military Intervention vs Non-Interference (Politics)
+  - Disinformation and Social Media: Can We Protect Truth? (Technology)
+  - The Mental Health Crisis: What's Driving Youth Depression? (Healthcare)
+  - Economic Inequality: Is Capitalism Broken? (Economy)
+  - Reparations and Historical Justice: What Do We Owe the Past? (Society)
+  - Gender and LGBTQ+ Rights: How Far Should Society Go? (Society)
+  - Automation and Job Displacement: Will There Be Work in 2050? (Economy)
+  - Corporate Accountability: Do Companies Have Too Much Power? (Economy)
+  - Global Manufacturing: Should the West Reshore Production? (Economy)
+  - Water and Resource Wars: Who Owns the Commons? (Environment)
+  - Pandemic Prevention: Are We Ready for the Next One? (Healthcare)
+
+- **100 Seed Statements**: Each discussion includes 5 diverse, perspective-rich statements to generate genuine debate
 - Created admin user for seeding operations
 
 ### Previous Fixes (November 2025)
