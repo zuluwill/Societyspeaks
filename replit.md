@@ -6,26 +6,36 @@ Society Speaks is an open-source public discussion platform that empowers commun
 
 The application integrates with Pol.is to facilitate consensus-building discussions and includes features for user profiles (both individual and company), discussion management, geographic filtering, and comprehensive analytics tracking.
 
-## Recent Changes (October 26, 2025)
+## Recent Changes (December 10, 2025)
 
-### New Features
-- **Statement Seeding for Native Discussions**: Added Step 4 to discussion creation flow requiring 3-10 seed statements before publishing. Matches Pol.is workflow to ensure discussions launch with engaging content.
-- **AI Research Tools Integration**: Added links to Claude AI, ChatGPT, and Perplexity to help users quickly generate diverse seed statements using copy/paste (no API keys required).
-- **4-Step Discussion Creation**: Enhanced creation flow - (1) Configure type, (2) Pol.is embed (if applicable), (3) Discussion details, (4) Seed statements (native only).
+### Performance Optimizations
+- **N+1 Query Fix in view_discussion**: Added eager loading with `joinedload(Statement.user)` to fetch user data in single query instead of one-per-statement. Resolves Sentry issues #82444121 and #73094553.
 
-### Critical Fixes
-- **Redis Cache Connection**: Fixed critical issue where Flask-Caching was attempting to connect to localhost:6379 instead of cloud Redis. Changed from `CACHE_REDIS_CLIENT` to `CACHE_REDIS_URL` configuration parameter.
-- **Deployment Configuration**: Configured autoscale deployment target with production-ready gunicorn settings
-- **Voting Interface**: Completed redesign with three always-visible voting buttons (AGREE, DISAGREE, UNSURE) with 80px touch targets for mobile
-- **Mobile UX**: Implemented responsive grid layout for vote buttons with proper opacity feedback for anonymous users
-- **Research Tools Dropdown**: Fixed mobile display of research tools dropdown - now appears on left side on mobile to prevent cutoff
+### Content Seeding
+- **9 Engaging Discussions Created**: Seeded platform with discussions across all topics:
+  - The Future of Remote Work (Technology)
+  - Solving Global Housing Crisis (Economy)
+  - Climate Action: Individual vs Government (Environment)
+  - Reshaping Education Post-Pandemic (Education)
+  - Healthcare Access & Global Inequalities (Healthcare)
+  - AI Ethics and Regulation (Technology)
+  - Immigration and Cultural Diversity (Society)
+  - Infrastructure Investment (Infrastructure)
+  - Democracy in Crisis (Politics)
+- **45 Seed Statements**: Each discussion includes 5 diverse, engagement-worthy statements to kickstart debate
+- Created admin user for seeding operations
+
+### Previous Fixes (November 2025)
+- **CAPTCHA Validation Error**: Added try-except handling for bot garbage data in auth/routes.py
+- **Response Form "Position Field Required"**: Changed SelectField to RadioField in statement_forms.py
+- **Redis Cache Connection**: Fixed Flask-Caching localhost:6379 issue, now uses cloud Redis
+- **Voting Interface**: Redesigned with always-visible buttons (AGREE, DISAGREE, UNSURE) with 80px touch targets
 
 ### Production Status
-- App is ready for deployment
 - All critical errors resolved
-- Redis caching properly configured and tested
+- Ready for production deployment
+- Redis caching configured and tested
 - Background scheduler operational
-- Rate limiting configured with cloud Redis
 
 ## User Preferences
 
