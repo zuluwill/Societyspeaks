@@ -38,10 +38,24 @@ The application integrates with Pol.is to facilitate consensus-building discussi
   - Water and Resource Wars: Who Owns the Commons? (Environment)
   - Pandemic Prevention: Are We Ready for the Next One? (Healthcare)
 
-- **164 Seed Statements**: Discussions now have 7-9 statements each with diverse perspectives
+- **28 Total Discussions with 226 Seed Statements**: Comprehensive coverage of global issues
+  
+  **Additional Critical Topics (8):**
+  - Gun Control: Safety vs Constitutional Rights (Politics)
+  - Abortion and Reproductive Rights (Society)
+  - Criminal Justice Reform (Politics)
+  - Food Security and Agriculture (Environment)
+  - Energy Transition (Environment)
+  - Drug Policy and Legalization (Healthcare)
+  - Privacy vs Surveillance (Technology)
+  - Religious Freedom vs Secularism (Society)
+  
+  **Statement Distribution:**
+  - All 28 discussions have 7+ statements each
   - 2 discussions with 7 statements
-  - 5 discussions with 8 statements  
-  - 13 discussions with 9 statements
+  - 5 discussions with 8 statements
+  - 21 discussions with 7-9 statements
+  - Diverse perspectives on each topic to spark genuine debate
 - Created admin user for seeding operations
 
 ### Previous Fixes (November 2025)
