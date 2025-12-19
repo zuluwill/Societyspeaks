@@ -17,29 +17,29 @@ from flask_caching import Cache
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-# Simplified CSP that will work with inline scripts
+# Hardened CSP without unsafe-inline and unsafe-eval
 csp = {
-    'default-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https:", "data:", "blob:"],
+    'default-src': ["'self'", "https:", "data:", "blob:"],
     'img-src': ["'self'", "data:", "https:", "blob:"],
     'connect-src': ["'self'", "https:", "wss:", "https://cdn.jsdelivr.net"],
     'font-src': ["'self'", "data:", "https:"],
     'frame-src': ["'self'", "https:"],
     'style-src': [
         "'self'",
-        "'unsafe-inline'",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com"
     ],
     'script-src': [
         "'self'",
-        "'unsafe-inline'",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
         "https://www.googletagmanager.com",
         "https://cdn-cookieyes.com",
         "https://pol.is"
     ],
-    'object-src': ["'none'"]
+    'object-src': ["'none'"],
+    'base-uri': ["'self'"],
+    'form-action': ["'self'"]
 }
 
 
