@@ -15,17 +15,43 @@ import os
 import json
 import time
 import io
+from pathlib import Path
 
 
 profiles_bp = Blueprint('profiles', __name__, template_folder='../templates/profiles')
 
 client = Client()
 
+# Allowed file extensions for uploads
+ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+
+def allowed_file(filename):
+    """Check if file extension is allowed"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def validate_file_size(file_data):
+    """Check if file size is within limits"""
+    file_data.seek(0, os.SEEK_END)
+    size = file_data.tell()
+    file_data.seek(0)
+    return size <= MAX_FILE_SIZE
+
 
 
 def upload_to_object_storage(file_data, filename):
-    """Upload file to Replit's object storage"""
+    """Upload file to Replit's object storage with validation"""
     try:
+        # Validate file extension
+        if not allowed_file(filename):
+            current_app.logger.warning(f"Blocked upload of disallowed file type: {filename}")
+            return None
+        
+        # Validate file size
+        if not validate_file_size(file_data):
+            current_app.logger.warning(f"Blocked upload of oversized file: {filename}")
+            return None
+        
         # Avoid adding the unique prefix multiple times
         if not filename.startswith(f"{current_user.id}_"):
             filename = f"{current_user.id}_{int(time.time())}_{filename}"
@@ -64,6 +90,11 @@ def delete_from_object_storage(filename):
 def get_image(filename):
     """Retrieve image from Replit's object storage"""
     try:
+        # Validate filename to prevent path traversal
+        if '..' in filename or filename.startswith('/'):
+            current_app.logger.warning(f"Blocked potential path traversal attempt: {filename}")
+            return send_file('static/images/default-avatar.png', mimetype='image/png')
+        
         storage_path = f"profile_images/{filename}"
 
         # Download the file data as bytes
