@@ -124,13 +124,18 @@ def init_scheduler(app):
             
             logger.info("Starting cleanup of old consensus analyses")
             
-            discussions = Discussion.query.filter_by(has_native_statements=True).all()
+            # Only get discussion IDs that have analyses to clean up (more efficient)
+            discussion_ids_with_analyses = db.session.query(
+                ConsensusAnalysis.discussion_id
+            ).group_by(ConsensusAnalysis.discussion_id).having(
+                db.func.count(ConsensusAnalysis.id) > 10
+            ).all()
             
-            for discussion in discussions:
+            for (discussion_id,) in discussion_ids_with_analyses:
                 try:
                     # Get all analyses for this discussion
                     analyses = ConsensusAnalysis.query.filter_by(
-                        discussion_id=discussion.id
+                        discussion_id=discussion_id
                     ).order_by(ConsensusAnalysis.created_at.desc()).all()
                     
                     # Keep only 10 most recent
@@ -140,10 +145,10 @@ def init_scheduler(app):
                             db.session.delete(analysis)
                         
                         db.session.commit()
-                        logger.info(f"Deleted {len(to_delete)} old analyses for discussion {discussion.id}")
+                        logger.info(f"Deleted {len(to_delete)} old analyses for discussion {discussion_id}")
                     
                 except Exception as e:
-                    logger.error(f"Error cleaning up analyses for discussion {discussion.id}: {e}")
+                    logger.error(f"Error cleaning up analyses for discussion {discussion_id}: {e}")
                     db.session.rollback()
                     continue
             

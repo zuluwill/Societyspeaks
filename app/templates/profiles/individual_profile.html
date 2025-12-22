@@ -199,12 +199,32 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h2 class="text-2xl font-bold text-gray-900 mb-6">Discussions Started</h2>
 
-        {% if discussions %}
+        {% if discussions.items %}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {% for discussion in discussions %}
+                {% for discussion in discussions.items %}
                     {{ discussion_card(discussion) }}
                 {% endfor %}
             </div>
+            
+            {% if discussions.pages > 1 %}
+            <nav class="flex justify-center mt-8">
+                <ul class="flex space-x-2">
+                    {% if discussions.has_prev %}
+                    <li><a href="?page={{ discussions.prev_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Previous</a></li>
+                    {% endif %}
+                    {% for page_num in discussions.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            <li><a href="?page={{ page_num }}" class="px-3 py-2 border rounded-md {% if page_num == discussions.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
+                        {% else %}
+                            <li class="px-3 py-2">...</li>
+                        {% endif %}
+                    {% endfor %}
+                    {% if discussions.has_next %}
+                    <li><a href="?page={{ discussions.next_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Next</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
         {% else %}
             <p class="text-gray-600">No discussions started yet.</p>
         {% endif %}

@@ -59,7 +59,7 @@
                         <h3 class="text-lg leading-6 font-medium text-gray-900">Individual Profiles</h3>
                     </div>
                     <ul role="list" class="divide-y divide-gray-200">
-                        {% for profile in individual_profiles %}
+                        {% for profile in individual_profiles.items %}
                         <li>
                             <div class="px-4 py-4 flex items-center sm:px-6">
                                 <div class="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
@@ -95,6 +95,26 @@
                         </li>
                         {% endfor %}
                     </ul>
+                    
+                    {% if individual_profiles.pages > 1 %}
+                    <nav class="flex justify-center py-4">
+                        <ul class="flex space-x-2">
+                            {% if individual_profiles.has_prev %}
+                            <li><a href="?page={{ individual_profiles.prev_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Previous</a></li>
+                            {% endif %}
+                            {% for page_num in individual_profiles.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                                {% if page_num %}
+                                    <li><a href="?page={{ page_num }}" class="px-3 py-2 border rounded-md {% if page_num == individual_profiles.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
+                                {% else %}
+                                    <li class="px-3 py-2">...</li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if individual_profiles.has_next %}
+                            <li><a href="?page={{ individual_profiles.next_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Next</a></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
                 </div>
 
                 <!-- Company Profiles -->
@@ -103,7 +123,7 @@
                         <h3 class="text-lg leading-6 font-medium text-gray-900">Company Profiles</h3>
                     </div>
                     <ul role="list" class="divide-y divide-gray-200">
-                        {% for profile in company_profiles %}
+                        {% for profile in company_profiles.items %}
                         <li>
                             <div class="px-4 py-4 flex items-center sm:px-6">
                                 <div class="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
@@ -139,6 +159,26 @@
                         </li>
                         {% endfor %}
                     </ul>
+                    
+                    {% if company_profiles.pages > 1 %}
+                    <nav class="flex justify-center py-4">
+                        <ul class="flex space-x-2">
+                            {% if company_profiles.has_prev %}
+                            <li><a href="?page={{ company_profiles.prev_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Previous</a></li>
+                            {% endif %}
+                            {% for page_num in company_profiles.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                                {% if page_num %}
+                                    <li><a href="?page={{ page_num }}" class="px-3 py-2 border rounded-md {% if page_num == company_profiles.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
+                                {% else %}
+                                    <li class="px-3 py-2">...</li>
+                                {% endif %}
+                            {% endfor %}
+                            {% if company_profiles.has_next %}
+                            <li><a href="?page={{ company_profiles.next_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Next</a></li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
                 </div>
             </div>
         </div>

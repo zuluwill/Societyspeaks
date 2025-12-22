@@ -171,6 +171,10 @@ class DiscussionParticipant(db.Model):
 
 
 class IndividualProfile(db.Model):
+    __table_args__ = (
+        db.Index('idx_individual_profile_user_id', 'user_id'),
+    )
+    
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     full_name = db.Column(db.String(150), nullable=False)
@@ -207,6 +211,10 @@ class IndividualProfile(db.Model):
             self.slug = generate_slug(self.full_name)
 
 class CompanyProfile(db.Model):
+    __table_args__ = (
+        db.Index('idx_company_profile_user_id', 'user_id'),
+    )
+    
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     company_name = db.Column(db.String(150), nullable=False)
@@ -249,6 +257,9 @@ class Discussion(db.Model):
     __table_args__ = (
         db.Index('idx_discussion_title_desc', 'title', 'description'),
         db.Index('idx_discussion_created_at', 'created_at'),
+        db.Index('idx_discussion_creator_id', 'creator_id'),
+        db.Index('idx_discussion_is_featured', 'is_featured'),
+        db.Index('idx_discussion_topic', 'topic'),
     )
     
     id = db.Column(db.Integer, primary_key=True)
