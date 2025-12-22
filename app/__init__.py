@@ -276,14 +276,7 @@ def create_app():
         PERMANENT_SESSION_LIFETIME=timedelta(days=7)
     )
 
-    # Sentry in production only
-    if env == 'production' and app.config.get('SENTRY_DSN'):
-        sentry_sdk.init(
-            dsn=app.config['SENTRY_DSN'],
-            integrations=[FlaskIntegration()],
-            traces_sample_rate=1.0,
-            profiles_sample_rate=1.0
-        )
+    # Note: Sentry already initialized at top of create_app() for production
 
     # User loader
     from app.models import User

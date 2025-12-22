@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for, abort
+from flask_login import login_required, current_user
 from app.models import Discussion, IndividualProfile, CompanyProfile
 from app import db
 from datetime import datetime
@@ -104,8 +105,11 @@ def sitemap():
 
 
 @main_bp.route('/test-sitemap')
+@login_required
 def test_sitemap():
-    """Test route to view sitemap content"""
+    """Test route to view sitemap content - admin only"""
+    if not current_user.is_admin:
+        abort(403)
     try:
         sitemap_xml = generate_sitemap()
         return f"""
@@ -162,8 +166,11 @@ Sitemap: {base_url}/sitemap.xml"""
 
 
 @main_bp.route('/test-robots')
+@login_required
 def test_robots():
-    """Test route to verify robots.txt"""
+    """Test route to verify robots.txt - admin only"""
+    if not current_user.is_admin:
+        abort(403)
     try:
         base_url = get_base_url()
 
