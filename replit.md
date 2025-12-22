@@ -22,6 +22,14 @@ The application integrates with Pol.is to facilitate consensus-building discussi
 - **Protected Test Routes**: /test-sitemap and /test-robots now require admin login (previously public)
 - **Verified Webhook Security**: WEBHOOK_SECRET configured, production properly fails closed when missing
 
+### Code Quality Improvements (December 22, 2025)
+- **Proper Logging**: Replaced all print() calls with current_app.logger.debug/error() in middleware, init, routes, and seo modules
+- **Centralized Configuration**: 
+  - Added SPAM_PATTERNS to config.py with fallback defaults in auth/routes.py and commands.py
+  - Cities data loaded once at app startup and cached in app.config['CITIES_BY_COUNTRY']
+- **Eliminated Duplication**: discussions/routes.py now uses cached cities data instead of reloading from disk
+- **Documentation Sync**: Fixed README.md version inconsistencies to match requirements.txt exactly
+
 ## Previous Changes (December 10, 2025)
 
 ### Fixes & UX/UI Improvements (December 10, 2025)
