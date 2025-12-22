@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for
-from app.models import Discussion
+from app.models import Discussion, IndividualProfile, CompanyProfile
 from app import db
 from datetime import datetime
 from slugify import slugify
