@@ -1,0 +1,2362 @@
+# Plan Name: Fix my vibe coded codebase, check for common AI generated problems and help me create a plan to fix all the issues to ensure this codebase is maintainable, works correctly, doesnt have hidden security flaws and uses sensible technologies and patterns.
+
+## Tasks
+
+### 1. Set up comprehensive testing infrastructure (Epic: Phase 4: Feature Completion & Test Coverage)
+
+#### Description
+
+Establish testing framework and infrastructure for the application.
+
+Set up:
+1. Install pytest and related testing packages (pytest-flask, pytest-cov, factory-boy)
+2. Create tests/ directory structure (tests/unit/, tests/integration/, tests/fixtures/)
+3. Set up test database configuration (separate from production)
+4. Create base test fixtures (app, client, database, test users)
+5. Configure pytest.ini and test coverage reporting
+6. Add test data factories for models (User, Discussion, Profile, Statement)
+7. Document testing conventions and how to run tests
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): N/A
+    - current (in progress task): Set up comprehensive testing infrastructure <-
+    - upcoming (not yet): Fix bare except clauses across codebase
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Establish a comprehensive testing infrastructure for the Society Speaks Flask application to enable reliable automated testing and quality assurance.
+
+##### Technical Specs:
+
+**Testing Framework:**
+- Install pytest as the primary test runner
+- Add pytest-flask for Flask-specific test utilities
+- Add pytest-cov for code coverage reporting
+- Add factory-boy for creating test data models
+- Consider pytest-mock for mocking external dependencies
+
+**Directory Structure:**
+- Create `tests/` directory at project root
+- Create `tests/unit/` for isolated unit tests
+- Create `tests/integration/` for integration tests
+- Create `tests/fixtures/` for shared test fixtures and data
+
+**Database Configuration:**
+- Set up separate test database configuration in config.py (TestConfig class)
+- Use in-memory SQLite or dedicated test PostgreSQL database
+- Ensure test database is isolated from development/production
+- Add database cleanup between test runs
+
+**Base Fixtures:**
+- Application fixture: Creates test Flask app instance
+- Client fixture: Provides test client for making requests
+- Database fixture: Handles test database setup/teardown
+- Session fixture: Manages database sessions for tests
+- Test user fixtures: Authenticated user, admin user, regular user
+
+**Factory Pattern:**
+- Create factories using factory-boy for User model
+- Create factories for IndividualProfile and CompanyProfile
+- Create factories for Discussion model
+- Create factories for Statement model (native statement system)
+- Create factories for Vote model
+- Ensure factories handle relationships correctly
+
+**Configuration Files:**
+- Create pytest.ini with test discovery settings
+- Configure coverage reporting (HTML, terminal, minimum thresholds)
+- Set up pytest markers for categorizing tests (unit, integration, slow)
+- Configure test output verbosity and warnings
+
+##### Implementation Checklist:
+
+- [ ] Add testing packages to requirements.txt: pytest, pytest-flask, pytest-cov, factory-boy
+- [ ] Create tests/ directory structure with unit/, integration/, and fixtures/ subdirectories
+- [ ] Add TestConfig class to config.py with test database configuration
+- [ ] Create pytest.ini with test discovery patterns and coverage settings
+- [ ] Create tests/conftest.py with base fixtures (app, client, db, session)
+- [ ] Create tests/fixtures/factories.py with factory-boy model factories
+- [ ] Create tests/fixtures/test_data.py with sample data for testing
+- [ ] Create README_TESTING.md documenting how to run tests and conventions
+- [ ] Add .coveragerc for coverage configuration (exclude patterns, etc.)
+- [ ] Test that pytest runs successfully with example test
+- [ ] Verify test database isolation (changes don't affect development DB)
+
+##### Success Criteria:
+
+- [ ] Running `pytest` discovers and runs tests successfully
+- [ ] Running `pytest --cov=app` generates coverage report
+- [ ] Test database is completely isolated from development/production
+- [ ] Base fixtures (app, client, db) work correctly
+- [ ] Factory-boy factories can create valid test instances of all models
+- [ ] Documentation clearly explains how to write and run tests
+- [ ] Coverage reporting shows which code is tested/untested
+- [ ] Test suite runs cleanly without warnings or errors
+
+##### Files to Create:
+
+- `pytest.ini` - pytest configuration
+- `tests/conftest.py` - base fixtures
+- `tests/fixtures/factories.py` - factory-boy model factories
+- `tests/fixtures/test_data.py` - sample test data
+- `.coveragerc` - coverage configuration
+- `README_TESTING.md` - testing documentation
+- `tests/unit/test_example.py` - example unit test to verify setup
+
+##### Files to Modify:
+
+- `requirements.txt` - add pytest, pytest-flask, pytest-cov, factory-boy
+- `config.py` - add TestConfig class with test database settings
+
+---
+
+
+### 2. Phase 1: Critical Security & Stability Fixes (Epic: Comprehensive AI-Generated Code Remediation for Society Speaks Platform)
+
+#### Description
+
+Address immediate security vulnerabilities and crash-inducing bugs that could impact production stability. This includes fixing authentication/authorization issues, CSRF protection, webhook security, removing debug code, and fixing Python anti-patterns that cause crashes or unpredictable behavior.
+
+
+### 3. Comprehensive AI-Generated Code Remediation for Society Speaks Platform
+
+#### Description
+
+Systematic audit and remediation of AI-generated codebase to fix critical anti-patterns, security vulnerabilities, code quality issues, and performance problems. Includes establishing proper patterns, completing incomplete features, and adding comprehensive test coverage. The codebase is a Flask/Python discussion platform with PostgreSQL, Redis, and various integrations (Pol.is, Sentry, etc.).
+
+
+### 4. Phase 2: Code Quality & Pattern Consistency (Epic: Comprehensive AI-Generated Code Remediation for Society Speaks Platform)
+
+#### Description
+
+Eliminate AI-generated code smell by simplifying over-engineered logic, removing code duplication, establishing consistent error handling patterns, moving hardcoded values to configuration, and resolving dependency version inconsistencies.
+
+
+### 5. Phase 4: Feature Completion & Test Coverage (Epic: Comprehensive AI-Generated Code Remediation for Society Speaks Platform)
+
+#### Description
+
+Complete unfinished features (CSV export, etc.) and create a comprehensive test suite covering critical paths including authentication, discussions, profiles, and the native statement system.
+
+
+### 6. Phase 3: Performance & Scalability Optimization (Epic: Comprehensive AI-Generated Code Remediation for Society Speaks Platform)
+
+#### Description
+
+Optimize database queries to prevent N+1 issues, add pagination/limits to unscoped queries, and ensure the application can scale as data grows without performance degradation.
+
+
+### 7. Fix bare except clauses across codebase (Epic: Phase 1: Critical Security & Stability Fixes)
+
+#### Description
+
+Replace all bare 'except:' clauses with specific exception handling. Locations:
+- app/auth/routes.py:208 (registration error handling)
+- app/email_utils.py:427 (email sending)
+- app/profiles/routes.py:244, 249 (profile image handling)
+- app/models.py:81 (model initialization)
+
+Replace with appropriate specific exceptions (e.g., ValueError, IOError, SQLAlchemyError) and add proper error logging. This prevents catching system-level exceptions like KeyboardInterrupt and makes debugging easier.
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Set up comprehensive testing infrastructure
+    - current (in progress task): Fix bare except clauses across codebase <-
+    - upcoming (not yet): Add missing imports for Profile models in routes.py
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Replace all bare `except:` clauses with specific exception handling to prevent catching system-level exceptions and improve error debugging. Bare except clauses are a Python anti-pattern that can catch exceptions like KeyboardInterrupt and SystemExit, making the application difficult to debug and interrupt.
+
+##### Technical Specs:
+
+**Locations to Fix:**
+1. `app/auth/routes.py:208` - Registration error handling
+2. `app/email_utils.py:427` - Email sending error handling
+3. `app/profiles/routes.py:244, 249` - Profile image upload/processing
+4. `app/models.py:81` - Model initialization
+
+**Exception Types to Use:**
+- **ValueError** - For invalid input/data conversion errors
+- **IOError/OSError** - For file operations (image upload/save)
+- **SQLAlchemyError** - For database operations
+- **SMTPException** - For email sending failures
+- **JSONDecodeError** - For JSON parsing errors
+- **ValidationError** - For form/data validation failures
+
+**Error Logging:**
+- Use Python's logging module (`logger.error()`, `logger.exception()`)
+- Include contextual information (user ID, file name, operation attempted)
+- Use `logger.exception()` to include stack traces for debugging
+- Set appropriate log levels (ERROR for exceptions, WARNING for expected failures)
+
+##### Implementation Checklist:
+
+- [ ] Review each bare except location to determine appropriate specific exception
+- [ ] Replace bare except in app/auth/routes.py:208 with specific exception(s)
+- [ ] Replace bare except in app/email_utils.py:427 with SMTPException or specific email errors
+- [ ] Replace bare except in app/profiles/routes.py:244 with IOError/ValueError for image handling
+- [ ] Replace bare except in app/profiles/routes.py:249 with IOError/ValueError for image handling
+- [ ] Replace bare except in app/models.py:81 with SQLAlchemyError or appropriate exception
+- [ ] Add proper error logging with contextual information at each location
+- [ ] Ensure error messages are user-friendly where displayed
+- [ ] Test each error path to verify exceptions are caught correctly
+- [ ] Verify system-level exceptions (KeyboardInterrupt) are no longer caught
+
+##### Success Criteria:
+
+- [ ] No bare `except:` clauses remain in the four specified locations
+- [ ] Each exception handler catches specific, appropriate exception types
+- [ ] Error logging includes sufficient context for debugging (user ID, operation, etc.)
+- [ ] User-facing error messages are clear and helpful
+- [ ] System can be interrupted with Ctrl+C without being caught
+- [ ] Code review confirms exceptions are caught at appropriate specificity level
+- [ ] Testing confirms error handling still works for actual error cases
+
+##### Dependencies:
+
+- Access to Python logging module (already imported in most files)
+- Understanding of what operations each code block performs
+
+##### Files to Read:
+
+- `app/auth/routes.py` - registration error handling context
+- `app/email_utils.py` - email sending implementation
+- `app/profiles/routes.py` - image upload/processing logic
+- `app/models.py` - model initialization code
+
+##### Files to Modify:
+
+- `app/auth/routes.py` (line ~208)
+- `app/email_utils.py` (line ~427)
+- `app/profiles/routes.py` (lines ~244, 249)
+- `app/models.py` (line ~81)
+
+---
+
+
+### 8. Add missing imports for Profile models in routes.py (Epic: Phase 1: Critical Security & Stability Fixes)
+
+#### Description
+
+app/routes.py references IndividualProfile and CompanyProfile (lines 70-71) without importing them from app.models.
+
+Add the proper import statement at the top of the file:
+from app.models import IndividualProfile, CompanyProfile
+
+This will prevent potential NameError exceptions when these models are accessed.
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Fix bare except clauses across codebase
+    - current (in progress task): Add missing imports for Profile models in routes.py <-
+    - upcoming (not yet): Initialize Flask-SeaSurf for comprehensive CSRF protection
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Add missing import statements for IndividualProfile and CompanyProfile models in app/routes.py to prevent potential NameError exceptions when these models are referenced.
+
+##### Technical Specs:
+
+**Issue:**
+- `app/routes.py` lines 70-71 reference IndividualProfile and CompanyProfile
+- These models are not imported from app.models
+- This will cause NameError if those code paths are executed
+
+**Solution:**
+- Add import statement: `from app.models import IndividualProfile, CompanyProfile`
+- Place import with other model imports at top of file
+- Verify no circular import issues are created
+
+**Verification:**
+- Check if the referenced lines actually execute in normal application flow
+- Verify the import works without circular dependency issues
+- Test that the routes using these models work correctly
+
+##### Implementation Checklist:
+
+- [ ] Locate the import section at the top of app/routes.py
+- [ ] Add: `from app.models import IndividualProfile, CompanyProfile`
+- [ ] Ensure import is placed with other app.models imports (if any)
+- [ ] Verify no circular import issues by importing app in Python shell
+- [ ] Check lines 70-71 to understand the context of usage
+- [ ] Test the specific routes that use these models
+- [ ] Verify the application starts without import errors
+
+##### Success Criteria:
+
+- [ ] Import statement added to app/routes.py
+- [ ] No circular import errors when starting the application
+- [ ] No NameError when code paths using IndividualProfile/CompanyProfile execute
+- [ ] Application runs and routes using these models work correctly
+
+##### Files to Read:
+
+- `app/routes.py` - to understand usage context at lines 70-71
+- `app/models.py` - to verify model definitions
+
+##### Files to Modify:
+
+- `app/routes.py` - add import statement at the top
+
+---
+
+
+### 9. Initialize Flask-SeaSurf for comprehensive CSRF protection (Epic: Phase 1: Critical Security & Stability Fixes)
+
+#### Description
+
+Flask-SeaSurf is listed in requirements.txt but is never initialized in the application. Currently, CSRF protection only comes from Flask-WTF forms.
+
+In app/__init__.py:
+1. Import SeaSurf from flask_seasurf
+2. Initialize SeaSurf(app) after app creation
+3. Configure exemptions for webhook endpoints if needed
+4. Test that existing forms still work with the additional CSRF layer
+
+This provides application-wide CSRF protection beyond just form submissions.
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Add missing imports for Profile models in routes.py
+    - current (in progress task): Initialize Flask-SeaSurf for comprehensive CSRF protection <-
+    - upcoming (not yet): Create authentication and authorization test suite
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Initialize Flask-SeaSurf to provide comprehensive application-wide CSRF protection beyond the form-level protection currently provided by Flask-WTF.
+
+##### Technical Specs:
+
+**Current State:**
+- Flask-SeaSurf is listed in requirements.txt but never initialized
+- CSRF protection currently only covers Flask-WTF forms
+- API endpoints, AJAX requests, and non-form submissions are unprotected
+
+**Implementation:**
+- Import SeaSurf from flask_seasurf in app/__init__.py
+- Initialize after app creation: `csrf = SeaSurf(app)`
+- Configure exemptions for webhook endpoints (may not have CSRF tokens)
+- Ensure compatibility with existing Flask-WTF form protection
+
+**Webhook Exemptions:**
+- Identify webhook endpoints that receive external POST requests
+- Use `@csrf.exempt` decorator or configure exemption patterns
+- Common candidates: Pol.is webhooks, payment webhooks, etc.
+
+**Testing:**
+- Verify existing forms with Flask-WTF still work (shouldn't conflict)
+- Test that non-exempt POST endpoints require CSRF token
+- Test that webhook endpoints still accept external requests
+- Verify AJAX requests work (may need token in headers)
+
+##### Implementation Checklist:
+
+- [ ] Add `from flask_seasurf import SeaSurf` to app/__init__.py
+- [ ] Initialize SeaSurf after app creation (after `app = Flask(__name__)`)
+- [ ] Identify webhook endpoints that need CSRF exemption (check webhook_security.py, routes.py)
+- [ ] Add `@csrf.exempt` decorator to webhook endpoints OR configure exemption patterns
+- [ ] Test existing forms to ensure they still submit correctly
+- [ ] Test that non-form POST endpoints are now protected
+- [ ] Test webhook endpoints still accept external requests
+- [ ] Check if AJAX requests need updates to include CSRF token
+- [ ] Document CSRF protection configuration in README or comments
+
+##### Success Criteria:
+
+- [ ] SeaSurf is initialized in app/__init__.py
+- [ ] Application starts without errors
+- [ ] Existing Flask-WTF forms continue to work correctly
+- [ ] POST requests without CSRF tokens are rejected (except exempted endpoints)
+- [ ] Webhook endpoints are properly exempted and still function
+- [ ] AJAX requests (if any) work correctly with CSRF protection
+- [ ] No regression in existing functionality
+
+##### Dependencies:
+
+- Flask-SeaSurf package (already in requirements.txt)
+- Understanding of which endpoints are webhooks requiring exemption
+
+##### Files to Read:
+
+- `app/__init__.py` - locate app initialization code
+- `app/webhook_security.py` - identify webhook endpoints
+- `app/routes.py` - check for other POST endpoints that might be webhooks
+
+##### Files to Modify:
+
+- `app/__init__.py` - add SeaSurf import and initialization
+- Potentially webhook route files - add @csrf.exempt decorators if needed
+
+
+### 10. Create authentication and authorization test suite (Epic: Phase 4: Feature Completion & Test Coverage)
+
+#### Description
+
+Create comprehensive tests for authentication flows and authorization checks.
+
+Test coverage:
+1. User registration (valid data, duplicate emails, spam detection)
+2. Login/logout flows (correct credentials, incorrect credentials, session management)
+3. Password reset functionality (request, validation, reset completion)
+4. Email verification process
+5. Rate limiting on auth endpoints
+6. Admin authorization decorator (admin access, non-admin rejection)
+7. Session timeout and security
+8. CSRF protection on auth forms
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Initialize Flask-SeaSurf for comprehensive CSRF protection
+    - current (in progress task): Create authentication and authorization test suite <-
+    - upcoming (not yet): Remove duplicate Sentry initialization
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Create a comprehensive test suite for authentication and authorization functionality to ensure security and reliability of user access controls.
+
+##### Technical Specs:
+
+###### Testing Framework Setup:
+- Use pytest with pytest-flask for Flask application testing
+- Configure test fixtures for app context, database, and test client
+- Create factory functions for test users (regular users, admin users, unverified users)
+- Set up isolated test database that resets between test runs
+
+###### Test Coverage Areas:
+
+**User Registration:**
+- Valid registration with all required fields
+- Duplicate email detection and rejection
+- Spam pattern detection in usernames/emails
+- Invalid email format handling
+- Missing required field validation
+- Password strength requirements
+
+**Login/Logout Flows:**
+- Successful login with valid credentials
+- Login failure with incorrect password
+- Login failure with non-existent email
+- Session creation on successful login
+- Session destruction on logout
+- Remember me functionality (if applicable)
+- Redirect after login behavior
+
+**Password Reset:**
+- Password reset request generation
+- Token validation and expiration
+- Successful password reset completion
+- Invalid/expired token rejection
+- Email sending verification
+
+**Email Verification:**
+- Verification email sent on registration
+- Token validation for email verification
+- Account activation on verification
+- Unverified account restrictions
+
+**Rate Limiting:**
+- Login endpoint rate limit enforcement
+- Registration endpoint rate limit enforcement
+- Password reset endpoint rate limit enforcement
+- Rate limit bypass for legitimate users after timeout
+
+**Admin Authorization:**
+- Admin decorator allows admin users access
+- Admin decorator rejects non-admin users (403 response)
+- Session validity checks for admin routes
+- Admin flag cannot be self-assigned by users
+
+**Security Measures:**
+- Session timeout enforcement
+- CSRF token validation on auth forms
+- Secure session cookie attributes
+- Protection against session fixation
+
+##### Implementation Checklist:
+- [ ] Create `tests/test_auth.py` with test class structure
+- [ ] Implement registration test cases (valid, duplicate, spam)
+- [ ] Implement login/logout test cases with session verification
+- [ ] Implement password reset workflow tests
+- [ ] Implement email verification tests
+- [ ] Implement rate limiting tests (may require mocking time)
+- [ ] Implement admin authorization decorator tests
+- [ ] Implement session security tests (timeout, CSRF)
+- [ ] Add test fixtures for common auth scenarios
+- [ ] Ensure all tests clean up properly (no state leakage)
+
+##### Success Criteria:
+- [ ] All authentication flows are tested with positive and negative cases
+- [ ] Test coverage for auth routes exceeds 90%
+- [ ] Rate limiting properly enforced and tested
+- [ ] Admin authorization correctly prevents unauthorized access
+- [ ] All security measures (CSRF, session timeout) verified
+- [ ] Tests run independently without side effects
+- [ ] Clear test failure messages aid debugging
+
+##### Dependencies:
+- Ticket #28 (Set up comprehensive testing infrastructure) must be completed first
+
+##### Files to Read:
+- `app/auth/routes.py` - Authentication route implementations
+- `app/models.py` - User model and authentication methods
+- `app/admin/routes.py` - Admin authorization decorator
+- `config.py` - Session and security configuration
+
+##### Files to Modify:
+- `tests/test_auth.py` - Create new test file
+- `tests/fixtures/auth_fixtures.py` - Create auth-specific fixtures (if needed)
+
+---
+
+
+### 11. Remove duplicate Sentry initialization (Epic: Phase 1: Critical Security & Stability Fixes)
+
+#### Description
+
+Sentry is initialized twice in app/__init__.py:
+- Lines 74-83: First initialization
+- Lines 280-286: Duplicate initialization
+
+Remove the duplicate initialization and ensure Sentry is only initialized once early in the application lifecycle. Verify that error tracking still works correctly after the change.
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Create authentication and authorization test suite
+    - current (in progress task): Remove duplicate Sentry initialization <-
+    - upcoming (not yet): Remove duplicate Limiter (rate limiting) initialization
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Remove duplicate Sentry initialization code to prevent potential conflicts and ensure clean error tracking configuration.
+
+##### Technical Specs:
+
+**Current State:**
+- Sentry is initialized twice in `app/__init__.py`
+- First initialization: lines 74-83
+- Duplicate initialization: lines 280-286
+- Both initializations likely use the same DSN and configuration
+
+**Target State:**
+- Single Sentry initialization early in application lifecycle
+- Initialization occurs before blueprint registration
+- Configuration properly inherits from config.py settings
+- No redundant initialization code
+
+##### Implementation Checklist:
+- [ ] Review both Sentry initialization blocks to identify differences
+- [ ] Determine if any unique configuration exists in the duplicate block
+- [ ] Keep the first initialization (lines 74-83) as canonical
+- [ ] Remove duplicate initialization (lines 280-286)
+- [ ] Verify Sentry DSN is correctly loaded from environment/config
+- [ ] Ensure initialization happens before app.register_blueprint calls
+- [ ] Test error tracking by triggering a test exception (in development)
+- [ ] Verify Sentry dashboard receives error reports correctly
+- [ ] Check application logs for Sentry initialization messages
+- [ ] Remove any orphaned imports related to removed code
+
+##### Success Criteria:
+- [ ] Only one Sentry initialization block exists in `app/__init__.py`
+- [ ] Sentry initialization occurs early in the create_app() function
+- [ ] Error tracking functions correctly in development environment
+- [ ] No duplicate error reports appear in Sentry dashboard
+- [ ] Application starts without Sentry-related warnings
+- [ ] Code review confirms clean, single initialization pattern
+
+##### Files to Read:
+- `app/__init__.py` - Locate both initialization blocks
+- `config.py` - Verify SENTRY_DSN configuration
+
+##### Files to Modify:
+- `app/__init__.py` - Remove duplicate initialization block
+
+---
+
+
+### 12. Remove duplicate Limiter (rate limiting) initialization (Epic: Phase 1: Critical Security & Stability Fixes)
+
+#### Description
+
+Flask-Limiter is initialized twice:
+- Global limiter in app/__init__.py
+- Local limiter in app/auth/routes.py:19
+
+Remove the local duplicate in auth/routes.py and use the global limiter instance. Update any auth routes that reference the local limiter to use the global one imported from app/__init__.py.
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Remove duplicate Sentry initialization
+    - current (in progress task): Remove duplicate Limiter (rate limiting) initialization <-
+    - upcoming (not yet): Fix webhook secret security configuration
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Eliminate duplicate Flask-Limiter initialization to ensure consistent rate limiting behavior across the application.
+
+##### Technical Specs:
+
+**Current State:**
+- Global limiter instance created in `app/__init__.py` 
+- Duplicate local limiter created in `app/auth/routes.py:19`
+- Auth routes may reference the local instance instead of global
+- Potential for inconsistent rate limit configuration
+
+**Target State:**
+- Single global limiter instance in `app/__init__.py`
+- All auth routes import and use the global limiter
+- Consistent rate limit configuration across application
+- No local limiter instances in blueprint modules
+
+**Import Pattern:**
+Auth routes should import limiter like:
+```python
+from app import limiter
+```
+
+##### Implementation Checklist:
+- [ ] Identify the local limiter initialization in `app/auth/routes.py:19`
+- [ ] Review auth routes to find all references to the local limiter
+- [ ] Remove the local limiter initialization
+- [ ] Add import statement for global limiter from app
+- [ ] Update all `@limiter.limit()` decorators to use imported limiter
+- [ ] Verify rate limit decorators remain intact on auth endpoints
+- [ ] Test rate limiting on login endpoint (manual or automated)
+- [ ] Test rate limiting on registration endpoint
+- [ ] Check for any other blueprints with duplicate limiter instances
+- [ ] Ensure no import errors or circular dependency issues
+
+##### Success Criteria:
+- [ ] No local limiter initialization in `app/auth/routes.py`
+- [ ] Auth routes successfully import global limiter instance
+- [ ] Rate limiting functions correctly on auth endpoints
+- [ ] No errors or warnings related to limiter initialization
+- [ ] Rate limit responses return 429 status code as expected
+- [ ] Application starts without limiter-related errors
+
+##### Dependencies:
+None - this is a standalone refactoring task
+
+##### Files to Read:
+- `app/__init__.py` - Locate global limiter initialization
+- `app/auth/routes.py` - Identify local limiter and usage
+
+##### Files to Modify:
+- `app/auth/routes.py` - Remove duplicate limiter, add import
+
+---
+
+
+### 13. Fix webhook secret security configuration (Epic: Phase 1: Critical Security & Stability Fixes)
+
+#### Description
+
+config.py (lines 151-156) has a dev fallback for webhook secrets that could leak into production:
+
+Webhook secret currently defaults to 'dev-secret-key-change-in-production' if not set. This is a security vulnerability.
+
+Update to:
+1. Remove the dev fallback in production mode
+2. Raise a configuration error if WEBHOOK_SECRET is not set in production
+3. Only allow fallback in Development config class
+4. Add validation in webhook_security.py to reject requests with default secret
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Remove duplicate Limiter (rate limiting) initialization
+    - current (in progress task): Fix webhook secret security configuration <-
+    - upcoming (not yet): Strengthen admin authorization checks
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Fix critical security vulnerability where webhook secrets default to a known development value that could be exploited in production.
+
+##### Technical Specs:
+
+**Current Vulnerability:**
+- `config.py` lines 151-156 contains webhook secret configuration
+- Default value: `'dev-secret-key-change-in-production'` 
+- This default applies even in production if WEBHOOK_SECRET env var is not set
+- Attackers could forge webhook requests using the known default
+
+**Security Requirements:**
+- Production must fail fast if WEBHOOK_SECRET is not configured
+- Development environment can use fallback for convenience
+- Webhook validation must reject default/weak secrets
+- Configuration error messages should guide proper setup
+
+##### Implementation Checklist:
+
+###### Config.py Changes:
+- [ ] Locate webhook secret configuration in `config.py` (lines 151-156)
+- [ ] In Production config class: Remove fallback, make WEBHOOK_SECRET required
+- [ ] Add validation to raise ConfigurationError if WEBHOOK_SECRET not set in production
+- [ ] In Development config class: Keep dev fallback for convenience
+- [ ] Add clear error message: "WEBHOOK_SECRET must be set in production environment"
+
+###### Webhook Security Validation:
+- [ ] Open `app/webhook_security.py`
+- [ ] Add validation function to check for default/weak secrets
+- [ ] Reject requests if secret matches known default values
+- [ ] List of forbidden defaults: `['dev-secret-key-change-in-production', '', None]`
+- [ ] Log security warning when default secret is detected
+- [ ] Return 403 Forbidden for requests with invalid secrets
+
+###### Documentation:
+- [ ] Update README.md or deployment docs with WEBHOOK_SECRET requirement
+- [ ] Add example: `WEBHOOK_SECRET=your-strong-random-secret-here`
+- [ ] Document how to generate secure webhook secret (e.g., `openssl rand -hex 32`)
+
+##### Success Criteria:
+- [ ] Production deployment fails if WEBHOOK_SECRET is not set
+- [ ] Clear error message guides developers to set the secret
+- [ ] Development environment continues to work with fallback
+- [ ] Webhook validation rejects requests with default secret
+- [ ] No hardcoded secrets remain in production configuration
+- [ ] Security review confirms vulnerability is mitigated
+
+##### Testing:
+- [ ] Test production mode startup without WEBHOOK_SECRET (should fail)
+- [ ] Test production mode with valid WEBHOOK_SECRET (should succeed)
+- [ ] Test webhook endpoint with default secret (should reject with 403)
+- [ ] Test webhook endpoint with valid secret (should process normally)
+- [ ] Verify development mode works without manual configuration
+
+##### Files to Read:
+- `config.py` - Webhook secret configuration
+- `app/webhook_security.py` - Webhook validation logic
+
+##### Files to Modify:
+- `config.py` - Update Production and Development config classes
+- `app/webhook_security.py` - Add default secret validation
+- `README.md` or deployment docs - Document WEBHOOK_SECRET requirement
+
+
+### 14. Strengthen admin authorization checks (Epic: Phase 1: Critical Security & Stability Fixes)
+
+#### Description
+
+Review and strengthen admin authorization:
+1. Verify that admin decorator checks session validity (not just user.is_admin flag)
+2. Add session timeout checks for admin routes
+3. Ensure admin routes in app/admin/routes.py properly validate authorization
+4. Add audit logging for admin actions
+5. Check that is_admin flag cannot be set by users themselves
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Fix webhook secret security configuration
+    - current (in progress task): Strengthen admin authorization checks <-
+    - upcoming (not yet): Fix webhook security DEBUG mode bypass
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Strengthen the admin authorization system to ensure proper security controls and audit trails for administrative actions.
+
+##### Technical Specs:
+
+**Backend - Authorization Layer:**
+- Admin decorator must validate both `user.is_admin` flag AND active session validity
+- Session timeout enforcement for admin routes (prevent stale admin sessions)
+- Audit logging system for all admin actions (who, what, when, IP address)
+- Database model validation to ensure `is_admin` flag cannot be manipulated by users
+
+**Security Validations:**
+- Session freshness check (re-authentication requirement for sensitive operations)
+- CSRF token validation on all admin state-changing operations
+- IP address logging and optional IP allowlist support
+- Failed authorization attempt tracking
+
+##### Implementation Checklist:
+
+- [ ] Update admin decorator in `app/admin/routes.py` or utility module to:
+  - Verify session validity (check session expiry, user ID match)
+  - Confirm user.is_admin flag is True
+  - Log authorization check results
+- [ ] Add session timeout logic specifically for admin routes (shorter timeout than regular users)
+- [ ] Review all routes in `app/admin/routes.py` for consistent decorator usage
+- [ ] Implement audit logging:
+  - Create audit log model or use existing logging infrastructure
+  - Log: timestamp, user_id, action, IP address, affected resources
+  - Store securely (cannot be modified by admins)
+- [ ] Verify `is_admin` flag security:
+  - Check User model for proper field protection
+  - Ensure no user-facing forms or APIs can modify this flag
+  - Add database constraint if possible
+- [ ] Add rate limiting to admin login attempts
+- [ ] Test admin authorization failure scenarios (expired session, non-admin access)
+
+##### Success Criteria:
+
+- [ ] Admin decorator validates BOTH session validity AND is_admin flag
+- [ ] Stale admin sessions are rejected (configurable timeout period)
+- [ ] All admin actions are logged with user, timestamp, action, and IP
+- [ ] `is_admin` flag cannot be set through user registration, profile updates, or any user-accessible endpoint
+- [ ] Failed admin access attempts are logged and rate-limited
+- [ ] Code review confirms consistent authorization checks across all admin routes
+
+##### Dependencies:
+- None (standalone security hardening)
+
+##### Files to Read:
+- `app/admin/routes.py` - Current admin routes and authorization decorator
+- `app/models.py` - User model to verify is_admin field protection
+- `app/auth/routes.py` - Session management patterns
+- `config.py` - Session timeout configuration
+
+##### Files to Modify:
+- `app/admin/routes.py` - Admin decorator and route authorization
+- `app/models.py` - Potentially add audit log model
+- `app/utils.py` or create `app/admin/security.py` - Admin authorization utilities
+- Potentially `config.py` - Admin session timeout configuration
+
+---
+
+
+### 15. Fix webhook security DEBUG mode bypass (Epic: Phase 1: Critical Security & Stability Fixes)
+
+#### Description
+
+app/webhook_security.py has security bypasses in DEBUG mode:
+- Line 72: Allows requests without signature in DEBUG
+- Line 140: Allows requests without signature/timestamp in DEBUG
+
+This is dangerous if DEBUG is accidentally enabled in production. Update to:
+1. Remove DEBUG mode bypasses for signature validation
+2. Create separate test endpoints for development webhook testing
+3. Always validate signatures regardless of DEBUG setting
+4. Add clear warnings in logs when validation is skipped
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Strengthen admin authorization checks
+    - current (in progress task): Fix webhook security DEBUG mode bypass <-
+    - upcoming (not yet): Remove test routes from production code
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Remove dangerous DEBUG mode security bypasses in webhook signature validation to prevent production vulnerabilities.
+
+##### Technical Specs:
+
+**Backend - Webhook Security:**
+- Webhook signature validation must be enforced in ALL environments
+- Remove conditional DEBUG mode bypasses in `app/webhook_security.py`
+- Create separate development testing infrastructure that doesn't compromise security
+- Add clear logging for validation processes (without exposing secrets)
+
+**Development Testing Solution:**
+- Dedicated test endpoints that require explicit enabling (environment variable)
+- Test mode uses mock signatures or test-specific secrets (never production secrets)
+- Clear visual/log indicators when test endpoints are enabled
+
+##### Implementation Checklist:
+
+- [ ] Remove DEBUG bypass at line 72 in `webhook_security.py` (signature validation skip)
+- [ ] Remove DEBUG bypass at line 140 in `webhook_security.py` (signature/timestamp validation skip)
+- [ ] Always validate webhook signatures regardless of DEBUG setting
+- [ ] Create alternative testing approach:
+  - Add `ENABLE_WEBHOOK_TEST_ENDPOINTS=true` environment variable (default: false)
+  - Create `/webhook/test` endpoint that accepts unsigned requests (only if enabled)
+  - Add prominent warnings in logs when test endpoints are active
+- [ ] Add logging for webhook validation:
+  - Log validation success/failure (without exposing secrets)
+  - Log when signatures are missing or invalid
+  - Include request metadata (timestamp, source IP)
+- [ ] Update development documentation to explain new testing approach
+- [ ] Add validation check: raise ConfigurationError if DEBUG=True in production environment
+
+##### Success Criteria:
+
+- [ ] Webhook signature validation ALWAYS runs regardless of DEBUG setting
+- [ ] No code paths allow unsigned webhooks in production
+- [ ] Test endpoints are clearly separated and require explicit enabling
+- [ ] Logs show clear warnings when test mode is active
+- [ ] Code review confirms no DEBUG-based security bypasses remain
+- [ ] Documentation updated with new webhook testing procedures
+- [ ] Test that webhook validation fails correctly with invalid/missing signatures
+
+##### Dependencies:
+- None (standalone security fix)
+
+##### Files to Read:
+- `app/webhook_security.py` - Current webhook validation logic
+- `config.py` - DEBUG mode configuration
+
+##### Files to Modify:
+- `app/webhook_security.py` - Remove DEBUG bypasses, add proper validation
+- Potentially create `app/webhooks/test_routes.py` - Separate test endpoints
+- Documentation files (README, developer docs) - Update testing instructions
+
+---
+
+
+### 16. Remove test routes from production code (Epic: Phase 1: Critical Security & Stability Fixes)
+
+#### Description
+
+app/routes.py contains test routes that should not be in production:
+- /test-sitemap
+- /test-robots
+
+Remove these routes entirely or wrap them in DEBUG mode checks so they're only available during development. Update any documentation that might reference these endpoints.
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Fix webhook security DEBUG mode bypass
+    - current (in progress task): Remove test routes from production code <-
+    - upcoming (not yet): Replace print statements with proper logging
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Remove test routes from production code to reduce attack surface and prevent confusion in production environments.
+
+##### Technical Specs:
+
+**Backend - Route Cleanup:**
+- Remove `/test-sitemap` and `/test-robots` routes from `app/routes.py`
+- Ensure removal doesn't break any production functionality (verify these are truly test-only)
+- Optional: If routes are useful for development, wrap in DEBUG mode checks
+- Update any documentation or scripts referencing these endpoints
+
+**Alternative (if routes needed for development):**
+- Wrap routes in `if app.debug:` or `if app.config['TESTING']:` conditional
+- Add clear comments indicating these are development-only
+- Ensure they return 404 in production
+
+##### Implementation Checklist:
+
+- [ ] Locate `/test-sitemap` and `/test-robots` routes in `app/routes.py`
+- [ ] Verify these routes are not referenced by:
+  - Production code
+  - Monitoring/health check systems
+  - CI/CD pipelines
+  - User-facing documentation
+- [ ] Choose approach:
+  - **Option A (Recommended)**: Delete routes entirely
+  - **Option B**: Wrap in `if current_app.debug:` conditional
+- [ ] If using Option B, add clear comments and log warnings when accessed
+- [ ] Update documentation:
+  - Remove references from user docs
+  - Update developer docs if routes moved to debug-only
+- [ ] Search codebase for any references to these endpoint URLs
+- [ ] Test that production deployment doesn't expose these routes
+
+##### Success Criteria:
+
+- [ ] `/test-sitemap` and `/test-robots` return 404 in production environment
+- [ ] No broken references to these routes in the codebase
+- [ ] Documentation updated (no references to test routes)
+- [ ] If debug-only: routes only accessible when `DEBUG=True`
+- [ ] Code review confirms clean removal/protection of test endpoints
+
+##### Dependencies:
+- None (standalone cleanup)
+
+##### Files to Read:
+- `app/routes.py` - Current test route implementations
+- Documentation files - Check for references to these endpoints
+
+##### Files to Modify:
+- `app/routes.py` - Remove or wrap test routes
+- Documentation files (if they reference these routes)
+
+---
+
+
+### 17. Replace print statements with proper logging (Epic: Phase 1: Critical Security & Stability Fixes)
+
+#### Description
+
+Replace all print() debug statements with proper logging using Python's logging module:
+
+Locations:
+- app/__init__.py:330, 332, 334, 335 (blueprint registration)
+- app/routes.py:101 (general debugging)
+
+Replace with logger.debug() or logger.info() calls as appropriate. Ensure logging is configured properly to capture these messages in production logs without cluttering output.
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Remove test routes from production code
+    - current (in progress task): Replace print statements with proper logging <-
+    - upcoming (not yet): Refactor duplicate profile lookup patterns
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Replace debug print statements with proper Python logging to ensure production logs are structured, configurable, and maintainable.
+
+##### Technical Specs:
+
+**Backend - Logging Infrastructure:**
+- Use Python's built-in `logging` module instead of print statements
+- Configure appropriate log levels (DEBUG, INFO, WARNING, ERROR)
+- Ensure logs are captured in production log aggregation systems
+- Maintain readability without cluttering output
+
+**Logging Configuration:**
+- Application should have centralized logging setup (likely in `app/__init__.py`)
+- Use module-level loggers: `logger = logging.getLogger(__name__)`
+- Format should include timestamp, level, module name, and message
+
+##### Implementation Checklist:
+
+- [ ] Import logging module at top of affected files
+- [ ] Create module-level logger instances: `logger = logging.getLogger(__name__)`
+- [ ] Replace print statements in `app/__init__.py:330, 332, 334, 335`:
+  - Blueprint registration messages â†’ `logger.info()`
+  - Include blueprint name and registration status
+- [ ] Replace print statement in `app/routes.py:101`:
+  - Determine appropriate level (likely `logger.debug()` or `logger.info()`)
+  - Add context about what's being debugged
+- [ ] Verify logging configuration in `app/__init__.py`:
+  - Check if logging is properly initialized
+  - Ensure log level is configurable via environment variable
+  - Confirm format includes necessary information
+- [ ] Test logging output:
+  - Development: logs appear in console
+  - Production: logs go to appropriate destination (Sentry, file, etc.)
+- [ ] Search for any other print() statements that should be converted
+
+##### Success Criteria:
+
+- [ ] No print() statements remain in production code paths
+- [ ] All former print() statements replaced with appropriate logger calls
+- [ ] Logs include proper context (module name, timestamp, level)
+- [ ] Log level is configurable (DEBUG in development, INFO in production)
+- [ ] Production logs are captured by existing log aggregation (Sentry integration works)
+- [ ] Code review confirms proper logging levels used (DEBUG for detailed info, INFO for important events)
+
+##### Dependencies:
+- None (standalone code quality improvement)
+
+##### Files to Read:
+- `app/__init__.py` - Logging configuration and blueprint registration
+- `app/routes.py` - Debug print location
+- `config.py` - Check for LOG_LEVEL configuration
+
+##### Files to Modify:
+- `app/__init__.py` - Replace print statements with logger calls, verify logging config
+- `app/routes.py` - Replace print statement with logger call
+
+
+### 18. Refactor duplicate profile lookup patterns (Epic: Phase 2: Code Quality & Pattern Consistency)
+
+#### Description
+
+Profile lookup logic is duplicated across multiple routes (profiles/routes.py, admin/routes.py).
+
+Refactor to:
+1. Create utility functions for common profile operations:
+   - get_individual_profile_or_404()
+   - get_company_profile_or_404()
+   - get_profile_discussions()
+2. Move these to app/utils.py or create app/profile_utils.py
+3. Update all routes to use the centralized functions
+4. Add consistent error handling and authorization checks
+5. Include proper eager loading (joinedload) in the utility functions to prevent N+1 queries
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Replace print statements with proper logging
+    - current (in progress task): Refactor duplicate profile lookup patterns <-
+    - upcoming (not yet): Create profile management test suite
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Refactor duplicate profile lookup logic into centralized utility functions to improve code maintainability and prevent N+1 database queries.
+
+##### Technical Specs:
+- **Backend**: Create reusable utility functions for profile operations with proper eager loading
+- **Database**: Implement optimized queries using SQLAlchemy's `joinedload` to prevent N+1 issues
+- **Error Handling**: Standardize 404 responses and authorization checks across all profile routes
+
+##### Implementation Checklist:
+- [ ] Create `app/profile_utils.py` (or add to existing `app/utils.py`)
+- [ ] Implement `get_individual_profile_or_404(slug)` with joinedload for related data
+- [ ] Implement `get_company_profile_or_404(slug)` with joinedload for related data
+- [ ] Implement `get_profile_discussions(profile, limit=None, active_only=False)` with proper pagination support
+- [ ] Add consistent authorization checking (e.g., `verify_profile_owner(profile, user)`)
+- [ ] Update `app/profiles/routes.py` to use new utility functions
+- [ ] Update `app/admin/routes.py` to use new utility functions
+- [ ] Remove all duplicate profile lookup code from routes
+- [ ] Add error logging for failed lookups
+
+##### Success Criteria:
+- [ ] All profile lookup logic consolidated into 3-4 clear utility functions
+- [ ] No duplicate profile query code exists in route files
+- [ ] All profile routes use the centralized functions
+- [ ] Eager loading (joinedload) is implemented to prevent N+1 queries on related data (creator, discussions, etc.)
+- [ ] Consistent 404 error handling across all profile operations
+- [ ] Authorization checks are centralized and consistent
+- [ ] No regressions in existing profile functionality
+
+##### Files to Modify:
+- `app/profile_utils.py` (create new file) or `app/utils.py` (if exists)
+- `app/profiles/routes.py` (remove duplicate lookups, import utilities)
+- `app/admin/routes.py` (remove duplicate lookups, import utilities)
+
+---
+
+
+### 19. Create profile management test suite (Epic: Phase 4: Feature Completion & Test Coverage)
+
+#### Description
+
+Create comprehensive tests for individual and company profile functionality.
+
+Test coverage:
+1. Profile creation (individual, company, required fields, validation)
+2. Profile editing and updates (authorized users only)
+3. Profile image/banner upload and processing
+4. Profile slug generation and uniqueness
+5. Profile privacy settings
+6. Profile-discussion association
+7. Profile listing and search
+8. City/country location handling
+9. Social media link validation
+10. Profile deletion and cascade effects
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Refactor duplicate profile lookup patterns
+    - current (in progress task): Create profile management test suite <-
+    - upcoming (not yet): Eliminate code duplication for cities JSON loading
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Create a comprehensive test suite covering all profile management functionality for both individual and company profiles, ensuring proper validation, authorization, and data integrity.
+
+##### Technical Specs:
+- **Testing Framework**: pytest with Flask test client and database fixtures
+- **Coverage Areas**: CRUD operations, file uploads, authorization, validation, cascading deletes
+- **Database**: Use test database with proper transaction rollback between tests
+- **Fixtures**: Create factories for User, IndividualProfile, CompanyProfile test data
+
+##### Implementation Checklist:
+- [ ] Create `tests/test_profiles.py` for profile management tests
+- [ ] Test individual profile creation with valid data (POST to creation endpoint)
+- [ ] Test company profile creation with valid data
+- [ ] Test profile creation validation (missing required fields, invalid data)
+- [ ] Test profile editing authorization (owner can edit, non-owner cannot)
+- [ ] Test profile image upload and processing (valid images, size limits, invalid files)
+- [ ] Test profile banner upload and processing
+- [ ] Test slug generation from profile names (uniqueness, URL-safe characters)
+- [ ] Test slug uniqueness constraints (duplicate slugs handled properly)
+- [ ] Test profile privacy settings (public/private visibility)
+- [ ] Test profile-discussion association (profiles appear on their discussions)
+- [ ] Test profile listing endpoints (pagination, filtering)
+- [ ] Test profile search functionality
+- [ ] Test city/country location selection and validation
+- [ ] Test social media link validation (valid URLs, invalid formats rejected)
+- [ ] Test profile deletion and cascade effects (associated data handled properly)
+- [ ] Test profile retrieval by slug (404 for non-existent profiles)
+
+##### Success Criteria:
+- [ ] All 10 test coverage areas have corresponding test cases
+- [ ] Tests verify both success cases and error handling
+- [ ] Authorization tests confirm only owners can edit their profiles
+- [ ] Validation tests ensure invalid data is rejected with appropriate error messages
+- [ ] Cascade tests verify related data is properly handled on profile deletion
+- [ ] All tests pass consistently with proper database cleanup
+- [ ] Test coverage for profile routes exceeds 80%
+
+##### Dependencies:
+- Testing infrastructure must be set up first (task #28)
+- Test fixtures and factories should be available
+
+##### Files to Create:
+- `tests/test_profiles.py`
+
+##### Files to Read:
+- `app/profiles/routes.py` (profile route handlers to test)
+- `app/models.py` (IndividualProfile, CompanyProfile models)
+- `tests/fixtures/` (existing test fixtures and factories)
+
+---
+
+
+### 20. Eliminate code duplication for cities JSON loading (Epic: Phase 2: Code Quality & Pattern Consistency)
+
+#### Description
+
+The cities_by_country.json file is loaded in multiple places with duplicate code:
+- app/__init__.py:96
+- app/discussions/routes.py:178
+
+Refactor to:
+1. Create a single utility function to load and cache cities data
+2. Load cities data once during application initialization
+3. Make it available through app context or a helper module
+4. Remove duplicate loading code from routes
+5. Add error handling for missing/corrupted JSON file
+
+This improves performance (load once) and maintainability (single source of truth).
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Create profile management test suite
+    - current (in progress task): Eliminate code duplication for cities JSON loading <-
+    - upcoming (not yet): Create discussion management test suite
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Eliminate duplicate cities JSON loading code by creating a centralized utility that loads and caches the cities_by_country.json data once during application initialization.
+
+##### Technical Specs:
+- **Backend**: Create a singleton-pattern utility function for cities data loading
+- **Caching**: Load JSON data once at app startup and make available globally
+- **Storage**: Use Flask app context or a dedicated module-level cache
+- **Error Handling**: Handle missing/corrupted JSON file with appropriate fallback
+
+##### Implementation Checklist:
+- [ ] Create `load_cities_data()` utility function in `app/utils.py` (or new `app/data_utils.py`)
+- [ ] Implement caching mechanism (module-level variable or app context)
+- [ ] Load cities data once in `app/__init__.py` during initialization
+- [ ] Make cities data accessible via `get_cities_data()` or `app.cities_data`
+- [ ] Add error handling for FileNotFoundError (missing JSON)
+- [ ] Add error handling for JSONDecodeError (corrupted JSON)
+- [ ] Implement fallback to empty dict or minimal data on error
+- [ ] Remove duplicate loading code from `app/__init__.py:96`
+- [ ] Remove duplicate loading code from `app/discussions/routes.py:178`
+- [ ] Update both locations to use the centralized utility
+- [ ] Add logging for successful load and any errors
+
+##### Success Criteria:
+- [ ] Cities JSON is loaded exactly once during application startup
+- [ ] No duplicate JSON loading code exists in routes or init files
+- [ ] Both `app/__init__.py` and `app/discussions/routes.py` use the same data source
+- [ ] Missing or corrupted JSON file doesn't crash the application
+- [ ] Cities data is accessible from any part of the application
+- [ ] Performance improved (single load vs. multiple reads)
+- [ ] Error cases are logged appropriately
+
+##### Files to Modify:
+- `app/utils.py` or `app/data_utils.py` (create if needed)
+- `app/__init__.py` (initialize cities data, remove duplicate loading)
+- `app/discussions/routes.py` (remove duplicate loading, use centralized utility)
+
+##### Files to Read:
+- `cities_by_country.json` (understand data structure)
+
+---
+
+
+### 21. Create discussion management test suite (Epic: Phase 4: Feature Completion & Test Coverage)
+
+#### Description
+
+Create comprehensive tests for discussion creation, viewing, and management.
+
+Test coverage:
+1. Discussion creation (individual profiles, company profiles, validation)
+2. Discussion listing and filtering (search, pagination, country/city filters)
+3. Discussion detail views and permissions
+4. Slug generation and uniqueness
+5. Discussion state transitions (active, archived, etc.)
+6. View tracking and analytics
+7. Keyword extraction and topic assignment
+8. Integration with Pol.is (if applicable)
+9. Discussion moderation features
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Eliminate code duplication for cities JSON loading
+    - current (in progress task): Create discussion management test suite <-
+    - upcoming (not yet): Complete CSV export feature in consensus analysis
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Create a comprehensive test suite covering all discussion management functionality, including creation, viewing, moderation, and integration with external services like Pol.is.
+
+##### Technical Specs:
+- **Testing Framework**: pytest with Flask test client and database fixtures
+- **Coverage Areas**: CRUD operations, permissions, state management, analytics, external integrations
+- **Database**: Use test database with proper isolation
+- **Fixtures**: Create factories for Discussion, User, Profile test data
+
+##### Implementation Checklist:
+- [ ] Create `tests/test_discussions.py` for discussion management tests
+- [ ] Test discussion creation by individual profile owners (valid data, success)
+- [ ] Test discussion creation by company profile owners (valid data, success)
+- [ ] Test discussion creation validation (missing fields, invalid data rejected)
+- [ ] Test discussion creation authorization (only profile owners can create)
+- [ ] Test discussion listing endpoint (all discussions returned)
+- [ ] Test discussion search functionality (keyword matching)
+- [ ] Test discussion pagination (page size, page numbers)
+- [ ] Test discussion filtering by country
+- [ ] Test discussion filtering by city
+- [ ] Test discussion detail view (correct data displayed)
+- [ ] Test discussion view permissions (public vs. private discussions)
+- [ ] Test slug generation from discussion titles (URL-safe, unique)
+- [ ] Test slug uniqueness constraints
+- [ ] Test discussion state transitions (active â†’ archived, etc.)
+- [ ] Test view tracking (view count increments correctly)
+- [ ] Test discussion analytics endpoints
+- [ ] Test keyword extraction from discussion content
+- [ ] Test topic assignment to discussions
+- [ ] Test Pol.is integration (if applicable - mock external API)
+- [ ] Test discussion moderation features (flagging, hiding, etc.)
+- [ ] Test discussion editing authorization (owner only)
+- [ ] Test discussion deletion and cascade effects
+
+##### Success Criteria:
+- [ ] All 9 test coverage areas have corresponding test cases
+- [ ] Tests verify both success and error scenarios
+- [ ] Authorization tests confirm proper access control
+- [ ] Validation tests ensure data integrity
+- [ ] State transition tests verify discussion lifecycle management
+- [ ] Analytics tests verify metrics are calculated correctly
+- [ ] External API integration tests use proper mocking
+- [ ] All tests pass consistently with clean database state
+- [ ] Test coverage for discussion routes exceeds 80%
+
+##### Dependencies:
+- Testing infrastructure must be set up first (task #28)
+- Test fixtures and factories should be available
+
+##### Files to Create:
+- `tests/test_discussions.py`
+
+##### Files to Read:
+- `app/discussions/routes.py` (discussion route handlers)
+- `app/models.py` (Discussion model definition)
+- `app/polis_integration.py` (if exists - for integration testing)
+- `tests/fixtures/` (existing test fixtures)
+
+
+### 22. Complete CSV export feature in consensus analysis (Epic: Phase 4: Feature Completion & Test Coverage)
+
+#### Description
+
+consensus.py line 257 has a TODO for CSV export functionality that is incomplete.
+
+Implement CSV export:
+1. Add CSV generation logic for consensus analysis data
+2. Include all relevant metrics (statements, votes, clusters, etc.)
+3. Ensure proper CSV formatting with headers
+4. Add download endpoint with appropriate content-type headers
+5. Include option to export filtered/sorted data
+6. Add user-friendly filename generation (discussion-name-consensus-YYYY-MM-DD.csv)
+7. Test with various discussion sizes and data states
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Create discussion management test suite
+    - current (in progress task): Complete CSV export feature in consensus analysis <-
+    - upcoming (not yet): Create native statement system test suite
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Complete the CSV export functionality for consensus analysis data that was left incomplete at line 257 in consensus.py.
+
+##### Technical Specs:
+- **Backend**: Implement CSV generation logic for consensus analysis results
+- **Data Structure**: Export statements, votes, vote counts, clusters, consensus metrics, and analysis metadata
+- **Routing**: Add download endpoint with proper CSV content-type headers (`text/csv`) and content-disposition for file download
+- **Filename Generation**: Create descriptive filenames following pattern: `{discussion-slug}-consensus-{YYYY-MM-DD}.csv`
+- **Data Filtering**: Support exporting filtered/sorted data (e.g., by cluster, vote threshold, date range)
+
+##### Implementation Checklist:
+- [ ] Implement CSV generation function in consensus.py using Python's csv module
+- [ ] Include all relevant columns: statement text, author, timestamp, agree/disagree counts, confidence levels, cluster assignment, consensus score
+- [ ] Add CSV headers with clear, human-readable column names
+- [ ] Create download route (e.g., `/discussion/<id>/consensus/export`) with authentication check
+- [ ] Set proper HTTP headers: `Content-Type: text/csv` and `Content-Disposition: attachment; filename=...`
+- [ ] Handle empty consensus data gracefully (export with headers only or informative message)
+- [ ] Support optional query parameters for filtering (cluster_id, min_votes, date_range)
+- [ ] Ensure proper character encoding (UTF-8 with BOM for Excel compatibility)
+
+##### Success Criteria:
+- [ ] CSV file downloads successfully with descriptive filename
+- [ ] All consensus metrics are present and properly formatted in the CSV
+- [ ] File opens correctly in Excel and Google Sheets without encoding issues
+- [ ] Filtered exports correctly reflect the requested subset of data
+- [ ] Export handles edge cases: no statements, no votes, single-cluster discussions
+- [ ] Large datasets (1000+ statements) export without timeout or memory issues
+
+##### Dependencies:
+- Requires completed consensus analysis functionality in consensus.py
+- Depends on proper authentication/authorization for accessing discussion data
+
+##### Files to Read:
+- `app/consensus.py` - Review existing consensus analysis logic and data structures
+- `app/models.py` - Understand Statement, Vote, and Discussion models
+
+##### Files to Modify:
+- `app/consensus.py` - Add CSV generation function and resolve TODO at line 257
+- `app/discussions/routes.py` or create new blueprint route for download endpoint
+- Consider adding `app/templates/discussions/detail.html` link to export button
+
+---
+
+
+### 23. Create native statement system test suite (Epic: Phase 4: Feature Completion & Test Coverage)
+
+#### Description
+
+Create comprehensive tests for the native statement and voting system.
+
+Test coverage:
+1. Statement creation and submission
+2. Statement validation (quality checks, moderation)
+3. Voting mechanics (agree/disagree, confidence levels)
+4. Statement ranking and sorting algorithms
+5. Consensus analysis calculation
+6. Statement flagging and moderation
+7. User vote history and changes
+8. Statement analytics and metrics
+9. Integration with discussion lifecycle
+10. Performance with large numbers of statements/votes
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Complete CSV export feature in consensus analysis
+    - current (in progress task): Create native statement system test suite <-
+    - upcoming (not yet): Add pagination to admin profile listing queries
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Create a comprehensive test suite for the native statement and voting system to ensure correctness, reliability, and performance.
+
+##### Technical Specs:
+- **Testing Framework**: Use pytest with pytest-flask for application context
+- **Test Database**: Configure separate test database to avoid polluting production data
+- **Coverage Areas**: Statement CRUD, voting mechanics, ranking algorithms, consensus analysis, moderation, analytics
+- **Performance Testing**: Validate performance with large datasets (100+ statements, 1000+ votes)
+- **Fixtures**: Create reusable test data factories for users, discussions, statements, and votes
+
+##### Implementation Checklist:
+- [ ] Create `tests/test_native_statements.py` for statement creation, validation, and moderation tests
+- [ ] Create `tests/test_voting.py` for voting mechanics (agree/disagree, confidence levels, vote changes)
+- [ ] Create `tests/test_ranking.py` for statement sorting and ranking algorithm validation
+- [ ] Create `tests/test_consensus.py` for consensus analysis calculation accuracy
+- [ ] Create `tests/test_statement_moderation.py` for flagging and moderation workflows
+- [ ] Create test fixtures for users, discussions, and statement/vote data using factory_boy or pytest fixtures
+- [ ] Test vote history tracking and user vote changes (edge case: user changes vote multiple times)
+- [ ] Test statement analytics: total votes, agreement percentage, confidence distribution
+- [ ] Test integration with discussion lifecycle: statements in active vs archived discussions
+- [ ] Create performance test with 100+ statements and 1000+ votes to validate query efficiency
+
+##### Success Criteria:
+- [ ] All statement CRUD operations work correctly with proper validation
+- [ ] Voting mechanics correctly handle all scenarios: new votes, vote changes, conflicting votes
+- [ ] Ranking algorithms produce consistent, correct ordering based on consensus logic
+- [ ] Consensus analysis calculations match expected values (verify with known test cases)
+- [ ] Moderation flags trigger correctly and affect statement visibility appropriately
+- [ ] Vote history accurately tracks all user interactions and changes
+- [ ] Analytics calculations (vote totals, percentages) are accurate
+- [ ] Performance tests complete in reasonable time (<5s for 1000 votes)
+- [ ] Test coverage for native statement system is >80%
+
+##### Dependencies:
+- Requires test infrastructure setup (#28) to be completed first
+- Depends on understanding of Statement, Vote models in app/models.py
+
+##### Files to Read:
+- `app/models.py` - Statement, Vote, Discussion models
+- `app/native_statements/` - Routes and logic for statement system (if exists as blueprint)
+- `app/consensus.py` - Consensus analysis logic
+
+##### Files to Modify:
+- Create `tests/test_native_statements.py`
+- Create `tests/test_voting.py`
+- Create `tests/test_ranking.py`
+- Create `tests/test_consensus.py`
+- Create `tests/test_statement_moderation.py`
+- Create `tests/fixtures/statement_fixtures.py` for reusable test data
+
+---
+
+
+### 24. Add pagination to admin profile listing queries (Epic: Phase 3: Performance & Scalability Optimization)
+
+#### Description
+
+admin/routes.py lines 53-54 fetch all profiles without pagination:
+- IndividualProfile.query.all()
+- CompanyProfile.query.all()
+
+This will cause performance issues as the number of profiles grows.
+
+Update to:
+1. Add pagination parameters (page, per_page) to the admin profiles route
+2. Use .paginate() instead of .all()
+3. Update the admin template to display pagination controls
+4. Set a reasonable default page size (e.g., 50 profiles per page)
+5. Add filtering/search capabilities to help admins find specific profiles
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Create native statement system test suite
+    - current (in progress task): Add pagination to admin profile listing queries <-
+    - upcoming (not yet): Add pagination to user discussion queries in profile views
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Add pagination to admin profile listing queries to prevent performance degradation as the number of profiles grows.
+
+##### Technical Specs:
+- **Backend**: Replace `.all()` queries with `.paginate()` in admin/routes.py lines 53-54
+- **Pagination Parameters**: Accept `page` (default: 1) and `per_page` (default: 50) from query string
+- **Frontend**: Update admin template to display pagination controls (Previous, Page N of M, Next)
+- **Filtering**: Add optional search/filter by profile name, email, or creation date
+- **Performance**: Ensure queries use proper indexes and avoid N+1 patterns
+
+##### Implementation Checklist:
+- [ ] Update admin profile route to accept pagination parameters (`?page=1&per_page=50`)
+- [ ] Replace `IndividualProfile.query.all()` with `IndividualProfile.query.paginate(page=page, per_page=per_page)`
+- [ ] Replace `CompanyProfile.query.all()` with `CompanyProfile.query.paginate(page=page, per_page=per_page)`
+- [ ] Update admin template to display pagination controls using Flask-SQLAlchemy's pagination helper methods
+- [ ] Add search form to filter profiles by name, email, or other relevant fields
+- [ ] Set reasonable default page size (50) and max per_page limit (100) to prevent abuse
+- [ ] Add total profile count display (e.g., "Showing 1-50 of 523 profiles")
+- [ ] Handle edge cases: empty results, invalid page numbers, out-of-range page numbers
+
+##### Success Criteria:
+- [ ] Admin profile pages load quickly even with 1000+ profiles in database
+- [ ] Pagination controls work correctly: Previous/Next buttons enable/disable appropriately
+- [ ] Page number displays correctly (e.g., "Page 2 of 15")
+- [ ] Search/filter functionality narrows results and maintains pagination
+- [ ] Invalid page numbers redirect to page 1 or show appropriate error message
+- [ ] Per-page limits are enforced (reject requests for per_page > 100)
+
+##### Dependencies:
+- None (standalone optimization)
+
+##### Files to Read:
+- `app/admin/routes.py` - Current admin profile listing implementation (lines 53-54)
+- `app/templates/admin/` - Admin template files to understand current UI structure
+
+##### Files to Modify:
+- `app/admin/routes.py` - Update profile listing routes with pagination logic
+- `app/templates/admin/profiles.html` (or similar) - Add pagination controls and search form
+
+---
+
+
+### 25. Add pagination to user discussion queries in profile views (Epic: Phase 3: Performance & Scalability Optimization)
+
+#### Description
+
+profiles/routes.py has multiple instances of fetching all discussions without limits:
+- Line 373: Discussion.query.filter_by(creator_id=profile.user_id).all()
+- Line 380: Discussion.query.filter_by(creator_id=profile.user_id).all()
+- Line 390: Discussion.query.filter_by(creator_id=profile.user_id).all()
+
+For users with many discussions, this could cause performance issues.
+
+Update to:
+1. Add pagination to profile discussion listings
+2. Limit the number of discussions shown (e.g., 20 most recent)
+3. Add 'View All Discussions' link if count exceeds limit
+4. Consider showing only active/recent discussions by default
+5. Use eager loading (joinedload) to prevent N+1 queries
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Add pagination to admin profile listing queries
+    - current (in progress task): Add pagination to user discussion queries in profile views <-
+    - upcoming (not yet): Optimize scheduler native discussion query
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Add pagination to user discussion queries in profile views to prevent performance issues for users with many discussions.
+
+##### Technical Specs:
+- **Backend**: Replace `.all()` queries in profiles/routes.py (lines 373, 380, 390) with limited queries
+- **Query Optimization**: Use `.order_by()` to show most recent discussions first, limit to 20 by default
+- **Eager Loading**: Apply `joinedload()` to prevent N+1 queries when loading discussion-related data
+- **Frontend**: Add "View All Discussions" link or pagination controls if count exceeds display limit
+- **Performance**: Ensure queries execute efficiently even for users with 100+ discussions
+
+##### Implementation Checklist:
+- [ ] Add `.order_by(Discussion.created_at.desc())` to sort discussions by recency
+- [ ] Replace `.all()` with `.limit(20).all()` or use `.paginate()` for full pagination support
+- [ ] Add discussion count query to determine if "View All" link is needed
+- [ ] Implement eager loading: `.options(joinedload(Discussion.creator))` to prevent N+1 queries
+- [ ] Update profile templates to display "View All Discussions (N total)" link when count > 20
+- [ ] Consider adding filter for active discussions only by default (exclude archived)
+- [ ] Optionally add full pagination controls if "View All" page is implemented
+- [ ] Cache discussion count if it's queried frequently
+
+##### Success Criteria:
+- [ ] Profile pages load quickly regardless of discussion count (tested with users having 100+ discussions)
+- [ ] Only 20 most recent discussions display by default, sorted newest first
+- [ ] "View All Discussions" link appears when user has more than 20 discussions
+- [ ] No N+1 query issues (verify with SQLAlchemy query logging or profiling tool)
+- [ ] Query execution time is <500ms even for users with 200+ discussions
+- [ ] Active discussions are prioritized over archived ones (if filtering is implemented)
+
+##### Dependencies:
+- Consider coordination with N+1 query optimization task (#25) to ensure joinedload usage is consistent
+
+##### Files to Read:
+- `app/profiles/routes.py` - Current implementation (lines 373, 380, 390)
+- `app/models.py` - Discussion model to understand relationships and available fields
+- `app/templates/profiles/` - Profile templates to see how discussions are displayed
+
+##### Files to Modify:
+- `app/profiles/routes.py` - Update discussion query logic at lines 373, 380, 390
+- `app/templates/profiles/individual_detail.html` and `app/templates/profiles/company_detail.html` - Add "View All" link or pagination controls
+
+
+### 26. Optimize scheduler native discussion query (Epic: Phase 3: Performance & Scalability Optimization)
+
+#### Description
+
+scheduler.py line 127 fetches all native discussions without limits:
+Discussion.query.filter_by(has_native_statements=True).all()
+
+As the platform grows, this could become inefficient.
+
+Update to:
+1. Add filtering to only process discussions that need analysis
+2. Consider batching the processing (e.g., process 100 at a time)
+3. Add ordering to prioritize active discussions
+4. Implement proper pagination for large result sets
+5. Add indexes on has_native_statements column if not present
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Add pagination to user discussion queries in profile views
+    - current (in progress task): Optimize scheduler native discussion query <-
+    - upcoming (not yet): Fix N+1 query patterns in profile routes
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Optimize the scheduler's native discussion query to prevent performance degradation as the platform scales.
+
+##### Current Issue
+
+The scheduler fetches ALL native discussions without any limits or pagination:
+```python
+Discussion.query.filter_by(has_native_statements=True).all()
+```
+
+This unbounded query will cause severe performance problems as the number of discussions grows.
+
+##### Technical Specs
+
+**Backend Changes:**
+- Modify `scheduler.py` line 127 to implement intelligent batching and filtering
+- Add query optimization to only process discussions requiring analysis
+- Implement proper ordering to prioritize active/recent discussions
+- Add batch size configuration (default: 100 discussions per run)
+
+**Database Changes:**
+- Verify index exists on `has_native_statements` column
+- Add index on relevant timestamp columns for ordering
+- Consider composite index for `(has_native_statements, last_analyzed_at)` if applicable
+
+**Processing Logic:**
+- Add filtering criteria: discussion activity status, last analysis timestamp
+- Implement pagination cursor or offset-based batching
+- Add logging for batch processing metrics
+
+##### Implementation Checklist
+
+- [ ] Replace `.all()` with paginated query (limit to configurable batch size)
+- [ ] Add filtering to skip discussions already analyzed recently
+- [ ] Order by priority: active discussions first, then by last_updated or created_at
+- [ ] Implement batch processing loop if total discussions exceed batch size
+- [ ] Add index on `has_native_statements` column (verify in migration)
+- [ ] Add optional composite indexes for common filter combinations
+- [ ] Add configuration option for batch size (environment variable)
+- [ ] Add logging: number of discussions processed, batch execution time
+- [ ] Handle edge cases: empty result sets, failed processing mid-batch
+
+##### Success Criteria
+
+- [ ] Query uses pagination with configurable limit (default 100)
+- [ ] Only discussions needing analysis are processed
+- [ ] Active discussions are prioritized in processing order
+- [ ] Database indexes exist for filtered/ordered columns
+- [ ] Batch processing handles large datasets without memory issues
+- [ ] Logs show clear metrics for monitoring scheduler performance
+- [ ] Processing time remains consistent regardless of total discussion count
+
+##### Files to Modify
+
+- `scheduler.py` - Update discussion query at line 127
+- Migration file (new) - Add database indexes
+- `config.py` (optional) - Add batch size configuration
+
+---
+
+
+### 27. Fix N+1 query patterns in profile routes (Epic: Phase 3: Performance & Scalability Optimization)
+
+#### Description
+
+Profile routes query discussions separately from profile data, causing N+1 issues.
+
+Optimize by:
+1. Use joinedload to eagerly load related discussions with profiles
+2. Review all profile routes for relationship loading patterns
+3. Add selectinload or joinedload for commonly accessed relationships
+4. Use query profiling to identify other N+1 patterns
+5. Add database query monitoring in development to catch new N+1 issues
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Optimize scheduler native discussion query
+    - current (in progress task): Fix N+1 query patterns in profile routes <-
+    - upcoming (not yet): Review and optimize database indexes
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Fix N+1 query patterns in profile routes that cause unnecessary database queries when loading related discussions.
+
+##### Current Issue
+
+Profile routes query discussions separately from profile data, resulting in N+1 query problems:
+- `profiles/routes.py:373, 380, 390` - Discussions queried after profile fetch
+- Missing eager loading for relationships commonly accessed together
+
+This causes one query for the profile, then N additional queries for related discussions/data.
+
+##### Technical Specs
+
+**Backend Changes:**
+- Use SQLAlchemy's `joinedload()` for one-to-many relationships
+- Use `selectinload()` for large collections or when JOIN would create duplicates
+- Review ALL profile routes for relationship access patterns
+- Add query profiling in development to detect N+1 issues
+
+**Optimization Patterns:**
+```python
+#### Before (N+1 issue):
+profile = IndividualProfile.query.get(id)
+discussions = Discussion.query.filter_by(creator_id=profile.user_id).all()
+
+#### After (eager loading):
+profile = IndividualProfile.query.options(
+    joinedload(IndividualProfile.user).joinedload(User.discussions)
+).get(id)
+```
+
+##### Implementation Checklist
+
+- [ ] Add `joinedload()` to profile queries that access discussions
+- [ ] Review `profiles/routes.py` lines 373, 380, 390 for eager loading
+- [ ] Identify all profile-related relationships commonly accessed together
+- [ ] Apply `selectinload()` for large collections where appropriate
+- [ ] Add query profiling decorator/middleware in development mode
+- [ ] Set up SQLAlchemy echo logging during testing to verify query counts
+- [ ] Review company profile routes for similar N+1 patterns
+- [ ] Document eager loading patterns in code comments
+- [ ] Add before/after query count comparison in testing
+
+##### Success Criteria
+
+- [ ] Profile detail views use single query (or minimal queries) to load profile + discussions
+- [ ] No N+1 queries detected in development query profiling
+- [ ] SQLAlchemy echo logs show optimized query patterns
+- [ ] Page load times improve for profiles with many discussions
+- [ ] Eager loading is applied consistently across all profile routes
+- [ ] Development monitoring is in place to catch future N+1 issues
+- [ ] Code comments document the eager loading strategy
+
+##### Dependencies
+
+- Requires testing infrastructure (Task #28) to verify query counts
+
+##### Files to Read
+
+- `app/models.py` - Understand relationship definitions
+- `app/profiles/routes.py` - Review current query patterns
+
+##### Files to Modify
+
+- `app/profiles/routes.py` - Add eager loading to profile queries
+- `app/__init__.py` (optional) - Add query profiling middleware for development
+
+---
+
+
+### 28. Review and optimize database indexes (Epic: Phase 3: Performance & Scalability Optimization)
+
+#### Description
+
+Ensure proper indexing for common query patterns to improve performance.
+
+Review and add indexes for:
+1. Foreign key columns (creator_id, user_id, discussion_id, etc.)
+2. Frequently filtered columns (has_native_statements, is_active, etc.)
+3. Columns used in ORDER BY clauses
+4. Composite indexes for multi-column filters
+5. Document indexing strategy for future reference
+
+Verify that migrations include index creation for all necessary columns.
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Fix N+1 query patterns in profile routes
+    - current (in progress task): Review and optimize database indexes <-
+    - upcoming (not yet): Create integration and end-to-end test suite
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Review and optimize database indexes to ensure efficient query performance across the application.
+
+##### Overview
+
+Conduct a comprehensive audit of database queries and ensure proper indexes exist for all common query patterns. This is essential for maintaining performance as data grows.
+
+##### Technical Specs
+
+**Index Types Needed:**
+- Single-column indexes on foreign keys (creator_id, user_id, discussion_id, etc.)
+- Single-column indexes on frequently filtered columns (has_native_statements, is_active, etc.)
+- Indexes on columns used in ORDER BY clauses (created_at, updated_at, etc.)
+- Composite indexes for multi-column filter patterns
+- Partial indexes for filtered queries (if supported)
+
+**Analysis Required:**
+- Review all model files for foreign key relationships
+- Analyze route files for common filter patterns
+- Examine ORDER BY usage across queries
+- Identify slow queries from application logs (if available)
+
+##### Implementation Checklist
+
+- [ ] Audit all models for foreign key columns without indexes
+- [ ] Create migration adding indexes on: creator_id, user_id, discussion_id, profile_id
+- [ ] Add indexes on boolean flags: has_native_statements, is_active, is_admin
+- [ ] Add indexes on timestamp columns: created_at, updated_at (commonly used in ORDER BY)
+- [ ] Identify multi-column filter patterns (e.g., WHERE country='X' AND is_active=True)
+- [ ] Create composite indexes for common multi-column queries
+- [ ] Consider partial indexes for queries with constant filters
+- [ ] Document indexing strategy in migration comments
+- [ ] Create `docs/database_indexes.md` documenting current indexes and rationale
+- [ ] Verify migrations apply successfully in development
+- [ ] Test query performance before/after index creation
+
+##### Success Criteria
+
+- [ ] All foreign key columns have indexes
+- [ ] Frequently filtered boolean columns have indexes
+- [ ] Timestamp columns used in ORDER BY have indexes
+- [ ] Composite indexes exist for common multi-column queries
+- [ ] Database migration successfully creates all necessary indexes
+- [ ] Documentation exists explaining indexing strategy
+- [ ] Query execution times improve for common operations
+- [ ] No degradation in write performance from over-indexing
+
+##### Files to Read
+
+- `app/models.py` - Review all model definitions
+- `app/*/routes.py` - Analyze query patterns across all blueprints
+- Existing migration files - Check for already-defined indexes
+
+##### Files to Modify
+
+- Create new migration file: `migrations/versions/XXX_add_performance_indexes.py`
+- Create new documentation: `docs/database_indexes.md`
+
+---
+
+
+### 29. Create integration and end-to-end test suite (Epic: Phase 4: Feature Completion & Test Coverage)
+
+#### Description
+
+Create integration tests for critical user journeys and system interactions.
+
+Test coverage:
+1. Complete user journey: signup -> create profile -> create discussion -> add statements -> vote
+2. Admin workflows: user management, profile moderation, discussion oversight
+3. Email sending and notification system
+4. Webhook handling and security validation
+5. Scheduled tasks (consensus analysis, cleanup jobs)
+6. Redis/session management and fallback scenarios
+7. Database transaction handling and rollbacks
+8. API endpoint integration (if applicable)
+9. Error handling and recovery scenarios
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Review and optimize database indexes
+    - current (in progress task): Create integration and end-to-end test suite <-
+    - upcoming (not yet): Simplify over-engineered Redis/session/rate-limiting fallback logic
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Create comprehensive integration and end-to-end tests covering critical user journeys and system interactions.
+
+##### Overview
+
+Build integration test suite to verify complete workflows function correctly and all system components work together properly. These tests validate real-world usage scenarios.
+
+##### Technical Specs
+
+**Testing Framework:**
+- pytest with pytest-flask for Flask integration
+- Use test database with realistic data volumes
+- Factory-based test data creation (factory-boy)
+- Transaction rollback after each test
+
+**Test Environment:**
+- Separate test database configuration
+- Mock external services (email, webhooks) where appropriate
+- Redis test instance or mock for session/rate limiting
+- Test fixtures for common setup scenarios
+
+##### Implementation Checklist
+
+###### Core User Journey Tests
+- [ ] Complete signup flow: form submission â†’ email verification â†’ profile creation
+- [ ] Profile creation: individual/company profiles with validation
+- [ ] Discussion creation and publishing workflow
+- [ ] Statement submission and voting workflow
+- [ ] Full journey: signup â†’ create profile â†’ create discussion â†’ add statements â†’ vote
+
+###### Admin Workflow Tests
+- [ ] Admin login and authorization checks
+- [ ] User management: view users, modify status, ban users
+- [ ] Profile moderation: review, approve, reject profiles
+- [ ] Discussion oversight: view all discussions, archive, moderate
+
+###### System Integration Tests
+- [ ] Email sending: registration, password reset, notifications
+- [ ] Webhook handling: signature validation, payload processing, error handling
+- [ ] Scheduled tasks: consensus analysis execution, cleanup jobs
+- [ ] Redis/session: session creation, retrieval, expiration, filesystem fallback
+- [ ] Database transactions: commit success, rollback on error, constraint violations
+
+###### Error Handling Tests
+- [ ] Invalid form submissions and validation errors
+- [ ] Authentication failures and rate limiting
+- [ ] Database connection failures and recovery
+- [ ] External service failures (email, webhooks)
+- [ ] Session timeout and re-authentication
+
+##### Success Criteria
+
+- [ ] All critical user journeys pass from start to finish
+- [ ] Admin workflows complete successfully with proper authorization
+- [ ] Email sending integrates correctly (mocked or test mode)
+- [ ] Webhook signature validation works correctly
+- [ ] Scheduled tasks execute without errors
+- [ ] Redis fallback scenarios work when Redis unavailable
+- [ ] Database transactions handle errors with proper rollbacks
+- [ ] Error scenarios are handled gracefully without crashes
+- [ ] Tests are idempotent and can run in any order
+- [ ] Test suite runs in reasonable time (<5 minutes)
+
+##### Dependencies
+
+- Requires testing infrastructure from Task #28
+- May depend on test data factories from Task #28
+
+##### Files to Create
+
+- `tests/integration/test_user_journeys.py`
+- `tests/integration/test_admin_workflows.py`
+- `tests/integration/test_email_system.py`
+- `tests/integration/test_webhooks.py`
+- `tests/integration/test_scheduled_tasks.py`
+- `tests/integration/test_session_management.py`
+- `tests/integration/test_database_transactions.py`
+- `tests/integration/test_error_handling.py`
+
+##### Files to Read
+
+- `tests/conftest.py` - Test configuration and fixtures
+- All route files - Understand endpoints and workflows
+- `app/models.py` - Understand data relationships
+
+
+### 30. Simplify over-engineered Redis/session/rate-limiting fallback logic (Epic: Phase 2: Code Quality & Pattern Consistency)
+
+#### Description
+
+The Redis connection and fallback logic in config.py and app/__init__.py is overly complex with excessive try/except nesting.
+
+Simplify by:
+1. Consolidate Redis connection logic into a single, clear initialization function
+2. Reduce nested try/except blocks - use clear, single-level error handling
+3. Document fallback behavior clearly (Redis -> filesystem for sessions, Redis -> memory for rate limiting)
+4. Remove redundant error catching
+5. Make the fallback logic more testable and maintainable
+
+The goal is to maintain the same functionality with clearer, simpler code that's easier to understand and modify.
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Create integration and end-to-end test suite
+    - current (in progress task): Simplify over-engineered Redis/session/rate-limiting fallback logic <-
+    - upcoming (not yet): Establish consistent error handling patterns across codebase
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Refactor the overly complex Redis connection and fallback logic in `config.py` and `app/__init__.py` to improve code clarity and maintainability.
+
+The current implementation uses excessive try/except nesting that makes the code difficult to understand and maintain. The fallback behavior (Redis â†’ filesystem for sessions, Redis â†’ memory for rate limiting) needs to be consolidated and clearly documented.
+
+##### Technical Specs:
+- **Backend**: Consolidate Redis initialization into a single, clear function
+- **Error Handling**: Replace nested try/except blocks with single-level error handling
+- **Configuration**: Maintain existing fallback behavior without functional changes
+- **Documentation**: Add clear inline comments explaining fallback scenarios
+
+##### Implementation Checklist:
+- [ ] Create a single Redis initialization function that handles connection and fallback
+- [ ] Reduce all nested try/except blocks to single-level error handling
+- [ ] Use specific exceptions (RedisError, ConnectionError) instead of bare except
+- [ ] Add clear documentation for each fallback scenario (sessions, rate limiting)
+- [ ] Remove redundant error catching that doesn't add value
+- [ ] Ensure the same fallback behavior is preserved (Redis â†’ filesystem/memory)
+- [ ] Add logging at appropriate points to track fallback usage
+
+##### Success Criteria:
+- [ ] Redis connection logic is consolidated into a single, reusable function
+- [ ] No nested try/except blocks remain - all error handling is single-level
+- [ ] Fallback behavior is clearly documented with comments
+- [ ] All existing functionality works identically (sessions, rate limiting)
+- [ ] Code is more readable and easier to modify
+- [ ] Error handling uses specific exception types, not bare except
+
+##### Files to modify:
+- `config.py` - Redis connection and configuration logic
+- `app/__init__.py` - Redis/session/rate-limiting initialization
+
+---
+
+
+### 31. Establish consistent error handling patterns across codebase (Epic: Phase 2: Code Quality & Pattern Consistency)
+
+#### Description
+
+Error handling is inconsistent across the codebase - mix of bare except, Exception, and specific exceptions.
+
+Create and implement a consistent error handling strategy:
+1. Document error handling guidelines (when to use which exception types)
+2. Always use specific exceptions (ValueError, IOError, SQLAlchemyError, etc.)
+3. Establish logging standards for different error severities
+4. Create utility functions for common error handling patterns
+5. Ensure all error handlers log appropriate context for debugging
+6. Review all exception handling in routes, models, and utilities for consistency
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Simplify over-engineered Redis/session/rate-limiting fallback logic
+    - current (in progress task): Establish consistent error handling patterns across codebase <-
+    - upcoming (not yet): Move hardcoded spam patterns to configuration
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Establish and implement a consistent error handling strategy across the entire codebase to replace the current mix of bare except, generic Exception catching, and specific exceptions.
+
+Currently, error handling is inconsistent throughout the application, making debugging difficult and potentially masking serious issues. A unified approach with clear guidelines is needed.
+
+##### Technical Specs:
+- **Error Handling Guidelines**: Document when to use specific exception types vs generic
+- **Logging Standards**: Define severity levels (debug, info, warning, error, critical)
+- **Utility Functions**: Create reusable error handling patterns for common scenarios
+- **Context Preservation**: Ensure all error handlers capture relevant debugging information
+
+##### Implementation Checklist:
+- [ ] Create error handling documentation (error_handling.md or in existing docs)
+- [ ] Define guidelines for exception types (ValueError, IOError, SQLAlchemyError, etc.)
+- [ ] Establish logging standards for different error severities
+- [ ] Create utility functions for common patterns (e.g., database error handler, API error handler)
+- [ ] Review and update error handling in all route files (auth, discussions, profiles, admin)
+- [ ] Review and update error handling in models.py
+- [ ] Review and update error handling in utility files (email_utils.py, etc.)
+- [ ] Ensure all error handlers include context (user_id, request data, etc.) for debugging
+- [ ] Add structured logging where appropriate (JSON format for production parsing)
+
+##### Success Criteria:
+- [ ] Error handling guidelines documented and accessible to developers
+- [ ] All bare except clauses replaced with specific exception types
+- [ ] Consistent logging patterns used throughout (same format, appropriate severity)
+- [ ] Common error scenarios have reusable utility functions
+- [ ] Error logs include sufficient context for debugging (no mystery errors)
+- [ ] Code review confirms consistency across all modules
+
+##### Dependencies:
+- Task #6 (Fix bare except clauses) should be completed first
+
+##### Files to read:
+- `app/auth/routes.py:208` - Current bare except example
+- `app/email_utils.py:427` - Current bare except example
+- `app/profiles/routes.py:244, 249` - Current bare except examples
+- `app/models.py:81` - Current bare except example
+
+##### Files to modify:
+- `app/auth/routes.py` - Update error handling
+- `app/discussions/routes.py` - Update error handling
+- `app/profiles/routes.py` - Update error handling
+- `app/admin/routes.py` - Update error handling
+- `app/models.py` - Update error handling
+- `app/email_utils.py` - Update error handling
+- `config.py` - Update error handling (if needed)
+- Create `docs/error_handling.md` or add section to existing docs
+
+---
+
+
+### 32. Move hardcoded spam patterns to configuration (Epic: Phase 2: Code Quality & Pattern Consistency)
+
+#### Description
+
+app/auth/routes.py:41 contains a large hardcoded list of spam emoji/keyword patterns directly in the route file.
+
+Refactor to:
+1. Create a separate spam_patterns.py configuration file or add to config.py
+2. Move all spam detection patterns to the config file
+3. Structure patterns in a maintainable format (categories, comments explaining each pattern)
+4. Make patterns easily updatable without touching route code
+5. Consider loading patterns from a JSON file for easier non-developer updates
+6. Update auth routes to import and use the centralized patterns
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Establish consistent error handling patterns across codebase
+    - current (in progress task): Move hardcoded spam patterns to configuration <-
+    - upcoming (not yet): Resolve version inconsistencies between README and requirements.txt
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Move the large hardcoded list of spam emoji/keyword patterns from `app/auth/routes.py:41` into a proper configuration structure for easier maintenance and updates.
+
+Currently, spam detection patterns are embedded directly in the route file, making them difficult to update and maintain. These patterns should be externalized to allow updates without modifying code.
+
+##### Technical Specs:
+- **Configuration File**: Create `app/spam_patterns.py` or add to existing config structure
+- **Data Structure**: Organize patterns by category with explanatory comments
+- **Optional Enhancement**: Consider JSON file for non-developer updates
+- **Import Updates**: Update auth routes to import from centralized location
+
+##### Implementation Checklist:
+- [ ] Create configuration file for spam patterns (`app/spam_patterns.py` or extend `config.py`)
+- [ ] Move all spam emoji/keyword patterns from `app/auth/routes.py:41`
+- [ ] Structure patterns in maintainable categories (emojis, keywords, suspicious patterns)
+- [ ] Add comments explaining each pattern category and rationale
+- [ ] Make patterns easily accessible as constants or configuration variables
+- [ ] Update `app/auth/routes.py` to import and use centralized patterns
+- [ ] Consider adding JSON file option for easier non-developer updates (optional)
+- [ ] Document how to update spam patterns in the future
+
+##### Success Criteria:
+- [ ] Spam patterns removed from route file
+- [ ] Patterns centralized in configuration file with clear structure
+- [ ] Each pattern category has explanatory comments
+- [ ] Auth routes successfully import and use the centralized patterns
+- [ ] Spam detection functionality works identically to before
+- [ ] Documentation exists for updating patterns
+
+##### Files to read:
+- `app/auth/routes.py:41` - Current hardcoded spam patterns location
+
+##### Files to modify:
+- `app/auth/routes.py` - Remove hardcoded patterns, add import
+- Create `app/spam_patterns.py` (or modify `config.py`)
+
+---
+
+
+### 33. Resolve version inconsistencies between README and requirements.txt (Epic: Phase 2: Code Quality & Pattern Consistency)
+
+#### Description
+
+README.md and requirements.txt have conflicting package versions:
+- Flask: README shows 3.0.0, requirements.txt has 2.3.3
+- redis: README shows 5.0.1, requirements.txt has 5.2.0
+- Flask-SQLAlchemy: README shows 3.1.1, requirements.txt has 3.0.5
+- gunicorn: README has no version, requirements.txt has 21.2.0
+
+Resolve by:
+1. Use requirements.txt as the source of truth (actual installed versions)
+2. Update README.md to match requirements.txt versions exactly
+3. Add a note in README about keeping versions in sync
+4. Consider auto-generating dependency list in README from requirements.txt
+5. Verify all packages are on compatible, secure versions
+
+#### Prompt
+
+<general>
+These instructions are for a task that is part of a larger plan:
+    <plan>
+    - previous (completed): Move hardcoded spam patterns to configuration
+    - current (in progress task): Resolve version inconsistencies between README and requirements.txt <-
+    - upcoming (not yet): N/A
+    </plan>
+Within reason, stick to only the deliverables outlined in these instructions,
+don't do extra work, and instead assume anything not mentioned is out of scope.
+</general>
+
+Resolve version inconsistencies between `README.md` and `requirements.txt` to ensure documentation accurately reflects the actual installed package versions.
+
+Multiple packages show different versions in the README compared to the requirements file, creating confusion and potential issues during setup or troubleshooting.
+
+##### Technical Specs:
+- **Source of Truth**: Use `requirements.txt` as authoritative (actual installed versions)
+- **Documentation Update**: Update README.md to match exactly
+- **Maintenance Note**: Add guidance about keeping versions synchronized
+- **Optional Automation**: Consider generating dependency list from requirements.txt
+
+##### Implementation Checklist:
+- [ ] Compare all package versions between README.md and requirements.txt
+- [ ] Update README.md to match requirements.txt versions exactly:
+  - Flask: 2.3.3 (not 3.0.0)
+  - redis: 5.2.0 (not 5.0.1)
+  - Flask-SQLAlchemy: 3.0.5 (not 3.1.1)
+  - gunicorn: 21.2.0 (add version to README)
+- [ ] Add note in README about using requirements.txt as source of truth
+- [ ] Verify all packages are on compatible, non-deprecated versions
+- [ ] Check for security advisories on current package versions
+- [ ] Consider adding script/note about auto-generating dependency list
+- [ ] Document process for updating dependencies
+
+##### Success Criteria:
+- [ ] All package versions in README.md match requirements.txt exactly
+- [ ] No conflicting version information exists in documentation
+- [ ] README includes note about keeping versions synchronized
+- [ ] All packages verified as compatible and secure
+- [ ] Future maintenance process documented
+
+##### Files to read:
+- `requirements.txt` - Source of truth for package versions
+- `README.md` - Documentation to be updated
+
+##### Files to modify:
+- `README.md` - Update dependency versions and add maintenance notes
