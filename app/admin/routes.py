@@ -50,8 +50,17 @@ def dashboard():
 @login_required
 @admin_required
 def list_profiles():
-    individual_profiles = IndividualProfile.query.all()
-    company_profiles = CompanyProfile.query.all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    individual_profiles = IndividualProfile.query.options(
+        db.joinedload(IndividualProfile.user)
+    ).order_by(IndividualProfile.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    
+    company_profiles = CompanyProfile.query.options(
+        db.joinedload(CompanyProfile.user)
+    ).order_by(CompanyProfile.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    
     return render_template(
         'admin/profiles/list.html',
         individual_profiles=individual_profiles,
@@ -334,14 +343,24 @@ def delete_discussion(discussion_id):
 @login_required
 @admin_required
 def list_discussions():
-    discussions = Discussion.query.order_by(Discussion.created_at.desc()).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    discussions = Discussion.query.options(
+        db.joinedload(Discussion.creator)
+    ).order_by(Discussion.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    
     return render_template('admin/discussions/list.html', discussions=discussions)
 
 @admin_bp.route('/users')
 @login_required
 @admin_required
 def list_users():
-    users = User.query.order_by(User.created_at.desc()).all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    users = User.query.order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    
     return render_template('admin/users/list.html', users=users)
 
 @admin_bp.route('/users/<int:user_id>/delete', methods=['POST'])

@@ -370,14 +370,20 @@ def edit_company_profile(company_name):
 @track_profile_view  # Add this decorator
 def view_individual_profile(username):
     profile = IndividualProfile.query.filter_by(slug=username).first_or_404()
-    discussions = Discussion.query.filter_by(creator_id=profile.user_id).all()
+    page = request.args.get('page', 1, type=int)
+    discussions = Discussion.query.filter_by(creator_id=profile.user_id).order_by(
+        Discussion.created_at.desc()
+    ).paginate(page=page, per_page=10, error_out=False)
     return render_template('profiles/individual_profile.html', profile=profile, discussions=discussions)
 
 @profiles_bp.route('/profile/company/<company_name>')
 @track_profile_view  # Add this decorator
 def view_company_profile(company_name):
     profile = CompanyProfile.query.filter_by(slug=company_name).first_or_404()
-    discussions = Discussion.query.filter_by(creator_id=profile.user_id).all()
+    page = request.args.get('page', 1, type=int)
+    discussions = Discussion.query.filter_by(creator_id=profile.user_id).order_by(
+        Discussion.created_at.desc()
+    ).paginate(page=page, per_page=10, error_out=False)
     return render_template('profiles/company_profile.html', profile=profile, discussions=discussions)
 
 
@@ -385,10 +391,13 @@ def view_company_profile(company_name):
 @profiles_bp.route('/profile/<username>')
 @login_required
 def view_profile(username):
-    profile = IndividualProfile.query.filter_by(slug=username).first() or CompanyProfile.query.filter_by(slug=username).first()
-    if profile:
-        discussions = Discussion.query.filter_by(creator_id=profile.user_id).all()
-        return render_template('profiles/view_profile.html', profile=profile, discussions=discussions)
+    individual = IndividualProfile.query.filter_by(slug=username).first()
+    if individual:
+        return redirect(url_for('profiles.view_individual_profile', username=username))
+    
+    company = CompanyProfile.query.filter_by(slug=username).first()
+    if company:
+        return redirect(url_for('profiles.view_company_profile', company_name=username))
 
     flash("Profile not found.", "error")
     return redirect(url_for('main.index'))
