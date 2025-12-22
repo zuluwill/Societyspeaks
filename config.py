@@ -139,6 +139,14 @@ class Config:
     # Admin Security Settings
     ADMIN_LOGIN_ATTEMPTS = int(os.getenv('ADMIN_LOGIN_ATTEMPTS', '3'))  # Max failed login attempts
     ADMIN_LOGIN_TIMEOUT = int(os.getenv('ADMIN_LOGIN_TIMEOUT', '1800'))  # Timeout in seconds (30 minutes)
+    
+    # Spam Detection Patterns
+    SPAM_PATTERNS = [
+        'bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph',
+        '📍', '📌', '🔑', '📫', '📪', '📬', '📭', '📮', '📯',
+        '📜', '📃', '📄', '📑', '📊', '📈', '📉', '📋', '📎',
+        '📏', '📐', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓', '🔔', '🔕'
+    ]
 
     # Admin Features Control
     ADMIN_CAN_CREATE_USERS = os.getenv('ADMIN_CAN_CREATE_USERS', 'False').lower() == 'true'

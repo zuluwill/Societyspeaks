@@ -11,10 +11,10 @@ def track_profile_view(f):
         company_name = kwargs.get('company_name')
 
         if username:
-            print(f"Tracking view for individual profile: {username}")
+            current_app.logger.debug(f"Tracking view for individual profile: {username}")
             profile = IndividualProfile.query.filter_by(slug=username).first()
             if profile:
-                print(f"Found individual profile with ID: {profile.id}")
+                current_app.logger.debug(f"Found individual profile with ID: {profile.id}")
                 profile_view = ProfileView(
                     individual_profile_id=profile.id,  # Changed from profile_id
                     viewer_id=current_user.id if current_user.is_authenticated else None,
@@ -25,7 +25,7 @@ def track_profile_view(f):
         elif company_name:
             profile = CompanyProfile.query.filter_by(slug=company_name).first()
             if profile:
-                print(f"Found company profile with ID: {profile.id}")
+                current_app.logger.debug(f"Found company profile with ID: {profile.id}")
                 profile_view = ProfileView(
                     company_profile_id=profile.id,  # Changed for company profiles
                     viewer_id=current_user.id if current_user.is_authenticated else None,

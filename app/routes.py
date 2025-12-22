@@ -99,7 +99,7 @@ def sitemap():
         response.headers['Cache-Control'] = 'public, max-age=3600'  # Cache for 1 hour
         return response
     except Exception as e:
-        print(f"Error generating sitemap: {e}")
+        current_app.logger.error(f"Error generating sitemap: {e}")
         return Response("Error generating sitemap", status=500)
 
 

@@ -171,60 +171,37 @@ def fetch_discussions(search, country, city, topic, keywords, page, per_page=9, 
 
 @discussions_bp.route('/search', methods=['GET'])
 def search_discussions():
-    # Load city and country data path first
-    json_path = os.path.join(current_app.root_path, 'static', 'data', 'cities_by_country.json')
-    
-    try:
-        with open(json_path, 'r') as f:
-            cities_by_country = json.load(f)
-        countries = list(cities_by_country.keys())
+    # Use cached cities data from app config (loaded at startup)
+    cities_by_country = current_app.config.get('CITIES_BY_COUNTRY', {})
+    countries = list(cities_by_country.keys())
 
-        # Get search parameters
-        search_term = request.args.get('q', '')
-        topic = request.args.get('topic')
-        country = request.args.get('country')
-        city = request.args.get('city')
-        keywords = request.args.get('keywords', '')
-        page = request.args.get('page', 1, type=int)
-        sort = request.args.get('sort', 'recent')  # Default to 'recent' if not specified
+    # Get search parameters
+    search_term = request.args.get('q', '')
+    topic = request.args.get('topic')
+    country = request.args.get('country')
+    city = request.args.get('city')
+    keywords = request.args.get('keywords', '')
+    page = request.args.get('page', 1, type=int)
+    sort = request.args.get('sort', 'recent')
 
-        # Use modified fetch_discussions to include sorting
-        discussions = fetch_discussions(
-            search=search_term,
-            country=country,
-            city=city,
-            topic=topic,
-            keywords=keywords,
-            page=page,
-            sort=sort  # Pass sort parameter here
-        )
+    # Use modified fetch_discussions to include sorting
+    discussions = fetch_discussions(
+        search=search_term,
+        country=country,
+        city=city,
+        topic=topic,
+        keywords=keywords,
+        page=page,
+        sort=sort
+    )
 
-        return render_template(
-            'discussions/search_discussions.html',
-            discussions=discussions,
-            search_term=search_term,
-            countries=countries,
-            cities_by_country=cities_by_country
-        )
-
-    except FileNotFoundError:
-        current_app.logger.error(f"Could not find cities_by_country.json at {json_path}")
-        return render_template(
-            'discussions/search_discussions.html',
-            discussions=None,
-            search_term='',
-            countries=[],
-            cities_by_country={}
-        )
-    except Exception as e:
-        current_app.logger.error(f"Error in search_discussions: {str(e)}")
-        return render_template(
-            'discussions/search_discussions.html',
-            discussions=None,
-            search_term='',
-            countries=[],
-            cities_by_country={}
-        )
+    return render_template(
+        'discussions/search_discussions.html',
+        discussions=discussions,
+        search_term=search_term,
+        countries=countries,
+        cities_by_country=cities_by_country
+    )
 
 
 

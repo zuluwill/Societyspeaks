@@ -58,8 +58,8 @@ You can try the live version at https://societyspeaks.io/
 ## 📋 Requirements
 
 ```txt
-Flask==3.0.0
-Flask-SQLAlchemy==3.1.1
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
 Flask-Migrate==4.0.0
 Flask-Login==0.6.3
 Flask-WTF==1.2.2
@@ -74,9 +74,9 @@ psycopg2-binary==2.9.10
 python-slugify==8.0.1
 email_validator==2.2.0
 sentry-sdk==2.17.0
-redis==5.0.1
-replit==3.2.0
-gunicorn
+redis==5.2.0
+replit>=4.1.0
+gunicorn==21.2.0
 ```
 
 ## ⚙️ Environment Variables

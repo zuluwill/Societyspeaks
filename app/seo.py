@@ -1,5 +1,5 @@
 # app/seo.py
-from flask import Response, url_for, request
+from flask import Response, url_for, request, current_app
 from datetime import datetime
 from app.models import Discussion
 
@@ -178,7 +178,7 @@ def generate_sitemap():
                 ]
                 xml_content.extend(discussion_entry)
     except Exception as e:
-        print(f"Error adding discussions to sitemap: {e}")
+        current_app.logger.error(f"Error adding discussions to sitemap: {e}")
 
     # Close the XML
     xml_content.append('</urlset>')
