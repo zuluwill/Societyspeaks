@@ -13,10 +13,7 @@ from app.email_utils import send_password_reset_email, send_welcome_email, send_
 auth_bp = Blueprint('auth', __name__)
 
 
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-
-limiter = Limiter(key_func=get_remote_address)
+from app import limiter
 
 @auth_bp.route('/verify-email/<token>', methods=['GET'])
 def verify_email(token):
