@@ -1,0 +1,200 @@
+2025-12-22 12:05:05.57
+316a9048
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-12-22 12:05:05.81
+316a9048
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-12-22 12:05:06.03
+316a9048
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-12-22 12:05:06.29
+316a9048
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-12-22 12:05:06.50
+316a9048
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-12-22 12:05:06.73
+316a9048
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-12-22 12:06:01.16
+316a9048
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-12-22 12:06:01.26
+316a9048
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-12-22 12:06:16.22
+316a9048
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-12-22 12:06:16.44
+316a9048
+User
+404 Page Not Found: 404 Not Found: The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.
+2025-12-22 12:10:33.95
+ca80c927
+User
+[2025-12-22 12:10:33 +0000] [27] [INFO] Starting gunicorn 21.2.0
+2025-12-22 12:10:33.95
+ca80c927
+User
+[2025-12-22 12:10:33 +0000] [27] [INFO] Using worker: sync
+2025-12-22 12:10:33.95
+ca80c927
+User
+[2025-12-22 12:10:33 +0000] [27] [INFO] Listening at: http://0.0.0.0:5000 (27)
+2025-12-22 12:10:33.95
+ca80c927
+User
+[2025-12-22 12:10:33 +0000] [32] [INFO] Booting worker with pid: 32
+2025-12-22 12:10:42.45
+ca80c927
+User
+Cache initialized with Redis URL
+2025-12-22 12:10:42.57
+ca80c927
+User
+Using REDIS_URL from environment variable for rate limiting
+2025-12-22 12:10:43.05
+ca80c927
+User
+Rate limiter configured with Redis (production)
+2025-12-22 12:10:43.05
+ca80c927
+User
+Rate limiter storage verified:
+2025-12-22 12:10:48.76
+ca80c927
+User
+warnings.warn("Can not find any timezone configuration, defaulting to UTC.")
+2025-12-22 12:10:48.76
+ca80c927
+User
+/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/tzlocal/unix.py:207: UserWarning: Can not find any timezone configuration, defaulting to UTC.
+2025-12-22 12:10:48.80
+ca80c927
+User
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-12-22 12:10:48.80
+ca80c927
+User
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-12-22 12:10:48.80
+ca80c927
+User
+- auto_cluster_discussions: interval[6:00:00]
+2025-12-22 12:10:48.80
+ca80c927
+User
+Added job "init_scheduler..cleanup_old_consensus_analyses" to job store "default"
+2025-12-22 12:10:48.80
+ca80c927
+User
+Scheduler initialized with jobs:
+2025-12-22 12:10:48.80
+ca80c927
+User
+Added job "init_scheduler..auto_cluster_active_discussions" to job store "default"
+2025-12-22 12:10:48.80
+ca80c927
+User
+Scheduler started
+2025-12-22 12:10:48.80
+ca80c927
+User
+- cleanup_old_analyses: cron[hour='3']
+2025-12-22 12:10:48.80
+ca80c927
+User
+Scheduler started
+2025-12-22 12:10:48.80
+ca80c927
+User
+Background scheduler started successfully
+2025-12-22 12:10:54.98
+ca80c927
+User
+[2025-12-22 12:10:54 +0000] [27] [INFO] Starting gunicorn 21.2.0
+2025-12-22 12:10:54.98
+ca80c927
+User
+[2025-12-22 12:10:54 +0000] [27] [INFO] Using worker: sync
+2025-12-22 12:10:54.98
+ca80c927
+User
+[2025-12-22 12:10:54 +0000] [27] [INFO] Listening at: http://0.0.0.0:5000 (27)
+2025-12-22 12:10:54.99
+ca80c927
+User
+[2025-12-22 12:10:54 +0000] [32] [INFO] Booting worker with pid: 32
+2025-12-22 12:11:05.15
+ca80c927
+User
+Cache initialized with Redis URL
+2025-12-22 12:11:05.32
+ca80c927
+User
+Using REDIS_URL from environment variable for rate limiting
+2025-12-22 12:11:05.81
+ca80c927
+User
+Rate limiter configured with Redis (production)
+2025-12-22 12:11:05.81
+ca80c927
+User
+Rate limiter storage verified:
+2025-12-22 12:11:12.61
+ca80c927
+User
+/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/tzlocal/unix.py:207: UserWarning: Can not find any timezone configuration, defaulting to UTC.
+2025-12-22 12:11:12.61
+ca80c927
+User
+warnings.warn("Can not find any timezone configuration, defaulting to UTC.")
+2025-12-22 12:11:12.65
+ca80c927
+User
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-12-22 12:11:12.65
+ca80c927
+User
+Scheduler initialized with jobs:
+2025-12-22 12:11:12.65
+ca80c927
+User
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-12-22 12:11:12.65
+ca80c927
+User
+Added job "init_scheduler..auto_cluster_active_discussions" to job store "default"
+2025-12-22 12:11:12.65
+ca80c927
+User
+Scheduler started
+2025-12-22 12:11:12.65
+ca80c927
+User
+- auto_cluster_discussions: interval[6:00:00]
+2025-12-22 12:11:12.65
+ca80c927
+User
+- cleanup_old_analyses: cron[hour='3']
+2025-12-22 12:11:12.65
+ca80c927
+User
+Added job "init_scheduler..cleanup_old_consensus_analyses" to job store "default"
+2025-12-22 12:11:12.65
+ca80c927
+User
+Background scheduler started successfully
+2025-12-22 12:11:12.65
+ca80c927
+User
+Scheduler started
