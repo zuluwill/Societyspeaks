@@ -320,12 +320,11 @@ def create_app():
     app.register_blueprint(help_bp, url_prefix='/help')
 
     from app.admin import admin_bp
-    print("Registering admin blueprint...")  # Debug statement
+    app.logger.debug("Registering admin blueprint...")
     app.register_blueprint(admin_bp, url_prefix='/admin')
-    print("Admin blueprint registered")  # Debug statement
-    # Add this line to print all registered routes
-    print("All registered routes:")
-    print(app.url_map)
+    app.logger.debug("Admin blueprint registered")
+    app.logger.debug("All registered routes:")
+    app.logger.debug(app.url_map)
 
 
     from app.commands import init_commands

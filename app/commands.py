@@ -1,5 +1,6 @@
 
 from flask.cli import with_appcontext
+from flask import current_app
 import click
 from app import db
 from app.models import User, IndividualProfile, CompanyProfile, Discussion
@@ -10,8 +11,8 @@ from datetime import datetime, timedelta
 def clean_spam():
     """Delete spam accounts based on patterns"""
     try:
-        # Find users with spam patterns
-        spam_patterns = ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑']
+        # Get spam patterns from config
+        spam_patterns = current_app.config.get('SPAM_PATTERNS', ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph'])
         
         spam_users = User.query.filter(
             db.or_(

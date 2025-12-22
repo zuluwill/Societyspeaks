@@ -34,8 +34,8 @@ def register():
         email = request.form.get('email')
         password = request.form.get('password')
         
-        # Define spam patterns
-        spam_patterns = ['bitcoin', 'btc', 'binance', 'crypto', 'telegra.ph', '📍', '📌', '🔑', '📫', '📪', '📬', '📭', '📮', '📯', '📜', '📃', '📄', '📑', '📊', '📈', '📉', '📋', '📌', '📍', '📎', '📏', '📐', '🔍', '🔎', '🔏', '🔐', '🔒', '🔓', '🔔', '🔕']
+        # Get spam patterns from config
+        spam_patterns = current_app.config.get('SPAM_PATTERNS', [])
         
         # Check for spam in a case-insensitive way
         input_text = f"{username.lower()} {email.lower()}"
