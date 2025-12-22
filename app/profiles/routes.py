@@ -241,12 +241,12 @@ def create_company_profile():
             if logo:
                 try:
                     delete_from_object_storage(logo)
-                except:
+                except Exception:
                     pass
             if banner_image:
                 try:
                     delete_from_object_storage(banner_image)
-                except:
+                except Exception:
                     pass
             flash("Error creating company profile. Please try again.", "error")
             return render_template('profiles/create_company_profile.html', form=form)

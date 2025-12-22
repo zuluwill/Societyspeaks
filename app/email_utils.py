@@ -424,6 +424,6 @@ def create_discussion_notification(user_id, discussion_id, notification_type, ad
         current_app.logger.error(f"Failed to create notification: {e}")
         try:
             db.session.rollback()
-        except:
+        except Exception:
             pass
         return None
