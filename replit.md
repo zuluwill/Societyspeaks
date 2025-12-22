@@ -6,7 +6,17 @@ Society Speaks is an open-source public discussion platform that empowers commun
 
 The application integrates with Pol.is to facilitate consensus-building discussions and includes features for user profiles (both individual and company), discussion management, geographic filtering, and comprehensive analytics tracking.
 
-## Recent Changes (December 10, 2025)
+## Recent Changes (December 22, 2025)
+
+### Performance Optimizations (December 22, 2025)
+- **Pagination**: Added pagination to admin routes (profiles, users, discussions at 20 items/page) and profile view routes (10 items/page) to reduce database load
+- **Eager Loading**: Added joinedload for related data in admin queries to prevent N+1 query issues
+- **Database Indexes**: Added indexes on Discussion (creator_id, is_featured, topic), IndividualProfile (user_id), and CompanyProfile (user_id)
+- **Scheduler Optimization**: Optimized cleanup_old_consensus_analyses to only query discussions with >10 analyses
+- **Fixed view_profile Route**: Changed to redirect pattern instead of using non-existent template
+- **Exception Handling**: Replaced bare except clauses with proper exception handling
+
+## Previous Changes (December 10, 2025)
 
 ### Fixes & UX/UI Improvements (December 10, 2025)
 - **N+1 Query Fix in view_discussion**: Added eager loading with `joinedload(Statement.user)` to fetch user data in single query. Resolves Sentry issues #82444121 and #73094553.
