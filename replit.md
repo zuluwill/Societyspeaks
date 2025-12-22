@@ -16,6 +16,12 @@ The application integrates with Pol.is to facilitate consensus-building discussi
 - **Fixed view_profile Route**: Changed to redirect pattern instead of using non-existent template
 - **Exception Handling**: Replaced bare except clauses with proper exception handling
 
+### Security Fixes (December 22, 2025)
+- **Removed Duplicate Sentry**: Eliminated duplicate sentry_sdk.init() call that was causing double instrumentation
+- **Consolidated Rate Limiter**: auth/routes.py now imports shared limiter from app module instead of creating duplicate instance
+- **Protected Test Routes**: /test-sitemap and /test-robots now require admin login (previously public)
+- **Verified Webhook Security**: WEBHOOK_SECRET configured, production properly fails closed when missing
+
 ## Previous Changes (December 10, 2025)
 
 ### Fixes & UX/UI Improvements (December 10, 2025)
