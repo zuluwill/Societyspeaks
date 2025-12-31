@@ -360,32 +360,66 @@
     {% include "components/toast.html" %}
 
     <script>
-        // Mobile menu toggle
-        const mobileMenuButton = document.getElementById('mobile-menu-button');
-        const mobileMenu = document.getElementById('mobile-menu');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile menu toggle - improved for touch devices
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
 
-        if (mobileMenuButton && mobileMenu) {
-            mobileMenuButton.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-        }
-
-        // Desktop user menu toggle
-        const userMenuButton = document.getElementById('desktop-user-menu');
-        const userMenuDropdown = document.getElementById('desktop-dropdown-menu');
-
-        if (userMenuButton && userMenuDropdown) {
-            userMenuButton.addEventListener('click', () => {
-                userMenuDropdown.classList.toggle('hidden');
-            });
-
-            // Close the dropdown when clicking outside
-            document.addEventListener('click', (event) => {
-                if (!userMenuButton.contains(event.target) && !userMenuDropdown.contains(event.target)) {
-                    userMenuDropdown.classList.add('hidden');
+            if (mobileMenuButton && mobileMenu) {
+                // Handle both click and touch events
+                function toggleMobileMenu(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    mobileMenu.classList.toggle('hidden');
+                    
+                    // Update aria-expanded for accessibility
+                    const isExpanded = !mobileMenu.classList.contains('hidden');
+                    mobileMenuButton.setAttribute('aria-expanded', isExpanded);
                 }
-            });
-        }
+                
+                mobileMenuButton.addEventListener('click', toggleMobileMenu);
+                mobileMenuButton.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    toggleMobileMenu(e);
+                });
+                
+                // Close mobile menu when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+                        if (!mobileMenuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
+                            mobileMenu.classList.add('hidden');
+                            mobileMenuButton.setAttribute('aria-expanded', 'false');
+                        }
+                    }
+                });
+            }
+
+            // Desktop user menu toggle
+            const userMenuButton = document.getElementById('desktop-user-menu');
+            const userMenuDropdown = document.getElementById('desktop-dropdown-menu');
+
+            if (userMenuButton && userMenuDropdown) {
+                function toggleUserMenu(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    userMenuDropdown.classList.toggle('hidden');
+                    
+                    // Update aria-expanded for accessibility
+                    const isExpanded = !userMenuDropdown.classList.contains('hidden');
+                    userMenuButton.setAttribute('aria-expanded', isExpanded);
+                }
+                
+                userMenuButton.addEventListener('click', toggleUserMenu);
+
+                // Close the dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!userMenuButton.contains(e.target) && !userMenuDropdown.contains(e.target)) {
+                        userMenuDropdown.classList.add('hidden');
+                        userMenuButton.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>

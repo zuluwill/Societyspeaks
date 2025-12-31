@@ -446,41 +446,62 @@
       const shareButton = document.getElementById("shareButton");
       const shareButtons = document.querySelector("#shareButtons");
 
-      shareButton.addEventListener("click", function (e) {
-        e.stopPropagation();
-        shareButtons.classList.toggle("hidden");
-      });
+      if (shareButton && shareButtons) {
+        function toggleShare(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          shareButtons.classList.toggle("hidden");
+          
+          // Update aria-expanded
+          const isExpanded = !shareButtons.classList.contains("hidden");
+          shareButton.setAttribute("aria-expanded", isExpanded);
+        }
+        
+        shareButton.addEventListener("click", toggleShare);
+        shareButton.addEventListener("touchend", function(e) {
+          e.preventDefault();
+          toggleShare(e);
+        });
+      }
 
-      // Research Tools Dropdown Logic
+      // Research Tools Dropdown Logic - improved for mobile
       const researchToolsBtn = document.getElementById("researchToolsBtn");
-      const researchToolsDropdown = document.getElementById(
-        "researchToolsDropdown"
-      );
+      const researchToolsDropdown = document.getElementById("researchToolsDropdown");
 
       if (researchToolsBtn && researchToolsDropdown) {
-        researchToolsBtn.addEventListener("click", function (e) {
+        function toggleResearchTools(e) {
+          e.preventDefault();
           e.stopPropagation();
           researchToolsDropdown.classList.toggle("hidden");
+          
+          // Update aria-expanded
+          const isExpanded = !researchToolsDropdown.classList.contains("hidden");
+          researchToolsBtn.setAttribute("aria-expanded", isExpanded);
+        }
+        
+        researchToolsBtn.addEventListener("click", toggleResearchTools);
+        researchToolsBtn.addEventListener("touchend", function(e) {
+          e.preventDefault();
+          toggleResearchTools(e);
         });
       }
 
       // Global click handler for both dropdowns
       document.addEventListener("click", function (e) {
         // Handle share buttons dropdown
-        if (
-          !shareButtons.contains(e.target) &&
-          !shareButton.contains(e.target)
-        ) {
-          shareButtons.classList.add("hidden");
+        if (shareButtons && shareButton) {
+          if (!shareButtons.contains(e.target) && !shareButton.contains(e.target)) {
+            shareButtons.classList.add("hidden");
+            shareButton.setAttribute("aria-expanded", "false");
+          }
         }
 
         // Handle research tools dropdown
-        if (
-          researchToolsDropdown &&
-          !researchToolsDropdown.contains(e.target) &&
-          !researchToolsBtn.contains(e.target)
-        ) {
-          researchToolsDropdown.classList.add("hidden");
+        if (researchToolsDropdown && researchToolsBtn) {
+          if (!researchToolsDropdown.contains(e.target) && !researchToolsBtn.contains(e.target)) {
+            researchToolsDropdown.classList.add("hidden");
+            researchToolsBtn.setAttribute("aria-expanded", "false");
+          }
         }
       });
     });
