@@ -442,9 +442,10 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", function () {
-      // Share Button Logic
+      // Share Button Logic - improved to prevent double-toggle on touch devices
       const shareButton = document.getElementById("shareButton");
       const shareButtons = document.querySelector("#shareButtons");
+      let shareButtonTouchHandled = false;
 
       if (shareButton && shareButtons) {
         function toggleShare(e) {
@@ -457,16 +458,24 @@
           shareButton.setAttribute("aria-expanded", isExpanded);
         }
         
-        shareButton.addEventListener("click", toggleShare);
         shareButton.addEventListener("touchend", function(e) {
           e.preventDefault();
+          shareButtonTouchHandled = true;
           toggleShare(e);
+          setTimeout(function() { shareButtonTouchHandled = false; }, 300);
+        }, { passive: false });
+        
+        shareButton.addEventListener("click", function(e) {
+          if (!shareButtonTouchHandled) {
+            toggleShare(e);
+          }
         });
       }
 
-      // Research Tools Dropdown Logic - improved for mobile
+      // Research Tools Dropdown Logic - improved to prevent double-toggle on touch devices
       const researchToolsBtn = document.getElementById("researchToolsBtn");
       const researchToolsDropdown = document.getElementById("researchToolsDropdown");
+      let researchToolsTouchHandled = false;
 
       if (researchToolsBtn && researchToolsDropdown) {
         function toggleResearchTools(e) {
@@ -479,10 +488,17 @@
           researchToolsBtn.setAttribute("aria-expanded", isExpanded);
         }
         
-        researchToolsBtn.addEventListener("click", toggleResearchTools);
         researchToolsBtn.addEventListener("touchend", function(e) {
           e.preventDefault();
+          researchToolsTouchHandled = true;
           toggleResearchTools(e);
+          setTimeout(function() { researchToolsTouchHandled = false; }, 300);
+        }, { passive: false });
+        
+        researchToolsBtn.addEventListener("click", function(e) {
+          if (!researchToolsTouchHandled) {
+            toggleResearchTools(e);
+          }
         });
       }
 

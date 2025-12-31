@@ -394,11 +394,13 @@
                 });
             }
 
-            // Desktop user menu toggle
+            // Desktop user menu toggle - improved for mobile/touch
             const userMenuButton = document.getElementById('desktop-user-menu');
             const userMenuDropdown = document.getElementById('desktop-dropdown-menu');
 
             if (userMenuButton && userMenuDropdown) {
+                let touchHandled = false;
+                
                 function toggleUserMenu(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -409,9 +411,20 @@
                     userMenuButton.setAttribute('aria-expanded', isExpanded);
                 }
                 
-                userMenuButton.addEventListener('click', toggleUserMenu);
+                userMenuButton.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    touchHandled = true;
+                    toggleUserMenu(e);
+                    setTimeout(function() { touchHandled = false; }, 300);
+                }, { passive: false });
+                
+                userMenuButton.addEventListener('click', function(e) {
+                    if (!touchHandled) {
+                        toggleUserMenu(e);
+                    }
+                });
 
-                // Close the dropdown when clicking outside
+                // Close the dropdown when clicking/touching outside
                 document.addEventListener('click', function(e) {
                     if (!userMenuButton.contains(e.target) && !userMenuDropdown.contains(e.target)) {
                         userMenuDropdown.classList.add('hidden');
