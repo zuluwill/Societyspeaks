@@ -1,0 +1,199 @@
+{% extends 'layout.html' %}
+
+{% block title %}{{ topic.title }} - Trending Topics{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{{ url_for('trending.dashboard') }}" class="text-blue-600 hover:underline">&larr; Back to Dashboard</a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+                <h1 class="text-2xl font-bold text-gray-900">{{ topic.title }}</h1>
+                <span class="px-3 py-1 rounded-full text-sm font-medium
+                    {% if topic.status == 'published' %}bg-green-100 text-green-800
+                    {% elif topic.status == 'pending_review' %}bg-yellow-100 text-yellow-800
+                    {% elif topic.status == 'discarded' %}bg-gray-100 text-gray-800
+                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {{ topic.status }}
+                </span>
+            </div>
+
+            <p class="text-gray-600 mb-4">{{ topic.description }}</p>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div class="bg-gray-50 p-3 rounded">
+                    <div class="text-sm text-gray-500">Sources</div>
+                    <div class="text-xl font-bold">{{ topic.source_count }}</div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded">
+                    <div class="text-sm text-gray-500">Civic Score</div>
+                    <div class="text-xl font-bold {% if topic.civic_score and topic.civic_score >= 0.7 %}text-green-600{% endif %}">
+                        {{ "%.0f"|format((topic.civic_score or 0) * 100) }}%
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded">
+                    <div class="text-sm text-gray-500">Quality Score</div>
+                    <div class="text-xl font-bold {% if topic.quality_score and topic.quality_score >= 0.7 %}text-green-600{% endif %}">
+                        {{ "%.0f"|format((topic.quality_score or 0) * 100) }}%
+                    </div>
+                </div>
+                <div class="bg-gray-50 p-3 rounded">
+                    <div class="text-sm text-gray-500">Risk Flag</div>
+                    <div class="text-xl font-bold {% if topic.risk_flag %}text-red-600{% else %}text-green-600{% endif %}">
+                        {% if topic.risk_flag %}Yes{% else %}No{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if topic.risk_flag and topic.risk_reason %}
+            <div class="bg-red-50 border border-red-200 rounded p-3 mb-4">
+                <div class="text-red-800 font-medium">Risk Reason</div>
+                <div class="text-red-700">{{ topic.risk_reason }}</div>
+            </div>
+            {% endif %}
+
+            {% if topic.canonical_tags %}
+            <div class="mb-4">
+                <div class="text-sm text-gray-500 mb-2">Canonical Tags</div>
+                <div class="flex flex-wrap gap-2">
+                    {% for tag in topic.canonical_tags %}
+                    <span class="bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-4 border-b">
+            <h2 class="text-xl font-semibold">Source Articles</h2>
+        </div>
+        <div class="divide-y">
+            {% for ta in topic.articles %}
+            {% if ta.article %}
+            <div class="p-4">
+                <a href="{{ ta.article.url }}" target="_blank" class="text-blue-600 hover:underline font-medium">
+                    {{ ta.article.title }}
+                </a>
+                <div class="text-sm text-gray-500 mt-1">
+                    {{ ta.article.source.name }} 
+                    {% if ta.article.published_at %} | {{ ta.article.published_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}
+                    {% if ta.article.sensationalism_score %}
+                    | Sensationalism: {{ "%.0f"|format(ta.article.sensationalism_score * 100) }}%
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-4 border-b flex justify-between items-center">
+            <h2 class="text-xl font-semibold">Seed Statements</h2>
+            <form action="{{ url_for('trending.regenerate_seeds', topic_id=topic.id) }}" method="post">
+                <button type="submit" class="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded hover:bg-gray-200">
+                    Regenerate
+                </button>
+            </form>
+        </div>
+        <div class="divide-y">
+            {% if topic.seed_statements %}
+                {% for stmt in topic.seed_statements %}
+                <div class="p-4">
+                    <div class="flex items-start gap-3">
+                        <span class="px-2 py-1 text-xs rounded
+                            {% if stmt.position == 'pro' %}bg-green-100 text-green-800
+                            {% elif stmt.position == 'con' %}bg-red-100 text-red-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ stmt.position }}
+                        </span>
+                        <p class="text-gray-700">{{ stmt.content }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="p-4 text-gray-500">No seed statements generated yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-4 border-b">
+            <h2 class="text-xl font-semibold">Edit Topic</h2>
+        </div>
+        <form action="{{ url_for('trending.edit_topic', topic_id=topic.id) }}" method="post" class="p-4">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Title (Neutral Framing Question)</label>
+                <input type="text" name="title" value="{{ topic.title }}" 
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea name="description" rows="3" 
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500">{{ topic.description or '' }}</textarea>
+            </div>
+            <button type="submit" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                Update Topic
+            </button>
+        </form>
+    </div>
+
+    {% if topic.status == 'pending_review' %}
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-4 border-b">
+            <h2 class="text-xl font-semibold">Actions</h2>
+        </div>
+        <div class="p-4 space-y-4">
+            <form action="{{ url_for('trending.publish', topic_id=topic.id) }}" method="post" class="inline-block">
+                <button type="submit" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                    Publish as Discussion
+                </button>
+            </form>
+
+            <form action="{{ url_for('trending.rescore', topic_id=topic.id) }}" method="post" class="inline-block">
+                <button type="submit" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                    Rescore Topic
+                </button>
+            </form>
+
+            <form action="{{ url_for('trending.discard', topic_id=topic.id) }}" method="post" class="inline-block">
+                <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
+                    onclick="return confirm('Are you sure you want to discard this topic?')">
+                    Discard
+                </button>
+            </form>
+
+            <div class="border-t pt-4 mt-4">
+                <h3 class="font-medium mb-2">Merge into Existing Discussion</h3>
+                <form action="{{ url_for('trending.merge', topic_id=topic.id) }}" method="post" class="flex gap-2">
+                    <select name="discussion_id" class="flex-1 border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="">Select a discussion...</option>
+                        {% for discussion in recent_discussions %}
+                        <option value="{{ discussion.id }}">{{ discussion.title[:60] }}...</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                        Merge
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if topic.status == 'published' and topic.created_discussion %}
+    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div class="font-medium text-green-800 mb-2">Published as Discussion</div>
+        <a href="{{ url_for('discussions.view_discussion', slug=topic.created_discussion.slug) }}" 
+           class="text-green-700 hover:underline">
+            View: {{ topic.created_discussion.title }}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -155,6 +155,31 @@ def init_scheduler(app):
             logger.info("Cleanup task complete")
     
     
+    @scheduler.scheduled_job('interval', hours=1, id='trending_topics_pipeline')
+    def run_trending_topics_pipeline():
+        """
+        Fetch news and process trending topics
+        Runs every hour
+        """
+        with app.app_context():
+            from app.trending.pipeline import run_pipeline, process_held_topics
+            
+            logger.info("Starting trending topics pipeline")
+            
+            try:
+                articles, topics, ready = run_pipeline(hold_minutes=60)
+                logger.info(f"Pipeline result: {articles} articles, {topics} new topics, {ready} ready for review")
+                
+                held_ready = process_held_topics()
+                if held_ready > 0:
+                    logger.info(f"Processed {held_ready} held topics")
+                    
+            except Exception as e:
+                logger.error(f"Trending topics pipeline error: {e}", exc_info=True)
+            
+            logger.info("Trending topics pipeline complete")
+    
+    
     logger.info("Scheduler initialized with jobs:")
     for job in scheduler.get_jobs():
         logger.info(f"  - {job.id}: {job.trigger}")

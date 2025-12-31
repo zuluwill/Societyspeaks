@@ -1,0 +1,125 @@
+{% extends 'layout.html' %}
+
+{% block title %}Trending Topics - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Trending Topics</h1>
+        <p class="text-gray-600 mt-2">News-to-Deliberation Compiler - Manage trending topics from curated news sources</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-sm text-gray-500">Pending Review</div>
+            <div class="text-2xl font-bold text-yellow-600">{{ stats.topics.pending_review }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-sm text-gray-500">Published</div>
+            <div class="text-2xl font-bold text-green-600">{{ stats.topics.published }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-sm text-gray-500">Articles (24h)</div>
+            <div class="text-2xl font-bold text-blue-600">{{ stats.articles.last_24h }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="text-sm text-gray-500">Active Sources</div>
+            <div class="text-2xl font-bold text-purple-600">{{ stats.sources.active }}</div>
+        </div>
+    </div>
+
+    <div class="flex gap-4 mb-8">
+        <form action="{{ url_for('trending.trigger_pipeline') }}" method="post">
+            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                Run Pipeline Now
+            </button>
+        </form>
+        <a href="{{ url_for('trending.manage_sources') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+            Manage Sources
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-4 border-b">
+            <h2 class="text-xl font-semibold">Review Queue</h2>
+        </div>
+        
+        {% if queue %}
+        <div class="divide-y">
+            {% for topic in queue %}
+            <div class="p-4 hover:bg-gray-50">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <a href="{{ url_for('trending.view_topic', topic_id=topic.id) }}" class="text-lg font-medium text-blue-600 hover:underline">
+                            {{ topic.title }}
+                        </a>
+                        <div class="flex gap-4 mt-2 text-sm text-gray-500">
+                            <span>{{ topic.source_count }} sources</span>
+                            <span class="{% if topic.civic_score and topic.civic_score >= 0.7 %}text-green-600{% endif %}">
+                                Civic: {{ "%.0f"|format((topic.civic_score or 0) * 100) }}%
+                            </span>
+                            <span class="{% if topic.quality_score and topic.quality_score >= 0.7 %}text-green-600{% endif %}">
+                                Quality: {{ "%.0f"|format((topic.quality_score or 0) * 100) }}%
+                            </span>
+                            {% if topic.risk_flag %}
+                            <span class="text-red-600 font-medium">RISK: {{ topic.risk_reason or 'Flagged' }}</span>
+                            {% endif %}
+                        </div>
+                        {% if topic.canonical_tags %}
+                        <div class="flex gap-2 mt-2">
+                            {% for tag in topic.canonical_tags[:5] %}
+                            <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="flex gap-2 ml-4">
+                        {% if topic.is_high_confidence %}
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">High Confidence</span>
+                        {% endif %}
+                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">{{ topic.status }}</span>
+                    </div>
+                </div>
+                <div class="mt-2 text-sm text-gray-400">
+                    Created: {{ topic.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-8 text-center text-gray-500">
+            <p>No topics pending review.</p>
+            <p class="mt-2">Click "Run Pipeline Now" to fetch and process new articles.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="mt-8 bg-white rounded-lg shadow">
+        <div class="p-4 border-b">
+            <h2 class="text-xl font-semibold">All Topics Summary</h2>
+        </div>
+        <div class="p-4 grid grid-cols-5 gap-4 text-center">
+            <div>
+                <div class="text-2xl font-bold">{{ stats.topics.pending }}</div>
+                <div class="text-sm text-gray-500">Pending</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-yellow-600">{{ stats.topics.pending_review }}</div>
+                <div class="text-sm text-gray-500">Review</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-green-600">{{ stats.topics.published }}</div>
+                <div class="text-sm text-gray-500">Published</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-blue-600">{{ stats.topics.merged }}</div>
+                <div class="text-sm text-gray-500">Merged</div>
+            </div>
+            <div>
+                <div class="text-2xl font-bold text-gray-400">{{ stats.topics.discarded }}</div>
+                <div class="text-sm text-gray-500">Discarded</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

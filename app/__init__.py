@@ -326,6 +326,12 @@ def create_app():
     app.logger.debug("Registering admin blueprint...")
     app.register_blueprint(admin_bp, url_prefix='/admin')
     app.logger.debug("Admin blueprint registered")
+    
+    # Register trending topics blueprint (News-to-Deliberation Compiler)
+    from app.trending import trending_bp
+    app.register_blueprint(trending_bp)
+    app.logger.debug("Trending topics blueprint registered")
+    
     app.logger.debug("All registered routes:")
     app.logger.debug(app.url_map)
 

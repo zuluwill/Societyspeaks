@@ -6,7 +6,46 @@ Society Speaks is an open-source public discussion platform that empowers commun
 
 The application integrates with Pol.is to facilitate consensus-building discussions and includes features for user profiles (both individual and company), discussion management, geographic filtering, and comprehensive analytics tracking.
 
-## Recent Changes (December 22, 2025)
+## Recent Changes (December 31, 2025)
+
+### Trending Topics System - "News-to-Deliberation Compiler" (December 31, 2025)
+
+A complete system for automatically surfacing trending news topics for nuanced public debate:
+
+**New Database Models:**
+- `NewsSource`: Curated allowlist of trusted news sources (Guardian, BBC, Reuters, AP)
+- `NewsArticle`: Individual articles fetched with sensationalism scoring
+- `TrendingTopic`: Clustered topics with civic/quality/risk scoring
+- `TrendingTopicArticle`: Join table linking topics to source articles
+
+**Core Features:**
+- **News Fetching**: Guardian API and RSS feed integration with automatic deduplication
+- **Sensationalism Scoring**: LLM + heuristic-based clickbait detection
+- **Topic Clustering**: Semantic embedding-based clustering of related articles
+- **Multi-Factor Scoring**:
+  - `civic_score`: Is this worthwhile for civic discussion? (0-1)
+  - `quality_score`: Non-clickbait, fact density, multi-source (0-1)
+  - `risk_flag`: Culture war / sensitive / defamation risk detection
+- **Question-Level Deduplication**: Prevents duplicate topics using 30-day embedding comparison
+- **Cooldown Window**: 60-minute hold period for "2+ sources" verification
+- **Balanced Seed Statements**: LLM-generated diverse perspectives (pro/con/neutral)
+
+**Admin Interface** (`/admin/trending/`):
+- Dashboard with pipeline statistics
+- Review queue with publish/edit/merge/discard actions
+- Source management for adding/removing news feeds
+- Manual pipeline trigger
+
+**Background Processing**:
+- Hourly scheduled job for news fetching and processing
+- Conservative auto-publish rules (requires wire service + reputable source)
+- Human review queue for moderate confidence topics
+
+**Required Environment Variables:**
+- `GUARDIAN_API_KEY`: For Guardian API access (free tier available)
+- `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`: For LLM scoring and embeddings
+
+## Previous Changes (December 22, 2025)
 
 ### Performance Optimizations (December 22, 2025)
 - **Pagination**: Added pagination to admin routes (profiles, users, discussions at 20 items/page) and profile view routes (10 items/page) to reduce database load
