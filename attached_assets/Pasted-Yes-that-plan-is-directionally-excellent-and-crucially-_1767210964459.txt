@@ -1,0 +1,74 @@
+Yes — that plan is directionally excellent and (crucially) it leverages the right existing primitives in your codebase (seed statements, embeddings, moderation queue, duplicate detection). If you built that V1, you’d learn fast without trashing your brand.
+
+A few sharp edits I’d make before you implement:
+
+1) Don’t store source_articles[] as JSON long-term
+
+JSON is fine for a quick spike, but you’ll quickly want:
+	•	querying (“show me all topics sourced from BBC in last 7 days”)
+	•	dedupe at the article level
+	•	auditing / debugging / backfills
+
+Better:
+	•	NewsArticle table
+	•	TrendingTopicArticle join table
+
+You can still keep a denormalized JSON snapshot for convenience, but don’t make it the source of truth.
+
+2) Separate civic score vs “publish score”
+
+Keep these distinct:
+	•	civic_score (is this worthwhile as a civic discussion?)
+	•	quality_score (non-clickbait, fact density, multi-source)
+	•	risk_flag (culture war / sensitive topics / defamation risk)
+
+Then your publish rule becomes more stable:
+	•	publish if (quality high AND civic high AND sources>=2 AND not_duplicate AND not risk_flag)
+	•	else queue
+
+This avoids “sensationalism < 0.3” becoming the single gate.
+
+3) Add a “cooldown / holding pen” window
+
+Even 30–90 minutes helps:
+	•	improves “2+ sources” detection
+	•	reduces duplicates
+	•	avoids chasing early misinformation
+
+So: clusters land in pending_review + hold_until.
+
+4) Use question-level dedupe (not just cluster dedupe)
+
+The plan mentions it, but make it a first-class step:
+	•	store topic_embedding for the final prompt
+	•	compare to last 30 days of published prompts
+	•	if similar → merged (and attach new sources)
+
+5) Admin interface: include “Merge into existing discussion”
+
+Your ops UI should make merging painless:
+	•	select existing discussion
+	•	auto-add “What’s new” update + attach sources
+	•	optionally add 1–2 new seed statements
+
+This is how you avoid topic sprawl.
+
+6) Publishing: don’t auto-publish immediately in V1
+
+I’d do:
+	•	auto-draft everything
+	•	auto-publish only very high confidence (e.g. Reuters/AP + 1 other)
+	•	otherwise human review
+Once you’ve seen 2–4 weeks of outcomes, loosen it.
+
+7) One more field you’ll want: topic_slug + canonical event key
+
+A canonical key like ("uk", "nhs", "junior_doctors", "pay") (LLM-derived + normalized) will help you merge over time, even when embeddings wobble.
+
+⸻
+
+My verdict
+
+If you implement Replit’s plan with the tweaks above, you’re basically building a “news-to-deliberation compiler” with safety rails. That’s exactly the right move for Society Speaks.
+
+If you paste your existing Discussion + Statement models (or the relevant snippets), I’ll rewrite Replit’s model plan into exact SQLAlchemy models + migration notes + job pseudocode tailored to your app (so you can hand it straight to a dev/LLM without it going off-piste).

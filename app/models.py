@@ -749,3 +749,220 @@ class UserAPIKey(db.Model):
     user = db.relationship('User', backref='api_keys')
 
 
+# =============================================================================
+# TRENDING TOPICS SYSTEM (News-to-Deliberation Compiler)
+# =============================================================================
+
+class NewsSource(db.Model):
+    """
+    Curated allowlist of trusted news sources.
+    Only fetch from sources on this list.
+    """
+    __tablename__ = 'news_source'
+    __table_args__ = (
+        db.Index('idx_news_source_active', 'is_active'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False, unique=True)
+    feed_url = db.Column(db.String(500), nullable=False)
+    source_type = db.Column(db.String(20), default='rss')  # 'rss', 'api', 'guardian', 'nyt'
+    
+    reputation_score = db.Column(db.Float, default=0.8)  # 0-1 scale
+    is_active = db.Column(db.Boolean, default=True)
+    
+    last_fetched_at = db.Column(db.DateTime)
+    fetch_error_count = db.Column(db.Integer, default=0)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    articles = db.relationship('NewsArticle', backref='source', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<NewsSource {self.name}>'
+
+
+class NewsArticle(db.Model):
+    """
+    Individual news articles fetched from sources.
+    Stored separately for querying, deduplication, and auditing.
+    """
+    __tablename__ = 'news_article'
+    __table_args__ = (
+        db.Index('idx_article_source', 'source_id'),
+        db.Index('idx_article_fetched', 'fetched_at'),
+        db.Index('idx_article_external_id', 'external_id'),
+        db.UniqueConstraint('source_id', 'external_id', name='uq_source_article'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    source_id = db.Column(db.Integer, db.ForeignKey('news_source.id'), nullable=False)
+    
+    external_id = db.Column(db.String(500))  # Source's unique ID for deduplication
+    title = db.Column(db.String(500), nullable=False)
+    summary = db.Column(db.Text)
+    url = db.Column(db.String(1000), nullable=False)
+    
+    published_at = db.Column(db.DateTime)
+    fetched_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Scoring (computed at fetch time)
+    sensationalism_score = db.Column(db.Float)  # 0-1: higher = more clickbait
+    
+    # Embedding for clustering (stored as JSON array of floats)
+    title_embedding = db.Column(db.JSON)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<NewsArticle {self.title[:50]}...>'
+
+
+class TrendingTopic(db.Model):
+    """
+    A clustered news topic ready for deliberation.
+    Multiple articles are grouped into one topic.
+    """
+    __tablename__ = 'trending_topic'
+    __table_args__ = (
+        db.Index('idx_topic_status', 'status'),
+        db.Index('idx_topic_created', 'created_at'),
+        db.Index('idx_topic_hold_until', 'hold_until'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # The neutral framing question for discussion
+    title = db.Column(db.String(300), nullable=False)
+    description = db.Column(db.Text)
+    
+    # Canonical tags for long-term merging (LLM-derived)
+    # e.g., ["uk", "nhs", "junior_doctors", "pay"]
+    canonical_tags = db.Column(db.JSON)
+    topic_slug = db.Column(db.String(200))  # Normalized slug from tags
+    
+    # Scoring (separate scores per ChatGPT's advice)
+    civic_score = db.Column(db.Float)  # 0-1: Is this worthwhile for civic discussion?
+    quality_score = db.Column(db.Float)  # 0-1: Non-clickbait, fact density, multi-source
+    risk_flag = db.Column(db.Boolean, default=False)  # Culture war / sensitive / defamation risk
+    risk_reason = db.Column(db.String(200))  # Why it's flagged as risky
+    
+    source_count = db.Column(db.Integer, default=0)  # Number of unique sources
+    
+    # Embedding for question-level deduplication (last 30 days)
+    topic_embedding = db.Column(db.JSON)
+    
+    # Workflow status
+    status = db.Column(db.String(20), default='pending')
+    # pending -> held -> pending_review -> approved -> published
+    # pending -> held -> pending_review -> discarded
+    # pending -> held -> pending_review -> merged
+    
+    hold_until = db.Column(db.DateTime)  # Cooldown window (30-90 mins)
+    
+    # If merged into another topic/discussion
+    merged_into_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id'), nullable=True)
+    merged_into_discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=True)
+    
+    # Generated seed statements (JSON array)
+    seed_statements = db.Column(db.JSON)  # [{"content": "...", "position": "pro/con/neutral"}]
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    reviewed_at = db.Column(db.DateTime)
+    reviewed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    published_at = db.Column(db.DateTime)
+    
+    # Link to created discussion (if published)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=True)
+    
+    # Relationships
+    articles = db.relationship('TrendingTopicArticle', backref='topic', lazy='dynamic')
+    merged_into_topic = db.relationship('TrendingTopic', remote_side=[id], backref='merged_topics')
+    merged_into_discussion = db.relationship('Discussion', foreign_keys=[merged_into_discussion_id], backref='merged_topics')
+    created_discussion = db.relationship('Discussion', foreign_keys=[discussion_id], backref='source_topic')
+    reviewer = db.relationship('User', backref='reviewed_topics')
+    
+    @property
+    def is_high_confidence(self):
+        """
+        Auto-publish criteria:
+        - 2+ reputable sources
+        - High quality score
+        - High civic score
+        - Not risky
+        """
+        return (
+            self.source_count >= 2 and
+            (self.quality_score or 0) >= 0.7 and
+            (self.civic_score or 0) >= 0.7 and
+            not self.risk_flag
+        )
+    
+    @property
+    def should_auto_publish(self):
+        """
+        Very high confidence for auto-publish (V1 conservative)
+        Requires wire service (AP/Reuters) + 1 other
+        """
+        # Check if any source is a wire service
+        has_wire = False
+        for ta in self.articles:
+            if ta.article and ta.article.source:
+                if ta.article.source.name.lower() in ['associated press', 'reuters', 'ap', 'afp']:
+                    has_wire = True
+                    break
+        
+        return self.is_high_confidence and has_wire
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'canonical_tags': self.canonical_tags,
+            'civic_score': self.civic_score,
+            'quality_score': self.quality_score,
+            'risk_flag': self.risk_flag,
+            'risk_reason': self.risk_reason,
+            'source_count': self.source_count,
+            'status': self.status,
+            'hold_until': self.hold_until.isoformat() if self.hold_until else None,
+            'seed_statements': self.seed_statements,
+            'is_high_confidence': self.is_high_confidence,
+            'created_at': self.created_at.isoformat(),
+            'articles': [ta.article.title for ta in self.articles if ta.article]
+        }
+    
+    def __repr__(self):
+        return f'<TrendingTopic {self.title[:50]}...>'
+
+
+class TrendingTopicArticle(db.Model):
+    """
+    Join table linking TrendingTopic to NewsArticle.
+    Allows many-to-many with additional metadata.
+    """
+    __tablename__ = 'trending_topic_article'
+    __table_args__ = (
+        db.Index('idx_tta_topic', 'topic_id'),
+        db.Index('idx_tta_article', 'article_id'),
+        db.UniqueConstraint('topic_id', 'article_id', name='uq_topic_article'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id'), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey('news_article.id'), nullable=False)
+    
+    # When this article was added to the topic
+    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Similarity score to the topic centroid
+    similarity_score = db.Column(db.Float)
+    
+    # Relationships
+    article = db.relationship('NewsArticle', backref='topic_associations')
+
+
