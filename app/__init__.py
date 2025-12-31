@@ -31,6 +31,7 @@ csp = {
     ],
     'script-src': [
         "'self'",
+        "'unsafe-inline'",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
         "https://www.googletagmanager.com",
