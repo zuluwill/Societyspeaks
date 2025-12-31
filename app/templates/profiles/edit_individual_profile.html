@@ -103,10 +103,10 @@
                 <!-- Form Actions -->
                 <div class="flex justify-end space-x-4 mt-8">
                     <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) }}" 
-                       class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                       class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 min-h-11 flex items-center">
                         Cancel
                     </a>
-                    {{ form.submit(class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700") }}
+                    {{ form.submit(class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700 min-h-11 cursor-pointer") }}
                 </div>
             </form>
         </div>
