@@ -10,7 +10,7 @@ channel = "stable-24_05"
 [deployment]
 run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "run:app"]
 deploymentTarget = "autoscale"
-build = ["pip", "install", "-r", "requirements.txt"]
+build = ["bash", "-c", "pip install -r requirements.txt && npx tailwindcss -i ./app/static/src/input.css -o ./app/static/css/output.css --minify"]
 
 [[ports]]
 localPort = 5000
