@@ -27,7 +27,7 @@ def verify_email(token):
     return redirect(url_for('auth.login'))
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
-@limiter.limit("3/hour")  # Reduce to 3 registrations per IP per hour
+@limiter.limit("5/hour")
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
