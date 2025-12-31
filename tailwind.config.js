@@ -13,6 +13,12 @@ module.exports = {
   theme: {
     extend: {
       typography: require('./typography'),  // This links to our simplified typography
+      minHeight: {
+        '11': '2.75rem', // 44px - mobile touch target minimum
+      },
+      minWidth: {
+        '11': '2.75rem', // 44px - mobile touch target minimum
+      },
     }
   },
   plugins: [
