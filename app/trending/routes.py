@@ -101,7 +101,7 @@ def publish(topic_id):
     
     if discussion:
         flash(f"Published as discussion: {discussion.title}", "success")
-        return redirect(url_for('discussions.view_discussion', slug=discussion.slug))
+        return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
     else:
         flash("Failed to publish topic", "error")
         return redirect(url_for('trending.view_topic', topic_id=topic_id))
@@ -130,7 +130,7 @@ def regenerate_seeds(topic_id):
     """Regenerate seed statements for a topic."""
     topic = TrendingTopic.query.get_or_404(topic_id)
     
-    seeds = generate_seed_statements(topic, count=5)
+    seeds = generate_seed_statements(topic, count=7)
     topic.seed_statements = seeds
     db.session.commit()
     
