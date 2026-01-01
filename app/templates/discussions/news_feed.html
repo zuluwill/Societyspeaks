@@ -2,9 +2,37 @@
 {% from "components/discussion_card.html" import discussion_card %}
 
 {% block head %}
-    <title>News Discussions - SocietySpeaks</title>
-    <meta name="description" content="Join discussions on trending news topics. Curated from trusted sources for thoughtful debate.">
+    <title>News Discussions - SocietySpeaks | Trending Topics for Structured Debate</title>
+    <meta name="description" content="Join discussions on trending news topics. Curated from trusted journalism sources like The Guardian, BBC, Reuters for thoughtful, nuanced public debate.">
     <link rel="canonical" href="{{ url_for('discussions.news_feed', _external=True) }}">
+    
+    <meta property="og:title" content="News Discussions - Society Speaks">
+    <meta property="og:description" content="Trending news transformed into structured debates. Join the conversation on current affairs.">
+    <meta property="og:type" content="website">
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "News Discussions",
+      "description": "Trending topics from trusted journalism, transformed into structured debates for nuanced conversation",
+      "url": "{{ url_for('discussions.news_feed', _external=True) }}",
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Society Speaks",
+        "url": "https://societyspeaks.io"
+      },
+      "about": {
+        "@type": "Thing",
+        "name": "Current Affairs Discussions"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Society Speaks",
+        "url": "https://societyspeaks.io"
+      }
+    }
+    </script>
     <style>
         .topic-scroll {
             scroll-behavior: smooth;

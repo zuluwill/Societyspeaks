@@ -1,4 +1,47 @@
-{# templates/help/help.html #} {% extends "layout.html" %} {% block content %}
+{# templates/help/help.html #} {% extends "layout.html" %}
+
+{% block head %}
+<title>Help Center - Society Speaks | Learn How to Participate in Public Discussions</title>
+<meta name="description" content="Get help using Society Speaks. Learn how to create discussions, participate in debates, use our native debate system, and understand consensus-building tools.">
+<link rel="canonical" href="{{ url_for('help.help', _external=True) }}">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "name": "Society Speaks Help Center",
+  "description": "Help resources for using Society Speaks discussion platform",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I get started with Society Speaks?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Browse available discussions on the homepage, filter by country, city, or topic, and click on any discussion to participate. You can vote on comments by agreeing, disagreeing, or passing."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I create a discussion?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Create an account, click 'Create Discussion', choose between our Native Debate System or Pol.is embed, add seed statements to start the conversation, and share with your community."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the Native Debate System?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Our advanced system features real-time voting, threaded responses, evidence linking, and interactive consensus visualization - all built directly into Society Speaks."
+      }
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
 <div class="max-w-4xl mx-auto p-6">
   <!-- Header -->
   <div class="text-center mb-8">

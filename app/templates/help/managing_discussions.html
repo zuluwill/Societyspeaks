@@ -1,6 +1,38 @@
 {# templates/help/managing_discussions.html #}
 {% extends "layout.html" %}
 
+{% block head %}
+<title>Managing Discussions - Society Speaks Help | Monitor and Engage</title>
+<meta name="description" content="Learn how to monitor and maintain engaging discussions on Society Speaks. Track participation, promote engagement, and understand consensus visualizations.">
+<link rel="canonical" href="{{ url_for('help.managing_discussions', _external=True) }}">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Managing Discussions on Society Speaks",
+  "description": "Learn how to monitor and maintain engaging discussions",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Monitor Participation",
+      "text": "Track participant count, engagement levels, and review new comments regularly."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Promote Engagement",
+      "text": "Share on relevant platforms, engage with participants, and add new seed comments."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Understand Results",
+      "text": "Interpret opinion groups, consensus statements, and visualizations to derive insights."
+    }
+  ]
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-4xl mx-auto p-6">
     <!-- Header -->

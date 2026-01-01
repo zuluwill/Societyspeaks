@@ -132,32 +132,73 @@ def test_sitemap():
 
 @main_bp.route('/robots.txt')
 def robots():
-    """Serve the robots.txt file"""
+    """Serve the robots.txt file with LLM crawler support for GEO/AI discovery"""
     try:
         base_url = get_base_url()
-        robots_txt = f"""User-agent: Googlebot
-Allow: /
-Allow: /sitemap.xml
+        robots_txt = f"""# Society Speaks - robots.txt
+# Optimized for search engines and LLM/AI crawlers
 
+# Search Engine Crawlers
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# LLM/AI Crawlers - Explicitly allowed for GEO/AI discovery
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Anthropic-AI
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Cohere-ai
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+# Default rules for all other crawlers
 User-agent: *
 Allow: /
-Disallow: /account/settings
+Allow: /news
+Allow: /news/
+Allow: /discussions
+Allow: /discussions/
+Allow: /help
+Allow: /help/
+Allow: /about
+Allow: /sitemap.xml
+
+# Block private/auth areas
+Disallow: /account/
 Disallow: /user/settings
 Disallow: /api/
 Disallow: /admin/
 Disallow: /login
 Disallow: /register
+Disallow: /auth/
 Disallow: /*/*/edit
 Disallow: /*/edit
 
-# Only allow these file types to be indexed
-Allow: /*.html$
-Allow: /*.htm$
-Allow: /*.xml$
-Allow: /*.json$
-
-# Crawl-delay: 10
-
+# Sitemaps
 Sitemap: {base_url}/sitemap.xml"""
         return Response(robots_txt, mimetype='text/plain')
     except Exception as e:

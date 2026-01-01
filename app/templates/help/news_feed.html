@@ -1,5 +1,33 @@
 {# templates/help/news_feed.html #}
 {% extends "layout.html" %}
+
+{% block head %}
+<title>How Our News Feed Works - Society Speaks | Curated News Discussions</title>
+<meta name="description" content="Learn how Society Speaks sources and selects trending news topics for structured public debate. We transform polarising issues into nuanced, meaningful discussions.">
+<link rel="canonical" href="{{ url_for('help.news_feed', _external=True) }}">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How Our News Feed Works",
+  "description": "Understanding how Society Speaks surfaces trending topics for nuanced public debate",
+  "author": {
+    "@type": "Organization",
+    "name": "Society Speaks"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Society Speaks"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ url_for('help.news_feed', _external=True) }}"
+  }
+}
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-4xl mx-auto p-6">
   <div class="mb-8">

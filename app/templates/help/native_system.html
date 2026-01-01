@@ -1,5 +1,34 @@
-{# templates/help/native_system.html #} {% extends "layout.html" %} {% block
-content %}
+{# templates/help/native_system.html #} {% extends "layout.html" %}
+
+{% block head %}
+<title>Native Debate System - Society Speaks | Advanced Consensus-Building Features</title>
+<meta name="description" content="Learn about Society Speaks' advanced native debate system with real-time voting, threaded responses, evidence linking, and interactive consensus visualization.">
+<link rel="canonical" href="{{ url_for('help.native_system', _external=True) }}">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Native Debate System",
+  "description": "Society Speaks' advanced native debate features with consensus analysis and real-time voting",
+  "author": {
+    "@type": "Organization",
+    "name": "Society Speaks"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "{{ url_for('help.native_system', _external=True) }}"
+  },
+  "about": {
+    "@type": "SoftwareApplication",
+    "name": "Society Speaks Native Debate System",
+    "applicationCategory": "Discussion Platform"
+  }
+}
+</script>
+{% endblock %}
+
+{% block content %}
 <div class="max-w-4xl mx-auto p-6">
   <!-- Header -->
   <div class="mb-8">
