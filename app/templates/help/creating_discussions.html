@@ -1,5 +1,43 @@
-{# templates/help/creating_discussions.html #} {% extends "layout.html" %} {%
-block content %}
+{# templates/help/creating_discussions.html #} {% extends "layout.html" %}
+
+{% block head %}
+<title>Creating Discussions - Society Speaks Help | Start Meaningful Public Debates</title>
+<meta name="description" content="Learn how to create effective discussions on Society Speaks. Choose between our Native Debate System or Pol.is embed, add seed statements, and start meaningful conversations.">
+<link rel="canonical" href="{{ url_for('help.creating_discussions', _external=True) }}">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Creating Discussions on Society Speaks",
+  "description": "Learn how to create effective discussions using our Native System or Pol.is",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Choose Your System",
+      "text": "Select between the Native Debate System for in-depth deliberation or Pol.is for large-scale polling."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Add Seed Statements",
+      "text": "Create initial statements covering multiple viewpoints to encourage balanced participation."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Configure Settings",
+      "text": "Set topic, location scope, and moderation preferences for your discussion."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Share and Engage",
+      "text": "Share your discussion link and actively engage with participants."
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
 <div class="max-w-4xl mx-auto p-6">
   <!-- Header -->
   <div class="mb-8">

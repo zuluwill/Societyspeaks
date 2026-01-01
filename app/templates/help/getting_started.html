@@ -1,5 +1,38 @@
-{# templates/help/getting_started.html #} {% extends "layout.html" %} {% block
-content %}
+{# templates/help/getting_started.html #} {% extends "layout.html" %}
+
+{% block head %}
+<title>Getting Started - Society Speaks Help | How to Participate in Discussions</title>
+<meta name="description" content="Learn how to use Society Speaks. Discover how to join discussions, vote on statements, add your perspective, and participate in meaningful public dialogue.">
+<link rel="canonical" href="{{ url_for('help.getting_started', _external=True) }}">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "Getting Started with Society Speaks",
+  "description": "Learn how to participate in meaningful public discussions on Society Speaks",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Join a Discussion",
+      "text": "Browse available discussions on the homepage, filter by country, city, or topic, and click on any discussion to participate."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Vote on Comments",
+      "text": "For each comment, you can Agree, Disagree, or Pass if unsure or the comment is not relevant to you."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Add Your Perspective",
+      "text": "Submit your own statements to add to the discussion and help build consensus."
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
 <div class="max-w-4xl mx-auto p-6">
   <!-- Header -->
   <div class="mb-8">
