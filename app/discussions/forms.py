@@ -227,7 +227,7 @@ class CreateDiscussionForm(FlaskForm):
     # Phase 1: Native Statement System
     use_native_statements = BooleanField(
         'Use Native Statement System',
-        default=False,
+        default=True,
         description='Enable the new pol.is-inspired debate system with voting and consensus clustering (recommended)'
     )
 
