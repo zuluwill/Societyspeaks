@@ -55,3 +55,8 @@ waitForPort = 5000
 
 [agent]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+SITE_URL = "https://societyspeaks.io"

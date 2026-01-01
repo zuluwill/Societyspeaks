@@ -14,6 +14,7 @@ flask-limiter = "^3.13"
 feedparser = "^6.0.12"
 scikit-learn = "^1.8.0"
 openai = "^2.14.0"
+atproto = "^0.0.65"
 
 [tool.pyright]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md
