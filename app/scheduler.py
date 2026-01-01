@@ -162,7 +162,7 @@ def init_scheduler(app):
         Runs every hour
         """
         with app.app_context():
-            from app.trending.pipeline import run_pipeline, process_held_topics
+            from app.trending.pipeline import run_pipeline, process_held_topics, auto_publish_high_confidence
             
             logger.info("Starting trending topics pipeline")
             
@@ -173,6 +173,10 @@ def init_scheduler(app):
                 held_ready = process_held_topics()
                 if held_ready > 0:
                     logger.info(f"Processed {held_ready} held topics")
+                
+                auto_published = auto_publish_high_confidence()
+                if auto_published > 0:
+                    logger.info(f"Auto-published {auto_published} high-confidence topics")
                     
             except Exception as e:
                 logger.error(f"Trending topics pipeline error: {e}", exc_info=True)
