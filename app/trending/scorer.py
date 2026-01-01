@@ -1,11 +1,18 @@
 """
 Article and Topic Scoring Pipeline
 
+Philosophy: We WANT sensationalist/polarizing topics - these are the debates
+people are already having. Our goal is to bring nuance, balance, and 
+structured deliberation to hot-button issues.
+
 Uses LLM to score:
-- Sensationalism (clickbait detection)
-- Civic relevance (worth debating?)
-- Quality (factual, multi-perspective)
-- Risk flags (culture war, defamation)
+- Debate potential (is this generating discussion?)
+- Civic relevance (policy, society, public interest)
+- Quality (can we generate balanced seed statements?)
+- Risk flags (defamation, hate speech - these we avoid)
+
+We SKIP: celebrity gossip, lifestyle fluff, shopping content
+We KEEP: polarizing political/social debates that need nuance
 """
 
 import os
@@ -90,8 +97,14 @@ HIGH_VALUE_KEYWORDS = [
 
 def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle], List[NewsArticle]]:
     """
-    Pre-filter articles using cheap heuristics before LLM scoring.
-    Uses topic signals from premium sources to boost relevant articles.
+    Pre-filter articles to find debate-worthy topics.
+    
+    Philosophy: Sensationalism is a SIGNAL that people care about a topic.
+    We WANT hot-button issues - our job is to bring nuance to them.
+    
+    We SKIP only: celebrity gossip, lifestyle fluff, shopping content
+    We KEEP: polarizing debates on policy, society, politics, culture
+    
     Returns (articles_to_score, articles_to_skip).
     """
     from app.trending.topic_signals import (
@@ -116,13 +129,6 @@ def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle],
         title_lower = article.title.lower()
         
         if any(kw in title_lower for kw in LOW_VALUE_KEYWORDS):
-            article.sensationalism_score = 0.8
-            to_skip.append(article)
-            continue
-        
-        heuristic_score = score_sensationalism(article.title)
-        if heuristic_score >= 0.6:
-            article.sensationalism_score = heuristic_score
             to_skip.append(article)
             continue
         
@@ -133,14 +139,18 @@ def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle],
         topic_signal = calculate_topic_signal_score(
             article.title, article.summary, trending=trending_keywords
         )
-        if topic_signal >= 0.6:
+        if topic_signal >= 0.5:
             to_score.append(article)
             continue
         
-        if article.source and article.source.reputation_score >= 0.8:
+        heuristic_score = score_sensationalism(article.title)
+        if heuristic_score >= 0.4:
+            to_score.append(article)
+            continue
+        
+        if article.source and article.source.reputation_score >= 0.7:
             to_score.append(article)
         else:
-            article.sensationalism_score = heuristic_score
             to_skip.append(article)
     
     return to_score, to_skip
