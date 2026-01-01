@@ -75,32 +75,44 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     return len(articles), topics_created, ready_count
 
 
-def process_held_topics() -> int:
+def process_held_topics(batch_size: int = 10) -> int:
     """
     Process topics that have completed their hold window.
     Score them and move to pending_review.
+    Processes in batches with error handling per topic.
     """
     now = datetime.utcnow()
     
     held_topics = TrendingTopic.query.filter(
         TrendingTopic.status == 'pending',
         TrendingTopic.hold_until <= now
-    ).all()
+    ).order_by(TrendingTopic.created_at.desc()).limit(batch_size).all()
+    
+    if not held_topics:
+        return 0
+    
+    logger.info(f"Processing {len(held_topics)} held topics (batch of {batch_size})")
     
     ready_count = 0
     
     for topic in held_topics:
-        topic = score_topic(topic)
-        
-        seeds = generate_seed_statements(topic, count=7)
-        topic.seed_statements = seeds
-        
-        topic.status = 'pending_review'
-        ready_count += 1
-        
-        logger.info(f"Topic {topic.id} ready for review: {topic.title[:50]}...")
-    
-    db.session.commit()
+        try:
+            topic = score_topic(topic)
+            
+            seeds = generate_seed_statements(topic, count=7)
+            topic.seed_statements = seeds
+            
+            topic.status = 'pending_review'
+            ready_count += 1
+            
+            db.session.commit()
+            
+            logger.info(f"Topic {topic.id} ready for review: {topic.title[:50]}...")
+            
+        except Exception as e:
+            logger.error(f"Failed to process topic {topic.id}: {e}")
+            db.session.rollback()
+            continue
     
     return ready_count
 

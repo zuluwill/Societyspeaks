@@ -28,12 +28,20 @@
         </div>
     </div>
 
-    <div class="flex gap-4 mb-8">
+    <div class="flex flex-wrap gap-4 mb-8">
         <form action="{{ url_for('trending.trigger_pipeline') }}" method="post">
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
                 Run Pipeline Now
             </button>
         </form>
+        <form action="{{ url_for('trending.process_pending') }}" method="post">
+            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                Process Pending Topics
+            </button>
+        </form>
+        <a href="{{ url_for('trending.view_articles') }}" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+            View Articles
+        </a>
         <a href="{{ url_for('trending.manage_sources') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
             Manage Sources
         </a>

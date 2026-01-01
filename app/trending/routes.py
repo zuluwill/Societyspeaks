@@ -14,9 +14,9 @@ from flask import render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 
 from app import db
-from app.models import TrendingTopic, NewsSource, Discussion
+from app.models import TrendingTopic, NewsSource, Discussion, NewsArticle
 from app.trending import trending_bp
-from app.trending.pipeline import run_pipeline, get_review_queue, get_pipeline_stats
+from app.trending.pipeline import run_pipeline, get_review_queue, get_pipeline_stats, process_held_topics
 from app.trending.publisher import publish_topic, merge_topic_into_discussion
 from app.trending.seed_generator import generate_seed_statements
 from app.trending.scorer import score_topic
@@ -66,6 +66,42 @@ def trigger_pipeline():
         flash(f"Pipeline error: {str(e)}", "error")
     
     return redirect(url_for('trending.dashboard'))
+
+
+@trending_bp.route('/process-pending', methods=['POST'])
+@login_required
+@admin_required
+def process_pending():
+    """Process pending topics that are past their hold time."""
+    try:
+        ready = process_held_topics(batch_size=20)
+        if ready > 0:
+            flash(f"Processed {ready} topics - now ready for review", "success")
+        else:
+            flash("No pending topics ready to process", "info")
+    except Exception as e:
+        logger.error(f"Process pending error: {e}")
+        flash(f"Error processing pending topics: {str(e)}", "error")
+    
+    return redirect(url_for('trending.dashboard'))
+
+
+@trending_bp.route('/articles')
+@login_required
+@admin_required
+def view_articles():
+    """View recent articles."""
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+    
+    articles = NewsArticle.query.order_by(
+        NewsArticle.fetched_at.desc()
+    ).paginate(page=page, per_page=per_page, error_out=False)
+    
+    return render_template(
+        'trending/articles.html',
+        articles=articles
+    )
 
 
 @trending_bp.route('/topic/<int:topic_id>')
