@@ -101,12 +101,12 @@
     <div class="bg-white rounded-lg shadow-sm p-4 mb-8">
         <div class="flex flex-wrap gap-2">
             <a href="{{ url_for('discussions.news_feed') }}" 
-               class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if not topic_filter and view_mode == 'topics' %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
-                All Topics
-            </a>
-            <a href="{{ url_for('discussions.news_feed', view='all') }}" 
-               class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if view_mode == 'all' and not topic_filter %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+               class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if view_mode == 'latest' and not topic_filter %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
                 Latest
+            </a>
+            <a href="{{ url_for('discussions.news_feed', view='topics') }}" 
+               class="px-3 py-1.5 rounded-full text-sm font-medium transition {% if view_mode == 'topics' and not topic_filter %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-700 hover:bg-gray-200{% endif %}">
+                By Topic
             </a>
             <span class="border-l border-gray-300 mx-1"></span>
             {% for topic in topics %}
