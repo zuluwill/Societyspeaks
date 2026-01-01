@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, Blueprint,
 from flask_login import login_required, current_user
 from app import db, limiter
 from app.discussions.forms import CreateDiscussionForm
-from app.models import Discussion, DiscussionParticipant
+from app.models import Discussion, DiscussionParticipant, TrendingTopic
 from app.utils import get_recent_activity
 from app.middleware import track_discussion_view 
 from app.email_utils import create_discussion_notification
@@ -13,6 +13,37 @@ import os
 
 
 discussions_bp = Blueprint('discussions', __name__)
+
+
+@discussions_bp.route('/news')
+def news_feed():
+    """Display discussions generated from trending news topics."""
+    page = request.args.get('page', 1, type=int)
+    topic_filter = request.args.get('topic', None)
+    
+    news_discussion_ids = db.session.query(TrendingTopic.discussion_id).filter(
+        TrendingTopic.discussion_id.isnot(None)
+    ).subquery()
+    
+    query = Discussion.query.filter(
+        Discussion.id.in_(news_discussion_ids)
+    )
+    
+    if topic_filter:
+        query = query.filter(Discussion.topic == topic_filter)
+    
+    discussions = query.order_by(Discussion.created_at.desc()).paginate(
+        page=page, per_page=12, error_out=False
+    )
+    
+    topics = Discussion.TOPICS
+    
+    return render_template(
+        'discussions/news_feed.html',
+        discussions=discussions,
+        topics=topics,
+        topic_filter=topic_filter
+    )
 
 @discussions_bp.route('/create', methods=['GET', 'POST'])
 @login_required
