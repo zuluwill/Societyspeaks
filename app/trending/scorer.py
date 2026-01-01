@@ -91,8 +91,11 @@ HIGH_VALUE_KEYWORDS = [
 def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle], List[NewsArticle]]:
     """
     Pre-filter articles using cheap heuristics before LLM scoring.
+    Uses topic signals from premium sources to boost relevant articles.
     Returns (articles_to_score, articles_to_skip).
     """
+    from app.trending.topic_signals import calculate_topic_signal_score
+    
     to_score = []
     to_skip = []
     
@@ -111,6 +114,11 @@ def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle],
             continue
         
         if any(kw in title_lower for kw in HIGH_VALUE_KEYWORDS):
+            to_score.append(article)
+            continue
+        
+        topic_signal = calculate_topic_signal_score(article.title, article.summary)
+        if topic_signal >= 0.6:
             to_score.append(article)
             continue
         
