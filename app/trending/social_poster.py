@@ -174,7 +174,8 @@ def share_discussion_to_social(
         Dict with results for each platform
     """
     if not base_url:
-        base_url = os.environ.get('SITE_URL', 'https://societyspeaks.io')
+        from flask import current_app
+        base_url = current_app.config.get('SITE_URL', os.environ.get('SITE_URL', 'https://societyspeaks.io'))
     
     discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
     
