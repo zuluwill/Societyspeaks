@@ -2,170 +2,7 @@
 
 ## Overview
 
-Society Speaks is an open-source public discussion platform that empowers communities through meaningful dialogue using Pol.is technology. The platform enables users to create and participate in structured discussions on critical social, political, and community topics. Built with Flask and PostgreSQL, it provides a space where nuanced debate leads to better understanding and potential policy solutions.
-
-The application integrates with Pol.is to facilitate consensus-building discussions and includes features for user profiles (both individual and company), discussion management, geographic filtering, and comprehensive analytics tracking.
-
-## Recent Changes (January 1, 2026)
-
-### Audience Alignment & Expanded Sources (January 1, 2026)
-
-Enhanced the News-to-Deliberation Compiler to target intellectual podcast audiences:
-
-**Expanded News Sources (15 total):**
-- Original 4: Guardian, BBC, Reuters, Associated Press
-- Added 11: Financial Times, The Economist, Politico, Politico EU, UnHerd, The Atlantic, Foreign Affairs, Semafor, Bloomberg, TechCrunch, Axios
-
-**Extended Topic Categories (11 total):**
-- Original 8: Healthcare, Environment, Education, Technology, Economy, Politics, Society, Infrastructure
-- Added 3: Geopolitics, Business, Culture
-
-**New Scoring Dimensions:**
-- `audience_score`: 0-1 rating for appeal to target podcast audiences (Rest is Politics, Triggernometry, All-In, UnHerd, Diary of a CEO, Tim Ferriss, Louis Theroux)
-- `primary_topic`: Auto-categorization into one of 11 Discussion.TOPICS
-
-**Updated LLM Prompts:**
-- Scoring now evaluates intellectual substance over sensationalism
-- Topics assessed for appeal to audiences valuing nuanced debate and contrarian perspectives
-
-## Previous Changes (December 31, 2025)
-
-### Trending Topics System - "News-to-Deliberation Compiler" (December 31, 2025)
-
-A complete system for automatically surfacing trending news topics for nuanced public debate:
-
-**New Database Models:**
-- `NewsSource`: Curated allowlist of trusted news sources
-- `NewsArticle`: Individual articles fetched with sensationalism scoring
-- `TrendingTopic`: Clustered topics with civic/quality/audience/risk scoring
-- `TrendingTopicArticle`: Join table linking topics to source articles
-
-**Core Features:**
-- **News Fetching**: Guardian API and RSS feed integration with automatic deduplication
-- **Sensationalism Scoring**: LLM + heuristic-based clickbait detection
-- **Topic Clustering**: Semantic embedding-based clustering of related articles
-- **Multi-Factor Scoring**:
-  - `civic_score`: Is this worthwhile for civic discussion? (0-1)
-  - `quality_score`: Non-clickbait, fact density, multi-source (0-1)
-  - `audience_score`: Appeal to target podcast audiences (0-1)
-  - `risk_flag`: Culture war / sensitive / defamation risk detection
-- **Question-Level Deduplication**: Prevents duplicate topics using 30-day embedding comparison
-- **Cooldown Window**: 60-minute hold period for "2+ sources" verification
-- **Balanced Seed Statements**: LLM-generated diverse perspectives (pro/con/neutral)
-
-**Admin Interface** (`/admin/trending/`):
-- Dashboard with pipeline statistics
-- Review queue with publish/edit/merge/discard actions
-- Source management for adding/removing news feeds
-- Manual pipeline trigger
-
-**Background Processing**:
-- Hourly scheduled job for news fetching and processing
-- Conservative auto-publish rules (requires wire service + reputable source)
-- Human review queue for moderate confidence topics
-
-**Required Environment Variables:**
-- `GUARDIAN_API_KEY`: For Guardian API access (free tier available)
-- `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`: For LLM scoring and embeddings
-
-## Previous Changes (December 22, 2025)
-
-### Performance Optimizations (December 22, 2025)
-- **Pagination**: Added pagination to admin routes (profiles, users, discussions at 20 items/page) and profile view routes (10 items/page) to reduce database load
-- **Eager Loading**: Added joinedload for related data in admin queries to prevent N+1 query issues
-- **Database Indexes**: Added indexes on Discussion (creator_id, is_featured, topic), IndividualProfile (user_id), and CompanyProfile (user_id)
-- **Scheduler Optimization**: Optimized cleanup_old_consensus_analyses to only query discussions with >10 analyses
-- **Fixed view_profile Route**: Changed to redirect pattern instead of using non-existent template
-- **Exception Handling**: Replaced bare except clauses with proper exception handling
-
-### Security Fixes (December 22, 2025)
-- **Removed Duplicate Sentry**: Eliminated duplicate sentry_sdk.init() call that was causing double instrumentation
-- **Consolidated Rate Limiter**: auth/routes.py now imports shared limiter from app module instead of creating duplicate instance
-- **Protected Test Routes**: /test-sitemap and /test-robots now require admin login (previously public)
-- **Verified Webhook Security**: WEBHOOK_SECRET configured, production properly fails closed when missing
-
-### Code Quality Improvements (December 22, 2025)
-- **Proper Logging**: Replaced all print() calls with current_app.logger.debug/error() in middleware, init, routes, and seo modules
-- **Centralized Configuration**: 
-  - Added SPAM_PATTERNS to config.py with fallback defaults in auth/routes.py and commands.py
-  - Cities data loaded once at app startup and cached in app.config['CITIES_BY_COUNTRY']
-- **Eliminated Duplication**: discussions/routes.py now uses cached cities data instead of reloading from disk
-- **Documentation Sync**: Fixed README.md version inconsistencies to match requirements.txt exactly
-
-## Previous Changes (December 10, 2025)
-
-### Fixes & UX/UI Improvements (December 10, 2025)
-- **N+1 Query Fix in view_discussion**: Added eager loading with `joinedload(Statement.user)` to fetch user data in single query. Resolves Sentry issues #82444121 and #73094553.
-- **Duplicate Statement Type Options**: Fixed form field displaying "Claim Claim Question Question" by changing SelectField to RadioField in StatementForm
-- **CSS Loading**: Verified output.css loads correctly
-
-### UX/UI Enhancements
-- **Toast Notifications System**: Created reusable toast component for success/error/warning messages with auto-dismiss (3-5 seconds)
-- **Form Error Handling**: Improved visual feedback with error messages and color-coded validation states
-- **Mobile Button Sizing**: Ensured all interactive elements meet 44x44px minimum touch target for mobile accessibility
-- **Empty State Component**: Reusable empty state template for no-results scenarios with helpful context
-- **Loading Spinner Component**: Reusable spinner component for async operations
-- **Better Form Labels**: Improved hover states and cursor feedback on radio buttons
-- **Enhanced Accessibility**: Added proper ARIA labels and sr-only text for screen readers
-
-### Content Seeding
-- **20 Engaging Discussions Created**: Seeded platform with discussions across all topics with diverse perspectives:
-  
-  **Global Foundation Discussions (9):**
-  - The Future of Remote Work (Technology)
-  - Solving Global Housing Crisis (Economy)
-  - Climate Action: Individual vs Government (Environment)
-  - Reshaping Education Post-Pandemic (Education)
-  - Healthcare Access & Global Inequalities (Healthcare)
-  - AI Ethics and Regulation (Technology)
-  - Immigration and Cultural Diversity (Society)
-  - Infrastructure Investment (Infrastructure)
-  - Democracy in Crisis (Politics)
-
-  **Pressing Global Issues (11):**
-  - Geopolitical Tensions: Military Intervention vs Non-Interference (Politics)
-  - Disinformation and Social Media: Can We Protect Truth? (Technology)
-  - The Mental Health Crisis: What's Driving Youth Depression? (Healthcare)
-  - Economic Inequality: Is Capitalism Broken? (Economy)
-  - Reparations and Historical Justice: What Do We Owe the Past? (Society)
-  - Gender and LGBTQ+ Rights: How Far Should Society Go? (Society)
-  - Automation and Job Displacement: Will There Be Work in 2050? (Economy)
-  - Corporate Accountability: Do Companies Have Too Much Power? (Economy)
-  - Global Manufacturing: Should the West Reshore Production? (Economy)
-  - Water and Resource Wars: Who Owns the Commons? (Environment)
-  - Pandemic Prevention: Are We Ready for the Next One? (Healthcare)
-
-- **28 Total Discussions with 226 Seed Statements**: Comprehensive coverage of global issues
-  
-  **Additional Critical Topics (8):**
-  - Gun Control: Safety vs Constitutional Rights (Politics)
-  - Abortion and Reproductive Rights (Society)
-  - Criminal Justice Reform (Politics)
-  - Food Security and Agriculture (Environment)
-  - Energy Transition (Environment)
-  - Drug Policy and Legalization (Healthcare)
-  - Privacy vs Surveillance (Technology)
-  - Religious Freedom vs Secularism (Society)
-  
-  **Statement Distribution:**
-  - All 28 discussions have 7+ statements each
-  - 2 discussions with 7 statements
-  - 5 discussions with 8 statements
-  - 21 discussions with 7-9 statements
-  - Diverse perspectives on each topic to spark genuine debate
-- Created admin user for seeding operations
-
-### Previous Fixes (November 2025)
-- **CAPTCHA Validation Error**: Added try-except handling for bot garbage data in auth/routes.py
-- **Response Form "Position Field Required"**: Changed SelectField to RadioField in statement_forms.py
-- **Redis Cache Connection**: Fixed Flask-Caching localhost:6379 issue, now uses cloud Redis
-- **Voting Interface**: Redesigned with always-visible buttons (AGREE, DISAGREE, UNSURE) with 80px touch targets
-
-### Production Status
-- All critical errors resolved
-- Ready for production deployment
-- Redis caching configured and tested
-- Background scheduler operational
+Society Speaks is an open-source public discussion platform designed to foster meaningful dialogue using Pol.is technology. It enables users to create and participate in structured discussions on critical social, political, and community topics. Built with Flask and PostgreSQL, the platform aims to facilitate nuanced debate, build consensus, and potentially inform policy. Key capabilities include user profiles, discussion management, geographic filtering, and analytics, with a recent focus on automatically surfacing trending news for nuanced public debate through a "News-to-Deliberation Compiler."
 
 ## User Preferences
 
@@ -173,61 +10,42 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
-### Backend Framework
-- **Flask Application Structure**: Modular blueprint-based architecture with separate modules for authentication, profiles, discussions, admin, help, and settings
-- **Database ORM**: SQLAlchemy with Flask-SQLAlchemy for database operations and Flask-Migrate for schema management
-- **Authentication System**: Flask-Login with custom User model supporting both individual and company profile types
-- **Session Management**: Flask-Session with Redis backend for scalable session storage
+### UI/UX Decisions
+The platform utilizes a consistent UI with reusable components like `discussion_card`, toast notifications, empty state components, and loading spinners. It prioritizes mobile accessibility with 44x44px minimum touch targets and includes enhanced accessibility features like ARIA labels. Tailwind CSS is used for styling, ensuring a utility-first approach with custom typography plugins.
 
-### Database Design
-- **Primary Database**: PostgreSQL with connection pooling and health checks configured
-- **User Management**: Dual profile system supporting individual and company accounts linked to a central User model
-- **Discussion System**: Comprehensive discussion model with Pol.is integration, geographic filtering, topic categorization, and view tracking
-- **Analytics Tracking**: Dedicated models for tracking profile views and discussion engagement
+### Technical Implementations
+The backend is built with Flask, adopting a modular, blueprint-based architecture. SQLAlchemy with Flask-SQLAlchemy manages database operations, and Flask-Login handles user authentication for both individual and company profiles. Redis is integrated for session management, caching (Flask-Caching), and performance optimization. The "News-to-Deliberation Compiler" is a core system that automatically identifies trending news topics, scores articles for sensationalism and civic value using LLMs, clusters them into discussions, and generates balanced seed statements. This system relies on background hourly jobs and features an admin interface for review and management.
 
-### Caching and Performance
-- **Redis Integration**: Used for session storage, caching, and performance optimization with Flask-Caching
-- **Database Connection Pooling**: Configured with connection health checks, automatic reconnection, and optimized pool settings
-- **Static Asset Management**: Tailwind CSS for styling with custom configuration and typography plugins
+### Feature Specifications
+The platform supports a comprehensive discussion system with Pol.is integration, topic categorization, and geographic filtering. It includes a dedicated News feed page displaying discussions derived from trending topics, with pagination and topic filter chips. Analytics track profile views and discussion engagement. Security features include Flask-Talisman for CSP, Flask-Limiter for rate limiting, Flask-SeaSurf for CSRF protection, and Werkzeug for password hashing. File storage uses Replit Object Storage for user-uploaded images, with built-in cropping and compression.
 
-### Security Implementation
-- **Content Security Policy**: Flask-Talisman with comprehensive CSP rules allowing necessary inline scripts while maintaining security
-- **Rate Limiting**: Flask-Limiter for registration and authentication endpoints
-- **CSRF Protection**: Flask-SeaSurf for cross-site request forgery protection
-- **Password Security**: Werkzeug password hashing with strong hash algorithms
-
-### File Storage System
-- **Replit Object Storage**: Integration for profile images, company logos, and banner images
-- **Image Processing**: Built-in cropping and compression capabilities for uploaded images
-- **Secure File Handling**: Proper filename sanitization and storage path management
-
-### Email and Communication
-- **Loops Integration**: Transactional email system for user communications, password resets, and notifications
-- **Welcome Email Flow**: Automated onboarding sequence for new users
-- **Event Tracking**: User action tracking for engagement analytics
+### System Design Choices
+PostgreSQL is the primary database, configured with connection pooling and health checks. A dual-profile system supports individual and company accounts. The application emphasizes performance through pagination, eager loading, database indexing, and Redis caching. Logging is centralized using `current_app.logger`, and configuration is managed through `config.py`. Environment variables are used for API keys (e.g., Guardian, OpenAI/Anthropic).
 
 ## External Dependencies
 
 ### Core Services
-- **Pol.is Platform**: Primary discussion technology for consensus-building and opinion clustering
-- **PostgreSQL Database**: Production database hosted externally with connection pooling
-- **Redis Cloud**: Session storage and caching layer for improved performance
-- **Replit Object Storage**: File storage for user-uploaded images and media
+- **Pol.is Platform**: For structured discussions and consensus building.
+- **PostgreSQL Database**: External primary data store.
+- **Redis Cloud**: For session management, caching, and performance.
+- **Replit Object Storage**: For user-uploaded media.
 
 ### Email and Analytics
-- **Loops Email Service**: Transactional email delivery and user engagement tracking
-- **Sentry Error Tracking**: Comprehensive error monitoring and performance tracking
-- **Google Tag Manager**: Web analytics and conversion tracking
+- **Loops Email Service**: For transactional emails and user communications.
+- **Sentry Error Tracking**: For error monitoring and performance.
+- **Google Tag Manager**: For web analytics.
 
-### Development Tools
-- **Flask Extensions**: Comprehensive security, form handling, and database management stack
-- **Tailwind CSS**: Utility-first CSS framework with custom plugins for typography and forms
-- **Node.js Dependencies**: Build tools for CSS processing and frontend asset management
+### APIs
+- **Guardian API**: For news article fetching.
+- **OpenAI/Anthropic APIs**: For LLM-based scoring, embeddings, and content generation within the "News-to-Deliberation Compiler."
 
-### Security and Monitoring
-- **Flask-Talisman**: Security headers and content security policy enforcement
-- **Flask-Limiter**: Rate limiting for API endpoints and user actions
-- **Flask-SeaSurf**: CSRF protection for form submissions
+### Development & Security Tools
+- **Flask Extensions**: Various extensions for security, forms, and database management.
+- **Tailwind CSS**: Utility-first CSS framework.
+- **Node.js**: For frontend asset management and build processes.
+- **Flask-Talisman**: For security headers and CSP.
+- **Flask-Limiter**: For rate limiting.
+- **Flask-SeaSurf**: For CSRF protection.
 
 ### Geographic Data
-- **Country/City Data**: Static JSON files for geographic filtering and location selection in discussions and profiles
+- **Static JSON files**: For country/city data used in filtering.
