@@ -81,6 +81,7 @@
               type="checkbox"
               id="useNativeStatementsCheckbox"
               class="h-5 w-5 text-green-600 focus:ring-green-500 border-gray-300 rounded mt-0.5"
+              checked
             />
             <div class="ml-3 flex-1">
               <label
@@ -186,7 +187,7 @@
             type="hidden"
             name="use_native_statements"
             id="finalUseNativeStatements"
-            value="false"
+            value="true"
           />
 
           <h2 class="text-xl font-semibold text-gray-800 mb-6">
@@ -428,7 +429,7 @@
   let currentStep = 1;
   let cityChoices;
   let citySelect; // Define citySelect at the top level for reuse
-  let useNativeStatements = false; // Track native statements mode
+  let useNativeStatements = true; // Track native statements mode - default to native
   let seedStatements = []; // Track seed statements for native discussions
 
   document.addEventListener("DOMContentLoaded", function () {
@@ -472,6 +473,13 @@
         ? "true"
         : "false";
     });
+
+    // Initialize the UI state based on checkbox default (native is checked by default)
+    if (nativeCheckbox.checked) {
+      polisSection.style.opacity = "0.5";
+      polisSection.style.pointerEvents = "none";
+      step2Label.textContent = "Skipped";
+    }
 
     // Initialize visibility and handle scope change at load
     updateStepVisibility();
