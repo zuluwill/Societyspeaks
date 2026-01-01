@@ -194,6 +194,8 @@ def score_topic(topic: TrendingTopic) -> TrendingTopic:
     if not api_key:
         topic.civic_score = 0.5
         topic.quality_score = 0.5
+        topic.audience_score = 0.5
+        topic.primary_topic = 'Society'
         topic.risk_flag = False
         return topic
     
@@ -248,6 +250,8 @@ Respond with ONLY valid JSON."""
         logger.error(f"Topic scoring failed: {e}")
         topic.civic_score = 0.5
         topic.quality_score = 0.5
+        topic.audience_score = 0.5
+        topic.primary_topic = 'Society'
         topic.risk_flag = False
     
     return topic
