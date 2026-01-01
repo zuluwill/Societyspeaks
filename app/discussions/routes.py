@@ -22,7 +22,7 @@ def news_feed():
     
     page = request.args.get('page', 1, type=int)
     topic_filter = request.args.get('topic', None)
-    view_mode = request.args.get('view', 'topics')  # 'topics' or 'all'
+    view_mode = request.args.get('view', 'latest')  # 'latest' (default), 'topics', or filtered by topic
     
     news_discussion_ids = db.session.query(TrendingTopic.discussion_id).filter(
         TrendingTopic.discussion_id.isnot(None)
