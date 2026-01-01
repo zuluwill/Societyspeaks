@@ -6,16 +6,38 @@ Society Speaks is an open-source public discussion platform that empowers commun
 
 The application integrates with Pol.is to facilitate consensus-building discussions and includes features for user profiles (both individual and company), discussion management, geographic filtering, and comprehensive analytics tracking.
 
-## Recent Changes (December 31, 2025)
+## Recent Changes (January 1, 2026)
+
+### Audience Alignment & Expanded Sources (January 1, 2026)
+
+Enhanced the News-to-Deliberation Compiler to target intellectual podcast audiences:
+
+**Expanded News Sources (15 total):**
+- Original 4: Guardian, BBC, Reuters, Associated Press
+- Added 11: Financial Times, The Economist, Politico, Politico EU, UnHerd, The Atlantic, Foreign Affairs, Semafor, Bloomberg, TechCrunch, Axios
+
+**Extended Topic Categories (11 total):**
+- Original 8: Healthcare, Environment, Education, Technology, Economy, Politics, Society, Infrastructure
+- Added 3: Geopolitics, Business, Culture
+
+**New Scoring Dimensions:**
+- `audience_score`: 0-1 rating for appeal to target podcast audiences (Rest is Politics, Triggernometry, All-In, UnHerd, Diary of a CEO, Tim Ferriss, Louis Theroux)
+- `primary_topic`: Auto-categorization into one of 11 Discussion.TOPICS
+
+**Updated LLM Prompts:**
+- Scoring now evaluates intellectual substance over sensationalism
+- Topics assessed for appeal to audiences valuing nuanced debate and contrarian perspectives
+
+## Previous Changes (December 31, 2025)
 
 ### Trending Topics System - "News-to-Deliberation Compiler" (December 31, 2025)
 
 A complete system for automatically surfacing trending news topics for nuanced public debate:
 
 **New Database Models:**
-- `NewsSource`: Curated allowlist of trusted news sources (Guardian, BBC, Reuters, AP)
+- `NewsSource`: Curated allowlist of trusted news sources
 - `NewsArticle`: Individual articles fetched with sensationalism scoring
-- `TrendingTopic`: Clustered topics with civic/quality/risk scoring
+- `TrendingTopic`: Clustered topics with civic/quality/audience/risk scoring
 - `TrendingTopicArticle`: Join table linking topics to source articles
 
 **Core Features:**
@@ -25,6 +47,7 @@ A complete system for automatically surfacing trending news topics for nuanced p
 - **Multi-Factor Scoring**:
   - `civic_score`: Is this worthwhile for civic discussion? (0-1)
   - `quality_score`: Non-clickbait, fact density, multi-source (0-1)
+  - `audience_score`: Appeal to target podcast audiences (0-1)
   - `risk_flag`: Culture war / sensitive / defamation risk detection
 - **Question-Level Deduplication**: Prevents duplicate topics using 30-day embedding comparison
 - **Cooldown Window**: 60-minute hold period for "2+ sources" verification
