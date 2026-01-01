@@ -114,13 +114,32 @@ def init_scheduler(app):
     @scheduler.scheduled_job('cron', hour=3, id='cleanup_old_analyses')
     def cleanup_old_consensus_analyses():
         """
-        Clean up old consensus analyses
-        Keep only the 10 most recent for each discussion
+        Clean up old consensus analyses and news data
         Runs daily at 3 AM
         """
         with app.app_context():
             from app import db
-            from app.models import ConsensusAnalysis, Discussion
+            from app.models import ConsensusAnalysis, Discussion, NewsArticle, TrendingTopic
+            from datetime import timedelta
+            
+            logger.info("Starting cleanup of old data")
+            
+            cutoff_30_days = datetime.utcnow() - timedelta(days=30)
+            
+            old_articles = NewsArticle.query.filter(
+                NewsArticle.fetched_at < cutoff_30_days
+            ).delete(synchronize_session=False)
+            db.session.commit()
+            if old_articles > 0:
+                logger.info(f"Deleted {old_articles} old news articles")
+            
+            old_discarded = TrendingTopic.query.filter(
+                TrendingTopic.status == 'discarded',
+                TrendingTopic.created_at < cutoff_30_days
+            ).delete(synchronize_session=False)
+            db.session.commit()
+            if old_discarded > 0:
+                logger.info(f"Deleted {old_discarded} old discarded topics")
             
             logger.info("Starting cleanup of old consensus analyses")
             
@@ -155,11 +174,12 @@ def init_scheduler(app):
             logger.info("Cleanup task complete")
     
     
-    @scheduler.scheduled_job('interval', hours=1, id='trending_topics_pipeline')
+    @scheduler.scheduled_job('cron', hour='7,12,18,22', id='trending_topics_pipeline')
     def run_trending_topics_pipeline():
         """
         Fetch news and process trending topics
-        Runs every hour
+        Runs 4 times daily: 7am, 12pm, 6pm, 10pm UTC
+        Optimized for cost efficiency while catching major news cycles
         """
         with app.app_context():
             from app.trending.pipeline import run_pipeline, process_held_topics, auto_publish_high_confidence
