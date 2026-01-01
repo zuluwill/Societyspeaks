@@ -181,6 +181,72 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.95
         },
+        {
+            'name': 'Financial Times',
+            'feed_url': 'https://www.ft.com/rss/home',
+            'source_type': 'rss',
+            'reputation_score': 0.9
+        },
+        {
+            'name': 'The Economist',
+            'feed_url': 'https://www.economist.com/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.9
+        },
+        {
+            'name': 'Politico',
+            'feed_url': 'https://rss.politico.com/politics-news.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.8
+        },
+        {
+            'name': 'Politico EU',
+            'feed_url': 'https://www.politico.eu/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.8
+        },
+        {
+            'name': 'UnHerd',
+            'feed_url': 'https://unherd.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.75
+        },
+        {
+            'name': 'The Atlantic',
+            'feed_url': 'https://www.theatlantic.com/feed/all/',
+            'source_type': 'rss',
+            'reputation_score': 0.85
+        },
+        {
+            'name': 'Foreign Affairs',
+            'feed_url': 'https://www.foreignaffairs.com/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.9
+        },
+        {
+            'name': 'Semafor',
+            'feed_url': 'https://www.semafor.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8
+        },
+        {
+            'name': 'Bloomberg',
+            'feed_url': 'https://feeds.bloomberg.com/markets/news.rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85
+        },
+        {
+            'name': 'TechCrunch',
+            'feed_url': 'https://techcrunch.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.75
+        },
+        {
+            'name': 'Axios',
+            'feed_url': 'https://api.axios.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.8
+        },
     ]
     
     for source_data in default_sources:

@@ -166,9 +166,28 @@ Return ONLY a JSON array of numbers in order, e.g. [0.2, 0.5, 0.1]"""
     return articles
 
 
+VALID_TOPICS = [
+    'Healthcare', 'Environment', 'Education', 'Technology', 'Economy', 
+    'Politics', 'Society', 'Infrastructure', 'Geopolitics', 'Business', 'Culture'
+]
+
+TARGET_AUDIENCE_DESCRIPTION = """
+Our target audience follows podcasts like: The Rest is Politics, Newsagents, Triggernometry, 
+All-In Podcast, UnHerd, Diary of a CEO, Modern Wisdom, Tim Ferriss Show, Louis Theroux.
+
+They value:
+- Nuanced political/policy discussion (not partisan culture war)
+- Geopolitics and international affairs
+- Technology, economics, and entrepreneurship
+- Intellectual depth over sensationalism
+- Contrarian or heterodox perspectives
+- Long-form substantive debate
+"""
+
+
 def score_topic(topic: TrendingTopic) -> TrendingTopic:
     """
-    Score a topic for civic relevance, quality, and risk.
+    Score a topic for civic relevance, quality, risk, and audience alignment.
     """
     api_key, provider = get_system_api_key()
     
@@ -182,6 +201,8 @@ def score_topic(topic: TrendingTopic) -> TrendingTopic:
     
     prompt = f"""Analyze this news topic cluster for a civic debate platform.
 
+{TARGET_AUDIENCE_DESCRIPTION}
+
 Topic: {topic.title}
 Source articles:
 {chr(10).join(f'- {t}' for t in article_titles)}
@@ -190,8 +211,10 @@ Rate on 0-1 scale and respond in JSON:
 {{
     "civic_score": <0-1: how valuable is this for civic discussion? 1=very important public policy issue, 0=trivial/celebrity gossip>,
     "quality_score": <0-1: how factual and substantive? 1=well-sourced news, 0=rumor/opinion>,
+    "audience_score": <0-1: how appealing to our target audience? 1=perfect fit for intellectual podcast listeners, 0=tabloid/celebrity content>,
     "risk_flag": <true/false: is this culture war bait, defamation risk, or likely to cause more division than insight?>,
     "risk_reason": "<if risk_flag is true, explain briefly>",
+    "primary_topic": "<one of: Healthcare, Environment, Education, Technology, Economy, Politics, Society, Infrastructure, Geopolitics, Business, Culture>",
     "canonical_tags": ["<tag1>", "<tag2>", "<tag3>"] (normalized lowercase topic identifiers for deduplication)
 }}
 
@@ -207,9 +230,16 @@ Respond with ONLY valid JSON."""
         
         topic.civic_score = float(data.get('civic_score', 0.5))
         topic.quality_score = float(data.get('quality_score', 0.5))
+        topic.audience_score = float(data.get('audience_score', 0.5))
         topic.risk_flag = bool(data.get('risk_flag', False))
         topic.risk_reason = data.get('risk_reason', '')[:200] if data.get('risk_reason') else None
         topic.canonical_tags = data.get('canonical_tags', [])
+        
+        primary_topic = data.get('primary_topic', 'Society')
+        if primary_topic in VALID_TOPICS:
+            topic.primary_topic = primary_topic
+        else:
+            topic.primary_topic = 'Society'
         
         if topic.canonical_tags:
             topic.topic_slug = '_'.join(topic.canonical_tags[:4])

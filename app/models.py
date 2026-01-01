@@ -293,7 +293,8 @@ class Discussion(db.Model):
 
     # Define topics for validation
     TOPICS = [
-        'Healthcare', 'Environment', 'Education', 'Technology', 'Economy', 'Politics', 'Society', 'Infrastructure'
+        'Healthcare', 'Environment', 'Education', 'Technology', 'Economy', 
+        'Politics', 'Society', 'Infrastructure', 'Geopolitics', 'Business', 'Culture'
     ]
 
     def __init__(self, **kwargs):
@@ -846,8 +847,12 @@ class TrendingTopic(db.Model):
     # Scoring (separate scores per ChatGPT's advice)
     civic_score = db.Column(db.Float)  # 0-1: Is this worthwhile for civic discussion?
     quality_score = db.Column(db.Float)  # 0-1: Non-clickbait, fact density, multi-source
+    audience_score = db.Column(db.Float)  # 0-1: Appeal to target podcast audience
     risk_flag = db.Column(db.Boolean, default=False)  # Culture war / sensitive / defamation risk
     risk_reason = db.Column(db.String(200))  # Why it's flagged as risky
+    
+    # Primary topic category for the discussion
+    primary_topic = db.Column(db.String(50))  # Maps to Discussion.TOPICS
     
     source_count = db.Column(db.Integer, default=0)  # Number of unique sources
     

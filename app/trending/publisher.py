@@ -50,7 +50,7 @@ def publish_topic(topic: TrendingTopic, admin_user: User) -> Optional[Discussion
         slug=slug,
         has_native_statements=True,
         creator_id=admin_user.id,
-        topic=topic.canonical_tags[0] if topic.canonical_tags else 'trending',
+        topic=topic.primary_topic or 'Society',
         geographic_scope='global',
         is_featured=False
     )
