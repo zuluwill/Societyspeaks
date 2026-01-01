@@ -94,12 +94,25 @@ def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle],
     Uses topic signals from premium sources to boost relevant articles.
     Returns (articles_to_score, articles_to_skip).
     """
-    from app.trending.topic_signals import calculate_topic_signal_score
+    from app.trending.topic_signals import (
+        calculate_topic_signal_score,
+        get_trending_topics_from_premium_sources
+    )
+    
+    try:
+        trending_keywords = get_trending_topics_from_premium_sources(48)
+    except Exception as e:
+        logger.warning(f"Failed to fetch trending topics, using neutral scoring: {e}")
+        trending_keywords = {}
     
     to_score = []
     to_skip = []
     
     for article in articles:
+        if not article.title:
+            to_skip.append(article)
+            continue
+            
         title_lower = article.title.lower()
         
         if any(kw in title_lower for kw in LOW_VALUE_KEYWORDS):
@@ -117,7 +130,9 @@ def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle],
             to_score.append(article)
             continue
         
-        topic_signal = calculate_topic_signal_score(article.title, article.summary)
+        topic_signal = calculate_topic_signal_score(
+            article.title, article.summary, trending=trending_keywords
+        )
         if topic_signal >= 0.6:
             to_score.append(article)
             continue
