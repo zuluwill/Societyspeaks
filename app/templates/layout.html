@@ -153,6 +153,11 @@
                                 <a href="{{ url_for('settings.view_settings') }}"
                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
                                    role="menuitem">Settings</a>
+                                {% if current_user.is_admin %}
+                                <a href="{{ url_for('admin.dashboard') }}"
+                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
+                                   role="menuitem">Admin</a>
+                                {% endif %}
                                 <a href="{{ url_for('auth.logout') }}" 
                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
                                    role="menuitem">Sign out</a>
@@ -251,6 +256,10 @@
                                 {% endif %}
                                 <a href="{{ url_for('settings.view_settings') }}" 
                                    class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Settings</a>
+                                {% if current_user.is_admin %}
+                                <a href="{{ url_for('admin.dashboard') }}" 
+                                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Admin</a>
+                                {% endif %}
                                 <a href="{{ url_for('auth.logout') }}" 
                                    class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Sign out</a>
                             </div>
