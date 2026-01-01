@@ -28,6 +28,12 @@ def help():
             'description': 'Monitor and engage with your discussions',
             'icon': 'sparkles',
             'url': url_for('help.managing_discussions')
+        },
+        'news-feed': {
+            'title': 'How Our News Feed Works',
+            'description': 'How we source and select trending topics for debate',
+            'icon': 'newspaper',
+            'url': url_for('help.news_feed')
         }
     }
 
@@ -56,3 +62,7 @@ def polis_algorithms():
 @help_bp.route('/native-system')
 def native_system():
     return render_template('help/native_system.html')
+
+@help_bp.route('/news-feed')
+def news_feed():
+    return render_template('help/news_feed.html')
