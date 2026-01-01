@@ -279,9 +279,9 @@ def share_to_bluesky(topic_id):
     
     try:
         from app.trending.social_poster import post_to_bluesky
-        import os
+        from flask import current_app
         
-        base_url = os.environ.get('SITE_URL', 'https://societyspeaks.io')
+        base_url = current_app.config.get('SITE_URL', 'https://societyspeaks.io')
         discussion = topic.created_discussion
         discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
         
@@ -314,9 +314,9 @@ def get_x_share_url(topic_id):
         return redirect(url_for('trending.view_topic', topic_id=topic_id))
     
     from app.trending.social_poster import generate_x_share_url
-    import os
+    from flask import current_app
     
-    base_url = os.environ.get('SITE_URL', 'https://societyspeaks.io')
+    base_url = current_app.config.get('SITE_URL', 'https://societyspeaks.io')
     discussion = topic.created_discussion
     discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
     
