@@ -247,6 +247,42 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8
         },
+        {
+            'name': 'The Times',
+            'feed_url': 'https://www.thetimes.co.uk/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85
+        },
+        {
+            'name': 'The Telegraph',
+            'feed_url': 'https://www.telegraph.co.uk/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.8
+        },
+        {
+            'name': 'The Independent',
+            'feed_url': 'https://www.independent.co.uk/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.75
+        },
+        {
+            'name': 'The New Yorker',
+            'feed_url': 'https://www.newyorker.com/feed/everything',
+            'source_type': 'rss',
+            'reputation_score': 0.9
+        },
+        {
+            'name': 'The Spectator',
+            'feed_url': 'https://www.spectator.co.uk/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8
+        },
+        {
+            'name': 'The News Agents',
+            'feed_url': 'https://feeds.simplecast.com/Gr3nDCvY',
+            'source_type': 'rss',
+            'reputation_score': 0.85
+        },
     ]
     
     for source_data in default_sources:
