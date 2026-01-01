@@ -283,6 +283,42 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.85
         },
+        {
+            'name': 'The Rest Is Politics',
+            'feed_url': 'https://feeds.acast.com/public/shows/the-rest-is-politics',
+            'source_type': 'rss',
+            'reputation_score': 0.9
+        },
+        {
+            'name': 'Triggernometry',
+            'feed_url': 'https://feeds.acast.com/public/shows/triggernometry',
+            'source_type': 'rss',
+            'reputation_score': 0.8
+        },
+        {
+            'name': 'All-In Podcast',
+            'feed_url': 'https://feeds.megaphone.fm/all-in-with-chamath-jason-sacks-friedberg',
+            'source_type': 'rss',
+            'reputation_score': 0.85
+        },
+        {
+            'name': 'The Tim Ferriss Show',
+            'feed_url': 'https://rss.art19.com/tim-ferriss-show',
+            'source_type': 'rss',
+            'reputation_score': 0.85
+        },
+        {
+            'name': 'Diary of a CEO',
+            'feed_url': 'https://feeds.simplecast.com/tFDHTGpU',
+            'source_type': 'rss',
+            'reputation_score': 0.8
+        },
+        {
+            'name': 'Modern Wisdom',
+            'feed_url': 'https://feeds.megaphone.fm/modern-wisdom',
+            'source_type': 'rss',
+            'reputation_score': 0.8
+        },
     ]
     
     for source_data in default_sources:
