@@ -39,6 +39,11 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 - **Guardian API**: For news article fetching.
 - **OpenAI/Anthropic APIs**: For LLM-based scoring, embeddings, and content generation within the "News-to-Deliberation Compiler."
 
+### Social Media Integration
+- **Bluesky (AT Protocol)**: Automatic posting when news discussions are published via the `atproto` package. Requires `BLUESKY_APP_PASSWORD` secret.
+- **X/Twitter**: One-click share links (no API required) with pre-filled text including discussion link, topic hashtags, and podcast audience handles.
+- **Social Poster Service**: `app/trending/social_poster.py` handles all social media formatting and posting with topic-based hashtags targeting intellectual podcast audiences.
+
 ### Development & Security Tools
 - **Flask Extensions**: Various extensions for security, forms, and database management.
 - **Tailwind CSS**: Utility-first CSS framework.
