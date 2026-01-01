@@ -18,32 +18,61 @@ discussions_bp = Blueprint('discussions', __name__)
 @discussions_bp.route('/news')
 def news_feed():
     """Display discussions generated from trending news topics."""
+    from app.models import NewsSource
+    
     page = request.args.get('page', 1, type=int)
     topic_filter = request.args.get('topic', None)
+    view_mode = request.args.get('view', 'topics')  # 'topics' or 'all'
     
     news_discussion_ids = db.session.query(TrendingTopic.discussion_id).filter(
         TrendingTopic.discussion_id.isnot(None)
     ).subquery()
     
-    query = Discussion.query.filter(
-        Discussion.id.in_(news_discussion_ids)
-    )
+    # Get active news sources for transparency
+    news_sources = NewsSource.query.filter_by(is_active=True).order_by(NewsSource.name).all()
     
-    if topic_filter:
-        query = query.filter(Discussion.topic == topic_filter)
-    
-    discussions = query.order_by(Discussion.created_at.desc()).paginate(
-        page=page, per_page=12, error_out=False
-    )
-    
-    topics = Discussion.TOPICS
-    
-    return render_template(
-        'discussions/news_feed.html',
-        discussions=discussions,
-        topics=topics,
-        topic_filter=topic_filter
-    )
+    if view_mode == 'topics' and not topic_filter:
+        # Group discussions by topic for topic-organized view
+        topics_with_discussions = {}
+        for topic in Discussion.TOPICS:
+            topic_discussions = Discussion.query.filter(
+                Discussion.id.in_(news_discussion_ids),
+                Discussion.topic == topic
+            ).order_by(Discussion.created_at.desc()).limit(6).all()
+            if topic_discussions:
+                topics_with_discussions[topic] = topic_discussions
+        
+        return render_template(
+            'discussions/news_feed.html',
+            topics_with_discussions=topics_with_discussions,
+            news_sources=news_sources,
+            topics=Discussion.TOPICS,
+            topic_filter=None,
+            view_mode=view_mode,
+            discussions=None
+        )
+    else:
+        # Flat paginated view for single topic or 'all' view
+        query = Discussion.query.filter(
+            Discussion.id.in_(news_discussion_ids)
+        )
+        
+        if topic_filter:
+            query = query.filter(Discussion.topic == topic_filter)
+        
+        discussions = query.order_by(Discussion.created_at.desc()).paginate(
+            page=page, per_page=12, error_out=False
+        )
+        
+        return render_template(
+            'discussions/news_feed.html',
+            discussions=discussions,
+            news_sources=news_sources,
+            topics=Discussion.TOPICS,
+            topic_filter=topic_filter,
+            view_mode=view_mode,
+            topics_with_discussions=None
+        )
 
 @discussions_bp.route('/create', methods=['GET', 'POST'])
 @login_required
