@@ -68,23 +68,88 @@ def score_sensationalism(headline: str) -> float:
     return min(score, 1.0)
 
 
+LOW_VALUE_KEYWORDS = [
+    'celebrity', 'kardashian', 'royal family', 'gossip', 'dating', 'breakup',
+    'divorce', 'wedding', 'red carpet', 'fashion week', 'reality tv', 'bachelor',
+    'love island', 'influencer', 'tiktok star', 'instagram', 'viral video',
+    'horoscope', 'astrology', 'lottery', 'game show', 'quiz', 'recipe',
+    'best deals', 'discount', 'sale', 'shopping', 'gift guide'
+]
+
+HIGH_VALUE_KEYWORDS = [
+    'policy', 'legislation', 'parliament', 'congress', 'senate', 'government',
+    'economy', 'inflation', 'interest rate', 'gdp', 'unemployment', 'trade',
+    'climate', 'environment', 'renewable', 'emissions', 'sustainability',
+    'healthcare', 'nhs', 'medicare', 'public health', 'pandemic',
+    'education', 'university', 'school', 'curriculum', 'student',
+    'technology', 'artificial intelligence', 'regulation', 'antitrust',
+    'housing', 'infrastructure', 'transport', 'immigration', 'foreign policy',
+    'democracy', 'election', 'referendum', 'diplomacy', 'geopolitics'
+]
+
+
+def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle], List[NewsArticle]]:
+    """
+    Pre-filter articles using cheap heuristics before LLM scoring.
+    Returns (articles_to_score, articles_to_skip).
+    """
+    to_score = []
+    to_skip = []
+    
+    for article in articles:
+        title_lower = article.title.lower()
+        
+        if any(kw in title_lower for kw in LOW_VALUE_KEYWORDS):
+            article.sensationalism_score = 0.8
+            to_skip.append(article)
+            continue
+        
+        heuristic_score = score_sensationalism(article.title)
+        if heuristic_score >= 0.6:
+            article.sensationalism_score = heuristic_score
+            to_skip.append(article)
+            continue
+        
+        if any(kw in title_lower for kw in HIGH_VALUE_KEYWORDS):
+            to_score.append(article)
+            continue
+        
+        if article.source and article.source.reputation_score >= 0.8:
+            to_score.append(article)
+        else:
+            article.sensationalism_score = heuristic_score
+            to_skip.append(article)
+    
+    return to_score, to_skip
+
+
 def score_articles_with_llm(articles: List[NewsArticle]) -> List[NewsArticle]:
-    """Score multiple articles using LLM for sensationalism."""
+    """
+    Score articles using LLM for sensationalism.
+    Pre-filters to reduce LLM costs - only quality candidates get scored.
+    """
+    to_score, skipped = pre_filter_articles(articles)
+    
+    logger.info(f"Pre-filter: {len(to_score)} to score, {len(skipped)} skipped")
+    
+    if not to_score:
+        return articles
+    
     api_key, provider = get_system_api_key()
     
     if not api_key:
-        for article in articles:
+        for article in to_score:
             article.sensationalism_score = score_sensationalism(article.title)
         return articles
     
     try:
         if provider == 'openai':
-            return _score_with_openai(articles, api_key)
+            _score_with_openai(to_score, api_key)
         elif provider == 'anthropic':
-            return _score_with_anthropic(articles, api_key)
+            _score_with_anthropic(to_score, api_key)
     except Exception as e:
         logger.error(f"LLM scoring failed: {e}")
-        for article in articles:
+        for article in to_score:
             article.sensationalism_score = score_sensationalism(article.title)
     
     return articles
