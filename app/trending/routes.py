@@ -264,3 +264,66 @@ def delete_source(source_id):
 def api_stats():
     """API endpoint for pipeline stats."""
     return jsonify(get_pipeline_stats())
+
+
+@trending_bp.route('/topic/<int:topic_id>/share-bluesky', methods=['POST'])
+@login_required
+@admin_required
+def share_to_bluesky(topic_id):
+    """Manually share a published topic to Bluesky."""
+    topic = TrendingTopic.query.get_or_404(topic_id)
+    
+    if not topic.created_discussion:
+        flash("Topic must be published first", "error")
+        return redirect(url_for('trending.view_topic', topic_id=topic_id))
+    
+    try:
+        from app.trending.social_poster import post_to_bluesky
+        import os
+        
+        base_url = os.environ.get('SITE_URL', 'https://societyspeaks.io')
+        discussion = topic.created_discussion
+        discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
+        
+        uri = post_to_bluesky(
+            title=discussion.title,
+            topic=discussion.topic or 'Society',
+            discussion_url=discussion_url
+        )
+        
+        if uri:
+            flash("Posted to Bluesky successfully!", "success")
+        else:
+            flash("Failed to post to Bluesky. Check app password.", "error")
+    except Exception as e:
+        logger.error(f"Bluesky share error: {e}")
+        flash(f"Error posting to Bluesky: {str(e)}", "error")
+    
+    return redirect(url_for('trending.view_topic', topic_id=topic_id))
+
+
+@trending_bp.route('/topic/<int:topic_id>/x-share-url')
+@login_required
+@admin_required
+def get_x_share_url(topic_id):
+    """Generate and redirect to X share URL."""
+    topic = TrendingTopic.query.get_or_404(topic_id)
+    
+    if not topic.created_discussion:
+        flash("Topic must be published first", "error")
+        return redirect(url_for('trending.view_topic', topic_id=topic_id))
+    
+    from app.trending.social_poster import generate_x_share_url
+    import os
+    
+    base_url = os.environ.get('SITE_URL', 'https://societyspeaks.io')
+    discussion = topic.created_discussion
+    discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
+    
+    share_url = generate_x_share_url(
+        title=discussion.title,
+        topic=discussion.topic or 'Society',
+        discussion_url=discussion_url
+    )
+    
+    return redirect(share_url)

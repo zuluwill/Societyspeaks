@@ -80,6 +80,14 @@ def publish_topic(topic: TrendingTopic, admin_user: User) -> Optional[Discussion
     
     logger.info(f"Published topic {topic.id} as discussion {discussion.id}")
     
+    try:
+        from app.trending.social_poster import share_discussion_to_social
+        social_results = share_discussion_to_social(discussion)
+        if social_results.get('bluesky'):
+            logger.info(f"Shared to Bluesky: {social_results['bluesky']}")
+    except Exception as e:
+        logger.error(f"Failed to share to social media: {e}")
+    
     return discussion
 
 
