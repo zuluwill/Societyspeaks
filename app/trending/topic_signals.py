@@ -97,12 +97,21 @@ def get_trending_topics_from_premium_sources(hours: int = 48) -> Dict[str, int]:
     return trending
 
 
-def calculate_topic_signal_score(title: str, summary: str = None, hours: int = 48) -> float:
+def calculate_topic_signal_score(title: str, summary: str = None, trending: Dict[str, int] = None) -> float:
     """
     Calculate how well an article aligns with trending topics from premium sources.
     Returns 0-1 score where 1 = high alignment.
+    
+    Args:
+        title: Article title
+        summary: Article summary (optional)
+        trending: Pre-fetched trending keywords dict (optional, for batch processing)
     """
-    trending = get_trending_topics_from_premium_sources(hours)
+    if not title:
+        return 0.3
+    
+    if trending is None:
+        trending = get_trending_topics_from_premium_sources(48)
     
     if not trending:
         return 0.5
