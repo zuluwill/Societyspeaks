@@ -1,0 +1,183 @@
+{# templates/help/news_feed.html #}
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto p-6">
+  <div class="mb-8">
+    <a href="{{ url_for('help.help') }}" class="text-blue-600 hover:underline mb-4 inline-block">
+      &larr; Back to Help
+    </a>
+    <h1 class="text-3xl font-bold mb-4">How Our News Feed Works</h1>
+    <p class="text-gray-600">
+      Understanding how we surface trending topics for nuanced public debate.
+    </p>
+  </div>
+
+  <div class="space-y-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Our Philosophy</h2>
+      <p class="text-gray-700 mb-4">
+        The news is full of polarising debates where people talk past each other. 
+        Society Speaks takes these hot-button issues and creates a space for 
+        <strong>nuanced, structured discussion</strong> where you can disagree agreeably.
+      </p>
+      <div class="bg-blue-50 p-4 rounded-lg">
+        <p class="text-blue-900 font-medium">
+          We don't shy away from controversial topics - we believe they deserve better debate.
+        </p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Where We Source Topics</h2>
+      <p class="text-gray-700 mb-4">
+        We monitor quality news sources and intellectual podcasts to find topics worth debating:
+      </p>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-gray-900 mb-2">News Publications</h3>
+          <ul class="text-sm text-gray-700 space-y-1">
+            <li>The Guardian</li>
+            <li>The Economist</li>
+            <li>Financial Times</li>
+            <li>The Times, Telegraph, Independent</li>
+            <li>The Spectator, UnHerd</li>
+            <li>The Atlantic, Foreign Affairs</li>
+            <li>The New Yorker</li>
+          </ul>
+        </div>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h3 class="font-semibold text-gray-900 mb-2">Podcasts We Track</h3>
+          <ul class="text-sm text-gray-700 space-y-1">
+            <li>The Rest Is Politics</li>
+            <li>Triggernometry</li>
+            <li>The All-In Podcast</li>
+            <li>The News Agents</li>
+            <li>The Tim Ferriss Show</li>
+            <li>Diary of a CEO</li>
+            <li>Modern Wisdom</li>
+          </ul>
+        </div>
+      </div>
+      <p class="text-sm text-gray-500 mt-4">
+        We track what these sources are covering to understand which topics are generating 
+        substantive discussion in the intellectual media ecosystem.
+      </p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">How We Select Topics</h2>
+      
+      <div class="space-y-4">
+        <div class="border-l-4 border-green-500 pl-4">
+          <h3 class="font-semibold text-green-800">Topics We Include</h3>
+          <ul class="text-gray-700 mt-2 space-y-1">
+            <li>Policy debates (economy, healthcare, education, housing)</li>
+            <li>Political controversies and elections</li>
+            <li>Social issues generating public discussion</li>
+            <li>Technology and AI ethics</li>
+            <li>Climate and environment policy</li>
+            <li>International affairs and geopolitics</li>
+            <li>Topics trending in quality publications and podcasts</li>
+          </ul>
+        </div>
+        
+        <div class="border-l-4 border-red-500 pl-4">
+          <h3 class="font-semibold text-red-800">Topics We Filter Out</h3>
+          <ul class="text-gray-700 mt-2 space-y-1">
+            <li>Celebrity gossip and entertainment news</li>
+            <li>Reality TV and influencer content</li>
+            <li>Shopping guides and lifestyle fluff</li>
+            <li>Horoscopes and trivial content</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="bg-yellow-50 p-4 rounded-lg mt-4">
+        <p class="text-yellow-800 text-sm">
+          <strong>Note:</strong> We intentionally keep topics that are "sensationalist" in the media - 
+          these indicate issues people care deeply about. Our goal is to bring nuance and 
+          balance to debates that are often polarised elsewhere.
+        </p>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">How Topics Become Discussions</h2>
+      
+      <div class="space-y-4">
+        <div class="flex items-start gap-4">
+          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">1</div>
+          <div>
+            <h3 class="font-semibold">Article Collection</h3>
+            <p class="text-gray-600 text-sm">We gather articles from our sources 4 times daily to catch major news cycles.</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start gap-4">
+          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">2</div>
+          <div>
+            <h3 class="font-semibold">Topic Filtering</h3>
+            <p class="text-gray-600 text-sm">Articles are filtered to find debate-worthy civic topics while removing celebrity/lifestyle content.</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start gap-4">
+          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">3</div>
+          <div>
+            <h3 class="font-semibold">AI Scoring</h3>
+            <p class="text-gray-600 text-sm">Topics are scored for debate potential and civic relevance using AI.</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start gap-4">
+          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">4</div>
+          <div>
+            <h3 class="font-semibold">Clustering</h3>
+            <p class="text-gray-600 text-sm">Similar articles from different sources are grouped into single topics.</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start gap-4">
+          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">5</div>
+          <div>
+            <h3 class="font-semibold">Discussion Creation</h3>
+            <p class="text-gray-600 text-sm">A neutral discussion title and balanced seed statements are generated to frame the debate fairly.</p>
+          </div>
+        </div>
+        
+        <div class="flex items-start gap-4">
+          <div class="bg-blue-100 text-blue-800 rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">6</div>
+          <div>
+            <h3 class="font-semibold">Editorial Review</h3>
+            <p class="text-gray-600 text-sm">Our team reviews topics before they go live to ensure quality and balance.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Source Transparency</h2>
+      <p class="text-gray-700 mb-4">
+        Every news discussion shows which publications covered the story. 
+        You can see the original sources and read the full articles to get complete context.
+      </p>
+      <p class="text-gray-700">
+        We believe in transparency - you should know where topics come from and 
+        be able to verify information yourself.
+      </p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+      <h2 class="text-xl font-semibold mb-4">Feedback Welcome</h2>
+      <p class="text-gray-700 mb-4">
+        This system is always evolving. If you think we're missing important topics, 
+        including too much noise, or could improve our selection process, we'd love to hear from you.
+      </p>
+      <a href="{{ url_for('main.contact') }}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+        Send Feedback
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
