@@ -218,7 +218,10 @@ class CreateDiscussionForm(FlaskForm):
         ('Economy', 'Economy'),
         ('Politics', 'Politics'),
         ('Society', 'Society'),
-        ('Infrastructure', 'Infrastructure')
+        ('Infrastructure', 'Infrastructure'),
+        ('Geopolitics', 'Geopolitics'),
+        ('Business', 'Business'),
+        ('Culture', 'Culture')
     ], validators=[DataRequired()])
 
     # Phase 1: Native Statement System
