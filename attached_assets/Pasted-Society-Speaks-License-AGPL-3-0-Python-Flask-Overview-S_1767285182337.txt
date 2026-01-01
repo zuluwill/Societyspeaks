@@ -1,0 +1,174 @@
+Society Speaks 🗣️
+License: AGPL-3.0 Python Flask
+
+🎯 Overview
+Society Speaks is a public discussion platform where nuanced debate leads to better understanding and real solutions. It provides a space where users can create and participate in Pol.is-powered discussions, share opinions, and reach a consensus on various topics of social importance.
+
+🌍 Community Compact
+Society Speaks is committed to building a thriving, transparent, and supportive community. We value every contribution, feedback, and use of the platform. We encourage everyone to use the software freely and ethically, and to share back improvements so everyone benefits. Our goal is to align our success with the success of our community.💡
+
+🙌 Support This Project
+Society Speaks is open source, and your support helps us keep it alive! If you find this platform useful, please consider donating to help us continue development and maintenance.
+
+Sponsor on GitHub
+Thank you for your support! 💖
+
+📖 Roadmap & Ideas
+To see our future plans and ideas, check out IDEAS.md.
+
+🌟 Features
+💬 Create and embed Pol.is discussions
+🔍 Explore and join public debates
+👥 Individual and Company profiles
+🌍 Geographic and topic-based filtering
+📊 Discussion analytics and participation tracking
+🔒 Secure authentication system
+💨 Redis caching for improved performance
+🚨 Error tracking with Sentry
+📧 Email functionality
+🛡️ Enhanced security with Flask-Talisman
+🚦 Rate limiting protection
+🖥️ Demo
+You can try the live version at https://societyspeaks.io/
+
+🛠️ Tech Stack
+Backend: Python/Flask
+Database: PostgreSQL
+Caching: Redis
+Storage: Replit Object Storage
+Frontend: Tailwind CSS
+Monitoring: Sentry.io
+Security: Flask-Talisman, Flask-SeaSurf
+Session Management: Flask-Session with Redis
+Rate Limiting: Flask-Limiter
+Email Integration: Flask-Mail
+📋 Requirements
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.0
+Flask-Login==0.6.3
+Flask-WTF==1.2.2
+WTForms==3.2.1
+Flask-Session==0.8.0
+Flask-Caching==2.3.0
+Flask-Talisman==1.1.0
+Flask-SeaSurf==2.0.0
+Flask-Limiter==3.8.0
+Flask-Mail==0.10.0
+psycopg2-binary==2.9.10
+python-slugify==8.0.1
+email_validator==2.2.0
+sentry-sdk==2.17.0
+redis==5.2.0
+replit>=4.1.0
+gunicorn==21.2.0
+⚙️ Environment Variables
+# Core Configuration
+SECRET_KEY=your_secret_key
+DATABASE_URL=postgresql://user:password@localhost:5432/society_speaks
+REDIS_URL=redis://localhost:6379/0
+
+# Email Configuration
+MAIL_SERVER=smtp.your-email-server.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=your_email
+MAIL_PASSWORD=your_password
+
+# Error Tracking
+SENTRY_DSN=your_sentry_dsn
+
+# Environment
+FLASK_ENV=development  # or production
+🚀 Installation
+Local Development
+Clone the repository:
+git clone https://github.com/zuluwill/Societyspeaks.git
+cd societyspeaks
+Set up Python environment:
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+Install Node dependencies:
+npm install
+Configure environment:
+cp .env.example .env
+# Edit .env with your configurations
+Set up Redis and PostgreSQL:
+# Start Redis server
+redis-server
+
+# Create PostgreSQL database
+createdb societyspeaks
+Initialize database:
+flask db upgrade
+flask seed-db  # Optional: for sample data
+Compile Tailwind CSS:
+# Development
+npx tailwindcss -i ./app/static/src/input.css -o ./app/static/css/output.css --watch
+
+# Production
+npx tailwindcss -i ./app/static/src/input.css -o ./app/static/css/output.css --minify
+Replit Setup
+Fork the Repl
+
+Configure Secrets:
+
+DATABASE_URL
+SECRET_KEY
+REDIS_URL
+SENTRY_DSN (optional)
+MAIL_* configurations
+Install dependencies:
+
+poetry install
+flask db upgrade
+🔒 Security Features
+CSRF Protection with Flask-SeaSurf
+Secure headers with Flask-Talisman
+Rate limiting on sensitive endpoints
+Secure session handling with Redis
+Input validation and sanitization
+Protected against common web vulnerabilities
+Content Security Policy (CSP) implementation
+📈 Monitoring and Performance
+Error tracking with Sentry.io
+Redis caching for improved performance
+Database connection pooling
+Rate limiting protection
+Session management optimization
+Static file caching
+📁 Project Structure
+society_speaks/
+├── app/
+│   ├── __init__.py
+│   ├── models.py
+│   ├── routes.py
+│   ├── forms.py
+│   ├── templates/
+│   └── static/
+├── migrations/
+├── config.py
+├── run.py
+├── requirements.txt
+└── tailwind.config.js
+🤝 Contributing
+Fork the repository
+Create your feature branch (git checkout -b feature/AmazingFeature)
+Commit your changes (git commit -m 'Add some AmazingFeature')
+Push to the branch (git push origin feature/AmazingFeature)
+Open a Pull Request
+🐛 Known Issues
+Image upload size limitations on Replit
+Rate limiting on free tier databases
+Tailwind CSS compilation time on first build
+🙋‍♂️ Support
+For support, please open an issue or contact the maintainers.
+
+🙏 Acknowledgments
+Pol.is for discussion infrastructure
+Tailwind CSS for styling
+Flask for the web framework
+Replit for hosting and development environment
+📄 License
+GNU AFFERO GENERAL PUBLIC LICENSE...
