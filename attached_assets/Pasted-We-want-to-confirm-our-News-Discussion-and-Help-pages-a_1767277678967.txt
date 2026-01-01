@@ -1,0 +1,68 @@
+We want to confirm our News, Discussion, and Help pages are fully accessible and indexable by search engines (Google/Bing) and also parseable by LLM crawlers (for “GEO” / AI discovery). Please audit and confirm we follow best practices, with evidence.
+
+1) Crawl + indexability checks (must-pass)
+
+For these representative URLs (homepage, /news, a /news/<id>, /discussions, a /discussions/<id>, /help, a /help/<slug>), please confirm:
+	•	GET returns 200 (not 302 loops, 401, 403, 503)
+	•	HTML is served without requiring JS to render core content (title, intro, key text)
+	•	No bot-challenge / WAF interstitial is shown to crawlers
+	•	No noindex / nofollow anywhere for public pages:
+	•	no <meta name="robots" content="noindex">
+	•	no X-Robots-Tag: noindex response header
+
+Provide the output of:
+	•	curl -I <url> for each
+	•	and a sample of rendered HTML <title>, <meta robots>, <link rel=canonical>
+
+2) robots.txt + sitemap (critical)
+
+Please confirm:
+	•	https://societyspeaks.io/robots.txt exists and allows crawling of:
+	•	/news/
+	•	/discussions/
+	•	/help/
+	•	Only private areas are blocked (e.g. /admin/, /auth/, /account/, private APIs)
+	•	https://societyspeaks.io/sitemap.xml exists and is linked in robots.txt
+	•	sitemap includes all public:
+	•	discussion pages (canonical URLs)
+	•	help articles
+	•	news pages / news discussions
+…and excludes admin/private routes.
+
+3) Canonicals + duplicate control
+
+For discussions/news/help:
+	•	Each page has a self-referencing canonical URL
+	•	Query params (utm_*, tracking) don’t create duplicate indexable URLs
+	•	Paginated lists use best practices (either canonical to page 1 or proper pagination strategy)
+
+4) Metadata + structured data (to rank + to show well in AI results)
+
+Please add/confirm:
+	•	Strong <title> and meta description per page type
+	•	OpenGraph + Twitter cards (especially for News discussions)
+	•	Structured data:
+	•	Organization / WebSite on homepage
+	•	Article or NewsArticle for News items
+	•	FAQPage for Help articles (where applicable)
+	•	DiscussionForumPosting (or closest schema) for discussion pages
+Also confirm we expose publish/updated dates correctly (no future timestamps).
+
+5) Performance + rendering (SEO)
+	•	Core Web Vitals: reasonable LCP/CLS/INP
+	•	Pages are not blocked by heavy client-side rendering
+	•	Server-side rendered (or at least pre-rendered) titles + key content
+
+6) LLM crawler friendliness (GEO)
+	•	Public pages return readable HTML without JS requirements
+	•	We do not block common LLM user agents in robots.txt unnecessarily
+	•	Provide a short “About / How it works” summary on key pages (helps LLMs understand context)
+	•	Ensure consistent internal linking between News → Discussions → Help
+
+7) Deliverable
+
+Please respond with:
+	•	robots.txt contents
+	•	sitemap URL + count of indexed URLs by type
+	•	curl headers for sample pages
+	•	any changes you recommend + what you changed
