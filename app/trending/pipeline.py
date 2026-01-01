@@ -92,7 +92,7 @@ def process_held_topics() -> int:
     for topic in held_topics:
         topic = score_topic(topic)
         
-        seeds = generate_seed_statements(topic, count=5)
+        seeds = generate_seed_statements(topic, count=7)
         topic.seed_statements = seeds
         
         topic.status = 'pending_review'
