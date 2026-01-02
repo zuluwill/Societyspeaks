@@ -268,6 +268,35 @@ def discard(topic_id):
     return redirect(url_for('trending.dashboard'))
 
 
+@trending_bp.route('/topic/<int:topic_id>/unpublish', methods=['POST'])
+@login_required
+@admin_required
+def unpublish(topic_id):
+    """Unpublish a topic - delete discussion and revert to pending_review."""
+    topic = TrendingTopic.query.get_or_404(topic_id)
+    
+    if topic.status != 'published' or not topic.discussion_id:
+        flash("Topic is not published", "error")
+        return redirect(url_for('trending.view_topic', topic_id=topic_id))
+    
+    try:
+        discussion = Discussion.query.get(topic.discussion_id)
+        if discussion:
+            db.session.delete(discussion)
+        
+        topic.status = 'pending_review'
+        topic.discussion_id = None
+        topic.published_at = None
+        db.session.commit()
+        
+        flash("Discussion unpublished and topic reverted to review queue", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error unpublishing: {str(e)}", "error")
+    
+    return redirect(url_for('trending.view_topic', topic_id=topic_id))
+
+
 @trending_bp.route('/sources')
 @login_required
 @admin_required

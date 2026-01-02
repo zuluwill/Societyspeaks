@@ -891,38 +891,46 @@ class TrendingTopic(db.Model):
     created_discussion = db.relationship('Discussion', foreign_keys=[discussion_id], backref='source_topic')
     reviewer = db.relationship('User', backref='reviewed_topics')
     
+    HIGH_TRUST_SOURCES = [
+        'bbc news', 'the guardian', 'financial times', 'the economist',
+        'foreign affairs', 'the atlantic', 'the new yorker', 'bloomberg',
+        'the rest is politics', 'the news agents', 'all-in podcast',
+        'triggernometry', 'the tim ferriss show', 'diary of a ceo', 'modern wisdom',
+        'unherd', 'politico eu', 'the telegraph', 'the independent', 'techcrunch', 'axios'
+    ]
+    
     @property
     def is_high_confidence(self):
         """
-        Auto-publish criteria:
-        - 2+ reputable sources
-        - High quality score
-        - High civic score
-        - Not risky
+        High confidence for publishing:
+        - From a trusted source
+        - Has civic relevance (worth discussing)
+        - Not flagged as risky
         """
         return (
-            self.source_count >= 2 and
-            (self.quality_score or 0) >= 0.7 and
-            (self.civic_score or 0) >= 0.7 and
+            self.has_trusted_source and
+            (self.civic_score or 0) >= 0.5 and
             not self.risk_flag
         )
     
     @property
-    def should_auto_publish(self):
-        """
-        Very high confidence for auto-publish (V1 conservative)
-        Requires high-trust source (BBC, Guardian, FT) + 1 other
-        """
-        # Check if any source is a high-trust source
-        has_trusted = False
-        high_trust = ['bbc news', 'the guardian', 'financial times', 'the economist', 'foreign affairs']
+    def has_trusted_source(self):
+        """Check if any article is from a high-trust source."""
         for ta in self.articles:
             if ta.article and ta.article.source:
-                if ta.article.source.name.lower() in high_trust:
-                    has_trusted = True
-                    break
-        
-        return self.is_high_confidence and has_trusted
+                if ta.article.source.name.lower() in self.HIGH_TRUST_SOURCES:
+                    return True
+        return False
+    
+    @property
+    def should_auto_publish(self):
+        """
+        Auto-publish criteria:
+        - From a trusted source
+        - Has civic relevance
+        - Not risky
+        """
+        return self.is_high_confidence
     
     def to_dict(self):
         return {

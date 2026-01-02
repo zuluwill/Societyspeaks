@@ -152,26 +152,58 @@ def process_held_topics(batch_size: int = 10) -> int:
     return ready_count
 
 
-def auto_publish_high_confidence() -> int:
+def auto_publish_daily(max_topics: int = 5) -> int:
     """
-    Auto-publish topics that meet very high confidence criteria.
-    Conservative V1: requires wire service + another source.
+    Auto-publish up to max_topics diverse topics daily.
+    Selects topics from trusted sources with civic relevance.
+    Ensures diversity by checking title similarity.
     """
     from app.models import User
     from app.trending.publisher import publish_topic
     
-    topics = TrendingTopic.query.filter_by(status='pending_review').all()
+    topics = TrendingTopic.query.filter_by(status='pending_review').order_by(
+        TrendingTopic.civic_score.desc().nullslast(),
+        TrendingTopic.created_at.desc()
+    ).all()
+    
+    admin = User.query.filter_by(is_admin=True).first()
+    if not admin:
+        logger.error("No admin user found for auto-publish")
+        return 0
     
     published = 0
+    published_keywords = set()
+    
     for topic in topics:
-        if topic.should_auto_publish:
-            admin = User.query.filter_by(is_admin=True).first()
-            if admin:
-                publish_topic(topic, admin)
-                published += 1
-                logger.info(f"Auto-published topic {topic.id}: {topic.title[:50]}...")
+        if published >= max_topics:
+            break
+            
+        if not topic.should_auto_publish:
+            continue
+        
+        title_words = set(topic.title.lower().split())
+        title_words -= {'the', 'a', 'an', 'is', 'are', 'was', 'were', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by'}
+        
+        if published_keywords and len(title_words & published_keywords) >= 3:
+            logger.info(f"Skipping topic {topic.id} - too similar to already published: {topic.title[:40]}...")
+            continue
+        
+        try:
+            publish_topic(topic, admin)
+            published += 1
+            published_keywords.update(title_words)
+            logger.info(f"Auto-published topic {topic.id}: {topic.title[:50]}...")
+        except Exception as e:
+            logger.error(f"Failed to auto-publish topic {topic.id}: {e}")
+            db.session.rollback()
+            continue
     
     return published
+
+
+def auto_publish_high_confidence() -> int:
+    """Legacy function - calls auto_publish_daily for backwards compatibility."""
+    return auto_publish_daily(max_topics=5)
 
 
 def get_review_queue() -> List[TrendingTopic]:
