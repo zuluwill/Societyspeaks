@@ -1,0 +1,243 @@
+# Build: Daily Civic Question
+(Wordle-like daily participation ritual for Society Speaks)
+
+---
+
+## 1. Objective
+
+Build a **daily, finite, low-friction participation ritual** that encourages thoughtful civic engagement.
+
+This is NOT a feed.  
+This is NOT infinite scrolling.  
+It must feel like a **daily “done” moment**.
+
+Core principles:
+- One question per day
+- Under 5 minutes to complete
+- Insight revealed only after participation
+- Designed to work even with very low early participation (cold start)
+
+---
+
+## 2. Dedicated Daily Page (Core Product Surface)
+
+### Canonical Routes
+- `/daily` → always resolves to today’s question
+- `/daily/YYYY-MM-DD` → canonical permalink for sharing, email, and archives
+
+This page **is the product**.  
+Everything else (discussions, archives, stats) is secondary.
+
+Do NOT turn this into a feed.
+
+---
+
+## 3. Core User Experience (MVP)
+
+### Before answering
+On `/daily` show:
+- Today’s question (single statement)
+- Optional short context
+- Optional “Why this question?” sentence
+- Three prominent buttons:
+  - Agree
+  - Disagree
+  - Unsure
+
+Do NOT show:
+- Results
+- Clusters
+- Comments
+- Other users’ responses
+
+### Answering
+- User selects one option
+- Optional: add one short reason (280–500 characters max)
+- Submit response
+
+### After answering
+Reveal:
+- Consensus level:
+  - % Agree / % Disagree / % Unsure
+- Alignment insight:
+  - If clustering exists → “Closest group: X”
+  - If clustering does NOT exist → use Cold Start Mode (see below)
+- 1–2 bridge statements if available (else placeholder)
+
+Show:
+- Share block (see Share Snippet)
+- Clear completion state:
+  > “You’re done for today. Come back tomorrow.”
+
+⚠️ Results MUST NOT be visible before voting.
+
+---
+
+## 4. Cold Start Insight Mode (Critical)
+
+This explicitly solves the chicken-and-egg problem.
+
+### Threshold
+- Configurable response count (e.g. `< 50 responses`)
+
+### Behavior BELOW threshold
+- Do NOT show:
+  - opinion clusters
+  - “closest group”
+- Instead show:
+  - Raw percentages only
+  - One “Early Signal” message, e.g.:
+    - “Early responses suggest opinions are still forming.”
+    - “Initial responses lean toward agreement.”
+- Replace alignment text with:
+  - “Your response is helping shape the early signal.”
+
+### Behavior ABOVE threshold
+- Automatically enable:
+  - cluster labels
+  - bridge statements
+  - alignment insights
+
+Cold start must feel like **foundational participation**, not emptiness.
+
+---
+
+## 5. Share Snippet (MVP)
+
+Generate after voting.
+
+### Format
+- Title: `Society Speaks – Daily Question #<n> (<YYYY-MM-DD>)`
+- User response encoded as blocks:
+  - Agree = 🟦
+  - Disagree = 🟥
+  - Unsure = 🟨
+- Optional alignment label
+- Canonical link to daily question
+
+### Example Society Speaks – Daily Question #184 (2026-01-02)
+🟦
+Closest group: Civic Pragmatists
+https://societyspeaks.io/daily/2026-01-02  Text-only is MVP. Image cards are optional later.
+
+---
+
+## 6. Content Source & Question Selection
+
+### Priority order
+1. Existing curated discussion topics (primary source)
+2. High-quality news articles from existing news ingestion
+3. Manually added editorial questions (admin)
+
+### Selection rules
+- Prefer curated content first
+- Avoid repeats within last N days (configurable, e.g. 30)
+- Rotate categories if tags exist
+- Deterministic or date-seeded selection for reproducibility
+
+### Admin capabilities
+- Schedule future daily questions
+- Swap question for a given date
+- Publish / archive questions
+
+---
+
+## 7. Signup & Delivery (Adoption Driver)
+
+Users must be able to receive the daily question **without visiting the site manually**.
+
+### Supported delivery mechanisms (priority order)
+1. Email (MVP)
+2. Magic-link access (no login required)
+3. Share links (WhatsApp, social, email)
+4. Push notifications (future)
+
+### Signup rules
+- Email-only signup allowed (no password required)
+- Magic link allows:
+  - One response per day
+  - Optional reason
+- If user later creates a full account:
+  - Backfill historical participation
+
+### Email format (MVP)
+- Subject: `Today’s Civic Question (2 min)`
+- Body:
+  - One-sentence context
+  - Large “Answer Today’s Question” CTA
+  - No results shown in email
+
+---
+
+## 8. Participation Continuity (Phase 1.5 / Phase 2)
+
+Introduce **Thoughtful Participation Streaks**.
+
+Rules:
+- Streak increments when:
+  - User votes
+  - AND provides a reason at least X times per week
+- No streak for vote-only behaviour
+
+UI:
+- Subtle indicator only:
+  - “You’ve participated thoughtfully 5 days in a row”
+- No leaderboards
+- No public ranking
+
+Goal: identity-based retention, not gamification.
+
+---
+
+## 9. Language & Framing Rules
+
+Avoid these terms in UX:
+- discussion
+- debate
+- argument
+
+Prefer:
+- question
+- reflection
+- response
+- signal
+
+Under each question, include:
+- “Why this question?”
+- One neutral sentence explaining relevance
+
+---
+
+## 10. Pre-Build Audit (Required)
+
+Before implementing:
+1. Identify existing models/tables for:
+   - discussions / topics / news
+   - statements
+   - votes
+   - users
+   - clustering / analysis outputs
+   - trending topics ingestion
+2. Identify existing admin UIs
+3. Identify existing metadata:
+   - curated prompts
+   - categories / tags
+   - difficulty or controversy flags
+4. Document (briefly, in code comments or an internal note):
+   - what will be reused
+   - what will be extended
+   - what must be created new
+
+Curated content MUST be reused where possible.
+
+---
+
+## 11. MVP Acceptance Criteria
+
+- `/daily` shows exactly one question
+- User can vote once per day
+- Results are hidden until after voting
+- Cold Start Mode works cleanly
+- Share snippet is generated
+- Admin can manage daily questions
+- Experience feels finite, calm, and complete
