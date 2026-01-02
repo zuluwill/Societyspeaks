@@ -196,11 +196,15 @@ def create_app():
         if not text:
             return ''
         text = str(escape(text))
-        text = re.sub(
-            r'\[([^\]]+)\]\(([^)]+)\)',
-            r'<a href="\2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">\1</a>',
-            text
-        )
+        
+        def safe_link_replace(match):
+            link_text = match.group(1)
+            url = match.group(2)
+            if url.startswith(('http://', 'https://', '/')):
+                return f'<a href="{url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">{link_text}</a>'
+            return link_text
+        
+        text = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', safe_link_replace, text)
         text = re.sub(r'\*\*([^*]+)\*\*', r'<strong>\1</strong>', text)
         return Markup(text)
     
