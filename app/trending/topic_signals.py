@@ -18,9 +18,9 @@ logger = logging.getLogger(__name__)
 
 PREMIUM_SOURCES = [
     'The Economist', 'Financial Times', 'The New Yorker', 'Foreign Affairs',
-    'The Times', 'The Spectator', 'UnHerd', 'The Atlantic', 'The News Agents',
-    'The Rest Is Politics', 'Triggernometry', 'All-In Podcast',
-    'The Tim Ferriss Show', 'Diary of a CEO', 'Modern Wisdom'
+    'UnHerd', 'The Atlantic', 'The News Agents', 'The Rest Is Politics',
+    'Triggernometry', 'All-In Podcast', 'The Tim Ferriss Show',
+    'Diary of a CEO', 'Modern Wisdom'
 ]
 
 STOP_WORDS = {
