@@ -32,9 +32,17 @@ def generate_seed_statements(topic: TrendingTopic, count: int = 5) -> List[Dict]
 
 def _generate_with_openai(topic: TrendingTopic, count: int, api_key: str) -> List[Dict]:
     """Generate seeds using OpenAI."""
-    import openai
+    try:
+        import openai
+    except ImportError:
+        logger.error("OpenAI library not installed")
+        return []
     
-    client = openai.OpenAI(api_key=api_key)
+    try:
+        client = openai.OpenAI(api_key=api_key, timeout=60.0)
+    except Exception as e:
+        logger.error(f"Failed to create OpenAI client: {e}")
+        return []
     
     article_titles = [ta.article.title for ta in topic.articles if ta.article][:5]
     
@@ -99,6 +107,9 @@ Return ONLY valid JSON array."""
         
         return validated[:count]
     
+    except (SystemExit, KeyboardInterrupt):
+        logger.error("OpenAI call was interrupted (SystemExit/KeyboardInterrupt)")
+        return []
     except Exception as e:
         logger.error(f"Seed generation failed: {e}")
         return []
@@ -106,9 +117,17 @@ Return ONLY valid JSON array."""
 
 def _generate_with_anthropic(topic: TrendingTopic, count: int, api_key: str) -> List[Dict]:
     """Generate seeds using Anthropic."""
-    import anthropic
+    try:
+        import anthropic
+    except ImportError:
+        logger.error("Anthropic library not installed")
+        return []
     
-    client = anthropic.Anthropic(api_key=api_key)
+    try:
+        client = anthropic.Anthropic(api_key=api_key, timeout=60.0)
+    except Exception as e:
+        logger.error(f"Failed to create Anthropic client: {e}")
+        return []
     
     article_titles = [ta.article.title for ta in topic.articles if ta.article][:5]
     
@@ -169,6 +188,9 @@ Return ONLY valid JSON array."""
         
         return validated[:count]
     
+    except (SystemExit, KeyboardInterrupt):
+        logger.error("Anthropic call was interrupted (SystemExit/KeyboardInterrupt)")
+        return []
     except Exception as e:
         logger.error(f"Seed generation failed: {e}")
         return []
