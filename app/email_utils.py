@@ -514,4 +514,67 @@ def send_daily_question_to_all_subscribers():
     return sent_count
 
 
+def bulk_subscribe_existing_users(exclude_patterns=None):
+    """
+    Subscribe all existing registered users to daily questions.
+    Excludes test/bot accounts and users who have previously unsubscribed.
+    
+    Returns tuple: (subscribed_count, skipped_count, already_subscribed_count)
+    """
+    from app.models import User, DailyQuestionSubscriber
+    from app import db
+    
+    if exclude_patterns is None:
+        exclude_patterns = ['test', 'bot', 'fake', 'demo', 'example']
+    
+    users = User.query.filter(User.email.isnot(None)).all()
+    
+    subscribed = 0
+    skipped = 0
+    already_subscribed = 0
+    
+    for user in users:
+        email_lower = user.email.lower() if user.email else ''
+        username_lower = user.username.lower() if user.username else ''
+        
+        is_excluded = any(
+            pattern in email_lower or pattern in username_lower 
+            for pattern in exclude_patterns
+        )
+        
+        if is_excluded:
+            skipped += 1
+            current_app.logger.debug(f"Skipping test/bot user: {user.username}")
+            continue
+        
+        existing = DailyQuestionSubscriber.query.filter_by(email=user.email).first()
+        if existing:
+            if not existing.user_id:
+                existing.user_id = user.id
+                db.session.commit()
+            already_subscribed += 1
+            continue
+        
+        try:
+            subscriber = DailyQuestionSubscriber(
+                email=user.email,
+                user_id=user.id,
+                is_active=True
+            )
+            subscriber.generate_magic_token()
+            db.session.add(subscriber)
+            db.session.commit()
+            subscribed += 1
+            current_app.logger.info(f"Subscribed existing user: {user.username} ({user.email})")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error subscribing {user.email}: {e}")
+            skipped += 1
+    
+    current_app.logger.info(
+        f"Bulk subscribe complete: {subscribed} new, {already_subscribed} existing, {skipped} skipped"
+    )
+    return subscribed, skipped, already_subscribed
+
+
 from datetime import datetime

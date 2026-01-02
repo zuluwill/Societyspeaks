@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, Statement, TrendingTopic
+from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from app.admin.forms import UserAssignmentForm
 from functools import wraps
@@ -612,3 +612,37 @@ def view_daily_question(question_id):
         responses=responses,
         stats=question.vote_percentages
     )
+
+
+@admin_bp.route('/daily-questions/subscribers')
+@login_required
+@admin_required
+def list_daily_subscribers():
+    """View all daily question subscribers"""
+    subscribers = DailyQuestionSubscriber.query.order_by(
+        DailyQuestionSubscriber.created_at.desc()
+    ).all()
+    
+    return render_template(
+        'admin/daily/subscribers.html',
+        subscribers=subscribers,
+        active_count=sum(1 for s in subscribers if s.is_active),
+        total_count=len(subscribers)
+    )
+
+
+@admin_bp.route('/daily-questions/subscribers/bulk-add', methods=['POST'])
+@login_required
+@admin_required
+def bulk_subscribe_users():
+    """Subscribe all existing registered users to daily questions"""
+    from app.email_utils import bulk_subscribe_existing_users
+    
+    try:
+        subscribed, skipped, already = bulk_subscribe_existing_users()
+        flash(f'Subscribed {subscribed} users. {already} already subscribed. {skipped} skipped (test/bot accounts).', 'success')
+    except Exception as e:
+        current_app.logger.error(f"Bulk subscribe error: {e}")
+        flash(f'Error during bulk subscription: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.list_daily_subscribers'))

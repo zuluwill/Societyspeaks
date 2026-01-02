@@ -1,0 +1,118 @@
+{% extends "layout.html" %}
+
+{% block title %}Daily Question Subscribers - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Email Subscribers</h1>
+            <p class="mt-1 text-gray-500">{{ active_count }} active of {{ total_count }} total subscribers</p>
+        </div>
+        <div class="mt-4 sm:mt-0 flex space-x-3">
+            <a href="{{ url_for('admin.list_daily_questions') }}" 
+               class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+                Back to Questions
+            </a>
+            <form action="{{ url_for('admin.bulk_subscribe_users') }}" method="POST" 
+                  onsubmit="return confirm('This will subscribe all existing registered users (excluding test/bot accounts). Continue?');">
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                    </svg>
+                    Add All Existing Users
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
+        <div class="flex items-start">
+            <svg class="w-6 h-6 text-blue-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+                <h3 class="font-semibold text-blue-800">About Bulk Subscribe</h3>
+                <p class="text-sm text-blue-700 mt-1">
+                    Clicking "Add All Existing Users" will subscribe all registered users to daily question emails.
+                    Users with 'test', 'bot', 'fake', 'demo', or 'example' in their email/username are automatically excluded.
+                    Users who have previously unsubscribed will NOT be re-subscribed.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">All Subscribers</h3>
+        </div>
+        
+        {% if subscribers %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Streak</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscribed</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Email</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for sub in subscribers %}
+                    <tr class="{% if not sub.is_active %}bg-gray-50{% endif %}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-900">{{ sub.email }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if sub.user %}
+                            <a href="{{ url_for('admin.view_user', user_id=sub.user.id) }}" class="text-sm text-blue-600 hover:underline">
+                                {{ sub.user.username }}
+                            </a>
+                            {% else %}
+                            <span class="text-sm text-gray-400">Email only</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if sub.is_active %}
+                            <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>
+                            {% else %}
+                            <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">Unsubscribed</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="text-sm text-gray-900">{{ sub.current_streak }} days</span>
+                            {% if sub.longest_streak > sub.current_streak %}
+                            <span class="text-xs text-gray-500">(best: {{ sub.longest_streak }})</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ sub.created_at.strftime('%b %d, %Y') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% if sub.last_email_sent %}
+                            {{ sub.last_email_sent.strftime('%b %d, %Y') }}
+                            {% else %}
+                            Never
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="px-6 py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            <h3 class="mt-4 text-lg font-medium text-gray-900">No subscribers yet</h3>
+            <p class="mt-2 text-gray-500">Click "Add All Existing Users" to subscribe your registered users, or wait for users to subscribe themselves.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
