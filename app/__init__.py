@@ -349,7 +349,8 @@ def create_app():
     # Error handler for 404 Not Found
     @app.errorhandler(404)
     def page_not_found(e):
-        app.logger.warning(f"404 Page Not Found: {e}")
+        # Log at debug level to avoid log pollution from bots/crawlers
+        app.logger.debug(f"404 Page Not Found: {e}")
         return render_template('errors/404.html', error_code=404, error_message="The page you're looking for doesn't exist."), 404
 
     # Error handler for 500 Internal Server Error
