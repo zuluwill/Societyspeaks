@@ -1,0 +1,151 @@
+{% extends "layout.html" %}
+
+{% block title %}Create Daily Question - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+        <a href="{{ url_for('admin.list_daily_questions') }}" class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Daily Questions
+        </a>
+        <h1 class="text-3xl font-bold text-gray-900">Create Daily Question</h1>
+    </div>
+
+    <form method="POST" class="space-y-8">
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Question Details</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                    <label for="question_date" class="block text-sm font-medium text-gray-700 mb-1">Question Date</label>
+                    <input type="date" id="question_date" name="question_date" value="{{ next_date.isoformat() }}" required
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="topic_category" class="block text-sm font-medium text-gray-700 mb-1">Topic Category</label>
+                    <select id="topic_category" name="topic_category"
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select a topic...</option>
+                        {% for topic in topics %}
+                        <option value="{{ topic }}">{{ topic }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label for="question_text" class="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
+                <textarea id="question_text" name="question_text" rows="3" required maxlength="500"
+                          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          placeholder="The UK should increase funding for the NHS."></textarea>
+                <p class="text-sm text-gray-500 mt-1">A clear, neutral statement users can agree or disagree with (max 500 characters)</p>
+            </div>
+
+            <div class="mb-6">
+                <label for="context" class="block text-sm font-medium text-gray-700 mb-1">Context (optional)</label>
+                <textarea id="context" name="context" rows="2"
+                          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          placeholder="Brief context about the topic..."></textarea>
+            </div>
+
+            <div class="mb-6">
+                <label for="why_this_question" class="block text-sm font-medium text-gray-700 mb-1">Why This Question? (optional)</label>
+                <input type="text" id="why_this_question" name="why_this_question" maxlength="300"
+                       class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                       placeholder="This topic has been in the news recently due to...">
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Source (Optional)</h2>
+            <p class="text-sm text-gray-600 mb-4">Link this question to existing content for context and tracking.</p>
+            
+            <div class="mb-6">
+                <label for="source_type" class="block text-sm font-medium text-gray-700 mb-1">Source Type</label>
+                <select id="source_type" name="source_type"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="manual">Manual Entry</option>
+                    <option value="discussion">From Discussion</option>
+                    <option value="trending">From Trending Topic</option>
+                </select>
+            </div>
+
+            <div id="discussionSource" class="hidden mb-6">
+                <label for="source_discussion_id" class="block text-sm font-medium text-gray-700 mb-1">Source Discussion</label>
+                <select id="source_discussion_id" name="source_discussion_id"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Select a discussion...</option>
+                    {% for disc in discussions %}
+                    <option value="{{ disc.id }}">{{ disc.title[:60] }}{% if disc.title|length > 60 %}...{% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div id="trendingSource" class="hidden mb-6">
+                <label for="source_trending_topic_id" class="block text-sm font-medium text-gray-700 mb-1">Source Trending Topic</label>
+                <select id="source_trending_topic_id" name="source_trending_topic_id"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Select a trending topic...</option>
+                    {% for topic in trending_topics %}
+                    <option value="{{ topic.id }}">{{ topic.title[:60] }}{% if topic.title|length > 60 %}...{% endif %}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="cold_start_threshold" class="block text-sm font-medium text-gray-700 mb-1">Cold Start Threshold</label>
+                    <input type="number" id="cold_start_threshold" name="cold_start_threshold" value="50" min="10" max="500"
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <p class="text-sm text-gray-500 mt-1">Show "early signal" mode below this response count</p>
+                </div>
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="status" name="status"
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="scheduled">Scheduled</option>
+                        <option value="published">Published (Live)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-4">
+            <a href="{{ url_for('admin.list_daily_questions') }}" 
+               class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">
+                Cancel
+            </a>
+            <button type="submit" 
+                    class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                Create Question
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sourceType = document.getElementById('source_type');
+    const discussionSource = document.getElementById('discussionSource');
+    const trendingSource = document.getElementById('trendingSource');
+
+    sourceType.addEventListener('change', function() {
+        discussionSource.classList.add('hidden');
+        trendingSource.classList.add('hidden');
+        
+        if (this.value === 'discussion') {
+            discussionSource.classList.remove('hidden');
+        } else if (this.value === 'trending') {
+            trendingSource.classList.remove('hidden');
+        }
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,161 @@
+{% extends "layout.html" %}
+
+{% block title %}View Daily Question #{{ question.question_number }} - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+        <a href="{{ url_for('admin.list_daily_questions') }}" class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Daily Questions
+        </a>
+        <div class="flex items-center justify-between">
+            <h1 class="text-3xl font-bold text-gray-900">Question #{{ question.question_number }}</h1>
+            <a href="{{ url_for('admin.edit_daily_question', question_id=question.id) }}" 
+               class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+            </a>
+        </div>
+        <p class="text-gray-500 mt-1">{{ question.question_date.strftime('%B %d, %Y') }}</p>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <div class="flex items-start justify-between mb-4">
+            <div>
+                {% if question.topic_category %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mb-2">
+                    {{ question.topic_category }}
+                </span>
+                {% endif %}
+                <span class="ml-2 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
+                    {% if question.status == 'published' %}bg-green-100 text-green-800
+                    {% elif question.status == 'scheduled' %}bg-blue-100 text-blue-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ question.status|title }}
+                </span>
+            </div>
+            <a href="{{ url_for('daily.by_date', date_str=question.question_date.isoformat()) }}" target="_blank" 
+               class="text-blue-600 hover:text-blue-800 text-sm">
+                View Public Page
+            </a>
+        </div>
+        
+        <h2 class="text-xl font-bold text-gray-900 mb-4">{{ question.question_text }}</h2>
+        
+        {% if question.context %}
+        <p class="text-gray-600 mb-4">{{ question.context }}</p>
+        {% endif %}
+        
+        {% if question.why_this_question %}
+        <div class="bg-blue-50 rounded-lg p-4">
+            <p class="text-sm text-blue-800">
+                <span class="font-semibold">Why this question?</span> {{ question.why_this_question }}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Response Statistics</h3>
+        
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
+            <div class="text-center p-4 bg-gray-50 rounded-lg">
+                <p class="text-3xl font-bold text-gray-900">{{ stats.total }}</p>
+                <p class="text-sm text-gray-500">Total Responses</p>
+            </div>
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                <p class="text-3xl font-bold text-blue-600">{{ stats.agree }}%</p>
+                <p class="text-sm text-gray-500">Agree</p>
+            </div>
+            <div class="text-center p-4 bg-red-50 rounded-lg">
+                <p class="text-3xl font-bold text-red-600">{{ stats.disagree }}%</p>
+                <p class="text-sm text-gray-500">Disagree</p>
+            </div>
+            <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                <p class="text-3xl font-bold text-yellow-600">{{ stats.unsure }}%</p>
+                <p class="text-sm text-gray-500">Unsure</p>
+            </div>
+        </div>
+
+        <div class="space-y-3">
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span>Agree</span>
+                    <span>{{ stats.agree }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="bg-blue-500 h-4 rounded-full" style="width: {{ stats.agree }}%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span>Disagree</span>
+                    <span>{{ stats.disagree }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="bg-red-500 h-4 rounded-full" style="width: {{ stats.disagree }}%"></div>
+                </div>
+            </div>
+            <div>
+                <div class="flex justify-between text-sm mb-1">
+                    <span>Unsure</span>
+                    <span>{{ stats.unsure }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-4">
+                    <div class="bg-yellow-500 h-4 rounded-full" style="width: {{ stats.unsure }}%"></div>
+                </div>
+            </div>
+        </div>
+        
+        {% if question.is_cold_start %}
+        <div class="mt-4 p-4 bg-yellow-50 rounded-lg">
+            <p class="text-sm text-yellow-800">
+                <span class="font-semibold">Cold Start Mode Active:</span> 
+                {{ question.response_count }} / {{ question.cold_start_threshold }} responses needed for full insights
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if responses %}
+    <div class="bg-white rounded-xl shadow-sm">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Recent Responses ({{ responses|length }})</h3>
+        </div>
+        <div class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+            {% for response in responses %}
+            <div class="px-6 py-4">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center">
+                        <span class="text-2xl mr-3">{{ response.vote_emoji }}</span>
+                        <div>
+                            <p class="font-medium text-gray-900">{{ response.vote_label }}</p>
+                            <p class="text-sm text-gray-500">
+                                {% if response.user %}{{ response.user.username }}{% else %}Anonymous{% endif %}
+                                &middot; {{ response.created_at.strftime('%b %d at %H:%M') }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% if response.reason %}
+                <p class="mt-2 text-gray-600 text-sm pl-11">"{{ response.reason }}"</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-gray-50 rounded-xl p-8 text-center text-gray-500">
+        <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+        <p>No responses yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
