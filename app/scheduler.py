@@ -129,10 +129,8 @@ def init_scheduler(app):
             
             low_relevance_deleted = NewsArticle.query.filter(
                 NewsArticle.fetched_at < cutoff_7_days,
-                db.or_(
-                    NewsArticle.relevance_score < 0.3,
-                    NewsArticle.relevance_score.is_(None)
-                )
+                NewsArticle.relevance_score.isnot(None),
+                NewsArticle.relevance_score < 0.3
             ).delete(synchronize_session=False)
             db.session.commit()
             if low_relevance_deleted > 0:
