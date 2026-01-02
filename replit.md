@@ -84,9 +84,15 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 - **Purpose**: Wordle-like daily participation ritual for quick civic engagement
 - **Routes**: `/daily` (today's question), `/daily/YYYY-MM-DD` (historical questions)
 - **Voting**: Agree/Disagree/Unsure with optional reason (max 500 chars)
-- **Models**: `DailyQuestion` (question scheduling, stats), `DailyQuestionResponse` (user votes)
+- **Models**: `DailyQuestion` (question scheduling, stats), `DailyQuestionResponse` (user votes), `DailyQuestionSubscriber` (email subscribers), `DailyQuestionSelection` (auto-selection tracking)
 - **Cold Start Mode**: Shows "Early Signal" messaging below configurable threshold (default 50 responses)
 - **Share Snippets**: Emoji bar chart for social media sharing (X, WhatsApp, copy to clipboard)
 - **Session Fingerprinting**: Anonymous users identified by session + user-agent for one-vote-per-day
 - **Admin Interface**: Full CRUD at `/admin/daily-questions` for scheduling and managing questions
 - **Navigation**: "Daily" link added to main navigation bar
+- **Email Subscription**: `/daily/subscribe` for email signup, magic-link voting without login, 48-hour token expiry
+- **Magic Links**: `/daily/m/<token>` for one-click voting from emails, auto-login for linked users
+- **Participation Streaks**: Tracks current_streak, longest_streak, and thoughtful_participations (40-50% reasons)
+- **Auto-Selection Service**: `app/daily/auto_selection.py` picks questions from discussions > trending topics > statements
+- **Scheduler Jobs**: `daily_question_publish` (7:30am) auto-publishes today + 7 days ahead, `daily_question_email` (8:00am) sends to all subscribers
+- **Templates**: Subscribe, success, and unsubscribe pages with streak display in results
