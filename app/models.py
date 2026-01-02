@@ -911,17 +911,18 @@ class TrendingTopic(db.Model):
     def should_auto_publish(self):
         """
         Very high confidence for auto-publish (V1 conservative)
-        Requires wire service (AP/Reuters) + 1 other
+        Requires high-trust source (BBC, Guardian, FT) + 1 other
         """
-        # Check if any source is a wire service
-        has_wire = False
+        # Check if any source is a high-trust source
+        has_trusted = False
+        high_trust = ['bbc news', 'the guardian', 'financial times', 'the economist', 'foreign affairs']
         for ta in self.articles:
             if ta.article and ta.article.source:
-                if ta.article.source.name.lower() in ['associated press', 'reuters', 'ap', 'afp']:
-                    has_wire = True
+                if ta.article.source.name.lower() in high_trust:
+                    has_trusted = True
                     break
         
-        return self.is_high_confidence and has_wire
+        return self.is_high_confidence and has_trusted
     
     def to_dict(self):
         return {
