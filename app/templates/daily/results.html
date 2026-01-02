@@ -114,19 +114,13 @@
             </div>
 
             <div class="border-t pt-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Share Your Response</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Invite Others to Participate</h3>
                 
-                {% if share_snippet %}
-                <div class="bg-gray-50 rounded-lg p-4 mb-4 font-mono text-sm">
-                    <p class="whitespace-pre-line">{{ share_snippet.text }}</p>
-                </div>
-                {% endif %}
-                
-                {% set results_share_text = base_share_text ~ ' | I voted: ' ~ (user_response.vote_label if user_response else 'See results') ~ ' | ' ~ stats.agree ~ '% Agree, ' ~ stats.disagree ~ '% Disagree - powered by https://societyspeaks.io' %}
+                {% set results_share_text = base_share_text ~ ' - What do you think? ' ~ stats.total ~ ' people have weighed in. Add your voice at societyspeaks.io' %}
 
                 <div class="flex justify-center">
                     {{ share_button(
-                        title="Daily Question #" ~ question.question_number ~ " Results",
+                        title="Daily Civic Question - Society Speaks",
                         url=results_url,
                         description=results_share_text,
                         button_style="secondary"
