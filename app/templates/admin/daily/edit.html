@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+
+{% block title %}Edit Daily Question #{{ question.question_number }} - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+        <a href="{{ url_for('admin.list_daily_questions') }}" class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Daily Questions
+        </a>
+        <div class="flex items-center justify-between">
+            <h1 class="text-3xl font-bold text-gray-900">Edit Question #{{ question.question_number }}</h1>
+            <span class="px-3 py-1 text-sm font-medium rounded-full 
+                {% if question.status == 'published' %}bg-green-100 text-green-800
+                {% elif question.status == 'scheduled' %}bg-blue-100 text-blue-800
+                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                {{ question.status|title }}
+            </span>
+        </div>
+        <p class="text-gray-500 mt-1">{{ question.question_date.strftime('%B %d, %Y') }}</p>
+    </div>
+
+    <form method="POST" class="space-y-8">
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Question Details</h2>
+            
+            <div class="mb-6">
+                <label for="topic_category" class="block text-sm font-medium text-gray-700 mb-1">Topic Category</label>
+                <select id="topic_category" name="topic_category"
+                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="">Select a topic...</option>
+                    {% for topic in topics %}
+                    <option value="{{ topic }}" {% if question.topic_category == topic %}selected{% endif %}>{{ topic }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label for="question_text" class="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
+                <textarea id="question_text" name="question_text" rows="3" required maxlength="500"
+                          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">{{ question.question_text }}</textarea>
+            </div>
+
+            <div class="mb-6">
+                <label for="context" class="block text-sm font-medium text-gray-700 mb-1">Context (optional)</label>
+                <textarea id="context" name="context" rows="2"
+                          class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">{{ question.context or '' }}</textarea>
+            </div>
+
+            <div class="mb-6">
+                <label for="why_this_question" class="block text-sm font-medium text-gray-700 mb-1">Why This Question? (optional)</label>
+                <input type="text" id="why_this_question" name="why_this_question" maxlength="300"
+                       value="{{ question.why_this_question or '' }}"
+                       class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Settings</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="cold_start_threshold" class="block text-sm font-medium text-gray-700 mb-1">Cold Start Threshold</label>
+                    <input type="number" id="cold_start_threshold" name="cold_start_threshold" 
+                           value="{{ question.cold_start_threshold }}" min="10" max="500"
+                           class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select id="status" name="status"
+                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="scheduled" {% if question.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                        <option value="published" {% if question.status == 'published' %}selected{% endif %}>Published</option>
+                        <option value="archived" {% if question.status == 'archived' %}selected{% endif %}>Archived</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 rounded-xl p-6">
+            <h3 class="text-sm font-medium text-gray-700 mb-3">Current Stats</h3>
+            <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                    <p class="text-2xl font-bold text-gray-900">{{ question.response_count }}</p>
+                    <p class="text-sm text-gray-500">Responses</p>
+                </div>
+                <div>
+                    <p class="text-2xl font-bold {% if question.is_cold_start %}text-yellow-600{% else %}text-green-600{% endif %}">
+                        {% if question.is_cold_start %}Cold Start{% else %}Active{% endif %}
+                    </p>
+                    <p class="text-sm text-gray-500">Mode</p>
+                </div>
+                <div>
+                    {% set stats = question.vote_percentages %}
+                    <p class="text-2xl font-bold text-blue-600">{{ stats.agree }}%</p>
+                    <p class="text-sm text-gray-500">Agree</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-between">
+            <form action="{{ url_for('admin.delete_daily_question', question_id=question.id) }}" method="POST" 
+                  onsubmit="return confirm('Are you sure you want to delete this question and all its responses?');">
+                <button type="submit" class="px-6 py-3 text-red-600 font-medium hover:text-red-800">
+                    Delete Question
+                </button>
+            </form>
+            
+            <div class="flex space-x-4">
+                <a href="{{ url_for('admin.list_daily_questions') }}" 
+                   class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

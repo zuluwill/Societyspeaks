@@ -2,10 +2,11 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, IndividualProfile, CompanyProfile, Discussion
+from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, Statement, TrendingTopic
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from app.admin.forms import UserAssignmentForm
 from functools import wraps
+from datetime import date, datetime, timedelta
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
 from app.utils import upload_to_object_storage  
@@ -411,3 +412,203 @@ def toggle_admin(user_id):
 def log_admin_access():
     if current_user.is_authenticated and current_user.is_admin:
         current_app.logger.info(f"Admin access: {current_user.username} - {request.endpoint}")
+
+
+@admin_bp.route('/daily-questions')
+@login_required
+@admin_required
+def list_daily_questions():
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    questions = DailyQuestion.query.order_by(
+        DailyQuestion.question_date.desc()
+    ).paginate(page=page, per_page=per_page, error_out=False)
+    
+    today = date.today()
+    todays_question = DailyQuestion.get_today()
+    
+    upcoming = DailyQuestion.query.filter(
+        DailyQuestion.question_date > today,
+        DailyQuestion.status == 'scheduled'
+    ).order_by(DailyQuestion.question_date.asc()).limit(7).all()
+    
+    return render_template(
+        'admin/daily/list.html',
+        questions=questions,
+        todays_question=todays_question,
+        upcoming=upcoming,
+        today=today
+    )
+
+
+@admin_bp.route('/daily-questions/create', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def create_daily_question():
+    if request.method == 'POST':
+        try:
+            question_date_str = request.form.get('question_date')
+            question_date = datetime.strptime(question_date_str, '%Y-%m-%d').date()
+            
+            existing = DailyQuestion.query.filter_by(question_date=question_date).first()
+            if existing:
+                flash(f'A question already exists for {question_date}', 'error')
+                return redirect(url_for('admin.create_daily_question'))
+            
+            source_type = request.form.get('source_type', 'manual')
+            source_discussion_id = request.form.get('source_discussion_id') or None
+            source_statement_id = request.form.get('source_statement_id') or None
+            source_trending_topic_id = request.form.get('source_trending_topic_id') or None
+            
+            question = DailyQuestion(
+                question_date=question_date,
+                question_number=DailyQuestion.get_next_question_number(),
+                question_text=request.form.get('question_text'),
+                context=request.form.get('context') or None,
+                why_this_question=request.form.get('why_this_question') or None,
+                topic_category=request.form.get('topic_category') or None,
+                source_type=source_type,
+                source_discussion_id=int(source_discussion_id) if source_discussion_id else None,
+                source_statement_id=int(source_statement_id) if source_statement_id else None,
+                source_trending_topic_id=int(source_trending_topic_id) if source_trending_topic_id else None,
+                cold_start_threshold=int(request.form.get('cold_start_threshold', 50)),
+                status=request.form.get('status', 'scheduled'),
+                created_by_id=current_user.id
+            )
+            
+            if question.status == 'published':
+                question.published_at = datetime.utcnow()
+            
+            db.session.add(question)
+            db.session.commit()
+            
+            flash(f'Daily question #{question.question_number} created successfully!', 'success')
+            return redirect(url_for('admin.list_daily_questions'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating daily question: {e}")
+            flash('Error creating daily question. Please try again.', 'error')
+    
+    discussions = Discussion.query.order_by(Discussion.created_at.desc()).limit(50).all()
+    trending_topics = TrendingTopic.query.filter_by(status='published').order_by(TrendingTopic.created_at.desc()).limit(20).all()
+    topics = Discussion.TOPICS
+    
+    next_date = date.today()
+    while DailyQuestion.query.filter_by(question_date=next_date).first():
+        next_date += timedelta(days=1)
+    
+    return render_template(
+        'admin/daily/create.html',
+        discussions=discussions,
+        trending_topics=trending_topics,
+        topics=topics,
+        next_date=next_date
+    )
+
+
+@admin_bp.route('/daily-questions/<int:question_id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_daily_question(question_id):
+    question = DailyQuestion.query.get_or_404(question_id)
+    
+    if request.method == 'POST':
+        try:
+            question.question_text = request.form.get('question_text')
+            question.context = request.form.get('context') or None
+            question.why_this_question = request.form.get('why_this_question') or None
+            question.topic_category = request.form.get('topic_category') or None
+            question.cold_start_threshold = int(request.form.get('cold_start_threshold', 50))
+            
+            new_status = request.form.get('status')
+            if new_status != question.status:
+                question.status = new_status
+                if new_status == 'published' and not question.published_at:
+                    question.published_at = datetime.utcnow()
+            
+            db.session.commit()
+            flash('Daily question updated successfully!', 'success')
+            return redirect(url_for('admin.list_daily_questions'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error updating daily question: {e}")
+            flash('Error updating daily question. Please try again.', 'error')
+    
+    topics = Discussion.TOPICS
+    return render_template('admin/daily/edit.html', question=question, topics=topics)
+
+
+@admin_bp.route('/daily-questions/<int:question_id>/publish', methods=['POST'])
+@login_required
+@admin_required
+def publish_daily_question(question_id):
+    question = DailyQuestion.query.get_or_404(question_id)
+    
+    try:
+        question.status = 'published'
+        question.published_at = datetime.utcnow()
+        db.session.commit()
+        flash(f'Daily question #{question.question_number} published!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error publishing daily question: {e}")
+        flash('Error publishing daily question.', 'error')
+    
+    return redirect(url_for('admin.list_daily_questions'))
+
+
+@admin_bp.route('/daily-questions/<int:question_id>/archive', methods=['POST'])
+@login_required
+@admin_required
+def archive_daily_question(question_id):
+    question = DailyQuestion.query.get_or_404(question_id)
+    
+    try:
+        question.status = 'archived'
+        db.session.commit()
+        flash(f'Daily question #{question.question_number} archived.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error archiving daily question: {e}")
+        flash('Error archiving daily question.', 'error')
+    
+    return redirect(url_for('admin.list_daily_questions'))
+
+
+@admin_bp.route('/daily-questions/<int:question_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_daily_question(question_id):
+    question = DailyQuestion.query.get_or_404(question_id)
+    
+    try:
+        DailyQuestionResponse.query.filter_by(daily_question_id=question_id).delete()
+        db.session.delete(question)
+        db.session.commit()
+        flash('Daily question deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting daily question: {e}")
+        flash('Error deleting daily question.', 'error')
+    
+    return redirect(url_for('admin.list_daily_questions'))
+
+
+@admin_bp.route('/daily-questions/<int:question_id>/view')
+@login_required
+@admin_required
+def view_daily_question(question_id):
+    question = DailyQuestion.query.get_or_404(question_id)
+    responses = DailyQuestionResponse.query.filter_by(
+        daily_question_id=question_id
+    ).order_by(DailyQuestionResponse.created_at.desc()).limit(100).all()
+    
+    return render_template(
+        'admin/daily/view.html',
+        question=question,
+        responses=responses,
+        stats=question.vote_percentages
+    )
