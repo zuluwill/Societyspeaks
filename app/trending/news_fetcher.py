@@ -195,18 +195,6 @@ def seed_default_sources():
             'reputation_score': 0.9
         },
         {
-            'name': 'Reuters',
-            'feed_url': 'https://www.reutersagency.com/feed/',
-            'source_type': 'rss',
-            'reputation_score': 0.95
-        },
-        {
-            'name': 'Associated Press',
-            'feed_url': 'https://rsshub.app/apnews/topics/apf-topnews',
-            'source_type': 'rss',
-            'reputation_score': 0.95
-        },
-        {
             'name': 'Financial Times',
             'feed_url': 'https://www.ft.com/rss/home',
             'source_type': 'rss',
@@ -217,12 +205,6 @@ def seed_default_sources():
             'feed_url': 'https://www.economist.com/the-world-this-week/rss.xml',
             'source_type': 'rss',
             'reputation_score': 0.9
-        },
-        {
-            'name': 'Politico',
-            'feed_url': 'https://rss.politico.com/politics-news.xml',
-            'source_type': 'rss',
-            'reputation_score': 0.8
         },
         {
             'name': 'Politico EU',
@@ -249,12 +231,6 @@ def seed_default_sources():
             'reputation_score': 0.9
         },
         {
-            'name': 'Semafor',
-            'feed_url': 'https://www.semafor.com/feed',
-            'source_type': 'rss',
-            'reputation_score': 0.8
-        },
-        {
             'name': 'Bloomberg',
             'feed_url': 'https://feeds.bloomberg.com/markets/news.rss',
             'source_type': 'rss',
@@ -273,12 +249,6 @@ def seed_default_sources():
             'reputation_score': 0.8
         },
         {
-            'name': 'The Times',
-            'feed_url': 'https://www.thetimes.co.uk/rss',
-            'source_type': 'rss',
-            'reputation_score': 0.85
-        },
-        {
             'name': 'The Telegraph',
             'feed_url': 'https://www.telegraph.co.uk/rss.xml',
             'source_type': 'rss',
@@ -295,12 +265,6 @@ def seed_default_sources():
             'feed_url': 'https://www.newyorker.com/feed/everything',
             'source_type': 'rss',
             'reputation_score': 0.9
-        },
-        {
-            'name': 'The Spectator',
-            'feed_url': 'https://www.spectator.co.uk/feed',
-            'source_type': 'rss',
-            'reputation_score': 0.8
         },
         {
             'name': 'The News Agents',
