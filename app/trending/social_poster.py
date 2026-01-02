@@ -81,19 +81,39 @@ def generate_post_text(
     import random
     intro = random.choice(intro_phrases)
     
+    max_length = 280 if platform == 'x' else 300
+    
     if platform == 'x':
         handles = " ".join(PODCAST_HANDLES_X[:5])
         post = f"{intro}: {title}\n\n{discussion_url}\n\n{' '.join(hashtags[:3])}\n\nFor fans of {handles}"
     else:
-        handles = " ".join(PODCAST_HANDLES_BLUESKY[:3])
         post = f"{intro}: {title}\n\n{discussion_url}\n\n{' '.join(hashtags[:3])}"
     
-    if platform == 'x' and len(post) > 280:
-        post = f"{intro}: {title}\n\n{discussion_url}\n\n{' '.join(hashtags[:2])}"
-    elif platform == 'bluesky' and len(post) > 300:
-        post = f"{intro}: {title}\n\n{discussion_url}"
+    if len(post) <= max_length:
+        return post
     
-    return post
+    if platform == 'x':
+        post = f"{intro}: {title}\n\n{discussion_url}\n\n{' '.join(hashtags[:2])}"
+    else:
+        post = f"{intro}: {title}\n\n{discussion_url}\n\n{hashtags[0]}"
+    
+    if len(post) <= max_length:
+        return post
+    
+    post = f"{intro}: {title}\n\n{discussion_url}"
+    
+    if len(post) <= max_length:
+        return post
+    
+    url_overhead = len(f"{intro}: ...\n\n{discussion_url}")
+    max_title_length = max_length - url_overhead - 3
+    if max_title_length > 20:
+        truncated_title = title[:max_title_length].rsplit(' ', 1)[0] + "..."
+        post = f"{intro}: {truncated_title}\n\n{discussion_url}"
+    else:
+        post = f"New: {discussion_url}"
+    
+    return post[:max_length]
 
 
 def post_to_bluesky(
