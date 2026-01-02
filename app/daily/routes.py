@@ -1,10 +1,11 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app
-from flask_login import current_user
+from flask_login import current_user, login_user
 from datetime import date, datetime
 from app.daily import daily_bp
 from app import db, limiter
-from app.models import DailyQuestion, DailyQuestionResponse
+from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, User
 import hashlib
+import re
 
 
 def get_session_fingerprint():
@@ -106,47 +107,6 @@ def by_date(date_str):
                              question=question)
 
 
-@daily_bp.route('/daily/vote', methods=['POST'])
-@limiter.limit("10 per minute")
-def vote():
-    """Submit a vote for today's question"""
-    question = DailyQuestion.get_today()
-    
-    if not question:
-        return jsonify({'success': False, 'error': 'No question available today'}), 400
-    
-    if has_user_voted(question):
-        return jsonify({'success': False, 'error': 'You have already voted today'}), 400
-    
-    vote_value = request.form.get('vote')
-    reason = request.form.get('reason', '').strip()
-    
-    vote_map = {'agree': 1, 'disagree': -1, 'unsure': 0}
-    if vote_value not in vote_map:
-        return jsonify({'success': False, 'error': 'Invalid vote value'}), 400
-    
-    if reason and len(reason) > 500:
-        reason = reason[:500]
-    
-    try:
-        response = DailyQuestionResponse(
-            daily_question_id=question.id,
-            user_id=current_user.id if current_user.is_authenticated else None,
-            session_fingerprint=get_session_fingerprint() if not current_user.is_authenticated else None,
-            vote=vote_map[vote_value],
-            reason=reason if reason else None
-        )
-        db.session.add(response)
-        db.session.commit()
-        
-        return redirect(url_for('daily.today'))
-    
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Error submitting daily vote: {e}")
-        return jsonify({'success': False, 'error': 'Failed to submit vote'}), 500
-
-
 @daily_bp.route('/daily/api/status')
 def api_status():
     """API endpoint to check current question status"""
@@ -193,3 +153,152 @@ def generate_share_snippet(question, user_response):
         'permalink': permalink,
         'vote_label': user_response.vote_label
     }
+
+
+@daily_bp.route('/daily/subscribe', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")
+def subscribe():
+    """Email subscription signup for daily questions"""
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        
+        if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            flash('Please enter a valid email address.', 'error')
+            return redirect(url_for('daily.subscribe'))
+        
+        existing = DailyQuestionSubscriber.query.filter_by(email=email).first()
+        if existing:
+            if existing.is_active:
+                flash('This email is already subscribed to daily questions.', 'info')
+            else:
+                existing.is_active = True
+                existing.generate_magic_token()
+                db.session.commit()
+                flash('Welcome back! Your subscription has been reactivated.', 'success')
+            return redirect(url_for('daily.subscribe_success'))
+        
+        user = User.query.filter_by(email=email).first()
+        
+        try:
+            subscriber = DailyQuestionSubscriber(
+                email=email,
+                user_id=user.id if user else None
+            )
+            subscriber.generate_magic_token()
+            db.session.add(subscriber)
+            db.session.commit()
+            
+            from app.email_utils import send_daily_question_welcome_email
+            send_daily_question_welcome_email(subscriber)
+            
+            flash('You have successfully subscribed to daily civic questions!', 'success')
+            return redirect(url_for('daily.subscribe_success'))
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating daily subscriber: {e}")
+            flash('There was an error processing your subscription. Please try again.', 'error')
+    
+    return render_template('daily/subscribe.html')
+
+
+@daily_bp.route('/daily/subscribe/success')
+def subscribe_success():
+    """Subscription confirmation page"""
+    return render_template('daily/subscribe_success.html')
+
+
+@daily_bp.route('/daily/unsubscribe/<token>')
+def unsubscribe(token):
+    """Unsubscribe from daily question emails"""
+    subscriber = DailyQuestionSubscriber.query.filter_by(magic_token=token).first()
+    
+    if not subscriber:
+        flash('Invalid unsubscribe link.', 'error')
+        return redirect(url_for('daily.today'))
+    
+    subscriber.is_active = False
+    db.session.commit()
+    
+    flash('You have been unsubscribed from daily civic questions.', 'success')
+    return render_template('daily/unsubscribed.html', email=subscriber.email)
+
+
+@daily_bp.route('/daily/m/<token>')
+def magic_link(token):
+    """Magic link access for email subscribers - allows voting without login"""
+    subscriber = DailyQuestionSubscriber.verify_magic_token(token)
+    
+    if not subscriber:
+        flash('This link has expired or is invalid. Please subscribe again.', 'warning')
+        return redirect(url_for('daily.subscribe'))
+    
+    session['daily_subscriber_id'] = subscriber.id
+    session['daily_subscriber_token'] = token
+    session.modified = True
+    
+    if subscriber.user:
+        login_user(subscriber.user)
+    
+    return redirect(url_for('daily.today'))
+
+
+@daily_bp.route('/daily/vote', methods=['POST'])
+@limiter.limit("10 per minute")
+def vote():
+    """Submit a vote for today's question"""
+    question = DailyQuestion.get_today()
+    
+    if not question:
+        return jsonify({'success': False, 'error': 'No question available today'}), 400
+    
+    if has_user_voted(question):
+        return jsonify({'success': False, 'error': 'You have already voted today'}), 400
+    
+    vote_value = request.form.get('vote')
+    reason = request.form.get('reason', '').strip()
+    
+    vote_map = {'agree': 1, 'disagree': -1, 'unsure': 0}
+    if vote_value not in vote_map:
+        return jsonify({'success': False, 'error': 'Invalid vote value'}), 400
+    
+    if reason and len(reason) > 500:
+        reason = reason[:500]
+    
+    try:
+        response = DailyQuestionResponse(
+            daily_question_id=question.id,
+            user_id=current_user.id if current_user.is_authenticated else None,
+            session_fingerprint=get_session_fingerprint() if not current_user.is_authenticated else None,
+            vote=vote_map[vote_value],
+            reason=reason if reason else None
+        )
+        db.session.add(response)
+        
+        subscriber_id = session.get('daily_subscriber_id')
+        if subscriber_id:
+            subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+            if subscriber:
+                subscriber.update_participation_streak(has_reason=bool(reason))
+        
+        db.session.commit()
+        
+        return redirect(url_for('daily.today'))
+    
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error submitting daily vote: {e}")
+        return jsonify({'success': False, 'error': 'Failed to submit vote'}), 500
+
+
+def get_subscriber_streak():
+    """Get current subscriber's streak info if available"""
+    subscriber_id = session.get('daily_subscriber_id')
+    if subscriber_id:
+        subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+        if subscriber and subscriber.current_streak > 0:
+            return {
+                'current_streak': subscriber.current_streak,
+                'longest_streak': subscriber.longest_streak,
+                'is_thoughtful': subscriber.is_thoughtful_participant
+            }
+    return None

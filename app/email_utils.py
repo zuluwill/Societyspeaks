@@ -4,7 +4,7 @@ import requests
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 from flask import current_app, url_for
-from app.models import Discussion, IndividualProfile, CompanyProfile
+from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestionSubscriber
 
 
 #This function is responsible for sending events to Loops
@@ -427,3 +427,91 @@ def create_discussion_notification(user_id, discussion_id, notification_type, ad
         except Exception:
             pass
         return None
+
+
+def send_daily_question_welcome_email(subscriber):
+    """Send welcome email to new daily question subscriber"""
+    magic_link_url = url_for('daily.magic_link', token=subscriber.magic_token, _external=True)
+    unsubscribe_url = url_for('daily.unsubscribe', token=subscriber.magic_token, _external=True)
+    
+    event_properties = {
+        "magicLinkUrl": magic_link_url,
+        "unsubscribeUrl": unsubscribe_url,
+        "dailyQuestionUrl": url_for('daily.today', _external=True)
+    }
+    
+    send_loops_event(
+        email_address=subscriber.email,
+        event_name="daily_question_welcome",
+        user_id=str(subscriber.id),
+        contact_properties={"email": subscriber.email},
+        event_properties=event_properties
+    )
+
+
+def send_daily_question_email(subscriber, question):
+    """Send daily question email to subscriber with magic link"""
+    from app.models import DailyQuestion
+    
+    subscriber.generate_magic_token()
+    from app import db
+    db.session.commit()
+    
+    magic_link_url = url_for('daily.magic_link', token=subscriber.magic_token, _external=True)
+    unsubscribe_url = url_for('daily.unsubscribe', token=subscriber.magic_token, _external=True)
+    question_url = url_for('daily.by_date', date_str=question.question_date.isoformat(), _external=True)
+    
+    streak_message = ""
+    if subscriber.current_streak > 1:
+        streak_message = f"You've participated {subscriber.current_streak} days in a row!"
+    
+    event_properties = {
+        "questionNumber": question.question_number,
+        "questionText": question.question_text,
+        "questionContext": question.context or "",
+        "whyThisQuestion": question.why_this_question or "",
+        "topicCategory": question.topic_category or "Civic",
+        "magicLinkUrl": magic_link_url,
+        "questionUrl": question_url,
+        "unsubscribeUrl": unsubscribe_url,
+        "streakMessage": streak_message,
+        "currentStreak": subscriber.current_streak
+    }
+    
+    send_loops_event(
+        email_address=subscriber.email,
+        event_name="daily_civic_question",
+        user_id=str(subscriber.id),
+        contact_properties={"email": subscriber.email},
+        event_properties=event_properties
+    )
+    
+    subscriber.last_email_sent = datetime.utcnow()
+    db.session.commit()
+
+
+def send_daily_question_to_all_subscribers():
+    """Send today's daily question to all active subscribers"""
+    from app.models import DailyQuestion, DailyQuestionSubscriber
+    from datetime import datetime
+    
+    question = DailyQuestion.get_today()
+    if not question:
+        current_app.logger.info("No daily question to send - none published for today")
+        return 0
+    
+    subscribers = DailyQuestionSubscriber.query.filter_by(is_active=True).all()
+    
+    sent_count = 0
+    for subscriber in subscribers:
+        try:
+            send_daily_question_email(subscriber, question)
+            sent_count += 1
+        except Exception as e:
+            current_app.logger.error(f"Error sending daily question to {subscriber.email}: {e}")
+    
+    current_app.logger.info(f"Sent daily question #{question.question_number} to {sent_count} subscribers")
+    return sent_count
+
+
+from datetime import datetime

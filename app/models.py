@@ -1199,3 +1199,140 @@ class DailyQuestionResponse(db.Model):
         return f'<DailyQuestionResponse {self.vote_label} on Q#{self.daily_question_id}>'
 
 
+class DailyQuestionSubscriber(db.Model):
+    """
+    Email-only subscriber for Daily Civic Questions.
+    Supports magic-link voting without requiring a full account.
+    """
+    __tablename__ = 'daily_question_subscriber'
+    __table_args__ = (
+        db.Index('idx_dqs_email', 'email'),
+        db.Index('idx_dqs_token', 'magic_token'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), nullable=False, unique=True)
+    
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    
+    is_active = db.Column(db.Boolean, default=True)
+    
+    magic_token = db.Column(db.String(64), unique=True)
+    token_expires_at = db.Column(db.DateTime)
+    
+    current_streak = db.Column(db.Integer, default=0)
+    longest_streak = db.Column(db.Integer, default=0)
+    last_participation_date = db.Column(db.Date)
+    thoughtful_participations = db.Column(db.Integer, default=0)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_email_sent = db.Column(db.DateTime)
+    
+    user = db.relationship('User', backref='daily_subscription')
+    
+    def generate_magic_token(self, expires_hours=48):
+        """Generate a new magic link token"""
+        import secrets
+        self.magic_token = secrets.token_urlsafe(32)
+        self.token_expires_at = datetime.utcnow() + timedelta(hours=expires_hours)
+        return self.magic_token
+    
+    @staticmethod
+    def verify_magic_token(token):
+        """Verify magic token and return subscriber if valid"""
+        subscriber = DailyQuestionSubscriber.query.filter_by(
+            magic_token=token,
+            is_active=True
+        ).first()
+        
+        if not subscriber:
+            return None
+            
+        if subscriber.token_expires_at and subscriber.token_expires_at < datetime.utcnow():
+            return None
+            
+        return subscriber
+    
+    def update_participation_streak(self, has_reason=False):
+        """Update participation streak after a vote"""
+        from datetime import date
+        today = date.today()
+        
+        if self.last_participation_date:
+            days_since = (today - self.last_participation_date).days
+            
+            if days_since == 0:
+                pass
+            elif days_since == 1:
+                self.current_streak += 1
+            else:
+                self.current_streak = 1
+        else:
+            self.current_streak = 1
+        
+        if has_reason:
+            self.thoughtful_participations += 1
+        
+        if self.current_streak > self.longest_streak:
+            self.longest_streak = self.current_streak
+        
+        self.last_participation_date = today
+    
+    @property
+    def is_thoughtful_participant(self):
+        """Check if user provides reasons regularly (at least 3 times per week on average)"""
+        if self.current_streak < 7:
+            return self.thoughtful_participations >= self.current_streak * 0.5
+        return self.thoughtful_participations >= self.current_streak * 0.4
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'current_streak': self.current_streak,
+            'longest_streak': self.longest_streak,
+            'is_active': self.is_active
+        }
+    
+    def __repr__(self):
+        return f'<DailyQuestionSubscriber {self.email}>'
+
+
+class DailyQuestionSelection(db.Model):
+    """
+    Track which content has been used for daily questions.
+    Prevents repeating questions within a configurable time window.
+    """
+    __tablename__ = 'daily_question_selection'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    source_type = db.Column(db.String(20), nullable=False)
+    source_discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=True)
+    source_statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=True)
+    source_trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id'), nullable=True)
+    
+    selected_at = db.Column(db.DateTime, default=datetime.utcnow)
+    question_date = db.Column(db.Date, nullable=False)
+    daily_question_id = db.Column(db.Integer, db.ForeignKey('daily_question.id'), nullable=True)
+    
+    @staticmethod
+    def is_recently_used(source_type, source_id, days=30):
+        """Check if a source has been used in the last N days"""
+        cutoff = datetime.utcnow() - timedelta(days=days)
+        
+        query = DailyQuestionSelection.query.filter(
+            DailyQuestionSelection.source_type == source_type,
+            DailyQuestionSelection.selected_at >= cutoff
+        )
+        
+        if source_type == 'discussion':
+            query = query.filter(DailyQuestionSelection.source_discussion_id == source_id)
+        elif source_type == 'statement':
+            query = query.filter(DailyQuestionSelection.source_statement_id == source_id)
+        elif source_type == 'trending':
+            query = query.filter(DailyQuestionSelection.source_trending_topic_id == source_id)
+        
+        return query.first() is not None
+
+
