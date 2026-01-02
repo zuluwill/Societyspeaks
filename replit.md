@@ -96,3 +96,10 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 - **Auto-Selection Service**: `app/daily/auto_selection.py` picks questions from discussions > trending topics > statements
 - **Scheduler Jobs**: `daily_question_publish` (7:30am) auto-publishes today + 7 days ahead, `daily_question_email` (8:00am) sends to all subscribers
 - **Templates**: Subscribe, success, and unsubscribe pages with streak display in results
+
+### About Page & SEO Updates (January 2026)
+- **About page**: Completely rewritten with new "sense-making system" narrative, covering: how it works (voting-based clustering), what it reveals (consensus/bridge/divisive statements), news-to-deliberation pipeline, Daily Question, and policy relevance
+- **SEO meta tags**: Updated descriptions, keywords, OG/Twitter cards to reflect platform positioning as "sense-making system for society"
+- **JSON-LD structured data**: Enhanced with Organization and WebApplication schemas including feature lists
+- **LLM discoverability (GEO)**: Added `/llms.txt` route with comprehensive platform description for AI crawlers
+- **robots.txt**: Updated to reference llms.txt for LLM crawler discovery
