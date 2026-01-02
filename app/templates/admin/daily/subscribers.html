@@ -69,9 +69,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% if sub.user %}
-                            <a href="{{ url_for('admin.view_user', user_id=sub.user.id) }}" class="text-sm text-blue-600 hover:underline">
-                                {{ sub.user.username }}
-                            </a>
+                            <span class="text-sm text-gray-900">{{ sub.user.username }}</span>
                             {% else %}
                             <span class="text-sm text-gray-400">Email only</span>
                             {% endif %}
