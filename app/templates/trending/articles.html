@@ -115,14 +115,18 @@
                                     <p class="text-gray-600 mt-2 text-sm">{{ article.summary[:200] }}{% if article.summary|length > 200 %}...{% endif %}</p>
                                     {% endif %}
                                 </div>
-                                <div class="flex flex-col gap-2 ml-4 items-end">
+                                <div class="flex flex-col gap-2 ml-4 items-end" title="Quality Score: Higher = more factual, less clickbait">
                                     {% if article.sensationalism_score is not none %}
-                                    <span class="px-2 py-1 rounded text-xs
-                                        {% if article.sensationalism_score <= 0.3 %}bg-green-100 text-green-800
-                                        {% elif article.sensationalism_score <= 0.5 %}bg-yellow-100 text-yellow-800
-                                        {% else %}bg-red-100 text-red-800{% endif %}">
-                                        {{ "%.0f"|format(article.sensationalism_score * 100) }}%
-                                    </span>
+                                    {% set quality_score = 100 - (article.sensationalism_score * 100) %}
+                                    <div class="text-center">
+                                        <span class="px-2 py-1 rounded text-xs
+                                            {% if quality_score >= 70 %}bg-green-100 text-green-800
+                                            {% elif quality_score >= 50 %}bg-yellow-100 text-yellow-800
+                                            {% else %}bg-red-100 text-red-800{% endif %}">
+                                            {{ "%.0f"|format(quality_score) }}%
+                                        </span>
+                                        <div class="text-xs text-gray-400 mt-1">quality</div>
+                                    </div>
                                     {% else %}
                                     <span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">
                                         Unscored
