@@ -230,6 +230,52 @@ def init_scheduler(app):
             logger.info("Daily auto-publish complete")
     
     
+    @scheduler.scheduled_job('cron', hour=7, minute=30, id='daily_question_publish')
+    def daily_question_publish():
+        """
+        Auto-publish today's daily question and schedule upcoming questions.
+        Runs at 7:30am UTC (before email send).
+        """
+        with app.app_context():
+            from app.daily.auto_selection import auto_publish_todays_question, auto_schedule_upcoming_questions
+            
+            logger.info("Starting daily question auto-publish")
+            
+            try:
+                question = auto_publish_todays_question()
+                if question:
+                    logger.info(f"Published daily question #{question.question_number}")
+                else:
+                    logger.warning("No daily question available to publish")
+                
+                scheduled = auto_schedule_upcoming_questions(days_ahead=7)
+                logger.info(f"Auto-scheduled {scheduled} upcoming questions")
+            except Exception as e:
+                logger.error(f"Daily question publish error: {e}", exc_info=True)
+            
+            logger.info("Daily question auto-publish complete")
+    
+    
+    @scheduler.scheduled_job('cron', hour=8, minute=0, id='daily_question_email')
+    def daily_question_email():
+        """
+        Send daily question email to all subscribers.
+        Runs at 8:00am UTC (after question is published).
+        """
+        with app.app_context():
+            from app.email_utils import send_daily_question_to_all_subscribers
+            
+            logger.info("Starting daily question email send")
+            
+            try:
+                sent = send_daily_question_to_all_subscribers()
+                logger.info(f"Sent daily question to {sent} subscribers")
+            except Exception as e:
+                logger.error(f"Daily question email error: {e}", exc_info=True)
+            
+            logger.info("Daily question email send complete")
+    
+    
     logger.info("Scheduler initialized with jobs:")
     for job in scheduler.get_jobs():
         logger.info(f"  - {job.id}: {job.trigger}")

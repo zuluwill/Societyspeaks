@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block title %}Subscribed Successfully - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-green-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
+            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">You're Subscribed!</h1>
+        
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <p class="text-gray-600 mb-6">
+                Check your inbox for a welcome email with your personal magic link. 
+                Starting tomorrow, you'll receive one civic question each morning.
+            </p>
+
+            <div class="bg-blue-50 rounded-lg p-4 text-left">
+                <h3 class="font-semibold text-blue-900 mb-2">What happens next?</h3>
+                <ol class="text-sm text-blue-800 space-y-2">
+                    <li class="flex items-start">
+                        <span class="font-semibold mr-2">1.</span>
+                        Check your email for the welcome message
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-semibold mr-2">2.</span>
+                        Tomorrow morning, you'll get your first daily question
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-semibold mr-2">3.</span>
+                        Click the magic link to vote instantly - no login needed
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="space-y-3">
+            <a href="{{ url_for('daily.today') }}" 
+               class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                Try Today's Question
+            </a>
+            <p class="text-sm text-gray-500">
+                Or <a href="/" class="text-blue-600 hover:underline">explore more discussions</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
