@@ -571,33 +571,56 @@ class StatementVote(db.Model):
     Based on pol.is 'votes' table:
     - vote values: -1 (disagree), 0 (unsure), 1 (agree)
     - Users can change votes (history preserved)
-    - Unique constraint on (statement_id, user_id)
+    - Supports both authenticated (user_id) and anonymous (session_fingerprint) voting
+    - Anonymous votes can be merged to user account on signup/login
     """
     __tablename__ = 'statement_vote'
     __table_args__ = (
         db.Index('idx_vote_discussion_user', 'discussion_id', 'user_id'),
         db.Index('idx_vote_discussion_statement', 'discussion_id', 'statement_id'),
-        db.UniqueConstraint('statement_id', 'user_id', name='uq_statement_user_vote'),
+        db.Index('idx_vote_session_fingerprint', 'session_fingerprint'),
     )
     
     id = db.Column(db.Integer, primary_key=True)
     statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)  # For fast lookups
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    session_fingerprint = db.Column(db.String(64), nullable=True)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
     
-    # Vote value: -1 (disagree), 0 (unsure), 1 (agree) - like pol.is
     vote = db.Column(db.SmallInteger, nullable=False)
     
-    # Optional confidence (1-5 scale) for weighted clustering
     confidence = db.Column(db.SmallInteger, nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
     statement = db.relationship('Statement', backref='votes')
     user = db.relationship('User', backref='statement_votes')
     discussion = db.relationship('Discussion', backref='statement_votes')
+    
+    @classmethod
+    def merge_anonymous_votes(cls, session_fingerprint, user_id):
+        """
+        Merge anonymous votes to a user account when they sign up or log in.
+        If user already voted on a statement, keep their authenticated vote.
+        """
+        anonymous_votes = cls.query.filter_by(session_fingerprint=session_fingerprint, user_id=None).all()
+        merged_count = 0
+        
+        for anon_vote in anonymous_votes:
+            existing_user_vote = cls.query.filter_by(
+                statement_id=anon_vote.statement_id,
+                user_id=user_id
+            ).first()
+            
+            if existing_user_vote:
+                db.session.delete(anon_vote)
+            else:
+                anon_vote.user_id = user_id
+                merged_count += 1
+        
+        db.session.commit()
+        return merged_count
     
     @validates('vote')
     def validate_vote(self, key, vote):
