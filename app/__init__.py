@@ -332,6 +332,11 @@ def create_app():
     app.register_blueprint(trending_bp)
     app.logger.debug("Trending topics blueprint registered")
     
+    # Register daily question blueprint (Daily Civic Question)
+    from app.daily import daily_bp
+    app.register_blueprint(daily_bp)
+    app.logger.debug("Daily question blueprint registered")
+    
     app.logger.debug("All registered routes:")
     app.logger.debug(app.url_map)
 
