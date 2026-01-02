@@ -79,3 +79,14 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 - `daily_auto_publish`: cron[8] - publishes up to 5 diverse topics once daily
 - `cleanup_old_analyses`: cron[3] - removes old data
 - `auto_cluster_discussions`: interval[6h] - clustering for active discussions
+
+### Daily Civic Question Feature
+- **Purpose**: Wordle-like daily participation ritual for quick civic engagement
+- **Routes**: `/daily` (today's question), `/daily/YYYY-MM-DD` (historical questions)
+- **Voting**: Agree/Disagree/Unsure with optional reason (max 500 chars)
+- **Models**: `DailyQuestion` (question scheduling, stats), `DailyQuestionResponse` (user votes)
+- **Cold Start Mode**: Shows "Early Signal" messaging below configurable threshold (default 50 responses)
+- **Share Snippets**: Emoji bar chart for social media sharing (X, WhatsApp, copy to clipboard)
+- **Session Fingerprinting**: Anonymous users identified by session + user-agent for one-vote-per-day
+- **Admin Interface**: Full CRUD at `/admin/daily-questions` for scheduling and managing questions
+- **Navigation**: "Daily" link added to main navigation bar
