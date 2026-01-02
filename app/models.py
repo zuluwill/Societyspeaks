@@ -812,6 +812,7 @@ class NewsArticle(db.Model):
     
     # Scoring (computed at fetch time)
     sensationalism_score = db.Column(db.Float)  # 0-1: higher = more clickbait
+    relevance_score = db.Column(db.Float)  # 0-1: discussion potential (1=policy debate, 0=product review)
     
     # Embedding for clustering (stored as JSON array of floats)
     title_embedding = db.Column(db.JSON)
