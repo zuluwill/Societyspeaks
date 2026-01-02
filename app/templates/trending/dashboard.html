@@ -106,15 +106,16 @@
     <div class="mt-8 bg-white rounded-lg shadow">
         <div class="p-4 border-b">
             <h2 class="text-xl font-semibold">Trending in Premium Sources</h2>
-            <p class="text-sm text-gray-500 mt-1">Topics being discussed by The Economist, FT, UnHerd, The Spectator, etc.</p>
+            <p class="text-sm text-gray-500 mt-1">Topics being discussed by The Economist, FT, UnHerd, The Spectator, etc. Click to filter articles.</p>
         </div>
         <div class="p-4">
             <div class="flex flex-wrap gap-2">
                 {% for topic in hot_topics %}
-                <span class="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full">
+                <a href="{{ url_for('trending.view_articles', keyword=topic.keyword) }}" 
+                   class="inline-flex items-center gap-1 bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full hover:bg-blue-200 transition-colors cursor-pointer">
                     {{ topic.keyword }}
                     <span class="bg-blue-200 text-blue-900 text-xs px-1.5 py-0.5 rounded-full">{{ topic.mentions }}</span>
-                </span>
+                </a>
                 {% endfor %}
             </div>
         </div>

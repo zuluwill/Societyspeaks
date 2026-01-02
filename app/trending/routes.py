@@ -94,17 +94,57 @@ def process_pending():
 @login_required
 @admin_required
 def view_articles():
-    """View recent articles."""
+    """View recent articles with search/filter."""
     page = request.args.get('page', 1, type=int)
     per_page = 50
     
-    articles = NewsArticle.query.order_by(
+    search = request.args.get('search', '').strip()
+    source_id = request.args.get('source', type=int)
+    status = request.args.get('status', '')
+    keyword = request.args.get('keyword', '').strip()
+    
+    query = NewsArticle.query
+    
+    if search:
+        query = query.filter(
+            db.or_(
+                NewsArticle.title.ilike(f'%{search}%'),
+                NewsArticle.summary.ilike(f'%{search}%')
+            )
+        )
+    
+    if keyword:
+        query = query.filter(
+            db.or_(
+                NewsArticle.title.ilike(f'%{keyword}%'),
+                NewsArticle.summary.ilike(f'%{keyword}%')
+            )
+        )
+    
+    if source_id:
+        query = query.filter(NewsArticle.source_id == source_id)
+    
+    if status == 'unscored':
+        query = query.filter(NewsArticle.sensationalism_score.is_(None))
+    elif status == 'scored':
+        query = query.filter(NewsArticle.sensationalism_score.isnot(None))
+    elif status == 'high_quality':
+        query = query.filter(NewsArticle.sensationalism_score <= 0.3)
+    
+    articles = query.order_by(
         NewsArticle.fetched_at.desc()
     ).paginate(page=page, per_page=per_page, error_out=False)
     
+    sources = NewsSource.query.order_by(NewsSource.name).all()
+    
     return render_template(
         'trending/articles.html',
-        articles=articles
+        articles=articles,
+        sources=sources,
+        search=search,
+        source_id=source_id,
+        status=status,
+        keyword=keyword
     )
 
 
@@ -367,3 +407,151 @@ def get_x_share_url(topic_id):
     )
     
     return redirect(share_url)
+
+
+@trending_bp.route('/articles/score-unscored', methods=['POST'])
+@login_required
+@admin_required
+def score_unscored_articles():
+    """Score all unscored articles."""
+    from app.trending.scorer import score_articles_with_llm
+    
+    try:
+        unscored = NewsArticle.query.filter(
+            NewsArticle.sensationalism_score.is_(None)
+        ).limit(100).all()
+        
+        if not unscored:
+            flash("No unscored articles found", "info")
+            return redirect(url_for('trending.view_articles'))
+        
+        score_articles_with_llm(unscored)
+        db.session.commit()
+        
+        scored_count = sum(1 for a in unscored if a.sensationalism_score is not None)
+        flash(f"Scored {scored_count} articles", "success")
+    except Exception as e:
+        logger.error(f"Scoring error: {e}")
+        db.session.rollback()
+        flash(f"Error scoring articles: {str(e)}", "error")
+    
+    return redirect(url_for('trending.view_articles'))
+
+
+@trending_bp.route('/article/<int:article_id>/promote', methods=['POST'])
+@login_required
+@admin_required
+def promote_article(article_id):
+    """Promote a single article to a discussion topic."""
+    from app.trending.clustering import generate_neutral_question, get_embeddings
+    from datetime import timedelta
+    from app.models import TrendingTopicArticle
+    
+    article = NewsArticle.query.get_or_404(article_id)
+    
+    try:
+        title = generate_neutral_question([article])
+        if not title:
+            title = f"Discussion: {article.title[:100]}"
+        
+        text = f"{article.title}. {article.summary or ''}"
+        embeddings = get_embeddings([text])
+        topic_embedding = embeddings[0] if embeddings else None
+        
+        topic = TrendingTopic(
+            title=title,
+            description=article.summary or '',
+            topic_embedding=topic_embedding,
+            source_count=1,
+            status='pending_review',
+            hold_until=datetime.utcnow()
+        )
+        
+        db.session.add(topic)
+        db.session.flush()
+        
+        link = TrendingTopicArticle(
+            topic_id=topic.id,
+            article_id=article.id
+        )
+        db.session.add(link)
+        db.session.commit()
+        
+        flash(f"Article promoted to topic: {title[:60]}...", "success")
+        return redirect(url_for('trending.view_topic', topic_id=topic.id))
+    except Exception as e:
+        logger.error(f"Promote error: {e}")
+        db.session.rollback()
+        flash(f"Error promoting article: {str(e)}", "error")
+    
+    return redirect(url_for('trending.view_articles'))
+
+
+@trending_bp.route('/articles/bulk-action', methods=['POST'])
+@login_required
+@admin_required
+def bulk_article_action():
+    """Handle bulk actions on articles."""
+    from app.trending.clustering import generate_neutral_question, get_embeddings
+    from app.models import TrendingTopicArticle
+    from app.trending.scorer import score_articles_with_llm
+    
+    action = request.form.get('action')
+    article_ids_raw = request.form.getlist('article_ids')
+    article_ids = [int(x) for x in article_ids_raw if x and x.isdigit()]
+    
+    if not article_ids:
+        flash("No articles selected", "error")
+        return redirect(url_for('trending.view_articles'))
+    
+    articles = NewsArticle.query.filter(NewsArticle.id.in_(article_ids)).all()
+    
+    if action == 'score':
+        try:
+            score_articles_with_llm(articles)
+            db.session.commit()
+            flash(f"Scored {len(articles)} articles", "success")
+        except Exception as e:
+            logger.error(f"Bulk score error: {e}")
+            db.session.rollback()
+            flash(f"Error scoring articles: {str(e)}", "error")
+    
+    elif action == 'create_topic':
+        try:
+            title = generate_neutral_question(articles)
+            if not title:
+                title = f"Discussion: {articles[0].title[:100]}"
+            
+            texts = [f"{a.title}. {a.summary or ''}" for a in articles]
+            combined = " ".join(texts)[:2000]
+            embeddings = get_embeddings([combined])
+            topic_embedding = embeddings[0] if embeddings else None
+            
+            topic = TrendingTopic(
+                title=title,
+                description=articles[0].summary or '',
+                topic_embedding=topic_embedding,
+                source_count=len(set(a.source_id for a in articles)),
+                status='pending_review',
+                hold_until=datetime.utcnow()
+            )
+            
+            db.session.add(topic)
+            db.session.flush()
+            
+            for article in articles:
+                link = TrendingTopicArticle(
+                    topic_id=topic.id,
+                    article_id=article.id
+                )
+                db.session.add(link)
+            
+            db.session.commit()
+            flash(f"Created topic from {len(articles)} articles", "success")
+            return redirect(url_for('trending.view_topic', topic_id=topic.id))
+        except Exception as e:
+            logger.error(f"Bulk topic error: {e}")
+            db.session.rollback()
+            flash(f"Error creating topic: {str(e)}", "error")
+    
+    return redirect(url_for('trending.view_articles'))
