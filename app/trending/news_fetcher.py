@@ -214,7 +214,7 @@ def seed_default_sources():
         },
         {
             'name': 'The Economist',
-            'feed_url': 'https://www.economist.com/rss',
+            'feed_url': 'https://www.economist.com/the-world-this-week/rss.xml',
             'source_type': 'rss',
             'reputation_score': 0.9
         },
@@ -304,7 +304,7 @@ def seed_default_sources():
         },
         {
             'name': 'The News Agents',
-            'feed_url': 'https://feeds.simplecast.com/Gr3nDCvY',
+            'feed_url': 'https://feeds.captivate.fm/the-news-agents/',
             'source_type': 'rss',
             'reputation_score': 0.85
         },
