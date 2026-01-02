@@ -45,6 +45,12 @@
         <a href="{{ url_for('trending.manage_sources') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
             Manage Sources
         </a>
+        <form action="{{ url_for('trending.clean_summaries') }}" method="post" 
+              onsubmit="return confirm('This will clean promotional content from all article summaries and topic descriptions. Continue?');">
+            <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700">
+                Clean Summaries
+            </button>
+        </form>
     </div>
 
     <div class="bg-white rounded-lg shadow">
