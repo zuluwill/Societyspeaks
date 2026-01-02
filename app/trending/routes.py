@@ -10,7 +10,7 @@ Provides UI for:
 
 import logging
 from datetime import datetime
-from flask import render_template, redirect, url_for, flash, request, jsonify
+from flask import render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 
 from app import db
@@ -272,16 +272,29 @@ def discard(topic_id):
 @login_required
 @admin_required
 def unpublish(topic_id):
-    """Unpublish a topic - delete discussion and revert to pending_review."""
+    """Unpublish a topic - delete discussion and all related records, revert to pending_review."""
+    from app.models import DiscussionSourceArticle, Statement, StatementVote
+    
     topic = TrendingTopic.query.get_or_404(topic_id)
     
     if topic.status != 'published' or not topic.discussion_id:
         flash("Topic is not published", "error")
         return redirect(url_for('trending.view_topic', topic_id=topic_id))
     
+    discussion_id = topic.discussion_id
+    discussion_title = None
+    
     try:
-        discussion = Discussion.query.get(topic.discussion_id)
+        discussion = Discussion.query.get(discussion_id)
         if discussion:
+            discussion_title = discussion.title
+            
+            DiscussionSourceArticle.query.filter_by(discussion_id=discussion_id).delete()
+            
+            StatementVote.query.filter_by(discussion_id=discussion_id).delete()
+            
+            Statement.query.filter_by(discussion_id=discussion_id).delete()
+            
             db.session.delete(discussion)
         
         topic.status = 'pending_review'
@@ -289,9 +302,11 @@ def unpublish(topic_id):
         topic.published_at = None
         db.session.commit()
         
+        current_app.logger.info(f"Unpublished topic {topic_id}: deleted discussion '{discussion_title}' and related records")
         flash("Discussion unpublished and topic reverted to review queue", "success")
     except Exception as e:
         db.session.rollback()
+        current_app.logger.error(f"Failed to unpublish topic {topic_id}: {e}")
         flash(f"Error unpublishing: {str(e)}", "error")
     
     return redirect(url_for('trending.view_topic', topic_id=topic_id))
