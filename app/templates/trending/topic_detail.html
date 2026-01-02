@@ -82,8 +82,8 @@
                 <div class="text-sm text-gray-500 mt-1">
                     {{ ta.article.source.name }} 
                     {% if ta.article.published_at %} | {{ ta.article.published_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}
-                    {% if ta.article.sensationalism_score %}
-                    | Sensationalism: {{ "%.0f"|format(ta.article.sensationalism_score * 100) }}%
+                    {% if ta.article.sensationalism_score is not none %}
+                    | Quality: {{ "%.0f"|format((1 - ta.article.sensationalism_score) * 100) }}%
                     {% endif %}
                 </div>
             </div>
