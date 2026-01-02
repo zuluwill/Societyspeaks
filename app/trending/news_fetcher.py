@@ -31,9 +31,6 @@ def clean_summary(text: str) -> Optional[str]:
     original_text = text
     
     promo_patterns = [
-        r'\*{2,}Source Articles:?\*{2,}.*$',
-        r'Source Articles:.*$',
-        r'\[([^\]]+)\]\([^)]+\)',
         r'_{3,}.*',
         r'-{5,}.*',
         r'Get more from .+? with .+?\.',
@@ -48,8 +45,6 @@ def clean_summary(text: str) -> Optional[str]:
         r'Learn more about your ad choices.*',
         r'Visit podcastchoices\.com.*',
         r'See omnystudio\.com.*',
-        r'https?://\S+',
-        r'\S+\.com/\S*',
         r'(?:Social |Video |Assistant |Executive |Senior )?(?:Producer|Editor|Host|Writer|Director)s?:\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:,\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)* *',
         r'(?:Exec|Executive) Producer.*',
         r'(?:Presented|Hosted|Produced|Written|Directed) by.*',
@@ -59,7 +54,6 @@ def clean_summary(text: str) -> Optional[str]:
         r'(?:Ad|Sponsor|Partner)(?:vertisement|ship)?s? by.*',
         r'This (?:episode|show|podcast) is (?:powered|sponsored|supported) by.*',
         r'[🎉🎧📧✅⚡️🔗💰🎁➼]',
-        r'\*{2,}',
     ]
     
     for pattern in promo_patterns:

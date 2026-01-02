@@ -188,6 +188,24 @@ def create_app():
     login_manager.login_message_category = "info"
     app.jinja_env.globals.update(current_user=current_user)
     
+    import re
+    from markupsafe import Markup, escape
+    
+    def render_markdown_links(text):
+        """Convert markdown links [text](url) to HTML <a> tags and **bold** to <strong>."""
+        if not text:
+            return ''
+        text = str(escape(text))
+        text = re.sub(
+            r'\[([^\]]+)\]\(([^)]+)\)',
+            r'<a href="\2" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">\1</a>',
+            text
+        )
+        text = re.sub(r'\*\*([^*]+)\*\*', r'<strong>\1</strong>', text)
+        return Markup(text)
+    
+    app.jinja_env.filters['render_markdown'] = render_markdown_links
+    
     # Initialize rate limiter with improved Redis handling
     try:
         redis_url = app.config.get('RATELIMIT_STORAGE_URL')
