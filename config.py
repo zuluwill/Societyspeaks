@@ -180,7 +180,6 @@ class ProductionConfig(Config):
     DEBUG = False
     SESSION_COOKIE_SECURE = True
     PREFERRED_URL_SCHEME = 'https'
-    SERVER_NAME = os.getenv('SERVER_NAME', 'societyspeaks.io')
     REMEMBER_COOKIE_SECURE = True
     REMEMBER_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Strict'

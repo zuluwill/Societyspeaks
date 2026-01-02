@@ -429,12 +429,19 @@ def create_discussion_notification(user_id, discussion_id, notification_type, ad
         return None
 
 
+def _get_base_url():
+    """Get the base URL for building links, works outside request context"""
+    base = os.getenv('BASE_URL', 'https://societyspeaks.io')
+    return base.rstrip('/')
+
+
 def send_daily_question_welcome_email(subscriber):
     """Send welcome email to new daily question subscriber"""
     transactional_id = os.getenv('LOOPS_DAILY_WELCOME_ID', 'cmjx1l3au1gku0i4ahx7xxvna')
     
-    magic_link_url = url_for('daily.magic_link', token=subscriber.magic_token, _external=True)
-    daily_question_url = url_for('daily.today', _external=True)
+    base_url = _get_base_url()
+    magic_link_url = f"{base_url}/daily/m/{subscriber.magic_token}"
+    daily_question_url = f"{base_url}/daily"
     
     data_variables = {
         "magicLinkUrl": magic_link_url,
@@ -462,8 +469,9 @@ def send_daily_question_email(subscriber, question):
     from app import db
     db.session.commit()
     
-    magic_link_url = url_for('daily.magic_link', token=subscriber.magic_token, _external=True)
-    question_url = url_for('daily.by_date', date_str=question.question_date.isoformat(), _external=True)
+    base_url = _get_base_url()
+    magic_link_url = f"{base_url}/daily/m/{subscriber.magic_token}"
+    question_url = f"{base_url}/daily/{question.question_date.isoformat()}"
     
     streak_message = " "
     if subscriber.current_streak > 1:
