@@ -1,141 +1,95 @@
 {% macro share_button(title, url, description="Join this discussion on SocietySpeaks", button_style="primary") %}
-<div class="relative share-button-container">
+<div class="relative">
     <button type="button" 
             onclick="toggleShareMenu(this)"
             aria-haspopup="true" 
             aria-expanded="false" 
             aria-label="Share"
-            class="inline-flex items-center justify-center min-h-[44px] min-w-[44px] px-5 py-3 {% if button_style == 'primary' %}bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 active:bg-gray-100{% endif %} rounded-lg transition-colors font-medium text-base">
+            class="inline-flex items-center px-4 py-2 {% if button_style == 'primary' %}bg-blue-600 text-white hover:bg-blue-700{% else %}bg-white text-gray-700 border border-gray-300 hover:bg-gray-50{% endif %} rounded-md transition-colors">
         <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
         </svg>
         Share
     </button>
-    
-    <div class="hidden share-menu fixed sm:absolute inset-x-4 sm:inset-x-auto bottom-4 sm:bottom-auto sm:top-full sm:mt-2 sm:right-0 sm:w-80 max-h-[80vh] overflow-y-auto rounded-xl bg-white shadow-2xl ring-1 ring-black ring-opacity-10 z-50">
-        <div class="p-4 border-b border-gray-100">
-            <div class="flex items-center justify-between mb-3">
-                <p class="text-sm font-semibold text-gray-900">Share this question</p>
-                <button onclick="closeShareMenu(this)" class="sm:hidden p-2 -mr-2 text-gray-400 hover:text-gray-600" aria-label="Close">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
-            </div>
-            <p class="text-sm text-gray-600 mb-3 leading-relaxed">{{ description }}</p>
-            <button onclick="copyShareText('{{ description }} {{ url }}')"
-                    class="w-full flex items-center justify-center min-h-[44px] px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 active:bg-blue-200 transition-colors font-medium">
-                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
-                </svg>
-                Copy Message
-            </button>
-        </div>
-
-        <div class="p-2">
+    <div class="hidden share-menu absolute top-full mt-2 right-0 w-72 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+        <div class="py-1">
             {% set share_title = title|urlencode %}
             {% set share_url = url|urlencode %}
             {% set share_text = description|urlencode %}
 
-            <div class="grid grid-cols-4 gap-2 mb-3">
-                <a href="https://wa.me/?text={{ share_text }}%20{{ share_url }}"
-                   target="_blank" 
-                   class="flex flex-col items-center justify-center min-h-[64px] p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors">
-                    <img src="{{ url_for('static', filename='icons/whatsapp.svg') }}" alt="WhatsApp" class="h-8 w-8 mb-1">
-                    <span class="text-xs text-gray-600">WhatsApp</span>
-                </a>
+            <a href="https://wa.me/?text={{ share_text }}%20{{ share_url }}"
+               target="_blank"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/whatsapp.svg') }}" alt="WhatsApp" class="h-5 w-5 mr-3">
+                WhatsApp
+            </a>
 
-                <a href="https://twitter.com/intent/tweet?text={{ share_text }}&url={{ share_url }}"
-                   target="_blank"
-                   class="flex flex-col items-center justify-center min-h-[64px] p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors">
-                    <img src="{{ url_for('static', filename='icons/X_icon.svg') }}" alt="X" class="h-8 w-8 mb-1">
-                    <span class="text-xs text-gray-600">X</span>
-                </a>
+            <a href="https://twitter.com/intent/tweet?text={{ share_text }}&url={{ share_url }}"
+               target="_blank"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/X_icon.svg') }}" alt="X (Twitter)" class="h-5 w-5 mr-3">
+                X (Twitter)
+            </a>
 
-                <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url }}&title={{ share_title }}" 
-                   target="_blank" 
-                   class="flex flex-col items-center justify-center min-h-[64px] p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors">
-                    <img src="{{ url_for('static', filename='icons/Linkedin_icon.svg') }}" alt="LinkedIn" class="h-8 w-8 mb-1">
-                    <span class="text-xs text-gray-600">LinkedIn</span>
-                </a>
+            <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ share_url }}&title={{ share_title }}" 
+               target="_blank" 
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/Linkedin_icon.svg') }}" alt="LinkedIn" class="h-5 w-5 mr-3">
+                LinkedIn
+            </a>
 
-                <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}&quote={{ share_text }}"
-                   target="_blank"
-                   class="flex flex-col items-center justify-center min-h-[64px] p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors">
-                    <img src="{{ url_for('static', filename='icons/facebook.svg') }}" alt="Facebook" class="h-8 w-8 mb-1">
-                    <span class="text-xs text-gray-600">Facebook</span>
-                </a>
-            </div>
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ share_url }}&quote={{ share_text }}"
+               target="_blank"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/facebook.svg') }}" alt="Facebook" class="h-5 w-5 mr-3">
+                Facebook
+            </a>
 
-            <div class="border-t border-gray-100 pt-2 space-y-1">
-                <a href="https://bsky.app/intent/compose?text={{ share_text }} {{ share_url }}"
-                   target="_blank"
-                   class="flex items-center min-h-[44px] px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors">
-                    <img src="{{ url_for('static', filename='icons/bluesky.svg') }}" alt="Bluesky" class="h-5 w-5 mr-3">
-                    BlueSky
-                </a>
+            <a href="https://bsky.app/intent/compose?text={{ share_text }} {{ share_url }}"
+               target="_blank"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/bluesky.svg') }}" alt="Bluesky" class="h-5 w-5 mr-3">
+                BlueSky
+            </a>
 
-                <a href="https://t.me/share/url?url={{ share_url }}&text={{ share_text }}"
-                   target="_blank"
-                   class="flex items-center min-h-[44px] px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors">
-                    <img src="{{ url_for('static', filename='icons/telegram.svg') }}" alt="Telegram" class="h-5 w-5 mr-3">
-                    Telegram
-                </a>
+            <a href="https://t.me/share/url?url={{ share_url }}&text={{ share_text }}"
+               target="_blank"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <img src="{{ url_for('static', filename='icons/telegram.svg') }}" alt="Telegram" class="h-5 w-5 mr-3">
+                Telegram
+            </a>
 
-                <a href="mailto:?subject={{ share_title }}%20-%20SocietySpeaks&body={{ share_text }}%0A%0A{{ share_url }}"
-                   class="flex items-center min-h-[44px] px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors">
-                    <svg class="h-5 w-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                    Email
-                </a>
+            <a href="mailto:?subject={{ share_title }}%20-%20SocietySpeaks&body={{ share_text }}%0A%0A{{ share_url }}"
+               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <svg class="h-5 w-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Email
+            </a>
 
-                <button onclick="copyLink('{{ url }}')"
-                        class="flex w-full items-center min-h-[44px] px-3 py-2 text-sm text-gray-700 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors">
-                    <svg class="h-5 w-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
-                    </svg>
-                    <span class="copy-text">Copy Link</span>
-                </button>
-            </div>
+            <button onclick="copyLink('{{ url }}')"
+                    class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                <svg class="h-5 w-5 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+                </svg>
+                <span class="copy-text">Copy Link</span>
+            </button>
         </div>
     </div>
-    
-    <div class="hidden share-overlay fixed inset-0 bg-black bg-opacity-25 z-40 sm:hidden"></div>
 </div>
 
 <script>
 function toggleShareMenu(button) {
-    const container = button.closest('.share-button-container');
-    const menu = container.querySelector('.share-menu');
-    const overlay = container.querySelector('.share-overlay');
+    const menu = button.nextElementSibling;
     const isHidden = menu.classList.contains('hidden');
 
-    // Hide all other share menus first
     document.querySelectorAll('.share-menu').forEach(m => m.classList.add('hidden'));
-    document.querySelectorAll('.share-overlay').forEach(o => o.classList.add('hidden'));
 
-    // Toggle this menu
     if (isHidden) {
         menu.classList.remove('hidden');
-        if (overlay) overlay.classList.remove('hidden');
-        button.setAttribute('aria-expanded', 'true');
     } else {
         menu.classList.add('hidden');
-        if (overlay) overlay.classList.add('hidden');
-        button.setAttribute('aria-expanded', 'false');
     }
-}
-
-function closeShareMenu(closeButton) {
-    const container = closeButton.closest('.share-button-container');
-    const menu = container.querySelector('.share-menu');
-    const overlay = container.querySelector('.share-overlay');
-    const mainButton = container.querySelector('button[aria-haspopup]');
-    
-    menu.classList.add('hidden');
-    if (overlay) overlay.classList.add('hidden');
-    if (mainButton) mainButton.setAttribute('aria-expanded', 'false');
 }
 
 function copyLink(url) {
@@ -149,43 +103,10 @@ function copyLink(url) {
     });
 }
 
-// Close share menus when clicking outside or on overlay
 document.addEventListener('click', (event) => {
-    if (event.target.classList.contains('share-overlay')) {
+    if (!event.target.closest('.share-menu') && !event.target.closest('button')) {
         document.querySelectorAll('.share-menu').forEach(menu => menu.classList.add('hidden'));
-        document.querySelectorAll('.share-overlay').forEach(overlay => overlay.classList.add('hidden'));
-        document.querySelectorAll('[aria-haspopup]').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
-        return;
-    }
-    
-    if (!event.target.closest('.share-menu') && !event.target.closest('.share-button-container button')) {
-        document.querySelectorAll('.share-menu').forEach(menu => menu.classList.add('hidden'));
-        document.querySelectorAll('.share-overlay').forEach(overlay => overlay.classList.add('hidden'));
-        document.querySelectorAll('[aria-haspopup]').forEach(btn => btn.setAttribute('aria-expanded', 'false'));
     }
 });
-
-function copyShareText(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        const button = event.currentTarget;
-        const originalHTML = button.innerHTML;
-        button.innerHTML = `
-            <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Copied!
-        `;
-        button.classList.remove('bg-blue-50', 'text-blue-700', 'hover:bg-blue-100');
-        button.classList.add('bg-green-50', 'text-green-700');
-
-        setTimeout(() => {
-            button.innerHTML = originalHTML;
-            button.classList.remove('bg-green-50', 'text-green-700');
-            button.classList.add('bg-blue-50', 'text-blue-700', 'hover:bg-blue-100');
-        }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy text: ', err);
-    });
-}
 </script>
 {% endmacro %}
