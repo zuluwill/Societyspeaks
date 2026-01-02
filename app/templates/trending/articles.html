@@ -114,7 +114,8 @@
                                         <span>Fetched: {{ article.fetched_at.strftime('%Y-%m-%d %H:%M') }}</span>
                                     </div>
                                     {% if article.summary %}
-                                    <p class="text-gray-600 mt-2 text-sm">{{ article.summary[:200] }}{% if article.summary|length > 200 %}...{% endif %}</p>
+                                    {% set clean_summary = article.summary|strip_markdown %}
+                                    <p class="text-gray-600 mt-2 text-sm">{{ clean_summary[:200] }}{% if clean_summary|length > 200 %}...{% endif %}</p>
                                     {% endif %}
                                 </div>
                                 <div class="flex flex-col gap-1 ml-4 items-end">

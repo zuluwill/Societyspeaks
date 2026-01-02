@@ -79,7 +79,7 @@
 
         <!-- Description with better typography -->
         <p class="text-base text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-            {{ discussion.description }}
+            {{ discussion.description|strip_markdown }}
         </p>
 
         <!-- Location -->
