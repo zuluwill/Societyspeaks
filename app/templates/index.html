@@ -3,7 +3,6 @@
 {% block content %}
 <!-- Hero Section -->
 <div class="relative isolate overflow-hidden bg-gradient-to-b from-blue-50 to-white">
-    <!-- Background pattern -->
     <div class="absolute inset-0">
         <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-blue-50 to-white"></div>
     </div>
@@ -14,36 +13,52 @@
             <div class="lg:col-span-6">
                 <div class="space-y-5">
                     <div class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-600">
-                        Bridging Divides Through Dialogue
+                        A Sense-Making System for Society
                     </div>
                     <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
-                        Where Conversations Shape Our Future
+                        Making Disagreement Useful Again
                     </h1>
 
-                    <!-- Stats -->
-                    <div class="mt-6 grid grid-cols-2 gap-4 sm:gap-6">
-                        <div class="bg-white/60 backdrop-blur rounded-lg p-4 text-center">
-                            <div class="text-2xl font-bold text-blue-600">10,000+</div>
-                            <div class="text-sm text-gray-600">Participants</div>
+                    <p class="text-lg text-gray-600">
+                        Society Speaks turns noise into signal. We use machine learning to find where people actually agree, reveal bridge ideas that unite opposing groups, and surface genuine divisions worth addressing.
+                    </p>
+
+                    <!-- Quick stats -->
+                    <div class="flex flex-wrap gap-6 text-sm text-gray-600">
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Consensus statements
                         </div>
-                        <div class="bg-white/60 backdrop-blur rounded-lg p-4 text-center">
-                            <div class="text-2xl font-bold text-blue-600">100+</div>
-                            <div class="text-sm text-gray-600">Active Discussions</div>
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                            </svg>
+                            Bridge ideas
+                        </div>
+                        <div class="flex items-center">
+                            <svg class="w-5 h-5 text-amber-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                            Genuine divisions
                         </div>
                     </div>
 
-                    <p class="text-lg text-gray-600">
-                        Join a new kind of public discussion platform where nuanced debate leads to better understanding and real policy solutions.
-                    </p>
-
                     <div class="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
-                        <a href="{{ url_for('discussions.search_discussions') }}" 
-                           class="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
-                            Join the Conversation
+                        <a href="{{ url_for('daily.today') }}" 
+                           class="inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Today's Question
                         </a>
-                        <a href="/about" 
-                           class="inline-flex items-center justify-center rounded-md bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-                            Learn more <span aria-hidden="true" class="ml-2">→</span>
+                        <a href="{{ url_for('discussions.news_feed') }}" 
+                           class="inline-flex items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                            <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                            </svg>
+                            From the News
                         </a>
                     </div>
                 </div>
@@ -61,105 +76,135 @@
     </div>
 </div>
 
+<!-- Daily Question Highlight -->
+<div class="bg-white border-b">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        <div class="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
+            <div class="lg:col-span-5">
+                <div class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700 mb-4">
+                    2 minutes a day
+                </div>
+                <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                    The Daily Question
+                </h2>
+                <p class="mt-4 text-lg text-gray-600">
+                    One carefully chosen question each day. Vote, share your reasoning, then see how others responded. Over time, this creates a longitudinal view of how public opinion evolves.
+                </p>
+                <div class="mt-6 flex flex-wrap gap-4">
+                    <a href="{{ url_for('daily.today') }}" 
+                       class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+                        Answer Today's Question
+                        <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+            <div class="mt-10 lg:mt-0 lg:col-span-7">
+                <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 lg:p-8">
+                    <div class="space-y-4">
+                        <div class="flex items-center text-sm text-gray-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            Daily at 8am
+                        </div>
+                        <div class="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
+                            <p class="text-gray-800 font-medium">How it works:</p>
+                            <ul class="mt-3 space-y-2 text-gray-600 text-sm">
+                                <li class="flex items-start">
+                                    <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2 mt-0.5">1</span>
+                                    Read the question and vote (Agree / Disagree / Unsure)
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2 mt-0.5">2</span>
+                                    Optionally explain your reasoning
+                                </li>
+                                <li class="flex items-start">
+                                    <span class="flex-shrink-0 h-5 w-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs mr-2 mt-0.5">3</span>
+                                    See how society responded after you vote
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- From the News Section -->
+<div class="bg-gray-50 py-12 lg:py-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-10">
+            <div class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-600 mb-4">
+                News to Deliberation
+            </div>
+            <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+                From the News
+            </h2>
+            <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+                We curate stories from trusted sources, filter out sensationalism, and turn them into balanced discussions. Real journalism as input to civic deliberation.
+            </p>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-3 mb-8">
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-gray-900 mb-2">Curated Sources</h3>
+                <p class="text-gray-600 text-sm">Stories from BBC, Guardian, The Atlantic, The Economist, and more trusted outlets.</p>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-gray-900 mb-2">Filtered for Relevance</h3>
+                <p class="text-gray-600 text-sm">AI scores articles for civic value, filtering out clickbait and sensationalism.</p>
+            </div>
+            <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
+                <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                </div>
+                <h3 class="font-semibold text-gray-900 mb-2">Balanced Discussions</h3>
+                <p class="text-gray-600 text-sm">Each story generates seed statements representing multiple perspectives.</p>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a href="{{ url_for('discussions.news_feed') }}" 
+               class="inline-flex items-center rounded-md bg-white px-5 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                Explore News Discussions
+                <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+            </a>
+        </div>
+    </div>
+</div>
+
 
 <!-- Voices of Democracy -->
-<div class="bg-white py-16 sm:py-24">
+<div class="bg-white py-12 lg:py-16">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-12">
+        <div class="text-center mb-10">
             <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                 Voices of Democracy
             </h2>
             <p class="mt-4 text-lg text-gray-600">
-                Throughout history, diverse voices have championed the power of democratic dialogue, nuance and debate.
+                Throughout history, diverse voices have championed the power of dialogue and understanding.
             </p>
         </div>
 
-        <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            <!-- Quote 1: Gandhi -->
-            <div class="relative rounded-lg bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                <div class="absolute top-4 right-4 text-blue-200 transform -rotate-12">
-                    <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
-                    </svg>
-                </div>
-                <blockquote class="text-gray-700 mt-4">
-                    "The spirit of democracy cannot be imposed from without. It has to come from within."
-                </blockquote>
-                <div class="mt-6 flex items-center">
-                    <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
-                        <img src="{{ url_for('static', filename='images/speakers/Mahatma-Gandhi.jpg') }}" alt="Mahatma Gandhi" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
-                    </div>
-                    <div class="ml-4">
-                        <cite class="font-semibold text-gray-900">Mahatma Gandhi</cite>
-                        <p class="text-sm text-gray-600">Leader of Indian Independence Movement</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quote 2: Malala -->
-            <div class="relative rounded-lg bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                <div class="absolute top-4 right-4 text-blue-200 transform -rotate-12">
-                    <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
-                    </svg>
-                </div>
-                <blockquote class="text-gray-700 mt-4">
-                    "I raise up my voice—not so I can shout, but so that those without a voice can be heard."
-                </blockquote>
-                <div class="mt-6 flex items-center">
-                    <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
-                        <img src="{{ url_for('static', filename='images/speakers/Malala_Yousafzai.jpg') }}" alt="Malala Yousafzai" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
-                    </div>
-                    <div class="ml-4">
-                        <cite class="font-semibold text-gray-900">Malala Yousafzai</cite>
-                        <p class="text-sm text-gray-600">Nobel Peace Prize Laureate</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quote 3: Eleanor Roosevelt -->
-            <div class="relative rounded-lg bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                <div class="absolute top-4 right-4 text-blue-200 transform -rotate-12">
-                    <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
-                    </svg>
-                </div>
-                <blockquote class="text-gray-700 mt-4">
-                    "Where, after all, do universal human rights begin? In small places, close to home..."
-                </blockquote>
-                <div class="mt-6 flex items-center">
-                    <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
-                        <img src="{{ url_for('static', filename='images/speakers/eleanor_roosevelt.jpg') }}" alt="Eleanor Roosevelt" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
-                    </div>
-                    <div class="ml-4">
-                        <cite class="font-semibold text-gray-900">Eleanor Roosevelt</cite>
-                        <p class="text-sm text-gray-600">Champion of Human Rights</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quote 4: Mandela -->
-            <div class="relative rounded-lg bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                <div class="absolute top-4 right-4 text-blue-200 transform -rotate-12">
-                    <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
-                    </svg>
-                </div>
-                <blockquote class="text-gray-700 mt-4">
-                    "A critical, independent and investigative press is the lifeblood of any democracy."
-                </blockquote>
-                <div class="mt-6 flex items-center">
-                    <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
-                        <img src="{{ url_for('static', filename='images/speakers/Nelson_Mandela.jpg') }}" alt="Nelson Mandela" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
-                    </div>
-                    <div class="ml-4">
-                        <cite class="font-semibold text-gray-900">Nelson Mandela</cite>
-                        <p class="text-sm text-gray-600">South African President & Freedom Fighter</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Quote 5: Margaret Mead -->
+        <div class="grid gap-6 md:grid-cols-3">
+            <!-- Quote 1: Margaret Mead -->
             <div class="relative rounded-lg bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm hover:shadow-md transition-all duration-300">
                 <div class="absolute top-4 right-4 text-blue-200 transform -rotate-12">
                     <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
@@ -180,7 +225,7 @@
                 </div>
             </div>
 
-            <!-- Quote 6: Martin Luther King Jr. -->
+            <!-- Quote 2: Nelson Mandela -->
             <div class="relative rounded-lg bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm hover:shadow-md transition-all duration-300">
                 <div class="absolute top-4 right-4 text-blue-200 transform -rotate-12">
                     <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
@@ -188,42 +233,20 @@
                     </svg>
                 </div>
                 <blockquote class="text-gray-700 mt-4">
-                    "Injustice anywhere is a threat to justice everywhere."
+                    "A critical, independent and investigative press is the lifeblood of any democracy."
                 </blockquote>
                 <div class="mt-6 flex items-center">
                     <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
-                        <img src="{{ url_for('static', filename='images/speakers/martin_luther_king_jr.jpeg') }}" alt="Martin Luther King Jr." class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
+                        <img src="{{ url_for('static', filename='images/speakers/Nelson_Mandela.jpg') }}" alt="Nelson Mandela" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
                     </div>
                     <div class="ml-4">
-                        <cite class="font-semibold text-gray-900">Martin Luther King Jr.</cite>
-                        <p class="text-sm text-gray-600">Civil Rights Leader</p>
-                    </div>
-                </div>
-            </div>
-            
-
-            <!-- Quote 7: Thomas Jefferson (18th century) -->
-            <div class="relative rounded-lg bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                <div class="absolute top-4 right-4 text-blue-200 transform -rotate-12">
-                    <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
-                    </svg>
-                </div>
-                <blockquote class="text-gray-700 mt-4">
-                    "The cornerstone of democracy rests on the foundation of an educated electorate."
-                </blockquote>
-                <div class="mt-6 flex items-center">
-                    <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
-                        <img src="{{ url_for('static', filename='images/speakers/Thomas_Jefferson.jpg') }}" alt="Thomas Jefferson" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
-                    </div>
-                    <div class="ml-4">
-                        <cite class="font-semibold text-gray-900">Thomas Jefferson</cite>
-                        <p class="text-sm text-gray-600">3rd U.S. President, 1776</p>
+                        <cite class="font-semibold text-gray-900">Nelson Mandela</cite>
+                        <p class="text-sm text-gray-600">South African President</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Quote 8: John Stuart Mill (19th century) -->
+            <!-- Quote 3: John Stuart Mill -->
             <div class="relative rounded-lg bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm hover:shadow-md transition-all duration-300">
                 <div class="absolute top-4 right-4 text-blue-200 transform -rotate-12">
                     <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
@@ -243,28 +266,6 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Quote 9: Noam Chomsky (Contemporary) -->
-            <div class="relative rounded-lg bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm hover:shadow-md transition-all duration-300">
-                <div class="absolute top-4 right-4 text-blue-200 transform -rotate-12">
-                    <svg class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
-                    </svg>
-                </div>
-                <blockquote class="text-gray-700 mt-4">
-                    "If we don't believe in freedom of expression for people we despise, we don't believe in it at all."
-                </blockquote>
-                <div class="mt-6 flex items-center">
-                    <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
-                        <img src="{{ url_for('static', filename='images/speakers/Noam_Chomsky.jpg') }}" alt="Noam Chomsky" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
-                    </div>
-                    <div class="ml-4">
-                        <cite class="font-semibold text-gray-900">Noam Chomsky</cite>
-                        <p class="text-sm text-gray-600">Philosopher & Political Activist</p>
-                    </div>
-                </div>
-            </div>
-            
         </div>
     </div>
 </div>
