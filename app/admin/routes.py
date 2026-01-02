@@ -623,9 +623,23 @@ def list_daily_subscribers():
         DailyQuestionSubscriber.created_at.desc()
     ).all()
     
+    subscribed_user_ids = {s.user_id for s in subscribers if s.user_id}
+    available_users = User.query.filter(
+        User.email.isnot(None),
+        ~User.id.in_(subscribed_user_ids) if subscribed_user_ids else True
+    ).order_by(User.username).all()
+    
+    exclude_patterns = ['test', 'bot', 'fake', 'demo', 'example']
+    available_users = [
+        u for u in available_users 
+        if not any(p in (u.email or '').lower() or p in (u.username or '').lower() 
+                   for p in exclude_patterns)
+    ]
+    
     return render_template(
         'admin/daily/subscribers.html',
         subscribers=subscribers,
+        available_users=available_users,
         active_count=sum(1 for s in subscribers if s.is_active),
         total_count=len(subscribers)
     )
@@ -645,4 +659,76 @@ def bulk_subscribe_users():
         current_app.logger.error(f"Bulk subscribe error: {e}")
         flash(f'Error during bulk subscription: {str(e)}', 'error')
     
+    return redirect(url_for('admin.list_daily_subscribers'))
+
+
+@admin_bp.route('/daily-questions/subscribers/add', methods=['POST'])
+@login_required
+@admin_required
+def add_subscriber():
+    """Add individual users as subscribers"""
+    user_ids = request.form.getlist('user_ids')
+    
+    if not user_ids:
+        flash('No users selected.', 'warning')
+        return redirect(url_for('admin.list_daily_subscribers'))
+    
+    added = 0
+    for user_id in user_ids:
+        try:
+            user = User.query.get(int(user_id))
+            if not user or not user.email:
+                continue
+            
+            existing = DailyQuestionSubscriber.query.filter_by(user_id=user.id).first()
+            if existing:
+                if not existing.is_active:
+                    existing.is_active = True
+                    db.session.commit()
+                    added += 1
+                continue
+            
+            subscriber = DailyQuestionSubscriber(
+                email=user.email,
+                user_id=user.id,
+                is_active=True
+            )
+            subscriber.generate_magic_token()
+            db.session.add(subscriber)
+            db.session.commit()
+            added += 1
+        except Exception as e:
+            current_app.logger.error(f"Error adding subscriber {user_id}: {e}")
+            db.session.rollback()
+    
+    flash(f'Added {added} subscriber(s).', 'success')
+    return redirect(url_for('admin.list_daily_subscribers'))
+
+
+@admin_bp.route('/daily-questions/subscribers/<int:subscriber_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def toggle_subscriber(subscriber_id):
+    """Toggle subscriber active status"""
+    subscriber = DailyQuestionSubscriber.query.get_or_404(subscriber_id)
+    subscriber.is_active = not subscriber.is_active
+    db.session.commit()
+    
+    status = 'activated' if subscriber.is_active else 'deactivated'
+    flash(f'Subscriber {subscriber.email} {status}.', 'success')
+    return redirect(url_for('admin.list_daily_subscribers'))
+
+
+@admin_bp.route('/daily-questions/subscribers/<int:subscriber_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_subscriber(subscriber_id):
+    """Delete a subscriber completely"""
+    subscriber = DailyQuestionSubscriber.query.get_or_404(subscriber_id)
+    email = subscriber.email
+    
+    db.session.delete(subscriber)
+    db.session.commit()
+    
+    flash(f'Subscriber {email} removed.', 'success')
     return redirect(url_for('admin.list_daily_subscribers'))
