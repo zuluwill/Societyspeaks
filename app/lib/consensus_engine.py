@@ -20,18 +20,23 @@ logger = logging.getLogger(__name__)
 def build_vote_matrix(discussion_id, db):
     """
     Build vote matrix from statement votes
-    Rows = users, Columns = statements, Values = votes (-1, 0, 1)
+    Rows = participants (users + anonymous), Columns = statements, Values = votes (-1, 0, 1)
+    
+    Supports both authenticated and anonymous participants:
+    - Authenticated: identified by user_id (u_{id})
+    - Anonymous: identified by session_fingerprint (a_{fingerprint})
     
     Returns:
-        vote_matrix: pandas DataFrame (users x statements)
-        user_ids: list of user IDs
+        vote_matrix: pandas DataFrame (participants x statements)
+        participant_ids: list of participant identifiers
         statement_ids: list of statement IDs
     """
     from app.models import StatementVote, Statement
     
-    # Get all votes for this discussion
+    # Get all votes for this discussion (both authenticated and anonymous)
     votes = db.session.query(
         StatementVote.user_id,
+        StatementVote.session_fingerprint,
         StatementVote.statement_id,
         StatementVote.vote
     ).filter(
@@ -41,23 +46,41 @@ def build_vote_matrix(discussion_id, db):
     if not votes:
         return None, [], []
     
+    # Create participant identifier: user_id takes precedence, fall back to session_fingerprint
+    vote_data = []
+    for v in votes:
+        if v.user_id:
+            participant_id = f"u_{v.user_id}"
+        elif v.session_fingerprint:
+            participant_id = f"a_{v.session_fingerprint[:16]}"
+        else:
+            continue  # Skip votes with neither identifier
+        vote_data.append({
+            'participant_id': participant_id,
+            'statement_id': v.statement_id,
+            'vote': v.vote
+        })
+    
+    if not vote_data:
+        return None, [], []
+    
     # Convert to DataFrame
-    df = pd.DataFrame(votes, columns=['user_id', 'statement_id', 'vote'])
+    df = pd.DataFrame(vote_data)
     
     # Pivot to create matrix
     vote_matrix = df.pivot_table(
-        index='user_id',
+        index='participant_id',
         columns='statement_id',
         values='vote',
-        fill_value=0  # Users who haven't voted get 0 (neutral)
+        fill_value=0  # Participants who haven't voted get 0 (neutral)
     )
     
-    user_ids = vote_matrix.index.tolist()
+    participant_ids = vote_matrix.index.tolist()
     statement_ids = vote_matrix.columns.tolist()
     
-    logger.info(f"Built vote matrix: {len(user_ids)} users x {len(statement_ids)} statements")
+    logger.info(f"Built vote matrix: {len(participant_ids)} participants x {len(statement_ids)} statements")
     
-    return vote_matrix, user_ids, statement_ids
+    return vote_matrix, participant_ids, statement_ids
 
 
 def can_cluster(discussion_id, db):
@@ -65,17 +88,25 @@ def can_cluster(discussion_id, db):
     Check if discussion has enough data for meaningful clustering
     
     Criteria (from pol.is analysis):
-    - At least 7 users
+    - At least 7 participants (users + anonymous)
     - At least 7 statements
     - At least 50 total votes
     - Each statement has at least 3 votes
     """
     from app.models import StatementVote, Statement
+    from sqlalchemy import case, func
     
-    # Count unique users
-    user_count = db.session.query(StatementVote.user_id).filter(
+    # Count unique participants (user_id OR session_fingerprint)
+    participant_count = db.session.query(
+        func.count(func.distinct(
+            case(
+                (StatementVote.user_id.isnot(None), func.concat('u_', StatementVote.user_id)),
+                else_=func.concat('a_', StatementVote.session_fingerprint)
+            )
+        ))
+    ).filter(
         StatementVote.discussion_id == discussion_id
-    ).distinct().count()
+    ).scalar() or 0
     
     # Count statements
     statement_count = Statement.query.filter_by(
@@ -102,8 +133,8 @@ def can_cluster(discussion_id, db):
     min_votes = min([v[1] for v in min_votes_per_statement])
     
     # Apply criteria
-    if user_count < 7:
-        return False, f"Need at least 7 users (have {user_count})"
+    if participant_count < 7:
+        return False, f"Need at least 7 participants (have {participant_count})"
     if statement_count < 7:
         return False, f"Need at least 7 statements (have {statement_count})"
     if vote_count < 50:
