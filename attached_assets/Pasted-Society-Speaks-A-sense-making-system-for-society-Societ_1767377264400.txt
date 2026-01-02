@@ -1,0 +1,120 @@
+Society Speaks
+
+A sense-making system for society
+
+Society Speaks exists to make disagreement useful again, not louder.
+
+We live in an age of constant debate, but very little of it produces understanding, consensus, or solutions.
+Social platforms reward outrage, certainty, and speed, making society appear more divided than it really is.
+
+Society Speaks is designed to do the opposite.
+
+It brings nuance back into public debate, enables people to disagree agreeably, and surfaces the insight needed to move from noise towards shared understanding and, ultimately, better decisions.
+
+⸻
+
+How Society Speaks works
+
+We do not group people by who they say they are. We group them by how they actually respond.
+
+Instead of likes, comments, or demographics, Society Speaks is built around structured participation:
+	•	clear statements
+	•	simple voting (agree / disagree / unsure)
+	•	optional short explanations
+
+Using machine learning inspired by Pol.is, we analyse voting patterns to:
+	•	identify natural opinion clusters
+	•	without labels, ideological assumptions, or demographic bias
+
+This reveals how views actually form and overlap, something polls and comment sections consistently fail to capture.
+
+⸻
+
+What the system reveals
+
+Society Speaks does not just show what people think.
+
+It produces three distinct types of insight.
+
+1. Consensus statements
+
+Ideas with broad agreement across participants.
+
+2. Bridge statements
+
+Ideas that resonate across different opinion clusters, even when people disagree elsewhere.
+These bridges are often invisible in public debate, but they are the most actionable insights for progress and compromise.
+
+3. Divisive statements
+
+Genuine fault lines where opinions are split and consensus does not yet exist.
+Surfacing these honestly is just as important as finding agreement, because it shows where deeper work is needed.
+
+Together, these outputs create a far more accurate picture of public opinion than binary polls or adversarial debate.
+
+⸻
+
+From news to deliberation
+
+Society Speaks does not treat news as content to be consumed, but as input into deliberation.
+
+Real journalism is:
+	•	curated for civic relevance
+	•	filtered to avoid sensational framing
+	•	transformed into balanced prompts and seed statements
+
+This turns passive news consumption into thoughtful participation and shifts the focus from headlines to underlying issues.
+
+⸻
+
+The Daily Question
+
+The Daily Question is the entry point.
+
+One carefully chosen question each day.
+Two minutes to respond.
+Insight revealed only after you have thought for yourself.
+
+Over time, this creates something rare:
+a longitudinal, nuanced view of public opinion, showing not just where society stands, but how views evolve, converge, or diverge over time.
+
+It is a small daily habit with cumulative civic value.
+
+⸻
+
+Why this matters
+
+The biggest problem in modern democracy is not disagreement. It is distorted disagreement.
+
+Society Speaks helps correct that by:
+	•	reducing knee-jerk reactions
+	•	making disagreement less hostile
+	•	revealing common ground without erasing difference
+	•	showing where compromise is possible and where it is not
+
+This kind of understanding is a prerequisite for solving real-world problems.
+
+⸻
+
+Policy relevance (without overpromising)
+
+Society Speaks does not claim to produce policy by itself.
+
+What it produces is something more fundamental:
+	•	evidence-based understanding of public opinion
+	•	clarity on where consensus exists
+	•	visibility into bridge ideas that can unite groups
+	•	honesty about genuine divisions that require deeper work
+
+That insight can inform policymakers, journalists, civic organisations, and anyone trying to design solutions that are both ambitious and legitimate.
+
+Better policy starts with better understanding.
+Society Speaks focuses on that first step.
+
+⸻
+
+In one line
+
+Society Speaks is a sense-making system that turns disagreement into understanding, and understanding into insight for better decisions.
+
+⸻

@@ -1,108 +1,260 @@
 {% extends "layout.html" %}
 
+{% block title %}About Society Speaks - A Sense-Making System for Society{% endblock %}
+{% block meta_description %}Society Speaks is a sense-making system that turns disagreement into understanding. Learn how we use machine learning to reveal opinion clusters, bridge statements, and genuine consensus from public participation.{% endblock %}
+{% block og_title %}About Society Speaks - Making Disagreement Useful Again{% endblock %}
+{% block og_description %}Society Speaks helps people disagree agreeably and surfaces the insight needed to move from noise to shared understanding and better decisions.{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-gray-50">
-    <!-- About Header -->
     <div class="bg-white border-b">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="text-center">
-                <h2 class="text-4xl font-bold leading-7 text-gray-900 sm:truncate sm:text-5xl sm:tracking-tight">
-                    About Society Speaks
-                </h2>
-                <p class="mt-4 text-xl text-gray-600">
-                    Participate in or start discussions that matter. Filter by your country, city, or topic and join the conversation.
+                <p class="text-blue-600 font-medium mb-3">A Sense-Making System for Society</p>
+                <h1 class="text-4xl font-bold leading-tight text-gray-900 sm:text-5xl">
+                    Making Disagreement Useful Again
+                </h1>
+                <p class="mt-6 text-xl text-gray-600 max-w-3xl mx-auto">
+                    We live in an age of constant debate, but very little of it produces understanding, consensus, or solutions. Society Speaks is designed to do the opposite.
                 </p>
             </div>
         </div>
     </div>
 
-    <!-- About Content -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden p-8">
-            <div class="text-lg text-gray-700 leading-relaxed">
-                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Our Mission</h3>
-                <p class="mb-6">
-                    Society Speaks was created to provide a platform where people can come together to discuss
-                    the most pressing issues facing society today. From local matters in your city to global challenges, 
-                    we offer a space where every voice can be heard, and every opinion matters.
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="prose prose-lg max-w-none">
+            <section class="mb-16">
+                <p class="text-xl text-gray-700 leading-relaxed">
+                    Social platforms reward outrage, certainty, and speed, making society appear more divided than it really is. Society Speaks brings nuance back into public debate, enables people to disagree agreeably, and surfaces the insight needed to move from noise towards shared understanding and, ultimately, better decisions.
                 </p>
+            </section>
 
-                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Why Use Society Speaks?</h3>
-                <ul class="list-disc list-inside mb-6">
-                    <li>Engage in meaningful discussions about important topics that impact your community and beyond.</li>
-                    <li>Share your thoughts, and see how your opinions compare to others globally.</li>
-                    <li>Stay informed with insights from people around the world, all in one place.</li>
+            <section class="mb-16 bg-blue-50 rounded-xl p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">How Society Speaks Works</h2>
+                <p class="text-gray-700 mb-6">
+                    We do not group people by who they say they are. We group them by how they actually respond.
+                </p>
+                <p class="text-gray-700 mb-6">
+                    Instead of likes, comments, or demographics, Society Speaks is built around structured participation:
+                </p>
+                <ul class="space-y-3 mb-6">
+                    <li class="flex items-start">
+                        <span class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm mr-3">1</span>
+                        <span class="text-gray-700">Clear statements on real issues</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm mr-3">2</span>
+                        <span class="text-gray-700">Simple voting (agree / disagree / unsure)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="flex-shrink-0 h-6 w-6 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm mr-3">3</span>
+                        <span class="text-gray-700">Optional short explanations for your reasoning</span>
+                    </li>
                 </ul>
-
-                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Our Vision</h3>
-                <p class="mb-6">
-                    We believe that open discussions can lead to a more connected, informed, and empathetic world. 
-                    With the power of technology, Society Speaks aims to bridge the gap between people of different 
-                    backgrounds and experiences, giving everyone the opportunity to contribute to the conversation. Find common ground or disagree agreeably.
+                <p class="text-gray-700">
+                    Using machine learning inspired by <a href="https://pol.is" class="text-blue-600 hover:underline" target="_blank" rel="noopener">Pol.is</a>, we analyse voting patterns to identify natural opinion clusters, without labels, ideological assumptions, or demographic bias. This reveals how views actually form and overlap, something polls and comment sections consistently fail to capture.
                 </p>
+            </section>
 
-                <h3 class="text-2xl font-semibold mb-6 text-gray-900">How It Works</h3>
-                <p class="mb-6">
-                    Simply choose a topic, join or start a discussion, and share your opinions. You can filter discussions by country, 
-                    city, or topic, ensuring you engage with content that matters to you. Our consensus analysis system ensures that
-                    your contributions are analyzed and displayed in a way that fosters deeper understanding and collaboration.
+            <section class="mb-16">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">What the System Reveals</h2>
+                <p class="text-gray-700 mb-8">
+                    Society Speaks does not just show what people think. It produces three distinct types of insight:
                 </p>
+                
+                <div class="grid gap-6 md:grid-cols-3">
+                    <div class="bg-white rounded-lg border border-gray-200 p-6">
+                        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Consensus Statements</h3>
+                        <p class="text-gray-600 text-sm">Ideas with broad agreement across participants, showing where society already aligns.</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg border border-gray-200 p-6">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Bridge Statements</h3>
+                        <p class="text-gray-600 text-sm">Ideas that resonate across different opinion clusters, even when people disagree elsewhere. These are the most actionable insights for progress.</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg border border-gray-200 p-6">
+                        <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Divisive Statements</h3>
+                        <p class="text-gray-600 text-sm">Genuine fault lines where opinions are split. Surfacing these honestly shows where deeper work is needed.</p>
+                    </div>
+                </div>
+                
+                <p class="text-gray-700 mt-8">
+                    Together, these outputs create a far more accurate picture of public opinion than binary polls or adversarial debate.
+                </p>
+            </section>
 
-                <h3 class="text-2xl font-semibold mb-6 text-gray-900">Join Us Today</h3>
-                <p>
-                    Whether you're here to listen, learn, or lead, Society Speaks is the place to start the conversation. 
-                    Join us today and make your voice heard!
+            <section class="mb-16 bg-gray-100 rounded-xl p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">From News to Deliberation</h2>
+                <p class="text-gray-700 mb-4">
+                    Society Speaks does not treat news as content to be consumed, but as input into deliberation.
                 </p>
-            </div>
+                <p class="text-gray-700 mb-4">
+                    Real journalism is:
+                </p>
+                <ul class="list-disc list-inside text-gray-700 mb-4 space-y-2">
+                    <li>Curated for civic relevance, not virality</li>
+                    <li>Filtered to avoid sensational framing</li>
+                    <li>Transformed into balanced prompts and seed statements</li>
+                </ul>
+                <p class="text-gray-700">
+                    This turns passive news consumption into thoughtful participation and shifts the focus from headlines to the underlying issues they point to.
+                </p>
+            </section>
+
+            <section class="mb-16">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">The Daily Question</h2>
+                <p class="text-gray-700 mb-4">
+                    The <a href="{{ url_for('daily.today') }}" class="text-blue-600 hover:underline">Daily Question</a> is the entry point.
+                </p>
+                <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                    <ul class="space-y-3 text-gray-700">
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            One carefully chosen question each day
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            Two minutes to respond
+                        </li>
+                        <li class="flex items-center">
+                            <svg class="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                            </svg>
+                            Insight revealed only after you have thought for yourself
+                        </li>
+                    </ul>
+                </div>
+                <p class="text-gray-700">
+                    Over time, this creates something rare: a longitudinal, nuanced view of public opinion, showing not just where society stands, but how views evolve, converge, or diverge over time. It is a small daily habit with cumulative civic value.
+                </p>
+            </section>
+
+            <section class="mb-16">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">Why This Matters</h2>
+                <p class="text-gray-700 mb-4">
+                    The biggest problem in modern democracy is not disagreement. It is distorted disagreement.
+                </p>
+                <p class="text-gray-700 mb-4">
+                    Society Speaks helps correct that by:
+                </p>
+                <ul class="list-disc list-inside text-gray-700 space-y-2">
+                    <li>Reducing knee-jerk reactions</li>
+                    <li>Making disagreement less hostile</li>
+                    <li>Revealing common ground without erasing difference</li>
+                    <li>Showing where compromise is possible and where it is not</li>
+                </ul>
+                <p class="text-gray-700 mt-4">
+                    This kind of understanding is a prerequisite for solving real-world problems.
+                </p>
+            </section>
+
+            <section class="mb-16 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6">For Policymakers and Civic Leaders</h2>
+                <p class="text-gray-700 mb-4">
+                    Society Speaks does not claim to produce policy by itself. What it produces is something more fundamental:
+                </p>
+                <ul class="space-y-3 mb-6">
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-gray-700">Evidence-based understanding of public opinion</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-gray-700">Clarity on where consensus exists</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-gray-700">Visibility into bridge ideas that can unite groups</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-blue-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-gray-700">Honesty about genuine divisions that require deeper work</span>
+                    </li>
+                </ul>
+                <p class="text-gray-700">
+                    That insight can inform policymakers, journalists, civic organisations, and anyone trying to design solutions that are both ambitious and legitimate. Better policy starts with better understanding. Society Speaks focuses on that first step.
+                </p>
+            </section>
         </div>
     </div>
 
-    <!-- Open Source Section -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg shadow-lg p-8 mt-8">
-                <h3 class="text-2xl font-semibold mb-4 text-gray-900">Open Source & Community Driven</h3>
-                <div class="flex flex-col md:flex-row gap-8">
-                    <div class="flex-1">
-                        <p class="text-gray-700 mb-4">
-                            Society Speaks is proudly open source and community driven. We believe in transparency and collaboration, which is why our entire codebase is available on GitHub for anyone to explore, contribute to, or learn from.
-                        </p>
-                        <p class="text-gray-700">
-                            Your sponsorship helps keep Society Speaks free, independent, and continuously improving. Every contribution supports our infrastructure costs and enables us to develop new features that empower meaningful public discourse.
-                        </p>
-                        <div class="mt-4">
-                            <a href="https://github.com/zuluwill/Societyspeaks" 
-                               class="inline-flex items-center text-blue-600 hover:text-blue-800">
-                                <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                    <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                                </svg>
-                                View on GitHub
-                            </a>
-                        </div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg shadow-lg p-8">
+            <h3 class="text-2xl font-semibold mb-4 text-gray-900">Open Source & Community Driven</h3>
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="flex-1">
+                    <p class="text-gray-700 mb-4">
+                        Society Speaks is proudly open source and community driven. We believe in transparency and collaboration, which is why our entire codebase is available on GitHub for anyone to explore, contribute to, or learn from.
+                    </p>
+                    <p class="text-gray-700">
+                        Your sponsorship helps keep Society Speaks free, independent, and continuously improving. Every contribution supports our infrastructure costs and enables us to develop new features that empower meaningful public discourse.
+                    </p>
+                    <div class="mt-4">
+                        <a href="https://github.com/zuluwill/Societyspeaks" 
+                           class="inline-flex items-center text-blue-600 hover:text-blue-800">
+                            <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                            </svg>
+                            View on GitHub
+                        </a>
                     </div>
                 </div>
             </div>
-
-            <!-- GitHub Sponsors Card -->
-            <div class="mt-8 flex justify-center">
-                <iframe src="https://github.com/sponsors/zuluwill/card" 
-                        title="Sponsor zuluwill" 
-                        height="225" 
-                        width="600" 
-                        style="border: 0; max-width: 100%;">
-                </iframe>
-            </div>
         </div>
 
-        <!-- Call to Action -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="bg-blue-600 rounded-lg shadow-lg overflow-hidden p-8 text-center">
-                <h3 class="text-2xl font-bold text-white mb-4">Ready to Join the Conversation?</h3>
-                <p class="text-white text-lg mb-6">Sign up today and start participating in discussions that matter.</p>
-                <a href="{{ url_for('auth.register') }}" 
+        <div class="mt-8 flex justify-center">
+            <iframe src="https://github.com/sponsors/zuluwill/card" 
+                    title="Sponsor zuluwill" 
+                    height="225" 
+                    width="600" 
+                    style="border: 0; max-width: 100%;">
+            </iframe>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="bg-blue-600 rounded-lg shadow-lg overflow-hidden p-8 text-center">
+            <h3 class="text-2xl font-bold text-white mb-4">Ready to Make Your Voice Heard?</h3>
+            <p class="text-white text-lg mb-6">Start with today's question or explore ongoing discussions.</p>
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{{ url_for('daily.today') }}" 
                    class="inline-block bg-white text-blue-600 font-semibold py-3 px-6 rounded-lg shadow hover:bg-gray-100 transition">
-                    Sign Up Now
+                    Today's Question
+                </a>
+                <a href="{{ url_for('discussions.news_feed') }}" 
+                   class="inline-block bg-blue-500 text-white font-semibold py-3 px-6 rounded-lg shadow hover:bg-blue-400 transition border border-blue-400">
+                    Explore Discussions
                 </a>
             </div>
         </div>
     </div>
-    {% endblock %}
+</div>
+{% endblock %}
