@@ -573,6 +573,10 @@ class StatementVote(db.Model):
     - Users can change votes (history preserved)
     - Supports both authenticated (user_id) and anonymous (session_fingerprint) voting
     - Anonymous votes can be merged to user account on signup/login
+    
+    Database constraints (created via SQL, not ORM):
+    - uq_statement_user_vote: UNIQUE (statement_id, user_id) WHERE user_id IS NOT NULL
+    - uq_statement_session_vote: UNIQUE (statement_id, session_fingerprint) WHERE session_fingerprint IS NOT NULL
     """
     __tablename__ = 'statement_vote'
     __table_args__ = (

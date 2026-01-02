@@ -10,6 +10,7 @@ from app import db, limiter
 from app.discussions.statement_forms import StatementForm, VoteForm, ResponseForm, FlagStatementForm
 from app.models import Discussion, Statement, StatementVote, Response, StatementFlag
 from sqlalchemy import func, desc, or_
+from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 import hashlib
 
@@ -263,82 +264,120 @@ def vote_statement(statement_id):
     if vote_value not in [-1, 0, 1]:
         return jsonify({'error': 'Invalid vote value'}), 400
 
-    if current_user.is_authenticated:
-        existing_vote = StatementVote.query.filter_by(
-            statement_id=statement_id,
-            user_id=current_user.id
-        ).first()
-
-        if existing_vote:
-            old_vote = existing_vote.vote
-            existing_vote.vote = vote_value
-            existing_vote.confidence = confidence
-            existing_vote.updated_at = datetime.utcnow()
-
-            if old_vote == 1:
-                statement.vote_count_agree -= 1
-            elif old_vote == -1:
-                statement.vote_count_disagree -= 1
-            elif old_vote == 0:
-                statement.vote_count_unsure -= 1
-        else:
-            existing_vote = StatementVote(
+    try:
+        if current_user.is_authenticated:
+            existing_vote = StatementVote.query.filter_by(
                 statement_id=statement_id,
-                user_id=current_user.id,
-                discussion_id=statement.discussion_id,
-                vote=vote_value,
-                confidence=confidence
-            )
-            db.session.add(existing_vote)
+                user_id=current_user.id
+            ).first()
 
-        if vote_value == 1:
-            statement.vote_count_agree += 1
-        elif vote_value == -1:
-            statement.vote_count_disagree += 1
-        elif vote_value == 0:
-            statement.vote_count_unsure += 1
+            if existing_vote:
+                old_vote = existing_vote.vote
+                existing_vote.vote = vote_value
+                existing_vote.confidence = confidence
+                existing_vote.updated_at = datetime.utcnow()
 
-        db.session.commit()
+                if old_vote == 1:
+                    statement.vote_count_agree -= 1
+                elif old_vote == -1:
+                    statement.vote_count_disagree -= 1
+                elif old_vote == 0:
+                    statement.vote_count_unsure -= 1
+            else:
+                existing_vote = StatementVote(
+                    statement_id=statement_id,
+                    user_id=current_user.id,
+                    discussion_id=statement.discussion_id,
+                    vote=vote_value,
+                    confidence=confidence
+                )
+                db.session.add(existing_vote)
 
-    else:
-        fingerprint = get_statement_vote_fingerprint()
-        
-        existing_vote = StatementVote.query.filter_by(
-            statement_id=statement_id,
-            session_fingerprint=fingerprint,
-            user_id=None
-        ).first()
+            if vote_value == 1:
+                statement.vote_count_agree += 1
+            elif vote_value == -1:
+                statement.vote_count_disagree += 1
+            elif vote_value == 0:
+                statement.vote_count_unsure += 1
 
-        if existing_vote:
-            old_vote = existing_vote.vote
-            existing_vote.vote = vote_value
-            existing_vote.confidence = confidence
-            existing_vote.updated_at = datetime.utcnow()
+            db.session.commit()
 
-            if old_vote == 1:
-                statement.vote_count_agree -= 1
-            elif old_vote == -1:
-                statement.vote_count_disagree -= 1
-            elif old_vote == 0:
-                statement.vote_count_unsure -= 1
         else:
-            existing_vote = StatementVote(
+            fingerprint = get_statement_vote_fingerprint()
+            
+            existing_vote = StatementVote.query.filter_by(
                 statement_id=statement_id,
                 session_fingerprint=fingerprint,
-                discussion_id=statement.discussion_id,
-                vote=vote_value,
-                confidence=confidence
-            )
-            db.session.add(existing_vote)
+                user_id=None
+            ).first()
 
-        if vote_value == 1:
-            statement.vote_count_agree += 1
-        elif vote_value == -1:
-            statement.vote_count_disagree += 1
-        elif vote_value == 0:
-            statement.vote_count_unsure += 1
+            if existing_vote:
+                old_vote = existing_vote.vote
+                existing_vote.vote = vote_value
+                existing_vote.confidence = confidence
+                existing_vote.updated_at = datetime.utcnow()
 
-        db.session.commit()
+                if old_vote == 1:
+                    statement.vote_count_agree -= 1
+                elif old_vote == -1:
+                    statement.vote_count_disagree -= 1
+                elif old_vote == 0:
+                    statement.vote_count_unsure -= 1
+            else:
+                existing_vote = StatementVote(
+                    statement_id=statement_id,
+                    session_fingerprint=fingerprint,
+                    discussion_id=statement.discussion_id,
+                    vote=vote_value,
+                    confidence=confidence
+                )
+                db.session.add(existing_vote)
+
+            if vote_value == 1:
+                statement.vote_count_agree += 1
+            elif vote_value == -1:
+                statement.vote_count_disagree += 1
+            elif vote_value == 0:
+                statement.vote_count_unsure += 1
+
+            db.session.commit()
+            
+    except IntegrityError:
+        db.session.rollback()
+        statement = Statement.query.get(statement_id)
+        if current_user.is_authenticated:
+            existing_vote = StatementVote.query.filter_by(
+                statement_id=statement_id,
+                user_id=current_user.id
+            ).first()
+        else:
+            existing_vote = StatementVote.query.filter_by(
+                statement_id=statement_id,
+                session_fingerprint=get_statement_vote_fingerprint(),
+                user_id=None
+            ).first()
+        
+        if existing_vote and existing_vote.vote != vote_value:
+            old_vote = existing_vote.vote
+            existing_vote.vote = vote_value
+            existing_vote.confidence = confidence
+            existing_vote.updated_at = datetime.utcnow()
+            
+            if old_vote == 1:
+                statement.vote_count_agree = max(0, statement.vote_count_agree - 1)
+            elif old_vote == -1:
+                statement.vote_count_disagree = max(0, statement.vote_count_disagree - 1)
+            elif old_vote == 0:
+                statement.vote_count_unsure = max(0, statement.vote_count_unsure - 1)
+            
+            if vote_value == 1:
+                statement.vote_count_agree += 1
+            elif vote_value == -1:
+                statement.vote_count_disagree += 1
+            elif vote_value == 0:
+                statement.vote_count_unsure += 1
+            
+            db.session.commit()
 
     return jsonify({
         'success': True,
