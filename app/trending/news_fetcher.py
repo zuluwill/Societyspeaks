@@ -27,7 +27,13 @@ class NewsFetcher:
     
     def fetch_all_sources(self) -> List[NewsArticle]:
         """Fetch articles from all active sources."""
-        sources = NewsSource.query.filter_by(is_active=True).all()
+        try:
+            sources = NewsSource.query.filter_by(is_active=True).all()
+        except Exception as e:
+            logger.error(f"Error fetching sources list: {e}")
+            db.session.rollback()
+            return []
+        
         all_articles = []
         
         for source in sources:
@@ -43,12 +49,19 @@ class NewsFetcher:
                 all_articles.extend(articles)
                 source.last_fetched_at = datetime.utcnow()
                 source.fetch_error_count = 0
+                db.session.commit()
                 
             except Exception as e:
                 logger.error(f"Error fetching from {source.name}: {e}")
-                source.fetch_error_count += 1
+                db.session.rollback()
+                try:
+                    source = db.session.merge(source)
+                    source.fetch_error_count += 1
+                    db.session.commit()
+                except Exception as inner_e:
+                    logger.error(f"Error updating error count for {source.name}: {inner_e}")
+                    db.session.rollback()
         
-        db.session.commit()
         return all_articles
     
     def _fetch_guardian(self, source: NewsSource) -> List[NewsArticle]:
@@ -77,12 +90,17 @@ class NewsFetcher:
             for item in data.get('response', {}).get('results', []):
                 external_id = item.get('id')
                 
-                existing = NewsArticle.query.filter_by(
-                    source_id=source.id,
-                    external_id=external_id
-                ).first()
-                
-                if existing:
+                try:
+                    existing = NewsArticle.query.filter_by(
+                        source_id=source.id,
+                        external_id=external_id
+                    ).first()
+                    
+                    if existing:
+                        continue
+                except Exception as db_err:
+                    logger.warning(f"DB error checking existing article: {db_err}")
+                    db.session.rollback()
                     continue
                 
                 fields = item.get('fields', {})
@@ -106,6 +124,7 @@ class NewsFetcher:
             
         except Exception as e:
             logger.error(f"Guardian API error: {e}")
+            db.session.rollback()
             raise
         
         return articles
@@ -120,12 +139,17 @@ class NewsFetcher:
             for entry in feed.entries[:20]:
                 external_id = entry.get('id') or entry.get('link', '')
                 
-                existing = NewsArticle.query.filter_by(
-                    source_id=source.id,
-                    external_id=external_id[:500]
-                ).first()
-                
-                if existing:
+                try:
+                    existing = NewsArticle.query.filter_by(
+                        source_id=source.id,
+                        external_id=external_id[:500]
+                    ).first()
+                    
+                    if existing:
+                        continue
+                except Exception as db_err:
+                    logger.warning(f"DB error checking existing article: {db_err}")
+                    db.session.rollback()
                     continue
                 
                 published_at = None
@@ -149,6 +173,7 @@ class NewsFetcher:
             
         except Exception as e:
             logger.error(f"RSS feed error for {source.name}: {e}")
+            db.session.rollback()
             raise
         
         return articles
@@ -321,11 +346,15 @@ def seed_default_sources():
         },
     ]
     
-    for source_data in default_sources:
-        existing = NewsSource.query.filter_by(name=source_data['name']).first()
-        if not existing:
-            source = NewsSource(**source_data)
-            db.session.add(source)
-            logger.info(f"Added default source: {source_data['name']}")
-    
-    db.session.commit()
+    try:
+        for source_data in default_sources:
+            existing = NewsSource.query.filter_by(name=source_data['name']).first()
+            if not existing:
+                source = NewsSource(**source_data)
+                db.session.add(source)
+                logger.info(f"Added default source: {source_data['name']}")
+        
+        db.session.commit()
+    except Exception as e:
+        logger.error(f"Error seeding default sources: {e}")
+        db.session.rollback()
