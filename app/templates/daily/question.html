@@ -1,8 +1,18 @@
 {% extends "layout.html" %}
+{% from "components/share_button.html" import share_button %}
 
 {% block title %}Daily Question #{{ question.question_number }} - Society Speaks{% endblock %}
 
 {% block meta_description %}Today's civic question: {{ question.question_text[:100] }}... Share your perspective in under 2 minutes.{% endblock %}
+
+{% set share_url = url_for('daily.by_date', date_str=question.question_date.strftime('%Y-%m-%d'), _external=True) %}
+{% set share_text = '"' ~ question.question_text[:200] ~ '"' ~ (' - Powered by https://societyspeaks.io' if question.question_text|length <= 200 else '..." - societyspeaks.io') %}
+
+{% block og_title %}{{ question.question_text[:70] }}... - Daily Civic Question{% endblock %}
+{% block og_description %}Take 2 minutes to share your view on today's civic question. Powered by Society Speaks - building consensus through meaningful dialogue.{% endblock %}
+
+{% block twitter_title %}{{ question.question_text[:70] }}... - Daily Question{% endblock %}
+{% block twitter_description %}{{ question.question_text[:200] }}... | Share your perspective in under 2 minutes. Powered by societyspeaks.io{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8 px-4 sm:px-6 lg:px-8">
@@ -103,6 +113,19 @@
 
         <div class="text-center text-gray-500 text-sm">
             <p>Takes less than 2 minutes. Your response helps shape the signal.</p>
+        </div>
+
+        <div class="mt-8 bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">Share This Question</h3>
+            <div class="flex justify-center">
+                {{ share_button(
+                    title="Daily Civic Question #" ~ question.question_number,
+                    url=share_url,
+                    description=share_text,
+                    button_style="primary"
+                ) }}
+            </div>
+            <p class="text-center text-sm text-gray-500 mt-4">Help us build consensus - share with friends</p>
         </div>
 
         <div class="mt-8 bg-blue-50 rounded-xl p-6 text-center">
