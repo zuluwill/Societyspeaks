@@ -54,3 +54,21 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 
 ### Geographic Data
 - **Static JSON files**: For country/city data used in filtering.
+
+## Recent Changes (January 2026)
+
+### Auto-Publishing System
+- Daily auto-publish now runs once at 8am UTC (separate cron job from news fetching)
+- Publishes up to 5 diverse topics from 21 trusted sources (news + premium podcasts)
+- Diversity check: skips topics with 3+ common keywords to avoid publishing similar stories
+- Quality threshold: civic_score >= 0.5 (lowered from 0.7)
+
+### Admin Controls
+- Added unpublish button for published topics (deletes discussion, reverts topic to pending_review)
+- Quality Score displayed instead of sensationalism (inverted scale: 100% = factual)
+
+### Scheduler Jobs
+- `trending_topics_pipeline`: cron[7,12,18,22] - fetches news from RSS feeds
+- `daily_auto_publish`: cron[8] - publishes up to 5 diverse topics once daily
+- `cleanup_old_analyses`: cron[3] - removes old data
+- `auto_cluster_discussions`: interval[6h] - clustering for active discussions

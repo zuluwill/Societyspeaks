@@ -182,7 +182,7 @@ def init_scheduler(app):
         Optimized for cost efficiency while catching major news cycles
         """
         with app.app_context():
-            from app.trending.pipeline import run_pipeline, process_held_topics, auto_publish_high_confidence
+            from app.trending.pipeline import run_pipeline, process_held_topics
             
             logger.info("Starting trending topics pipeline")
             
@@ -193,15 +193,31 @@ def init_scheduler(app):
                 held_ready = process_held_topics()
                 if held_ready > 0:
                     logger.info(f"Processed {held_ready} held topics")
-                
-                auto_published = auto_publish_high_confidence()
-                if auto_published > 0:
-                    logger.info(f"Auto-published {auto_published} high-confidence topics")
                     
             except Exception as e:
                 logger.error(f"Trending topics pipeline error: {e}", exc_info=True)
             
             logger.info("Trending topics pipeline complete")
+    
+    
+    @scheduler.scheduled_job('cron', hour=8, id='daily_auto_publish')
+    def daily_auto_publish():
+        """
+        Auto-publish up to 5 diverse topics daily.
+        Runs once at 8am UTC.
+        """
+        with app.app_context():
+            from app.trending.pipeline import auto_publish_daily
+            
+            logger.info("Starting daily auto-publish")
+            
+            try:
+                published = auto_publish_daily(max_topics=5)
+                logger.info(f"Auto-published {published} topics")
+            except Exception as e:
+                logger.error(f"Daily auto-publish error: {e}", exc_info=True)
+            
+            logger.info("Daily auto-publish complete")
     
     
     logger.info("Scheduler initialized with jobs:")
