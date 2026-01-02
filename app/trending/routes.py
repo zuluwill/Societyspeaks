@@ -20,6 +20,7 @@ from app.trending.pipeline import run_pipeline, get_review_queue, get_pipeline_s
 from app.trending.publisher import publish_topic, merge_topic_into_discussion
 from app.trending.seed_generator import generate_seed_statements
 from app.trending.scorer import score_topic
+from app.trending.news_fetcher import clean_summary
 
 logger = logging.getLogger(__name__)
 
@@ -606,3 +607,38 @@ def bulk_article_action():
             flash(f"Error creating topic: {str(e)}", "error")
     
     return redirect(url_for('trending.view_articles'))
+
+
+@trending_bp.route('/clean-summaries', methods=['POST'])
+@login_required
+@admin_required
+def clean_summaries():
+    """Clean promotional content from existing article summaries and topic descriptions."""
+    cleaned_articles = 0
+    cleaned_topics = 0
+    
+    try:
+        articles = NewsArticle.query.filter(NewsArticle.summary.isnot(None)).all()
+        for article in articles:
+            original = article.summary
+            cleaned = clean_summary(original)
+            if cleaned != original:
+                article.summary = cleaned
+                cleaned_articles += 1
+        
+        topics = TrendingTopic.query.filter(TrendingTopic.description.isnot(None)).all()
+        for topic in topics:
+            original = topic.description
+            cleaned = clean_summary(original)
+            if cleaned != original:
+                topic.description = cleaned
+                cleaned_topics += 1
+        
+        db.session.commit()
+        flash(f"Cleaned {cleaned_articles} article summaries and {cleaned_topics} topic descriptions", "success")
+    except Exception as e:
+        logger.error(f"Error cleaning summaries: {e}")
+        db.session.rollback()
+        flash(f"Error cleaning summaries: {str(e)}", "error")
+    
+    return redirect(url_for('trending.dashboard'))

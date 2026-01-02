@@ -6,6 +6,7 @@ Supports: Guardian API (free), RSS feeds
 """
 
 import os
+import re
 import logging
 import requests
 import feedparser
@@ -17,6 +18,60 @@ from app import db
 from app.models import NewsSource, NewsArticle
 
 logger = logging.getLogger(__name__)
+
+
+def clean_summary(text: str) -> Optional[str]:
+    """
+    Clean promotional content, ads, and credits from article/podcast summaries.
+    Returns cleaned text or None if nothing meaningful remains.
+    """
+    if not text:
+        return None
+    
+    original_text = text
+    
+    promo_patterns = [
+        r'_{3,}.*',
+        r'-{5,}.*',
+        r'Get more from .+? with .+?\.',
+        r'Enjoy bonus episodes.*?(?=\.|$)',
+        r'Start your \d+-day free trial.*?(?=\.|$)',
+        r'(?:powered|sponsored|brought to you) by .+?(?:\.|$)',
+        r'(?:Get|Grab|Use) (?:our|the) exclusive .+? deal.*?(?=\.|$)',
+        r'(?:NordVPN|ExpressVPN|Surfshark|VPN).*?(?:deal|offer|discount).*?(?=\.|$)',
+        r'(?:Fuse|Revolut|Nord|Express).*?(?:sign up|free trial|bonus|discount).*?(?=\.|$)',
+        r'To (?:sign up|save|get|claim).*?(?:visit|go to|head to).*?(?=\.|$)',
+        r'It\'s risk-free with.*?guarantee.*?(?=\.|$)',
+        r'Learn more about your ad choices.*',
+        r'Visit podcastchoices\.com.*',
+        r'See omnystudio\.com.*',
+        r'\S+\.com/\S*',
+        r'(?:Social |Video |Assistant |Executive |Senior )?(?:Producer|Editor|Host|Writer|Director)s?:\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*(?:,\s*[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)* *',
+        r'(?:Exec|Executive) Producer.*',
+        r'(?:Presented|Hosted|Produced|Written|Directed) by.*',
+        r'Subscribe to .+? (?:at|on|via).*',
+        r'Follow us (?:on|at).*',
+        r'Support (?:the show|us|this podcast).*',
+        r'(?:Ad|Sponsor|Partner)(?:vertisement|ship)?s? by.*',
+        r'This (?:episode|show|podcast) is (?:powered|sponsored|supported) by.*',
+        r'[🎉🎧📧✅⚡️🔗💰🎁➼]',
+    ]
+    
+    for pattern in promo_patterns:
+        text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.MULTILINE)
+    
+    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'\s*[,;]\s*[,;]+', ',', text)
+    text = re.sub(r'[.!?]\s*[.!?]+', '.', text)
+    text = text.strip(' .,;:-_')
+    
+    if len(text) < 50:
+        return None
+    
+    if len(text) < len(original_text) * 0.3:
+        return None
+    
+    return text[:2000] if len(text) > 2000 else text
 
 
 class NewsFetcher:
@@ -156,11 +211,14 @@ class NewsFetcher:
                 if hasattr(entry, 'published_parsed') and entry.published_parsed:
                     published_at = datetime(*entry.published_parsed[:6])
                 
+                raw_summary = entry.get('summary', '')
+                cleaned_summary = clean_summary(raw_summary) if raw_summary else None
+                
                 article = NewsArticle(
                     source_id=source.id,
                     external_id=external_id[:500],
                     title=entry.get('title', '')[:500],
-                    summary=entry.get('summary', '')[:2000] if entry.get('summary') else None,
+                    summary=cleaned_summary,
                     url=entry.get('link', '')[:1000],
                     published_at=published_at
                 )
