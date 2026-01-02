@@ -418,6 +418,46 @@
     </div>
   </div>
 
+  {% if discussion.description or discussion.source_article_links %}
+  <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <div class="max-w-3xl mx-auto">
+      {% if discussion.description %}
+      <div class="mb-4">
+        <p class="text-gray-700 leading-relaxed">{{ discussion.description }}</p>
+      </div>
+      {% endif %}
+
+      {% if discussion.source_article_links %}
+      <div class="border-t border-gray-200 pt-4">
+        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Source Articles</h3>
+        <div class="space-y-2">
+          {% for link in discussion.source_article_links %}
+          {% if link.article %}
+          <div class="flex items-start">
+            <svg class="w-4 h-4 text-gray-400 mt-1 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            <div>
+              <a href="{{ link.article.url }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 hover:underline text-sm font-medium">
+                {{ link.article.title }}
+              </a>
+              <p class="text-xs text-gray-500">
+                {{ link.article.source.name }}{% if link.article.source.country %} ({{ link.article.source.country }}){% endif %}
+                {% if link.article.published_at %}
+                | {{ link.article.published_at.strftime('%b %d, %Y') }}
+                {% endif %}
+              </p>
+            </div>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Native vs Pol.is Discussion Rendering -->
   <div class="min-h-screen">
     {% if discussion.has_native_statements %}

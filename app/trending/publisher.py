@@ -6,22 +6,41 @@ Handles the conversion from TrendingTopic to Discussion + seed Statements.
 """
 
 import logging
+from collections import Counter
 from datetime import datetime
 from typing import Optional
 
 from app import db
 from app.models import (
     TrendingTopic, Discussion, Statement, User,
-    generate_slug
+    DiscussionSourceArticle, generate_slug
 )
 
 logger = logging.getLogger(__name__)
 
 
+def _extract_country_from_articles(topic: TrendingTopic) -> Optional[str]:
+    """
+    Extract the most common country from source articles.
+    Returns None if no country info available (falls back to global).
+    """
+    countries = []
+    for ta in topic.articles:
+        if ta.article and ta.article.source and ta.article.source.country:
+            countries.append(ta.article.source.country)
+    
+    if not countries:
+        return None
+    
+    country_counts = Counter(countries)
+    most_common = country_counts.most_common(1)[0][0]
+    return most_common
+
+
 def publish_topic(topic: TrendingTopic, admin_user: User) -> Optional[Discussion]:
     """
     Convert a TrendingTopic into a live Discussion.
-    Creates the discussion and seed statements.
+    Creates the discussion, links source articles, and adds seed statements.
     """
     if topic.discussion_id:
         logger.warning(f"Topic {topic.id} already published to discussion {topic.discussion_id}")
@@ -35,28 +54,34 @@ def publish_topic(topic: TrendingTopic, admin_user: User) -> Optional[Discussion
         slug = f"{base_slug}-{counter}"
         counter += 1
     
-    article_urls = []
-    for ta in topic.articles:
-        if ta.article:
-            article_urls.append(f"- [{ta.article.source.name}]({ta.article.url})")
-    
-    description = topic.description or ""
-    if article_urls:
-        description += "\n\n**Source Articles:**\n" + "\n".join(article_urls[:5])
+    country = _extract_country_from_articles(topic)
+    if country:
+        geographic_scope = 'country'
+    else:
+        geographic_scope = 'global'
     
     discussion = Discussion(
         title=topic.title,
-        description=description,
+        description=topic.description or "",
         slug=slug,
         has_native_statements=True,
         creator_id=admin_user.id,
         topic=topic.primary_topic or 'Society',
-        geographic_scope='global',
+        geographic_scope=geographic_scope,
+        country=country,
         is_featured=False
     )
     
     db.session.add(discussion)
     db.session.flush()
+    
+    for ta in topic.articles:
+        if ta.article:
+            source_link = DiscussionSourceArticle(
+                discussion_id=discussion.id,
+                article_id=ta.article.id
+            )
+            db.session.add(source_link)
     
     if topic.seed_statements:
         for stmt_data in topic.seed_statements:
@@ -101,17 +126,18 @@ def merge_topic_into_discussion(
     Merge a trending topic into an existing discussion.
     Adds new source articles and optionally new seed statements.
     """
-    article_urls = []
     for ta in topic.articles:
         if ta.article:
-            article_urls.append(f"- [{ta.article.source.name}]({ta.article.url})")
-    
-    if article_urls:
-        update_text = "\n\n**Update - Additional Sources:**\n" + "\n".join(article_urls[:3])
-        if discussion.description:
-            discussion.description += update_text
-        else:
-            discussion.description = update_text
+            existing_link = DiscussionSourceArticle.query.filter_by(
+                discussion_id=discussion.id,
+                article_id=ta.article.id
+            ).first()
+            if not existing_link:
+                source_link = DiscussionSourceArticle(
+                    discussion_id=discussion.id,
+                    article_id=ta.article.id
+                )
+                db.session.add(source_link)
     
     if add_new_seeds and topic.seed_statements:
         for stmt_data in topic.seed_statements[:2]:

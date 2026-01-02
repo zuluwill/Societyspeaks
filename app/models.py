@@ -768,6 +768,7 @@ class NewsSource(db.Model):
     name = db.Column(db.String(200), nullable=False, unique=True)
     feed_url = db.Column(db.String(500), nullable=False)
     source_type = db.Column(db.String(20), default='rss')  # 'rss', 'api', 'guardian', 'nyt'
+    country = db.Column(db.String(100))  # Country the source primarily covers (e.g., 'United Kingdom', 'United States')
     
     reputation_score = db.Column(db.Float, default=0.8)  # 0-1 scale
     is_active = db.Column(db.Boolean, default=True)
@@ -969,5 +970,27 @@ class TrendingTopicArticle(db.Model):
     
     # Relationships
     article = db.relationship('NewsArticle', backref='topic_associations')
+
+
+class DiscussionSourceArticle(db.Model):
+    """
+    Join table linking Discussion to NewsArticle for news-based discussions.
+    Preserves source attribution when topics are published as discussions.
+    """
+    __tablename__ = 'discussion_source_article'
+    __table_args__ = (
+        db.Index('idx_dsa_discussion', 'discussion_id'),
+        db.Index('idx_dsa_article', 'article_id'),
+        db.UniqueConstraint('discussion_id', 'article_id', name='uq_discussion_article'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey('news_article.id'), nullable=False)
+    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    discussion = db.relationship('Discussion', backref='source_article_links')
+    article = db.relationship('NewsArticle', backref='discussion_links')
 
 
