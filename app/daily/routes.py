@@ -1,0 +1,195 @@
+from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app
+from flask_login import current_user
+from datetime import date, datetime
+from app.daily import daily_bp
+from app import db, limiter
+from app.models import DailyQuestion, DailyQuestionResponse
+import hashlib
+
+
+def get_session_fingerprint():
+    """Generate a fingerprint for anonymous users"""
+    if 'daily_fingerprint' not in session:
+        session_id = session.get('_id', request.remote_addr or 'unknown')
+        ip_addr = request.remote_addr or 'unknown'
+        user_agent = request.headers.get('User-Agent', '')[:100]
+        fingerprint_string = f"daily:{session_id}:{ip_addr}:{user_agent}"
+        session['daily_fingerprint'] = hashlib.sha256(fingerprint_string.encode()).hexdigest()
+        session.modified = True
+    return session['daily_fingerprint']
+
+
+def has_user_voted(daily_question):
+    """Check if current user/session has already voted on this question"""
+    if current_user.is_authenticated:
+        return DailyQuestionResponse.query.filter_by(
+            daily_question_id=daily_question.id,
+            user_id=current_user.id
+        ).first() is not None
+    else:
+        fingerprint = get_session_fingerprint()
+        return DailyQuestionResponse.query.filter_by(
+            daily_question_id=daily_question.id,
+            session_fingerprint=fingerprint
+        ).first() is not None
+
+
+def get_user_response(daily_question):
+    """Get current user's response if exists"""
+    if current_user.is_authenticated:
+        return DailyQuestionResponse.query.filter_by(
+            daily_question_id=daily_question.id,
+            user_id=current_user.id
+        ).first()
+    else:
+        fingerprint = get_session_fingerprint()
+        return DailyQuestionResponse.query.filter_by(
+            daily_question_id=daily_question.id,
+            session_fingerprint=fingerprint
+        ).first()
+
+
+@daily_bp.route('/daily')
+def today():
+    """Display today's daily question"""
+    question = DailyQuestion.get_today()
+    
+    if not question:
+        return render_template('daily/no_question.html')
+    
+    user_response = get_user_response(question)
+    has_voted = user_response is not None
+    
+    if has_voted:
+        return render_template('daily/results.html',
+                             question=question,
+                             user_response=user_response,
+                             stats=question.vote_percentages,
+                             is_cold_start=question.is_cold_start,
+                             early_signal=question.early_signal_message,
+                             share_snippet=generate_share_snippet(question, user_response))
+    else:
+        return render_template('daily/question.html',
+                             question=question)
+
+
+@daily_bp.route('/daily/<date_str>')
+def by_date(date_str):
+    """Display daily question for a specific date (permalink)"""
+    try:
+        question_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash("Invalid date format. Please use YYYY-MM-DD.", "warning")
+        return redirect(url_for('daily.today'))
+    
+    question = DailyQuestion.get_by_date(question_date)
+    
+    if not question:
+        return render_template('daily/no_question.html', 
+                             specific_date=question_date)
+    
+    is_today = question_date == date.today()
+    user_response = get_user_response(question)
+    has_voted = user_response is not None
+    
+    if has_voted or not is_today:
+        return render_template('daily/results.html',
+                             question=question,
+                             user_response=user_response,
+                             stats=question.vote_percentages,
+                             is_cold_start=question.is_cold_start,
+                             early_signal=question.early_signal_message,
+                             share_snippet=generate_share_snippet(question, user_response) if user_response else None,
+                             is_past=not is_today)
+    else:
+        return render_template('daily/question.html',
+                             question=question)
+
+
+@daily_bp.route('/daily/vote', methods=['POST'])
+@limiter.limit("10 per minute")
+def vote():
+    """Submit a vote for today's question"""
+    question = DailyQuestion.get_today()
+    
+    if not question:
+        return jsonify({'success': False, 'error': 'No question available today'}), 400
+    
+    if has_user_voted(question):
+        return jsonify({'success': False, 'error': 'You have already voted today'}), 400
+    
+    vote_value = request.form.get('vote')
+    reason = request.form.get('reason', '').strip()
+    
+    vote_map = {'agree': 1, 'disagree': -1, 'unsure': 0}
+    if vote_value not in vote_map:
+        return jsonify({'success': False, 'error': 'Invalid vote value'}), 400
+    
+    if reason and len(reason) > 500:
+        reason = reason[:500]
+    
+    try:
+        response = DailyQuestionResponse(
+            daily_question_id=question.id,
+            user_id=current_user.id if current_user.is_authenticated else None,
+            session_fingerprint=get_session_fingerprint() if not current_user.is_authenticated else None,
+            vote=vote_map[vote_value],
+            reason=reason if reason else None
+        )
+        db.session.add(response)
+        db.session.commit()
+        
+        return redirect(url_for('daily.today'))
+    
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error submitting daily vote: {e}")
+        return jsonify({'success': False, 'error': 'Failed to submit vote'}), 500
+
+
+@daily_bp.route('/daily/api/status')
+def api_status():
+    """API endpoint to check current question status"""
+    question = DailyQuestion.get_today()
+    
+    if not question:
+        return jsonify({'has_question': False})
+    
+    has_voted = has_user_voted(question)
+    
+    response_data = {
+        'has_question': True,
+        'question_number': question.question_number,
+        'question_date': question.question_date.isoformat(),
+        'has_voted': has_voted
+    }
+    
+    if has_voted:
+        response_data['stats'] = question.vote_percentages
+        response_data['is_cold_start'] = question.is_cold_start
+    
+    return jsonify(response_data)
+
+
+def generate_share_snippet(question, user_response):
+    """Generate share snippet for social media"""
+    if not user_response:
+        return None
+    
+    base_url = current_app.config.get('SITE_URL', 'https://societyspeaks.io')
+    permalink = f"{base_url}/daily/{question.question_date.isoformat()}"
+    
+    emoji = user_response.vote_emoji
+    
+    text = f"""Society Speaks – Daily Question #{question.question_number} ({question.question_date.strftime('%Y-%m-%d')})
+{emoji}
+{permalink}"""
+    
+    return {
+        'text': text,
+        'emoji': emoji,
+        'question_number': question.question_number,
+        'date': question.question_date.strftime('%Y-%m-%d'),
+        'permalink': permalink,
+        'vote_label': user_response.vote_label
+    }

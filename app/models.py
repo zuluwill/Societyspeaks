@@ -1004,3 +1004,198 @@ class DiscussionSourceArticle(db.Model):
     article = db.relationship('NewsArticle', backref='discussion_links')
 
 
+class DailyQuestion(db.Model):
+    """
+    Daily Civic Question - Wordle-like daily participation ritual.
+    Links to existing discussions/statements as question source.
+    One question per day, designed for finite, low-friction engagement.
+    """
+    __tablename__ = 'daily_question'
+    __table_args__ = (
+        db.Index('idx_daily_question_date', 'question_date'),
+        db.Index('idx_daily_question_status', 'status'),
+        db.UniqueConstraint('question_date', name='uq_daily_question_date'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    question_date = db.Column(db.Date, nullable=False, unique=True)
+    question_number = db.Column(db.Integer, nullable=False)
+    
+    question_text = db.Column(db.String(500), nullable=False)
+    context = db.Column(db.Text)
+    why_this_question = db.Column(db.String(300))
+    
+    source_type = db.Column(db.String(20), default='discussion')
+    source_discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=True)
+    source_statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=True)
+    source_trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id'), nullable=True)
+    
+    topic_category = db.Column(db.String(100))
+    
+    status = db.Column(db.String(20), default='scheduled')
+    
+    cold_start_threshold = db.Column(db.Integer, default=50)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    published_at = db.Column(db.DateTime)
+    
+    source_discussion = db.relationship('Discussion', backref='daily_questions')
+    source_statement = db.relationship('Statement', backref='daily_questions')
+    source_trending_topic = db.relationship('TrendingTopic', backref='daily_questions')
+    created_by = db.relationship('User', backref='created_daily_questions')
+    
+    @property
+    def response_count(self):
+        """Total number of responses to this daily question"""
+        return DailyQuestionResponse.query.filter_by(daily_question_id=self.id).count()
+    
+    @property
+    def is_cold_start(self):
+        """Check if below cold start threshold"""
+        return self.response_count < self.cold_start_threshold
+    
+    @property
+    def vote_percentages(self):
+        """Calculate vote percentages"""
+        responses = DailyQuestionResponse.query.filter_by(daily_question_id=self.id).all()
+        total = len(responses)
+        if total == 0:
+            return {'agree': 0, 'disagree': 0, 'unsure': 0, 'total': 0}
+        
+        agree = sum(1 for r in responses if r.vote == 1)
+        disagree = sum(1 for r in responses if r.vote == -1)
+        unsure = sum(1 for r in responses if r.vote == 0)
+        
+        return {
+            'agree': round((agree / total) * 100),
+            'disagree': round((disagree / total) * 100),
+            'unsure': round((unsure / total) * 100),
+            'total': total
+        }
+    
+    @property
+    def early_signal_message(self):
+        """Generate cold start early signal message"""
+        stats = self.vote_percentages
+        if stats['total'] == 0:
+            return "Be the first to respond to today's question."
+        
+        if stats['agree'] > stats['disagree'] + 20:
+            return "Early responses lean toward agreement."
+        elif stats['disagree'] > stats['agree'] + 20:
+            return "Early responses lean toward disagreement."
+        elif stats['unsure'] > 30:
+            return "Early responses show uncertainty on this topic."
+        else:
+            return "Early responses suggest opinions are still forming."
+    
+    @classmethod
+    def get_today(cls):
+        """Get today's daily question"""
+        from datetime import date
+        today = date.today()
+        return cls.query.filter_by(question_date=today, status='published').first()
+    
+    @classmethod
+    def get_by_date(cls, question_date):
+        """Get daily question for a specific date"""
+        return cls.query.filter_by(question_date=question_date, status='published').first()
+    
+    @classmethod
+    def get_next_question_number(cls):
+        """Get the next question number"""
+        last = cls.query.order_by(cls.question_number.desc()).first()
+        return (last.question_number + 1) if last else 1
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'question_date': self.question_date.isoformat(),
+            'question_number': self.question_number,
+            'question_text': self.question_text,
+            'context': self.context,
+            'why_this_question': self.why_this_question,
+            'topic_category': self.topic_category,
+            'status': self.status,
+            'response_count': self.response_count,
+            'is_cold_start': self.is_cold_start,
+            'vote_percentages': self.vote_percentages,
+            'created_at': self.created_at.isoformat()
+        }
+    
+    def __repr__(self):
+        return f'<DailyQuestion #{self.question_number} ({self.question_date})>'
+
+
+class DailyQuestionResponse(db.Model):
+    """
+    User response to a daily question.
+    Simplified voting with optional reason.
+    """
+    __tablename__ = 'daily_question_response'
+    __table_args__ = (
+        db.Index('idx_dqr_question', 'daily_question_id'),
+        db.Index('idx_dqr_user', 'user_id'),
+        db.Index('idx_dqr_date', 'created_at'),
+        db.UniqueConstraint('daily_question_id', 'user_id', name='uq_daily_question_user'),
+        db.UniqueConstraint('daily_question_id', 'session_fingerprint', name='uq_daily_question_session'),
+    )
+    
+    id = db.Column(db.Integer, primary_key=True)
+    daily_question_id = db.Column(db.Integer, db.ForeignKey('daily_question.id'), nullable=False)
+    
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    session_fingerprint = db.Column(db.String(64), nullable=True)
+    
+    vote = db.Column(db.SmallInteger, nullable=False)
+    
+    reason = db.Column(db.String(500), nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    daily_question = db.relationship('DailyQuestion', backref='responses')
+    user = db.relationship('User', backref='daily_question_responses')
+    
+    @validates('vote')
+    def validate_vote(self, key, vote):
+        """Ensure vote is -1, 0, or 1"""
+        if vote not in [-1, 0, 1]:
+            raise ValueError("Vote must be -1 (disagree), 0 (unsure), or 1 (agree)")
+        return vote
+    
+    @validates('reason')
+    def validate_reason(self, key, reason):
+        """Validate reason length (280-500 chars if provided)"""
+        if reason and len(reason) > 500:
+            raise ValueError("Reason must not exceed 500 characters")
+        return reason
+    
+    @property
+    def vote_emoji(self):
+        """Return emoji block for sharing"""
+        emoji_map = {1: '🟦', -1: '🟥', 0: '🟨'}
+        return emoji_map.get(self.vote, '⬜')
+    
+    @property
+    def vote_label(self):
+        """Return human-readable vote label"""
+        label_map = {1: 'Agree', -1: 'Disagree', 0: 'Unsure'}
+        return label_map.get(self.vote, 'Unknown')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'daily_question_id': self.daily_question_id,
+            'vote': self.vote,
+            'vote_label': self.vote_label,
+            'vote_emoji': self.vote_emoji,
+            'reason': self.reason,
+            'created_at': self.created_at.isoformat()
+        }
+    
+    def __repr__(self):
+        return f'<DailyQuestionResponse {self.vote_label} on Q#{self.daily_question_id}>'
+
+
