@@ -215,28 +215,39 @@ def create_statement(discussion_id):
                          discussion=discussion)
 
 
+def get_statement_vote_fingerprint():
+    """Generate a fingerprint for anonymous statement voters"""
+    import hashlib
+    if 'statement_vote_fingerprint' not in session:
+        session_id = session.get('_id', request.remote_addr or 'unknown')
+        ip_addr = request.remote_addr or 'unknown'
+        user_agent = request.headers.get('User-Agent', '')[:100]
+        fingerprint_string = f"statement_vote:{session_id}:{ip_addr}:{user_agent}"
+        session['statement_vote_fingerprint'] = hashlib.sha256(fingerprint_string.encode()).hexdigest()
+        session.modified = True
+    return session['statement_vote_fingerprint']
+
+
 @statements_bp.route('/statements/<int:statement_id>/vote', methods=['POST'])
-@limiter.limit("30 per minute")  # Removed @login_required to allow anonymous voting like pol.is
+@limiter.limit("30 per minute")
 def vote_statement(statement_id):
     """
     Vote on a statement (agree/disagree/unsure)
 
     Supports both authenticated and anonymous voting (like pol.is):
     - Authenticated users: votes stored in DB with user_id
-    - Anonymous users: votes stored in session, tracked for this browser only
+    - Anonymous users: votes stored in DB with session_fingerprint (can be merged to account later)
     """
     statement = Statement.query.get_or_404(statement_id)
 
-    # Get vote value from request (support both JSON and form data)
     if request.is_json:
         data = request.get_json()
         vote_value = int(data.get('vote', 0))
-        confidence = data.get('confidence', 3)  # Default to middle confidence (1-5 scale)
-        # Ensure confidence is an integer and in valid range
+        confidence = data.get('confidence', 3)
         try:
             confidence = int(confidence) if confidence is not None else 3
             if confidence < 1 or confidence > 5:
-                confidence = 3  # Reset to default if out of range
+                confidence = 3
         except (ValueError, TypeError):
             confidence = 3
     else:
@@ -252,35 +263,25 @@ def vote_statement(statement_id):
     if vote_value not in [-1, 0, 1]:
         return jsonify({'error': 'Invalid vote value'}), 400
 
-    # Initialize session votes if not exists
-    if 'statement_votes' not in session:
-        session['statement_votes'] = {}
-
-    # Handle authenticated vs anonymous voting
     if current_user.is_authenticated:
-        # AUTHENTICATED VOTING - Store in database
         existing_vote = StatementVote.query.filter_by(
             statement_id=statement_id,
             user_id=current_user.id
         ).first()
 
         if existing_vote:
-            # Update existing vote
             old_vote = existing_vote.vote
             existing_vote.vote = vote_value
             existing_vote.confidence = confidence
             existing_vote.updated_at = datetime.utcnow()
 
-            # Update denormalized counts
             if old_vote == 1:
                 statement.vote_count_agree -= 1
             elif old_vote == -1:
                 statement.vote_count_disagree -= 1
             elif old_vote == 0:
                 statement.vote_count_unsure -= 1
-
         else:
-            # Create new vote
             existing_vote = StatementVote(
                 statement_id=statement_id,
                 user_id=current_user.id,
@@ -290,7 +291,6 @@ def vote_statement(statement_id):
             )
             db.session.add(existing_vote)
 
-        # Update denormalized counts
         if vote_value == 1:
             statement.vote_count_agree += 1
         elif vote_value == -1:
@@ -301,20 +301,36 @@ def vote_statement(statement_id):
         db.session.commit()
 
     else:
-        # ANONYMOUS VOTING - Store in session only
-        statement_key = str(statement_id)
-        old_vote = session['statement_votes'].get(statement_key)
+        fingerprint = get_statement_vote_fingerprint()
+        
+        existing_vote = StatementVote.query.filter_by(
+            statement_id=statement_id,
+            session_fingerprint=fingerprint,
+            user_id=None
+        ).first()
 
-        # Update denormalized counts (remove old vote if exists)
-        if old_vote is not None:
+        if existing_vote:
+            old_vote = existing_vote.vote
+            existing_vote.vote = vote_value
+            existing_vote.confidence = confidence
+            existing_vote.updated_at = datetime.utcnow()
+
             if old_vote == 1:
                 statement.vote_count_agree -= 1
             elif old_vote == -1:
                 statement.vote_count_disagree -= 1
             elif old_vote == 0:
                 statement.vote_count_unsure -= 1
+        else:
+            existing_vote = StatementVote(
+                statement_id=statement_id,
+                session_fingerprint=fingerprint,
+                discussion_id=statement.discussion_id,
+                vote=vote_value,
+                confidence=confidence
+            )
+            db.session.add(existing_vote)
 
-        # Add new vote
         if vote_value == 1:
             statement.vote_count_agree += 1
         elif vote_value == -1:
@@ -322,13 +338,8 @@ def vote_statement(statement_id):
         elif vote_value == 0:
             statement.vote_count_unsure += 1
 
-        # Store vote in session
-        session['statement_votes'][statement_key] = vote_value
-        session.modified = True
-
         db.session.commit()
 
-    # Return updated vote counts
     return jsonify({
         'success': True,
         'vote': vote_value,
