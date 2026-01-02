@@ -465,15 +465,17 @@ def send_daily_question_email(subscriber, question):
     magic_link_url = url_for('daily.magic_link', token=subscriber.magic_token, _external=True)
     question_url = url_for('daily.by_date', date_str=question.question_date.isoformat(), _external=True)
     
-    streak_message = ""
+    streak_message = " "
     if subscriber.current_streak > 1:
         streak_message = f"You've participated {subscriber.current_streak} days in a row!"
+    
+    why_this = question.why_this_question or "This question helps us understand how the public thinks about important issues."
     
     data_variables = {
         "questionNumber": str(question.question_number),
         "questionText": question.question_text,
-        "questionContext": question.context or "",
-        "whyThisQuestion": question.why_this_question or "",
+        "questionContext": question.context or " ",
+        "whyThisQuestion": why_this,
         "topicCategory": question.topic_category or "Civic",
         "magicLinkUrl": magic_link_url,
         "questionUrl": question_url,
