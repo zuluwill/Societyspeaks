@@ -57,6 +57,13 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 
 ## Recent Changes (January 2026)
 
+### Article Relevance Scoring
+- Dual scoring system: **Relevance** (0-100%, how valuable for civic discussion) + **Clickbait Risk** (Low/Med/High)
+- Relevance-based filtering: High (70%+), Medium (40-70%), Low (<40%)
+- Pre-filtering with LOW_VALUE_KEYWORDS and PRODUCT_REVIEW_PATTERNS to catch product reviews, sports scores, listicles
+- Cleanup: Articles with <30% relevance deleted after 7 days, all articles after 30 days
+- UI shows relevance as primary badge, clickbait risk as secondary indicator
+
 ### Auto-Publishing System
 - Daily auto-publish now runs once at 8am UTC (separate cron job from news fetching)
 - Publishes up to 5 diverse topics from 21 trusted sources (news + premium podcasts)
@@ -65,7 +72,7 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 
 ### Admin Controls
 - Added unpublish button for published topics (deletes discussion, reverts topic to pending_review)
-- Quality Score displayed instead of sensationalism (inverted scale: 100% = factual)
+- Relevance Score displayed as primary metric; Clickbait Risk as secondary indicator
 
 ### Scheduler Jobs
 - `trending_topics_pipeline`: cron[7,12,18,22] - fetches news from RSS feeds
