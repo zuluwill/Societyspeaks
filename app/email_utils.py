@@ -431,59 +431,59 @@ def create_discussion_notification(user_id, discussion_id, notification_type, ad
 
 def send_daily_question_welcome_email(subscriber):
     """Send welcome email to new daily question subscriber"""
-    magic_link_url = url_for('daily.magic_link', token=subscriber.magic_token, _external=True)
-    unsubscribe_url = url_for('daily.unsubscribe', token=subscriber.magic_token, _external=True)
+    transactional_id = os.getenv('LOOPS_DAILY_WELCOME_ID', 'cmjx1l3au1gku0i4ahx7xxvna')
     
-    event_properties = {
+    magic_link_url = url_for('daily.magic_link', token=subscriber.magic_token, _external=True)
+    daily_question_url = url_for('daily.today', _external=True)
+    
+    data_variables = {
         "magicLinkUrl": magic_link_url,
-        "unsubscribeUrl": unsubscribe_url,
-        "dailyQuestionUrl": url_for('daily.today', _external=True)
+        "dailyQuestionUrl": daily_question_url
     }
     
-    send_loops_event(
-        email_address=subscriber.email,
-        event_name="daily_question_welcome",
-        user_id=str(subscriber.id),
-        contact_properties={"email": subscriber.email},
-        event_properties=event_properties
+    send_email(
+        recipient_email=subscriber.email,
+        data_variables=data_variables,
+        transactional_id=transactional_id
     )
 
 
 def send_daily_question_email(subscriber, question):
     """Send daily question email to subscriber with magic link"""
     from app.models import DailyQuestion
+    from datetime import datetime
+    
+    transactional_id = os.getenv('LOOPS_DAILY_QUESTION_ID')
+    if not transactional_id:
+        current_app.logger.error("LOOPS_DAILY_QUESTION_ID not set - cannot send daily question email")
+        return
     
     subscriber.generate_magic_token()
     from app import db
     db.session.commit()
     
     magic_link_url = url_for('daily.magic_link', token=subscriber.magic_token, _external=True)
-    unsubscribe_url = url_for('daily.unsubscribe', token=subscriber.magic_token, _external=True)
     question_url = url_for('daily.by_date', date_str=question.question_date.isoformat(), _external=True)
     
     streak_message = ""
     if subscriber.current_streak > 1:
         streak_message = f"You've participated {subscriber.current_streak} days in a row!"
     
-    event_properties = {
-        "questionNumber": question.question_number,
+    data_variables = {
+        "questionNumber": str(question.question_number),
         "questionText": question.question_text,
         "questionContext": question.context or "",
         "whyThisQuestion": question.why_this_question or "",
         "topicCategory": question.topic_category or "Civic",
         "magicLinkUrl": magic_link_url,
         "questionUrl": question_url,
-        "unsubscribeUrl": unsubscribe_url,
-        "streakMessage": streak_message,
-        "currentStreak": subscriber.current_streak
+        "streakMessage": streak_message
     }
     
-    send_loops_event(
-        email_address=subscriber.email,
-        event_name="daily_civic_question",
-        user_id=str(subscriber.id),
-        contact_properties={"email": subscriber.email},
-        event_properties=event_properties
+    send_email(
+        recipient_email=subscriber.email,
+        data_variables=data_variables,
+        transactional_id=transactional_id
     )
     
     subscriber.last_email_sent = datetime.utcnow()
