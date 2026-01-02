@@ -9,13 +9,22 @@
             <h1 class="text-3xl font-bold text-gray-900">Daily Questions</h1>
             <p class="mt-1 text-gray-500">Manage daily civic questions for user engagement</p>
         </div>
-        <a href="{{ url_for('admin.create_daily_question') }}" 
-           class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Create Question
-        </a>
+        <div class="mt-4 sm:mt-0 flex space-x-3">
+            <a href="{{ url_for('admin.list_daily_subscribers') }}" 
+               class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                Subscribers
+            </a>
+            <a href="{{ url_for('admin.create_daily_question') }}" 
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Create Question
+            </a>
+        </div>
     </div>
 
     {% if todays_question %}
