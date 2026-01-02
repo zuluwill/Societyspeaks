@@ -41,9 +41,11 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                 <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                     <option value="">All</option>
+                    <option value="high_relevance" {% if status == 'high_relevance' %}selected{% endif %}>High Relevance (70%+)</option>
+                    <option value="medium_relevance" {% if status == 'medium_relevance' %}selected{% endif %}>Medium Relevance (40%+)</option>
+                    <option value="low_relevance" {% if status == 'low_relevance' %}selected{% endif %}>Low Relevance (&lt;40%)</option>
                     <option value="unscored" {% if status == 'unscored' %}selected{% endif %}>Unscored</option>
                     <option value="scored" {% if status == 'scored' %}selected{% endif %}>Scored</option>
-                    <option value="high_quality" {% if status == 'high_quality' %}selected{% endif %}>High Quality</option>
                 </select>
             </div>
             {% if keyword %}
@@ -115,22 +117,37 @@
                                     <p class="text-gray-600 mt-2 text-sm">{{ article.summary[:200] }}{% if article.summary|length > 200 %}...{% endif %}</p>
                                     {% endif %}
                                 </div>
-                                <div class="flex flex-col gap-2 ml-4 items-end" title="Quality Score: Higher = more factual, less clickbait">
-                                    {% if article.sensationalism_score is not none %}
-                                    {% set quality_score = 100 - (article.sensationalism_score * 100) %}
-                                    <div class="text-center">
-                                        <span class="px-2 py-1 rounded text-xs
-                                            {% if quality_score >= 70 %}bg-green-100 text-green-800
-                                            {% elif quality_score >= 50 %}bg-yellow-100 text-yellow-800
+                                <div class="flex flex-col gap-1 ml-4 items-end">
+                                    {% if article.relevance_score is not none %}
+                                    {% set relevance_pct = article.relevance_score * 100 %}
+                                    <div class="text-center" title="Relevance: How valuable for civic discussion (policy, society, debates)">
+                                        <span class="px-2 py-1 rounded text-xs font-medium
+                                            {% if relevance_pct >= 70 %}bg-green-100 text-green-800
+                                            {% elif relevance_pct >= 40 %}bg-yellow-100 text-yellow-800
                                             {% else %}bg-red-100 text-red-800{% endif %}">
-                                            {{ "%.0f"|format(quality_score) }}%
+                                            {{ "%.0f"|format(relevance_pct) }}%
                                         </span>
-                                        <div class="text-xs text-gray-400 mt-1">quality</div>
+                                        <div class="text-xs text-gray-400">relevance</div>
                                     </div>
+                                    {% elif article.sensationalism_score is not none %}
+                                    <span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">
+                                        Pending
+                                    </span>
                                     {% else %}
                                     <span class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-600">
                                         Unscored
                                     </span>
+                                    {% endif %}
+                                    {% if article.sensationalism_score is not none %}
+                                    {% set clickbait_pct = article.sensationalism_score * 100 %}
+                                    <div class="text-center" title="Clickbait risk: Higher = more sensational headlines">
+                                        <span class="px-1 py-0.5 rounded text-[10px]
+                                            {% if clickbait_pct <= 30 %}text-green-600
+                                            {% elif clickbait_pct <= 60 %}text-yellow-600
+                                            {% else %}text-red-600{% endif %}">
+                                            {% if clickbait_pct <= 30 %}Low{% elif clickbait_pct <= 60 %}Med{% else %}High{% endif %} clickbait
+                                        </span>
+                                    </div>
                                     {% endif %}
                                 </div>
                             </div>

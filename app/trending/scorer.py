@@ -218,30 +218,37 @@ def score_articles_with_llm(articles: List[NewsArticle]) -> List[NewsArticle]:
 
 
 def _score_with_openai(articles: List[NewsArticle], api_key: str) -> List[NewsArticle]:
-    """Score articles using OpenAI."""
+    """Score articles using OpenAI for sensationalism and relevance."""
     import openai
     
     client = openai.OpenAI(api_key=api_key)
     
     headlines = [f"{i+1}. {a.title}" for i, a in enumerate(articles)]
     
-    prompt = f"""Rate each headline for sensationalism on a scale of 0-1 where:
+    prompt = f"""Rate each headline on two scales (0-1):
+
+1. SENSATIONALISM:
 - 0 = neutral, factual, professional journalism
 - 0.5 = slightly attention-grabbing but acceptable
 - 1 = clickbait, sensationalist, emotionally manipulative
 
+2. RELEVANCE (discussion potential for civic debate platform):
+- 0 = product reviews, sports scores, celebrity gossip, lifestyle content
+- 0.5 = interesting but not policy-relevant
+- 1 = policy debates, societal issues, political/economic topics worth deliberating
+
 Headlines:
 {chr(10).join(headlines)}
 
-Return ONLY a JSON array of numbers in order, e.g. [0.2, 0.5, 0.1]"""
+Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8}}, {{"s": 0.5, "r": 0.3}}]"""
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are a media quality analyst."},
+            {"role": "system", "content": "You are a media quality analyst for a civic debate platform."},
             {"role": "user", "content": prompt}
         ],
-        max_tokens=200,
+        max_tokens=500,
         temperature=0.3
     )
     
@@ -250,7 +257,8 @@ Return ONLY a JSON array of numbers in order, e.g. [0.2, 0.5, 0.1]"""
     
     for i, article in enumerate(articles):
         if i < len(scores):
-            article.sensationalism_score = float(scores[i])
+            article.sensationalism_score = float(scores[i].get('s', 0.5))
+            article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
         else:
             article.sensationalism_score = score_sensationalism(article.title)
     
@@ -258,26 +266,33 @@ Return ONLY a JSON array of numbers in order, e.g. [0.2, 0.5, 0.1]"""
 
 
 def _score_with_anthropic(articles: List[NewsArticle], api_key: str) -> List[NewsArticle]:
-    """Score articles using Anthropic."""
+    """Score articles using Anthropic for sensationalism and relevance."""
     import anthropic
     
     client = anthropic.Anthropic(api_key=api_key)
     
     headlines = [f"{i+1}. {a.title}" for i, a in enumerate(articles)]
     
-    prompt = f"""Rate each headline for sensationalism on a scale of 0-1 where:
+    prompt = f"""Rate each headline on two scales (0-1):
+
+1. SENSATIONALISM:
 - 0 = neutral, factual, professional journalism
 - 0.5 = slightly attention-grabbing but acceptable
 - 1 = clickbait, sensationalist, emotionally manipulative
 
+2. RELEVANCE (discussion potential for civic debate platform):
+- 0 = product reviews, sports scores, celebrity gossip, lifestyle content
+- 0.5 = interesting but not policy-relevant
+- 1 = policy debates, societal issues, political/economic topics worth deliberating
+
 Headlines:
 {chr(10).join(headlines)}
 
-Return ONLY a JSON array of numbers in order, e.g. [0.2, 0.5, 0.1]"""
+Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8}}, {{"s": 0.5, "r": 0.3}}]"""
 
     message = client.messages.create(
         model="claude-3-haiku-20240307",
-        max_tokens=200,
+        max_tokens=500,
         messages=[{"role": "user", "content": prompt}]
     )
     
@@ -286,7 +301,8 @@ Return ONLY a JSON array of numbers in order, e.g. [0.2, 0.5, 0.1]"""
     
     for i, article in enumerate(articles):
         if i < len(scores):
-            article.sensationalism_score = float(scores[i])
+            article.sensationalism_score = float(scores[i].get('s', 0.5))
+            article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
         else:
             article.sensationalism_score = score_sensationalism(article.title)
     

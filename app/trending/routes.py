@@ -125,15 +125,22 @@ def view_articles():
         query = query.filter(NewsArticle.source_id == source_id)
     
     if status == 'unscored':
-        query = query.filter(NewsArticle.sensationalism_score.is_(None))
+        query = query.filter(NewsArticle.relevance_score.is_(None))
     elif status == 'scored':
-        query = query.filter(NewsArticle.sensationalism_score.isnot(None))
-    elif status == 'high_quality':
-        query = query.filter(NewsArticle.sensationalism_score <= 0.3)
+        query = query.filter(NewsArticle.relevance_score.isnot(None))
+    elif status == 'high_relevance':
+        query = query.filter(NewsArticle.relevance_score >= 0.7)
+    elif status == 'medium_relevance':
+        query = query.filter(NewsArticle.relevance_score >= 0.4, NewsArticle.relevance_score < 0.7)
+    elif status == 'low_relevance':
+        query = query.filter(NewsArticle.relevance_score < 0.4)
     
-    articles = query.order_by(
-        NewsArticle.fetched_at.desc()
-    ).paginate(page=page, per_page=per_page, error_out=False)
+    if status in ['high_relevance', 'medium_relevance', '']:
+        query = query.order_by(NewsArticle.relevance_score.desc().nullslast(), NewsArticle.fetched_at.desc())
+    else:
+        query = query.order_by(NewsArticle.fetched_at.desc())
+    
+    articles = query.paginate(page=page, per_page=per_page, error_out=False)
     
     sources = NewsSource.query.order_by(NewsSource.name).all()
     

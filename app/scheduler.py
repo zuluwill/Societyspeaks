@@ -125,13 +125,25 @@ def init_scheduler(app):
             logger.info("Starting cleanup of old data")
             
             cutoff_30_days = datetime.utcnow() - timedelta(days=30)
+            cutoff_7_days = datetime.utcnow() - timedelta(days=7)
+            
+            low_relevance_deleted = NewsArticle.query.filter(
+                NewsArticle.fetched_at < cutoff_7_days,
+                db.or_(
+                    NewsArticle.relevance_score < 0.3,
+                    NewsArticle.relevance_score.is_(None)
+                )
+            ).delete(synchronize_session=False)
+            db.session.commit()
+            if low_relevance_deleted > 0:
+                logger.info(f"Deleted {low_relevance_deleted} low-relevance articles (>7 days old)")
             
             old_articles = NewsArticle.query.filter(
                 NewsArticle.fetched_at < cutoff_30_days
             ).delete(synchronize_session=False)
             db.session.commit()
             if old_articles > 0:
-                logger.info(f"Deleted {old_articles} old news articles")
+                logger.info(f"Deleted {old_articles} old news articles (>30 days)")
             
             old_discarded = TrendingTopic.query.filter(
                 TrendingTopic.status == 'discarded',
