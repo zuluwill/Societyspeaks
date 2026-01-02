@@ -316,31 +316,31 @@ def seed_default_sources():
         },
         {
             'name': 'Triggernometry',
-            'feed_url': 'https://feeds.acast.com/public/shows/triggernometry',
+            'feed_url': 'https://feeds.megaphone.fm/AALT9618167458',
             'source_type': 'rss',
             'reputation_score': 0.8
         },
         {
             'name': 'All-In Podcast',
-            'feed_url': 'https://feeds.megaphone.fm/all-in-with-chamath-jason-sacks-friedberg',
+            'feed_url': 'https://allinchamathjason.libsyn.com/rss',
             'source_type': 'rss',
             'reputation_score': 0.85
         },
         {
             'name': 'The Tim Ferriss Show',
-            'feed_url': 'https://rss.art19.com/tim-ferriss-show',
+            'feed_url': 'https://timferriss.libsyn.com/rss',
             'source_type': 'rss',
             'reputation_score': 0.85
         },
         {
             'name': 'Diary of a CEO',
-            'feed_url': 'https://feeds.simplecast.com/tFDHTGpU',
+            'feed_url': 'https://feeds.megaphone.fm/thediaryofaceo',
             'source_type': 'rss',
             'reputation_score': 0.8
         },
         {
             'name': 'Modern Wisdom',
-            'feed_url': 'https://feeds.megaphone.fm/modern-wisdom',
+            'feed_url': 'https://feeds.megaphone.fm/SIXMSB5088139739',
             'source_type': 'rss',
             'reputation_score': 0.8
         },
