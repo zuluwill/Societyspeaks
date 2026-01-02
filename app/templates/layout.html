@@ -88,8 +88,8 @@
                 <!-- Desktop Navigation -->
                 <div class="hidden lg:flex lg:items-center lg:space-x-6">
                     <a href="/" class="text-base font-medium text-white hover:text-blue-50 transition">Home</a>
-                    <a href="{{ url_for('daily.today') }}" class="text-base font-medium text-white hover:text-blue-50 transition">Daily</a>
-                    <a href="{{ url_for('discussions.news_feed') }}" class="text-base font-medium text-white hover:text-blue-50 transition">News</a>
+                    <a href="{{ url_for('daily.today') }}" class="text-base font-medium text-white hover:text-blue-50 transition">Today's Question</a>
+                    <a href="{{ url_for('discussions.news_feed') }}" class="text-base font-medium text-white hover:text-blue-50 transition">From the News</a>
                     <a href="/discussions/search" class="text-base font-medium text-white hover:text-blue-50 transition">Explore Discussions</a>
                     <a href="/about" class="text-base font-medium text-white hover:text-blue-50 transition">About</a>
                     <a href="{{ url_for('help.help') }}" class="text-base font-medium text-white hover:text-blue-50 transition">Help</a>
@@ -200,8 +200,8 @@
             <div class="lg:hidden hidden" id="mobile-menu">
                 <div class="space-y-1 px-2 pb-3 pt-2">
                     <a href="/" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Home</a>
-                    <a href="{{ url_for('daily.today') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Daily</a>
-                    <a href="{{ url_for('discussions.news_feed') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">News</a>
+                    <a href="{{ url_for('daily.today') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Today's Question</a>
+                    <a href="{{ url_for('discussions.news_feed') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">From the News</a>
                     <a href="/discussions/search" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Explore Discussions</a>
                     <a href="/about" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">About</a>
                     <a href="{{ url_for('help.help') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Help</a>
@@ -317,8 +317,8 @@
                     <h3 class="text-white text-lg font-semibold mb-4">Quick Links</h3>
                     <ul class="space-y-3">
                         <li><a href="/" class="text-gray-400 hover:text-white transition">Home</a></li>
-                        <li><a href="/daily" class="text-gray-400 hover:text-white transition">Daily Question</a></li>
-                        <li><a href="/news" class="text-gray-400 hover:text-white transition">News</a></li>
+                        <li><a href="/daily" class="text-gray-400 hover:text-white transition">Today's Question</a></li>
+                        <li><a href="/news" class="text-gray-400 hover:text-white transition">From the News</a></li>
                         <li><a href="/about" class="text-gray-400 hover:text-white transition">About Us</a></li>
                         <li><a href="/help" class="text-gray-400 hover:text-white transition">Help</a></li>
                         <li><a href="/privacy-policy" class="text-gray-400 hover:text-white transition">Privacy Policy</a></li>
