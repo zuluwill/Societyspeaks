@@ -198,8 +198,12 @@ Disallow: /auth/
 Disallow: /*/*/edit
 Disallow: /*/edit
 
-# Sitemaps
-Sitemap: {base_url}/sitemap.xml"""
+# Sitemaps and LLM Context
+Sitemap: {base_url}/sitemap.xml
+
+# LLM Context File (emerging standard for AI discoverability)
+# See: https://llmstxt.org
+LLMsTXT: {base_url}/llms.txt"""
         return Response(robots_txt, mimetype='text/plain')
     except Exception as e:
         current_app.logger.error(f"Error serving robots.txt: {str(e)}")
@@ -248,3 +252,13 @@ def test_robots():
         """
     except Exception as e:
         return f"Error testing robots.txt: {str(e)}"
+
+
+@main_bp.route('/llms.txt')
+def llms_txt():
+    """Serve the llms.txt file for LLM/AI discoverability (GEO)"""
+    try:
+        return current_app.send_static_file('llms.txt')
+    except Exception as e:
+        current_app.logger.error(f"Error serving llms.txt: {str(e)}")
+        return Response("LLMs context file not found", status=404)

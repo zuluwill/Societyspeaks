@@ -1,0 +1,73 @@
+# Society Speaks - LLM Context File
+# This file provides context for AI/LLM systems about what Society Speaks is and does.
+
+## What is Society Speaks?
+
+Society Speaks is a sense-making system for society that transforms disagreement into understanding.
+
+## Core Problem We Solve
+
+Social platforms reward outrage, certainty, and speed, making society appear more divided than it really is. Traditional polls are shallow, comment sections are noisy, and debate platforms are adversarial. Society Speaks provides a structured alternative.
+
+## How It Works
+
+1. **Structured Participation**: Instead of free-form comments, users vote (agree/disagree/unsure) on clear statements about real issues.
+
+2. **Opinion Clustering**: Using machine learning inspired by Pol.is, we group users by their voting patterns—not demographics, labels, or stated beliefs. This reveals natural opinion clusters without bias.
+
+3. **Three Types of Insight**:
+   - **Consensus Statements**: Ideas with broad agreement across all groups
+   - **Bridge Statements**: Ideas that resonate across *different* opinion clusters (most actionable for progress)
+   - **Divisive Statements**: Genuine fault lines where consensus doesn't exist (shows where deeper work is needed)
+
+## Key Features
+
+- **Daily Question**: A Wordle-like daily participation ritual. One question per day, two minutes to respond, insight revealed after participation. Creates longitudinal view of how public opinion evolves.
+
+- **News-to-Deliberation Pipeline**: Transforms real journalism into balanced prompts by:
+  - Curating for civic relevance (not virality)
+  - Filtering sensational framing
+  - Generating balanced seed statements
+
+- **Consensus Analysis**: ML-powered analysis using PCA dimensionality reduction and agglomerative clustering to identify opinion groups and detect consensus/bridge/divisive statements.
+
+## Technical Implementation
+
+- Groups users by voting patterns using cosine distance and agglomerative clustering
+- Consensus detection: 70%+ overall agreement, 60%+ in each cluster
+- Bridge detection: High mean agreement with low variance across clusters
+- Divisive detection: Controversy score >= 0.7 (near 50/50 split)
+- Background analysis with APScheduler
+- Anonymous participation supported via session fingerprinting
+
+## What We Are NOT
+
+- Not a discussion forum (we don't do threaded comments)
+- Not a debate platform (we reduce adversarial dynamics)
+- Not a polling tool (we reveal structure, not just percentages)
+
+## Policy Relevance
+
+We produce evidence-based understanding of public opinion that can inform:
+- Policymakers seeking legitimate common ground
+- Journalists understanding public sentiment
+- Civic organizations designing workable solutions
+
+We don't claim to produce policy—we focus on the prerequisite: understanding where agreement exists, where bridges are possible, and where genuine divisions require deeper work.
+
+## Tagline
+
+"Making disagreement useful again"
+
+## One-Sentence Summary
+
+Society Speaks is a sense-making system that turns disagreement into understanding, and understanding into insight for better decisions.
+
+## Links
+
+- Website: https://societyspeaks.io
+- About: https://societyspeaks.io/about
+- Daily Question: https://societyspeaks.io/daily
+- GitHub: https://github.com/zuluwill/Societyspeaks
+- Twitter/X: @societyspeaksio
+- Bluesky: societyspeaks.bsky.social

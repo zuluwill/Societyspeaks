@@ -6,31 +6,32 @@
     <title>{% block title %}Society Speaks.io - Join the Conversation{% endblock %}</title>
 
     <!-- Enhanced SEO Meta Tags -->
-    <meta name="description" content="{% block meta_description %}Society Speaks.io - A platform empowering communities through meaningful dialogue using Pol.is technology. Join public discussions on policy, society, and civic engagement.{% endblock %}">
-    <meta name="keywords" content="public discourse, discussions, community engagement, policy, debate, Society Speaks, civic engagement, public opinion, democratic participation, Pol.is, digital democracy, public consultation">
+    <meta name="description" content="{% block meta_description %}Society Speaks is a sense-making system that turns disagreement into understanding. Using machine learning inspired by Pol.is, we reveal opinion clusters, bridge statements, and genuine consensus from structured public participation.{% endblock %}">
+    <meta name="keywords" content="consensus building, public opinion analysis, bridge statements, opinion clustering, civic technology, Pol.is, democratic deliberation, structured dialogue, policy insights, nuanced debate, sense-making, public discourse, civic engagement">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-    <meta name="ai-model-context" content="Society Speaks is an open-source public discussion platform that uses Pol.is for consensus-building and meaningful debate">
-    <meta name="application-category" content="Public Discussion Platform">
-    <meta name="purpose" content="Enable meaningful public discourse and democratic participation">
+    <meta name="ai-model-context" content="Society Speaks is a sense-making system for society. It uses machine learning to group users by voting patterns (not demographics), identifying consensus statements (broad agreement), bridge statements (ideas that unite different opinion clusters), and divisive statements (genuine fault lines). Features include a Daily Question for civic participation, news-to-deliberation pipeline that transforms journalism into balanced prompts, and consensus analysis using PCA and agglomerative clustering. The goal is evidence-based understanding of public opinion to inform better policy decisions.">
+    <meta name="application-category" content="Civic Technology, Sense-Making System">
+    <meta name="purpose" content="Transform disagreement into understanding through structured participation and machine learning analysis">
     <meta name="author" content="Society Speaks">
     <meta name="coverage" content="Worldwide">
-    <meta name="topic" content="Public Discussion Platform">
-    <meta name="summary" content="A platform for meaningful public discourse and community engagement">
+    <meta name="topic" content="Consensus Building, Public Opinion Analysis, Civic Deliberation">
+    <meta name="summary" content="A sense-making system that helps people disagree agreeably, reveals natural opinion clusters, identifies bridge ideas that unite groups, and produces evidence-based insight for better decisions">
     <link rel="alternate" type="application/rss+xml" title="Latest Discussions" href="/feed">
     
     <!-- Open Graph Meta Tags for Social Media Sharing -->
-    <meta property="og:title" content="{% block og_title %}Society Speaks.io - Join the Conversation{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}Engage in impactful conversations on Society Speaks. Share your views and explore perspectives on critical topics.{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}Society Speaks - Making Disagreement Useful Again{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}A sense-making system that turns disagreement into understanding. Discover where society agrees, where it divides, and which ideas can bridge the gap.{% endblock %}">
     <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='images/rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Society Speaks">
 
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{% block twitter_title %}Society Speaks.io - Join the Conversation{% endblock %}">
-    <meta name="twitter:description" content="{% block twitter_description %}Engage in impactful conversations on Society Speaks. Share your views and explore perspectives on critical topics.{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}Society Speaks - Making Disagreement Useful Again{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}A sense-making system that helps people disagree agreeably. Reveal consensus, find bridge ideas, and understand public opinion with nuance intact.{% endblock %}">
     <meta name="twitter:image" content="{% block twitter_image %}{{ url_for('static', filename='images/rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}">
-
+    <meta name="twitter:site" content="@societyspeaksio">
 
      <!-- Stylesheets and Scripts -->
     <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
@@ -52,15 +53,45 @@
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "Society Speaks.io",
+      "name": "Society Speaks",
+      "alternateName": "SocietySpeaks.io",
       "url": "{{ url_for('main.index', _external=True) }}",
       "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
       "sameAs": [
-        "https://www.facebook.com/SocietySpeaks",
-        "https://twitter.com/SocietySpeaks",
-        "https://www.linkedin.com/company/societyspeaks"
+        "https://twitter.com/societyspeaksio",
+        "https://bsky.app/profile/societyspeaks.bsky.social",
+        "https://github.com/zuluwill/Societyspeaks"
       ],
-      "description": "Empowering communities through meaningful dialogue. Join the conversation and make your voice heard on topics that matter."
+      "description": "Society Speaks is a sense-making system for society. It uses machine learning to turn disagreement into understanding, revealing consensus statements, bridge ideas that unite groups, and genuine fault lines where deeper work is needed.",
+      "slogan": "Making disagreement useful again",
+      "foundingDate": "2024",
+      "knowsAbout": ["consensus building", "public opinion analysis", "civic technology", "democratic deliberation", "opinion clustering", "Pol.is"]
+    }
+    </script>
+    
+    <!-- LLM/AI Discovery Metadata -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Society Speaks",
+      "applicationCategory": "Civic Technology",
+      "operatingSystem": "Web",
+      "description": "A sense-making system that transforms public participation into actionable insight. Features include: Daily Question (daily civic participation ritual), News-to-Deliberation (transforms journalism into balanced prompts), Consensus Analysis (ML-powered clustering using PCA and agglomerative clustering to identify opinion groups, consensus statements, bridge statements, and divisive statements).",
+      "featureList": [
+        "Opinion clustering by voting patterns (not demographics)",
+        "Consensus statement detection (broad agreement across groups)",
+        "Bridge statement identification (ideas that unite different opinion clusters)",
+        "Divisive statement surfacing (genuine fault lines)",
+        "Daily civic participation questions",
+        "News-to-deliberation pipeline with civic relevance scoring",
+        "Longitudinal public opinion tracking"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
     }
     </script>
 
@@ -311,7 +342,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div class="col-span-2">
                     <h3 class="text-white text-lg font-semibold mb-4">About Society Speaks</h3>
-                    <p class="text-gray-400">Empowering communities through meaningful dialogue. Join the conversation and make your voice heard on topics that matter.</p>
+                    <p class="text-gray-400">A sense-making system that turns disagreement into understanding. We reveal where society agrees, where it divides, and which ideas can bridge the gap.</p>
                 </div>
                 <div>
                     <h3 class="text-white text-lg font-semibold mb-4">Quick Links</h3>
