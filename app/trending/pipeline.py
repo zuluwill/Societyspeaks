@@ -47,6 +47,22 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
             db.session.rollback()
     
     try:
+        from app.models import NewsSource
+        premium_unscored = NewsArticle.query.join(NewsSource).filter(
+            NewsArticle.sensationalism_score.is_(None),
+            NewsSource.reputation_score >= 0.7,
+            NewsArticle.fetched_at >= datetime.utcnow() - timedelta(days=7)
+        ).all()
+        
+        if premium_unscored:
+            logger.info(f"Scoring {len(premium_unscored)} unscored premium source articles")
+            score_articles_with_llm(premium_unscored)
+            db.session.commit()
+    except Exception as e:
+        logger.error(f"Error scoring premium articles: {e}")
+        db.session.rollback()
+    
+    try:
         unprocessed = NewsArticle.query.filter(
             NewsArticle.fetched_at >= datetime.utcnow() - timedelta(hours=6),
             NewsArticle.sensationalism_score.isnot(None),
