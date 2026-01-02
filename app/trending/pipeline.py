@@ -157,9 +157,22 @@ def auto_publish_daily(max_topics: int = 5) -> int:
     Auto-publish up to max_topics diverse topics daily.
     Selects topics from trusted sources with civic relevance.
     Ensures diversity by checking title similarity.
+    Enforces once-per-day limit by checking already-published today.
     """
     from app.models import User
     from app.trending.publisher import publish_topic
+    
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    already_published_today = TrendingTopic.query.filter(
+        TrendingTopic.status == 'published',
+        TrendingTopic.published_at >= today_start
+    ).count()
+    
+    if already_published_today >= max_topics:
+        logger.info(f"Already published {already_published_today} topics today, skipping auto-publish")
+        return 0
+    
+    remaining_slots = max_topics - already_published_today
     
     topics = TrendingTopic.query.filter_by(status='pending_review').order_by(
         TrendingTopic.civic_score.desc().nullslast(),
@@ -173,12 +186,15 @@ def auto_publish_daily(max_topics: int = 5) -> int:
     
     published = 0
     published_keywords = set()
+    skipped_similar = 0
+    skipped_criteria = 0
     
     for topic in topics:
-        if published >= max_topics:
+        if published >= remaining_slots:
             break
             
         if not topic.should_auto_publish:
+            skipped_criteria += 1
             continue
         
         title_words = set(topic.title.lower().split())
@@ -186,6 +202,7 @@ def auto_publish_daily(max_topics: int = 5) -> int:
         
         if published_keywords and len(title_words & published_keywords) >= 3:
             logger.info(f"Skipping topic {topic.id} - too similar to already published: {topic.title[:40]}...")
+            skipped_similar += 1
             continue
         
         try:
@@ -198,6 +215,7 @@ def auto_publish_daily(max_topics: int = 5) -> int:
             db.session.rollback()
             continue
     
+    logger.info(f"Auto-publish summary: {published} published, {skipped_similar} skipped (similar), {skipped_criteria} skipped (criteria)")
     return published
 
 
