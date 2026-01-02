@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, cache
-from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView
+from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView, StatementVote
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
 from datetime import datetime, timedelta
@@ -116,6 +116,14 @@ def login():
 
         # Log the user in
         login_user(user)
+        
+        # Merge any anonymous votes from this session to the user's account
+        fingerprint = session.get('statement_vote_fingerprint')
+        if fingerprint:
+            merged = StatementVote.merge_anonymous_votes(fingerprint, user.id)
+            if merged > 0:
+                current_app.logger.info(f"Merged {merged} anonymous votes for user {user.id}")
+        
         flash("Logged in successfully!", "success")
 
         # Check if the user has an individual or company profile
