@@ -35,7 +35,7 @@
                 <p class="text-sm text-gray-500 mb-1">From the discussion:</p>
                 <p class="text-gray-800 font-medium">{{ question.context }}</p>
                 {% if question.source_discussion %}
-                <a href="{{ url_for('discussions.view_discussion', slug=question.source_discussion.slug) }}" 
+                <a href="{{ url_for('discussions.view_discussion', discussion_id=question.source_discussion.id, slug=question.source_discussion.slug) }}" 
                    class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm mt-3 font-medium">
                     Dive deeper into the full discussion
                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
