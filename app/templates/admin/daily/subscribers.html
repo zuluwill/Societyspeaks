@@ -9,43 +9,67 @@
             <h1 class="text-3xl font-bold text-gray-900">Email Subscribers</h1>
             <p class="mt-1 text-gray-500">{{ active_count }} active of {{ total_count }} total subscribers</p>
         </div>
-        <div class="mt-4 sm:mt-0 flex space-x-3">
-            <a href="{{ url_for('admin.list_daily_questions') }}" 
-               class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
-                Back to Questions
-            </a>
-            <form action="{{ url_for('admin.bulk_subscribe_users') }}" method="POST" 
-                  onsubmit="return confirm('This will subscribe all existing registered users (excluding test/bot accounts). Continue?');">
-                <button type="submit" 
-                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+        <a href="{{ url_for('admin.list_daily_questions') }}" 
+           class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+            Back to Questions
+        </a>
+    </div>
+
+    {% if available_users %}
+    <div class="bg-white rounded-xl shadow-sm mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Add Subscribers</h3>
+            <p class="text-sm text-gray-500 mt-1">Select users to subscribe to daily question emails</p>
+        </div>
+        <form action="{{ url_for('admin.add_subscriber') }}" method="POST" class="p-6">
+            <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg mb-4">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50 sticky top-0">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-10">
+                                <input type="checkbox" id="select-all" class="rounded border-gray-300">
+                            </th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for user in available_users %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-2">
+                                <input type="checkbox" name="user_ids" value="{{ user.id }}" class="user-checkbox rounded border-gray-300">
+                            </td>
+                            <td class="px-4 py-2 text-sm text-gray-900">{{ user.username }}</td>
+                            <td class="px-4 py-2 text-sm text-gray-500">{{ user.email }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-500" id="selected-count">0 selected</span>
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                     </svg>
-                    Add All Existing Users
+                    Add Selected
                 </button>
-            </form>
-        </div>
-    </div>
-
-    <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-        <div class="flex items-start">
-            <svg class="w-6 h-6 text-blue-600 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-                <h3 class="font-semibold text-blue-800">About Bulk Subscribe</h3>
-                <p class="text-sm text-blue-700 mt-1">
-                    Clicking "Add All Existing Users" will subscribe all registered users to daily question emails.
-                    Users with 'test', 'bot', 'fake', 'demo', or 'example' in their email/username are automatically excluded.
-                    Users who have previously unsubscribed will NOT be re-subscribed.
-                </p>
             </div>
-        </div>
+        </form>
     </div>
+    {% endif %}
 
     <div class="bg-white rounded-xl shadow-sm">
-        <div class="px-6 py-4 border-b border-gray-200">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
             <h3 class="text-lg font-semibold text-gray-900">All Subscribers</h3>
+            {% if available_users %}
+            <form action="{{ url_for('admin.bulk_subscribe_users') }}" method="POST" class="inline"
+                  onsubmit="return confirm('This will subscribe ALL remaining {{ available_users|length }} users. Continue?');">
+                <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">
+                    Add all {{ available_users|length }} remaining users
+                </button>
+            </form>
+            {% endif %}
         </div>
         
         {% if subscribers %}
@@ -58,7 +82,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Streak</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscribed</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
@@ -78,7 +102,7 @@
                             {% if sub.is_active %}
                             <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>
                             {% else %}
-                            <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">Unsubscribed</span>
+                            <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">Inactive</span>
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -90,12 +114,32 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ sub.created_at.strftime('%b %d, %Y') }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {% if sub.last_email_sent %}
-                            {{ sub.last_email_sent.strftime('%b %d, %Y') }}
-                            {% else %}
-                            Never
-                            {% endif %}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex items-center space-x-2">
+                                <form action="{{ url_for('admin.toggle_subscriber', subscriber_id=sub.id) }}" method="POST" class="inline">
+                                    {% if sub.is_active %}
+                                    <button type="submit" class="text-yellow-600 hover:text-yellow-800" title="Deactivate">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                        </svg>
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="text-green-600 hover:text-green-800" title="Activate">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+                                    {% endif %}
+                                </form>
+                                <form action="{{ url_for('admin.delete_subscriber', subscriber_id=sub.id) }}" method="POST" class="inline"
+                                      onsubmit="return confirm('Remove {{ sub.email }} from subscribers? This cannot be undone.');">
+                                    <button type="submit" class="text-red-600 hover:text-red-800" title="Remove">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -108,9 +152,33 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             <h3 class="mt-4 text-lg font-medium text-gray-900">No subscribers yet</h3>
-            <p class="mt-2 text-gray-500">Click "Add All Existing Users" to subscribe your registered users, or wait for users to subscribe themselves.</p>
+            <p class="mt-2 text-gray-500">Select users above to add as subscribers.</p>
         </div>
         {% endif %}
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.user-checkbox');
+    const selectedCount = document.getElementById('selected-count');
+    
+    function updateCount() {
+        const checked = document.querySelectorAll('.user-checkbox:checked').length;
+        selectedCount.textContent = checked + ' selected';
+    }
+    
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateCount();
+        });
+    }
+    
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateCount);
+    });
+});
+</script>
 {% endblock %}
