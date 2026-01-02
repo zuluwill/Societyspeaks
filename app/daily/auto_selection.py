@@ -34,10 +34,9 @@ def get_eligible_discussions(days_to_avoid=AVOID_REPEAT_DAYS):
         DailyQuestionSelection.source_type == 'discussion',
         DailyQuestionSelection.selected_at >= cutoff,
         DailyQuestionSelection.source_discussion_id.isnot(None)
-    ).subquery()
+    ).scalar_subquery()
     
     discussions = Discussion.query.filter(
-        Discussion.status == 'active',
         Discussion.id.notin_(recently_used_ids)
     ).order_by(Discussion.created_at.desc()).limit(50).all()
     
@@ -52,7 +51,7 @@ def get_eligible_trending_topics(days_to_avoid=AVOID_REPEAT_DAYS, min_civic_scor
         DailyQuestionSelection.source_type == 'trending',
         DailyQuestionSelection.selected_at >= cutoff,
         DailyQuestionSelection.source_trending_topic_id.isnot(None)
-    ).subquery()
+    ).scalar_subquery()
     
     topics = TrendingTopic.query.filter(
         TrendingTopic.status == 'published',
@@ -64,17 +63,16 @@ def get_eligible_trending_topics(days_to_avoid=AVOID_REPEAT_DAYS, min_civic_scor
 
 
 def get_eligible_statements(days_to_avoid=AVOID_REPEAT_DAYS):
-    """Get statements from active discussions that haven't been used recently"""
+    """Get seed statements from discussions that haven't been used recently"""
     cutoff = datetime.utcnow() - timedelta(days=days_to_avoid)
     
     recently_used_ids = db.session.query(DailyQuestionSelection.source_statement_id).filter(
         DailyQuestionSelection.source_type == 'statement',
         DailyQuestionSelection.selected_at >= cutoff,
         DailyQuestionSelection.source_statement_id.isnot(None)
-    ).subquery()
+    ).scalar_subquery()
     
     statements = Statement.query.join(Discussion).filter(
-        Discussion.status == 'active',
         Statement.id.notin_(recently_used_ids),
         Statement.is_seed == True
     ).order_by(Statement.created_at.desc()).limit(50).all()
