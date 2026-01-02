@@ -97,6 +97,14 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 - **Scheduler Jobs**: `daily_question_publish` (7:30am) auto-publishes today + 7 days ahead, `daily_question_email` (8:00am) sends to all subscribers
 - **Templates**: Subscribe, success, and unsubscribe pages with streak display in results
 
+### Homepage Redesign (January 2026)
+- **Hero section**: Updated messaging to "Making Disagreement Useful Again" with "sense-making system" positioning
+- **Primary CTAs**: "Today's Question" and "From the News" buttons replace generic "Join the Conversation"
+- **Daily Question section**: Prominent feature section after hero explaining the daily civic ritual workflow
+- **From the News section**: 3 feature cards highlighting curated sources, relevance filtering, and balanced discussions
+- **Voices of Democracy**: Condensed from 9 quotes to 3 (Mead, Mandela, Mill) for better scroll weight
+- **Page flow**: Hero -> Daily Question -> From the News -> Quotes -> Value Props -> How It Works -> Featured Discussions
+
 ### About Page & SEO Updates (January 2026)
 - **About page**: Completely rewritten with new "sense-making system" narrative, covering: how it works (voting-based clustering), what it reveals (consensus/bridge/divisive statements), news-to-deliberation pipeline, Daily Question, and policy relevance
 - **SEO meta tags**: Updated descriptions, keywords, OG/Twitter cards to reflect platform positioning as "sense-making system for society"
