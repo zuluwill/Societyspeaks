@@ -83,32 +83,48 @@ def get_eligible_statements(days_to_avoid=AVOID_REPEAT_DAYS):
 def select_next_question_source():
     """
     Select the next question source using priority order:
-    1. Curated discussions
-    2. High-quality trending topics
-    3. Seed statements from discussions
+    1. Seed statements from curated discussions (THE main source)
+    2. High-quality trending topics (use their seed statements)
+    3. Direct statements as fallback
+    
+    Key insight: Daily questions should be actual voteable statements,
+    not just discussion titles. Users need specific claims to agree/disagree with.
     """
     discussions = get_eligible_discussions()
     if discussions:
-        selected = random.choice(discussions[:10])
-        return {
-            'source_type': 'discussion',
-            'source': selected,
-            'question_text': selected.title,
-            'context': selected.description[:300] if selected.description else None,
-            'topic_category': selected.topic
-        }
+        for discussion in discussions[:10]:
+            seed_statements = Statement.query.filter_by(
+                discussion_id=discussion.id,
+                is_seed=True
+            ).all()
+            if seed_statements:
+                selected_statement = random.choice(seed_statements)
+                return {
+                    'source_type': 'discussion',
+                    'source': discussion,
+                    'statement': selected_statement,
+                    'question_text': selected_statement.content,
+                    'context': discussion.title,
+                    'topic_category': discussion.topic,
+                    'discussion_slug': discussion.slug
+                }
     
     topics = get_eligible_trending_topics()
     if topics:
         selected = random.choice(topics[:5])
         seed_statements = selected.seed_statements
-        question_text = seed_statements[0] if seed_statements else selected.title
+        if seed_statements:
+            question_text = seed_statements[0]
+        else:
+            question_text = selected.title
         return {
             'source_type': 'trending',
             'source': selected,
+            'statement': None,
             'question_text': question_text,
             'context': selected.summary[:300] if selected.summary else None,
-            'topic_category': selected.topic
+            'topic_category': selected.topic,
+            'discussion_slug': None
         }
     
     statements = get_eligible_statements()
@@ -117,9 +133,11 @@ def select_next_question_source():
         return {
             'source_type': 'statement',
             'source': selected,
-            'question_text': selected.text,
-            'context': f"From discussion: {selected.discussion.title}" if selected.discussion else None,
-            'topic_category': selected.discussion.topic if selected.discussion else None
+            'statement': selected,
+            'question_text': selected.content,
+            'context': selected.discussion.title if selected.discussion else None,
+            'topic_category': selected.discussion.topic if selected.discussion else None,
+            'discussion_slug': selected.discussion.slug if selected.discussion else None
         }
     
     return None
@@ -129,8 +147,24 @@ def create_daily_question_from_source(question_date, source_info, created_by_id=
     """Create a DailyQuestion from the selected source"""
     source = source_info['source']
     source_type = source_info['source_type']
+    statement = source_info.get('statement')
     
     next_number = DailyQuestion.get_next_question_number()
+    
+    source_discussion_id = None
+    source_statement_id = None
+    source_trending_topic_id = None
+    
+    if source_type == 'discussion':
+        source_discussion_id = source.id
+        if statement:
+            source_statement_id = statement.id
+    elif source_type == 'trending':
+        source_trending_topic_id = source.id
+    elif source_type == 'statement':
+        source_statement_id = source.id
+        if hasattr(source, 'discussion') and source.discussion:
+            source_discussion_id = source.discussion.id
     
     question = DailyQuestion(
         question_date=question_date,
@@ -139,9 +173,9 @@ def create_daily_question_from_source(question_date, source_info, created_by_id=
         context=source_info.get('context'),
         topic_category=source_info.get('topic_category'),
         source_type=source_type,
-        source_discussion_id=source.id if source_type == 'discussion' else None,
-        source_trending_topic_id=source.id if source_type == 'trending' else None,
-        source_statement_id=source.id if source_type == 'statement' else None,
+        source_discussion_id=source_discussion_id,
+        source_trending_topic_id=source_trending_topic_id,
+        source_statement_id=source_statement_id,
         status='scheduled',
         created_by_id=created_by_id
     )
@@ -150,9 +184,9 @@ def create_daily_question_from_source(question_date, source_info, created_by_id=
     
     selection = DailyQuestionSelection(
         source_type=source_type,
-        source_discussion_id=source.id if source_type == 'discussion' else None,
-        source_trending_topic_id=source.id if source_type == 'trending' else None,
-        source_statement_id=source.id if source_type == 'statement' else None,
+        source_discussion_id=source_discussion_id,
+        source_trending_topic_id=source_trending_topic_id,
+        source_statement_id=source_statement_id,
         question_date=question_date
     )
     db.session.add(selection)
