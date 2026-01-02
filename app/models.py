@@ -602,8 +602,11 @@ class StatementVote(db.Model):
     def merge_anonymous_votes(cls, session_fingerprint, user_id):
         """
         Merge anonymous votes to a user account when they sign up or log in.
-        If user already voted on a statement, keep their authenticated vote.
+        If user already voted on a statement, keep their authenticated vote and
+        decrement the denormalized counts to avoid inflation.
         """
+        from app.models import Statement
+        
         anonymous_votes = cls.query.filter_by(session_fingerprint=session_fingerprint, user_id=None).all()
         merged_count = 0
         
@@ -614,9 +617,18 @@ class StatementVote(db.Model):
             ).first()
             
             if existing_user_vote:
+                statement = Statement.query.get(anon_vote.statement_id)
+                if statement:
+                    if anon_vote.vote == 1:
+                        statement.vote_count_agree = max(0, statement.vote_count_agree - 1)
+                    elif anon_vote.vote == -1:
+                        statement.vote_count_disagree = max(0, statement.vote_count_disagree - 1)
+                    elif anon_vote.vote == 0:
+                        statement.vote_count_unsure = max(0, statement.vote_count_unsure - 1)
                 db.session.delete(anon_vote)
             else:
                 anon_vote.user_id = user_id
+                anon_vote.session_fingerprint = None
                 merged_count += 1
         
         db.session.commit()
