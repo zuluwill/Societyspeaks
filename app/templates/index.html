@@ -45,7 +45,7 @@
                         </div>
                     </div>
 
-                    <div class="flex flex-col space-y-4 sm:flex-row sm:space-x-4 sm:space-y-0">
+                    <div class="flex flex-col space-y-3 sm:flex-row sm:flex-wrap sm:gap-3 sm:space-y-0">
                         <a href="{{ url_for('daily.today') }}" 
                            class="inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,6 +59,13 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
                             </svg>
                             From the News
+                        </a>
+                        <a href="{{ url_for('auth.register') }}" 
+                           class="inline-flex items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                            <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Start a Discussion
                         </a>
                     </div>
                 </div>
@@ -79,18 +86,18 @@
 <!-- Daily Question Highlight -->
 <div class="bg-white border-b">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div class="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
-            <div class="lg:col-span-5">
-                <div class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700 mb-4">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div class="lg:col-span-5 space-y-4 max-w-xl">
+                <div class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-700">
                     2 minutes a day
                 </div>
                 <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
                     The Daily Question
                 </h2>
-                <p class="mt-4 text-lg text-gray-600">
+                <p class="text-lg text-gray-600">
                     One carefully chosen question each day. Vote, share your reasoning, then see how others responded. Over time, this creates a longitudinal view of how public opinion evolves.
                 </p>
-                <div class="mt-6 flex flex-wrap gap-4">
+                <div class="flex flex-wrap gap-4">
                     <a href="{{ url_for('daily.today') }}" 
                        class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
                         Answer Today's Question
@@ -100,7 +107,7 @@
                     </a>
                 </div>
             </div>
-            <div class="mt-10 lg:mt-0 lg:col-span-7">
+            <div class="lg:col-span-7">
                 <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-6 lg:p-8">
                     <div class="space-y-4">
                         <div class="flex items-center text-sm text-gray-500">
@@ -292,7 +299,7 @@
                     </div>
                     <h3 class="mt-4 text-lg font-semibold text-gray-900">Better Discussions</h3>
                     <p class="mt-2 text-gray-600">
-                        Our AI-powered platform leveraging Pol.is helps us surface areas of agreement and understand different perspectives. Disagree agreeably.
+                        Machine learning clusters participants by voting patterns to surface consensus, find bridge ideas, and reveal genuine divisions. Disagree agreeably.
                     </p>
                 </div>
             </div>
@@ -411,7 +418,7 @@
                     </div>
                     <div class="ml-4">
                         <h4 class="text-lg font-semibold text-gray-900">AI-Powered Analysis</h4>
-                        <p class="mt-2 text-gray-600">Advanced algorithms provided by Pol.is help identify areas of consensus and bridge divides</p>
+                        <p class="mt-2 text-gray-600">Advanced clustering algorithms identify consensus statements and bridge ideas that unite opposing groups</p>
                     </div>
                 </div>
             </div>
