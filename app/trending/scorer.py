@@ -80,7 +80,23 @@ LOW_VALUE_KEYWORDS = [
     'divorce', 'wedding', 'red carpet', 'fashion week', 'reality tv', 'bachelor',
     'love island', 'influencer', 'tiktok star', 'instagram', 'viral video',
     'horoscope', 'astrology', 'lottery', 'game show', 'quiz', 'recipe',
-    'best deals', 'discount', 'sale', 'shopping', 'gift guide'
+    'best deals', 'discount', 'sale', 'shopping', 'gift guide',
+    'best vacuums', 'best trimmers', 'best headphones', 'best laptops', 'best phones',
+    'tested for', 'buyer guide', 'gift ideas', 'deals of the day', 'review:',
+    'premier league', 'championship', 'fa cup', 'champions league', 'europa league',
+    'man united', 'liverpool', 'arsenal', 'chelsea', 'man city', 'tottenham',
+    'crystal palace', 'leeds draw', 'brentford', 'everton', 'newcastle', 'aston villa',
+    'quarter-final', 'semi-final', 'penalty', 'goal scorer', 'hat-trick', 'clean sheet',
+    'transfer news', 'transfer window', 'deadline day', 'signing', 'loan deal',
+    'pet hair', 'beard trimmer', 'styling versatility', 'kitchen gadget',
+    'world darts', 'darts championship', 'snooker', 'golf tournament', 'wimbledon',
+    'formula 1', 'f1 grand prix', 'race winner', 'nfl', 'nba', 'mlb', 'nhl',
+    'match report', 'post-match', 'player rating', 'team news', 'starting lineup'
+]
+
+PRODUCT_REVIEW_PATTERNS = [
+    r'the \d+ best', r'\d+ best', r'best .* for', r'top \d+', r'review:',
+    r'tested.*for', r'buying guide', r'vs\.?$', r'versus',
 ]
 
 HIGH_VALUE_KEYWORDS = [
@@ -102,10 +118,11 @@ def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle],
     Philosophy: Sensationalism is a SIGNAL that people care about a topic.
     We WANT hot-button issues - our job is to bring nuance to them.
     
-    We SKIP only: celebrity gossip, lifestyle fluff, shopping content
+    We SKIP only: celebrity gossip, lifestyle fluff, shopping content, sports scores
     We KEEP: polarizing debates on policy, society, politics, culture
     
     Returns (articles_to_score, articles_to_skip).
+    Also sets initial relevance_score on skipped articles.
     """
     from app.trending.topic_signals import (
         calculate_topic_signal_score,
@@ -123,16 +140,24 @@ def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle],
     
     for article in articles:
         if not article.title:
+            article.relevance_score = 0.0
             to_skip.append(article)
             continue
             
         title_lower = article.title.lower()
         
         if any(kw in title_lower for kw in LOW_VALUE_KEYWORDS):
+            article.relevance_score = 0.1
+            to_skip.append(article)
+            continue
+        
+        if any(re.search(pattern, title_lower) for pattern in PRODUCT_REVIEW_PATTERNS):
+            article.relevance_score = 0.1
             to_skip.append(article)
             continue
         
         if any(kw in title_lower for kw in HIGH_VALUE_KEYWORDS):
+            article.relevance_score = 0.9
             to_score.append(article)
             continue
         
@@ -140,17 +165,21 @@ def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle],
             article.title, article.summary, trending=trending_keywords
         )
         if topic_signal >= 0.5:
+            article.relevance_score = 0.7 + (topic_signal * 0.3)
             to_score.append(article)
             continue
         
         heuristic_score = score_sensationalism(article.title)
         if heuristic_score >= 0.4:
+            article.relevance_score = 0.5
             to_score.append(article)
             continue
         
         if article.source and article.source.reputation_score >= 0.7:
+            article.relevance_score = 0.4
             to_score.append(article)
         else:
+            article.relevance_score = 0.2
             to_skip.append(article)
     
     return to_score, to_skip
