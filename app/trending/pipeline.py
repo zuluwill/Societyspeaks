@@ -39,18 +39,32 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     logger.info(f"Fetched {len(articles)} new articles")
     
     if articles:
-        articles = score_articles_with_llm(articles)
-        db.session.commit()
+        try:
+            articles = score_articles_with_llm(articles)
+            db.session.commit()
+        except Exception as e:
+            logger.error(f"Error scoring articles: {e}")
+            db.session.rollback()
     
-    unprocessed = NewsArticle.query.filter(
-        NewsArticle.fetched_at >= datetime.utcnow() - timedelta(hours=6),
-        NewsArticle.sensationalism_score.isnot(None),
-        NewsArticle.sensationalism_score <= 0.5
-    ).all()
+    try:
+        unprocessed = NewsArticle.query.filter(
+            NewsArticle.fetched_at >= datetime.utcnow() - timedelta(hours=6),
+            NewsArticle.sensationalism_score.isnot(None),
+            NewsArticle.sensationalism_score <= 0.5
+        ).all()
+    except Exception as e:
+        logger.error(f"Error querying unprocessed articles: {e}")
+        db.session.rollback()
+        return len(articles), 0, 0
     
-    processed_ids = set()
-    for (article_id,) in db.session.query(TrendingTopicArticle.article_id).distinct().all():
-        processed_ids.add(article_id)
+    try:
+        processed_ids = set()
+        for (article_id,) in db.session.query(TrendingTopicArticle.article_id).distinct().all():
+            processed_ids.add(article_id)
+    except Exception as e:
+        logger.error(f"Error querying processed article IDs: {e}")
+        db.session.rollback()
+        processed_ids = set()
     
     articles_to_cluster = [a for a in unprocessed if a.id not in processed_ids]
     
@@ -64,9 +78,14 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     topics_created = 0
     for cluster in clusters:
         if len(cluster) >= 1:
-            topic = create_topic_from_cluster(cluster, hold_minutes=hold_minutes)
-            if topic:
-                topics_created += 1
+            try:
+                topic = create_topic_from_cluster(cluster, hold_minutes=hold_minutes)
+                if topic:
+                    topics_created += 1
+            except Exception as e:
+                logger.error(f"Error creating topic from cluster: {e}")
+                db.session.rollback()
+                continue
     
     ready_count = process_held_topics()
     
