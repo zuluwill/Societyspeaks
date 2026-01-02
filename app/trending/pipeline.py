@@ -49,7 +49,7 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     try:
         from app.models import NewsSource
         premium_unscored = NewsArticle.query.join(NewsSource).filter(
-            NewsArticle.sensationalism_score.is_(None),
+            NewsArticle.relevance_score.is_(None),
             NewsSource.reputation_score >= 0.7,
             NewsArticle.fetched_at >= datetime.utcnow() - timedelta(days=7)
         ).all()
@@ -65,8 +65,8 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     try:
         unprocessed = NewsArticle.query.filter(
             NewsArticle.fetched_at >= datetime.utcnow() - timedelta(hours=6),
-            NewsArticle.sensationalism_score.isnot(None),
-            NewsArticle.sensationalism_score <= 0.5
+            NewsArticle.relevance_score.isnot(None),
+            NewsArticle.relevance_score >= 0.4
         ).all()
     except Exception as e:
         logger.error(f"Error querying unprocessed articles: {e}")
