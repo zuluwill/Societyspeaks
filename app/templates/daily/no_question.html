@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block title %}Daily Question - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-600 rounded-full text-sm font-medium mb-4">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Daily Question
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+
+            {% if specific_date %}
+            <h1 class="text-2xl font-bold text-gray-900 mb-4">No Question for {{ specific_date.strftime('%B %d, %Y') }}</h1>
+            <p class="text-gray-600 mb-6">
+                There wasn't a daily question on this date. Check out today's question instead.
+            </p>
+            <a href="{{ url_for('daily.today') }}" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                Today's Question
+            </a>
+            {% else %}
+            <h1 class="text-2xl font-bold text-gray-900 mb-4">No Question Today</h1>
+            <p class="text-gray-600 mb-6">
+                Today's civic question hasn't been published yet. Check back soon!
+            </p>
+            <div class="space-y-3">
+                <a href="/" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                    Explore Discussions
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-8 text-center">
+            <p class="text-gray-500 text-sm">
+                Daily questions are published each morning. Subscribe to get notified.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
