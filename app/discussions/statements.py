@@ -239,11 +239,21 @@ def vote_statement(statement_id):
     - Authenticated users: votes stored in DB with user_id
     - Anonymous users: votes stored in DB with session_fingerprint (can be merged to account later)
     """
+    user_agent = request.headers.get('User-Agent', '').lower()
+    bot_indicators = ['bot', 'crawler', 'spider', 'preview', 'fetch', 'slurp', 'mediapartners']
+    if any(indicator in user_agent for indicator in bot_indicators):
+        return jsonify({'error': 'Automated requests not allowed'}), 403
+    
     statement = Statement.query.get_or_404(statement_id)
 
     if request.is_json:
         data = request.get_json()
-        vote_value = int(data.get('vote', 0))
+        if data is None or 'vote' not in data:
+            return jsonify({'error': 'Vote value is required'}), 400
+        try:
+            vote_value = int(data.get('vote'))
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid vote value format'}), 400
         confidence = data.get('confidence', 3)
         try:
             confidence = int(confidence) if confidence is not None else 3
@@ -252,7 +262,13 @@ def vote_statement(statement_id):
         except (ValueError, TypeError):
             confidence = 3
     else:
-        vote_value = int(request.form.get('vote', 0)) if request.form.get('vote') else 0
+        vote_raw = request.form.get('vote')
+        if vote_raw is None or vote_raw == '':
+            return jsonify({'error': 'Vote value is required'}), 400
+        try:
+            vote_value = int(vote_raw)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid vote value format'}), 400
         confidence_raw = request.form.get('confidence', 3)
         try:
             confidence = int(confidence_raw) if confidence_raw else 3
@@ -262,7 +278,7 @@ def vote_statement(statement_id):
             confidence = 3
 
     if vote_value not in [-1, 0, 1]:
-        return jsonify({'error': 'Invalid vote value'}), 400
+        return jsonify({'error': 'Invalid vote value. Must be -1, 0, or 1'}), 400
 
     try:
         if current_user.is_authenticated:

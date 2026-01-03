@@ -256,6 +256,12 @@ def magic_link(token):
 @limiter.limit("10 per minute")
 def vote():
     """Submit a vote for today's question"""
+    user_agent = request.headers.get('User-Agent', '').lower()
+    bot_indicators = ['bot', 'crawler', 'spider', 'preview', 'fetch', 'slurp', 'mediapartners']
+    if any(indicator in user_agent for indicator in bot_indicators):
+        flash('Automated requests are not allowed.', 'error')
+        return redirect(url_for('daily.today'))
+    
     question = DailyQuestion.get_today()
     
     if not question:
@@ -265,6 +271,9 @@ def vote():
         return jsonify({'success': False, 'error': 'You have already voted today'}), 400
     
     vote_value = request.form.get('vote')
+    if vote_value is None or vote_value == '':
+        flash('Please select a vote option.', 'error')
+        return redirect(url_for('daily.today'))
     reason = request.form.get('reason', '').strip()
     
     vote_map = {'agree': 1, 'disagree': -1, 'unsure': 0}
