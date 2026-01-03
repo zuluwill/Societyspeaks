@@ -56,6 +56,16 @@ def today():
     question = DailyQuestion.get_today()
     
     if not question:
+        # Fallback: try to auto-publish if scheduler missed (e.g., autoscale cold start)
+        try:
+            from app.daily.auto_selection import auto_publish_todays_question
+            question = auto_publish_todays_question()
+            if question:
+                current_app.logger.info(f"Fallback auto-published daily question #{question.question_number}")
+        except Exception as e:
+            current_app.logger.error(f"Fallback auto-publish failed: {e}")
+    
+    if not question:
         return render_template('daily/no_question.html')
     
     user_response = get_user_response(question)
