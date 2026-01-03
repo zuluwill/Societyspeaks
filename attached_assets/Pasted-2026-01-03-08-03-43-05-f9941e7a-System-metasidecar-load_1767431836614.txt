@@ -1,0 +1,188 @@
+2026-01-03 08:03:43.05
+f9941e7a
+System
+metasidecar: loaded enterprise status from environment is_enterprise=false
+2026-01-03 08:03:43.05
+f9941e7a
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2026-01-03 08:03:49.10
+f9941e7a
+User
+[2026-01-03 08:03:49 +0000] [19] [INFO] Starting gunicorn 21.2.0
+2026-01-03 08:03:49.10
+f9941e7a
+User
+[2026-01-03 08:03:49 +0000] [19] [INFO] Listening at: http://0.0.0.0:5000 (19)
+2026-01-03 08:03:49.10
+f9941e7a
+User
+[2026-01-03 08:03:49 +0000] [19] [INFO] Using worker: sync
+2026-01-03 08:03:49.11
+f9941e7a
+User
+[2026-01-03 08:03:49 +0000] [23] [INFO] Booting worker with pid: 23
+2026-01-03 08:04:06.46
+f9941e7a
+User
+Cache initialized with Redis URL
+2026-01-03 08:04:06.58
+f9941e7a
+User
+Using REDIS_URL from environment variable for rate limiting
+2026-01-03 08:04:07.07
+f9941e7a
+User
+Rate limiter configured with Redis (production)
+2026-01-03 08:04:07.07
+f9941e7a
+User
+Rate limiter storage verified:
+2026-01-03 08:04:30.62
+f9941e7a
+User
+/home/runner/workspace/.pythonlibs/lib/python3.11/site-packages/tzlocal/unix.py:207: UserWarning: Can not find any timezone configuration, defaulting to UTC.
+2026-01-03 08:04:30.62
+f9941e7a
+User
+warnings.warn("Can not find any timezone configuration, defaulting to UTC.")
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Scheduler initialized with jobs:
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-01-03 08:04:30.86
+f9941e7a
+User
+- daily_question_publish: cron[hour='7', minute='30']
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Added job "init_scheduler..auto_cluster_active_discussions" to job store "default"
+2026-01-03 08:04:30.86
+f9941e7a
+User
+- trending_topics_pipeline: cron[hour='7,12,18,22']
+2026-01-03 08:04:30.86
+f9941e7a
+User
+- daily_auto_publish: cron[hour='8']
+2026-01-03 08:04:30.86
+f9941e7a
+User
+- cleanup_old_analyses: cron[hour='3']
+2026-01-03 08:04:30.86
+f9941e7a
+User
+- auto_cluster_discussions: interval[6:00:00]
+2026-01-03 08:04:30.86
+f9941e7a
+User
+- daily_question_email: cron[hour='8', minute='0']
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Added job "init_scheduler..run_trending_topics_pipeline" to job store "default"
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Added job "init_scheduler..cleanup_old_consensus_analyses" to job store "default"
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Added job "init_scheduler..daily_auto_publish" to job store "default"
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Scheduler started
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Added job "init_scheduler..daily_question_email" to job store "default"
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Added job "init_scheduler..daily_question_publish" to job store "default"
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Scheduler started
+2026-01-03 08:04:30.86
+f9941e7a
+User
+Background scheduler started successfully
+2026-01-03 09:16:25.46
+f9941e7a
+System
+starting up user application
+2026-01-03 09:16:25.46
+f9941e7a
+System
+metasidecar: loaded enterprise status from environment is_enterprise=false
+2026-01-03 09:16:25.46
+f9941e7a
+System
+forwarding local port 5000 to external port 80 (mapped as 1104)
+2026-01-03 09:16:31.27
+f9941e7a
+User
+[2026-01-03 09:16:31 +0000] [18] [INFO] Starting gunicorn 21.2.0
+2026-01-03 09:16:31.27
+f9941e7a
+User
+[2026-01-03 09:16:31 +0000] [18] [INFO] Using worker: sync
+2026-01-03 09:16:31.27
+f9941e7a
+User
+[2026-01-03 09:16:31 +0000] [18] [INFO] Listening at: http://0.0.0.0:5000 (18)
+2026-01-03 09:16:31.28
+f9941e7a
+User
+[2026-01-03 09:16:31 +0000] [22] [INFO] Booting worker with pid: 22
+2026-01-03 09:16:31.28
+f9941e7a
+User
+[2026-01-03 09:16:31 +0000] [22] [INFO] Booting worker with pid: 22
+2026-01-03 09:16:50.29
+f9941e7a
+User
+Cache initialized with Redis URL
+2026-01-03 09:16:50.39
+f9941e7a
+User
+Using REDIS_URL from environment variable for rate limiting
+2026-01-03 09:16:50.39
+f9941e7a
+User
+Using REDIS_URL from environment variable for rate limiting
+2026-01-03 09:16:50.89
+f9941e7a
+User
+Rate limiter configured with Redis (production)
+2026-01-03 09:16:50.89
+f9941e7a
+User
+Rate limiter storage verified:
