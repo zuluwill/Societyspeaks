@@ -6,6 +6,7 @@ Handles the conversion from TrendingTopic to Discussion + seed Statements.
 """
 
 import logging
+import re
 from collections import Counter
 from datetime import datetime
 from typing import Optional
@@ -15,6 +16,24 @@ from app.models import (
     TrendingTopic, Discussion, Statement, User,
     DiscussionSourceArticle, generate_slug
 )
+
+
+def strip_html_tags(text: str) -> str:
+    """Remove HTML tags from text, preserving the text content."""
+    if not text:
+        return ""
+    text = re.sub(r'<br\s*/?>', ' ', text)
+    text = re.sub(r'<p\s*/?>', ' ', text)
+    text = re.sub(r'</p>', ' ', text)
+    text = re.sub(r'<[^>]+>', '', text)
+    text = re.sub(r'&nbsp;', ' ', text)
+    text = re.sub(r'&amp;', '&', text)
+    text = re.sub(r'&lt;', '<', text)
+    text = re.sub(r'&gt;', '>', text)
+    text = re.sub(r'&quot;', '"', text)
+    text = re.sub(r'&#39;', "'", text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +79,11 @@ def publish_topic(topic: TrendingTopic, admin_user: User) -> Optional[Discussion
     else:
         geographic_scope = 'global'
     
+    clean_description = strip_html_tags(topic.description) if topic.description else ""
+    
     discussion = Discussion(
         title=topic.title,
-        description=topic.description or "",
+        description=clean_description,
         slug=slug,
         has_native_statements=True,
         creator_id=admin_user.id,
