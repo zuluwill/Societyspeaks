@@ -89,14 +89,6 @@ def create_app():
             },
         )
 
-    # Initialize PostHog for analytics
-    posthog_api_key = os.getenv("POSTHOG_API_KEY")
-    posthog_host = os.getenv("POSTHOG_HOST", "https://us.i.posthog.com")
-    if posthog_api_key:
-        posthog.project_api_key = posthog_api_key
-        posthog.host = posthog_host
-        posthog.debug = os.getenv("FLASK_ENV") != "production"
-    
     app = Flask(__name__, 
         static_url_path='',
         static_folder='static')
@@ -135,6 +127,16 @@ def create_app():
     # Determine environment
     env = os.getenv('FLASK_ENV', 'development')
     app.config.from_object(config_dict[env])
+    
+    # Configure PostHog for both server-side and frontend analytics
+    posthog_api_key = os.getenv("POSTHOG_API_KEY")
+    posthog_host = os.getenv("POSTHOG_HOST", "https://eu.i.posthog.com")
+    app.config['POSTHOG_API_KEY'] = posthog_api_key
+    app.config['POSTHOG_HOST'] = posthog_host
+    if posthog_api_key:
+        posthog.project_api_key = posthog_api_key
+        posthog.host = posthog_host
+        posthog.debug = env != "production"
 
     # Initialize Talisman with simplified CSP
     Talisman(
