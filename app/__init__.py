@@ -13,6 +13,7 @@ from logging.config import dictConfig
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from flask_session import Session
+import posthog
 from flask_caching import Cache
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -21,7 +22,7 @@ from flask_limiter.util import get_remote_address
 csp = {
     'default-src': ["'self'", "https:", "data:", "blob:"],
     'img-src': ["'self'", "data:", "https:", "blob:"],
-    'connect-src': ["'self'", "https:", "wss:", "https://cdn.jsdelivr.net"],
+    'connect-src': ["'self'", "https:", "wss:", "https://cdn.jsdelivr.net", "https://*.posthog.com", "https://us.i.posthog.com", "https://eu.i.posthog.com"],
     'font-src': ["'self'", "data:", "https:"],
     'frame-src': ["'self'", "https:"],
     'style-src': [
@@ -38,7 +39,10 @@ csp = {
         "https://cdnjs.cloudflare.com",
         "https://www.googletagmanager.com",
         "https://cdn-cookieyes.com",
-        "https://pol.is"
+        "https://pol.is",
+        "https://*.posthog.com",
+        "https://us-assets.i.posthog.com",
+        "https://eu-assets.i.posthog.com"
     ],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],
@@ -85,7 +89,13 @@ def create_app():
             },
         )
 
-
+    # Initialize PostHog for analytics
+    posthog_api_key = os.getenv("POSTHOG_API_KEY")
+    posthog_host = os.getenv("POSTHOG_HOST", "https://us.i.posthog.com")
+    if posthog_api_key:
+        posthog.project_api_key = posthog_api_key
+        posthog.host = posthog_host
+        posthog.debug = os.getenv("FLASK_ENV") != "production"
     
     app = Flask(__name__, 
         static_url_path='',
