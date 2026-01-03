@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from app.utils import get_recent_activity
 from itsdangerous import URLSafeTimedSerializer
 from app.email_utils import send_password_reset_email, send_welcome_email, send_profile_completion_reminder_email, get_missing_individual_profile_fields,get_missing_company_profile_fields
+import posthog
 
 
 auth_bp = Blueprint('auth', __name__)
@@ -82,6 +83,16 @@ def register():
         new_user.email_verified = False
         db.session.add(new_user)
         db.session.commit()
+        
+        # Track user signup with PostHog
+        try:
+            posthog.capture(
+                distinct_id=str(new_user.id),
+                event='user_signed_up',
+                properties={'username': username}
+            )
+        except Exception as e:
+            current_app.logger.warning(f"PostHog tracking error: {e}")
 
         # Generate verification token
         token = new_user.get_reset_token()
@@ -116,6 +127,17 @@ def login():
 
         # Log the user in
         login_user(user)
+        
+        # Track login with PostHog
+        try:
+            posthog.capture(
+                distinct_id=str(user.id),
+                event='user_logged_in',
+                properties={'email': user.email}
+            )
+            posthog.identify(distinct_id=str(user.id), properties={'email': user.email, 'username': user.username})
+        except Exception as e:
+            current_app.logger.warning(f"PostHog tracking error: {e}")
         
         # Merge any anonymous votes from this session to the user's account
         fingerprint = session.get('statement_vote_fingerprint')
@@ -197,7 +219,15 @@ def dashboard():
 @auth_bp.route('/logout')
 @login_required
 def logout():
+    user_id = str(current_user.id)
     logout_user()
+    
+    # Track logout with PostHog
+    try:
+        posthog.capture(distinct_id=user_id, event='user_logged_out')
+    except Exception as e:
+        current_app.logger.warning(f"PostHog tracking error: {e}")
+    
     flash("Logged out successfully.", "success")
     return redirect(url_for('main.index'))
 

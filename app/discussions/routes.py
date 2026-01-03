@@ -10,6 +10,7 @@ from app.webhook_security import webhook_required, webhook_with_timestamp
 from sqlalchemy.orm import joinedload
 import json
 import os
+import posthog
 
 
 discussions_bp = Blueprint('discussions', __name__)
@@ -120,6 +121,21 @@ def create_discussion():
                     current_app.logger.error(f"Error parsing seed statements: {e}")
         
         db.session.commit()
+        
+        # Track discussion creation with PostHog
+        try:
+            posthog.capture(
+                distinct_id=str(current_user.id),
+                event='discussion_created',
+                properties={
+                    'discussion_id': discussion.id,
+                    'topic': discussion.topic,
+                    'has_native_statements': discussion.has_native_statements,
+                    'seed_statement_count': statement_count
+                }
+            )
+        except Exception as e:
+            current_app.logger.warning(f"PostHog tracking error: {e}")
         
         flash(f"Discussion created successfully with {statement_count} seed statements!" if statement_count > 0 else "Discussion created successfully!", "success")
 
