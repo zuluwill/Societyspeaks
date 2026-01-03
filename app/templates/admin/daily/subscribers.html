@@ -15,11 +15,32 @@
         </a>
     </div>
 
+    <div class="bg-white rounded-xl shadow-sm mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Bulk Import Emails</h3>
+            <p class="text-sm text-gray-500 mt-1">Paste a list of email addresses (comma, newline, or space separated)</p>
+        </div>
+        <form action="{{ url_for('admin.bulk_import_subscribers') }}" method="POST" class="p-6">
+            <textarea name="emails" rows="5" 
+                      class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="email1@example.com, email2@example.com&#10;email3@example.com"></textarea>
+            <div class="flex items-center justify-between mt-4">
+                <span class="text-sm text-gray-500">Duplicates will be skipped automatically</span>
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    Import Emails
+                </button>
+            </div>
+        </form>
+    </div>
+
     {% if available_users %}
     <div class="bg-white rounded-xl shadow-sm mb-8">
         <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Add Subscribers</h3>
-            <p class="text-sm text-gray-500 mt-1">Select users to subscribe to daily question emails</p>
+            <h3 class="text-lg font-semibold text-gray-900">Add Existing Users</h3>
+            <p class="text-sm text-gray-500 mt-1">Select registered users to subscribe to daily question emails</p>
         </div>
         <form action="{{ url_for('admin.add_subscriber') }}" method="POST" class="p-6">
             <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg mb-4">
