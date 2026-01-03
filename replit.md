@@ -111,3 +111,9 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 - **JSON-LD structured data**: Enhanced with Organization and WebApplication schemas including feature lists
 - **LLM discoverability (GEO)**: Added `/llms.txt` route with comprehensive platform description for AI crawlers
 - **robots.txt**: Updated to reference llms.txt for LLM crawler discovery
+
+### Voting Security Fix (January 2026)
+- **Bug fix**: Vote endpoints no longer default to "unsure" when vote value is missing - now returns 400 error requiring explicit vote
+- **Bot protection**: Added user-agent filtering to reject known bots/crawlers/preview fetchers from submitting votes
+- **Affected endpoints**: `/statements/<id>/vote` and `/daily/vote`
+- **Edge cases**: Proper validation for empty strings, null values, and malformed JSON requests
