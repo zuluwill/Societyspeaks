@@ -732,3 +732,77 @@ def delete_subscriber(subscriber_id):
     
     flash(f'Subscriber {email} removed.', 'success')
     return redirect(url_for('admin.list_daily_subscribers'))
+
+
+@admin_bp.route('/daily-questions/subscribers/bulk-import', methods=['POST'])
+@login_required
+@admin_required
+def bulk_import_subscribers():
+    """Bulk import email-only subscribers from a list of emails"""
+    import re
+    
+    emails_text = request.form.get('emails', '').strip()
+    
+    if not emails_text:
+        flash('No emails provided.', 'warning')
+        return redirect(url_for('admin.list_daily_subscribers'))
+    
+    # Parse emails - handle comma, newline, semicolon, or space separated
+    raw_emails = re.split(r'[,;\s\n]+', emails_text)
+    
+    # Basic email validation regex
+    email_pattern = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    
+    added = 0
+    skipped_duplicate = 0
+    skipped_invalid = 0
+    
+    for email in raw_emails:
+        email = email.strip().lower()
+        
+        if not email:
+            continue
+            
+        if not email_pattern.match(email):
+            skipped_invalid += 1
+            continue
+        
+        # Check if already exists (by email)
+        existing = DailyQuestionSubscriber.query.filter_by(email=email).first()
+        if existing:
+            if not existing.is_active:
+                existing.is_active = True
+                db.session.commit()
+                added += 1
+            else:
+                skipped_duplicate += 1
+            continue
+        
+        # Check if there's a user with this email
+        user = User.query.filter_by(email=email).first()
+        
+        try:
+            subscriber = DailyQuestionSubscriber(
+                email=email,
+                user_id=user.id if user else None,
+                is_active=True
+            )
+            subscriber.generate_magic_token()
+            db.session.add(subscriber)
+            db.session.commit()
+            added += 1
+        except Exception as e:
+            current_app.logger.error(f"Error adding subscriber {email}: {e}")
+            db.session.rollback()
+    
+    # Build summary message
+    msg_parts = []
+    if added:
+        msg_parts.append(f'{added} added')
+    if skipped_duplicate:
+        msg_parts.append(f'{skipped_duplicate} already subscribed')
+    if skipped_invalid:
+        msg_parts.append(f'{skipped_invalid} invalid')
+    
+    flash(', '.join(msg_parts) if msg_parts else 'No emails processed.', 'success' if added else 'info')
+    return redirect(url_for('admin.list_daily_subscribers'))
