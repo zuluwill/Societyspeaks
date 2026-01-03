@@ -13,6 +13,7 @@ from sqlalchemy import func, desc, or_
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 import hashlib
+import posthog
 
 statements_bp = Blueprint('statements', __name__)
 
@@ -200,6 +201,22 @@ def create_statement(discussion_id):
         
         db.session.add(statement)
         db.session.commit()
+        
+        # Track statement creation with PostHog
+        try:
+            distinct_id = str(identifier['user_id']) if identifier['user_id'] else identifier['session_fingerprint']
+            posthog.capture(
+                distinct_id=distinct_id,
+                event='statement_created',
+                properties={
+                    'discussion_id': discussion_id,
+                    'statement_id': statement.id,
+                    'statement_type': form.statement_type.data,
+                    'is_authenticated': identifier['user_id'] is not None
+                }
+            )
+        except Exception as e:
+            current_app.logger.warning(f"PostHog tracking error: {e}")
         
         flash("Statement posted successfully!", "success")
         
@@ -395,6 +412,26 @@ def vote_statement(statement_id):
             
             db.session.commit()
 
+    # Track vote with PostHog
+    try:
+        if current_user.is_authenticated:
+            distinct_id = str(current_user.id)
+        else:
+            distinct_id = get_statement_vote_fingerprint()
+        vote_label = {1: 'agree', -1: 'disagree', 0: 'unsure'}.get(vote_value, 'unknown')
+        posthog.capture(
+            distinct_id=distinct_id,
+            event='statement_voted',
+            properties={
+                'statement_id': statement_id,
+                'discussion_id': statement.discussion_id,
+                'vote': vote_label,
+                'is_authenticated': current_user.is_authenticated
+            }
+        )
+    except Exception as e:
+        current_app.logger.warning(f"PostHog tracking error: {e}")
+    
     return jsonify({
         'success': True,
         'vote': vote_value,
