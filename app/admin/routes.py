@@ -734,6 +734,33 @@ def delete_subscriber(subscriber_id):
     return redirect(url_for('admin.list_daily_subscribers'))
 
 
+@admin_bp.route('/daily-questions/subscribers/bulk-remove', methods=['POST'])
+@login_required
+@admin_required
+def bulk_remove_subscribers():
+    """Bulk remove selected subscribers"""
+    subscriber_ids = request.form.getlist('subscriber_ids')
+    
+    if not subscriber_ids:
+        flash('No subscribers selected.', 'warning')
+        return redirect(url_for('admin.list_daily_subscribers'))
+    
+    removed = 0
+    for sub_id in subscriber_ids:
+        try:
+            subscriber = DailyQuestionSubscriber.query.get(int(sub_id))
+            if subscriber:
+                db.session.delete(subscriber)
+                removed += 1
+        except Exception as e:
+            current_app.logger.error(f"Error removing subscriber {sub_id}: {e}")
+            db.session.rollback()
+    
+    db.session.commit()
+    flash(f'Removed {removed} subscriber(s).', 'success')
+    return redirect(url_for('admin.list_daily_subscribers'))
+
+
 @admin_bp.route('/daily-questions/subscribers/bulk-import', methods=['POST'])
 @login_required
 @admin_required
