@@ -129,6 +129,47 @@
             </div>
         </div>
 
+        {% if source_discussion %}
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Continue the Discussion</h3>
+            <p class="text-sm text-gray-600 mb-4">This question comes from a broader discussion. Dive deeper to explore more perspectives and share your thoughts on related statements.</p>
+            <a href="{{ url_for('main.discussion_detail', discussion_id=source_discussion.id, slug=source_discussion.slug) }}" 
+               class="inline-flex items-center px-5 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                {{ source_discussion.title[:60] }}{% if source_discussion.title|length > 60 %}...{% endif %}
+            </a>
+        </div>
+        {% endif %}
+
+        {% if related_discussions and related_discussions|length > 0 %}
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-3">Explore More Discussions</h3>
+            <p class="text-sm text-gray-600 mb-4">Keep the conversation going with these related topics:</p>
+            <div class="space-y-3">
+                {% for discussion in related_discussions %}
+                <a href="{{ url_for('main.discussion_detail', discussion_id=discussion.id, slug=discussion.slug) }}" 
+                   class="block p-4 border border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h4 class="font-medium text-gray-900 mb-1">{{ discussion.title[:80] }}{% if discussion.title|length > 80 %}...{% endif %}</h4>
+                            {% if discussion.topic %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                {{ discussion.topic }}
+                            </span>
+                            {% endif %}
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400 flex-shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
         <div class="bg-green-50 rounded-xl p-6 text-center">
             <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
                 <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

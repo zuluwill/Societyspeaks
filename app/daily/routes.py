@@ -3,9 +3,40 @@ from flask_login import current_user, login_user
 from datetime import date, datetime
 from app.daily import daily_bp
 from app import db, limiter
-from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, User
+from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, User, Discussion
 import hashlib
 import re
+
+
+def get_related_discussions(question, limit=3):
+    """Get related discussions for exploration after voting"""
+    related = []
+    
+    if question.source_discussion:
+        source_topic = question.source_discussion.topic
+        if source_topic:
+            related = Discussion.query.filter(
+                Discussion.topic == source_topic,
+                Discussion.id != question.source_discussion_id,
+                Discussion.has_native_statements == True
+            ).order_by(Discussion.created_at.desc()).limit(limit).all()
+    
+    if len(related) < limit:
+        needed = limit - len(related)
+        exclude_ids = [d.id for d in related]
+        if question.source_discussion_id:
+            exclude_ids.append(question.source_discussion_id)
+        
+        query = Discussion.query.filter(
+            Discussion.has_native_statements == True
+        )
+        if exclude_ids:
+            query = query.filter(Discussion.id.notin_(exclude_ids))
+        
+        more = query.order_by(Discussion.created_at.desc()).limit(needed).all()
+        related.extend(more)
+    
+    return related
 
 
 def get_session_fingerprint():
@@ -78,7 +109,9 @@ def today():
                              stats=question.vote_percentages,
                              is_cold_start=question.is_cold_start,
                              early_signal=question.early_signal_message,
-                             share_snippet=generate_share_snippet(question, user_response))
+                             share_snippet=generate_share_snippet(question, user_response),
+                             source_discussion=question.source_discussion,
+                             related_discussions=get_related_discussions(question))
     else:
         return render_template('daily/question.html',
                              question=question)
@@ -111,7 +144,9 @@ def by_date(date_str):
                              is_cold_start=question.is_cold_start,
                              early_signal=question.early_signal_message,
                              share_snippet=generate_share_snippet(question, user_response) if user_response else None,
-                             is_past=not is_today)
+                             is_past=not is_today,
+                             source_discussion=question.source_discussion,
+                             related_discussions=get_related_discussions(question))
     else:
         return render_template('daily/question.html',
                              question=question)
