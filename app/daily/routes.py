@@ -8,6 +8,17 @@ import hashlib
 import re
 
 
+def get_source_articles(question, limit=5):
+    """Get source articles from the source discussion if available"""
+    if question.source_discussion and question.source_discussion.source_article_links:
+        articles = []
+        for link in question.source_discussion.source_article_links[:limit]:
+            if link.article:
+                articles.append(link.article)
+        return articles
+    return []
+
+
 def get_related_discussions(question, limit=3):
     """Get related discussions for exploration after voting"""
     related = []
@@ -111,6 +122,7 @@ def today():
                              early_signal=question.early_signal_message,
                              share_snippet=generate_share_snippet(question, user_response),
                              source_discussion=question.source_discussion,
+                             source_articles=get_source_articles(question),
                              related_discussions=get_related_discussions(question))
     else:
         return render_template('daily/question.html',
@@ -146,6 +158,7 @@ def by_date(date_str):
                              share_snippet=generate_share_snippet(question, user_response) if user_response else None,
                              is_past=not is_today,
                              source_discussion=question.source_discussion,
+                             source_articles=get_source_articles(question),
                              related_discussions=get_related_discussions(question))
     else:
         return render_template('daily/question.html',
