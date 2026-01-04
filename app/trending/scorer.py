@@ -19,11 +19,46 @@ import os
 import logging
 import json
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 
 from app.models import NewsArticle, TrendingTopic
 
 logger = logging.getLogger(__name__)
+
+
+def extract_json(text: str) -> Any:
+    """
+    Robustly extract JSON from LLM response.
+    Handles markdown code blocks, trailing text, and other artifacts.
+    """
+    if not text:
+        raise ValueError("Empty response from LLM")
+    
+    text = text.strip()
+    
+    code_block_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', text)
+    if code_block_match:
+        text = code_block_match.group(1).strip()
+    
+    if text.startswith('['):
+        bracket_match = re.search(r'(\[[\s\S]*?\])', text)
+        if bracket_match:
+            text = bracket_match.group(1)
+    elif text.startswith('{'):
+        brace_count = 0
+        end_pos = 0
+        for i, char in enumerate(text):
+            if char == '{':
+                brace_count += 1
+            elif char == '}':
+                brace_count -= 1
+                if brace_count == 0:
+                    end_pos = i + 1
+                    break
+        if end_pos > 0:
+            text = text[:end_pos]
+    
+    return json.loads(text)
 
 
 def get_system_api_key() -> Tuple[Optional[str], str]:
@@ -253,7 +288,9 @@ Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8}}, {{"s": 0.5, "
     )
     
     content = response.choices[0].message.content
-    scores = json.loads(content)
+    if not content:
+        raise ValueError("Empty response from OpenAI")
+    scores = extract_json(content)
     
     for i, article in enumerate(articles):
         if i < len(scores):
@@ -297,7 +334,7 @@ Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8}}, {{"s": 0.5, "
     )
     
     content = message.content[0].text
-    scores = json.loads(content)
+    scores = extract_json(content)
     
     for i, article in enumerate(articles):
         if i < len(scores):
@@ -371,7 +408,7 @@ Respond with ONLY valid JSON."""
         else:
             result = _call_anthropic(api_key, prompt)
         
-        data = json.loads(result)
+        data = extract_json(result)
         
         topic.civic_score = float(data.get('civic_score', 0.5))
         topic.quality_score = float(data.get('quality_score', 0.5))
@@ -412,7 +449,10 @@ def _call_openai(api_key: str, prompt: str) -> str:
         max_tokens=300,
         temperature=0.3
     )
-    return response.choices[0].message.content
+    content = response.choices[0].message.content
+    if not content:
+        raise ValueError("Empty response from OpenAI")
+    return content
 
 
 def _call_anthropic(api_key: str, prompt: str) -> str:
@@ -423,4 +463,7 @@ def _call_anthropic(api_key: str, prompt: str) -> str:
         max_tokens=300,
         messages=[{"role": "user", "content": prompt}]
     )
-    return message.content[0].text
+    content = message.content[0].text
+    if not content:
+        raise ValueError("Empty response from Anthropic")
+    return content
