@@ -333,7 +333,8 @@ Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8}}, {{"s": 0.5, "
         messages=[{"role": "user", "content": prompt}]
     )
     
-    content = message.content[0].text
+    content_block = message.content[0]
+    content = getattr(content_block, 'text', None) or str(content_block)
     scores = extract_json(content)
     
     for i, article in enumerate(articles):
@@ -463,7 +464,8 @@ def _call_anthropic(api_key: str, prompt: str) -> str:
         max_tokens=300,
         messages=[{"role": "user", "content": prompt}]
     )
-    content = message.content[0].text
+    content_block = message.content[0]
+    content = getattr(content_block, 'text', None) or str(content_block)
     if not content:
         raise ValueError("Empty response from Anthropic")
     return content
