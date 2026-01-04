@@ -16,6 +16,7 @@ scikit-learn = "^1.8.0"
 openai = "^2.14.0"
 atproto = "^0.0.65"
 posthog = "^7.4.2"
+anthropic = "^0.75.0"
 
 [tool.pyright]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md
