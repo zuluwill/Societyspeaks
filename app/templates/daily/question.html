@@ -97,7 +97,7 @@
                     </button>
                 </div>
 
-                <div id="reasonSection" class="hidden">
+                <div id="reasonSection" class="hidden mt-6">
                     <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
                         Add a short reason (optional)
                     </label>
@@ -106,6 +106,16 @@
                               placeholder="Share why you feel this way... (max 500 characters)"></textarea>
                     <p class="text-sm text-gray-500 mt-1">
                         <span id="charCount">0</span>/500 characters
+                    </p>
+                    <button type="button" id="submitVoteBtn"
+                            class="mt-4 w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Submit My Response
+                    </button>
+                    <p class="text-xs text-gray-400 mt-2 text-center">
+                        You can skip the reason and submit directly, or take your time to explain.
                     </p>
                 </div>
             </form>
@@ -151,6 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const reasonTextarea = document.getElementById('reason');
     const charCount = document.getElementById('charCount');
     const form = document.getElementById('voteForm');
+    const submitBtn = document.getElementById('submitVoteBtn');
     let selectedVote = null;
 
     voteBtns.forEach(btn => {
@@ -171,17 +182,25 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.value === 'unsure') this.classList.add('ring-yellow-500');
             
             reasonSection.classList.remove('hidden');
-            
-            setTimeout(() => {
-                const voteInput = document.createElement('input');
-                voteInput.type = 'hidden';
-                voteInput.name = 'vote';
-                voteInput.value = selectedVote;
-                form.appendChild(voteInput);
-                form.submit();
-            }, 300);
+            reasonTextarea.focus();
         });
     });
+
+    if (submitBtn) {
+        submitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (!selectedVote) {
+                alert('Please select Agree, Disagree, or Unsure first.');
+                return;
+            }
+            const voteInput = document.createElement('input');
+            voteInput.type = 'hidden';
+            voteInput.name = 'vote';
+            voteInput.value = selectedVote;
+            form.appendChild(voteInput);
+            form.submit();
+        });
+    }
 
     if (reasonTextarea) {
         reasonTextarea.addEventListener('input', function() {
