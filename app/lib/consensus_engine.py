@@ -7,6 +7,17 @@ Uses PCA + Agglomerative Clustering to find opinion groups
 Identifies consensus, bridge, and divisive statements
 
 Based on pol.is clustering patterns (AGPL-3.0)
+
+RECENT IMPROVEMENTS (2026-01-05):
+- Changed missing vote fill strategy from 0 (neutral) to statement mean
+  This preserves vote distribution and improves clustering accuracy
+- Removed StandardScaler before PCA to preserve meaningful variance signals
+  Variance = consensus vs division, which is exactly what PCA should focus on
+
+TODO - Remaining improvements:
+- Consider SparsityAwareScaler after PCA (pol.is-specific, need implementation)
+- Add validation metrics beyond silhouette score
+- Test clustering quality on real discussions
 """
 import numpy as np
 import pandas as pd
@@ -21,13 +32,14 @@ def build_vote_matrix(discussion_id, db):
     """
     Build vote matrix from statement votes
     Rows = participants (users + anonymous), Columns = statements, Values = votes (-1, 0, 1)
-    
+
     Supports both authenticated and anonymous participants:
     - Authenticated: identified by user_id (u_{id})
     - Anonymous: identified by session_fingerprint (a_{fingerprint})
-    
+
     Returns:
-        vote_matrix: pandas DataFrame (participants x statements)
+        vote_matrix_filled: pandas DataFrame with filled values (for PCA/clustering)
+        vote_matrix_real: pandas DataFrame with only real votes, NaN for missing (for consensus metrics)
         participant_ids: list of participant identifiers
         statement_ids: list of statement IDs
     """
@@ -67,20 +79,32 @@ def build_vote_matrix(discussion_id, db):
     # Convert to DataFrame
     df = pd.DataFrame(vote_data)
     
-    # Pivot to create matrix
-    vote_matrix = df.pivot_table(
+    # Pivot to create matrix (without filling initially)
+    vote_matrix_real = df.pivot_table(
         index='participant_id',
         columns='statement_id',
         values='vote',
-        fill_value=0  # Participants who haven't voted get 0 (neutral)
+        aggfunc='mean'  # In case of duplicate votes (shouldn't happen)
     )
-    
-    participant_ids = vote_matrix.index.tolist()
-    statement_ids = vote_matrix.columns.tolist()
-    
+
+    # Create filled version for PCA/clustering
+    # Fill missing votes with statement means (pol.is approach)
+    # This preserves vote distribution instead of artificially inflating neutral votes
+    # Example: If statement has 80% agree, 20% disagree - missing votes filled with 0.6
+    statement_means = vote_matrix_real.mean(axis=0)
+    vote_matrix_filled = vote_matrix_real.fillna(statement_means)
+
+    # Fallback: if any statement has zero votes (shouldn't happen due to can_cluster check)
+    vote_matrix_filled = vote_matrix_filled.fillna(0)
+
+    participant_ids = vote_matrix_filled.index.tolist()
+    statement_ids = vote_matrix_filled.columns.tolist()
+
     logger.info(f"Built vote matrix: {len(participant_ids)} participants x {len(statement_ids)} statements")
-    
-    return vote_matrix, participant_ids, statement_ids
+    logger.info(f"Statement mean fill range: [{statement_means.min():.2f}, {statement_means.max():.2f}]")
+
+    # Return both: filled for PCA, real for consensus metrics
+    return vote_matrix_filled, vote_matrix_real, participant_ids, statement_ids
 
 
 def can_cluster(discussion_id, db):
@@ -149,20 +173,22 @@ def perform_pca(vote_matrix, n_components=2):
     """
     Perform PCA dimensionality reduction
     Pol.is uses 2 components for visualization
+
+    NOTE: We do NOT use StandardScaler before PCA because:
+    - Variance in voting data is meaningful (consensus vs. division)
+    - StandardScaler would erase this signal by normalizing all statements to std=1
+    - PCA should focus on high-variance (divisive) statements to find opinion groups
+    - Cosine distance clustering doesn't require standardization anyway
     """
     from sklearn.decomposition import PCA
-    
-    # Standardize the data
-    from sklearn.preprocessing import StandardScaler
-    scaler = StandardScaler()
-    vote_matrix_scaled = scaler.fit_transform(vote_matrix)
-    
-    # Apply PCA
+
+    # Apply PCA directly (no standardization)
     pca = PCA(n_components=n_components)
-    vote_matrix_pca = pca.fit_transform(vote_matrix_scaled)
-    
+    vote_matrix_pca = pca.fit_transform(vote_matrix)
+
     logger.info(f"PCA explained variance: {pca.explained_variance_ratio_}")
-    
+    logger.info(f"PCA components shape: {vote_matrix_pca.shape}")
+
     return vote_matrix_pca, pca
 
 
@@ -228,44 +254,49 @@ def cluster_users(vote_matrix_pca, n_clusters=None, method='agglomerative'):
 def identify_consensus_statements(vote_matrix, user_labels, consensus_threshold=0.7, cluster_threshold=0.6):
     """
     Identify statements with broad consensus
-    
+
     Pol.is criteria:
     - ≥70% overall agreement
     - ≥60% agreement in EACH cluster
-    
+
+    Note: Uses real votes only (NaN = no vote), not imputed values
+
     Returns:
         List of (statement_id, agreement_rate) tuples
     """
     consensus_statements = []
-    
+
     for statement_id in vote_matrix.columns:
         statement_votes = vote_matrix[statement_id]
-        
-        # Calculate overall agreement (agree votes / total votes)
+
+        # Calculate overall agreement (agree votes / total REAL votes)
+        # Only count actual votes, not NaN (missing votes)
+        real_votes = statement_votes.notna()
         agree_votes = (statement_votes == 1).sum()
-        total_votes = (statement_votes != 0).sum()
-        
+        total_votes = real_votes.sum()
+
         if total_votes == 0:
             continue
-        
+
         overall_agreement = agree_votes / total_votes
-        
+
         if overall_agreement < consensus_threshold:
             continue
-        
+
         # Check agreement in each cluster
         cluster_agreements = []
         for cluster_id in np.unique(user_labels):
             cluster_mask = user_labels == cluster_id
             cluster_votes = statement_votes[vote_matrix.index[cluster_mask]]
-            
+
+            cluster_real = cluster_votes.notna()
             cluster_agree = (cluster_votes == 1).sum()
-            cluster_total = (cluster_votes != 0).sum()
-            
+            cluster_total = cluster_real.sum()
+
             if cluster_total > 0:
                 cluster_agreement = cluster_agree / cluster_total
                 cluster_agreements.append(cluster_agreement)
-        
+
         # All clusters must meet threshold
         if all(ca >= cluster_threshold for ca in cluster_agreements):
             consensus_statements.append({
@@ -273,7 +304,7 @@ def identify_consensus_statements(vote_matrix, user_labels, consensus_threshold=
                 'agreement_rate': overall_agreement,
                 'cluster_agreements': cluster_agreements
             })
-    
+
     logger.info(f"Found {len(consensus_statements)} consensus statements")
     return consensus_statements
 
@@ -281,38 +312,41 @@ def identify_consensus_statements(vote_matrix, user_labels, consensus_threshold=
 def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max_variance=0.15):
     """
     Identify bridge statements that unite different clusters
-    
+
     Pol.is criteria:
     - High mean agreement across clusters (≥65%)
     - Low variance across clusters (<0.15)
-    
+
+    Note: Uses real votes only (NaN = no vote), not imputed values
+
     Returns:
         List of (statement_id, mean_agreement, variance) tuples
     """
     bridge_statements = []
-    
+
     for statement_id in vote_matrix.columns:
         statement_votes = vote_matrix[statement_id]
-        
-        # Calculate agreement in each cluster
+
+        # Calculate agreement in each cluster (using real votes only)
         cluster_agreements = []
         for cluster_id in np.unique(user_labels):
             cluster_mask = user_labels == cluster_id
             cluster_votes = statement_votes[vote_matrix.index[cluster_mask]]
-            
+
+            cluster_real = cluster_votes.notna()
             cluster_agree = (cluster_votes == 1).sum()
-            cluster_total = (cluster_votes != 0).sum()
-            
+            cluster_total = cluster_real.sum()
+
             if cluster_total > 0:
                 cluster_agreement = cluster_agree / cluster_total
                 cluster_agreements.append(cluster_agreement)
-        
+
         if len(cluster_agreements) < 2:
             continue
-        
+
         mean_agreement = np.mean(cluster_agreements)
         variance = np.var(cluster_agreements)
-        
+
         if mean_agreement >= min_agreement and variance <= max_variance:
             bridge_statements.append({
                 'statement_id': statement_id,
@@ -320,7 +354,7 @@ def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max
                 'variance': variance,
                 'cluster_agreements': cluster_agreements
             })
-    
+
     logger.info(f"Found {len(bridge_statements)} bridge statements")
     return bridge_statements
 
@@ -328,37 +362,41 @@ def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max
 def identify_divisive_statements(vote_matrix, user_labels, min_controversy=0.7):
     """
     Identify divisive statements with strong disagreement
-    
+
     High controversy score (close to 50/50 split)
-    
+
+    Note: Uses real votes only (NaN = no vote), not imputed values
+    Only counts agree/disagree votes (not unsure)
+
     Returns:
         List of (statement_id, controversy_score) tuples
     """
     divisive_statements = []
-    
+
     for statement_id in vote_matrix.columns:
         statement_votes = vote_matrix[statement_id]
-        
+
+        # Only count explicit agree/disagree (NaN won't match, so excluded automatically)
         agree_votes = (statement_votes == 1).sum()
         disagree_votes = (statement_votes == -1).sum()
         total_votes = agree_votes + disagree_votes
-        
+
         if total_votes < 5:  # Need enough votes
             continue
-        
+
         agree_rate = agree_votes / total_votes if total_votes > 0 else 0
-        
+
         # Controversy score: 1 - |agree_rate - 0.5| * 2
         # Peaks at 1.0 when agree_rate = 0.5 (50/50 split)
         controversy = 1 - abs(agree_rate - 0.5) * 2
-        
+
         if controversy >= min_controversy:
             divisive_statements.append({
                 'statement_id': statement_id,
                 'controversy_score': controversy,
                 'agree_rate': agree_rate
             })
-    
+
     logger.info(f"Found {len(divisive_statements)} divisive statements")
     return divisive_statements
 
@@ -382,34 +420,35 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
         logger.warning(f"Cannot cluster discussion {discussion_id}: {message}")
         return None
     
-    # Build vote matrix
-    vote_matrix, user_ids, statement_ids = build_vote_matrix(discussion_id, db)
-    
-    if vote_matrix is None or len(user_ids) == 0:
+    # Build vote matrices (filled for PCA, real for consensus metrics)
+    vote_matrix_filled, vote_matrix_real, user_ids, statement_ids = build_vote_matrix(discussion_id, db)
+
+    if vote_matrix_filled is None or len(user_ids) == 0:
         return None
-    
-    # Perform PCA
-    vote_matrix_pca, pca = perform_pca(vote_matrix)
-    
-    # Cluster users
+
+    # Perform PCA on filled matrix (imputed values help PCA see patterns)
+    vote_matrix_pca, pca = perform_pca(vote_matrix_filled)
+
+    # Cluster users based on PCA
     user_labels, silhouette = cluster_users(vote_matrix_pca, method=method)
-    
+
     # Create user-cluster mapping
     cluster_assignments = {
         int(user_id): int(label)
         for user_id, label in zip(user_ids, user_labels)
     }
-    
+
     # Create PCA coordinates mapping
     pca_coordinates = {
         int(user_id): (float(coords[0]), float(coords[1]))
         for user_id, coords in zip(user_ids, vote_matrix_pca)
     }
-    
-    # Identify special statements
-    consensus_stmts = identify_consensus_statements(vote_matrix, user_labels)
-    bridge_stmts = identify_bridge_statements(vote_matrix, user_labels)
-    divisive_stmts = identify_divisive_statements(vote_matrix, user_labels)
+
+    # Identify special statements using REAL votes only (not imputed)
+    # This ensures consensus metrics only count actual participant votes
+    consensus_stmts = identify_consensus_statements(vote_matrix_real, user_labels)
+    bridge_stmts = identify_bridge_statements(vote_matrix_real, user_labels)
+    divisive_stmts = identify_divisive_statements(vote_matrix_real, user_labels)
     
     # Compile results
     results = {
