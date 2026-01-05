@@ -56,7 +56,7 @@ def build_vote_matrix(discussion_id, db):
     ).all()
     
     if not votes:
-        return None, [], []
+        return None, None, [], []
     
     # Create participant identifier: user_id takes precedence, fall back to session_fingerprint
     vote_data = []
@@ -74,7 +74,7 @@ def build_vote_matrix(discussion_id, db):
         })
     
     if not vote_data:
-        return None, [], []
+        return None, None, [], []
     
     # Convert to DataFrame
     df = pd.DataFrame(vote_data)
