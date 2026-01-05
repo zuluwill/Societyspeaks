@@ -266,7 +266,12 @@ def send_profile_completion_reminder_email(user):
     )
 
     if missing_fields:
-        profile_link = url_for('settings.profile', _external=True)
+        if isinstance(profile, IndividualProfile):
+            profile_link = url_for('profiles.edit_individual_profile', 
+                                   username=profile.slug, _external=True)
+        else:
+            profile_link = url_for('profiles.edit_company_profile', 
+                                   company_name=profile.slug, _external=True)
 
         # Simplified event properties
         event_properties = {
