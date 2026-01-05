@@ -13,6 +13,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timedelta
 import logging
+import threading
 
 logger = logging.getLogger(__name__)
 scheduler = None
@@ -256,24 +257,45 @@ def init_scheduler(app):
             logger.info("Daily question auto-publish complete")
     
     
+    _email_send_in_progress = threading.Event()
+    
+    def _run_email_send_in_thread(app_instance):
+        """Run email send in background thread with its own app context"""
+        try:
+            with app_instance.app_context():
+                from app.email_utils import send_daily_question_to_all_subscribers
+                
+                logger.info("Background thread: Starting daily question email send")
+                sent = send_daily_question_to_all_subscribers()
+                logger.info(f"Background thread: Sent daily question to {sent} subscribers")
+        except Exception as e:
+            logger.error(f"Background thread: Daily question email error: {e}", exc_info=True)
+        finally:
+            _email_send_in_progress.clear()
+            logger.info("Background thread: Daily question email send complete")
+    
     @scheduler.scheduled_job('cron', hour=8, minute=0, id='daily_question_email')
     def daily_question_email():
         """
         Send daily question email to all subscribers.
         Runs at 8:00am UTC (after question is published).
+        Launches in background thread to not block other scheduled jobs.
         """
-        with app.app_context():
-            from app.email_utils import send_daily_question_to_all_subscribers
-            
-            logger.info("Starting daily question email send")
-            
-            try:
-                sent = send_daily_question_to_all_subscribers()
-                logger.info(f"Sent daily question to {sent} subscribers")
-            except Exception as e:
-                logger.error(f"Daily question email error: {e}", exc_info=True)
-            
-            logger.info("Daily question email send complete")
+        if _email_send_in_progress.is_set():
+            logger.warning("Daily question email send already in progress, skipping")
+            return
+        
+        _email_send_in_progress.set()
+        logger.info("Launching daily question email send in background thread")
+        
+        email_thread = threading.Thread(
+            target=_run_email_send_in_thread,
+            args=(app,),
+            daemon=True,
+            name="daily-email-sender"
+        )
+        email_thread.start()
+        logger.info("Daily question email thread launched, scheduler continuing")
     
     
     logger.info("Scheduler initialized with jobs:")
