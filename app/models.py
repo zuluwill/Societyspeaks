@@ -853,6 +853,10 @@ class NewsArticle(db.Model):
     sensationalism_score = db.Column(db.Float)  # 0-1: higher = more clickbait
     relevance_score = db.Column(db.Float)  # 0-1: discussion potential (1=policy debate, 0=product review)
     
+    # Geographic scope detection (AI-analyzed from content)
+    geographic_scope = db.Column(db.String(20), default='unknown')  # 'global', 'regional', 'national', 'local', 'unknown'
+    geographic_countries = db.Column(db.String(500))  # Comma-separated list of countries mentioned (e.g., "UK, US" or "Global")
+    
     # Embedding for clustering (stored as JSON array of floats)
     title_embedding = db.Column(db.JSON)
     
