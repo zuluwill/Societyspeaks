@@ -619,7 +619,10 @@ def view_daily_question(question_id):
 @admin_required
 def list_daily_subscribers():
     """View all daily question subscribers"""
-    subscribers = DailyQuestionSubscriber.query.order_by(
+    from sqlalchemy.orm import joinedload
+    subscribers = DailyQuestionSubscriber.query.options(
+        joinedload(DailyQuestionSubscriber.user)
+    ).order_by(
         DailyQuestionSubscriber.created_at.desc()
     ).all()
     
