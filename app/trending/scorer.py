@@ -266,7 +266,7 @@ def score_articles_with_llm(articles: List[NewsArticle]) -> List[NewsArticle]:
 
 
 def _score_with_openai(articles: List[NewsArticle], api_key: str) -> List[NewsArticle]:
-    """Score articles using OpenAI for sensationalism and relevance."""
+    """Score articles using OpenAI Structured Outputs for guaranteed JSON schema."""
     import openai
     
     client = openai.OpenAI(api_key=api_key)
@@ -296,22 +296,52 @@ def _score_with_openai(articles: List[NewsArticle], api_key: str) -> List[NewsAr
 Headlines:
 {chr(10).join(headlines)}
 
-Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8, "geo": "national", "countries": "United Kingdom"}}, {{"s": 0.5, "r": 0.3, "geo": "global", "countries": "Global"}}]"""
+Rate each headline in order."""
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
-            {"role": "system", "content": "You are a media quality analyst for a civic debate platform."},
+            {"role": "system", "content": "You are a media quality analyst for a civic debate platform. Return ratings for each headline."},
             {"role": "user", "content": prompt}
         ],
-        max_tokens=1000,
+        response_format={
+            "type": "json_schema",
+            "json_schema": {
+                "name": "article_scores",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "scores": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "s": {"type": "number", "description": "Sensationalism score 0-1"},
+                                    "r": {"type": "number", "description": "Relevance score 0-1"},
+                                    "geo": {"type": "string", "enum": ["global", "regional", "national", "local"]},
+                                    "countries": {"type": "string", "description": "Country names or Global"}
+                                },
+                                "required": ["s", "r", "geo", "countries"],
+                                "additionalProperties": False
+                            }
+                        }
+                    },
+                    "required": ["scores"],
+                    "additionalProperties": False
+                }
+            }
+        },
+        max_tokens=1500,
         temperature=0.3
     )
     
     content = response.choices[0].message.content
     if not content:
         raise ValueError("Empty response from OpenAI")
-    scores = extract_json(content)
+    
+    result = json.loads(content)
+    scores = result.get('scores', [])
     
     for i, article in enumerate(articles):
         if i < len(scores):
