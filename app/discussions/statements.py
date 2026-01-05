@@ -13,12 +13,16 @@ from sqlalchemy import func, desc, or_
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 import hashlib
+import secrets
 try:
     import posthog
 except ImportError:
     posthog = None
 
 statements_bp = Blueprint('statements', __name__)
+
+STATEMENT_CLIENT_COOKIE_NAME = 'statement_client_id'
+STATEMENT_CLIENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
 
 
 def calculate_wilson_score(agree, disagree, confidence=0.95):
@@ -237,17 +241,59 @@ def create_statement(discussion_id):
                          discussion=discussion)
 
 
+def get_or_create_statement_client_id():
+    """Get the long-lived client ID from cookie, or generate a new one.
+    
+    Returns a tuple of (client_id, is_new) where is_new indicates if we need to set the cookie.
+    """
+    client_id = request.cookies.get(STATEMENT_CLIENT_COOKIE_NAME)
+    if client_id and len(client_id) == 64:
+        return client_id, False
+    new_id = secrets.token_hex(32)
+    return new_id, True
+
+
 def get_statement_vote_fingerprint():
-    """Generate a fingerprint for anonymous statement voters"""
-    import hashlib
-    if 'statement_vote_fingerprint' not in session:
-        session_id = session.get('_id', request.remote_addr or 'unknown')
-        ip_addr = request.remote_addr or 'unknown'
-        user_agent = request.headers.get('User-Agent', '')[:100]
-        fingerprint_string = f"statement_vote:{session_id}:{ip_addr}:{user_agent}"
-        session['statement_vote_fingerprint'] = hashlib.sha256(fingerprint_string.encode()).hexdigest()
+    """Generate a unique fingerprint for anonymous statement voters.
+    
+    Uses a long-lived client ID cookie as the primary identifier to survive session restarts.
+    This prevents both:
+    1. Fingerprint collisions (multiple users getting the same fingerprint)
+    2. Easy vote duplication (clearing session cookies to vote again)
+    
+    The client ID is stored in a separate long-lived cookie that persists for 1 year.
+    """
+    client_id, _ = get_or_create_statement_client_id()
+    fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
+    
+    if session.get('statement_vote_fingerprint') != fingerprint:
+        session['statement_vote_fingerprint'] = fingerprint
         session.modified = True
-    return session['statement_vote_fingerprint']
+    
+    return fingerprint
+
+
+def set_statement_client_id_cookie_if_needed(response):
+    """Set the long-lived client ID cookie if it doesn't exist."""
+    client_id, is_new = get_or_create_statement_client_id()
+    if is_new:
+        response.set_cookie(
+            STATEMENT_CLIENT_COOKIE_NAME,
+            client_id,
+            max_age=STATEMENT_CLIENT_COOKIE_MAX_AGE,
+            httponly=True,
+            secure=True,
+            samesite='Lax'
+        )
+    return response
+
+
+@statements_bp.after_request
+def after_request_set_statement_cookie(response):
+    """Automatically set the long-lived client ID cookie on all statement blueprint responses."""
+    if not current_user.is_authenticated:
+        return set_statement_client_id_cookie_if_needed(response)
+    return response
 
 
 @statements_bp.route('/statements/<int:statement_id>/vote', methods=['POST'])

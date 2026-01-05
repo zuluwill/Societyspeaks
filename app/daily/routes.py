@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app
+from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app, make_response
 from flask_login import current_user, login_user
 from datetime import date, datetime
 from app.daily import daily_bp
@@ -6,6 +6,10 @@ from app import db, limiter
 from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, User, Discussion
 import hashlib
 import re
+import secrets
+
+DAILY_CLIENT_COOKIE_NAME = 'daily_client_id'
+DAILY_CLIENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
 
 
 def get_source_articles(question, limit=5):
@@ -50,20 +54,60 @@ def get_related_discussions(question, limit=3):
     return related
 
 
-def get_session_fingerprint():
-    """Generate a unique fingerprint for anonymous users based on their browser session.
+def get_or_create_client_id():
+    """Get the long-lived client ID from cookie, or generate a new one.
     
-    Uses a cryptographically secure random token stored in the session cookie,
-    ensuring each browser session has a unique identifier regardless of IP or User-Agent.
-    This prevents fingerprint collisions when multiple users share the same network/browser.
+    Returns a tuple of (client_id, is_new) where is_new indicates if we need to set the cookie.
     """
-    import secrets
+    client_id = request.cookies.get(DAILY_CLIENT_COOKIE_NAME)
+    if client_id and len(client_id) == 64:
+        return client_id, False
+    new_id = secrets.token_hex(32)
+    return new_id, True
+
+
+def get_session_fingerprint():
+    """Generate a unique fingerprint for anonymous users.
     
-    if 'daily_fingerprint' not in session:
-        unique_token = secrets.token_hex(32)
-        session['daily_fingerprint'] = hashlib.sha256(unique_token.encode()).hexdigest()
+    Uses a long-lived client ID cookie as the primary identifier to survive session restarts.
+    This prevents both:
+    1. Fingerprint collisions (multiple users getting the same fingerprint)
+    2. Easy vote duplication (clearing session cookies to vote again)
+    
+    The client ID is stored in a separate long-lived cookie that persists for 1 year.
+    Always regenerates from the client_id cookie to ensure consistency across session restarts.
+    """
+    client_id, is_new = get_or_create_client_id()
+    fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
+    
+    if session.get('daily_fingerprint') != fingerprint:
+        session['daily_fingerprint'] = fingerprint
         session.modified = True
-    return session['daily_fingerprint']
+    
+    return fingerprint
+
+
+def set_client_id_cookie_if_needed(response):
+    """Set the long-lived client ID cookie if it doesn't exist or needs refresh."""
+    client_id, is_new = get_or_create_client_id()
+    if is_new:
+        response.set_cookie(
+            DAILY_CLIENT_COOKIE_NAME,
+            client_id,
+            max_age=DAILY_CLIENT_COOKIE_MAX_AGE,
+            httponly=True,
+            secure=True,
+            samesite='Lax'
+        )
+    return response
+
+
+@daily_bp.after_request
+def after_request_set_client_cookie(response):
+    """Automatically set the long-lived client ID cookie on all daily blueprint responses."""
+    if not current_user.is_authenticated:
+        return set_client_id_cookie_if_needed(response)
+    return response
 
 
 def has_user_voted(daily_question):
