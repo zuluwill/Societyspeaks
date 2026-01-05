@@ -254,9 +254,12 @@ def get_missing_company_profile_fields(profile):
 
 
 def send_profile_completion_reminder_email(user):
+    if not user.email:
+        return
+    
     profile = user.individual_profile or user.company_profile
 
-    if not profile:
+    if not profile or not profile.slug:
         return
 
     missing_fields = (
@@ -282,7 +285,7 @@ def send_profile_completion_reminder_email(user):
         send_loops_event(
             email_address=user.email,
             event_name="profile_completion_reminder",
-            user_id=str(user.id),  # Convert to string
+            user_id=str(user.id),
             contact_properties={"name": user.username},
             event_properties=event_properties
         )
