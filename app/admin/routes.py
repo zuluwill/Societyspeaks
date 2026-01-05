@@ -12,6 +12,7 @@ from werkzeug.security import generate_password_hash
 from app.utils import upload_to_object_storage  
 from app.email_utils import send_email
 from app.admin import admin_bp
+from sqlalchemy.orm import joinedload
 import time
 
 
@@ -619,7 +620,6 @@ def view_daily_question(question_id):
 @admin_required
 def list_daily_subscribers():
     """View all daily question subscribers"""
-    from sqlalchemy.orm import joinedload
     subscribers = DailyQuestionSubscriber.query.options(
         joinedload(DailyQuestionSubscriber.user)
     ).order_by(
