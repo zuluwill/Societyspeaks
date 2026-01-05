@@ -1,0 +1,248 @@
+# BuildError: Could not build url for endpoint 'settings.profile'. Did you mean 'main.view_profile' instead?
+
+**Issue ID:** 70510900
+**Project:** python-flask
+**Date:** 05/01/2026, 13:03:32
+## Issue Summary
+BuildError: Invalid endpoint 'settings.profile' during login
+**What's wrong:** BuildError: **'settings.profile' endpoint not found** during login, suggesting **'main.view_profile'**.
+**In the trace:** PostHog tracking error: **API key is required**.
+**Possible cause:** The **endpoint name 'settings.profile' is misspelled** or **incorrectly defined** in the routing configuration.
+
+## Tags
+
+- **browser:** Mobile Safari 26.2
+- **browser.name:** Mobile Safari
+- **client_os:** iOS 18.7
+- **client_os.name:** iOS
+- **device:** iPhone
+- **device.family:** iPhone
+- **environment:** production
+- **handled:** yes
+- **level:** error
+- **logger:** app
+- **mechanism:** logging
+- **runtime:** CPython 3.11.13
+- **runtime.name:** CPython
+- **server_name:** nixos
+- **transaction:** auth.login
+- **url:** https://societyspeaks.io/auth/login
+
+## Exception
+
+### Exception 1
+**Type:** BuildError
+**Value:** Could not build url for endpoint 'settings.profile'. Did you mean 'main.view_profile' instead?
+
+#### Stacktrace
+
+```
+ build in werkzeug/routing/map.py [Line 919] (Not in app)
+        else:
+            values = {}
+
+        rv = self._partial_build(endpoint, values, method, append_unknown)
+        if rv is None:
+            raise BuildError(endpoint, values, method, self)  <-- SUSPECT LINE
+
+        domain_part, path, websocket = rv
+        host = self.get_host(domain_part)
+
+        if url_scheme is None:
+---
+Variable values:
+{
+  "append_unknown": "True",
+  "endpoint": "'settings.profile'",
+  "force_external": "True",
+  "method": "None",
+  "rv": "None",
+  "self": "<werkzeug.routing.map.MapAdapter object at 0x7fed28165950>",
+  "url_scheme": "None",
+  "values": {}
+}
+
+=======
+ url_for in flask/app.py [Line 1060] (Not in app)
+            raise ValueError("When specifying '_scheme', '_external' must be True.")
+
+        self.inject_url_defaults(endpoint, values)
+
+        try:
+            rv = url_adapter.build(  # type: ignore[union-attr]  <-- SUSPECT LINE
+                endpoint,
+                values,
+                method=_method,
+                url_scheme=_scheme,
+                force_external=_external,
+---
+Variable values:
+{
+  "_anchor": "None",
+  "_external": "True",
+  "_method": "None",
+  "_scheme": "None",
+  "blueprint_name": "[Filtered]",
+  "endpoint": "'settings.profile'",
+  "req_ctx": "[Filtered]",
+  "self": "<Flask 'app'>",
+  "url_adapter": "<werkzeug.routing.map.MapAdapter object at 0x7fed28165950>",
+  "values": {
+    "_anchor": "None",
+    "_external": "True",
+    "_method": "None",
+    "_scheme": "None"
+  }
+}
+
+=======
+ url_for in flask/app.py [Line 1071] (Not in app)
+            )
+        except BuildError as error:
+            values.update(
+                _anchor=_anchor, _method=_method, _scheme=_scheme, _external=_external
+            )
+            return self.handle_url_build_error(error, endpoint, values)  <-- SUSPECT LINE
+
+        if _anchor is not None:
+            _anchor = _url_quote(_anchor, safe="%!#$&'()*+,/:;=?@")
+            rv = f"{rv}#{_anchor}"
+
+---
+Variable values:
+{
+  "_anchor": "None",
+  "_external": "True",
+  "_method": "None",
+  "_scheme": "None",
+  "blueprint_name": "[Filtered]",
+  "endpoint": "'settings.profile'",
+  "req_ctx": "[Filtered]",
+  "self": "<Flask 'app'>",
+  "url_adapter": "<werkzeug.routing.map.MapAdapter object at 0x7fed28165950>",
+  "values": {
+    "_anchor": "None",
+    "_external": "True",
+    "_method": "None",
+    "_scheme": "None"
+  }
+}
+
+=======
+ url_for in flask/helpers.py [Line 222] (Not in app)
+       The ``_anchor`` and ``_method`` parameters were added.
+
+    .. versionchanged:: 0.9
+       Calls ``app.handle_url_build_error`` on build errors.
+    """
+    return current_app.url_for(  <-- SUSPECT LINE
+        endpoint,
+        _anchor=_anchor,
+        _method=_method,
+        _scheme=_scheme,
+        _external=_external,
+---
+Variable values:
+{
+  "_anchor": "None",
+  "_external": "True",
+  "_method": "None",
+  "_scheme": "None",
+  "endpoint": "'settings.profile'",
+  "values": {}
+}
+
+=======
+ send_profile_completion_reminder_email in app/email_utils.py [Line 269] (In app)
+        if isinstance(profile, IndividualProfile)
+        else get_missing_company_profile_fields(profile)
+    )
+
+    if missing_fields:
+        profile_link = url_for('settings.profile', _external=True)  <-- SUSPECT LINE
+
+        # Simplified event properties
+        event_properties = {
+            "profileUrl": profile_link,
+            "incompleteFields": missing_fields
+---
+Variable values:
+{
+  "missing_fields": [
+    "'Bio'"
+  ],
+  "profile": "<IndividualProfile 11>",
+  "user": "<User 15>"
+}
+
+=======
+ login in app/auth/routes.py [Line 171] (In app)
+            if isinstance(profile, IndividualProfile)
+            else get_missing_company_profile_fields(profile)
+        )
+
+        if missing_fields:
+            send_profile_completion_reminder_email(user)  <-- SUSPECT LINE
+
+        # Redirect to the dashboard if the user has a complete or partially complete profile
+        return redirect(url_for('auth.dashboard'))
+
+    return render_template('auth/login.html')
+---
+Variable values:
+{
+  "email": "'lpalazzi@outlook.com'",
+  "fingerprint": "None",
+  "missing_fields": [
+    "'Bio'"
+  ],
+  "password": "[Filtered]",
+  "profile": "<IndividualProfile 11>",
+  "user": "<User 15>"
+}
+
+=======
+ dispatch_request in flask/app.py [Line 852] (Not in app)
+            and req.method == "OPTIONS"
+        ):
+            return self.make_default_options_response()
+        # otherwise dispatch to the handler for that endpoint
+        view_args: dict[str, t.Any] = req.view_args  # type: ignore[assignment]
+        return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  <-- SUSPECT LINE
+
+    def full_dispatch_request(self) -> Response:
+        """Dispatches the request and on top of that performs request
+        pre and postprocessing as well as HTTP exception catching and
+        error handling.
+---
+Variable values:
+{
+  "req": "[Filtered]",
+  "rule": "[Filtered]",
+  "self": "<Flask 'app'>",
+  "view_args": {}
+}
+
+=======
+ full_dispatch_request in flask/app.py [Line 867] (Not in app)
+
+        try:
+            request_started.send(self, _async_wrapper=self.ensure_sync)
+            rv = self.preprocess_request()
+            if rv is None:
+                rv = self.dispatch_request()  <-- SUSPECT LINE
+        except Exception as e:
+            rv = self.handle_user_exception(e)
+        return self.finalize_request(rv)
+
+    def finalize_request(
+---
+Variable values:
+{
+  "e": "BuildError('settings.profile', {}, None)",
+  "rv": "None",
+  "self": "<Flask 'app'>"
+}
+
+=======
+```
