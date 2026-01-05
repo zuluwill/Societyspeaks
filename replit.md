@@ -117,3 +117,10 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 - **Bot protection**: Added user-agent filtering to reject known bots/crawlers/preview fetchers from submitting votes
 - **Affected endpoints**: `/statements/<id>/vote` and `/daily/vote`
 - **Edge cases**: Proper validation for empty strings, null values, and malformed JSON requests
+
+### Geographic Scope Detection (January 2026)
+- **AI-powered detection**: When articles are scored, AI now extracts geographic scope (global, regional, national, local) and countries mentioned
+- **New fields**: `NewsArticle.geographic_scope` and `NewsArticle.geographic_countries` store detected geographic context
+- **Propagation**: Geographic info flows from articles -> discussions -> daily questions
+- **Display**: Daily questions and discussions now show geographic badges ("Global" or country name like "United Kingdom")
+- **Clarity for users**: Addresses feedback that questions should clarify which country they're referring to

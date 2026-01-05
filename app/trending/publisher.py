@@ -61,10 +61,8 @@ def _extract_geographic_info(topic: TrendingTopic) -> tuple:
     if scopes:
         scope_counts = Counter(scopes)
         most_common_scope = scope_counts.most_common(1)[0][0]
-        if most_common_scope == 'national':
+        if most_common_scope in ('national', 'local', 'regional'):
             geographic_scope = 'country'
-        elif most_common_scope == 'local':
-            geographic_scope = 'city'
         else:
             geographic_scope = 'global'
     else:
