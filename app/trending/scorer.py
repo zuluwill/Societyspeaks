@@ -336,7 +336,13 @@ Rate each headline in order."""
         temperature=0.3
     )
     
-    content = response.choices[0].message.content
+    choice = response.choices[0]
+    
+    if choice.finish_reason == 'length':
+        logger.warning("OpenAI response truncated (max_tokens reached)")
+        raise ValueError("OpenAI response was truncated")
+    
+    content = choice.message.content
     if not content:
         raise ValueError("Empty response from OpenAI")
     
