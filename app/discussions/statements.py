@@ -55,7 +55,10 @@ def get_user_identifier():
     
     Returns dict with:
     - user_id: ID if authenticated, None if anonymous
-    - session_fingerprint: Hash of session + IP for anonymous tracking
+    - session_fingerprint: Cookie-based fingerprint for anonymous tracking
+    
+    Uses long-lived cookie for anonymous users to prevent fingerprint collisions
+    when multiple users share the same network/browser type.
     """
     if current_user.is_authenticated:
         return {
@@ -63,21 +66,16 @@ def get_user_identifier():
             'session_fingerprint': None
         }
     else:
-        # Create fingerprint from session ID + IP address
-        if 'fingerprint' not in session:
-            # Generate stable fingerprint for this session
-            session_id = session.get('_id', request.remote_addr or 'unknown')
-            ip_addr = request.remote_addr or 'unknown'
-            user_agent = request.headers.get('User-Agent', '')[:100]
-            
-            fingerprint_string = f"{session_id}:{ip_addr}:{user_agent}"
-            fingerprint = hashlib.sha256(fingerprint_string.encode()).hexdigest()
+        client_id, _ = get_or_create_statement_client_id()
+        fingerprint = hashlib.sha256(client_id.encode()).hexdigest()
+        
+        if session.get('fingerprint') != fingerprint:
             session['fingerprint'] = fingerprint
             session.modified = True
         
         return {
             'user_id': None,
-            'session_fingerprint': session['fingerprint']
+            'session_fingerprint': fingerprint
         }
 
 
