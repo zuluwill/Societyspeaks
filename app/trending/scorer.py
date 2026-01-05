@@ -260,22 +260,30 @@ def _score_with_openai(articles: List[NewsArticle], api_key: str) -> List[NewsAr
     
     headlines = [f"{i+1}. {a.title}" for i, a in enumerate(articles)]
     
-    prompt = f"""Rate each headline on two scales (0-1):
+    prompt = f"""Rate each headline on these scales:
 
-1. SENSATIONALISM:
+1. SENSATIONALISM (0-1):
 - 0 = neutral, factual, professional journalism
 - 0.5 = slightly attention-grabbing but acceptable
 - 1 = clickbait, sensationalist, emotionally manipulative
 
-2. RELEVANCE (discussion potential for civic debate platform):
+2. RELEVANCE (0-1, discussion potential for civic debate platform):
 - 0 = product reviews, sports scores, celebrity gossip, lifestyle content
 - 0.5 = interesting but not policy-relevant
 - 1 = policy debates, societal issues, political/economic topics worth deliberating
 
+3. GEOGRAPHIC SCOPE:
+- "global" = affects multiple continents, international issue
+- "regional" = affects a region like EU, APAC, Middle East
+- "national" = specific to one country
+- "local" = specific city/state/province
+
+4. COUNTRIES: Which country/countries is this primarily about? Use ISO country names (e.g., "United Kingdom", "United States"). For global topics, use "Global". For regional, list key countries.
+
 Headlines:
 {chr(10).join(headlines)}
 
-Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8}}, {{"s": 0.5, "r": 0.3}}]"""
+Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8, "geo": "national", "countries": "United Kingdom"}}, {{"s": 0.5, "r": 0.3, "geo": "global", "countries": "Global"}}]"""
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -283,7 +291,7 @@ Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8}}, {{"s": 0.5, "
             {"role": "system", "content": "You are a media quality analyst for a civic debate platform."},
             {"role": "user", "content": prompt}
         ],
-        max_tokens=500,
+        max_tokens=1000,
         temperature=0.3
     )
     
@@ -296,8 +304,12 @@ Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8}}, {{"s": 0.5, "
         if i < len(scores):
             article.sensationalism_score = float(scores[i].get('s', 0.5))
             article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
+            article.geographic_scope = scores[i].get('geo', 'unknown')
+            article.geographic_countries = scores[i].get('countries', '')
         else:
             article.sensationalism_score = score_sensationalism(article.title)
+            article.geographic_scope = 'unknown'
+            article.geographic_countries = ''
     
     return articles
 
@@ -310,26 +322,34 @@ def _score_with_anthropic(articles: List[NewsArticle], api_key: str) -> List[New
     
     headlines = [f"{i+1}. {a.title}" for i, a in enumerate(articles)]
     
-    prompt = f"""Rate each headline on two scales (0-1):
+    prompt = f"""Rate each headline on these scales:
 
-1. SENSATIONALISM:
+1. SENSATIONALISM (0-1):
 - 0 = neutral, factual, professional journalism
 - 0.5 = slightly attention-grabbing but acceptable
 - 1 = clickbait, sensationalist, emotionally manipulative
 
-2. RELEVANCE (discussion potential for civic debate platform):
+2. RELEVANCE (0-1, discussion potential for civic debate platform):
 - 0 = product reviews, sports scores, celebrity gossip, lifestyle content
 - 0.5 = interesting but not policy-relevant
 - 1 = policy debates, societal issues, political/economic topics worth deliberating
 
+3. GEOGRAPHIC SCOPE:
+- "global" = affects multiple continents, international issue
+- "regional" = affects a region like EU, APAC, Middle East
+- "national" = specific to one country
+- "local" = specific city/state/province
+
+4. COUNTRIES: Which country/countries is this primarily about? Use ISO country names (e.g., "United Kingdom", "United States"). For global topics, use "Global". For regional, list key countries.
+
 Headlines:
 {chr(10).join(headlines)}
 
-Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8}}, {{"s": 0.5, "r": 0.3}}]"""
+Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8, "geo": "national", "countries": "United Kingdom"}}, {{"s": 0.5, "r": 0.3, "geo": "global", "countries": "Global"}}]"""
 
     message = client.messages.create(
         model="claude-3-haiku-20240307",
-        max_tokens=500,
+        max_tokens=1000,
         messages=[{"role": "user", "content": prompt}]
     )
     
@@ -341,8 +361,12 @@ Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8}}, {{"s": 0.5, "
         if i < len(scores):
             article.sensationalism_score = float(scores[i].get('s', 0.5))
             article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
+            article.geographic_scope = scores[i].get('geo', 'unknown')
+            article.geographic_countries = scores[i].get('countries', '')
         else:
             article.sensationalism_score = score_sensationalism(article.title)
+            article.geographic_scope = 'unknown'
+            article.geographic_countries = ''
     
     return articles
 

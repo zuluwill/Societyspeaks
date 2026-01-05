@@ -38,22 +38,52 @@ def strip_html_tags(text: str) -> str:
 logger = logging.getLogger(__name__)
 
 
-def _extract_country_from_articles(topic: TrendingTopic) -> Optional[str]:
+def _extract_geographic_info(topic: TrendingTopic) -> tuple:
     """
-    Extract the most common country from source articles.
-    Returns None if no country info available (falls back to global).
+    Extract geographic scope and countries from source articles.
+    Uses AI-detected geographic info from articles if available,
+    otherwise falls back to source country.
+    
+    Returns (geographic_scope, country_string)
     """
-    countries = []
+    scopes = []
+    countries_list = []
+    
     for ta in topic.articles:
-        if ta.article and ta.article.source and ta.article.source.country:
-            countries.append(ta.article.source.country)
+        if ta.article:
+            if ta.article.geographic_scope and ta.article.geographic_scope != 'unknown':
+                scopes.append(ta.article.geographic_scope)
+            if ta.article.geographic_countries:
+                countries_list.append(ta.article.geographic_countries)
+            elif ta.article.source and ta.article.source.country:
+                countries_list.append(ta.article.source.country)
     
-    if not countries:
-        return None
+    if scopes:
+        scope_counts = Counter(scopes)
+        most_common_scope = scope_counts.most_common(1)[0][0]
+        if most_common_scope == 'national':
+            geographic_scope = 'country'
+        elif most_common_scope == 'local':
+            geographic_scope = 'city'
+        else:
+            geographic_scope = 'global'
+    else:
+        geographic_scope = 'global'
     
-    country_counts = Counter(countries)
-    most_common = country_counts.most_common(1)[0][0]
-    return most_common
+    if countries_list:
+        all_countries = []
+        for c in countries_list:
+            all_countries.extend([x.strip() for x in c.split(',')])
+        
+        if 'Global' in all_countries:
+            country = None
+        else:
+            country_counts = Counter(all_countries)
+            country = country_counts.most_common(1)[0][0]
+    else:
+        country = None
+    
+    return geographic_scope, country
 
 
 def publish_topic(topic: TrendingTopic, admin_user: User) -> Optional[Discussion]:
@@ -73,11 +103,7 @@ def publish_topic(topic: TrendingTopic, admin_user: User) -> Optional[Discussion
         slug = f"{base_slug}-{counter}"
         counter += 1
     
-    country = _extract_country_from_articles(topic)
-    if country:
-        geographic_scope = 'country'
-    else:
-        geographic_scope = 'global'
+    geographic_scope, country = _extract_geographic_info(topic)
     
     clean_description = strip_html_tags(topic.description) if topic.description else ""
     
