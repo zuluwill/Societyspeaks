@@ -51,13 +51,17 @@ def get_related_discussions(question, limit=3):
 
 
 def get_session_fingerprint():
-    """Generate a fingerprint for anonymous users"""
+    """Generate a unique fingerprint for anonymous users based on their browser session.
+    
+    Uses a cryptographically secure random token stored in the session cookie,
+    ensuring each browser session has a unique identifier regardless of IP or User-Agent.
+    This prevents fingerprint collisions when multiple users share the same network/browser.
+    """
+    import secrets
+    
     if 'daily_fingerprint' not in session:
-        session_id = session.get('_id', request.remote_addr or 'unknown')
-        ip_addr = request.remote_addr or 'unknown'
-        user_agent = request.headers.get('User-Agent', '')[:100]
-        fingerprint_string = f"daily:{session_id}:{ip_addr}:{user_agent}"
-        session['daily_fingerprint'] = hashlib.sha256(fingerprint_string.encode()).hexdigest()
+        unique_token = secrets.token_hex(32)
+        session['daily_fingerprint'] = hashlib.sha256(unique_token.encode()).hexdigest()
         session.modified = True
     return session['daily_fingerprint']
 
