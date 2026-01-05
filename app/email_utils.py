@@ -2,7 +2,8 @@
 import os
 import time
 import requests
-from concurrent.futures import ThreadPoolExecutor
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Thread
 from flask import current_app, url_for
 from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestionSubscriber
@@ -10,6 +11,31 @@ from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuest
 EMAIL_TIMEOUT = 30
 MAX_RETRIES = 3
 RETRY_DELAY = 2
+
+EMAILS_PER_SECOND = 4
+BATCH_SIZE = 100
+MAX_WORKERS = 4
+
+
+class RateLimiter:
+    """Thread-safe rate limiter for API calls"""
+    def __init__(self, rate_per_second):
+        self.rate = rate_per_second
+        self.min_interval = 1.0 / rate_per_second
+        self.last_call = 0
+        self.lock = threading.Lock()
+    
+    def acquire(self):
+        """Wait until we can make another call"""
+        with self.lock:
+            now = time.time()
+            time_since_last = now - self.last_call
+            if time_since_last < self.min_interval:
+                time.sleep(self.min_interval - time_since_last)
+            self.last_call = time.time()
+
+
+_rate_limiter = RateLimiter(EMAILS_PER_SECOND)
 
 
 #This function is responsible for sending events to Loops
@@ -53,7 +79,7 @@ def send_loops_event(email_address, event_name, user_id, contact_properties, eve
 
 
 #This function sends transactional emails through Loops
-def send_email(recipient_email, data_variables, transactional_id):
+def send_email(recipient_email, data_variables, transactional_id, use_rate_limit=True):
     api_key = os.getenv('LOOPS_API_KEY')
     url = 'https://app.loops.so/api/v1/transactional'
 
@@ -70,22 +96,28 @@ def send_email(recipient_email, data_variables, transactional_id):
 
     for attempt in range(MAX_RETRIES):
         try:
+            if use_rate_limit:
+                _rate_limiter.acquire()
+            
             response = requests.post(url, json=payload, headers=headers, timeout=EMAIL_TIMEOUT)
 
             if response.status_code == 200:
-                current_app.logger.info(f"Email sent successfully to {recipient_email}.")
                 return True
+            elif response.status_code == 429:
+                if attempt < MAX_RETRIES - 1:
+                    wait_time = RETRY_DELAY * (attempt + 2)
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    return False
             else:
-                current_app.logger.error(f"Failed to send email to {recipient_email}: {response.status_code} - {response.text}")
                 return False
         except requests.exceptions.Timeout:
             if attempt < MAX_RETRIES - 1:
-                current_app.logger.warning(f"Timeout sending email to {recipient_email} (attempt {attempt + 1}/{MAX_RETRIES}), retrying...")
                 time.sleep(RETRY_DELAY * (attempt + 1))
             else:
-                current_app.logger.error(f"Timeout sending email to {recipient_email} after {MAX_RETRIES} attempts")
-        except requests.exceptions.RequestException as e:
-            current_app.logger.error(f"Error sending email to {recipient_email}: {e}")
+                return False
+        except requests.exceptions.RequestException:
             return False
     return False
 
@@ -519,9 +551,68 @@ def send_daily_question_email(subscriber, question):
     db.session.commit()
 
 
+def _prepare_email_payload(subscriber, question):
+    """Prepare email payload for a subscriber (can be called from thread)"""
+    from datetime import datetime
+    
+    subscriber.generate_magic_token()
+    
+    base_url = _get_base_url()
+    magic_link_url = f"{base_url}/daily/m/{subscriber.magic_token}"
+    question_url = f"{base_url}/daily/{question.question_date.isoformat()}"
+    
+    streak_message = " "
+    if subscriber.current_streak > 1:
+        streak_message = f"You've participated {subscriber.current_streak} days in a row!"
+    
+    why_this = question.why_this_question or "This question helps us understand how the public thinks about important issues."
+    
+    transactional_id = os.getenv('LOOPS_DAILY_QUESTION_ID')
+    
+    data_variables = {
+        "questionNumber": str(question.question_number),
+        "questionText": question.question_text,
+        "questionContext": question.context or " ",
+        "whyThisQuestion": why_this,
+        "topicCategory": question.topic_category or "Civic",
+        "magicLinkUrl": magic_link_url,
+        "questionUrl": question_url,
+        "streakMessage": streak_message
+    }
+    
+    return {
+        'email': subscriber.email,
+        'subscriber_id': subscriber.id,
+        'data_variables': data_variables,
+        'transactional_id': transactional_id,
+        'magic_token': subscriber.magic_token
+    }
+
+
+def _send_single_email_worker(payload):
+    """Worker function for sending a single email (thread-safe)"""
+    try:
+        success = send_email(
+            recipient_email=payload['email'],
+            data_variables=payload['data_variables'],
+            transactional_id=payload['transactional_id'],
+            use_rate_limit=True
+        )
+        return {'email': payload['email'], 'subscriber_id': payload['subscriber_id'], 
+                'success': success, 'magic_token': payload['magic_token']}
+    except Exception as e:
+        return {'email': payload['email'], 'subscriber_id': payload['subscriber_id'], 
+                'success': False, 'error': str(e)}
+
+
 def send_daily_question_to_all_subscribers():
-    """Send today's daily question to all active subscribers with rate limiting"""
+    """
+    Send today's daily question to all active subscribers.
+    Uses rate limiting and batched processing for high-volume sending (10k-20k emails).
+    At 4 req/sec: 10k emails = ~42 min, 20k emails = ~84 min
+    """
     from app.models import DailyQuestion, DailyQuestionSubscriber
+    from app import db
     from datetime import datetime
     
     question = DailyQuestion.get_today()
@@ -529,26 +620,81 @@ def send_daily_question_to_all_subscribers():
         current_app.logger.info("No daily question to send - none published for today")
         return 0
     
+    transactional_id = os.getenv('LOOPS_DAILY_QUESTION_ID')
+    if not transactional_id:
+        current_app.logger.error("LOOPS_DAILY_QUESTION_ID not set - cannot send daily question email")
+        return 0
+    
     subscribers = DailyQuestionSubscriber.query.filter_by(is_active=True).all()
     total_subscribers = len(subscribers)
-    current_app.logger.info(f"Sending daily question #{question.question_number} to {total_subscribers} subscribers")
     
+    if total_subscribers == 0:
+        current_app.logger.info("No active subscribers to send daily question to")
+        return 0
+    
+    estimated_time = total_subscribers / EMAILS_PER_SECOND / 60
+    current_app.logger.info(
+        f"Starting daily question #{question.question_number} send to {total_subscribers} subscribers "
+        f"(estimated time: {estimated_time:.1f} minutes at {EMAILS_PER_SECOND} emails/sec)"
+    )
+    
+    start_time = time.time()
     sent_count = 0
     failed_count = 0
+    failed_emails = []
     
-    for i, subscriber in enumerate(subscribers):
+    payloads = []
+    for subscriber in subscribers:
         try:
-            send_daily_question_email(subscriber, question)
-            sent_count += 1
-            
-            if (i + 1) % 10 == 0:
-                time.sleep(0.5)
-                
+            payload = _prepare_email_payload(subscriber, question)
+            payloads.append(payload)
         except Exception as e:
             failed_count += 1
-            current_app.logger.error(f"Error sending daily question to {subscriber.email}: {e}")
+            current_app.logger.error(f"Error preparing email for {subscriber.email}: {e}")
     
-    current_app.logger.info(f"Daily question #{question.question_number}: sent {sent_count}, failed {failed_count} of {total_subscribers}")
+    db.session.commit()
+    
+    for i in range(0, len(payloads), BATCH_SIZE):
+        batch = payloads[i:i + BATCH_SIZE]
+        batch_num = (i // BATCH_SIZE) + 1
+        total_batches = (len(payloads) + BATCH_SIZE - 1) // BATCH_SIZE
+        
+        for payload in batch:
+            result = _send_single_email_worker(payload)
+            if result['success']:
+                sent_count += 1
+                try:
+                    sub = DailyQuestionSubscriber.query.get(result['subscriber_id'])
+                    if sub:
+                        sub.last_email_sent = datetime.utcnow()
+                        sub.magic_token = result.get('magic_token')
+                except Exception:
+                    pass
+            else:
+                failed_count += 1
+                failed_emails.append(result['email'])
+        
+        db.session.commit()
+        
+        elapsed = time.time() - start_time
+        rate = sent_count / elapsed if elapsed > 0 else 0
+        current_app.logger.info(
+            f"Batch {batch_num}/{total_batches} complete: {sent_count} sent, {failed_count} failed "
+            f"({rate:.1f} emails/sec)"
+        )
+    
+    elapsed_total = time.time() - start_time
+    current_app.logger.info(
+        f"Daily question #{question.question_number} complete: "
+        f"{sent_count} sent, {failed_count} failed of {total_subscribers} "
+        f"in {elapsed_total/60:.1f} minutes ({sent_count/elapsed_total:.1f} emails/sec)"
+    )
+    
+    if failed_emails and len(failed_emails) <= 20:
+        current_app.logger.warning(f"Failed emails: {', '.join(failed_emails)}")
+    elif failed_emails:
+        current_app.logger.warning(f"First 20 failed emails: {', '.join(failed_emails[:20])}")
+    
     return sent_count
 
 
