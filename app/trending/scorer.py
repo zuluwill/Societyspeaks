@@ -34,6 +34,7 @@ def extract_json(text: str) -> Any:
     if not text:
         raise ValueError("Empty response from LLM")
     
+    original_text = text
     text = text.strip()
     
     code_block_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', text)
@@ -41,7 +42,7 @@ def extract_json(text: str) -> Any:
         text = code_block_match.group(1).strip()
     
     if text.startswith('['):
-        bracket_match = re.search(r'(\[[\s\S]*?\])', text)
+        bracket_match = re.search(r'(\[[\s\S]*\])', text)
         if bracket_match:
             text = bracket_match.group(1)
     elif text.startswith('{'):
@@ -57,8 +58,20 @@ def extract_json(text: str) -> Any:
                     break
         if end_pos > 0:
             text = text[:end_pos]
+    else:
+        array_match = re.search(r'(\[[\s\S]*\])', text)
+        if array_match:
+            text = array_match.group(1)
+        else:
+            obj_match = re.search(r'(\{[\s\S]*\})', text)
+            if obj_match:
+                text = obj_match.group(1)
     
-    return json.loads(text)
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as e:
+        logger.warning(f"JSON parse failed, raw response (first 500 chars): {original_text[:500]}")
+        raise ValueError(f"Invalid JSON from LLM: {e}")
 
 
 def get_system_api_key() -> Tuple[Optional[str], str]:
