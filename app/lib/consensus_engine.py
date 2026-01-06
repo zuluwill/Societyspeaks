@@ -176,7 +176,9 @@ def build_vote_matrix(discussion_id, db):
     statement_ids = vote_matrix_filled.columns.tolist()
 
     logger.info(f"Built vote matrix: {len(participant_ids)} participants x {len(statement_ids)} statements")
-    logger.info(f"Statement mean fill range: [{statement_means.min():.2f}, {statement_means.max():.2f}]")
+    means_list = statement_means.tolist()  # type: ignore[union-attr]
+    if means_list:
+        logger.info(f"Statement mean fill range: [{min(means_list):.2f}, {max(means_list):.2f}]")
 
     # Return both: filled for PCA, real for consensus metrics
     return vote_matrix_filled, vote_matrix_real, participant_ids, statement_ids
@@ -578,14 +580,15 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
     user_labels, silhouette = cluster_users(vote_matrix_pca_scaled, method=method)
 
     # Create user-cluster mapping
+    # user_ids are strings like "u_42" (authenticated) or "a_abc123" (anonymous)
     cluster_assignments = {
-        int(user_id): int(label)
+        user_id: int(label)
         for user_id, label in zip(user_ids, user_labels)
     }
 
     # Create PCA coordinates mapping (using scaled coordinates for visualization)
     pca_coordinates = {
-        int(user_id): (float(coords[0]), float(coords[1]))
+        user_id: (float(coords[0]), float(coords[1]))
         for user_id, coords in zip(user_ids, vote_matrix_pca_scaled)
     }
 
