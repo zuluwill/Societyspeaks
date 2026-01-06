@@ -1,0 +1,205 @@
+Highest impact: Use comments to automatically generate statements that reveal hidden consensus and feed your clustering engine.
+
+  Here's why this aligns perfectly with your mission:
+
+  ---
+  The Problem Comments Solve
+
+  Current state:
+  Daily Question: "Should we implement carbon tax?"
+
+  Results: 64% Agree, 24% Disagree, 12% Unsure
+
+  This binary framing hides crucial nuance:
+  - Agree voters might have different reasons (moral, economic, practical)
+  - Disagree voters might support the GOAL but oppose the METHOD
+  - Hidden consensus might exist on specific aspects
+
+  The comments reveal this nuance, but it's locked away unused.
+
+  ---
+  The Solution: Comments → Statements → Clustering
+
+  Automated pipeline:
+
+  Day 1-2: Daily question collects 150 votes + comments
+
+  Day 2 (Nightly job):
+  ↓
+  LLM analyzes all comments:
+  "Extract common themes, concerns, and nuanced positions
+  from these comments. Identify areas of agreement across
+  different vote options. Generate 8-12 clear, votable
+  statements that capture the real debate."
+  ↓
+  LLM generates statements:
+  • "Carbon tax should include rebates for low-income families"
+    (Mentioned by 34 agree voters, 12 disagree voters)
+
+  • "Public transit should be improved before implementing carbon tax"
+    (Mentioned by 8 agree voters, 18 disagree voters)
+
+  • "Economic impact studies needed before major policy changes"
+    (Mentioned by 5 agree voters, 22 disagree voters)
+  ↓
+  Auto-post these to the linked discussion
+  (Or: you review/approve in 10 min)
+  ↓
+  Day 3+: Users vote on these nuanced statements
+  ↓
+  Day 7: Clustering reveals:
+  "Wait - 78% of ALL voters (agree + disagree) support
+  the rebate idea! There's consensus on the nuance even
+  though the binary vote was split 64-24."
+
+  ---
+  Why This Is Highest Impact
+
+  1. Reveals Hidden Consensus ✅
+
+  Binary votes hide agreement on specifics.
+
+  Example:
+  - Daily Q: "Defund the police?" → 45% yes, 55% no (looks polarized)
+  - Comments reveal: 80% support "redirect some funding to social services"
+  - Common ground discovered from apparent disagreement
+
+  2. Feeds Your Clustering Engine ✅
+
+  Generated statements get voted on → clustering happens → opinion groups emerge.
+
+  Now you can say:
+  "We found 4 opinion groups, not just 2 sides. And here's what ALL groups agree on..."
+
+  3. Creates Bridge Statements Automatically ✅
+
+  Comments from opposite voters that mention same concern → bridge statement.
+
+  Example:
+  - Agree voter: "Yes, but only if there's accountability"
+  - Disagree voter: "No, unless there's accountability"
+  - → Statement: "Policy should include accountability mechanisms"
+  - → Clustering shows: This is a CONSENSUS statement!
+
+  4. Demonstrates Your Differentiator ✅
+
+  No other platform does this:
+  - Pol.is: Manual statement submission
+  - Twitter: Just shows binary poll results
+  - Reddit: Comments are noise, not structured
+  - You: Comments → Structured statements → Clustering → Consensus
+
+  5. Actionable, Not Just Understanding ✅
+
+  Not just "see why people disagree" but "find what people agree on."
+
+  Policy makers could act on the consensus that emerges.
+
+  ---
+  Real-World Example
+
+  Daily Question: "Should universities be free?"
+
+  Binary results: 58% Agree, 42% Disagree
+
+  Comments analysis reveals:
+
+  From Agree voters:
+  - "Yes, education is a right" (18 comments)
+  - "Yes, but only for public universities" (12 comments)
+  - "Yes, but with income-based repayment after graduation" (8 comments)
+  - "Yes, at least for community colleges" (14 comments)
+
+  From Disagree voters:
+  - "No, it's too expensive" (22 comments)
+  - "No, but reduce costs significantly" (16 comments)
+  - "No, but expand grants and reduce interest" (11 comments)
+  - "No, but community colleges should be free" (9 comments)
+
+  Generated statements:
+  1. "Community colleges should be tuition-free"
+    - Appears in: 14 agree + 9 disagree comments = 55% of voters mentioned this
+  2. "University costs should be significantly reduced even if not fully free"
+    - Appears in: 8 agree + 16 disagree comments = 41% mentioned this
+  3. "Public universities should be treated differently than private"
+    - Appears in: 12 agree + 5 disagree comments = 29% mentioned this
+
+  These get added to the discussion → users vote → clustering reveals:
+
+  Result: "85% support making community colleges free, even though only 58% supported 'free universities' in the binary question."
+
+  HIDDEN CONSENSUS DISCOVERED 🎯
+
+  ---
+  Why This Beats Other Options
+
+  | Option                   | Mission Impact     | Scalability  | Creates Consensus                                |
+  |--------------------------|--------------------|--------------|--------------------------------------------------|
+  | Theme → Statements       | ⭐⭐⭐⭐⭐ Highest | ✅ Automated | ✅ Yes - actionable                              |
+  | Cluster comments         | ⭐⭐⭐⭐ High      | ✅ Automated | ⚠️ Shows nuance, but passive                     |
+  | Show sample comments     | ⭐⭐ Medium        | ✅ Easy      | ❌ Just builds empathy                           |
+  | Bridge comment detection | ⭐⭐⭐ High        | ✅ Automated | ⚠️ Models behavior, but doesn't create consensus |
+
+  ---
+  Technical Implementation
+
+  Phase 1: Manual Test
+
+  1. Pick a daily question with 100+ comments
+  2. Manually send comments to Claude
+  3. Prompt: "Extract 10 votable statements that capture the real debate and areas of agreement"
+  4. Manually add these to the linked discussion
+  5. See if they get votes and reveal consensus
+
+  Phase 2: Automated Pipeline
+
+  1. Nightly cron job (after daily question closes)
+  2. Fetch all comments for today's question
+  3. Send to LLM with structured prompt
+  4. Generate 8-12 statements
+  5. Auto-post to linked discussion (or queue for your 10-min review)
+
+  Phase 3: Show the Loop
+
+  On results page:
+  💬 From Your Comments:
+  We analyzed 156 comments and identified 3 areas of
+  potential consensus. These have been added to the
+  discussion for deeper exploration:
+
+  • Statement 1 [mentioned by 45% of all voters]
+  • Statement 2 [mentioned by 38% of all voters]
+  • Statement 3 [mentioned by 31% of all voters]
+
+  [Vote on these in the full discussion →]
+
+  ---
+  Mission Alignment
+
+  Your mission: Reduce polarization, find common ground
+
+  This feature:
+  - ✅ Extracts consensus from apparent disagreement
+  - ✅ Shows nuance beyond binary positions
+  - ✅ Creates bridge statements automatically
+  - ✅ Feeds clustering to reveal true opinion groups
+  - ✅ Makes polarization measurable and addressable
+  - ✅ Generates actionable insights for decision-makers
+
+  This is THE feature that shows why your platform exists.
+
+  ---
+  Bottom Line
+
+  Answer to "what's most useful and highest impact?"
+
+  Use comments to auto-generate statements that reveal hidden consensus.
+
+  Because:
+  1. Comments contain the nuance binary votes hide
+  2. LLM can extract common themes across vote lines
+  3. These become votable statements in linked discussion
+  4. Clustering reveals: "80% agree on this specific aspect"
+  5. Hidden consensus emerges = mission accomplished
+
+  This transforms passive comments into active consensus-finding.
