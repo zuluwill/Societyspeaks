@@ -109,6 +109,54 @@ discussion.title }}{% endblock %} {% block content %}
     </div>
   </div>
 
+  <!-- Opinion Groups - What Each Group Believes -->
+  {% if opinion_groups %}
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h2 class="text-xl font-semibold mb-4">What Each Group Believes</h2>
+    <p class="text-gray-600 mb-6">
+      These are the statements each opinion group agrees on most strongly. This helps understand the core beliefs that define each group.
+    </p>
+    <div class="grid grid-cols-1 {% if opinion_groups|length > 1 %}lg:grid-cols-2{% endif %} gap-6">
+      {% for group in opinion_groups %}
+      <div class="border rounded-lg overflow-hidden">
+        <div class="bg-blue-600 text-white px-4 py-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-semibold text-lg">{{ group.name }}</h3>
+            <span class="bg-blue-500 px-2 py-1 rounded text-sm">
+              {{ group.participant_count }} participant{% if group.participant_count != 1 %}s{% endif %}
+            </span>
+          </div>
+        </div>
+        <div class="p-4 bg-gray-50">
+          <p class="text-sm text-gray-600 mb-3 font-medium">Top beliefs:</p>
+          <ul class="space-y-3">
+            {% for stmt in group.statements %}
+            <li class="bg-white rounded-lg p-3 border border-gray-200">
+              <div class="text-gray-900 text-sm mb-2">{{ stmt.content | e }}</div>
+              <div class="flex items-center text-xs text-gray-500">
+                <span class="bg-green-100 text-green-800 px-2 py-0.5 rounded font-medium">
+                  {{ "%.0f"|format(stmt.agreement_rate * 100) }}% agree
+                </span>
+                <span class="ml-2">{{ stmt.vote_count }} votes in group</span>
+              </div>
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% elif analysis.cluster_data.get('representative_statements') %}
+  <div class="bg-gray-50 rounded-lg shadow p-6 mb-6 border border-gray-200">
+    <h2 class="text-xl font-semibold mb-4 text-gray-600">What Each Group Believes</h2>
+    <p class="text-gray-500">
+      Representative statements data is available but some statements may have been removed. 
+      Re-run the analysis to refresh this section.
+    </p>
+  </div>
+  {% endif %}
+
   <!-- Consensus Statements -->
   {% if consensus_statements %}
   <div class="bg-green-50 rounded-lg shadow p-6 mb-6 border border-green-200">
