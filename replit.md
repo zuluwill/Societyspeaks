@@ -140,6 +140,8 @@ PostgreSQL is the primary database, configured with connection pooling and healt
   - Gate UI shows progress bar and unlockable benefits
   - Button on discussion page shows lock icon + vote progress (e.g., "2/5") when gated
   - Gate check happens every request (database query, no caching bypass)
+  - Gate applies to both `/consensus` and `/consensus/report` routes
+  - Authenticated users get credit for votes cast before logging in (session fingerprint merge)
 - **Implementation**: `app/lib/consensus_engine.py` contains `calculate_scaling_factors()`, `apply_sparsity_scaling()`, `identify_representative_statements()`
 - **UI**: `app/templates/discussions/consensus_results.html` displays representative statements in responsive 2-column grid with XSS protection
 - **Templates**: `consensus_gate.html` (participation gate), `consensus_report.html` (printable report)
