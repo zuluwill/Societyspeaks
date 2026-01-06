@@ -123,4 +123,16 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 - **New fields**: `NewsArticle.geographic_scope` and `NewsArticle.geographic_countries` store detected geographic context
 - **Propagation**: Geographic info flows from articles -> discussions -> daily questions
 - **Display**: Daily questions and discussions now show geographic badges ("Global" or country name like "United Kingdom")
-- **Clarity for users**: Addresses feedback that questions should clarify which country they're referring to
+
+### Consensus Clustering Improvements (January 2026)
+- **SparsityAwareScaler**: Pol.is innovation adapted from red-dwarf library that prevents sparse voters from bunching at PCA center
+  - Enables discovery of 4-5+ opinion groups instead of just 2-3
+  - Uses `sqrt(total_statements / participant_votes)` scaling factor
+  - Code properly attributed to pol.is community (AGPL-3.0)
+- **Representative Statements Per Opinion Group**: New feature showing what each group believes
+  - Identifies top 5 statements each group agrees on most strongly
+  - Uses "strength" metric: `agreement_rate × participation_weight`
+  - UI displays "What Each Group Believes" section in Consensus Analysis page
+  - Makes opinion groups interpretable: "Group 1 believes [X, Y, Z]"
+- **Implementation**: `app/lib/consensus_engine.py` contains `calculate_scaling_factors()`, `apply_sparsity_scaling()`, `identify_representative_statements()`
+- **UI**: `app/templates/discussions/consensus_results.html` displays representative statements in responsive 2-column grid with XSS protection
