@@ -7,6 +7,7 @@ from app.utils import get_recent_activity
 from app.middleware import track_discussion_view 
 from app.email_utils import create_discussion_notification
 from app.webhook_security import webhook_required, webhook_with_timestamp
+from app.discussions.consensus import get_user_vote_count, PARTICIPATION_THRESHOLD
 from sqlalchemy.orm import joinedload
 import json
 import os
@@ -207,21 +208,29 @@ def view_discussion(discussion_id, slug):
             # Fetch all and sort by controversy score in Python
             statements = query.all()
             statements.sort(key=lambda s: s.controversy_score, reverse=True)
+            user_vote_count, _ = get_user_vote_count(discussion_id)
             return render_template('discussions/view_discussion.html', 
                                  discussion=discussion,
                                  statements=statements,
                                  sort=sort,
-                                 form=form)
+                                 form=form,
+                                 user_vote_count=user_vote_count,
+                                 participation_threshold=PARTICIPATION_THRESHOLD)
         
         # Default pagination
         statements = query.limit(20).all()
+    
+    # Get user's vote count for participation gate display
+    user_vote_count, _ = get_user_vote_count(discussion_id)
     
     # Render the page
     return render_template('discussions/view_discussion.html', 
                          discussion=discussion,
                          statements=statements,
                          sort=sort,
-                         form=form)
+                         form=form,
+                         user_vote_count=user_vote_count,
+                         participation_threshold=PARTICIPATION_THRESHOLD)
 
 
 

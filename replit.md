@@ -134,5 +134,12 @@ PostgreSQL is the primary database, configured with connection pooling and healt
   - Uses "strength" metric: `agreement_rate × participation_weight`
   - UI displays "What Each Group Believes" section in Consensus Analysis page
   - Makes opinion groups interpretable: "Group 1 believes [X, Y, Z]"
+- **Participation Gate**: Users must vote on 5+ statements before viewing consensus analysis
+  - Prevents anchoring bias (seeing results before voting influences opinions)
+  - Discussion creators and admins bypass the gate (need to manage discussions)
+  - Gate UI shows progress bar and unlockable benefits
+  - Button on discussion page shows lock icon + vote progress (e.g., "2/5") when gated
+  - Gate check happens every request (database query, no caching bypass)
 - **Implementation**: `app/lib/consensus_engine.py` contains `calculate_scaling_factors()`, `apply_sparsity_scaling()`, `identify_representative_statements()`
 - **UI**: `app/templates/discussions/consensus_results.html` displays representative statements in responsive 2-column grid with XSS protection
+- **Templates**: `consensus_gate.html` (participation gate), `consensus_report.html` (printable report)
