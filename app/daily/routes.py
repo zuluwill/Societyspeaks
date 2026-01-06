@@ -186,8 +186,7 @@ def get_discussion_participation_data(question):
     
     # Count total statements and participants
     total_statements = Statement.query.filter_by(
-        discussion_id=question.source_discussion_id,
-        is_active=True
+        discussion_id=question.source_discussion_id
     ).count()
     
     participant_count = db.session.query(
