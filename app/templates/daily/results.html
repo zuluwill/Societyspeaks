@@ -229,7 +229,87 @@
             </div>
         </div>
 
-        {% if source_discussion %}
+        {% if source_discussion and participation %}
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-md p-6 mb-6 border border-blue-100">
+            <div class="flex items-start mb-4">
+                <div class="flex-shrink-0 mr-3">
+                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Your Vote Counts</h3>
+                    <p class="text-sm text-gray-600">
+                        Your vote is now part of the <strong>{{ source_discussion.title[:40] }}{% if source_discussion.title|length > 40 %}...{% endif %}</strong> discussion
+                        {% if participation.participant_count > 1 %}
+                        alongside {{ participation.participant_count - 1 }} other participant{% if participation.participant_count > 2 %}s{% endif %}.
+                        {% else %}.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            {% if not participation.is_unlocked %}
+            <div class="bg-white rounded-lg p-4 mb-4 border border-blue-200">
+                <div class="flex items-center mb-2">
+                    <svg class="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <span class="font-semibold text-gray-900">Unlock Deeper Insights</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-3">
+                    You've contributed <strong>{{ participation.vote_count }}</strong> of {{ participation.threshold }} votes needed to see the <em>Consensus Analysis</em> - 
+                    discover which opinion group you belong to and what brings people together.
+                </p>
+                <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" 
+                         style="width: {{ [(participation.vote_count / participation.threshold * 100), 100] | min }}%"></div>
+                </div>
+                <p class="text-xs text-gray-500">{{ participation.votes_needed }} more vote{% if participation.votes_needed != 1 %}s{% endif %} to unlock</p>
+            </div>
+            
+            <a href="{{ url_for('discussions.view_discussion', discussion_id=source_discussion.id, slug=source_discussion.slug) }}" 
+               class="w-full inline-flex items-center justify-center px-5 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+                Vote on {{ participation.votes_needed }} More Statement{% if participation.votes_needed != 1 %}s{% endif %}
+            </a>
+            {% else %}
+            <div class="bg-green-50 rounded-lg p-4 mb-4 border border-green-200">
+                <div class="flex items-center mb-2">
+                    <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                    </svg>
+                    <span class="font-semibold text-green-800">Consensus Analysis Unlocked!</span>
+                </div>
+                <p class="text-sm text-green-700">
+                    You've voted on {{ participation.vote_count }} statements. You can now see how your views compare to different opinion groups.
+                </p>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="{{ url_for('consensus.view_results', discussion_id=source_discussion.id) }}" 
+                   class="flex-1 inline-flex items-center justify-center px-5 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    View Consensus Analysis
+                </a>
+                <a href="{{ url_for('discussions.view_discussion', discussion_id=source_discussion.id, slug=source_discussion.slug) }}" 
+                   class="flex-1 inline-flex items-center justify-center px-5 py-3 border-2 border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition">
+                    Continue Voting
+                </a>
+            </div>
+            {% endif %}
+
+            <p class="text-xs text-gray-500 mt-4 text-center">
+                {{ participation.total_statements }} total statements in this discussion
+            </p>
+        </div>
+        {% elif source_discussion %}
         <div class="bg-white rounded-xl shadow-md p-6 mb-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-3">Continue the Discussion</h3>
             <p class="text-sm text-gray-600 mb-4">This question comes from a broader discussion. Dive deeper to explore more perspectives and share your thoughts on related statements.</p>

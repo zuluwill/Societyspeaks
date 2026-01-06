@@ -96,6 +96,8 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 - **Auto-Selection Service**: `app/daily/auto_selection.py` picks questions from discussions > trending topics > statements
 - **Scheduler Jobs**: `daily_question_publish` (7:30am) auto-publishes today + 7 days ahead, `daily_question_email` (8:00am) sends to all subscribers
 - **Templates**: Subscribe, success, and unsubscribe pages with streak display in results
+- **Discussion Vote Sync**: When daily question is linked to a discussion statement, votes auto-sync to `StatementVote` table, contributing to consensus analysis
+- **Participation Progress UI**: Results page shows "Your Vote Counts" section with progress bar toward unlocking consensus analysis (5 votes required), links to continue voting or view analysis when unlocked
 
 ### Homepage Redesign (January 2026)
 - **Hero section**: Updated messaging to "Making Disagreement Useful Again" with "sense-making system" positioning

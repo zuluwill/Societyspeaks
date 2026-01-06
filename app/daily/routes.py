@@ -140,6 +140,86 @@ def get_user_response(daily_question):
         ).first()
 
 
+def get_discussion_participation_data(question):
+    """
+    Get user's participation data for the linked discussion.
+    Used to show progress toward unlocking consensus analysis.
+    
+    Returns dict with:
+    - vote_count: number of statements voted on
+    - votes_needed: votes needed to unlock consensus (0 if already unlocked)
+    - total_statements: total statements in discussion
+    - participant_count: total participants in discussion
+    """
+    from app.models import StatementVote, Statement
+    from app.discussions.consensus import PARTICIPATION_THRESHOLD
+    
+    if not question.source_discussion_id:
+        return None
+    
+    discussion = question.source_discussion
+    if not discussion:
+        return None
+    
+    # Get vote count for this user in the discussion
+    vote_count = 0
+    fingerprint = get_session_fingerprint()
+    
+    if current_user.is_authenticated:
+        vote_count = StatementVote.query.filter_by(
+            discussion_id=question.source_discussion_id,
+            user_id=current_user.id
+        ).count()
+        
+        # Also count fingerprint votes (for pre-login votes)
+        if fingerprint:
+            fingerprint_count = StatementVote.query.filter_by(
+                discussion_id=question.source_discussion_id,
+                session_fingerprint=fingerprint
+            ).filter(StatementVote.user_id.is_(None)).count()
+            vote_count += fingerprint_count
+    elif fingerprint:
+        vote_count = StatementVote.query.filter_by(
+            discussion_id=question.source_discussion_id,
+            session_fingerprint=fingerprint
+        ).count()
+    
+    # Count total statements and participants
+    total_statements = Statement.query.filter_by(
+        discussion_id=question.source_discussion_id,
+        is_active=True
+    ).count()
+    
+    participant_count = db.session.query(
+        db.func.count(db.distinct(StatementVote.user_id))
+    ).filter(
+        StatementVote.discussion_id == question.source_discussion_id,
+        StatementVote.user_id.isnot(None)
+    ).scalar() or 0
+    
+    # Add anonymous participants
+    anon_count = db.session.query(
+        db.func.count(db.distinct(StatementVote.session_fingerprint))
+    ).filter(
+        StatementVote.discussion_id == question.source_discussion_id,
+        StatementVote.user_id.is_(None),
+        StatementVote.session_fingerprint.isnot(None)
+    ).scalar() or 0
+    
+    participant_count += anon_count
+    
+    votes_needed = max(0, PARTICIPATION_THRESHOLD - vote_count)
+    
+    return {
+        'vote_count': vote_count,
+        'votes_needed': votes_needed,
+        'threshold': PARTICIPATION_THRESHOLD,
+        'total_statements': total_statements,
+        'participant_count': participant_count,
+        'is_unlocked': votes_needed == 0
+    }
+
+
 @daily_bp.route('/daily')
 def today():
     """Display today's daily question"""
@@ -162,6 +242,7 @@ def today():
     has_voted = user_response is not None
     
     if has_voted:
+        participation_data = get_discussion_participation_data(question)
         return render_template('daily/results.html',
                              question=question,
                              user_response=user_response,
@@ -171,7 +252,8 @@ def today():
                              share_snippet=generate_share_snippet(question, user_response),
                              source_discussion=question.source_discussion,
                              source_articles=get_source_articles(question),
-                             related_discussions=get_related_discussions(question))
+                             related_discussions=get_related_discussions(question),
+                             participation=participation_data)
     else:
         return render_template('daily/question.html',
                              question=question)
@@ -197,6 +279,7 @@ def by_date(date_str):
     has_voted = user_response is not None
     
     if has_voted or not is_today:
+        participation_data = get_discussion_participation_data(question)
         return render_template('daily/results.html',
                              question=question,
                              user_response=user_response,
@@ -207,7 +290,8 @@ def by_date(date_str):
                              is_past=not is_today,
                              source_discussion=question.source_discussion,
                              source_articles=get_source_articles(question),
-                             related_discussions=get_related_discussions(question))
+                             related_discussions=get_related_discussions(question),
+                             participation=participation_data)
     else:
         return render_template('daily/question.html',
                              question=question)
@@ -351,7 +435,14 @@ def magic_link(token):
 @daily_bp.route('/daily/vote', methods=['POST'])
 @limiter.limit("10 per minute")
 def vote():
-    """Submit a vote for today's question"""
+    """Submit a vote for today's question
+    
+    When the daily question is linked to a discussion statement, the vote is
+    also recorded as a StatementVote in that discussion. This allows daily
+    question participation to contribute to the discussion's consensus analysis.
+    """
+    from app.models import StatementVote, Statement
+    
     user_agent = request.headers.get('User-Agent', '').lower()
     bot_indicators = ['bot', 'crawler', 'spider', 'preview', 'fetch', 'slurp', 'mediapartners']
     if any(indicator in user_agent for indicator in bot_indicators):
@@ -380,6 +471,7 @@ def vote():
         reason = reason[:500]
     
     try:
+        # Create the daily question response
         response = DailyQuestionResponse(
             daily_question_id=question.id,
             user_id=current_user.id if current_user.is_authenticated else None,
@@ -388,6 +480,74 @@ def vote():
             reason=reason if reason else None
         )
         db.session.add(response)
+        
+        # If linked to a discussion statement, sync the vote to StatementVote
+        # This makes the daily question vote count toward consensus analysis
+        if question.source_statement_id and question.source_discussion_id:
+            statement = Statement.query.get(question.source_statement_id)
+            if statement:
+                fingerprint = get_session_fingerprint()
+                new_vote = vote_map[vote_value]
+                
+                # Check if user already has a vote on this statement
+                existing_statement_vote = None
+                if current_user.is_authenticated:
+                    existing_statement_vote = StatementVote.query.filter_by(
+                        statement_id=question.source_statement_id,
+                        user_id=current_user.id
+                    ).first()
+                elif fingerprint:
+                    existing_statement_vote = StatementVote.query.filter_by(
+                        statement_id=question.source_statement_id,
+                        session_fingerprint=fingerprint
+                    ).first()
+                
+                if existing_statement_vote:
+                    # Update existing vote to match daily question vote
+                    old_vote = existing_statement_vote.vote
+                    if old_vote != new_vote:
+                        # Adjust vote counts for the change
+                        if old_vote == 1:
+                            statement.vote_count_agree = max(0, (statement.vote_count_agree or 0) - 1)
+                        elif old_vote == -1:
+                            statement.vote_count_disagree = max(0, (statement.vote_count_disagree or 0) - 1)
+                        elif old_vote == 0:
+                            statement.vote_count_unsure = max(0, (statement.vote_count_unsure or 0) - 1)
+                        
+                        if new_vote == 1:
+                            statement.vote_count_agree = (statement.vote_count_agree or 0) + 1
+                        elif new_vote == -1:
+                            statement.vote_count_disagree = (statement.vote_count_disagree or 0) + 1
+                        else:
+                            statement.vote_count_unsure = (statement.vote_count_unsure or 0) + 1
+                        
+                        existing_statement_vote.vote = new_vote
+                        current_app.logger.info(
+                            f"Daily question vote updated existing vote in discussion {question.source_discussion_id}"
+                        )
+                else:
+                    # Create new statement vote
+                    stmt_vote = StatementVote(
+                        statement_id=question.source_statement_id,
+                        discussion_id=question.source_discussion_id,
+                        user_id=current_user.id if current_user.is_authenticated else None,
+                        session_fingerprint=fingerprint if not current_user.is_authenticated else None,
+                        vote=new_vote
+                    )
+                    db.session.add(stmt_vote)
+                    
+                    # Update statement vote counts
+                    if new_vote == 1:
+                        statement.vote_count_agree = (statement.vote_count_agree or 0) + 1
+                    elif new_vote == -1:
+                        statement.vote_count_disagree = (statement.vote_count_disagree or 0) + 1
+                    else:
+                        statement.vote_count_unsure = (statement.vote_count_unsure or 0) + 1
+                    
+                    current_app.logger.info(
+                        f"Daily question vote synced to discussion {question.source_discussion_id}, "
+                        f"statement {question.source_statement_id}"
+                    )
         
         subscriber_id = session.get('daily_subscriber_id')
         if subscriber_id:
