@@ -128,7 +128,14 @@ def view_results(discussion_id):
             rep_statements_map = {s.id: s for s in rep_statements}
         
         # Build opinion groups with enriched statement data
-        for cluster_id in sorted(representative_data.keys(), key=lambda x: int(x)):
+        # Handle non-numeric cluster IDs gracefully (e.g., "noise" clusters)
+        def safe_cluster_sort_key(x):
+            try:
+                return (0, int(x))
+            except (ValueError, TypeError):
+                return (1, str(x))
+        
+        for cluster_id in sorted(representative_data.keys(), key=safe_cluster_sort_key):
             group_stmts = []
             for stmt_data in representative_data[cluster_id]:
                 stmt = rep_statements_map.get(stmt_data['statement_id'])
@@ -143,17 +150,29 @@ def view_results(discussion_id):
             if group_stmts:
                 # Count participants in this cluster
                 # Normalize comparison: cluster_id from representative_data and values from cluster_assignments
-                # may be strings or ints depending on JSON serialization, so convert both to int for comparison
+                # may be strings or ints depending on JSON serialization
                 cluster_assignments = analysis.cluster_data.get('cluster_assignments', {})
-                target_cluster = int(cluster_id)
-                participant_count = sum(
-                    1 for c in cluster_assignments.values() 
-                    if int(c) == target_cluster
-                )
+                
+                # Handle non-numeric cluster IDs (e.g., "noise")
+                try:
+                    target_cluster = int(cluster_id)
+                    group_name = f"Group {target_cluster + 1}"
+                except (ValueError, TypeError):
+                    target_cluster = str(cluster_id)
+                    group_name = str(cluster_id).title()  # e.g., "noise" -> "Noise"
+                
+                # Safe comparison that handles both numeric and string cluster IDs
+                def matches_cluster(c):
+                    try:
+                        return int(c) == target_cluster if isinstance(target_cluster, int) else str(c) == target_cluster
+                    except (ValueError, TypeError):
+                        return str(c) == str(target_cluster)
+                
+                participant_count = sum(1 for c in cluster_assignments.values() if matches_cluster(c))
                 
                 opinion_groups.append({
                     'id': target_cluster,
-                    'name': f"Group {target_cluster + 1}",
+                    'name': group_name,
                     'participant_count': participant_count,
                     'statements': group_stmts
                 })
