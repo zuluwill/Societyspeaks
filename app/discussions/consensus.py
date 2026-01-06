@@ -7,13 +7,46 @@ Provides endpoints for running consensus analysis and viewing results
 from flask import render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db, limiter
-from app.models import Discussion, ConsensusAnalysis, Statement
+from app.models import Discussion, ConsensusAnalysis, Statement, StatementVote
+from app.discussions.statements import get_statement_vote_fingerprint
 from app.lib.consensus_engine import run_consensus_analysis, save_consensus_analysis, can_cluster
 from datetime import datetime, timedelta
 import logging
 
 consensus_bp = Blueprint('consensus', __name__)
 logger = logging.getLogger(__name__)
+
+# Minimum votes required to unlock consensus analysis
+PARTICIPATION_THRESHOLD = 5
+
+
+def get_user_vote_count(discussion_id):
+    """
+    Get the number of statements a user has voted on in this discussion.
+    Works for both authenticated and anonymous users.
+    
+    Returns: (vote_count, identifier_type)
+        - vote_count: number of distinct statements voted on
+        - identifier_type: 'user' or 'anonymous'
+    """
+    if current_user.is_authenticated:
+        count = StatementVote.query.filter_by(
+            discussion_id=discussion_id,
+            user_id=current_user.id
+        ).count()
+        return count, 'user'
+    else:
+        try:
+            fingerprint = get_statement_vote_fingerprint()
+            if fingerprint:
+                count = StatementVote.query.filter_by(
+                    discussion_id=discussion_id,
+                    session_fingerprint=fingerprint
+                ).count()
+                return count, 'anonymous'
+        except Exception as e:
+            logger.debug(f"Could not get fingerprint: {e}")
+        return 0, 'anonymous'
 
 
 @consensus_bp.route('/discussions/<int:discussion_id>/consensus/analyze', methods=['POST'])
@@ -82,8 +115,32 @@ def view_results(discussion_id):
     """
     View consensus analysis results page
     Shows clusters, consensus statements, bridges, and divisive points
+    
+    Participation Gate: Users must vote on at least PARTICIPATION_THRESHOLD 
+    statements before viewing analysis results. This prevents anchoring bias
+    where seeing results influences voting behavior.
+    
+    Exceptions:
+    - Discussion creators can always view (they need to manage the discussion)
+    - Admins can always view
     """
     discussion = Discussion.query.get_or_404(discussion_id)
+    
+    # Check participation gate (unless user is creator or admin)
+    is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
+    is_admin = current_user.is_authenticated and getattr(current_user, 'is_admin', False)
+    
+    if not is_creator and not is_admin:
+        vote_count, identifier_type = get_user_vote_count(discussion_id)
+        votes_needed = max(0, PARTICIPATION_THRESHOLD - vote_count)
+        
+        if votes_needed > 0:
+            # Show participation gate page
+            return render_template('discussions/consensus_gate.html',
+                                 discussion=discussion,
+                                 vote_count=vote_count,
+                                 votes_needed=votes_needed,
+                                 threshold=PARTICIPATION_THRESHOLD)
     
     # Get latest analysis
     analysis = ConsensusAnalysis.query.filter_by(
