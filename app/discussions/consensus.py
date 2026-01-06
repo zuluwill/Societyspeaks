@@ -110,12 +110,61 @@ def view_results(discussion_id):
     bridge_statements = Statement.query.filter(Statement.id.in_(bridge_stmt_ids)).all() if bridge_stmt_ids else []
     divisive_statements = Statement.query.filter(Statement.id.in_(divisive_stmt_ids)).all() if divisive_stmt_ids else []
     
+    # Get representative statements per opinion group
+    # This shows what each group believes (top 5 statements they agree on)
+    representative_data = analysis.cluster_data.get('representative_statements', {})
+    opinion_groups = []
+    
+    if representative_data:
+        # Collect all statement IDs across all groups
+        all_rep_stmt_ids = []
+        for cluster_id, stmts in representative_data.items():
+            all_rep_stmt_ids.extend([s['statement_id'] for s in stmts])
+        
+        # Fetch all statements in one query for efficiency
+        rep_statements_map = {}
+        if all_rep_stmt_ids:
+            rep_statements = Statement.query.filter(Statement.id.in_(all_rep_stmt_ids)).all()
+            rep_statements_map = {s.id: s for s in rep_statements}
+        
+        # Build opinion groups with enriched statement data
+        for cluster_id in sorted(representative_data.keys(), key=lambda x: int(x)):
+            group_stmts = []
+            for stmt_data in representative_data[cluster_id]:
+                stmt = rep_statements_map.get(stmt_data['statement_id'])
+                if stmt:
+                    group_stmts.append({
+                        'content': stmt.content,
+                        'agreement_rate': stmt_data.get('agreement_rate', 0),
+                        'vote_count': stmt_data.get('vote_count', 0),
+                        'strength': stmt_data.get('strength', 0)
+                    })
+            
+            if group_stmts:
+                # Count participants in this cluster
+                # Normalize comparison: cluster_id from representative_data and values from cluster_assignments
+                # may be strings or ints depending on JSON serialization, so convert both to int for comparison
+                cluster_assignments = analysis.cluster_data.get('cluster_assignments', {})
+                target_cluster = int(cluster_id)
+                participant_count = sum(
+                    1 for c in cluster_assignments.values() 
+                    if int(c) == target_cluster
+                )
+                
+                opinion_groups.append({
+                    'id': target_cluster,
+                    'name': f"Group {target_cluster + 1}",
+                    'participant_count': participant_count,
+                    'statements': group_stmts
+                })
+    
     return render_template('discussions/consensus_results.html',
                          discussion=discussion,
                          analysis=analysis,
                          consensus_statements=consensus_statements,
                          bridge_statements=bridge_statements,
-                         divisive_statements=divisive_statements)
+                         divisive_statements=divisive_statements,
+                         opinion_groups=opinion_groups)
 
 
 @consensus_bp.route('/api/discussions/<int:discussion_id>/consensus/data')
