@@ -25,16 +25,34 @@ def get_user_vote_count(discussion_id):
     Get the number of statements a user has voted on in this discussion.
     Works for both authenticated and anonymous users.
     
+    For authenticated users, also counts any votes made before login 
+    (via session fingerprint) to ensure votes persist across login.
+    
     Returns: (vote_count, identifier_type)
         - vote_count: number of distinct statements voted on
         - identifier_type: 'user' or 'anonymous'
     """
     if current_user.is_authenticated:
-        count = StatementVote.query.filter_by(
+        # Count votes by user_id
+        user_count = StatementVote.query.filter_by(
             discussion_id=discussion_id,
             user_id=current_user.id
         ).count()
-        return count, 'user'
+        
+        # Also count any anonymous votes from same session (pre-login votes)
+        # This ensures the gate respects votes made before user logged in
+        fingerprint_count = 0
+        try:
+            fingerprint = get_statement_vote_fingerprint()
+            if fingerprint:
+                fingerprint_count = StatementVote.query.filter_by(
+                    discussion_id=discussion_id,
+                    session_fingerprint=fingerprint
+                ).filter(StatementVote.user_id.is_(None)).count()
+        except Exception as e:
+            logger.debug(f"Could not get fingerprint for auth user: {e}")
+        
+        return user_count + fingerprint_count, 'user'
     else:
         try:
             fingerprint = get_statement_vote_fingerprint()
@@ -327,8 +345,27 @@ def generate_report(discussion_id):
     """
     Generate a detailed PDF/HTML report of consensus analysis
     Includes cluster descriptions, key statements, and recommendations
+    
+    Participation Gate: Same as view_results - users must vote on at least
+    PARTICIPATION_THRESHOLD statements before viewing.
     """
     discussion = Discussion.query.get_or_404(discussion_id)
+    
+    # Check participation gate (same as view_results)
+    is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
+    is_admin = current_user.is_authenticated and getattr(current_user, 'is_admin', False)
+    
+    if not is_creator and not is_admin:
+        vote_count, identifier_type = get_user_vote_count(discussion_id)
+        votes_needed = max(0, PARTICIPATION_THRESHOLD - vote_count)
+        
+        if votes_needed > 0:
+            # Redirect to gate page
+            return render_template('discussions/consensus_gate.html',
+                                 discussion=discussion,
+                                 vote_count=vote_count,
+                                 votes_needed=votes_needed,
+                                 threshold=PARTICIPATION_THRESHOLD)
     
     # Get latest analysis
     analysis = ConsensusAnalysis.query.filter_by(
