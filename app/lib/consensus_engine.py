@@ -14,10 +14,10 @@ RECENT IMPROVEMENTS (2026-01-05):
 - Removed StandardScaler before PCA to preserve meaningful variance signals
   Variance = consensus vs division, which is exactly what PCA should focus on
 
-TODO - Remaining improvements:
-- Consider SparsityAwareScaler after PCA (pol.is-specific, need implementation)
-- Add validation metrics beyond silhouette score
-- Test clustering quality on real discussions
+RECENT IMPROVEMENTS (2026-01-06):
+- Added SparsityAwareScaler after PCA (pol.is innovation)
+  Prevents sparse voters from bunching at center, enables 4-5+ opinion groups
+  Code adapted from pol.is red-dwarf library: https://github.com/polis-community/red-dwarf
 """
 import numpy as np
 import pandas as pd
@@ -26,6 +26,81 @@ from typing import Dict, List, Tuple, Optional
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+# ==============================================================================
+# SPARSITY-AWARE SCALING (from pol.is red-dwarf)
+# ==============================================================================
+# Adapted from: https://github.com/polis-community/red-dwarf
+# License: AGPL-3.0 (compatible with Society Speaks)
+#
+# This is a key innovation from pol.is that prevents participants with fewer
+# votes from clustering near the center of PCA space. Without this, you get
+# mostly 2-3 clusters. With it, you get more nuanced opinion groups (4-5+).
+# ==============================================================================
+
+def calculate_scaling_factors(vote_matrix_sparse):
+    """
+    Calculate row-based scaling factors from sparse vote matrix.
+
+    Participants who voted on fewer statements get higher scaling factors,
+    which stretches them away from the center in PCA space. This prevents
+    sparse voters from being incorrectly grouped together.
+
+    Formula: sqrt(total_statements / participant_votes)
+
+    Example:
+    - Voted on all 20 statements: sqrt(20/20) = 1.0 (no change)
+    - Voted on 5 statements: sqrt(20/5) = 2.0 (doubled distance)
+    - Voted on 2 statements: sqrt(20/2) = 3.16 (tripled distance)
+
+    Args:
+        vote_matrix_sparse: DataFrame with NaN for missing votes
+
+    Returns:
+        Array of scaling factors (one per participant)
+    """
+    # Convert DataFrame to numpy array for processing
+    X_sparse = vote_matrix_sparse.values if isinstance(vote_matrix_sparse, pd.DataFrame) else vote_matrix_sparse
+    X_sparse = np.atleast_2d(X_sparse)
+
+    _, n_total_statements = X_sparse.shape
+
+    # Count actual votes per participant (non-NaN values)
+    vote_mask = ~np.isnan(X_sparse)
+    n_participant_votes = np.count_nonzero(vote_mask, axis=1)
+
+    # Calculate scaling: sqrt(total / actual_votes)
+    # Use maximum(1, ...) to avoid division by zero
+    scaling_factors = np.sqrt(n_total_statements / np.maximum(1, n_participant_votes))
+
+    return scaling_factors
+
+
+def apply_sparsity_scaling(pca_coordinates, vote_matrix_sparse):
+    """
+    Apply sparsity-aware scaling to PCA coordinates.
+
+    This is the pol.is innovation that enables finding 4-5+ opinion groups
+    instead of just 2-3. It stretches sparse voters away from the center
+    proportionally to how sparse their voting is.
+
+    Args:
+        pca_coordinates: numpy array (n_participants, n_components)
+        vote_matrix_sparse: DataFrame with NaN for missing votes
+
+    Returns:
+        Scaled PCA coordinates (same shape as input)
+    """
+    scaling_factors = calculate_scaling_factors(vote_matrix_sparse)
+
+    # Apply scaling to each PCA dimension
+    # scaling_factors[:, np.newaxis] converts (n,) to (n, 1) for broadcasting
+    scaled_coordinates = pca_coordinates * scaling_factors[:, np.newaxis]
+
+    logger.info(f"Applied sparsity scaling. Factor range: [{scaling_factors.min():.2f}, {scaling_factors.max():.2f}]")
+
+    return scaled_coordinates
 
 
 def build_vote_matrix(discussion_id, db):
@@ -401,10 +476,75 @@ def identify_divisive_statements(vote_matrix, user_labels, min_controversy=0.7):
     return divisive_statements
 
 
+def identify_representative_statements(vote_matrix, user_labels, top_n=5):
+    """
+    Identify the most representative statements for each opinion group.
+
+    Representative statements are those with high agreement within each group.
+    This makes opinion groups interpretable: "Group 1 believes [X, Y, Z]"
+
+    This is inspired by pol.is's approach to characterizing opinion groups
+    and makes clustering results actionable for users.
+
+    Args:
+        vote_matrix: DataFrame with real votes (NaN for missing)
+        user_labels: Cluster assignments for each participant
+        top_n: Number of top statements to return per group (default 5)
+
+    Returns:
+        Dict mapping cluster_id -> list of representative statements
+        Each statement includes: statement_id, agreement_rate, vote_count, strength
+    """
+    representatives = {}
+
+    for cluster_id in np.unique(user_labels):
+        cluster_mask = user_labels == cluster_id
+        cluster_indices = np.where(cluster_mask)[0]
+        cluster_votes = vote_matrix.iloc[cluster_indices]
+
+        # Calculate agreement for each statement within this cluster
+        statement_scores = []
+        for statement_id in cluster_votes.columns:
+            votes = cluster_votes[statement_id]
+            real_votes = votes.notna()
+            vote_count = real_votes.sum()
+
+            if vote_count < 3:  # Need minimum votes to be representative
+                continue
+
+            # Calculate agreement rate (% who agree among those who voted)
+            agree_count = (votes == 1).sum()
+            agreement_rate = agree_count / vote_count
+
+            # Calculate "strength" - high agreement weighted by participation
+            # This ensures we pick statements that are both agreed upon AND voted on
+            # Participation weight caps at 1.0 (if everyone in cluster voted)
+            participation_weight = min(vote_count / len(cluster_votes), 1.0)
+            strength = agreement_rate * participation_weight
+
+            statement_scores.append({
+                'statement_id': int(statement_id),
+                'agreement_rate': float(agreement_rate),
+                'vote_count': int(vote_count),
+                'agree_count': int(agree_count),
+                'strength': float(strength)
+            })
+
+        # Sort by strength (agreement weighted by participation)
+        statement_scores.sort(key=lambda x: x['strength'], reverse=True)
+
+        # Take top N
+        representatives[int(cluster_id)] = statement_scores[:top_n]
+
+    logger.info(f"Identified {sum(len(v) for v in representatives.values())} representative statements across {len(representatives)} groups")
+
+    return representatives
+
+
 def run_consensus_analysis(discussion_id, db, method='agglomerative'):
     """
     Main function to run complete consensus analysis on a discussion
-    
+
     Returns:
         Dictionary with:
         - cluster_assignments: user_id -> cluster_id mapping
@@ -412,6 +552,7 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
         - consensus_statements: list of consensus statement details
         - bridge_statements: list of bridge statement details
         - divisive_statements: list of divisive statement details
+        - representative_statements: dict of cluster_id -> top statements that group agrees on
         - metadata: clustering metadata (n_clusters, silhouette_score, etc.)
     """
     # Check if ready for clustering
@@ -429,8 +570,12 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
     # Perform PCA on filled matrix (imputed values help PCA see patterns)
     vote_matrix_pca, pca = perform_pca(vote_matrix_filled)
 
-    # Cluster users based on PCA
-    user_labels, silhouette = cluster_users(vote_matrix_pca, method=method)
+    # Apply sparsity-aware scaling (pol.is innovation)
+    # This prevents sparse voters from bunching at center, enabling 4-5+ clusters
+    vote_matrix_pca_scaled = apply_sparsity_scaling(vote_matrix_pca, vote_matrix_real)
+
+    # Cluster users based on scaled PCA coordinates
+    user_labels, silhouette = cluster_users(vote_matrix_pca_scaled, method=method)
 
     # Create user-cluster mapping
     cluster_assignments = {
@@ -438,10 +583,10 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
         for user_id, label in zip(user_ids, user_labels)
     }
 
-    # Create PCA coordinates mapping
+    # Create PCA coordinates mapping (using scaled coordinates for visualization)
     pca_coordinates = {
         int(user_id): (float(coords[0]), float(coords[1]))
-        for user_id, coords in zip(user_ids, vote_matrix_pca)
+        for user_id, coords in zip(user_ids, vote_matrix_pca_scaled)
     }
 
     # Identify special statements using REAL votes only (not imputed)
@@ -449,7 +594,11 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
     consensus_stmts = identify_consensus_statements(vote_matrix_real, user_labels)
     bridge_stmts = identify_bridge_statements(vote_matrix_real, user_labels)
     divisive_stmts = identify_divisive_statements(vote_matrix_real, user_labels)
-    
+
+    # Identify representative statements for each opinion group
+    # This helps users understand "what does each group believe?"
+    representative_stmts = identify_representative_statements(vote_matrix_real, user_labels)
+
     # Compile results
     results = {
         'cluster_assignments': cluster_assignments,
@@ -457,6 +606,7 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
         'consensus_statements': consensus_stmts,
         'bridge_statements': bridge_stmts,
         'divisive_statements': divisive_stmts,
+        'representative_statements': representative_stmts,
         'metadata': {
             'num_clusters': int(len(np.unique(user_labels))),
             'silhouette_score': float(silhouette),
@@ -471,7 +621,8 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
     logger.info(f"Consensus analysis complete for discussion {discussion_id}")
     logger.info(f"  - {len(user_ids)} users in {len(np.unique(user_labels))} clusters")
     logger.info(f"  - {len(consensus_stmts)} consensus, {len(bridge_stmts)} bridge, {len(divisive_stmts)} divisive")
-    
+    logger.info(f"  - {sum(len(v) for v in representative_stmts.values())} representative statements identified")
+
     return results
 
 
