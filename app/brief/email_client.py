@@ -187,7 +187,7 @@ class ResendClient:
             str: Simple HTML email
         """
         items_html = ""
-        for item in brief.items.order_by(BriefItem.position):
+        for item in brief.items.order_by(BriefItem.position.asc()):
             bullets_html = "".join([f"<li>{bullet}</li>" for bullet in item.summary_bullets])
             items_html += f"""
             <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-left: 4px solid #333;">
@@ -260,7 +260,8 @@ class BriefEmailScheduler:
         subscribers_to_send = []
 
         for subscriber in all_subscribers:
-            if not subscriber.is_subscribed_eligible():
+            # Check eligibility AND duplicate prevention
+            if not subscriber.can_receive_brief():
                 continue
 
             # Convert subscriber's preferred time to UTC
@@ -368,6 +369,11 @@ def send_brief_to_subscriber(subscriber_email: str, brief_date: Optional[str] = 
     subscriber = DailyBriefSubscriber.query.filter_by(email=subscriber_email).first()
     if not subscriber:
         logger.error(f"Subscriber not found: {subscriber_email}")
+        return False
+
+    # Verify subscriber status (allow test sends even if already sent today)
+    if subscriber.status != 'active':
+        logger.error(f"Subscriber not active: {subscriber_email} (status: {subscriber.status})")
         return False
 
     if brief_date:

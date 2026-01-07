@@ -132,6 +132,10 @@ def generate(date_str=None):
         logger.info(f"Admin generating brief for {brief_date}")
         brief = generate_daily_brief(brief_date, auto_publish=False)
 
+        if brief is None:
+            flash('No suitable topics available for this date. Try fetching news first.', 'warning')
+            return redirect(url_for('brief_admin.dashboard'))
+
         flash(f'Brief generated successfully! Review it before publishing.', 'success')
         return redirect(url_for('brief_admin.preview', date_str=date_str))
 

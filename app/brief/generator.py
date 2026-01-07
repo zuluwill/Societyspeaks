@@ -481,7 +481,7 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
             raise
 
 
-def generate_daily_brief(brief_date: Optional[date] = None, auto_publish: bool = True) -> DailyBrief:
+def generate_daily_brief(brief_date: Optional[date] = None, auto_publish: bool = True) -> Optional[DailyBrief]:
     """
     Convenience function to generate today's brief.
 
@@ -490,7 +490,7 @@ def generate_daily_brief(brief_date: Optional[date] = None, auto_publish: bool =
         auto_publish: Set to 'ready' status if True
 
     Returns:
-        DailyBrief instance
+        DailyBrief instance, or None if no topics available
     """
     from app.brief.topic_selector import select_topics_for_date
 
@@ -502,7 +502,8 @@ def generate_daily_brief(brief_date: Optional[date] = None, auto_publish: bool =
     topics = selector_import(brief_date, limit=5)
 
     if not topics:
-        raise ValueError(f"No topics available for brief on {brief_date}")
+        logger.warning(f"No topics available for brief on {brief_date} - skipping generation")
+        return None
 
     # Generate brief
     generator = BriefGenerator()
