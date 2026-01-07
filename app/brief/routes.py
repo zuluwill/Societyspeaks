@@ -5,6 +5,7 @@ Public routes for daily brief viewing, subscription, and archive.
 """
 
 from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app
+from flask_login import current_user
 from datetime import date, datetime, timedelta
 from app.brief import brief_bp
 from app import db, limiter
@@ -31,13 +32,17 @@ def today():
         flash("Today's brief is being prepared. Check back soon!", 'info')
         return render_template('brief/no_brief.html')
 
-    # Check if user is subscriber (active status required)
+    # Check if user is subscriber (active status required) or admin
     subscriber = None
     is_subscriber = False
     if 'brief_subscriber_id' in session:
         subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
         if subscriber and subscriber.status == 'active':
             is_subscriber = True
+    
+    # Admins can see full brief content
+    if current_user.is_authenticated and current_user.is_admin:
+        is_subscriber = True
 
     # Get items ordered by position
     items = brief.items.order_by(BriefItem.position).all()
@@ -68,13 +73,17 @@ def view_date(date_str):
         flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
         return render_template('brief/no_brief.html', requested_date=brief_date)
 
-    # Check if user is subscriber (active status required)
+    # Check if user is subscriber (active status required) or admin
     subscriber = None
     is_subscriber = False
     if 'brief_subscriber_id' in session:
         subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
         if subscriber and subscriber.status == 'active':
             is_subscriber = True
+    
+    # Admins can see full brief content
+    if current_user.is_authenticated and current_user.is_admin:
+        is_subscriber = True
 
     items = brief.items.order_by(BriefItem.position).all()
 
