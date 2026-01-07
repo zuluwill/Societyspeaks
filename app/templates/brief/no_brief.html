@@ -5,12 +5,8 @@
 {% block meta_description %}Get the news that matters, without the noise. Curated stories with multi-perspective coverage analysis, delivered daily.{% endblock %}
 
 {% block content %}
-<div class="relative isolate overflow-hidden bg-gradient-to-b from-blue-50 to-white">
-    <div class="absolute inset-0">
-        <div class="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-r from-blue-50 to-white"></div>
-    </div>
-
-    <section class="relative mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+<div class="bg-gradient-to-b from-blue-50 to-white">
+    <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <div class="max-w-3xl mx-auto text-center">
             <div class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-600 mb-6">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,7 +29,7 @@
                 so you can understand issues—not just react to headlines.
             </p>
             
-            <div class="flex flex-col space-y-3 sm:flex-row sm:flex-wrap sm:justify-center sm:gap-3 sm:space-y-0 mb-4">
+            <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-center mb-4">
                 <a href="{{ url_for('brief.subscribe') }}" 
                    class="inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
