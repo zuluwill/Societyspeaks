@@ -306,3 +306,125 @@ def api_brief_by_date(date_str):
         return jsonify({'error': 'No brief found'}), 404
 
     return jsonify(brief.to_dict())
+
+
+@brief_bp.route('/brief/admin/test-send', methods=['POST'])
+def admin_test_send():
+    """Send a test brief email (admin only, development use)"""
+    import os
+    from flask_login import current_user
+    from app.brief.email_client import ResendClient
+    from datetime import date
+    import secrets
+
+    # Only allow admins
+    if not current_user.is_authenticated or not current_user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
+
+    data = request.get_json() or {}
+    email = data.get('email')
+
+    if not email:
+        return jsonify({'error': 'Email required'}), 400
+
+    # Get or create the subscriber
+    subscriber = DailyBriefSubscriber.query.filter_by(email=email).first()
+    if not subscriber:
+        subscriber = DailyBriefSubscriber(
+            email=email,
+            status='active',
+            tier='trial',
+            timezone='Europe/London',
+            preferred_send_hour=8,
+            magic_token=secrets.token_urlsafe(32),
+            trial_ends_at=datetime.utcnow() + timedelta(days=14)
+        )
+        db.session.add(subscriber)
+        db.session.commit()
+        logger.info(f"Created test subscriber: {email}")
+
+    # Get or create a test brief
+    today = date.today()
+    brief = DailyBrief.query.filter_by(date=today).first()
+
+    if not brief:
+        # Create a sample brief for testing
+        brief = DailyBrief(
+            date=today,
+            title=f"Tuesday's Brief: AI, Climate, Democracy",
+            intro_text="Today we look at three stories shaping public discourse: advances in AI governance, climate policy debates, and democratic participation trends. Each story includes coverage from multiple perspectives.",
+            status='published',
+            auto_selected=True
+        )
+        db.session.add(brief)
+        db.session.flush()
+
+        # Add sample items
+        sample_items = [
+            {
+                'headline': 'AI Safety Summit Sets New International Standards',
+                'summary_bullets': [
+                    'World leaders agreed on voluntary AI safety protocols at the summit.',
+                    'The framework addresses both near-term risks and long-term existential concerns.',
+                    'Tech companies committed to pre-deployment testing for high-risk systems.'
+                ],
+                'source_count': 12,
+                'coverage_distribution': {'left': 0.35, 'center': 0.40, 'right': 0.25},
+                'sources_by_leaning': {'left': ['Guardian', 'Vox'], 'center': ['BBC', 'Reuters'], 'right': ['WSJ']}
+            },
+            {
+                'headline': 'Climate Finance Debate Heats Up Ahead of COP',
+                'summary_bullets': [
+                    'Developing nations push for $1 trillion annual climate fund.',
+                    'Rich countries resist binding commitments, propose private sector solutions.',
+                    'Small island states warn of existential threat without immediate action.'
+                ],
+                'source_count': 8,
+                'coverage_distribution': {'left': 0.45, 'center': 0.30, 'right': 0.25},
+                'sources_by_leaning': {'left': ['Guardian'], 'center': ['AP', 'BBC'], 'right': ['Telegraph']}
+            },
+            {
+                'headline': 'Voter Turnout Trends Signal Shifting Democratic Engagement',
+                'summary_bullets': [
+                    'Youth voter registration up 15% in key battleground areas.',
+                    'Mail-in voting preferences vary significantly by party affiliation.',
+                    'New voting laws spark debate over access versus security.'
+                ],
+                'source_count': 6,
+                'coverage_distribution': {'left': 0.30, 'center': 0.35, 'right': 0.35},
+                'sources_by_leaning': {'left': ['NPR'], 'center': ['PBS'], 'right': ['Fox News']}
+            }
+        ]
+
+        for i, item_data in enumerate(sample_items, start=1):
+            item = BriefItem(
+                brief_id=brief.id,
+                position=i,
+                headline=item_data['headline'],
+                summary_bullets=item_data['summary_bullets'],
+                source_count=item_data['source_count'],
+                coverage_distribution=item_data['coverage_distribution'],
+                sources_by_leaning=item_data['sources_by_leaning']
+            )
+            db.session.add(item)
+
+        db.session.commit()
+        logger.info(f"Created test brief for {today}")
+
+    # Send the email
+    try:
+        client = ResendClient()
+        success = client.send_brief(subscriber, brief)
+
+        if success:
+            return jsonify({
+                'success': True,
+                'message': f'Test brief sent to {email}',
+                'brief_title': brief.title
+            })
+        else:
+            return jsonify({'error': 'Failed to send email'}), 500
+
+    except Exception as e:
+        logger.error(f"Test send failed: {e}")
+        return jsonify({'error': str(e)}), 500
