@@ -62,8 +62,9 @@ class ResendClient:
             # Render email HTML
             html_content = self._render_email(subscriber, brief)
 
-            # Build unsubscribe URL
-            unsubscribe_url = f"https://societyspeaks.com/brief/unsubscribe/{subscriber.magic_token}"
+            # Build unsubscribe URL using environment config
+            base_url = os.environ.get('APP_BASE_URL', 'https://societyspeaks.com')
+            unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
 
             # Prepare email data with List-Unsubscribe headers for compliance
             email_data = {
