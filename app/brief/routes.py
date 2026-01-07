@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 @brief_bp.route('/brief')
 @brief_bp.route('/brief/today')
+@limiter.limit("60/minute")
 def today():
     """Show today's brief"""
     brief = DailyBrief.get_today()
@@ -48,6 +49,7 @@ def today():
 
 
 @brief_bp.route('/brief/<date_str>')
+@limiter.limit("60/minute")
 def view_date(date_str):
     """View brief for a specific date (YYYY-MM-DD format)"""
     try:
@@ -83,6 +85,7 @@ def view_date(date_str):
 
 
 @brief_bp.route('/brief/archive')
+@limiter.limit("60/minute")
 def archive():
     """Browse brief archive"""
     page = request.args.get('page', 1, type=int)
