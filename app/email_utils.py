@@ -88,7 +88,7 @@ def update_loops_contact(email_address, properties):
 #This function is responsible for sending events to Loops
 def send_loops_event(email_address, event_name, user_id, contact_properties, event_properties):
     api_key = os.getenv('LOOPS_API_KEY')
-    url = f'https://app.loops.so/api/v1/events/{event_name}'
+    url = 'https://app.loops.so/api/v1/events/send'
 
     headers = {
         'Authorization': f'Bearer {api_key}',
@@ -97,6 +97,7 @@ def send_loops_event(email_address, event_name, user_id, contact_properties, eve
 
     payload = {
         'email': email_address,
+        'eventName': event_name,
         'userId': user_id,
         'contactProperties': contact_properties,
         'eventProperties': event_properties

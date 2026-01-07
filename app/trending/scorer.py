@@ -233,10 +233,11 @@ def pre_filter_articles(articles: List[NewsArticle]) -> Tuple[List[NewsArticle],
     return to_score, to_skip
 
 
-def score_articles_with_llm(articles: List[NewsArticle]) -> List[NewsArticle]:
+def score_articles_with_llm(articles: List[NewsArticle], batch_size: int = 25) -> List[NewsArticle]:
     """
     Score articles using LLM for sensationalism.
     Pre-filters to reduce LLM costs - only quality candidates get scored.
+    Processes in batches to avoid token limits.
     """
     to_score, skipped = pre_filter_articles(articles)
     
@@ -252,15 +253,18 @@ def score_articles_with_llm(articles: List[NewsArticle]) -> List[NewsArticle]:
             article.sensationalism_score = score_sensationalism(article.title)
         return articles
     
-    try:
-        if provider == 'openai':
-            _score_with_openai(to_score, api_key)
-        elif provider == 'anthropic':
-            _score_with_anthropic(to_score, api_key)
-    except Exception as e:
-        logger.error(f"LLM scoring failed: {e}")
-        for article in to_score:
-            article.sensationalism_score = score_sensationalism(article.title)
+    for i in range(0, len(to_score), batch_size):
+        batch = to_score[i:i + batch_size]
+        try:
+            if provider == 'openai':
+                _score_with_openai(batch, api_key)
+            elif provider == 'anthropic':
+                _score_with_anthropic(batch, api_key)
+            logger.info(f"Scored batch {i // batch_size + 1} ({len(batch)} articles)")
+        except Exception as e:
+            logger.error(f"LLM scoring failed for batch: {e}")
+            for article in batch:
+                article.sensationalism_score = score_sensationalism(article.title)
     
     return articles
 
