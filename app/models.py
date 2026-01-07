@@ -811,7 +811,12 @@ class NewsSource(db.Model):
     
     reputation_score = db.Column(db.Float, default=0.8)  # 0-1 scale
     is_active = db.Column(db.Boolean, default=True)
-    
+
+    # Political leaning for coverage analysis (-3 to +3: left to right, 0 = center)
+    political_leaning = db.Column(db.Float)  # -2=Left, -1=Lean Left, 0=Center, 1=Lean Right, 2=Right
+    leaning_source = db.Column(db.String(50))  # 'allsides', 'manual', 'llm_inferred'
+    leaning_updated_at = db.Column(db.DateTime)
+
     last_fetched_at = db.Column(db.DateTime)
     fetch_error_count = db.Column(db.Integer, default=0)
     
@@ -1045,6 +1050,319 @@ class DiscussionSourceArticle(db.Model):
     # Relationships
     discussion = db.relationship('Discussion', backref='source_article_links')
     article = db.relationship('NewsArticle', backref='discussion_links')
+
+
+class DailyBrief(db.Model):
+    """
+    Daily Sense-Making Brief - Evening news summary (6pm).
+    Aggregates 3-5 curated topics with coverage analysis.
+    Separate from Daily Question (morning participation prompt).
+    """
+    __tablename__ = 'daily_brief'
+    __table_args__ = (
+        db.Index('idx_brief_date', 'date'),
+        db.Index('idx_brief_status', 'status'),
+        db.UniqueConstraint('date', name='uq_daily_brief_date'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    date = db.Column(db.Date, nullable=False, unique=True)
+    title = db.Column(db.String(200))  # e.g., "Tuesday's Brief: Climate, Tech, Healthcare"
+    intro_text = db.Column(db.Text)  # 2-3 sentence calm framing
+
+    status = db.Column(db.String(20), default='draft')  # draft|ready|published|skipped
+
+    # Admin override tracking
+    auto_selected = db.Column(db.Boolean, default=True)  # False if admin edited
+    admin_edited_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    admin_notes = db.Column(db.Text)  # Why was this edited/skipped?
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    published_at = db.Column(db.DateTime)
+
+    # Relationships
+    items = db.relationship('BriefItem', backref='brief', lazy='dynamic',
+                           cascade='all, delete-orphan', order_by='BriefItem.position')
+    admin_editor = db.relationship('User', backref='edited_briefs', foreign_keys=[admin_edited_by])
+
+    @property
+    def item_count(self):
+        """Number of items in this brief"""
+        return self.items.count()
+
+    @classmethod
+    def get_today(cls):
+        """Get today's brief"""
+        from datetime import date
+        today = date.today()
+        return cls.query.filter_by(date=today, status='published').first()
+
+    @classmethod
+    def get_by_date(cls, brief_date):
+        """Get brief for a specific date"""
+        return cls.query.filter_by(date=brief_date, status='published').first()
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'date': self.date.isoformat(),
+            'title': self.title,
+            'intro_text': self.intro_text,
+            'status': self.status,
+            'item_count': self.item_count,
+            'items': [item.to_dict() for item in self.items.order_by(BriefItem.position)],
+            'published_at': self.published_at.isoformat() if self.published_at else None,
+            'created_at': self.created_at.isoformat()
+        }
+
+    def __repr__(self):
+        return f'<DailyBrief {self.date} ({self.status})>'
+
+
+class BriefItem(db.Model):
+    """
+    Individual story in a daily brief (3-5 per brief).
+    References TrendingTopic for DRY principle.
+    """
+    __tablename__ = 'brief_item'
+    __table_args__ = (
+        db.Index('idx_brief_item_brief', 'brief_id'),
+        db.Index('idx_brief_item_topic', 'trending_topic_id'),
+        db.UniqueConstraint('brief_id', 'position', name='uq_brief_position'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    brief_id = db.Column(db.Integer, db.ForeignKey('daily_brief.id'), nullable=False)
+    position = db.Column(db.Integer, nullable=False)  # Display order 1-5
+
+    # Source (DRY - reference existing TrendingTopic)
+    trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id'), nullable=False)
+
+    # Generated content (LLM-created for brief context)
+    headline = db.Column(db.String(200))  # Shorter, punchier than TrendingTopic title
+    summary_bullets = db.Column(db.JSON)  # ['bullet1', 'bullet2', 'bullet3']
+
+    # Coverage analysis (computed from TrendingTopic articles)
+    coverage_distribution = db.Column(db.JSON)  # {'left': 0.2, 'center': 0.5, 'right': 0.3}
+    coverage_imbalance = db.Column(db.Float)  # 0-1 score (0=balanced, 1=single perspective)
+    source_count = db.Column(db.Integer)  # Number of unique sources
+    sources_by_leaning = db.Column(db.JSON)  # {'left': ['Guardian'], 'center': ['BBC', 'FT'], 'right': []}
+
+    # Sensationalism (from source articles)
+    sensationalism_score = db.Column(db.Float)  # Average of article scores
+    sensationalism_label = db.Column(db.String(20))  # 'low', 'medium', 'high'
+
+    # Verification links (LLM-extracted + admin additions)
+    verification_links = db.Column(db.JSON)  # [{'tier': 'primary', 'url': '...', 'type': '...', 'description': '...', 'is_paywalled': bool}]
+
+    # CTA to discussion
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=True)
+    cta_text = db.Column(db.String(200))  # Customizable per item
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    trending_topic = db.relationship('TrendingTopic', backref='brief_items')
+    discussion = db.relationship('Discussion', backref='brief_items')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'position': self.position,
+            'headline': self.headline,
+            'summary_bullets': self.summary_bullets,
+            'coverage_distribution': self.coverage_distribution,
+            'coverage_imbalance': self.coverage_imbalance,
+            'source_count': self.source_count,
+            'sources_by_leaning': self.sources_by_leaning,
+            'sensationalism_score': self.sensationalism_score,
+            'sensationalism_label': self.sensationalism_label,
+            'verification_links': self.verification_links,
+            'discussion_id': self.discussion_id,
+            'cta_text': self.cta_text,
+            'trending_topic': self.trending_topic.to_dict() if self.trending_topic else None
+        }
+
+    def __repr__(self):
+        return f'<BriefItem {self.position}. {self.headline}>'
+
+
+class DailyBriefSubscriber(db.Model):
+    """
+    Subscribers to daily brief (separate from daily question).
+    Supports paid tiers and timezone preferences.
+    """
+    __tablename__ = 'daily_brief_subscriber'
+    __table_args__ = (
+        db.Index('idx_dbs_email', 'email'),
+        db.Index('idx_dbs_token', 'magic_token'),
+        db.Index('idx_dbs_team', 'team_id'),
+        db.Index('idx_dbs_status', 'status'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), nullable=False, unique=True)
+
+    # Subscription tier
+    tier = db.Column(db.String(20), default='trial')  # trial|individual|team
+    trial_started_at = db.Column(db.DateTime)
+    trial_ends_at = db.Column(db.DateTime)  # 14-day trial
+
+    # Team management
+    team_id = db.Column(db.Integer, db.ForeignKey('brief_team.id'), nullable=True)
+
+    # Preferences
+    timezone = db.Column(db.String(50), default='UTC')  # e.g., 'Europe/London', 'America/New_York'
+    preferred_send_hour = db.Column(db.Integer, default=18)  # 6pm in their timezone (options: 6, 8, 18)
+
+    # Status
+    status = db.Column(db.String(20), default='active')  # active|unsubscribed|bounced|payment_failed
+    unsubscribed_at = db.Column(db.DateTime)
+
+    # Magic link auth (reuse pattern from DailyQuestionSubscriber)
+    magic_token = db.Column(db.String(64), unique=True)
+    magic_token_expires = db.Column(db.DateTime)
+
+    # Stripe integration
+    stripe_customer_id = db.Column(db.String(255))
+    stripe_subscription_id = db.Column(db.String(255))
+    subscription_expires_at = db.Column(db.DateTime)  # For grace period
+
+    # Optional: Link to User account
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    # Tracking
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_sent_at = db.Column(db.DateTime)
+    total_briefs_received = db.Column(db.Integer, default=0)
+
+    # Relationships
+    user = db.relationship('User', backref='brief_subscription')
+    team = db.relationship('BriefTeam', backref='members')
+
+    def generate_magic_token(self, expires_hours=48):
+        """Generate a new magic link token"""
+        import secrets
+        self.magic_token = secrets.token_urlsafe(32)
+        self.magic_token_expires = datetime.utcnow() + timedelta(hours=expires_hours)
+        return self.magic_token
+
+    @staticmethod
+    def verify_magic_token(token):
+        """Verify magic token and return subscriber if valid"""
+        subscriber = DailyBriefSubscriber.query.filter_by(
+            magic_token=token,
+            status='active'
+        ).first()
+
+        if not subscriber:
+            return None
+
+        if subscriber.magic_token_expires and subscriber.magic_token_expires < datetime.utcnow():
+            return None
+
+        return subscriber
+
+    def start_trial(self):
+        """Start 14-day free trial"""
+        self.tier = 'trial'
+        self.trial_started_at = datetime.utcnow()
+        self.trial_ends_at = datetime.utcnow() + timedelta(days=14)
+        self.status = 'active'
+
+    def is_subscribed_eligible(self):
+        """Check if subscriber should receive emails"""
+        if self.status != 'active':
+            return False
+
+        # During test phase: everyone gets access (check env var)
+        import os
+        if not os.environ.get('BILLING_ENFORCEMENT_ENABLED'):
+            return True
+
+        # Post-launch: check subscription status
+        if self.tier == 'trial':
+            return datetime.utcnow() < self.trial_ends_at
+
+        if self.tier in ['individual', 'team']:
+            # Check Stripe subscription status
+            return self.subscription_expires_at and datetime.utcnow() < self.subscription_expires_at
+
+        return False
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'tier': self.tier,
+            'timezone': self.timezone,
+            'preferred_send_hour': self.preferred_send_hour,
+            'status': self.status,
+            'is_eligible': self.is_subscribed_eligible(),
+            'trial_ends_at': self.trial_ends_at.isoformat() if self.trial_ends_at else None
+        }
+
+    def __repr__(self):
+        return f'<DailyBriefSubscriber {self.email} ({self.tier})>'
+
+
+class BriefTeam(db.Model):
+    """
+    Multi-seat team subscriptions for daily brief.
+    """
+    __tablename__ = 'brief_team'
+    __table_args__ = (
+        db.Index('idx_brief_team_admin', 'admin_email'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255))
+
+    # Billing
+    seat_limit = db.Column(db.Integer, default=5)
+    price_per_seat = db.Column(db.Integer, default=800)  # $8.00 in cents (team rate)
+    base_price = db.Column(db.Integer, default=4000)  # $40/month for 5 seats
+
+    # Stripe
+    stripe_customer_id = db.Column(db.String(255))
+    stripe_subscription_id = db.Column(db.String(255))
+
+    # Admin contact
+    admin_email = db.Column(db.String(255))  # Who manages the team
+
+    # Status
+    status = db.Column(db.String(20), default='active')  # active|cancelled|payment_failed
+
+    # Tracking
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def current_seat_count(self):
+        """Number of active members"""
+        return DailyBriefSubscriber.query.filter_by(
+            team_id=self.id,
+            status='active'
+        ).count()
+
+    @property
+    def has_available_seats(self):
+        """Check if team has available seats"""
+        return self.current_seat_count < self.seat_limit
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'seat_limit': self.seat_limit,
+            'current_seat_count': self.current_seat_count,
+            'has_available_seats': self.has_available_seats,
+            'admin_email': self.admin_email,
+            'status': self.status
+        }
+
+    def __repr__(self):
+        return f'<BriefTeam {self.name} ({self.current_seat_count}/{self.seat_limit} seats)>'
 
 
 class DailyQuestion(db.Model):

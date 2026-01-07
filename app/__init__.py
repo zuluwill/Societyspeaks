@@ -382,7 +382,16 @@ def create_app():
     from app.daily import daily_bp
     app.register_blueprint(daily_bp)
     app.logger.debug("Daily question blueprint registered")
-    
+
+    # Register daily brief blueprints (Evening Sense-Making Brief)
+    from app.brief import brief_bp
+    app.register_blueprint(brief_bp)
+    app.logger.debug("Daily brief blueprint registered")
+
+    from app.brief.admin import brief_admin_bp
+    app.register_blueprint(brief_admin_bp)
+    app.logger.debug("Daily brief admin blueprint registered")
+
     app.logger.debug("All registered routes:")
     app.logger.debug(app.url_map)
 
