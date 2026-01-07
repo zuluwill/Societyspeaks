@@ -1,0 +1,71 @@
+{% extends "layout.html" %}
+
+{% block title %}Brief Archive - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Brief Archive</h1>
+            <p class="text-gray-600">Browse past daily sense-making briefs</p>
+        </div>
+
+        {% if briefs %}
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div class="divide-y divide-gray-100">
+                {% for brief in briefs %}
+                <a href="{{ url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d')) }}" 
+                   class="block p-6 hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 mb-1">{{ brief.date.strftime('%A, %B %d, %Y') }}</p>
+                            <h2 class="font-semibold text-gray-900">{{ brief.title }}</h2>
+                            <p class="text-sm text-gray-600 mt-1">{{ brief.item_count }} stories</p>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if pagination.pages > 1 %}
+        <div class="mt-6 flex justify-center">
+            <nav class="flex items-center space-x-2">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('brief.archive', page=pagination.prev_num) }}" 
+                   class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+                    Previous
+                </a>
+                {% endif %}
+                
+                <span class="px-3 py-2 text-gray-600">
+                    Page {{ pagination.page }} of {{ pagination.pages }}
+                </span>
+                
+                {% if pagination.has_next %}
+                <a href="{{ url_for('brief.archive', page=pagination.next_num) }}" 
+                   class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+                    Next
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="bg-white rounded-xl shadow-md p-8 text-center">
+            <p class="text-gray-600">No briefs have been published yet.</p>
+            <a href="{{ url_for('brief.subscribe') }}" class="inline-flex items-center mt-4 text-amber-600 hover:text-amber-700 font-medium">
+                Subscribe to get notified
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

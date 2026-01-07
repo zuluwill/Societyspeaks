@@ -1,0 +1,127 @@
+{% extends "layout.html" %}
+
+{% block title %}How We Create the Daily Brief - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Our Methodology</h1>
+            <p class="text-gray-600">How we create the Daily Sense-Making Brief</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8 space-y-8">
+            <section>
+                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mr-3 text-sm font-bold">1</span>
+                    Story Selection
+                </h2>
+                <p class="text-gray-700 mb-4">
+                    We don't try to cover everything. Instead, we select 3-5 stories that matter for civic sense-making based on:
+                </p>
+                <ul class="space-y-2 text-gray-600 ml-11">
+                    <li class="flex items-start">
+                        <span class="text-amber-600 mr-2">•</span>
+                        <span><strong>Civic importance</strong> - Does this affect public policy, rights, or institutions?</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-amber-600 mr-2">•</span>
+                        <span><strong>Source diversity</strong> - Is it being covered by outlets across perspectives?</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-amber-600 mr-2">•</span>
+                        <span><strong>Topic diversity</strong> - We avoid overloading any single category</span>
+                    </li>
+                </ul>
+            </section>
+
+            <section>
+                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mr-3 text-sm font-bold">2</span>
+                    Coverage Analysis
+                </h2>
+                <p class="text-gray-700 mb-4">
+                    For each story, we show you which outlets are covering it and from what perspective:
+                </p>
+                <div class="bg-gray-50 rounded-lg p-4 ml-11">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-600">Example coverage distribution</span>
+                    </div>
+                    <div class="flex h-4 rounded-full overflow-hidden bg-gray-200">
+                        <div class="bg-blue-500" style="width: 25%"></div>
+                        <div class="bg-purple-500" style="width: 50%"></div>
+                        <div class="bg-red-500" style="width: 25%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span class="text-blue-600">Left-leaning</span>
+                        <span class="text-purple-600">Center</span>
+                        <span class="text-red-600">Right-leaning</span>
+                    </div>
+                </div>
+                <p class="text-gray-600 mt-4 ml-11">
+                    Source ratings come from AllSides and our own manual classifications. We show the balance, not to say who's "right," but to help you see the full picture.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mr-3 text-sm font-bold">3</span>
+                    Verification Links
+                </h2>
+                <p class="text-gray-700 ml-11">
+                    Where possible, we link to primary sources: government documents, academic studies, official statements. These let you verify claims directly rather than relying on any single outlet's interpretation.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mr-3 text-sm font-bold">4</span>
+                    Editorial Review
+                </h2>
+                <p class="text-gray-700 ml-11">
+                    Every brief is reviewed by a human editor before publication. We check for accuracy, tone, and balance. If something isn't right, we hold the brief rather than publish something misleading.
+                </p>
+            </section>
+
+            <section class="bg-amber-50 rounded-lg p-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-2">What We Don't Do</h2>
+                <ul class="space-y-2 text-gray-700">
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <span>Sensationalize headlines for clicks</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <span>Tell you what to think</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <span>Pretend to be objective (we show you the perspectives instead)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <span>Cover everything (we focus on what matters for civic sense-making)</span>
+                    </li>
+                </ul>
+            </section>
+        </div>
+
+        <div class="mt-8 text-center">
+            <a href="{{ url_for('brief.today') }}" class="inline-flex items-center px-6 py-3 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition">
+                Read Today's Brief
+                <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

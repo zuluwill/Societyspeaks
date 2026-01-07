@@ -1,0 +1,183 @@
+{% extends "layout.html" %}
+
+{% block title %}Brief Admin Dashboard - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-2xl font-bold text-gray-900">Daily Brief Admin</h1>
+            <a href="{{ url_for('brief_admin.generate') }}" 
+               class="inline-flex items-center px-4 py-2 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Generate Today's Brief
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Active Subscribers</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ total_subscribers }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Trial Users</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ trial_subscribers }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Paid Subscribers</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ paid_subscribers }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Today's Brief</h2>
+                </div>
+                <div class="p-6">
+                    {% if today_brief %}
+                    <div class="mb-4">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                            {% if today_brief.status == 'published' %}bg-green-100 text-green-800
+                            {% elif today_brief.status == 'ready' %}bg-blue-100 text-blue-800
+                            {% elif today_brief.status == 'draft' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ today_brief.status|title }}
+                        </span>
+                    </div>
+                    <h3 class="font-semibold text-gray-900 mb-2">{{ today_brief.title }}</h3>
+                    <p class="text-sm text-gray-600 mb-4">{{ today_brief.item_count }} items</p>
+                    <div class="flex gap-3">
+                        <a href="{{ url_for('brief_admin.preview') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+                            Preview
+                        </a>
+                        {% if today_brief.status != 'published' %}
+                        <form action="{{ url_for('brief_admin.publish', brief_id=today_brief.id) }}" method="POST" class="inline">
+                            <button type="submit" 
+                                    class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
+                                Publish
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <p class="text-gray-500 mb-4">No brief generated for today yet.</p>
+                        <a href="{{ url_for('brief_admin.generate') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition">
+                            Generate Now
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900">Candidate Topics</h2>
+                </div>
+                <div class="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+                    {% for topic in candidate_topics[:5] %}
+                    <div class="p-4">
+                        <p class="font-medium text-gray-900 text-sm">{{ topic.title[:60] }}...</p>
+                        <div class="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                            <span>Civic: {{ (topic.civic_score * 100)|int }}%</span>
+                            <span>Sources: {{ topic.source_count }}</span>
+                            <span>{{ topic.primary_topic or 'Uncategorized' }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center text-gray-500">
+                        No candidate topics available
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-900">Recent Briefs</h2>
+                <a href="{{ url_for('brief_admin.subscribers') }}" class="text-sm text-amber-600 hover:text-amber-700">
+                    Manage Subscribers →
+                </a>
+            </div>
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for brief in recent_briefs %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ brief.date.strftime('%Y-%m-%d') }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {{ brief.title[:40] }}...
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ brief.item_count }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                {% if brief.status == 'published' %}bg-green-100 text-green-800
+                                {% elif brief.status == 'ready' %}bg-blue-100 text-blue-800
+                                {% elif brief.status == 'draft' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ brief.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{{ url_for('brief_admin.preview', date_str=brief.date.strftime('%Y-%m-%d')) }}" 
+                               class="text-amber-600 hover:text-amber-900">View</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">No briefs yet</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

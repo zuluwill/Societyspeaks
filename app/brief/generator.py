@@ -9,7 +9,7 @@ import os
 import logging
 import json
 from datetime import datetime, date
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 from app.models import DailyBrief, BriefItem, TrendingTopic, NewsArticle, db
 from app.brief.coverage_analyzer import CoverageAnalyzer
 from app.trending.scorer import extract_json, get_system_api_key
@@ -209,7 +209,7 @@ class BriefGenerator:
         self,
         topic: TrendingTopic,
         articles: List[NewsArticle]
-    ) -> Dict[str, any]:
+    ) -> Dict[str, Any]:
         """
         Generate headline and bullets using LLM.
 

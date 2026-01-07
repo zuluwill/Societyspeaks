@@ -313,7 +313,7 @@ def subscribers():
 def test_send():
     """Send test email to admin"""
     brief_id = request.form.get('brief_id', type=int)
-    test_email = request.form.get('email', current_user.email)
+    test_email = request.form.get('email') or current_user.email
 
     if not brief_id:
         flash('Brief ID required.', 'error')

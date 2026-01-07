@@ -1,0 +1,114 @@
+{% extends "layout.html" %}
+
+{% block title %}Brief Subscribers - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <a href="{{ url_for('brief_admin.dashboard') }}" class="text-gray-500 hover:text-gray-700 text-sm mb-2 inline-block">
+                    ← Back to Dashboard
+                </a>
+                <h1 class="text-2xl font-bold text-gray-900">Subscribers</h1>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <p class="text-sm text-gray-500">Total</p>
+                <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <p class="text-sm text-gray-500">Active</p>
+                <p class="text-2xl font-bold text-green-600">{{ stats.active }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <p class="text-sm text-gray-500">Trial</p>
+                <p class="text-2xl font-bold text-blue-600">{{ stats.trial }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <p class="text-sm text-gray-500">Unsubscribed</p>
+                <p class="text-2xl font-bold text-gray-400">{{ stats.unsubscribed }}</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tier</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timezone</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Briefs Received</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for subscriber in subscribers %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ subscriber.email }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                {% if subscriber.tier == 'trial' %}bg-blue-100 text-blue-800
+                                {% elif subscriber.tier == 'individual' %}bg-green-100 text-green-800
+                                {% elif subscriber.tier == 'team' %}bg-purple-100 text-purple-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ subscriber.tier }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                {% if subscriber.status == 'active' %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ subscriber.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ subscriber.timezone }} @ {{ subscriber.preferred_send_hour }}:00
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ subscriber.created_at.strftime('%Y-%m-%d') if subscriber.created_at else 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ subscriber.total_briefs_received or 0 }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">No subscribers yet</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if pagination.pages > 1 %}
+            <div class="px-6 py-4 border-t border-gray-200">
+                <nav class="flex items-center justify-between">
+                    <div class="text-sm text-gray-500">
+                        Showing {{ ((pagination.page - 1) * pagination.per_page) + 1 }} - {{ pagination.page * pagination.per_page }} of {{ pagination.total }}
+                    </div>
+                    <div class="flex gap-2">
+                        {% if pagination.has_prev %}
+                        <a href="{{ url_for('brief_admin.subscribers', page=pagination.prev_num) }}" 
+                           class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">
+                            Previous
+                        </a>
+                        {% endif %}
+                        {% if pagination.has_next %}
+                        <a href="{{ url_for('brief_admin.subscribers', page=pagination.next_num) }}" 
+                           class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">
+                            Next
+                        </a>
+                        {% endif %}
+                    </div>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

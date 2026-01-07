@@ -1,0 +1,123 @@
+{% extends "layout.html" %}
+
+{% block title %}Preview Brief - {{ brief.date }} - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <a href="{{ url_for('brief_admin.dashboard') }}" class="text-gray-500 hover:text-gray-700 text-sm mb-2 inline-block">
+                    ← Back to Dashboard
+                </a>
+                <h1 class="text-2xl font-bold text-gray-900">Preview Brief</h1>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                    {% if brief.status == 'published' %}bg-green-100 text-green-800
+                    {% elif brief.status == 'ready' %}bg-blue-100 text-blue-800
+                    {% elif brief.status == 'draft' %}bg-yellow-100 text-yellow-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ brief.status|title }}
+                </span>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">{{ brief.date.strftime('%A, %B %d, %Y') }}</p>
+                        <h2 class="text-xl font-bold text-gray-900">{{ brief.title }}</h2>
+                    </div>
+                    <div class="flex gap-2">
+                        {% if brief.status == 'draft' %}
+                        <form action="{{ url_for('brief_admin.publish', brief_id=brief.id) }}" method="POST">
+                            <button type="submit" class="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
+                                Publish
+                            </button>
+                        </form>
+                        {% elif brief.status == 'ready' %}
+                        <form action="{{ url_for('brief_admin.publish', brief_id=brief.id) }}" method="POST">
+                            <button type="submit" class="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
+                                Publish Now
+                            </button>
+                        </form>
+                        {% elif brief.status == 'published' %}
+                        <form action="{{ url_for('brief_admin.unpublish', brief_id=brief.id) }}" method="POST">
+                            <button type="submit" class="px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition">
+                                Unpublish
+                            </button>
+                        </form>
+                        {% endif %}
+                        <form action="{{ url_for('brief_admin.skip', brief_id=brief.id) }}" method="POST" class="inline">
+                            <button type="submit" class="px-4 py-2 bg-red-100 text-red-700 font-medium rounded-lg hover:bg-red-200 transition">
+                                Skip
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-amber-50 border-l-4 border-amber-400 p-4 m-4 rounded">
+                <p class="text-gray-700 italic">{{ brief.intro_text }}</p>
+            </div>
+
+            <div class="divide-y divide-gray-100">
+                {% for item in items %}
+                <div class="p-6">
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-start gap-4 flex-1">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
+                                {{ item.position }}
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold text-gray-900 mb-2">{{ item.headline }}</h3>
+                                
+                                <ul class="space-y-1 mb-3">
+                                    {% for bullet in item.summary_bullets %}
+                                    <li class="text-gray-700 text-sm">• {{ bullet }}</li>
+                                    {% endfor %}
+                                </ul>
+
+                                <div class="flex items-center gap-4 text-xs text-gray-500">
+                                    <span>Sources: {{ item.source_count }}</span>
+                                    <span>Imbalance: {{ (item.coverage_imbalance * 100)|int }}%</span>
+                                    {% if item.sensationalism_label %}
+                                    <span>Sensationalism: {{ item.sensationalism_label }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 ml-4">
+                            <a href="{{ url_for('brief_admin.edit_item', item_id=item.id) }}" 
+                               class="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200">
+                                Edit
+                            </a>
+                            <form action="{{ url_for('brief_admin.remove_item', item_id=item.id) }}" method="POST" class="inline">
+                                <button type="submit" class="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+                                        onclick="return confirm('Remove this item from the brief?')">
+                                    Remove
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Send Test Email</h3>
+            <form action="{{ url_for('brief_admin.test_send') }}" method="POST" class="flex gap-3">
+                <input type="hidden" name="brief_id" value="{{ brief.id }}">
+                <input type="email" name="email" placeholder="test@example.com" 
+                       class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+                <button type="submit" class="px-4 py-2 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition">
+                    Send Test
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
