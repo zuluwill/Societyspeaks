@@ -93,7 +93,7 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     
     topics_created = 0
     for cluster in clusters:
-        if len(cluster) >= 1:
+        if len(cluster) >= 2:  # Require at least 2 articles for a new topic
             try:
                 topic = create_topic_from_cluster(cluster, hold_minutes=hold_minutes)
                 if topic:
@@ -102,6 +102,13 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
                 logger.error(f"Error creating topic from cluster: {e}")
                 db.session.rollback()
                 continue
+        elif len(cluster) == 1:
+            # Single articles: try to match to existing topics
+            try:
+                _backfill_single_article(cluster[0])
+            except Exception as e:
+                logger.warning(f"Failed to backfill article {cluster[0].id}: {e}")
+                db.session.rollback()
     
     ready_count = process_held_topics()
     
@@ -257,3 +264,144 @@ def get_pipeline_stats() -> dict:
             'discarded': TrendingTopic.query.filter_by(status='discarded').count()
         }
     }
+
+
+def _backfill_single_article(
+    article: NewsArticle,
+    topic_embeddings_cache: dict = None
+) -> bool:
+    """
+    Try to match a single article to an existing topic.
+    Uses a lower similarity threshold than topic creation.
+    
+    Args:
+        article: The article to backfill
+        topic_embeddings_cache: Optional pre-computed dict of {topic_id: (topic, embedding_array)}
+    
+    Returns True if article was added to an existing topic.
+    """
+    import numpy as np
+    from app.trending.clustering import get_embeddings
+    
+    if not article.title_embedding:
+        text = f"{article.title}. {article.summary or ''}"
+        embeddings = get_embeddings([text])
+        if embeddings:
+            article.title_embedding = embeddings[0] if isinstance(embeddings[0], list) else embeddings[0].tolist()
+            db.session.commit()
+        else:
+            return False
+    
+    article_embedding = np.array(article.title_embedding)
+    
+    BACKFILL_THRESHOLD = 0.75
+    best_match = None
+    best_similarity = 0.0
+    
+    if topic_embeddings_cache:
+        for topic_id, (topic, topic_embedding) in topic_embeddings_cache.items():
+            similarity = np.dot(article_embedding, topic_embedding) / (
+                np.linalg.norm(article_embedding) * np.linalg.norm(topic_embedding)
+            )
+            
+            if similarity > best_similarity and similarity >= BACKFILL_THRESHOLD:
+                best_similarity = float(similarity)
+                best_match = topic
+    else:
+        cutoff = datetime.utcnow() - timedelta(days=7)
+        recent_topics = TrendingTopic.query.filter(
+            TrendingTopic.created_at >= cutoff,
+            TrendingTopic.topic_embedding.isnot(None),
+            TrendingTopic.status.in_(['pending', 'pending_review', 'approved', 'published'])
+        ).all()
+        
+        for topic in recent_topics:
+            if topic.topic_embedding:
+                topic_embedding = np.array(topic.topic_embedding)
+                similarity = np.dot(article_embedding, topic_embedding) / (
+                    np.linalg.norm(article_embedding) * np.linalg.norm(topic_embedding)
+                )
+                
+                if similarity > best_similarity and similarity >= BACKFILL_THRESHOLD:
+                    best_similarity = float(similarity)
+                    best_match = topic
+    
+    if best_match:
+        existing_link = TrendingTopicArticle.query.filter_by(
+            topic_id=best_match.id,
+            article_id=article.id
+        ).first()
+        
+        if not existing_link:
+            link = TrendingTopicArticle(
+                topic_id=best_match.id,
+                article_id=article.id,
+                similarity_score=best_similarity
+            )
+            db.session.add(link)
+            
+            best_match.source_count = len(set(
+                ta.article.source_id for ta in best_match.articles if ta.article
+            ))
+            db.session.commit()
+            
+            logger.info(f"Backfilled article {article.id} to topic {best_match.id} (similarity: {best_similarity:.2f})")
+            return True
+    
+    return False
+
+
+def backfill_orphan_articles(limit: int = 100) -> int:
+    """
+    Find articles not linked to any topic and try to match them to existing topics.
+    Runs periodically to enrich topics with more sources.
+    
+    Returns: Number of articles successfully backfilled.
+    """
+    import numpy as np
+    
+    cutoff = datetime.utcnow() - timedelta(days=7)
+    
+    linked_article_ids = db.session.query(TrendingTopicArticle.article_id).distinct()
+    
+    orphan_articles = NewsArticle.query.filter(
+        NewsArticle.fetched_at >= cutoff,
+        NewsArticle.relevance_score.isnot(None),
+        NewsArticle.relevance_score >= 0.4,
+        ~NewsArticle.id.in_(linked_article_ids)
+    ).order_by(NewsArticle.fetched_at.desc()).limit(limit).all()
+    
+    if not orphan_articles:
+        logger.info("No orphan articles to backfill")
+        return 0
+    
+    logger.info(f"Attempting to backfill {len(orphan_articles)} orphan articles")
+    
+    recent_topics = TrendingTopic.query.filter(
+        TrendingTopic.created_at >= cutoff,
+        TrendingTopic.topic_embedding.isnot(None),
+        TrendingTopic.status.in_(['pending', 'pending_review', 'approved', 'published'])
+    ).all()
+    
+    topic_embeddings_cache = {}
+    for topic in recent_topics:
+        if topic.topic_embedding:
+            topic_embeddings_cache[topic.id] = (topic, np.array(topic.topic_embedding))
+    
+    logger.info(f"Loaded {len(topic_embeddings_cache)} topic embeddings for similarity matching")
+    
+    backfilled = 0
+    for article in orphan_articles:
+        try:
+            if _backfill_single_article(article, topic_embeddings_cache):
+                backfilled += 1
+        except Exception as e:
+            logger.warning(f"Failed to backfill article {article.id}: {e}")
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            continue
+    
+    logger.info(f"Backfilled {backfilled} of {len(orphan_articles)} orphan articles")
+    return backfilled

@@ -231,6 +231,26 @@ def init_scheduler(app):
             logger.info("Daily auto-publish complete")
     
     
+    @scheduler.scheduled_job('cron', hour='9,15,21', id='backfill_orphan_articles')
+    def backfill_orphan_articles_job():
+        """
+        Backfill orphan articles to existing topics.
+        Runs 3 times daily to enrich topics with more sources.
+        """
+        with app.app_context():
+            from app.trending.pipeline import backfill_orphan_articles
+            
+            logger.info("Starting orphan article backfill")
+            
+            try:
+                backfilled = backfill_orphan_articles(limit=100)
+                logger.info(f"Backfilled {backfilled} orphan articles")
+            except Exception as e:
+                logger.error(f"Orphan article backfill error: {e}", exc_info=True)
+            
+            logger.info("Orphan article backfill complete")
+    
+
     @scheduler.scheduled_job('cron', hour=7, minute=30, id='daily_question_publish')
     def daily_question_publish():
         """
