@@ -5,210 +5,236 @@
 {% block meta_description %}{{ brief.intro_text[:160] }}{% endblock %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-b from-blue-50 to-white py-8 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-3xl mx-auto">
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-600 mb-4">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                </svg>
-                Daily Sense-Making Brief
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{{ brief.title }}</h1>
-            <p class="text-gray-500">{{ brief.date.strftime('%A, %d %B %Y') }}</p>
+<div class="min-h-screen bg-gradient-to-b from-slate-100 to-white">
+    <header class="bg-blue-800 text-white py-10 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto text-center">
+            <p class="text-blue-300 text-xs font-semibold tracking-widest uppercase mb-3">Society Speaks</p>
+            <h1 class="font-serif text-3xl sm:text-4xl font-bold mb-3">The Daily Brief</h1>
+            <p class="text-blue-200 text-sm">{{ brief.date.strftime('%A, %d %B %Y') }}</p>
+        </div>
+    </header>
+
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+        <div class="bg-blue-50 rounded-xl border border-blue-200 p-5 sm:p-6 mb-8 shadow-sm">
+            <p class="text-blue-800 text-base leading-relaxed">{{ brief.intro_text }}</p>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
-            <div class="bg-blue-50 border-l-4 border-blue-400 p-6">
-                <p class="text-gray-700 italic">{{ brief.intro_text }}</p>
-            </div>
-
-            {% if is_subscriber %}
-            <div class="divide-y divide-gray-100">
-                {% for item in items %}
-                <div class="p-6">
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
+        <div class="space-y-8">
+            {% for item in items %}
+            <article class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div class="p-6 sm:p-8">
+                    <div class="flex items-start gap-4 mb-5">
+                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-800 text-white flex items-center justify-center font-bold text-lg">
                             {{ item.position }}
                         </div>
-                        <div class="flex-1">
-                            <h2 class="text-lg font-bold text-gray-900 mb-3">{{ item.headline }}</h2>
-                            
-                            <ul class="space-y-2 mb-4">
-                                {% for bullet in item.summary_bullets %}
-                                <li class="flex items-start">
-                                    <span class="text-blue-600 mr-2">&bull;</span>
-                                    <span class="text-gray-700">{{ bullet }}</span>
-                                </li>
-                                {% endfor %}
-                            </ul>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900 leading-snug flex-1">
+                            {{ item.headline }}
+                        </h2>
+                    </div>
 
-                            <div class="bg-gray-50 rounded-lg p-4 mb-4">
-                                <div class="flex items-center justify-between mb-2">
-                                    <span class="text-sm font-medium text-gray-600">Coverage Analysis</span>
-                                    <span class="text-xs text-gray-500">{{ item.source_count }} sources</span>
-                                </div>
-                                <div class="flex h-3 rounded-full overflow-hidden bg-gray-200">
-                                    {% if item.coverage_distribution %}
-                                    <div class="bg-blue-500" style="width: {{ (item.coverage_distribution.left or 0) * 100 }}%"></div>
-                                    <div class="bg-purple-500" style="width: {{ (item.coverage_distribution.center or 0) * 100 }}%"></div>
-                                    <div class="bg-red-500" style="width: {{ (item.coverage_distribution.right or 0) * 100 }}%"></div>
-                                    {% endif %}
-                                </div>
-                                <div class="flex justify-between text-xs text-gray-500 mt-1">
-                                    <span>Left</span>
-                                    <span>Centre</span>
-                                    <span>Right</span>
-                                </div>
-                                {% if item.sources_by_leaning %}
-                                <div class="mt-2 text-xs text-gray-500">
-                                    {% if item.sources_by_leaning.left %}
-                                    <span class="text-blue-600">{{ item.sources_by_leaning.left|join(', ') }}</span>
-                                    {% endif %}
-                                    {% if item.sources_by_leaning.center %}
-                                    <span class="text-purple-600">{{ item.sources_by_leaning.center|join(', ') }}</span>
-                                    {% endif %}
-                                    {% if item.sources_by_leaning.right %}
-                                    <span class="text-red-600">{{ item.sources_by_leaning.right|join(', ') }}</span>
-                                    {% endif %}
-                                </div>
+                    <div class="flex flex-wrap items-center gap-2 mb-5">
+                        {% if item.source_count %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-md bg-blue-800 text-white text-xs font-semibold">
+                            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                            </svg>
+                            {{ item.source_count }} sources
+                        </span>
+                        {% endif %}
+
+                        {% if item.sensationalism_label %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-semibold
+                            {% if item.sensationalism_label == 'low' %}bg-green-100 text-green-800
+                            {% elif item.sensationalism_label == 'medium' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {% if item.sensationalism_label == 'low' %}
+                            <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            {% endif %}
+                            {{ item.sensationalism_label|capitalize }} sensationalism
+                        </span>
+                        {% endif %}
+
+                        {% if item.coverage_distribution %}
+                        {% set left_pct = (item.coverage_distribution.get('left', 0) * 100)|int %}
+                        {% set right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
+                        {% if left_pct < 15 and right_pct > 30 %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                            Blindspot: {{ left_pct }}% left coverage
+                        </span>
+                        {% elif right_pct < 15 and left_pct > 30 %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                            </svg>
+                            Blindspot: {{ right_pct }}% right coverage
+                        </span>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+
+                    {% if item.summary_bullets %}
+                    <ul class="space-y-3 mb-6">
+                        {% for bullet in item.summary_bullets %}
+                        <li class="flex items-start">
+                            <span class="text-blue-600 mr-3 mt-1 text-lg leading-none">&bull;</span>
+                            <span class="text-gray-700 leading-relaxed">{{ bullet }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+
+                    {% if item.so_what %}
+                    <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-5 mb-6">
+                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">Why It Matters</p>
+                        <p class="text-amber-900 leading-relaxed">{{ item.so_what }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if item.perspectives %}
+                    <div class="bg-slate-50 rounded-xl p-5 mb-6">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">How It's Being Framed</p>
+                        <div class="space-y-3">
+                            {% if item.perspectives.get('left') %}
+                            <div class="flex items-start gap-3">
+                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-bold flex-shrink-0">L</span>
+                                <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-blue-600">Left:</span> {{ item.perspectives.get('left') }}</p>
+                            </div>
+                            {% endif %}
+                            {% if item.perspectives.get('center') %}
+                            <div class="flex items-start gap-3">
+                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-xs font-bold flex-shrink-0">C</span>
+                                <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-purple-600">Centre:</span> {{ item.perspectives.get('center') }}</p>
+                            </div>
+                            {% endif %}
+                            {% if item.perspectives.get('right') %}
+                            <div class="flex items-start gap-3">
+                                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600 text-xs font-bold flex-shrink-0">R</span>
+                                <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-red-600">Right:</span> {{ item.perspectives.get('right') }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if item.coverage_distribution %}
+                    <div class="mb-6">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Coverage Balance</p>
+                        {% set left_pct = (item.coverage_distribution.get('left', 0) * 100)|int %}
+                        {% set center_pct = (item.coverage_distribution.get('center', 0) * 100)|int %}
+                        {% set right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
+                        
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="flex h-3 flex-1 rounded-full overflow-hidden bg-gray-200">
+                                {% if left_pct > 0 %}
+                                <div class="bg-blue-500" style="width: {{ left_pct }}%"></div>
+                                {% endif %}
+                                {% if center_pct > 0 %}
+                                <div class="bg-purple-500" style="width: {{ center_pct }}%"></div>
+                                {% endif %}
+                                {% if right_pct > 0 %}
+                                <div class="bg-red-500" style="width: {{ right_pct }}%"></div>
                                 {% endif %}
                             </div>
-
-                            {% if item.verification_links %}
-                            <div class="flex flex-wrap gap-2 mb-4">
-                                {% for link in item.verification_links[:3] %}
-                                <a href="{{ link.url }}" target="_blank" rel="noopener" 
-                                   class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium 
-                                          {% if link.tier == 'primary' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-700{% endif %}">
-                                    {% if link.is_paywalled %}
-                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                                    </svg>
-                                    {% endif %}
-                                    {{ link.description }}
-                                </a>
-                                {% endfor %}
+                        </div>
+                        
+                        <div class="flex justify-between text-xs">
+                            <span class="text-blue-600 font-medium">{{ left_pct }}% Left</span>
+                            <span class="text-purple-600 font-medium">{{ center_pct }}% Centre</span>
+                            <span class="text-red-600 font-medium">{{ right_pct }}% Right</span>
+                        </div>
+                        
+                        {% if item.sources_by_leaning %}
+                        <div class="mt-3 pt-3 border-t border-gray-100">
+                            <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                                {% if item.sources_by_leaning.get('left') %}
+                                <span><span class="text-blue-600 font-medium">Left:</span> {{ item.sources_by_leaning.left|join(', ') }}</span>
+                                {% endif %}
+                                {% if item.sources_by_leaning.get('center') %}
+                                <span><span class="text-purple-600 font-medium">Centre:</span> {{ item.sources_by_leaning.center|join(', ') }}</span>
+                                {% endif %}
+                                {% if item.sources_by_leaning.get('right') %}
+                                <span><span class="text-red-600 font-medium">Right:</span> {{ item.sources_by_leaning.right|join(', ') }}</span>
+                                {% endif %}
                             </div>
-                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
 
-                            {% if item.discussion and item.discussion.slug %}
-                            <a href="{{ url_for('discussions.view_discussion', discussion_id=item.discussion.id, slug=item.discussion.slug) }}" 
-                               class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                {{ item.cta_text or 'Join the discussion' }}
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    {% if item.verification_links %}
+                    <div class="mb-6">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Verify It Yourself</p>
+                        <div class="space-y-2">
+                            {% for link in item.verification_links %}
+                            <a href="{{ link.url }}" target="_blank" rel="noopener" 
+                               class="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors group">
+                                <div class="flex items-center gap-2">
+                                    {% if link.tier == 'primary' %}
+                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-green-100 text-green-600">
+                                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-gray-100 text-gray-500">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                                        </svg>
+                                    </span>
+                                    {% endif %}
+                                    <span class="text-sm text-gray-700 group-hover:text-blue-700">{{ link.description }}</span>
+                                    {% if link.is_paywalled %}
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-500">
+                                        <svg class="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                        </svg>
+                                        Paywall
+                                    </span>
+                                    {% endif %}
+                                </div>
+                                <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                             </a>
-                            {% endif %}
+                            {% endfor %}
                         </div>
                     </div>
+                    {% endif %}
+
+                    {% if item.discussion and item.discussion.slug %}
+                    <div class="pt-4 border-t border-gray-100">
+                        <a href="{{ url_for('discussions.view_discussion', discussion_id=item.discussion.id, slug=item.discussion.slug) }}" 
+                           class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 bg-blue-800 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+                            </svg>
+                            {{ item.cta_text or 'Join the Discussion' }}
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="divide-y divide-gray-100">
-                {% if items %}
-                <div class="p-6">
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center font-bold">
-                            1
-                        </div>
-                        <div class="flex-1">
-                            <h2 class="text-lg font-bold text-gray-900 mb-3">{{ items[0].headline }}</h2>
-                            
-                            {% if items[0].summary_bullets %}
-                            <ul class="space-y-2 mb-4">
-                                <li class="flex items-start">
-                                    <span class="text-blue-600 mr-2">&bull;</span>
-                                    <span class="text-gray-700">{{ items[0].summary_bullets[0] }}</span>
-                                </li>
-                            </ul>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-            
-            <div class="relative">
-                <div class="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white pointer-events-none" style="height: 100px; top: -100px;"></div>
-                
-                <div class="bg-gradient-to-b from-blue-50 to-blue-100 p-8 text-center border-t border-blue-200">
-                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-600 mb-4">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                        </svg>
-                    </div>
-                    
-                    <h3 class="text-2xl font-bold text-gray-900 mb-2">Unlock the Full Brief</h3>
-                    <p class="text-gray-600 mb-2">
-                        This brief includes <strong>{{ items|length }} stories</strong> with coverage analysis, 
-                        verification links, and discussion prompts.
-                    </p>
-                    <p class="text-gray-500 text-sm mb-6">
-                        Subscribe to access the full brief and get it delivered to your inbox daily.
-                    </p>
-                    
-                    <a href="{{ url_for('brief.subscribe') }}" 
-                       class="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        Start 14-Day Free Trial
-                    </a>
-                    
-                    <p class="text-xs text-gray-500 mt-4">No credit card required. Cancel anytime.</p>
-                    
-                    <div class="mt-6 pt-6 border-t border-blue-200">
-                        <p class="text-sm text-gray-600 mb-3">What subscribers get:</p>
-                        <div class="flex flex-wrap justify-center gap-3 text-xs">
-                            <span class="inline-flex items-center px-3 py-1 rounded-full bg-white text-gray-700 shadow-sm">
-                                <svg class="w-3 h-3 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                                Full coverage analysis
-                            </span>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full bg-white text-gray-700 shadow-sm">
-                                <svg class="w-3 h-3 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                                Verification links
-                            </span>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full bg-white text-gray-700 shadow-sm">
-                                <svg class="w-3 h-3 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                                Daily email delivery
-                            </span>
-                            <span class="inline-flex items-center px-3 py-1 rounded-full bg-white text-gray-700 shadow-sm">
-                                <svg class="w-3 h-3 text-green-500 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                                Archive access
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
+            </article>
+            {% endfor %}
         </div>
 
-        {% if is_subscriber %}
-        <div class="bg-white rounded-xl shadow-md p-6 text-center">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Share tomorrow's brief</h3>
+        <div class="bg-white rounded-xl shadow-md p-6 mt-8 mb-12 text-center">
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Share Tomorrow's Brief</h3>
             <p class="text-gray-600 mb-4">Know someone who'd benefit from sense-making over sensationalism?</p>
             <button onclick="navigator.share ? navigator.share({title: '{{ brief.title }}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'))" 
-                    class="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+                    class="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                 </svg>
                 Share This Brief
             </button>
         </div>
-        {% endif %}
 
-        <div class="mt-6 text-center text-sm text-gray-500">
+        <div class="text-center text-sm text-gray-500 pb-8">
             <a href="{{ url_for('brief.archive') }}" class="hover:text-gray-700">View Archive</a>
             <span class="mx-2">|</span>
             <a href="{{ url_for('brief.methodology') }}" class="hover:text-gray-700">How We Select Stories</a>
