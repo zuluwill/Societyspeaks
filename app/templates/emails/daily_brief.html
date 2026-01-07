@@ -27,7 +27,7 @@
             .container { width: 100% !important; padding: 0 !important; }
             .mobile-padding { padding-left: 16px !important; padding-right: 16px !important; }
             .mobile-header { padding: 24px 16px !important; }
-            .mobile-headline { font-size: 18px !important; }
+            .mobile-headline { font-size: 22px !important; line-height: 1.25 !important; }
         }
     </style>
 </head>
@@ -72,10 +72,10 @@
 
                     <!-- Intro -->
                     <tr>
-                        <td class="mobile-padding" style="background-color: #eff6ff; padding: 24px 28px; border-bottom: 1px solid #dbeafe;">
+                        <td class="mobile-padding" style="background-color: #eff6ff; padding: 28px 32px; border-bottom: 1px solid #dbeafe;">
                             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                                 <tr>
-                                    <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #1e40af;">
+                                    <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.7; color: #1e40af; font-weight: 500;">
                                         {{ brief.intro_text }}
                                     </td>
                                 </tr>
@@ -86,12 +86,21 @@
                     <!-- Stories -->
                     {% for item in brief.items|sort(attribute='position') %}
                     <tr>
-                        <td class="mobile-padding" style="padding: 32px 28px; border-bottom: 1px solid #e2e8f0;">
+                        <td class="mobile-padding" style="padding: 32px 28px; border-bottom: 1px solid #e2e8f0; {% if item.is_underreported %}background-color: #fef3c7;{% endif %}">
                             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                                
-                                <!-- Story Number -->
+
+                                <!-- Story Number / Under the Radar Badge -->
                                 <tr>
                                     <td style="padding-bottom: 14px;">
+                                        {% if item.is_underreported %}
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td style="background-color: #f59e0b; border-radius: 6px; padding: 6px 12px;">
+                                                    <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px;">📭 Under the Radar</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        {% else %}
                                         <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
                                                 <td width="32" height="32" align="center" style="background-color: #1e40af; border-radius: 50%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 700; color: #ffffff;">
@@ -99,12 +108,16 @@
                                                 </td>
                                             </tr>
                                         </table>
+                                        {% endif %}
                                     </td>
                                 </tr>
                                 
                                 <!-- Headline -->
                                 <tr>
-                                    <td class="mobile-headline" style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #0f172a; line-height: 1.35; padding-bottom: 12px;">
+                                    <td class="mobile-headline" style="font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 700; color: #0f172a; line-height: 1.3; padding-bottom: 14px; letter-spacing: -0.02em;">
+                                        {% if item.trending_topic and item.trending_topic.primary_topic %}
+                                            {% if item.trending_topic.primary_topic.lower() in ['economy', 'business', 'finance'] %}📊{% elif item.trending_topic.primary_topic.lower() in ['policy', 'politics', 'government', 'law'] %}⚖️{% elif item.trending_topic.primary_topic.lower() in ['international', 'world', 'global'] %}🌍{% elif item.trending_topic.primary_topic.lower() in ['health', 'healthcare', 'medicine'] %}🏥{% elif item.trending_topic.primary_topic.lower() in ['technology', 'tech', 'digital'] %}💻{% elif item.trending_topic.primary_topic.lower() in ['environment', 'climate'] %}🌱{% elif item.trending_topic.primary_topic.lower() in ['education'] %}📚{% elif item.trending_topic.primary_topic.lower() in ['science'] %}🔬{% endif %}
+                                        {% endif %}
                                         {{ item.headline }}
                                     </td>
                                 </tr>
@@ -136,7 +149,7 @@
                                                     <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                                                         <tr>
                                                             <td style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; padding: 4px 10px;">
-                                                                <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 600; color: #b91c1c;">Blindspot: Only {{ left_pct }}% left-leaning coverage</span>
+                                                                <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 600; color: #b91c1c;">🔍 Blindspot: {{ left_pct }}% left coverage</span>
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -146,7 +159,7 @@
                                                     <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                                                         <tr>
                                                             <td style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 4px; padding: 4px 10px;">
-                                                                <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 600; color: #1d4ed8;">Blindspot: Only {{ right_pct }}% right-leaning coverage</span>
+                                                                <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 600; color: #1d4ed8;">🔍 Blindspot: {{ right_pct }}% right coverage</span>
                                                             </td>
                                                         </tr>
                                                     </table>
@@ -160,14 +173,14 @@
                                 
                                 <!-- Summary Bullets -->
                                 <tr>
-                                    <td style="padding-bottom: 20px;">
+                                    <td style="padding-bottom: 22px;">
                                         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                                             {% for bullet in item.summary_bullets %}
                                             <tr>
-                                                <td width="20" valign="top" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #1e40af; padding-top: 2px;">
+                                                <td width="24" valign="top" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; color: #1e40af; padding-top: 3px;">
                                                     &bull;
                                                 </td>
-                                                <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #374151; padding-bottom: 10px;">
+                                                <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.65; color: #1f2937; padding-bottom: 12px;">
                                                     {{ bullet }}
                                                 </td>
                                             </tr>
@@ -175,6 +188,32 @@
                                         </table>
                                     </td>
                                 </tr>
+
+                                <!-- Why This Matters To You -->
+                                {% if item.personal_impact %}
+                                <tr>
+                                    <td style="padding-bottom: 20px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 0 6px 6px 0;">
+                                            <tr>
+                                                <td style="padding: 14px 18px;">
+                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #1e3a8a; text-transform: uppercase; padding-bottom: 6px;">
+                                                                💡 Why This Matters To You
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #1e40af; font-weight: 600;">
+                                                                {{ item.personal_impact }}
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                {% endif %}
 
                                 <!-- So What? Analysis -->
                                 {% if item.so_what %}
@@ -190,7 +229,7 @@
                                                             </td>
                                                         </tr>
                                                         <tr>
-                                                            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #713f12;">
+                                                            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.65; color: #713f12;">
                                                                 {{ item.so_what }}
                                                             </td>
                                                         </tr>
@@ -236,6 +275,32 @@
                                                             </td>
                                                         </tr>
                                                         {% endif %}
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+                                <!-- Blindspot Explanation -->
+                                {% if item.blindspot_explanation %}
+                                <tr>
+                                    <td style="padding-bottom: 20px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #fefce8; border-left: 3px solid #f59e0b; border-radius: 0 6px 6px 0;">
+                                            <tr>
+                                                <td style="padding: 14px 18px;">
+                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #92400e; text-transform: uppercase; padding-bottom: 6px;">
+                                                                🔍 Coverage Gap Analysis
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #78350f; font-style: italic;">
+                                                                {{ item.blindspot_explanation }}
+                                                            </td>
+                                                        </tr>
                                                     </table>
                                                 </td>
                                             </tr>

@@ -289,13 +289,20 @@ def _score_with_openai(articles: List[NewsArticle], api_key: str) -> List[NewsAr
 - 0.5 = interesting but not policy-relevant
 - 1 = policy debates, societal issues, political/economic topics worth deliberating
 
-3. GEOGRAPHIC SCOPE:
+3. PERSONAL RELEVANCE (0-1, direct impact on readers' daily lives):
+- 1.0 = directly affects wages, prices, taxes, housing, health/safety, rights, services
+- 0.5 = indirect impact or affects specific groups only
+- 0.0 = no personal impact (international relations, political process, cultural topics)
+Examples of HIGH (0.8-1.0): "New tax rates announced", "Housing prices surge 15%", "Healthcare changes affect 5M people"
+Examples of LOW (0.0-0.3): "Prime Minister meets foreign leader", "New cultural exhibit opens", "Sports team wins championship"
+
+4. GEOGRAPHIC SCOPE:
 - "global" = affects multiple continents, international issue
 - "regional" = affects a region like EU, APAC, Middle East
 - "national" = specific to one country
 - "local" = specific city/state/province
 
-4. COUNTRIES: Which country/countries is this primarily about? Use ISO country names (e.g., "United Kingdom", "United States"). For global topics, use "Global". For regional, list key countries.
+5. COUNTRIES: Which country/countries is this primarily about? Use ISO country names (e.g., "United Kingdom", "United States"). For global topics, use "Global". For regional, list key countries.
 
 Headlines:
 {chr(10).join(headlines)}
@@ -323,10 +330,11 @@ Rate each headline in order."""
                                 "properties": {
                                     "s": {"type": "number", "description": "Sensationalism score 0-1"},
                                     "r": {"type": "number", "description": "Relevance score 0-1"},
+                                    "p": {"type": "number", "description": "Personal relevance score 0-1"},
                                     "geo": {"type": "string", "enum": ["global", "regional", "national", "local"]},
                                     "countries": {"type": "string", "description": "Country names or Global"}
                                 },
-                                "required": ["s", "r", "geo", "countries"],
+                                "required": ["s", "r", "p", "geo", "countries"],
                                 "additionalProperties": False
                             }
                         }
@@ -357,10 +365,12 @@ Rate each headline in order."""
         if i < len(scores):
             article.sensationalism_score = float(scores[i].get('s', 0.5))
             article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
+            article.personal_relevance_score = float(scores[i].get('p', 0.5))
             article.geographic_scope = scores[i].get('geo', 'unknown')
             article.geographic_countries = scores[i].get('countries', '')
         else:
             article.sensationalism_score = score_sensationalism(article.title)
+            article.personal_relevance_score = 0.5
             article.geographic_scope = 'unknown'
             article.geographic_countries = ''
     
@@ -387,18 +397,25 @@ def _score_with_anthropic(articles: List[NewsArticle], api_key: str) -> List[New
 - 0.5 = interesting but not policy-relevant
 - 1 = policy debates, societal issues, political/economic topics worth deliberating
 
-3. GEOGRAPHIC SCOPE:
+3. PERSONAL RELEVANCE (0-1, direct impact on readers' daily lives):
+- 1.0 = directly affects wages, prices, taxes, housing, health/safety, rights, services
+- 0.5 = indirect impact or affects specific groups only
+- 0.0 = no personal impact (international relations, political process, cultural topics)
+Examples of HIGH (0.8-1.0): "New tax rates announced", "Housing prices surge 15%", "Healthcare changes affect 5M people"
+Examples of LOW (0.0-0.3): "Prime Minister meets foreign leader", "New cultural exhibit opens", "Sports team wins championship"
+
+4. GEOGRAPHIC SCOPE:
 - "global" = affects multiple continents, international issue
 - "regional" = affects a region like EU, APAC, Middle East
 - "national" = specific to one country
 - "local" = specific city/state/province
 
-4. COUNTRIES: Which country/countries is this primarily about? Use ISO country names (e.g., "United Kingdom", "United States"). For global topics, use "Global". For regional, list key countries.
+5. COUNTRIES: Which country/countries is this primarily about? Use ISO country names (e.g., "United Kingdom", "United States"). For global topics, use "Global". For regional, list key countries.
 
 Headlines:
 {chr(10).join(headlines)}
 
-Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8, "geo": "national", "countries": "United Kingdom"}}, {{"s": 0.5, "r": 0.3, "geo": "global", "countries": "Global"}}]"""
+Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8, "p": 0.9, "geo": "national", "countries": "United Kingdom"}}, {{"s": 0.5, "r": 0.3, "p": 0.1, "geo": "global", "countries": "Global"}}]"""
 
     message = client.messages.create(
         model="claude-3-haiku-20240307",
@@ -414,10 +431,12 @@ Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8, "geo": "nationa
         if i < len(scores):
             article.sensationalism_score = float(scores[i].get('s', 0.5))
             article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
+            article.personal_relevance_score = float(scores[i].get('p', 0.5))
             article.geographic_scope = scores[i].get('geo', 'unknown')
             article.geographic_countries = scores[i].get('countries', '')
         else:
             article.sensationalism_score = score_sensationalism(article.title)
+            article.personal_relevance_score = 0.5
             article.geographic_scope = 'unknown'
             article.geographic_countries = ''
     
