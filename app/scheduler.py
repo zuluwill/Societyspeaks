@@ -321,6 +321,10 @@ def init_scheduler(app):
                     auto_publish=True  # Sets status to 'ready' not 'published'
                 )
 
+                if brief is None:
+                    logger.warning("No topics available for today's brief - skipping generation")
+                    return
+
                 logger.info(f"Daily brief generated: {brief.title} ({brief.item_count} items)")
 
                 # Log for admin notification (could trigger Slack webhook here)

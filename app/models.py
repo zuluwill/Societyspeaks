@@ -1291,6 +1291,27 @@ class DailyBriefSubscriber(db.Model):
 
         return False
 
+    def has_received_brief_today(self, brief_date=None):
+        """Check if subscriber already received brief for given date (prevents duplicate sends)"""
+        from datetime import date as date_type
+        if brief_date is None:
+            brief_date = date_type.today()
+
+        if not self.last_sent_at:
+            return False
+
+        return self.last_sent_at.date() == brief_date
+
+    def can_receive_brief(self, brief_date=None):
+        """Full eligibility check including duplicate prevention"""
+        if not self.is_subscribed_eligible():
+            return False
+
+        if self.has_received_brief_today(brief_date):
+            return False
+
+        return True
+
     def to_dict(self):
         return {
             'id': self.id,
