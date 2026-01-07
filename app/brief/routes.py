@@ -26,10 +26,13 @@ def today():
         flash("Today's brief is being prepared. Check back soon!", 'info')
         return render_template('brief/no_brief.html')
 
-    # Check if user is subscriber
+    # Check if user is subscriber (active status required)
     subscriber = None
+    is_subscriber = False
     if 'brief_subscriber_id' in session:
         subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
+        if subscriber and subscriber.status == 'active':
+            is_subscriber = True
 
     # Get items ordered by position
     items = brief.items.order_by(BriefItem.position).all()
@@ -39,6 +42,7 @@ def today():
         brief=brief,
         items=items,
         subscriber=subscriber,
+        is_subscriber=is_subscriber,
         is_today=True
     )
 
@@ -58,10 +62,13 @@ def view_date(date_str):
         flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
         return render_template('brief/no_brief.html', requested_date=brief_date)
 
-    # Check if user is subscriber
+    # Check if user is subscriber (active status required)
     subscriber = None
+    is_subscriber = False
     if 'brief_subscriber_id' in session:
         subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
+        if subscriber and subscriber.status == 'active':
+            is_subscriber = True
 
     items = brief.items.order_by(BriefItem.position).all()
 
@@ -70,6 +77,7 @@ def view_date(date_str):
         brief=brief,
         items=items,
         subscriber=subscriber,
+        is_subscriber=is_subscriber,
         is_today=(brief_date == date.today())
     )
 
@@ -251,7 +259,19 @@ def underreported():
 
 @brief_bp.route('/api/brief/latest')
 def api_latest():
-    """API endpoint for latest brief (for external integrations)"""
+    """API endpoint for latest brief (subscriber-only)"""
+    # Check if user is an active subscriber
+    subscriber = None
+    if 'brief_subscriber_id' in session:
+        subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
+
+    if not subscriber or subscriber.status != 'active':
+        return jsonify({
+            'error': 'Subscription required',
+            'message': 'Subscribe to access the full Daily Brief API.',
+            'subscribe_url': '/brief/subscribe'
+        }), 401
+
     brief = DailyBrief.get_today()
 
     if not brief:
@@ -262,7 +282,19 @@ def api_latest():
 
 @brief_bp.route('/api/brief/<date_str>')
 def api_brief_by_date(date_str):
-    """API endpoint for brief by date"""
+    """API endpoint for brief by date (subscriber-only)"""
+    # Check if user is an active subscriber
+    subscriber = None
+    if 'brief_subscriber_id' in session:
+        subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
+
+    if not subscriber or subscriber.status != 'active':
+        return jsonify({
+            'error': 'Subscription required',
+            'message': 'Subscribe to access the full Daily Brief API.',
+            'subscribe_url': '/brief/subscribe'
+        }), 401
+
     try:
         brief_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
