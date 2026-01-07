@@ -8,6 +8,7 @@ Provides defensible metrics without claiming "truth" or "bias".
 from typing import Dict, List, Optional
 from app.models import TrendingTopic, NewsArticle, NewsSource
 from app.trending.allsides_seed import get_leaning_label, get_leaning_color
+from app.trending.scorer import get_system_api_key, extract_json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -212,6 +213,104 @@ class CoverageAnalyzer:
             return 'medium'
         else:
             return 'high'
+
+    def analyze_coverage_gap(self, gap_side: str) -> Optional[str]:
+        """
+        Use LLM to explain why one perspective might not be covering this story.
+
+        Args:
+            gap_side: 'left' or 'right' - which side has low coverage
+
+        Returns:
+            str: One-sentence hypothesis for why this gap exists, or None if analysis fails
+        """
+        try:
+            api_key, provider = get_system_api_key()
+            if not api_key:
+                logger.warning("No LLM API key available for blindspot analysis")
+                return None
+
+            # Get article summaries for context
+            article_summaries = []
+            for article in self.articles[:5]:  # Limit to 5 articles for context
+                source_name = article.source.name if article.source else 'Unknown'
+                summary = article.summary[:200] if article.summary else article.title
+                article_summaries.append(f"[{source_name}] {summary}")
+
+            articles_text = '\n'.join(article_summaries)
+
+            # Calculate current distribution
+            distribution_data = self.calculate_distribution()
+            dist = distribution_data['distribution']
+            left_pct = round(dist['left'] * 100)
+            center_pct = round(dist['center'] * 100)
+            right_pct = round(dist['right'] * 100)
+
+            prompt = f"""Analyze this news story's coverage gap and provide a neutral, one-sentence hypothesis for why {gap_side}-leaning outlets have minimal coverage.
+
+STORY: {self.topic.title}
+SUMMARY: {self.topic.description or 'N/A'}
+
+COVERAGE DISTRIBUTION:
+- Left-leaning: {left_pct}%
+- Center: {center_pct}%
+- Right-leaning: {right_pct}%
+
+SAMPLE ARTICLES:
+{articles_text}
+
+Provide a brief, neutral hypothesis (max 30 words) explaining why {gap_side}-leaning outlets might not be covering this story prominently. Consider:
+- Editorial priorities (what stories each side typically emphasizes)
+- Narrative fit (does this story challenge or support their usual frames?)
+- Audience interests
+- Timing or news cycle factors
+
+Be specific and neutral. Don't judge - just explain the likely editorial reasoning.
+
+Respond with ONLY JSON:
+{{
+  "hypothesis": "One sentence explaining the coverage gap (max 30 words)"
+}}"""
+
+            # Call LLM
+            if provider == 'openai':
+                import openai
+                client = openai.OpenAI(api_key=api_key)
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a media analyst explaining coverage patterns. Be neutral and specific. Respond only in valid JSON."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=150,
+                    temperature=0.3
+                )
+                content = response.choices[0].message.content
+            else:  # anthropic
+                import anthropic
+                client = anthropic.Anthropic(api_key=api_key)
+                message = client.messages.create(
+                    model="claude-3-haiku-20240307",
+                    max_tokens=150,
+                    temperature=0.3,
+                    system="You are a media analyst explaining coverage patterns. Be neutral and specific. Respond only in valid JSON.",
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                content = message.content[0].text
+
+            # Extract JSON
+            data = extract_json(content)
+            hypothesis = data.get('hypothesis', '')
+
+            if hypothesis:
+                logger.info(f"Generated blindspot explanation for {gap_side}: {hypothesis[:50]}...")
+                return hypothesis
+            else:
+                return None
+
+        except Exception as e:
+            logger.warning(f"Failed to generate blindspot explanation: {e}")
+            return None
 
     @staticmethod
     def format_for_display(distribution_data: Dict) -> Dict:

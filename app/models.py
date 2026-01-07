@@ -857,7 +857,8 @@ class NewsArticle(db.Model):
     # Scoring (computed at fetch time)
     sensationalism_score = db.Column(db.Float)  # 0-1: higher = more clickbait
     relevance_score = db.Column(db.Float)  # 0-1: discussion potential (1=policy debate, 0=product review)
-    
+    personal_relevance_score = db.Column(db.Float)  # 0-1: direct impact on daily life (economic/health/rights)
+
     # Geographic scope detection (AI-analyzed from content)
     geographic_scope = db.Column(db.String(20), default='unknown')  # 'global', 'regional', 'national', 'local', 'unknown'
     geographic_countries = db.Column(db.String(500))  # Comma-separated list of countries mentioned (e.g., "UK, US" or "Global")
@@ -1142,6 +1143,7 @@ class BriefItem(db.Model):
     # Generated content (LLM-created for brief context)
     headline = db.Column(db.String(200))  # Shorter, punchier than TrendingTopic title
     summary_bullets = db.Column(db.JSON)  # ['bullet1', 'bullet2', 'bullet3']
+    personal_impact = db.Column(db.Text)  # One-sentence personal relevance ("Why This Matters To You")
     so_what = db.Column(db.Text)  # "So what?" analysis paragraph
     perspectives = db.Column(db.JSON)  # {'left': '...', 'center': '...', 'right': '...'}
 
@@ -1150,6 +1152,7 @@ class BriefItem(db.Model):
     coverage_imbalance = db.Column(db.Float)  # 0-1 score (0=balanced, 1=single perspective)
     source_count = db.Column(db.Integer)  # Number of unique sources
     sources_by_leaning = db.Column(db.JSON)  # {'left': ['Guardian'], 'center': ['BBC', 'FT'], 'right': []}
+    blindspot_explanation = db.Column(db.Text)  # LLM-generated explanation for coverage gaps
 
     # Sensationalism (from source articles)
     sensationalism_score = db.Column(db.Float)  # Average of article scores
@@ -1161,6 +1164,9 @@ class BriefItem(db.Model):
     # CTA to discussion
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=True)
     cta_text = db.Column(db.String(200))  # Customizable per item
+
+    # Special item types
+    is_underreported = db.Column(db.Boolean, default=False)  # "Under the Radar" bonus item
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -1174,17 +1180,20 @@ class BriefItem(db.Model):
             'position': self.position,
             'headline': self.headline,
             'summary_bullets': self.summary_bullets,
+            'personal_impact': self.personal_impact,
             'so_what': self.so_what,
             'perspectives': self.perspectives,
             'coverage_distribution': self.coverage_distribution,
             'coverage_imbalance': self.coverage_imbalance,
             'source_count': self.source_count,
             'sources_by_leaning': self.sources_by_leaning,
+            'blindspot_explanation': self.blindspot_explanation,
             'sensationalism_score': self.sensationalism_score,
             'sensationalism_label': self.sensationalism_label,
             'verification_links': self.verification_links,
             'discussion_id': self.discussion_id,
             'cta_text': self.cta_text,
+            'is_underreported': self.is_underreported,
             'trending_topic': self.trending_topic.to_dict() if self.trending_topic else None
         }
 

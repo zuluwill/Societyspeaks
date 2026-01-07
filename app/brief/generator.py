@@ -40,7 +40,8 @@ class BriefGenerator:
         self,
         brief_date: date,
         selected_topics: List[TrendingTopic],
-        auto_publish: bool = True
+        auto_publish: bool = True,
+        include_underreported: bool = True
     ) -> DailyBrief:
         """
         Generate complete daily brief from selected topics.
@@ -49,6 +50,7 @@ class BriefGenerator:
             brief_date: Date of the brief
             selected_topics: List of TrendingTopic instances (pre-selected)
             auto_publish: If True, set status to 'ready' (default True)
+            include_underreported: If True, add "Under the Radar" bonus item (default True)
 
         Returns:
             DailyBrief instance (saved to database)
@@ -85,16 +87,29 @@ class BriefGenerator:
         brief.title = self._generate_brief_title(selected_topics)
         brief.intro_text = self._generate_intro_text(selected_topics)
 
-        # Generate items
+        # Generate main items
+        items_created = 0
         for position, topic in enumerate(selected_topics, start=1):
             try:
                 item = self._generate_brief_item(brief, topic, position)
                 db.session.add(item)
                 logger.info(f"Generated item {position}: {item.headline}")
+                items_created += 1
             except Exception as e:
                 logger.error(f"Failed to generate item for topic {topic.id}: {e}")
                 # Continue with other items
                 continue
+
+        # Add underreported "Under the Radar" bonus item
+        if include_underreported and items_created > 0:
+            try:
+                underreported_item = self._generate_underreported_item(brief, items_created + 1, selected_topics)
+                if underreported_item:
+                    db.session.add(underreported_item)
+                    logger.info(f"Generated Under the Radar item: {underreported_item.headline}")
+            except Exception as e:
+                logger.warning(f"Failed to generate underreported item: {e}")
+                # Non-critical - continue without it
 
         # Set status
         brief.status = 'ready' if auto_publish else 'draft'
@@ -196,6 +211,20 @@ class BriefGenerator:
         sensationalism_scores = [a.sensationalism_score for a in articles if a.sensationalism_score is not None]
         avg_sensationalism = sum(sensationalism_scores) / len(sensationalism_scores) if sensationalism_scores else None
 
+        # Generate blindspot explanation if needed
+        blindspot_explanation = None
+        if coverage_data['distribution']:
+            left_pct = coverage_data['distribution'].get('left', 0)
+            right_pct = coverage_data['distribution'].get('right', 0)
+
+            # Check for blindspot (< 15% coverage from one side when other side has > 30%)
+            if left_pct < 0.15 and right_pct > 0.30:
+                logger.info(f"Detected left blindspot for topic {topic.id}, generating explanation...")
+                blindspot_explanation = analyzer.analyze_coverage_gap('left')
+            elif right_pct < 0.15 and left_pct > 0.30:
+                logger.info(f"Detected right blindspot for topic {topic.id}, generating explanation...")
+                blindspot_explanation = analyzer.analyze_coverage_gap('right')
+
         # Generate CTA text
         cta_text = self._generate_cta_text(topic)
 
@@ -206,12 +235,14 @@ class BriefGenerator:
             trending_topic_id=topic.id,
             headline=llm_content['headline'],
             summary_bullets=llm_content['bullets'],
+            personal_impact=llm_content.get('personal_impact'),
             so_what=llm_content.get('so_what'),
             perspectives=llm_content.get('perspectives'),
             coverage_distribution=coverage_data['distribution'],
             coverage_imbalance=coverage_data['imbalance_score'],
             source_count=coverage_data['source_count'],
             sources_by_leaning=coverage_data['sources_by_leaning'],
+            blindspot_explanation=blindspot_explanation,
             sensationalism_score=avg_sensationalism,
             sensationalism_label=analyzer.get_sensationalism_label(avg_sensationalism),
             verification_links=verification_links,
@@ -220,6 +251,172 @@ class BriefGenerator:
         )
 
         return item
+
+    def _generate_underreported_item(
+        self,
+        brief: DailyBrief,
+        position: int,
+        exclude_topics: List[TrendingTopic]
+    ) -> Optional[BriefItem]:
+        """
+        Generate a special "Under the Radar" item for underreported stories.
+
+        Args:
+            brief: DailyBrief instance
+            position: Position in brief (usually 6)
+            exclude_topics: Topics already in the brief (to avoid duplicates)
+
+        Returns:
+            BriefItem instance or None if no underreported story found
+        """
+        from app.brief.underreported import UnderreportedDetector
+
+        detector = UnderreportedDetector(lookback_days=7)
+        stories = detector.find_underreported_stories(limit=10)
+
+        # Exclude topics already in brief
+        exclude_ids = {t.id for t in exclude_topics}
+        available_stories = [s for s in stories if s['topic'].id not in exclude_ids]
+
+        if not available_stories:
+            logger.info("No underreported stories found for Under the Radar item")
+            return None
+
+        # Take the highest-scored underreported story
+        story = available_stories[0]
+        topic = story['topic']
+
+        logger.info(f"Selected underreported topic: {topic.title} (civic={story['civic_score']:.2f}, sources={story['source_count']})")
+
+        # Get articles for this topic
+        article_links = topic.articles.all() if hasattr(topic, 'articles') else []
+        articles = [link.article for link in article_links if link.article]
+
+        if not articles:
+            return None
+
+        # Generate coverage data
+        analyzer = CoverageAnalyzer(topic)
+        coverage_data = analyzer.calculate_distribution()
+
+        # Generate content via LLM (same as regular items)
+        llm_content = self._generate_item_content(topic, articles)
+
+        # Extract verification links
+        verification_links = self._extract_verification_links(articles)
+
+        # Calculate sensationalism
+        sensationalism_scores = [a.sensationalism_score for a in articles if a.sensationalism_score is not None]
+        avg_sensationalism = sum(sensationalism_scores) / len(sensationalism_scores) if sensationalism_scores else None
+
+        # Generate blindspot explanation if applicable
+        blindspot_explanation = None
+        if coverage_data['distribution']:
+            left_pct = coverage_data['distribution'].get('left', 0)
+            right_pct = coverage_data['distribution'].get('right', 0)
+
+            if left_pct < 0.15 and right_pct > 0.30:
+                blindspot_explanation = analyzer.analyze_coverage_gap('left')
+            elif right_pct < 0.15 and left_pct > 0.30:
+                blindspot_explanation = analyzer.analyze_coverage_gap('right')
+
+        # Create item with is_underreported flag
+        item = BriefItem(
+            brief_id=brief.id,
+            position=position,
+            trending_topic_id=topic.id,
+            headline=llm_content['headline'],
+            summary_bullets=llm_content['bullets'],
+            personal_impact=llm_content.get('personal_impact'),
+            so_what=llm_content.get('so_what'),
+            perspectives=llm_content.get('perspectives'),
+            coverage_distribution=coverage_data['distribution'],
+            coverage_imbalance=coverage_data['imbalance_score'],
+            source_count=coverage_data['source_count'],
+            sources_by_leaning=coverage_data['sources_by_leaning'],
+            blindspot_explanation=blindspot_explanation,
+            sensationalism_score=avg_sensationalism,
+            sensationalism_label=analyzer.get_sensationalism_label(avg_sensationalism),
+            verification_links=verification_links,
+            discussion_id=topic.discussion_id,
+            cta_text=None,  # No CTA for underreported items
+            is_underreported=True  # Mark as special "Under the Radar" item
+        )
+
+        return item
+
+    def _validate_item_content(
+        self,
+        content: Dict[str, Any],
+        topic_title: str
+    ) -> Tuple[bool, List[str], int]:
+        """
+        Validate generated content using opposite LLM provider for peer review.
+
+        Args:
+            content: Generated content dict with headline, bullets, personal_impact, so_what
+            topic_title: Topic title for context
+
+        Returns:
+            Tuple of (passes_validation, list_of_issues, quality_score_0_to_10)
+        """
+        # Use opposite provider for validation
+        validation_provider = 'anthropic' if self.provider == 'openai' else 'openai'
+
+        critique_prompt = f"""You are a senior editor reviewing news briefing content for quality issues.
+
+TOPIC: {topic_title}
+
+GENERATED CONTENT:
+Headline: {content.get('headline', 'N/A')}
+
+Bullets:
+{chr(10).join(f"- {b}" for b in content.get('bullets', []))}
+
+Personal Impact: {content.get('personal_impact', 'N/A')}
+
+So What: {content.get('so_what', 'N/A')}
+
+Review this content and check for these quality problems:
+
+1. VAGUE LANGUAGE: Uses words like "could", "might", "some people say", "appears to"
+2. MISSING SPECIFICS: Lacks numbers, dates, named people/organizations, or concrete details
+3. GENERIC IMPACT: Impact statements are generic ("will affect many people") rather than specific ("17 million Americans by March 2026")
+4. SENSATIONAL FRAMING: Uses emotional language, exaggeration, or clickbait patterns
+5. UNCLEAR REFERENCES: Uses "this", "it", "they" without clear antecedents
+6. PASSIVE VOICE: Uses passive constructions that obscure responsibility
+7. MISSING PERSONAL RELEVANCE: Personal impact statement doesn't explain direct relevance to readers
+
+Respond ONLY with valid JSON:
+{{
+  "passes": true or false (true if quality_score >= 7),
+  "quality_score": 0-10 (10 = excellent, specific, concrete; 0 = vague, generic, poor),
+  "issues": ["Specific issue 1", "Specific issue 2", ...]
+}}
+
+Be strict but fair. If content is specific, concrete, and well-written, give credit."""
+
+        try:
+            # Call opposite LLM for validation
+            if validation_provider == 'openai':
+                response = self._call_openai(critique_prompt)
+            else:
+                response = self._call_anthropic(critique_prompt)
+
+            data = extract_json(response)
+
+            passes = data.get('passes', False)
+            quality_score = data.get('quality_score', 0)
+            issues = data.get('issues', [])
+
+            logger.info(f"Content validation: passes={passes}, score={quality_score}, issues={len(issues)}")
+
+            return (passes, issues, quality_score)
+
+        except Exception as e:
+            logger.warning(f"Content validation failed: {e}. Accepting content by default.")
+            # If validation fails, accept the content (don't block on validation errors)
+            return (True, [], 7)
 
     def _generate_item_content(
         self,
@@ -267,19 +464,53 @@ ARTICLES:
 
 Generate a comprehensive news item with:
 
-1. HEADLINE: A concise, neutral headline (8-12 words). No sensationalism.
+1. HEADLINE: A concise, active headline (6-10 words maximum).
+   - Use active voice, present tense
+   - Include concrete noun + action verb
+   - No questions, no clickbait, no metaphors
+   - Be specific, not generic
+
+   Examples:
+   ✓ GOOD: "Treasury Plans £50bn Green Investment Fund"
+   ✓ GOOD: "Meta Fined €1.2bn for Data Violations"
+   ✗ BAD: "Government Faces Pressure on Climate Policy" (passive, vague)
+   ✗ BAD: "Tech Companies Under Fire" (metaphor, unclear)
 
 2. KEY POINTS: 3-4 bullet points covering the essential facts:
-   - What happened (the core news)
-   - Key figures, numbers, or quotes
-   - Important context or timeline
-   - What happens next (if known)
+   - What happened (the core news with specific details)
+   - Key figures, numbers, dates, or quotes (be concrete)
+   - Important context or timeline (when does this take effect?)
+   - What happens next (specific next steps if known)
 
-3. SO WHAT: One paragraph (2-3 sentences) explaining why this matters for ordinary citizens. What are the real-world implications? Use the framing "So what?" to explain relevance.
+   Each bullet must include at least one concrete detail (number, date, named person/organization).
 
-4. PERSPECTIVES: How different outlets are framing this story:
+3. PERSONAL IMPACT: One sentence (max 25 words) explaining direct personal relevance.
+   - Must be specific and actionable
+   - Target: ordinary citizens, not policy wonks
+   - Include timeframe if relevant
+
+   Examples:
+   ✓ GOOD: "If you have student loans, this changes your repayment timeline by 6-18 months."
+   ✓ GOOD: "Your local council will need to implement this by June 2026."
+   ✓ GOOD: "Mortgage holders could see rates drop 0.25-0.5% within 3 months."
+   ✗ BAD: "This could affect many people." (vague, no specifics)
+
+4. SO WHAT: One paragraph (2-3 sentences) explaining concrete, real-world impact.
+   - BE SPECIFIC: Include numbers, dates, affected groups, or measurable outcomes
+   - Show second-order effects: "If this continues, watch for..."
+   - Make it personal: "You'll notice this when..." or "This affects [group] by..."
+   - Add historical context when relevant: "Last time this happened (year), the result was..."
+
+   Examples:
+   ✓ GOOD: "So what? 17 million Americans in red states will lose Medicaid expansion by March if governors don't reverse course. Last time federal funding changed (2017), 8 states took 2+ years to respond, leaving 3 million temporarily uninsured."
+   ✗ BAD: "So what? This decision could impact healthcare access and affect millions of people across the country." (vague, no specifics)
+
+   ✓ GOOD: "So what? If you have student loans, this changes your repayment timeline by 6-18 months depending on your balance. The new rules take effect in August 2026, with applications opening in June."
+   ✗ BAD: "So what? This policy will have implications for people with student debt." (generic, no actionable info)
+
+5. PERSPECTIVES: How different outlets are framing this story:
    - Left-leaning view (if available): One sentence summary
-   - Centre view: One sentence summary  
+   - Centre view: One sentence summary
    - Right-leaning view (if available): One sentence summary
 
 Guidelines:
@@ -287,13 +518,16 @@ Guidelines:
 - No em dashes. Use commas, colons, or periods instead
 - Neutral, calm tone throughout
 - Focus on facts and analysis, not opinion
-- Make the "So what?" genuinely insightful, not generic
+- Avoid vague language (could, might, some say, appears to)
+- Every claim should have a number, date, or named source
+- Make the "So what?" genuinely insightful and concrete, not generic
 
 Return JSON:
 {{
   "headline": "...",
   "bullets": ["bullet 1", "bullet 2", "bullet 3", "bullet 4"],
-  "so_what": "So what? [Your analysis here]",
+  "personal_impact": "One sentence personal relevance (max 25 words)",
+  "so_what": "So what? [Your specific, concrete analysis here]",
   "perspectives": {{
     "left": "Left-leaning outlets emphasise...",
     "center": "Centrist outlets focus on...",
@@ -301,41 +535,78 @@ Return JSON:
   }}
 }}"""
 
-        try:
-            response = self._call_llm(prompt)
-            data = extract_json(response)
+        # Try generation up to 2 times with validation
+        max_attempts = 2
+        last_data = None
+        last_issues = []
 
-            # Validate response
-            if 'headline' not in data or 'bullets' not in data:
-                raise ValueError("Missing headline or bullets in LLM response")
+        for attempt in range(1, max_attempts + 1):
+            try:
+                # Generate content
+                response = self._call_llm(prompt)
+                data = extract_json(response)
 
-            if not isinstance(data['bullets'], list) or len(data['bullets']) < 2:
-                raise ValueError("Bullets must be a list with at least 2 items")
+                # Basic validation
+                if 'headline' not in data or 'bullets' not in data:
+                    raise ValueError("Missing headline or bullets in LLM response")
 
-            # Trim bullets to 4 max
-            data['bullets'] = data['bullets'][:4]
-            
-            # Ensure so_what and perspectives exist
-            if 'so_what' not in data:
-                data['so_what'] = None
-            if 'perspectives' not in data:
-                data['perspectives'] = None
+                if not isinstance(data['bullets'], list) or len(data['bullets']) < 2:
+                    raise ValueError("Bullets must be a list with at least 2 items")
 
-            return data
+                # Trim bullets to 4 max
+                data['bullets'] = data['bullets'][:4]
 
-        except Exception as e:
-            logger.error(f"LLM content generation failed: {e}")
-            # Fallback to topic title and description
-            return {
-                'headline': topic.title[:100],  # Truncate if needed
-                'bullets': [
-                    topic.description[:150] if topic.description else "Details unavailable",
-                    f"Covered by {len(articles)} sources",
-                    "See sources for full context"
-                ],
-                'so_what': None,
-                'perspectives': None
-            }
+                # Ensure optional fields exist
+                if 'personal_impact' not in data:
+                    data['personal_impact'] = None
+                if 'so_what' not in data:
+                    data['so_what'] = None
+                if 'perspectives' not in data:
+                    data['perspectives'] = None
+
+                last_data = data
+
+                # Multi-model validation
+                passes, issues, quality_score = self._validate_item_content(data, topic.title)
+
+                if passes:
+                    logger.info(f"Content passed validation on attempt {attempt} with score {quality_score}")
+                    return data
+                else:
+                    logger.warning(f"Content failed validation on attempt {attempt}. Score: {quality_score}, Issues: {issues}")
+                    last_issues = issues
+
+                    # If this is not the last attempt, regenerate with feedback
+                    if attempt < max_attempts:
+                        logger.info(f"Regenerating content with quality feedback...")
+                        # Add issues to prompt for next iteration
+                        prompt += f"\n\nPREVIOUS ATTEMPT HAD THESE ISSUES - PLEASE FIX:\n"
+                        for issue in issues:
+                            prompt += f"- {issue}\n"
+                    else:
+                        # Last attempt failed, but return it anyway (don't block on quality)
+                        logger.warning(f"Using content despite validation failure after {max_attempts} attempts")
+                        return data
+
+            except Exception as e:
+                logger.error(f"LLM content generation failed on attempt {attempt}: {e}")
+                if attempt == max_attempts:
+                    # All attempts failed, fall through to fallback
+                    break
+
+        # Fallback if all attempts failed
+        logger.error("All generation attempts failed - using fallback content")
+        return {
+            'headline': topic.title[:100],  # Truncate if needed
+            'bullets': [
+                topic.description[:150] if topic.description else "Details unavailable",
+                f"Covered by {len(articles)} sources",
+                "See sources for full context"
+            ],
+            'personal_impact': None,
+            'so_what': None,
+            'perspectives': None
+        }
 
     def _extract_verification_links(
         self,

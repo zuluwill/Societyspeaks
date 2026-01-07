@@ -21,12 +21,23 @@
 
         <div class="space-y-8">
             {% for item in items %}
-            <article class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <article class="rounded-2xl shadow-lg border overflow-hidden {% if item.is_underreported %}bg-amber-50 border-amber-300{% else %}bg-white border-gray-100{% endif %}">
                 <div class="p-6 sm:p-8">
+                    {% if item.is_underreported %}
+                    <div class="mb-5">
+                        <span class="inline-flex items-center px-3 py-1.5 rounded-md bg-amber-500 text-white text-xs font-bold uppercase tracking-wider">
+                            📭 Under the Radar
+                        </span>
+                        <p class="text-amber-800 text-xs mt-2 font-medium">High civic importance, low media coverage</p>
+                    </div>
+                    {% endif %}
+
                     <div class="flex items-start gap-4 mb-5">
+                        {% if not item.is_underreported %}
                         <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-800 text-white flex items-center justify-center font-bold text-lg">
                             {{ item.position }}
                         </div>
+                        {% endif %}
                         <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900 leading-snug flex-1">
                             {{ item.headline }}
                         </h2>
@@ -90,6 +101,13 @@
                     </ul>
                     {% endif %}
 
+                    {% if item.personal_impact %}
+                    <div class="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-5 mb-6">
+                        <p class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">💡 Why This Matters To You</p>
+                        <p class="text-blue-900 leading-relaxed font-medium">{{ item.personal_impact }}</p>
+                    </div>
+                    {% endif %}
+
                     {% if item.so_what %}
                     <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-5 mb-6">
                         <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">Why It Matters</p>
@@ -120,6 +138,13 @@
                             </div>
                             {% endif %}
                         </div>
+                    </div>
+                    {% endif %}
+
+                    {% if item.blindspot_explanation %}
+                    <div class="bg-amber-50 border-l-4 border-amber-500 rounded-r-lg p-5 mb-6">
+                        <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">🔍 Coverage Gap Analysis</p>
+                        <p class="text-amber-900 leading-relaxed italic">{{ item.blindspot_explanation }}</p>
                     </div>
                     {% endif %}
 

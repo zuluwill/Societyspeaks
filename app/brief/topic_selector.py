@@ -117,19 +117,27 @@ class TopicSelector:
         """
         Calculate priority score for brief selection.
 
-        Scoring formula:
-        - Civic score: 40% (public importance)
-        - Quality score: 30% (factual density, non-clickbait)
-        - Source count: 20% (more sources = better)
+        Scoring formula (updated Jan 2026):
+        - Civic score: 35% (public importance)
+        - Quality score: 25% (factual density, non-clickbait)
+        - Personal relevance: 15% (direct impact on daily life)
+        - Source count: 15% (more sources = better)
         - Coverage balance: 10% (balanced = bonus)
 
         Returns:
             float: Score from 0-1 (higher = higher priority)
         """
+        # Calculate average personal relevance from articles
+        article_links = topic.articles.all() if hasattr(topic, 'articles') else []
+        articles = [link.article for link in article_links if link.article]
+        personal_scores = [a.personal_relevance_score for a in articles if a.personal_relevance_score is not None]
+        avg_personal_relevance = sum(personal_scores) / len(personal_scores) if personal_scores else 0.5
+
         base_score = (
-            topic.civic_score * 0.4 +
-            topic.quality_score * 0.3 +
-            min(topic.source_count / 10, 1.0) * 0.2  # Cap at 10 sources
+            topic.civic_score * 0.35 +
+            topic.quality_score * 0.25 +
+            avg_personal_relevance * 0.15 +
+            min(topic.source_count / 10, 1.0) * 0.15  # Cap at 10 sources
         )
 
         # Coverage balance bonus
@@ -141,7 +149,8 @@ class TopicSelector:
 
         logger.debug(f"Topic '{topic.title[:50]}...' scored {total_score:.2f} "
                     f"(civic={topic.civic_score:.2f}, quality={topic.quality_score:.2f}, "
-                    f"sources={topic.source_count}, balance={1-coverage['imbalance_score']:.2f})")
+                    f"personal={avg_personal_relevance:.2f}, sources={topic.source_count}, "
+                    f"balance={1-coverage['imbalance_score']:.2f})")
 
         return total_score
 
