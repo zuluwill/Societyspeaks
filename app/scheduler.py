@@ -296,12 +296,138 @@ def init_scheduler(app):
         )
         email_thread.start()
         logger.info("Daily question email thread launched, scheduler continuing")
-    
-    
+
+
+    # ==============================================================================
+    # DAILY BRIEF JOBS
+    # ==============================================================================
+
+    @scheduler.scheduled_job('cron', hour=17, minute=0, id='generate_daily_brief')
+    def generate_daily_brief_job():
+        """
+        Generate daily brief at 5:00pm UTC
+        Auto-selects topics and creates draft brief
+        Admin has 45-60 min to review before auto-publish
+        """
+        with app.app_context():
+            from app.brief.generator import generate_daily_brief
+            from datetime import date
+
+            logger.info("Starting daily brief generation")
+
+            try:
+                brief = generate_daily_brief(
+                    brief_date=date.today(),
+                    auto_publish=True  # Sets status to 'ready' not 'published'
+                )
+
+                logger.info(f"Daily brief generated: {brief.title} ({brief.item_count} items)")
+
+                # Log for admin notification (could trigger Slack webhook here)
+                if brief.item_count < 3:
+                    logger.warning(f"Brief only has {brief.item_count} items, below minimum!")
+
+            except Exception as e:
+                logger.error(f"Daily brief generation failed: {e}", exc_info=True)
+
+
+    @scheduler.scheduled_job('cron', hour=18, minute=0, id='auto_publish_brief')
+    def auto_publish_daily_brief():
+        """
+        Auto-publish today's brief at 6:00pm UTC if still in 'ready' status
+        This gives admin 1 hour review window (5pm-6pm)
+        If admin already published/skipped, this does nothing
+        """
+        with app.app_context():
+            from app.models import DailyBrief
+            from datetime import date
+
+            logger.info("Checking if brief should auto-publish")
+
+            try:
+                brief = DailyBrief.query.filter_by(
+                    date=date.today(),
+                    status='ready'
+                ).first()
+
+                if brief:
+                    # Auto-publish
+                    brief.status = 'published'
+                    brief.published_at = datetime.utcnow()
+                    db.session.commit()
+
+                    logger.info(f"Auto-published brief: {brief.title}")
+                else:
+                    # Either already published, skipped, or doesn't exist
+                    existing = DailyBrief.query.filter_by(date=date.today()).first()
+                    if existing:
+                        logger.info(f"Brief status is '{existing.status}', not auto-publishing")
+                    else:
+                        logger.warning("No brief exists for today!")
+
+            except Exception as e:
+                logger.error(f"Auto-publish failed: {e}", exc_info=True)
+
+
+    @scheduler.scheduled_job('cron', minute=0, id='send_brief_emails')
+    def send_brief_emails_hourly():
+        """
+        Send brief emails every hour on the hour
+        Checks which subscribers should receive at this UTC hour based on their timezone
+        Example: At 18:00 UTC, sends to:
+        - UK users with preferred_hour=18 (6pm UK time)
+        - EST users with preferred_hour=13 (1pm EST = 18:00 UTC)
+        - PST users with preferred_hour=10 (10am PST = 18:00 UTC)
+        """
+        with app.app_context():
+            from app.brief.email_client import BriefEmailScheduler
+
+            current_hour = datetime.utcnow().hour
+            logger.info(f"Starting brief email send for hour {current_hour} UTC")
+
+            try:
+                scheduler_obj = BriefEmailScheduler()
+                results = scheduler_obj.send_todays_brief_hourly()
+
+                if results:
+                    logger.info(f"Brief emails sent: {results['sent']} successful, {results['failed']} failed")
+
+                    if results['errors']:
+                        for error in results['errors'][:5]:  # Log first 5 errors
+                            logger.error(error)
+                else:
+                    logger.info("No brief to send or no subscribers at this hour")
+
+            except Exception as e:
+                logger.error(f"Brief email sending failed: {e}", exc_info=True)
+
+
+    @scheduler.scheduled_job('cron', hour=2, id='update_allsides_ratings')
+    def update_allsides_ratings_monthly():
+        """
+        Update AllSides political leaning ratings monthly
+        Runs at 2am UTC on the 1st of each month
+        """
+        with app.app_context():
+            from app.trending.allsides_seed import update_source_leanings
+
+            # Only run on first day of month
+            if datetime.utcnow().day != 1:
+                return
+
+            logger.info("Updating AllSides ratings")
+
+            try:
+                results = update_source_leanings()
+                logger.info(f"AllSides update complete: {results}")
+            except Exception as e:
+                logger.error(f"AllSides update failed: {e}", exc_info=True)
+
+
     logger.info("Scheduler initialized with jobs:")
     for job in scheduler.get_jobs():
         logger.info(f"  - {job.id}: {job.trigger}")
-    
+
     return scheduler
 
 

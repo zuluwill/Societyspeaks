@@ -399,15 +399,31 @@ def subscribe_success():
 @daily_bp.route('/daily/unsubscribe/<token>')
 def unsubscribe(token):
     """Unsubscribe from daily question emails"""
+    from app.email_utils import update_loops_contact
+
     subscriber = DailyQuestionSubscriber.query.filter_by(magic_token=token).first()
-    
+
     if not subscriber:
         flash('Invalid unsubscribe link.', 'error')
         return redirect(url_for('daily.today'))
-    
+
+    # Update database
     subscriber.is_active = False
     db.session.commit()
-    
+
+    # Update Loops.so contact to stop sending emails
+    try:
+        update_loops_contact(
+            subscriber.email,
+            {
+                'dailyQuestionSubscribed': False,
+                'unsubscribedAt': datetime.utcnow().isoformat()
+            }
+        )
+    except Exception as e:
+        current_app.logger.error(f"Failed to update Loops contact on unsubscribe: {e}")
+        # Continue anyway - database is source of truth
+
     flash('You have been unsubscribed from daily civic questions.', 'success')
     return render_template('daily/unsubscribed.html', email=subscriber.email)
 

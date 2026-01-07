@@ -38,6 +38,53 @@ class RateLimiter:
 _rate_limiter = RateLimiter(EMAILS_PER_SECOND)
 
 
+# This function updates contact properties in Loops
+def update_loops_contact(email_address, properties):
+    """
+    Update contact properties in Loops.so
+
+    Args:
+        email_address: Contact email
+        properties: Dict of properties to update (e.g., {'subscribed': False, 'unsubscribed': True})
+
+    Returns:
+        bool: Success status
+    """
+    api_key = os.getenv('LOOPS_API_KEY')
+    url = 'https://app.loops.so/api/v1/contacts/update'
+
+    headers = {
+        'Authorization': f'Bearer {api_key}',
+        'Content-Type': 'application/json'
+    }
+
+    payload = {
+        'email': email_address,
+        **properties
+    }
+
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.put(url, json=payload, headers=headers, timeout=EMAIL_TIMEOUT)
+
+            if response.status_code == 200:
+                current_app.logger.info(f"Loops contact updated for {email_address}.")
+                return True
+            else:
+                current_app.logger.error(f"Failed to update Loops contact for {email_address}: {response.status_code} - {response.text}")
+                return False
+        except requests.exceptions.Timeout:
+            if attempt < MAX_RETRIES - 1:
+                current_app.logger.warning(f"Timeout updating Loops contact (attempt {attempt + 1}/{MAX_RETRIES}), retrying...")
+                time.sleep(RETRY_DELAY * (attempt + 1))
+            else:
+                current_app.logger.error(f"Timeout updating Loops contact for {email_address} after {MAX_RETRIES} attempts")
+        except requests.exceptions.RequestException as e:
+            current_app.logger.error(f"Error updating Loops contact for {email_address}: {e}")
+            return False
+    return False
+
+
 #This function is responsible for sending events to Loops
 def send_loops_event(email_address, event_name, user_id, contact_properties, event_properties):
     api_key = os.getenv('LOOPS_API_KEY')
@@ -58,7 +105,7 @@ def send_loops_event(email_address, event_name, user_id, contact_properties, eve
     for attempt in range(MAX_RETRIES):
         try:
             response = requests.post(url, json=payload, headers=headers, timeout=EMAIL_TIMEOUT)
-            
+
             if response.status_code == 200:
                 current_app.logger.info(f"Loops event '{event_name}' triggered for {email_address}.")
                 return True
