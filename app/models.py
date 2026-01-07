@@ -1142,6 +1142,8 @@ class BriefItem(db.Model):
     # Generated content (LLM-created for brief context)
     headline = db.Column(db.String(200))  # Shorter, punchier than TrendingTopic title
     summary_bullets = db.Column(db.JSON)  # ['bullet1', 'bullet2', 'bullet3']
+    so_what = db.Column(db.Text)  # "So what?" analysis paragraph
+    perspectives = db.Column(db.JSON)  # {'left': '...', 'center': '...', 'right': '...'}
 
     # Coverage analysis (computed from TrendingTopic articles)
     coverage_distribution = db.Column(db.JSON)  # {'left': 0.2, 'center': 0.5, 'right': 0.3}
@@ -1172,6 +1174,8 @@ class BriefItem(db.Model):
             'position': self.position,
             'headline': self.headline,
             'summary_bullets': self.summary_bullets,
+            'so_what': self.so_what,
+            'perspectives': self.perspectives,
             'coverage_distribution': self.coverage_distribution,
             'coverage_imbalance': self.coverage_imbalance,
             'source_count': self.source_count,

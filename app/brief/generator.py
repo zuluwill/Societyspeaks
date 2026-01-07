@@ -192,6 +192,8 @@ class BriefGenerator:
             trending_topic_id=topic.id,
             headline=llm_content['headline'],
             summary_bullets=llm_content['bullets'],
+            so_what=llm_content.get('so_what'),
+            perspectives=llm_content.get('perspectives'),
             coverage_distribution=coverage_data['distribution'],
             coverage_imbalance=coverage_data['imbalance_score'],
             source_count=coverage_data['source_count'],
@@ -211,42 +213,78 @@ class BriefGenerator:
         articles: List[NewsArticle]
     ) -> Dict[str, Any]:
         """
-        Generate headline and bullets using LLM.
+        Generate headline, bullets, and analysis using LLM.
 
         Returns:
             dict: {
                 'headline': str (10 words max),
-                'bullets': list of str (2-3 bullets)
+                'bullets': list of str (3-4 bullets),
+                'so_what': str (why this matters),
+                'perspectives': dict with 'left', 'center', 'right' viewpoints
             }
         """
         # Prepare article summaries for context
         article_context = []
-        for i, article in enumerate(articles[:5], start=1):  # Max 5 articles
-            summary = article.summary[:200] if article.summary else article.title
-            article_context.append(f"{i}. {article.source.name}: {article.title}\n   {summary}")
+        source_perspectives = {'left': [], 'center': [], 'right': []}
+        
+        for i, article in enumerate(articles[:8], start=1):  # Max 8 articles for richer context
+            summary = article.summary[:300] if article.summary else article.title
+            source_name = article.source.name if article.source else 'Unknown'
+            
+            # Get political leaning from source (-2 to +2 scale)
+            leaning_score = article.source.political_leaning if article.source and article.source.political_leaning is not None else 0
+            
+            article_context.append(f"{i}. [{source_name}] {article.title}\n   {summary}")
+            
+            # Collect perspectives by leaning score
+            if leaning_score <= -1:  # Left or Lean Left
+                source_perspectives['left'].append(f"{source_name}: {summary[:150]}")
+            elif leaning_score >= 1:  # Right or Lean Right
+                source_perspectives['right'].append(f"{source_name}: {summary[:150]}")
+            else:  # Center
+                source_perspectives['center'].append(f"{source_name}: {summary[:150]}")
 
         article_text = '\n'.join(article_context)
 
-        prompt = f"""Generate a brief news item from these articles about the same story.
+        prompt = f"""You are a senior news analyst creating a Tortoise Media-style briefing. Generate rich, analytical content from these articles about the same story.
 
 ARTICLES:
 {article_text}
 
-Generate:
-1. A concise headline (8-12 words, neutral tone, no sensationalism)
-2. 2-3 bullet points summarizing what happened (factual, no opinion)
+Generate a comprehensive news item with:
+
+1. HEADLINE: A concise, neutral headline (8-12 words). No sensationalism.
+
+2. KEY POINTS: 3-4 bullet points covering the essential facts:
+   - What happened (the core news)
+   - Key figures, numbers, or quotes
+   - Important context or timeline
+   - What happens next (if known)
+
+3. SO WHAT: One paragraph (2-3 sentences) explaining why this matters for ordinary citizens. What are the real-world implications? Use the framing "So what?" to explain relevance.
+
+4. PERSPECTIVES: How different outlets are framing this story:
+   - Left-leaning view (if available): One sentence summary
+   - Centre view: One sentence summary  
+   - Right-leaning view (if available): One sentence summary
 
 Guidelines:
-- Headline should be shorter and punchier than article titles
-- Bullets should be "what happened" not "why it matters"
-- Use neutral language (avoid "bombshell", "shocking", etc.)
-- Focus on facts, not speculation
-- Each bullet should be 10-20 words
+- Use British English (analyse, centre, organisation)
+- No em dashes. Use commas, colons, or periods instead
+- Neutral, calm tone throughout
+- Focus on facts and analysis, not opinion
+- Make the "So what?" genuinely insightful, not generic
 
 Return JSON:
 {{
   "headline": "...",
-  "bullets": ["bullet 1", "bullet 2", "bullet 3"]
+  "bullets": ["bullet 1", "bullet 2", "bullet 3", "bullet 4"],
+  "so_what": "So what? [Your analysis here]",
+  "perspectives": {{
+    "left": "Left-leaning outlets emphasise...",
+    "center": "Centrist outlets focus on...",
+    "right": "Right-leaning outlets highlight..."
+  }}
 }}"""
 
         try:
@@ -260,8 +298,14 @@ Return JSON:
             if not isinstance(data['bullets'], list) or len(data['bullets']) < 2:
                 raise ValueError("Bullets must be a list with at least 2 items")
 
-            # Trim bullets to 3 max
-            data['bullets'] = data['bullets'][:3]
+            # Trim bullets to 4 max
+            data['bullets'] = data['bullets'][:4]
+            
+            # Ensure so_what and perspectives exist
+            if 'so_what' not in data:
+                data['so_what'] = None
+            if 'perspectives' not in data:
+                data['perspectives'] = None
 
             return data
 
@@ -274,7 +318,9 @@ Return JSON:
                     topic.description[:150] if topic.description else "Details unavailable",
                     f"Covered by {len(articles)} sources",
                     "See sources for full context"
-                ]
+                ],
+                'so_what': None,
+                'perspectives': None
             }
 
     def _extract_verification_links(
