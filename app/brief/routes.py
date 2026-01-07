@@ -10,8 +10,12 @@ from app.brief import brief_bp
 from app import db, limiter
 from app.models import DailyBrief, BriefItem, DailyBriefSubscriber, BriefTeam, User
 from app.brief.email_client import send_brief_to_subscriber
+from app.models import BriefEmailEvent
 import re
 import logging
+import hmac
+import hashlib
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -431,3 +435,174 @@ def admin_test_send():
     except Exception as e:
         logger.error(f"Test send failed: {e}")
         return jsonify({'error': str(e)}), 500
+
+
+@brief_bp.route('/brief/webhooks/resend', methods=['POST'])
+def resend_webhook():
+    """
+    Handle Resend email webhooks for analytics tracking.
+    
+    Resend sends events: email.sent, email.delivered, email.opened,
+    email.clicked, email.bounced, email.complained
+    
+    Docs: https://resend.com/docs/dashboard/webhooks/introduction
+    """
+    try:
+        # Verify webhook signature (Resend uses svix for webhooks)
+        webhook_secret = os.environ.get('RESEND_WEBHOOK_SECRET')
+        
+        if webhook_secret:
+            # Get signature headers from Resend/Svix
+            svix_id = request.headers.get('svix-id')
+            svix_timestamp = request.headers.get('svix-timestamp')
+            svix_signature = request.headers.get('svix-signature')
+            
+            if not all([svix_id, svix_timestamp, svix_signature]):
+                logger.warning("Missing webhook signature headers")
+                return jsonify({'error': 'Missing signature headers'}), 401
+            
+            # Verify signature using HMAC-SHA256
+            payload_bytes = request.get_data()
+            signed_content = f"{svix_id}.{svix_timestamp}.{payload_bytes.decode('utf-8')}"
+            
+            # Extract the base64 encoded secret
+            secret_bytes = webhook_secret.encode('utf-8')
+            if webhook_secret.startswith('whsec_'):
+                import base64
+                secret_bytes = base64.b64decode(webhook_secret[6:])
+            
+            expected_sig = hmac.new(
+                secret_bytes,
+                signed_content.encode('utf-8'),
+                hashlib.sha256
+            ).digest()
+            
+            import base64
+            expected_sig_b64 = base64.urlsafe_b64encode(expected_sig).decode('utf-8')
+            
+            # Svix sends signatures as "v1,<sig> v1,<sig2>" or just "v1,<sig>"
+            # We need to extract the base64 part after "v1,"
+            signatures = svix_signature.split(' ')
+            valid = False
+            for sig_entry in signatures:
+                # Split "v1,<signature>" on comma to get just the signature
+                if ',' in sig_entry:
+                    version, sig_value = sig_entry.split(',', 1)
+                    # Compare using timing-safe comparison
+                    # Also try standard b64 in case urlsafe differs
+                    standard_sig = base64.b64encode(expected_sig).decode('utf-8')
+                    if hmac.compare_digest(sig_value, expected_sig_b64) or hmac.compare_digest(sig_value, standard_sig):
+                        valid = True
+                        break
+            
+            if not valid:
+                logger.warning(f"Invalid webhook signature. Expected variations of: {expected_sig_b64[:20]}...")
+                return jsonify({'error': 'Invalid signature'}), 401
+        
+        # Get webhook payload
+        payload = request.get_json()
+        
+        if not payload:
+            logger.warning("Empty webhook payload received")
+            return jsonify({'status': 'ignored'}), 200
+        
+        event_type = payload.get('type')
+        data = payload.get('data', {})
+        
+        if not event_type:
+            return jsonify({'status': 'ignored'}), 200
+        
+        logger.info(f"Resend webhook received: {event_type}")
+        
+        # Extract email address from recipient
+        to_email = None
+        if 'to' in data and isinstance(data['to'], list) and len(data['to']) > 0:
+            to_email = data['to'][0]
+        
+        # Find subscriber by email
+        subscriber = None
+        if to_email:
+            subscriber = DailyBriefSubscriber.query.filter_by(email=to_email).first()
+        
+        # Create event record
+        event = BriefEmailEvent(
+            subscriber_id=subscriber.id if subscriber else None,
+            resend_email_id=data.get('email_id'),
+            event_type=event_type,
+            click_url=data.get('click', {}).get('link') if event_type == 'email.clicked' else None,
+            bounce_type=data.get('bounce', {}).get('type') if event_type == 'email.bounced' else None,
+            user_agent=request.headers.get('User-Agent'),
+            ip_address=request.remote_addr
+        )
+        db.session.add(event)
+        
+        # Update subscriber analytics
+        if subscriber:
+            if event_type == 'email.opened':
+                subscriber.total_opens = (subscriber.total_opens or 0) + 1
+                subscriber.last_opened_at = datetime.utcnow()
+            elif event_type == 'email.clicked':
+                subscriber.total_clicks = (subscriber.total_clicks or 0) + 1
+                subscriber.last_clicked_at = datetime.utcnow()
+            elif event_type == 'email.bounced':
+                subscriber.status = 'bounced'
+                logger.warning(f"Subscriber {to_email} bounced, marking as bounced")
+            elif event_type == 'email.complained':
+                subscriber.status = 'unsubscribed'
+                subscriber.unsubscribed_at = datetime.utcnow()
+                logger.warning(f"Subscriber {to_email} complained, unsubscribing")
+        
+        db.session.commit()
+        
+        return jsonify({'status': 'processed'}), 200
+        
+    except Exception as e:
+        logger.error(f"Webhook processing error: {e}")
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@brief_bp.route('/brief/admin/analytics')
+def admin_analytics():
+    """View email analytics dashboard"""
+    from flask_login import current_user
+    
+    if not current_user.is_authenticated or not current_user.is_admin:
+        flash('Admin access required', 'error')
+        return redirect(url_for('brief.today'))
+    
+    # Get aggregate stats
+    total_subscribers = DailyBriefSubscriber.query.filter_by(status='active').count()
+    total_opens = db.session.query(db.func.sum(DailyBriefSubscriber.total_opens)).scalar() or 0
+    total_clicks = db.session.query(db.func.sum(DailyBriefSubscriber.total_clicks)).scalar() or 0
+    total_sent = db.session.query(db.func.sum(DailyBriefSubscriber.total_briefs_received)).scalar() or 0
+    
+    # Calculate rates
+    open_rate = (total_opens / total_sent * 100) if total_sent > 0 else 0
+    click_rate = (total_clicks / total_sent * 100) if total_sent > 0 else 0
+    
+    # Recent events
+    recent_events = BriefEmailEvent.query.order_by(
+        BriefEmailEvent.created_at.desc()
+    ).limit(50).all()
+    
+    # Events by type (last 7 days)
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    event_counts = db.session.query(
+        BriefEmailEvent.event_type,
+        db.func.count(BriefEmailEvent.id)
+    ).filter(
+        BriefEmailEvent.created_at >= week_ago
+    ).group_by(BriefEmailEvent.event_type).all()
+    
+    return render_template(
+        'brief/admin_analytics.html',
+        total_subscribers=total_subscribers,
+        total_sent=total_sent,
+        total_opens=total_opens,
+        total_clicks=total_clicks,
+        open_rate=round(open_rate, 1),
+        click_rate=round(click_rate, 1),
+        recent_events=recent_events,
+        event_counts=dict(event_counts)
+    )
