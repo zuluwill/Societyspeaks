@@ -1,371 +1,274 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="x-apple-disable-message-reformatting">
     <title>{{ brief.title }}</title>
-    <style>
-        /* Reset */
-        body, p, h1, h2, h3, ul, li { margin: 0; padding: 0; }
-
-        /* Base */
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            color: #2c3e50;
-            background-color: #f5f5f5;
-        }
-
-        /* Container */
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-        }
-
-        /* Header */
-        .header {
-            background-color: #1e40af;
-            color: #ffffff;
-            padding: 30px 20px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 20px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
-
-        .header .date {
-            font-size: 13px;
-            opacity: 0.9;
-        }
-
-        /* Intro */
-        .intro {
-            padding: 25px 20px;
-            background-color: #eff6ff;
-            border-left: 4px solid #3b82f6;
-            margin: 20px;
-        }
-
-        .intro p {
-            font-size: 14px;
-            font-style: italic;
-            color: #7f8c8d;
-            line-height: 1.5;
-        }
-
-        /* Content */
-        .content {
-            padding: 0 20px 20px;
-        }
-
-        /* Brief Item */
-        .brief-item {
-            margin: 30px 0;
-            padding: 25px;
-            background: #f9f9f9;
-            border-left: 4px solid #3498db;
-            border-radius: 2px;
-        }
-
-        .brief-item-header {
-            display: flex;
-            align-items: baseline;
-            margin-bottom: 12px;
-        }
-
-        .item-number {
-            font-size: 18px;
-            font-weight: 700;
-            color: #3498db;
-            margin-right: 8px;
-            flex-shrink: 0;
-        }
-
-        .item-headline {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-            line-height: 1.3;
-        }
-
-        /* Summary bullets */
-        .summary-bullets {
-            margin: 15px 0;
-            padding-left: 20px;
-        }
-
-        .summary-bullets li {
-            margin-bottom: 8px;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #34495e;
-        }
-
-        /* Metadata */
-        .item-metadata {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        /* Sensationalism badge */
-        .sensationalism-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            margin-right: 10px;
-        }
-
-        .badge-low {
-            background-color: #d4edda;
-            color: #155724;
-        }
-
-        .badge-medium {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-
-        .badge-high {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-
-        /* Coverage bar */
-        .coverage-info {
-            margin-top: 12px;
-        }
-
-        .coverage-label {
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-
-        .coverage-bar {
-            display: flex;
-            height: 8px;
-            background-color: #ecf0f1;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 5px;
-        }
-
-        .coverage-segment {
-            height: 100%;
-        }
-
-        .coverage-left {
-            background-color: #3498db;
-        }
-
-        .coverage-center {
-            background-color: #9b59b6;
-        }
-
-        .coverage-right {
-            background-color: #e74c3c;
-        }
-
-        .coverage-sources {
-            font-size: 11px;
-            color: #95a5a6;
-            line-height: 1.4;
-        }
-
-        /* CTA Button */
-        .cta-button {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background-color: #3498db;
-            color: #ffffff !important;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .cta-button:hover {
-            background-color: #2980b9;
-        }
-
-        /* Footer */
-        .footer {
-            margin-top: 40px;
-            padding: 30px 20px;
-            border-top: 2px solid #ecf0f1;
-            text-align: center;
-            background-color: #fafafa;
-        }
-
-        .footer-links {
-            margin-bottom: 15px;
-        }
-
-        .footer-links a {
-            color: #7f8c8d;
-            text-decoration: none;
-            font-size: 12px;
-            margin: 0 10px;
-        }
-
-        .footer-links a:hover {
-            text-decoration: underline;
-        }
-
-        .footer-tagline {
-            font-size: 12px;
-            color: #95a5a6;
-            font-style: italic;
-            margin-top: 10px;
-        }
-
-        /* Mobile responsive */
-        @media only screen and (max-width: 600px) {
-            .email-container {
-                width: 100% !important;
-            }
-
-            .header {
-                padding: 20px 15px;
-            }
-
-            .header h1 {
-                font-size: 18px;
-            }
-
-            .intro, .content {
-                padding: 15px;
-            }
-
-            .brief-item {
-                padding: 15px;
-                margin: 20px 0;
-            }
-
-            .item-headline {
-                font-size: 16px;
-            }
-
-            .summary-bullets li {
-                font-size: 13px;
-            }
+    <!--[if mso]>
+    <noscript>
+        <xml>
+            <o:OfficeDocumentSettings>
+                <o:AllowPNG/>
+                <o:PixelsPerInch>96</o:PixelsPerInch>
+            </o:OfficeDocumentSettings>
+        </xml>
+    </noscript>
+    <![endif]-->
+    <style type="text/css">
+        body, table, td, p, a, li { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+        img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+        body { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+        a[x-apple-data-detectors] { color: inherit !important; text-decoration: none !important; font-size: inherit !important; font-family: inherit !important; font-weight: inherit !important; line-height: inherit !important; }
+        @media only screen and (max-width: 620px) {
+            .wrapper { width: 100% !important; }
+            .container { width: 100% !important; padding: 0 !important; }
+            .mobile-padding { padding-left: 16px !important; padding-right: 16px !important; }
+            .mobile-header { padding: 24px 16px !important; }
+            .mobile-headline { font-size: 18px !important; }
         }
     </style>
 </head>
-<body>
-    <div class="email-container">
-        <!-- Header -->
-        <div class="header">
-            <h1>SOCIETY SPEAKS DAILY BRIEF</h1>
-            <div class="date">{{ brief.date.strftime('%A, %B %d, %Y') }}</div>
-        </div>
-
-        <!-- Intro -->
-        <div class="intro">
-            <p>{{ brief.intro_text }}</p>
-        </div>
-
-        <!-- Content -->
-        <div class="content">
-            {% for item in brief.items.order_by('position') %}
-            <div class="brief-item">
-                <!-- Headline -->
-                <div class="brief-item-header">
-                    <span class="item-number">{{ item.position }}.</span>
-                    <h2 class="item-headline">{{ item.headline }}</h2>
-                </div>
-
-                <!-- Summary bullets -->
-                <ul class="summary-bullets">
-                    {% for bullet in item.summary_bullets %}
-                    <li>{{ bullet }}</li>
-                    {% endfor %}
-                </ul>
-
-                <!-- Metadata -->
-                <div class="item-metadata">
-                    <!-- Sensationalism badge -->
-                    {% if item.sensationalism_label %}
-                    <span class="sensationalism-badge badge-{{ item.sensationalism_label }}">
-                        {{ item.sensationalism_label }} sensationalism
-                    </span>
-                    {% endif %}
-
-                    <!-- Coverage distribution -->
-                    {% if item.coverage_distribution and item.source_count > 0 %}
-                    <div class="coverage-info">
-                        <div class="coverage-label">Coverage: {{ item.source_count }} sources across perspectives</div>
-
-                        <div class="coverage-bar">
-                            {% if item.coverage_distribution.left > 0 %}
-                            <div class="coverage-segment coverage-left" style="width: {{ (item.coverage_distribution.left * 100)|round }}%"></div>
-                            {% endif %}
-                            {% if item.coverage_distribution.center > 0 %}
-                            <div class="coverage-segment coverage-center" style="width: {{ (item.coverage_distribution.center * 100)|round }}%"></div>
-                            {% endif %}
-                            {% if item.coverage_distribution.right > 0 %}
-                            <div class="coverage-segment coverage-right" style="width: {{ (item.coverage_distribution.right * 100)|round }}%"></div>
-                            {% endif %}
-                        </div>
-
-                        <div class="coverage-sources">
-                            {% if item.sources_by_leaning.left %}
-                            <strong>Left:</strong> {{ item.sources_by_leaning.left|join(', ') }}
-                            {% endif %}
-                            {% if item.sources_by_leaning.center %}
-                            {% if item.sources_by_leaning.left %} • {% endif %}
-                            <strong>Center:</strong> {{ item.sources_by_leaning.center|join(', ') }}
-                            {% endif %}
-                            {% if item.sources_by_leaning.right %}
-                            {% if item.sources_by_leaning.left or item.sources_by_leaning.center %} • {% endif %}
-                            <strong>Right:</strong> {{ item.sources_by_leaning.right|join(', ') }}
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-
-                <!-- CTA -->
-                {% if item.discussion_id %}
-                <a href="https://societyspeaks.com/discussion/{{ item.discussion_id }}?utm_source=brief&utm_medium=email" class="cta-button">
-                    {{ item.cta_text or "Join the discussion" }}
-                </a>
-                {% endif %}
-            </div>
-            {% endfor %}
-        </div>
-
-        <!-- Footer -->
-        <div class="footer">
-            <div class="footer-links">
-                <a href="https://societyspeaks.com/brief?utm_source=email">View Online</a> •
-                <a href="https://societyspeaks.com/brief/archive?utm_source=email">Archive</a> •
-                <a href="https://societyspeaks.com/brief/methodology?utm_source=email">Methodology</a> •
-                <a href="{{ unsubscribe_url }}">Unsubscribe</a>
-            </div>
-
-            <div class="footer-tagline">
-                Society Speaks – Sense-making, not sensationalism
-            </div>
-
-            <div style="margin-top: 15px; font-size: 11px; color: #bdc3c7;">
-                {% if subscriber.tier == 'trial' and subscriber.trial_ends_at %}
-                Trial ends {{ subscriber.trial_ends_at.strftime('%B %d') }} •
-                <a href="https://societyspeaks.com/brief/subscribe?utm_source=email" style="color: #3498db;">Subscribe</a>
-                {% endif %}
-            </div>
-        </div>
+<body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    
+    <!-- Preheader (hidden preview text) -->
+    <div style="display: none; max-height: 0; overflow: hidden; mso-hide: all;">
+        {{ brief.intro_text[:100] }}...
+        &#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;
     </div>
+
+    <!-- Wrapper -->
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f1f5f9;">
+        <tr>
+            <td align="center" style="padding: 20px 10px;">
+                
+                <!-- Container -->
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" class="container" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" class="mobile-header" style="background-color: #1e40af; padding: 36px 24px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 600; letter-spacing: 2px; color: #93c5fd; text-transform: uppercase; padding-bottom: 10px;">
+                                        Society Speaks
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="font-family: Georgia, 'Times New Roman', serif; font-size: 28px; font-weight: 700; color: #ffffff; line-height: 1.2; padding-bottom: 8px;">
+                                        The Daily Brief
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #bfdbfe;">
+                                        {{ brief.date.strftime('%A, %d %B %Y') }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Intro -->
+                    <tr>
+                        <td class="mobile-padding" style="background-color: #eff6ff; padding: 24px 28px; border-bottom: 1px solid #dbeafe;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #1e40af;">
+                                        {{ brief.intro_text }}
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Stories -->
+                    {% for item in brief.items|sort(attribute='position') %}
+                    <tr>
+                        <td class="mobile-padding" style="padding: 32px 28px; border-bottom: 1px solid #e2e8f0;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                
+                                <!-- Story Number -->
+                                <tr>
+                                    <td style="padding-bottom: 14px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td width="32" height="32" align="center" style="background-color: #1e40af; border-radius: 50%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 700; color: #ffffff;">
+                                                    {{ item.position }}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Headline -->
+                                <tr>
+                                    <td class="mobile-headline" style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #0f172a; line-height: 1.35; padding-bottom: 18px;">
+                                        {{ item.headline }}
+                                    </td>
+                                </tr>
+                                
+                                <!-- Summary Bullets -->
+                                <tr>
+                                    <td style="padding-bottom: 20px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                            {% for bullet in item.summary_bullets %}
+                                            <tr>
+                                                <td width="20" valign="top" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #1e40af; padding-top: 2px;">
+                                                    &bull;
+                                                </td>
+                                                <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #374151; padding-bottom: 10px;">
+                                                    {{ bullet }}
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Coverage Analysis Box -->
+                                {% if item.source_count and item.coverage_distribution %}
+                                <tr>
+                                    <td style="padding-top: 4px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f8fafc; border-radius: 8px;">
+                                            <tr>
+                                                <td style="padding: 18px;">
+                                                    
+                                                    <!-- Coverage Header -->
+                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #64748b; text-transform: uppercase;">
+                                                                Coverage Analysis
+                                                            </td>
+                                                            <td align="right" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #64748b;">
+                                                                {{ item.source_count }} sources
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                    
+                                                    <!-- Coverage Bar -->
+                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin: 12px 0;">
+                                                        <tr>
+                                                            {% set left_pct = (item.coverage_distribution.get('left', 0) * 100)|int %}
+                                                            {% set center_pct = (item.coverage_distribution.get('center', 0) * 100)|int %}
+                                                            {% set right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
+                                                            {% if left_pct > 0 %}
+                                                            <td width="{{ left_pct }}%" height="10" style="background-color: #3b82f6; {% if loop.first %}border-radius: 5px 0 0 5px;{% endif %}"></td>
+                                                            {% endif %}
+                                                            {% if center_pct > 0 %}
+                                                            <td width="{{ center_pct }}%" height="10" style="background-color: #a855f7;"></td>
+                                                            {% endif %}
+                                                            {% if right_pct > 0 %}
+                                                            <td width="{{ right_pct }}%" height="10" style="background-color: #ef4444; {% if loop.last %}border-radius: 0 5px 5px 0;{% endif %}"></td>
+                                                            {% endif %}
+                                                        </tr>
+                                                    </table>
+                                                    
+                                                    <!-- Source Labels -->
+                                                    {% if item.sources_by_leaning %}
+                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; line-height: 1.6; color: #64748b;">
+                                                                {% if item.sources_by_leaning.get('left') %}
+                                                                <span style="color: #2563eb;">Left: {{ item.sources_by_leaning.get('left', [])|join(', ') }}</span>
+                                                                {% if item.sources_by_leaning.get('center') or item.sources_by_leaning.get('right') %} &nbsp;|&nbsp; {% endif %}
+                                                                {% endif %}
+                                                                {% if item.sources_by_leaning.get('center') %}
+                                                                <span style="color: #7c3aed;">Centre: {{ item.sources_by_leaning.get('center', [])|join(', ') }}</span>
+                                                                {% if item.sources_by_leaning.get('right') %} &nbsp;|&nbsp; {% endif %}
+                                                                {% endif %}
+                                                                {% if item.sources_by_leaning.get('right') %}
+                                                                <span style="color: #dc2626;">Right: {{ item.sources_by_leaning.get('right', [])|join(', ') }}</span>
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                                    {% endif %}
+
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+                                <!-- CTA Button -->
+                                {% if item.discussion_id %}
+                                <tr>
+                                    <td style="padding-top: 20px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td align="center" style="background-color: #1e40af; border-radius: 6px;">
+                                                    <a href="https://societyspeaks.com/discussions/{{ item.discussion_id }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 28px;">
+                                                        Join the Discussion &rarr;
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+                            </table>
+                        </td>
+                    </tr>
+                    {% endfor %}
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #0f172a; padding: 36px 28px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                
+                                <!-- Brand -->
+                                <tr>
+                                    <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; color: #94a3b8; text-transform: uppercase; padding-bottom: 6px;">
+                                        Society Speaks
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #64748b; padding-bottom: 24px;">
+                                        Sense-making, not sensationalism
+                                    </td>
+                                </tr>
+                                
+                                <!-- Links -->
+                                <tr>
+                                    <td align="center" style="padding-bottom: 24px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td style="padding: 0 12px;">
+                                                    <a href="https://societyspeaks.com/brief/archive" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #94a3b8; text-decoration: none;">Archive</a>
+                                                </td>
+                                                <td style="padding: 0 12px;">
+                                                    <a href="https://societyspeaks.com/brief/methodology" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #94a3b8; text-decoration: none;">How We Work</a>
+                                                </td>
+                                                <td style="padding: 0 12px;">
+                                                    <a href="https://societyspeaks.com/brief/account" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #94a3b8; text-decoration: none;">Preferences</a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Unsubscribe -->
+                                <tr>
+                                    <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #475569;">
+                                        <a href="{{ unsubscribe_url }}" target="_blank" style="color: #64748b; text-decoration: underline;">Unsubscribe</a>
+                                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                                        <a href="https://societyspeaks.com/brief/account" target="_blank" style="color: #64748b; text-decoration: underline;">Manage preferences</a>
+                                    </td>
+                                </tr>
+
+                            </table>
+                        </td>
+                    </tr>
+
+                </table>
+                
+            </td>
+        </tr>
+    </table>
+    
 </body>
 </html>
