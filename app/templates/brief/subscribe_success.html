@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block title %}Subscription Confirmed - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-6">
+            <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </div>
+        
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">You're Subscribed!</h1>
+        <p class="text-gray-600 mb-8">Welcome to the Daily Brief. You'll receive your first email at your preferred time.</p>
+        
+        <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h3 class="font-semibold text-gray-900 mb-3">What happens next?</h3>
+            <ul class="space-y-3 text-left text-sm text-gray-600">
+                <li class="flex items-start">
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold mr-3">1</span>
+                    <span>Check your inbox for a welcome email with your magic link</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold mr-3">2</span>
+                    <span>Use the magic link to access your personalized brief anytime</span>
+                </li>
+                <li class="flex items-start">
+                    <span class="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold mr-3">3</span>
+                    <span>Receive daily briefs at your preferred time</span>
+                </li>
+            </ul>
+        </div>
+        
+        <a href="{{ url_for('brief.today') }}" class="inline-flex items-center px-6 py-3 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition">
+            View Today's Brief
+            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+            </svg>
+        </a>
+    </div>
+</div>
+{% endblock %}

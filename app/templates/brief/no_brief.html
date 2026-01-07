@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+
+{% block title %}No Brief Available - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-6">
+            <svg class="w-8 h-8 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        
+        <h1 class="text-2xl font-bold text-gray-900 mb-4">Brief Not Available Yet</h1>
+        
+        {% if requested_date %}
+        <p class="text-gray-600 mb-8">No brief is available for {{ requested_date.strftime('%B %d, %Y') }}.</p>
+        {% else %}
+        <p class="text-gray-600 mb-8">Today's brief is being prepared. It will be published around 6pm UTC.</p>
+        {% endif %}
+        
+        <div class="space-y-4">
+            <a href="{{ url_for('brief.archive') }}" class="block w-full py-3 px-4 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition-colors">
+                Browse Past Briefs
+            </a>
+            <a href="{{ url_for('brief.subscribe') }}" class="block w-full py-3 px-4 border-2 border-amber-600 text-amber-600 font-semibold rounded-lg hover:bg-amber-50 transition-colors">
+                Subscribe to Get Notified
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

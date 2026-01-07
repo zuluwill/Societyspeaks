@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block title %}Underreported Stories - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-8 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-3xl mx-auto">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center px-4 py-2 bg-orange-100 text-orange-800 rounded-full text-sm font-medium mb-4">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Media Blindspot Detector
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Underreported Stories</h1>
+            <p class="text-gray-600">High civic importance, low media coverage</p>
+        </div>
+
+        {% if stories %}
+        <div class="space-y-6">
+            {% for story in stories %}
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0 w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="font-bold text-gray-900 mb-2">{{ story.title }}</h2>
+                        <p class="text-gray-600 text-sm mb-3">{{ story.description[:200] }}...</p>
+                        <div class="flex items-center gap-4 text-sm">
+                            <span class="inline-flex items-center text-orange-600">
+                                <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
+                                </svg>
+                                Civic Score: {{ (story.civic_score * 100)|int }}%
+                            </span>
+                            <span class="text-gray-500">
+                                {{ story.source_count }} source{% if story.source_count != 1 %}s{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl shadow-md p-8 text-center">
+            <p class="text-gray-600">No underreported stories detected in the past week.</p>
+            <p class="text-gray-500 text-sm mt-2">This is actually good news - it means important stories are getting coverage.</p>
+        </div>
+        {% endif %}
+
+        <div class="mt-8 text-center">
+            <a href="{{ url_for('brief.today') }}" class="inline-flex items-center text-amber-600 hover:text-amber-700 font-medium">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Today's Brief
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

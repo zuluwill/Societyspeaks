@@ -13,7 +13,7 @@ import pytz
 from datetime import datetime
 from typing import List, Optional
 from flask import render_template, current_app
-from app.models import DailyBrief, DailyBriefSubscriber, db
+from app.models import DailyBrief, DailyBriefSubscriber, BriefItem, db
 from app.email_utils import RateLimiter
 
 logger = logging.getLogger(__name__)
@@ -187,7 +187,7 @@ class ResendClient:
             str: Simple HTML email
         """
         items_html = ""
-        for item in brief.items.order_by('position'):
+        for item in brief.items.order_by(BriefItem.position):
             bullets_html = "".join([f"<li>{bullet}</li>" for bullet in item.summary_bullets])
             items_html += f"""
             <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-left: 4px solid #333;">
