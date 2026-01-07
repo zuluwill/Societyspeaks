@@ -56,6 +56,15 @@ class BriefGenerator:
         if not selected_topics:
             raise ValueError("Cannot generate brief with no topics")
 
+        valid_topics = [t for t in selected_topics if t.id is not None]
+        if len(valid_topics) < len(selected_topics):
+            logger.warning(f"Filtered out {len(selected_topics) - len(valid_topics)} topics without database IDs")
+        
+        if not valid_topics:
+            raise ValueError("No valid topics with database IDs")
+        
+        selected_topics = valid_topics
+
         logger.info(f"Generating brief for {brief_date} with {len(selected_topics)} topics")
 
         # Check if brief already exists
@@ -164,6 +173,11 @@ class BriefGenerator:
         Returns:
             BriefItem instance (not yet saved)
         """
+        if topic.id is None:
+            raise ValueError(f"Topic has no ID (not persisted to database): '{topic.title}'")
+        if brief.id is None:
+            raise ValueError(f"Brief has no ID (not persisted to database)")
+        
         # Get articles for this topic
         article_links = topic.articles.all() if hasattr(topic, 'articles') else []
         articles = [link.article for link in article_links if link.article]
