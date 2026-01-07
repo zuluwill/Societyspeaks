@@ -27,11 +27,7 @@ logger = logging.getLogger(__name__)
 def today():
     """Show today's brief"""
     brief = DailyBrief.get_today()
-
-    if not brief:
-        flash("Today's brief is being prepared. Check back soon!", 'info')
-        return render_template('brief/no_brief.html')
-
+    
     # Check if user is subscriber (active status required) or admin
     subscriber = None
     is_subscriber = False
@@ -43,6 +39,22 @@ def today():
     # Admins can see full brief content
     if current_user.is_authenticated and current_user.is_admin:
         is_subscriber = True
+
+    # Non-subscribers see the landing page with optional brief preview
+    if not is_subscriber:
+        items = []
+        if brief:
+            items = brief.items.order_by(BriefItem.position).all()
+        return render_template(
+            'brief/landing.html',
+            brief=brief,
+            items=items
+        )
+
+    # No brief available for subscribers
+    if not brief:
+        flash("Today's brief is being prepared. Check back soon!", 'info')
+        return render_template('brief/no_brief.html')
 
     # Get items ordered by position
     items = brief.items.order_by(BriefItem.position).all()
@@ -68,11 +80,7 @@ def view_date(date_str):
         return redirect(url_for('brief.today'))
 
     brief = DailyBrief.get_by_date(brief_date)
-
-    if not brief:
-        flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
-        return render_template('brief/no_brief.html', requested_date=brief_date)
-
+    
     # Check if user is subscriber (active status required) or admin
     subscriber = None
     is_subscriber = False
@@ -84,6 +92,14 @@ def view_date(date_str):
     # Admins can see full brief content
     if current_user.is_authenticated and current_user.is_admin:
         is_subscriber = True
+
+    # Non-subscribers see the landing page (redirect to today for best experience)
+    if not is_subscriber:
+        return redirect(url_for('brief.today'))
+
+    if not brief:
+        flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
+        return render_template('brief/no_brief.html', requested_date=brief_date)
 
     items = brief.items.order_by(BriefItem.position).all()
 
