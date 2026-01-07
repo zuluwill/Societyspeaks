@@ -62,12 +62,19 @@ class ResendClient:
             # Render email HTML
             html_content = self._render_email(subscriber, brief)
 
-            # Prepare email data
+            # Build unsubscribe URL
+            unsubscribe_url = f"https://societyspeaks.com/brief/unsubscribe/{subscriber.magic_token}"
+
+            # Prepare email data with List-Unsubscribe headers for compliance
             email_data = {
                 'from': self.from_email,
                 'to': [subscriber.email],
                 'subject': brief.title,
-                'html': html_content
+                'html': html_content,
+                'headers': {
+                    'List-Unsubscribe': f'<{unsubscribe_url}>',
+                    'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+                }
             }
 
             # Send with rate limiting
