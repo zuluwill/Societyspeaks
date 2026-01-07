@@ -296,9 +296,18 @@ Respond with ONLY JSON:
                     system="You are a media analyst explaining coverage patterns. Be neutral and specific. Respond only in valid JSON.",
                     messages=[{"role": "user", "content": prompt}]
                 )
-                content = message.content[0].text
+                content = None
+                for block in message.content:
+                    if hasattr(block, 'text') and block.text:
+                        content = block.text
+                        break
+                if not content:
+                    logger.warning("Anthropic response had no text content blocks")
+                    return None
 
             # Extract JSON
+            if not content:
+                return None
             data = extract_json(content)
             hypothesis = data.get('hypothesis', '')
 
