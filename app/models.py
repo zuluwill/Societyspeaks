@@ -1241,6 +1241,12 @@ class DailyBriefSubscriber(db.Model):
     last_sent_at = db.Column(db.DateTime)
     total_briefs_received = db.Column(db.Integer, default=0)
 
+    # Email analytics
+    total_opens = db.Column(db.Integer, default=0)
+    total_clicks = db.Column(db.Integer, default=0)
+    last_opened_at = db.Column(db.DateTime)
+    last_clicked_at = db.Column(db.DateTime)
+
     # Relationships
     user = db.relationship('User', backref='brief_subscription')
     team = db.relationship('BriefTeam', backref='members')
@@ -1388,6 +1394,43 @@ class BriefTeam(db.Model):
 
     def __repr__(self):
         return f'<BriefTeam {self.name} ({self.current_seat_count}/{self.seat_limit} seats)>'
+
+
+class BriefEmailEvent(db.Model):
+    """
+    Tracks email events (opens, clicks, bounces) from Resend webhooks.
+    Used for analytics and deliverability monitoring.
+    """
+    __tablename__ = 'brief_email_event'
+    __table_args__ = (
+        db.Index('idx_bee_subscriber', 'subscriber_id'),
+        db.Index('idx_bee_brief', 'brief_id'),
+        db.Index('idx_bee_type', 'event_type'),
+        db.Index('idx_bee_created', 'created_at'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    subscriber_id = db.Column(db.Integer, db.ForeignKey('daily_brief_subscriber.id'), nullable=True)
+    brief_id = db.Column(db.Integer, db.ForeignKey('daily_brief.id'), nullable=True)
+
+    # Resend event data
+    resend_email_id = db.Column(db.String(255))  # Resend's email ID for tracking
+    event_type = db.Column(db.String(50), nullable=False)  # email.sent, email.delivered, email.opened, email.clicked, email.bounced, email.complained
+    
+    # Additional data
+    click_url = db.Column(db.String(500))  # For click events, which link was clicked
+    bounce_type = db.Column(db.String(50))  # hard, soft
+    user_agent = db.Column(db.String(500))
+    ip_address = db.Column(db.String(45))
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    subscriber = db.relationship('DailyBriefSubscriber', backref='email_events')
+    brief = db.relationship('DailyBrief', backref='email_events')
+
+    def __repr__(self):
+        return f'<BriefEmailEvent {self.event_type} for subscriber {self.subscriber_id}>'
 
 
 class DailyQuestion(db.Model):
