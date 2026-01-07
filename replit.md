@@ -77,8 +77,17 @@ PostgreSQL is the primary database, configured with connection pooling and healt
 ### Scheduler Jobs
 - `trending_topics_pipeline`: cron[7,12,18,22] - fetches news from RSS feeds
 - `daily_auto_publish`: cron[8] - publishes up to 5 diverse topics once daily
+- `backfill_orphan_articles`: cron[9,15,21] - matches unlinked articles to existing topics
 - `cleanup_old_analyses`: cron[3] - removes old data
 - `auto_cluster_discussions`: interval[6h] - clustering for active discussions
+
+### Topic Clustering Improvements (January 2026)
+- **Minimum 2-article requirement**: Topics now require at least 2 articles to be created (was 1)
+- **Orphan article backfill**: Single articles that don't cluster are now matched to existing topics using 0.75 similarity threshold
+- **`_backfill_single_article()`**: Matches individual articles to existing topics via embedding similarity
+- **`backfill_orphan_articles()`**: Scheduled job enriches topics with unclustered articles (runs 3x daily)
+- **Duplicate detection threshold**: Lowered from 0.85 to 0.78 for more aggressive topic merging
+- **Problem solved**: Previously 95% of topics had only 1 article, preventing meaningful multi-source coverage analysis
 
 ### Daily Civic Question Feature
 - **Purpose**: Wordle-like daily participation ritual for quick civic engagement

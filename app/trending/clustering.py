@@ -107,7 +107,7 @@ def find_duplicate_topic(topic_embedding: List[float], days: int = 30) -> Option
                 np.linalg.norm(new_embedding) * np.linalg.norm(existing_embedding)
             )
             
-            if similarity >= 0.85:
+            if similarity >= 0.78:  # Lowered from 0.85 to catch more related articles
                 return topic
     
     return None
