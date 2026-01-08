@@ -2,7 +2,15 @@
 
 ## Overview
 
-Society Speaks is an open-source public discussion platform designed to foster meaningful dialogue using Pol.is technology. It enables users to create and participate in structured discussions on critical social, political, and community topics. Built with Flask and PostgreSQL, the platform aims to facilitate nuanced debate, build consensus, and potentially inform policy. Key capabilities include user profiles, discussion management, geographic filtering, and analytics, with a recent focus on automatically surfacing trending news for nuanced public debate through a "News-to-Deliberation Compiler."
+Society Speaks is a public discussion platform designed to foster meaningful dialogue using Pol.is technology. Licensed under AGPL-3.0, it enables users to create and participate in structured discussions on critical social, political, and community topics. Built with Flask and PostgreSQL, the platform aims to facilitate nuanced debate, build consensus, and potentially inform policy. Key capabilities include user profiles, discussion management, geographic filtering, and analytics, with a recent focus on automatically surfacing trending news for nuanced public debate through a "News-to-Deliberation Compiler."
+
+## License
+
+This project is licensed under **GNU Affero General Public License v3.0 (AGPL-3.0)**. This license:
+- Requires attribution and copyright notices
+- Forces derivatives to also be open source under AGPL-3.0
+- Requires source code disclosure for network/SaaS deployments
+- Aligns with Pol.is (which uses the same license)
 
 ## User Preferences
 
