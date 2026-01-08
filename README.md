@@ -349,13 +349,14 @@ For support, please open an issue or contact the maintainers.
 - [Flask](https://flask.palletsprojects.com) - Web framework
 - [APScheduler](https://apscheduler.readthedocs.io) - Background job scheduling
 - [Replit](https://replit.com) - Hosting and development environment
+- [AllSides](https://www.allsides.com) - Media bias ratings reference
 
 ## License
 
 GNU AFFERO GENERAL PUBLIC LICENSE
 Version 3, 19 November 2007
 
-Copyright (C) 2024 William Roberts
+Copyright (C) 2024-2026 William Roberts
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
