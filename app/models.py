@@ -179,6 +179,8 @@ class DiscussionParticipant(db.Model):
                 participant_identifier=participant_identifier
             )
             db.session.add(participant)
+            # Flush to get the ID even if not committing (needed for increment_response_count)
+            db.session.flush()
         else:
             # Update last activity
             existing.last_activity = datetime.utcnow()
