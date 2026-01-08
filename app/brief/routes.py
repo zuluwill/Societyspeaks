@@ -562,6 +562,11 @@ def resend_webhook():
                 logger.warning("Missing webhook signature headers")
                 return jsonify({'error': 'Missing signature headers'}), 401
             
+            # Guard against empty string headers
+            if not svix_signature.strip():
+                logger.warning("Empty webhook signature header")
+                return jsonify({'error': 'Empty signature header'}), 401
+            
             # Verify signature using HMAC-SHA256
             payload_bytes = request.get_data()
             signed_content = f"{svix_id}.{svix_timestamp}.{payload_bytes.decode('utf-8')}"
@@ -612,8 +617,8 @@ def resend_webhook():
         # Use unified EmailAnalytics service (DRY)
         event = EmailAnalytics.record_from_webhook(payload)
         
-        if event:
-            # Also update subscriber-specific analytics for brief subscribers
+        # Update subscriber metrics in a separate transaction for isolation
+        try:
             data = payload.get('data', {})
             to_list = data.get('to', [])
             to_email = to_list[0] if to_list else None
@@ -629,6 +634,9 @@ def resend_webhook():
                         subscriber.total_clicks = (subscriber.total_clicks or 0) + 1
                         subscriber.last_clicked_at = datetime.utcnow()
                     db.session.commit()
+        except Exception as sub_error:
+            logger.warning(f"Failed to update subscriber metrics (non-fatal): {sub_error}")
+            db.session.rollback()
         
         return jsonify({'status': 'processed'}), 200
         
@@ -658,8 +666,8 @@ def admin_analytics():
     # Get unified stats using DRY service
     dashboard_stats = EmailAnalytics.get_dashboard_stats(days=days)
     
-    # Get recent events (optionally filtered)
-    recent_events = EmailAnalytics.get_recent_events(category=category_filter, limit=50)
+    # Get recent events (optionally filtered - pass None explicitly if no filter)
+    recent_events = EmailAnalytics.get_recent_events(category=category_filter if category_filter else None, limit=50)
     
     # Get stats for selected category or overall
     if category_filter:

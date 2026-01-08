@@ -24,7 +24,7 @@ Usage:
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 from flask import current_app
 from app import db
 from app.models import (
@@ -57,16 +57,16 @@ class EmailAnalytics:
     EVENT_COMPLAINED = 'complained'
 
     @classmethod
-    def record_send(cls, email: str, category: str, resend_id: str = None,
-                    subject: str = None, user_id: int = None,
-                    brief_subscriber_id: int = None, question_subscriber_id: int = None,
-                    brief_id: int = None, daily_question_id: int = None) -> EmailEvent:
+    def record_send(cls, email: str, category: str, resend_id: Optional[str] = None,
+                    subject: Optional[str] = None, user_id: Optional[int] = None,
+                    brief_subscriber_id: Optional[int] = None, question_subscriber_id: Optional[int] = None,
+                    brief_id: Optional[int] = None, daily_question_id: Optional[int] = None) -> Optional[EmailEvent]:
         """
         Record that an email was sent.
         Call this after successfully sending via Resend.
         
         Returns:
-            EmailEvent: The created event record
+            EmailEvent: The created event record, or None if failed
         """
         try:
             event = EmailEvent.record_event(
@@ -81,6 +81,9 @@ class EmailAnalytics:
                 brief_id=brief_id,
                 daily_question_id=daily_question_id
             )
+            if event is None:
+                logger.warning(f"EmailEvent.record_event returned None for {email}")
+                return None
             db.session.commit()
             logger.debug(f"Recorded send event for {email} ({category})")
             return event
@@ -124,9 +127,9 @@ class EmailAnalytics:
             category, context = cls._identify_email_context(recipient_email, data)
             
             # Extract additional data based on event type
-            click_url = None
-            bounce_type = None
-            complaint_type = None
+            click_url: Optional[str] = None
+            bounce_type: Optional[str] = None
+            complaint_type: Optional[str] = None
             
             if normalized_type == cls.EVENT_CLICKED:
                 click_data = data.get('click', {})
@@ -153,6 +156,10 @@ class EmailAnalytics:
                 bounce_type=bounce_type,
                 complaint_type=complaint_type
             )
+            
+            if event is None:
+                logger.warning(f"Failed to create event for webhook: {normalized_type}")
+                return None
             
             # Handle status updates for bounces/complaints
             if normalized_type in [cls.EVENT_BOUNCED, cls.EVENT_COMPLAINED]:
@@ -211,7 +218,7 @@ class EmailAnalytics:
         return category, context
 
     @classmethod
-    def _handle_deliverability_issue(cls, email: str, event_type: str, bounce_type: str = None):
+    def _handle_deliverability_issue(cls, email: str, event_type: str, bounce_type: Optional[str] = None):
         """
         Handle bounces and complaints by updating subscriber status.
         DRY: Centralized deliverability handling.
@@ -276,7 +283,7 @@ class EmailAnalytics:
         }
 
     @classmethod
-    def get_recent_events(cls, category: str = None, limit: int = 50) -> List[EmailEvent]:
+    def get_recent_events(cls, category: Optional[str] = None, limit: int = 50) -> List[EmailEvent]:
         """
         Get recent email events for display.
         
@@ -329,8 +336,8 @@ class EmailAnalytics:
 
 
 # Convenience functions for common operations
-def record_email_sent(email: str, category: str, resend_id: str = None, 
-                      subject: str = None, **kwargs) -> Optional[EmailEvent]:
+def record_email_sent(email: str, category: str, resend_id: Optional[str] = None, 
+                      subject: Optional[str] = None, **kwargs) -> Optional[EmailEvent]:
     """Convenience function to record a sent email."""
     return EmailAnalytics.record_send(email, category, resend_id, subject, **kwargs)
 
