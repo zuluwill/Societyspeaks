@@ -3,7 +3,7 @@ from flask_login import current_user, login_user
 from datetime import date, datetime
 from app.daily import daily_bp
 from app import db, limiter
-from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, User, Discussion
+from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant
 import hashlib
 import re
 import secrets
@@ -597,6 +597,15 @@ def vote():
                             content=reason
                         )
                         db.session.add(statement_response)
+                        
+                        # Update participant response_count for accurate analytics
+                        participant = DiscussionParticipant.track_participant(
+                            discussion_id=question.source_discussion_id,
+                            user_id=current_user.id
+                        )
+                        participant.response_count = (participant.response_count or 0) + 1
+                        participant.last_activity = datetime.utcnow()
+                        
                         current_app.logger.info(
                             f"Daily question reason synced as response to statement {question.source_statement_id}"
                         )
