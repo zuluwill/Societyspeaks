@@ -238,7 +238,12 @@ def score_articles_with_llm(articles: List[NewsArticle], batch_size: int = 25) -
     Score articles using LLM for sensationalism.
     Pre-filters to reduce LLM costs - only quality candidates get scored.
     Processes in batches to avoid token limits.
+    
+    Uses ordered per-article updates to avoid deadlocks when multiple
+    processes are scoring articles concurrently.
     """
+    from app import db
+    
     to_score, skipped = pre_filter_articles(articles)
     
     logger.info(f"Pre-filter: {len(to_score)} to score, {len(skipped)} skipped")
@@ -261,8 +266,26 @@ def score_articles_with_llm(articles: List[NewsArticle], batch_size: int = 25) -
             elif provider == 'anthropic':
                 _score_with_anthropic(batch, api_key)
             logger.info(f"Scored batch {i // batch_size + 1} ({len(batch)} articles)")
+            
+            # Commit per-batch in order by ID to avoid deadlocks
+            # Sort batch by ID to ensure consistent ordering across processes
+            sorted_batch = sorted(batch, key=lambda a: a.id)
+            for article in sorted_batch:
+                try:
+                    db.session.add(article)
+                    db.session.flush()
+                except Exception as flush_err:
+                    logger.warning(f"Flush failed for article {article.id}: {flush_err}")
+            
+            try:
+                db.session.commit()
+            except Exception as commit_err:
+                logger.error(f"Batch commit failed: {commit_err}")
+                db.session.rollback()
+                
         except Exception as e:
             logger.error(f"LLM scoring failed for batch: {e}")
+            db.session.rollback()
             for article in batch:
                 article.sensationalism_score = score_sensationalism(article.title)
     

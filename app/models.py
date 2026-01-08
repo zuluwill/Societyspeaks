@@ -7,6 +7,7 @@ from unidecode import unidecode
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import validates
+from typing import Optional
 
 import re
 
@@ -1522,16 +1523,32 @@ class EmailEvent(db.Model):
 
     @classmethod
     def record_event(cls, recipient_email: str, event_type: str, email_category: str,
-                     resend_email_id: str = None, email_subject: str = None,
-                     user_id: int = None, brief_subscriber_id: int = None,
-                     question_subscriber_id: int = None, brief_id: int = None,
-                     daily_question_id: int = None, click_url: str = None,
-                     bounce_type: str = None, complaint_type: str = None,
-                     user_agent: str = None, ip_address: str = None):
+                     resend_email_id: Optional[str] = None, email_subject: Optional[str] = None,
+                     user_id: Optional[int] = None, brief_subscriber_id: Optional[int] = None,
+                     question_subscriber_id: Optional[int] = None, brief_id: Optional[int] = None,
+                     daily_question_id: Optional[int] = None, click_url: Optional[str] = None,
+                     bounce_type: Optional[str] = None, complaint_type: Optional[str] = None,
+                     user_agent: Optional[str] = None, ip_address: Optional[str] = None):
         """
         Factory method to record an email event.
         DRY: Single point of entry for all event recording.
+        
+        Args:
+            recipient_email: Required - email address of recipient
+            event_type: Required - type of event (sent, delivered, opened, etc.)
+            email_category: Required - category (auth, daily_brief, etc.)
+            
+        Returns:
+            EmailEvent instance or None if validation fails
         """
+        if not recipient_email or not event_type or not email_category:
+            import logging
+            logging.getLogger(__name__).error(
+                f"EmailEvent.record_event missing required fields: "
+                f"email={recipient_email}, type={event_type}, category={email_category}"
+            )
+            return None
+        
         # Normalize event_type (remove 'email.' prefix if present)
         if event_type.startswith('email.'):
             event_type = event_type[6:]
@@ -1557,10 +1574,11 @@ class EmailEvent(db.Model):
         return event
 
     @classmethod
-    def get_stats(cls, email_category: str = None, days: int = 7) -> dict:
+    def get_stats(cls, email_category: Optional[str] = None, days: int = 7) -> dict:
         """
         Get aggregated statistics for emails.
         DRY: Reusable stats method for any category.
+        email_category can be None to get stats for all categories.
         """
         from sqlalchemy import func
         
@@ -1603,7 +1621,7 @@ class EmailEvent(db.Model):
         }
 
     @classmethod
-    def get_recent_events(cls, email_category: str = None, limit: int = 50):
+    def get_recent_events(cls, email_category: Optional[str] = None, limit: int = 50):
         """Get recent events, optionally filtered by category."""
         query = cls.query.order_by(cls.created_at.desc())
         if email_category:
