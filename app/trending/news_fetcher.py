@@ -385,6 +385,14 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8
         },
+        {
+            'name': 'Stratechery',
+            'feed_url': 'https://stratechery.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0  # Center - tech/business analysis
+        },
     ]
     
     try:

@@ -74,6 +74,11 @@ ALLSIDES_RATINGS = {
         'source': 'manual',
         'notes': 'Technology news, generally apolitical'
     },
+    'Stratechery': {
+        'leaning': 0,  # Center
+        'source': 'manual',
+        'notes': 'Ben Thompson tech/business strategy analysis, apolitical'
+    },
     'Axios': {
         'leaning': 0,  # Center
         'source': 'allsides',
