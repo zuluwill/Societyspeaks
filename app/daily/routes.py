@@ -455,8 +455,12 @@ def vote():
     When the daily question is linked to a discussion statement, the vote is
     also recorded as a StatementVote in that discussion. This allows daily
     question participation to contribute to the discussion's consensus analysis.
+    
+    If a reason is provided and the user is authenticated, the reason is also
+    synced as a Response on the linked statement, making it visible in the
+    discussion's response thread.
     """
-    from app.models import StatementVote, Statement
+    from app.models import StatementVote, Statement, Response
     
     user_agent = request.headers.get('User-Agent', '').lower()
     bot_indicators = ['bot', 'crawler', 'spider', 'preview', 'fetch', 'slurp', 'mediapartners']
@@ -562,6 +566,25 @@ def vote():
                     current_app.logger.info(
                         f"Daily question vote synced to discussion {question.source_discussion_id}, "
                         f"statement {question.source_statement_id}"
+                    )
+                
+                # If user provided a reason and is authenticated, sync as a Response
+                # This makes the reason visible in the discussion's response thread
+                if reason and current_user.is_authenticated:
+                    # Map vote to position: agree=pro, disagree=con, unsure=neutral
+                    position_map = {1: 'pro', -1: 'con', 0: 'neutral'}
+                    position = position_map.get(new_vote, 'neutral')
+                    
+                    # Create a Response for the linked statement
+                    statement_response = Response(
+                        statement_id=question.source_statement_id,
+                        user_id=current_user.id,
+                        position=position,
+                        content=reason
+                    )
+                    db.session.add(statement_response)
+                    current_app.logger.info(
+                        f"Daily question reason synced as response to statement {question.source_statement_id}"
                     )
         
         subscriber_id = session.get('daily_subscriber_id')
