@@ -40,7 +40,7 @@ PostgreSQL serves as the primary database, configured for connection pooling and
 - **OpenAI/Anthropic APIs**: For LLM-based scoring, embeddings, and content generation within the "News-to-Deliberation Compiler."
 
 ### Social Media Integration
-- **Bluesky (AT Protocol)**: Automatic posting of news discussions.
+- **Bluesky (AT Protocol)**: Automatic posting of news discussions with staggered scheduling (2pm, 4pm, 6pm, 8pm, 10pm UTC = 9am, 11am, 1pm, 3pm, 5pm EST) to maximize US audience engagement across different timezones.
 - **X/Twitter**: One-click share links.
 
 ### Development & Security Tools

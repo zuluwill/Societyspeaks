@@ -2,18 +2,23 @@
 Social Media Poster Service
 
 Posts news discussions to social media platforms:
-- Bluesky: Automatic posting via AT Protocol
+- Bluesky: Automatic posting via AT Protocol (with staggered scheduling)
 - X/Twitter: Generate share links (API requires paid plan)
 """
 
 import os
 import logging
+from datetime import datetime, timedelta
 from typing import Optional, List
 from urllib.parse import quote
 
 from flask import url_for
 
 logger = logging.getLogger(__name__)
+
+# Staggered posting times (in UTC hours) targeting US audience
+# These are: 2pm, 4pm, 6pm, 8pm, 10pm UTC = 9am, 11am, 1pm, 3pm, 5pm EST
+BLUESKY_POST_HOURS_UTC = [14, 16, 18, 20, 22]
 
 BLUESKY_HANDLE = "societyspeaks.bsky.social"
 
@@ -181,7 +186,8 @@ def generate_x_share_url(
 
 def share_discussion_to_social(
     discussion,
-    base_url: str = None
+    base_url: str = None,
+    skip_bluesky: bool = False
 ) -> dict:
     """
     Share a discussion to all configured social platforms.
@@ -189,6 +195,7 @@ def share_discussion_to_social(
     Args:
         discussion: Discussion model instance
         base_url: Base URL of the site (e.g., https://societyspeaks.io)
+        skip_bluesky: If True, skip immediate Bluesky posting (for scheduled posts)
     
     Returns:
         Dict with results for each platform
@@ -204,12 +211,13 @@ def share_discussion_to_social(
         'x_share_url': None,
     }
     
-    bluesky_uri = post_to_bluesky(
-        title=discussion.title,
-        topic=discussion.topic or 'Society',
-        discussion_url=discussion_url
-    )
-    results['bluesky'] = bluesky_uri
+    if not skip_bluesky:
+        bluesky_uri = post_to_bluesky(
+            title=discussion.title,
+            topic=discussion.topic or 'Society',
+            discussion_url=discussion_url
+        )
+        results['bluesky'] = bluesky_uri
     
     x_url = generate_x_share_url(
         title=discussion.title,
@@ -219,3 +227,92 @@ def share_discussion_to_social(
     results['x_share_url'] = x_url
     
     return results
+
+
+def schedule_bluesky_post(discussion, slot_index: int = 0) -> Optional[datetime]:
+    """
+    Schedule a discussion for staggered Bluesky posting.
+    
+    Args:
+        discussion: Discussion model instance
+        slot_index: Which time slot to use (0-4 for the 5 daily slots)
+    
+    Returns:
+        The scheduled datetime, or None if scheduling failed
+    """
+    from app import db
+    
+    now = datetime.utcnow()
+    
+    # Get the hour for this slot
+    slot_index = slot_index % len(BLUESKY_POST_HOURS_UTC)
+    target_hour = BLUESKY_POST_HOURS_UTC[slot_index]
+    
+    # Calculate the scheduled time
+    scheduled_time = now.replace(hour=target_hour, minute=0, second=0, microsecond=0)
+    
+    # If the time has already passed today, schedule for tomorrow
+    if scheduled_time <= now:
+        scheduled_time += timedelta(days=1)
+    
+    discussion.bluesky_scheduled_at = scheduled_time
+    db.session.commit()
+    
+    logger.info(f"Scheduled discussion {discussion.id} for Bluesky at {scheduled_time} UTC")
+    return scheduled_time
+
+
+def process_scheduled_bluesky_posts() -> int:
+    """
+    Process any discussions that are due to be posted to Bluesky.
+    Called by the scheduler every 15 minutes.
+    
+    Returns:
+        Number of posts sent
+    """
+    from app import db
+    from app.models import Discussion
+    
+    now = datetime.utcnow()
+    
+    # Find discussions that are scheduled and due (scheduled time has passed, not yet posted)
+    due_posts = Discussion.query.filter(
+        Discussion.bluesky_scheduled_at.isnot(None),
+        Discussion.bluesky_scheduled_at <= now,
+        Discussion.bluesky_posted_at.is_(None)
+    ).all()
+    
+    if not due_posts:
+        logger.debug("No scheduled Bluesky posts due")
+        return 0
+    
+    logger.info(f"Processing {len(due_posts)} scheduled Bluesky posts")
+    
+    base_url = os.environ.get('SITE_URL', 'https://societyspeaks.io')
+    posted_count = 0
+    
+    for discussion in due_posts:
+        try:
+            discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
+            
+            uri = post_to_bluesky(
+                title=discussion.title,
+                topic=discussion.topic or 'Society',
+                discussion_url=discussion_url
+            )
+            
+            if uri:
+                discussion.bluesky_post_uri = uri
+                discussion.bluesky_posted_at = datetime.utcnow()
+                db.session.commit()
+                posted_count += 1
+                logger.info(f"Posted discussion {discussion.id} to Bluesky: {uri}")
+            else:
+                logger.warning(f"Failed to post discussion {discussion.id} to Bluesky (no URI returned)")
+                
+        except Exception as e:
+            logger.error(f"Error posting discussion {discussion.id} to Bluesky: {e}")
+            db.session.rollback()
+            continue
+    
+    return posted_count
