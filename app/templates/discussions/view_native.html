@@ -213,8 +213,19 @@
                 <a href="{{ url_for('statements.view_statement', statement_id=statement.id) }}" 
                    class="flex-1 text-center px-4 py-3 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg font-medium transition-colors"
                    title="See full discussion thread with all responses">
-                    <div class="font-bold">💬 View Discussion</div>
-                    <div style="font-size: 11px; color: #64748b;">See responses & debate</div>
+                    <div class="font-bold">💬 View Discussion
+                      {% set response_count = statement.responses|rejectattr('is_deleted')|list|length %}
+                      {% if response_count > 0 %}
+                      <span class="ml-1 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">{{ response_count }}</span>
+                      {% endif %}
+                    </div>
+                    <div style="font-size: 11px; color: #64748b;">
+                      {% if response_count > 0 %}
+                        {{ response_count }} response{% if response_count != 1 %}s{% endif %} so far
+                      {% else %}
+                        Be first to respond
+                      {% endif %}
+                    </div>
                 </a>
                 {% if current_user.is_authenticated %}
                 <a href="{{ url_for('statements.create_response', statement_id=statement.id) }}" 
