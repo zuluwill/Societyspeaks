@@ -618,11 +618,9 @@ def track_discussion_activity(discussion_id):
                     discussion_id=discussion_id,
                     participant_identifier=participant_id
                 ).first()
-                
+
                 if participant:
-                    participant.response_count += 1
-                    participant.last_activity = db.session.execute(db.text('SELECT NOW()')).scalar()
-                    db.session.commit()
+                    participant.increment_response_count(commit=True)
             
             # Create notification for discussion creator
             if discussion.creator_id:
@@ -714,10 +712,11 @@ def simulate_discussion_activity(discussion_id):
         
         if simulation_type == 'new_participant':
             # Simulate a new participant
+            import time
             participant = DiscussionParticipant.track_participant(
                 discussion_id=discussion_id,
                 user_id=None,
-                participant_identifier=f"sim_participant_{db.session.execute(db.text('SELECT EXTRACT(EPOCH FROM NOW())')).scalar()}"
+                participant_identifier=f"sim_participant_{int(time.time())}"
             )
             
             # Create notification if discussion has a creator
