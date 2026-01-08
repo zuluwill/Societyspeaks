@@ -85,7 +85,7 @@
 
             <form id="voteForm" action="{{ url_for('daily.vote') }}" method="POST" class="space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <button type="submit" name="vote" value="agree" 
+                    <button type="button" value="agree" 
                             class="vote-btn flex flex-col items-center justify-center p-6 rounded-xl border-2 border-blue-200 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 group">
                         <div class="w-16 h-16 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center mb-3 transition-colors">
                             <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,7 +95,7 @@
                         <span class="text-lg font-semibold text-gray-900">Agree</span>
                     </button>
 
-                    <button type="submit" name="vote" value="disagree"
+                    <button type="button" value="disagree"
                             class="vote-btn flex flex-col items-center justify-center p-6 rounded-xl border-2 border-red-200 hover:border-red-500 hover:bg-red-50 transition-all duration-200 group">
                         <div class="w-16 h-16 rounded-full bg-red-100 group-hover:bg-red-200 flex items-center justify-center mb-3 transition-colors">
                             <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,7 +105,7 @@
                         <span class="text-lg font-semibold text-gray-900">Disagree</span>
                     </button>
 
-                    <button type="submit" name="vote" value="unsure"
+                    <button type="button" value="unsure"
                             class="vote-btn flex flex-col items-center justify-center p-6 rounded-xl border-2 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 transition-all duration-200 group">
                         <div class="w-16 h-16 rounded-full bg-yellow-100 group-hover:bg-yellow-200 flex items-center justify-center mb-3 transition-colors">
                             <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
