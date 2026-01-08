@@ -76,9 +76,9 @@ class ResendEmailClient:
 
         self.rate_limiter = RateLimiter(self.RATE_LIMIT)
         
-        # Email addresses
-        self.from_email = os.environ.get('RESEND_FROM_EMAIL', 'Society Speaks <hello@societyspeaks.io>')
-        self.from_email_daily = os.environ.get('RESEND_DAILY_FROM_EMAIL', 'Daily Questions <daily@societyspeaks.io>')
+        # Email addresses - use brief.societyspeaks.io subdomain which is verified in Resend
+        self.from_email = os.environ.get('RESEND_FROM_EMAIL', 'Society Speaks <hello@brief.societyspeaks.io>')
+        self.from_email_daily = os.environ.get('RESEND_DAILY_FROM_EMAIL', 'Daily Questions <daily@brief.societyspeaks.io>')
         
         # Base URL for building links
         self.base_url = os.environ.get('BASE_URL', 'https://societyspeaks.io')
