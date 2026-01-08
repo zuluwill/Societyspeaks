@@ -6,10 +6,10 @@
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-slate-100 to-white">
-    <header class="bg-blue-800 text-white py-10 px-4 sm:px-6 lg:px-8">
+    <header class="bg-blue-800 py-10 px-4 sm:px-6 lg:px-8">
         <div class="max-w-3xl mx-auto text-center">
             <p class="text-blue-300 text-xs font-semibold tracking-widest uppercase mb-3">Society Speaks</p>
-            <h1 class="font-serif text-3xl sm:text-4xl font-bold mb-3">The Daily Brief</h1>
+            <h1 class="text-white text-3xl sm:text-4xl font-bold mb-3" style="font-family: Georgia, 'Times New Roman', Times, serif;">The Daily Brief</h1>
             <p class="text-blue-200 text-sm">{{ brief.date.strftime('%A, %d %B %Y') }}</p>
         </div>
     </header>
@@ -81,16 +81,16 @@
                         {% endif %}
 
                         {% if item.sensationalism_label %}
-                        <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-semibold
+                        <span class="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-semibold whitespace-nowrap
                             {% if item.sensationalism_label == 'low' %}bg-green-100 text-green-800
                             {% elif item.sensationalism_label == 'medium' %}bg-yellow-100 text-yellow-800
                             {% else %}bg-red-100 text-red-800{% endif %}">
                             {% if item.sensationalism_label == 'low' %}
-                            <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
                             {% endif %}
-                            {{ item.sensationalism_label|capitalize }} sensationalism
+                            <span>{{ item.sensationalism_label|capitalize }} sensationalism</span>
                         </span>
                         {% endif %}
 
@@ -184,18 +184,17 @@
                     <div class="mb-6">
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Coverage Balance</p>
                         
-                        <div class="flex items-center gap-3 mb-2">
-                            <div class="flex h-3 flex-1 rounded-full overflow-hidden bg-gray-200">
-                                {% if cov_left_pct > 0 %}
-                                <div class="bg-blue-500" style="width: {{ cov_left_pct }}%"></div>
-                                {% endif %}
-                                {% if cov_center_pct > 0 %}
-                                <div class="bg-purple-500" style="width: {{ cov_center_pct }}%"></div>
-                                {% endif %}
-                                {% if cov_right_pct > 0 %}
-                                <div class="bg-red-500" style="width: {{ cov_right_pct }}%"></div>
-                                {% endif %}
-                            </div>
+                        <!-- Coverage Bar with proper colors -->
+                        <div class="w-full h-3 rounded-full overflow-hidden mb-3" style="display: flex; background-color: #e5e7eb;">
+                            {% if cov_left_pct > 0 %}
+                            <div style="width: {{ cov_left_pct }}%; background-color: #3b82f6; height: 100%;"></div>
+                            {% endif %}
+                            {% if cov_center_pct > 0 %}
+                            <div style="width: {{ cov_center_pct }}%; background-color: #a855f7; height: 100%;"></div>
+                            {% endif %}
+                            {% if cov_right_pct > 0 %}
+                            <div style="width: {{ cov_right_pct }}%; background-color: #ef4444; height: 100%;"></div>
+                            {% endif %}
                         </div>
                         
                         <div class="flex justify-between text-xs">
