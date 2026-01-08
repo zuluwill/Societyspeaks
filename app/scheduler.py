@@ -283,9 +283,10 @@ def init_scheduler(app):
         """Run email send in background thread with its own app context"""
         try:
             with app_instance.app_context():
-                from app.email_utils import send_daily_question_to_all_subscribers
+                # Use new Resend client with batch API for faster sending
+                from app.resend_client import send_daily_question_to_all_subscribers
                 
-                logger.info("Background thread: Starting daily question email send")
+                logger.info("Background thread: Starting daily question email send (via Resend)")
                 sent = send_daily_question_to_all_subscribers()
                 logger.info(f"Background thread: Sent daily question to {sent} subscribers")
         except Exception as e:

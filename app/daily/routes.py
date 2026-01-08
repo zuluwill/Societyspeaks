@@ -425,7 +425,7 @@ def subscribe():
             db.session.add(subscriber)
             db.session.commit()
             
-            from app.email_utils import send_daily_question_welcome_email
+            from app.resend_client import send_daily_question_welcome_email
             send_daily_question_welcome_email(subscriber)
             
             flash('You have successfully subscribed to daily civic questions!', 'success')
@@ -447,30 +447,18 @@ def subscribe_success():
 @daily_bp.route('/daily/unsubscribe/<token>')
 def unsubscribe(token):
     """Unsubscribe from daily question emails"""
-    from app.email_utils import update_loops_contact
-
     subscriber = DailyQuestionSubscriber.query.filter_by(magic_token=token).first()
 
     if not subscriber:
         flash('Invalid unsubscribe link.', 'error')
         return redirect(url_for('daily.today'))
 
-    # Update database
+    # Update database (source of truth for subscription status)
     subscriber.is_active = False
     db.session.commit()
 
-    # Update Loops.so contact to stop sending emails
-    try:
-        update_loops_contact(
-            subscriber.email,
-            {
-                'dailyQuestionSubscribed': False,
-                'unsubscribedAt': datetime.utcnow().isoformat()
-            }
-        )
-    except Exception as e:
-        current_app.logger.error(f"Failed to update Loops contact on unsubscribe: {e}")
-        # Continue anyway - database is source of truth
+    # Note: With Resend, unsubscribe is handled by List-Unsubscribe headers
+    # and our database is the source of truth. No external API call needed.
 
     flash('You have been unsubscribed from daily civic questions.', 'success')
     return render_template('daily/unsubscribed.html', email=subscriber.email)

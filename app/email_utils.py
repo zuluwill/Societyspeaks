@@ -302,13 +302,16 @@ def get_missing_company_profile_fields(profile):
 
 
 def send_profile_completion_reminder_email(user):
+    """Send profile completion reminder email via Resend"""
+    # Delegate to new Resend implementation
+    from app.resend_client import send_profile_completion_reminder_email as resend_send_reminder
+    
     if not user.email:
-        return
+        return False
     
     profile = user.individual_profile or user.company_profile
-
     if not profile or not profile.slug:
-        return
+        return False
 
     missing_fields = (
         get_missing_individual_profile_fields(profile) 
@@ -316,77 +319,24 @@ def send_profile_completion_reminder_email(user):
         else get_missing_company_profile_fields(profile)
     )
 
-    if missing_fields:
-        if isinstance(profile, IndividualProfile):
-            profile_link = url_for('profiles.edit_individual_profile', 
-                                   username=profile.slug, _external=True)
-        else:
-            profile_link = url_for('profiles.edit_company_profile', 
-                                   company_name=profile.slug, _external=True)
+    if not missing_fields:
+        return False
 
-        # Simplified event properties
-        event_properties = {
-            "profileUrl": profile_link,
-            "incompleteFields": missing_fields
-        }
+    if isinstance(profile, IndividualProfile):
+        profile_url = url_for('profiles.edit_individual_profile', 
+                               username=profile.slug, _external=True)
+    else:
+        profile_url = url_for('profiles.edit_company_profile', 
+                               company_name=profile.slug, _external=True)
 
-        send_loops_event(
-            email_address=user.email,
-            event_name="profile_completion_reminder",
-            user_id=str(user.id),
-            contact_properties={"name": user.username},
-            event_properties=event_properties
-        )
+    return resend_send_reminder(user, missing_fields, profile_url)
 
 
 def send_discussion_notification_email(user, discussion, notification_type, additional_data=None):
-    """Send real-time discussion notification email"""
-    # Map notification types to transactional IDs (you'll need to create these in Loops)
-    transactional_ids = {
-        'new_participant': "cm34ll2e604fmynht3l8jns9p",  # Replace with actual ID when created
-        'new_response': "cm34ll2e604fmynht3l8jns9p",     # Replace with actual ID when created
-        'discussion_active': "cm34ll2e604fmynht3l8jns9p"  # Replace with actual ID when created
-    }
-    
-    transactional_id = transactional_ids.get(notification_type, transactional_ids['new_participant'])
-    
-    # Generate discussion URL
-    discussion_url = url_for('discussions.view_discussion', 
-                            discussion_id=discussion.id, 
-                            slug=discussion.slug, 
-                            _external=True)
-    
-    # Prepare notification-specific data
-    if notification_type == 'new_participant':
-        title = f"New participant joined your discussion"
-        message = f"Someone new has joined the discussion '{discussion.title}'"
-    elif notification_type == 'new_response':
-        title = f"New response in your discussion"
-        message = f"There's new activity in your discussion '{discussion.title}'"
-    else:
-        title = f"Activity in your discussion"
-        message = f"There's been activity in your discussion '{discussion.title}'"
-    
-    # Prepare data variables for email
-    data_variables = {
-        "username": user.username or "User",
-        "discussionTitle": discussion.title,
-        "discussionUrl": discussion_url,
-        "notificationTitle": title,
-        "notificationMessage": message,
-        "discussionTopic": discussion.topic or "General"
-    }
-    
-    # Add any additional data
-    if additional_data:
-        data_variables.update(additional_data)
-    
-    # Send the notification email
-    send_email(
-        recipient_email=user.email,
-        data_variables=data_variables,
-        transactional_id=transactional_id
-    )
+    """Send real-time discussion notification email via Resend"""
+    # Use the new Resend implementation
+    from app.resend_client import send_discussion_notification_email as resend_send_notification
+    return resend_send_notification(user, discussion, notification_type, additional_data)
 
 
 def send_weekly_discussion_digest(user):

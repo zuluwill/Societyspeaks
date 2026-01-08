@@ -79,7 +79,7 @@ RESEND_API_KEY=re_...              # Get from resend.com
 BRIEF_FROM_EMAIL=Daily Brief <brief@societyspeaks.com>
 
 # Existing (you should have these)
-LOOPS_API_KEY=...                  # For daily question emails
+RESEND_API_KEY=...                 # For all transactional emails
 DATABASE_URL=postgresql://...
 REDIS_URL=redis://...
 ```

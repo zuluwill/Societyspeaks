@@ -1448,41 +1448,186 @@ class BriefTeam(db.Model):
         return f'<BriefTeam {self.name} ({self.current_seat_count}/{self.seat_limit} seats)>'
 
 
-class BriefEmailEvent(db.Model):
+class EmailEvent(db.Model):
     """
-    Tracks email events (opens, clicks, bounces) from Resend webhooks.
-    Used for analytics and deliverability monitoring.
+    Unified email event tracking for all email types.
+    Tracks opens, clicks, bounces from Resend webhooks.
+    
+    Email categories:
+    - auth: Password reset, welcome, account activation
+    - daily_brief: Daily Brief emails
+    - daily_question: Daily Question emails
+    - discussion: Discussion notification emails
+    - admin: Admin-generated emails
     """
-    __tablename__ = 'brief_email_event'
+    __tablename__ = 'email_event'
     __table_args__ = (
-        db.Index('idx_bee_subscriber', 'subscriber_id'),
-        db.Index('idx_bee_brief', 'brief_id'),
-        db.Index('idx_bee_type', 'event_type'),
-        db.Index('idx_bee_created', 'created_at'),
+        db.Index('idx_ee_email', 'recipient_email'),
+        db.Index('idx_ee_category', 'email_category'),
+        db.Index('idx_ee_event_type', 'event_type'),
+        db.Index('idx_ee_created', 'created_at'),
+        db.Index('idx_ee_resend_id', 'resend_email_id'),
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    subscriber_id = db.Column(db.Integer, db.ForeignKey('daily_brief_subscriber.id'), nullable=True)
-    brief_id = db.Column(db.Integer, db.ForeignKey('daily_brief.id'), nullable=True)
-
-    # Resend event data
-    resend_email_id = db.Column(db.String(255))  # Resend's email ID for tracking
-    event_type = db.Column(db.String(50), nullable=False)  # email.sent, email.delivered, email.opened, email.clicked, email.bounced, email.complained
     
-    # Additional data
-    click_url = db.Column(db.String(500))  # For click events, which link was clicked
+    # Email identification (generic - works for any email type)
+    recipient_email = db.Column(db.String(255), nullable=False)
+    resend_email_id = db.Column(db.String(255), index=True)  # Resend's email ID
+    
+    # Email categorization
+    email_category = db.Column(db.String(30), nullable=False)  # auth, daily_brief, daily_question, discussion, admin
+    email_subject = db.Column(db.String(500))  # Store subject for reference
+    
+    # Event data from Resend
+    event_type = db.Column(db.String(50), nullable=False)  # sent, delivered, opened, clicked, bounced, complained
+    
+    # Optional references (for analytics drill-down)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    brief_subscriber_id = db.Column(db.Integer, db.ForeignKey('daily_brief_subscriber.id'), nullable=True)
+    question_subscriber_id = db.Column(db.Integer, db.ForeignKey('daily_question_subscriber.id'), nullable=True)
+    brief_id = db.Column(db.Integer, db.ForeignKey('daily_brief.id'), nullable=True)
+    daily_question_id = db.Column(db.Integer, db.ForeignKey('daily_question.id'), nullable=True)
+    
+    # Additional event data
+    click_url = db.Column(db.String(500))  # For click events
     bounce_type = db.Column(db.String(50))  # hard, soft
+    complaint_type = db.Column(db.String(50))  # spam, abuse
     user_agent = db.Column(db.String(500))
     ip_address = db.Column(db.String(45))
-
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
-    subscriber = db.relationship('DailyBriefSubscriber', backref='email_events')
+    user = db.relationship('User', backref='email_events')
+    brief_subscriber = db.relationship('DailyBriefSubscriber', backref='email_events')
+    question_subscriber = db.relationship('DailyQuestionSubscriber', backref='email_events')
     brief = db.relationship('DailyBrief', backref='email_events')
+    daily_question = db.relationship('DailyQuestion', backref='email_events')
+
+    # Class constants for email categories
+    CATEGORY_AUTH = 'auth'
+    CATEGORY_DAILY_BRIEF = 'daily_brief'
+    CATEGORY_DAILY_QUESTION = 'daily_question'
+    CATEGORY_DISCUSSION = 'discussion'
+    CATEGORY_ADMIN = 'admin'
+    
+    # Class constants for event types (without email. prefix for clean storage)
+    EVENT_SENT = 'sent'
+    EVENT_DELIVERED = 'delivered'
+    EVENT_OPENED = 'opened'
+    EVENT_CLICKED = 'clicked'
+    EVENT_BOUNCED = 'bounced'
+    EVENT_COMPLAINED = 'complained'
+
+    @classmethod
+    def record_event(cls, recipient_email: str, event_type: str, email_category: str,
+                     resend_email_id: str = None, email_subject: str = None,
+                     user_id: int = None, brief_subscriber_id: int = None,
+                     question_subscriber_id: int = None, brief_id: int = None,
+                     daily_question_id: int = None, click_url: str = None,
+                     bounce_type: str = None, complaint_type: str = None,
+                     user_agent: str = None, ip_address: str = None):
+        """
+        Factory method to record an email event.
+        DRY: Single point of entry for all event recording.
+        """
+        # Normalize event_type (remove 'email.' prefix if present)
+        if event_type.startswith('email.'):
+            event_type = event_type[6:]
+        
+        event = cls(
+            recipient_email=recipient_email,
+            resend_email_id=resend_email_id,
+            email_category=email_category,
+            email_subject=email_subject,
+            event_type=event_type,
+            user_id=user_id,
+            brief_subscriber_id=brief_subscriber_id,
+            question_subscriber_id=question_subscriber_id,
+            brief_id=brief_id,
+            daily_question_id=daily_question_id,
+            click_url=click_url,
+            bounce_type=bounce_type,
+            complaint_type=complaint_type,
+            user_agent=user_agent,
+            ip_address=ip_address
+        )
+        db.session.add(event)
+        return event
+
+    @classmethod
+    def get_stats(cls, email_category: str = None, days: int = 7) -> dict:
+        """
+        Get aggregated statistics for emails.
+        DRY: Reusable stats method for any category.
+        """
+        from sqlalchemy import func
+        
+        cutoff = datetime.utcnow() - timedelta(days=days)
+        query = cls.query.filter(cls.created_at >= cutoff)
+        
+        if email_category:
+            query = query.filter(cls.email_category == email_category)
+        
+        # Count by event type
+        event_counts = db.session.query(
+            cls.event_type,
+            func.count(cls.id)
+        ).filter(cls.created_at >= cutoff)
+        
+        if email_category:
+            event_counts = event_counts.filter(cls.email_category == email_category)
+        
+        event_counts = dict(event_counts.group_by(cls.event_type).all())
+        
+        total_sent = event_counts.get('sent', 0)
+        total_delivered = event_counts.get('delivered', 0)
+        total_opened = event_counts.get('opened', 0)
+        total_clicked = event_counts.get('clicked', 0)
+        total_bounced = event_counts.get('bounced', 0)
+        total_complained = event_counts.get('complained', 0)
+        
+        return {
+            'total_sent': total_sent,
+            'total_delivered': total_delivered,
+            'total_opened': total_opened,
+            'total_clicked': total_clicked,
+            'total_bounced': total_bounced,
+            'total_complained': total_complained,
+            'delivery_rate': round((total_delivered / total_sent * 100), 1) if total_sent > 0 else 0,
+            'open_rate': round((total_opened / total_delivered * 100), 1) if total_delivered > 0 else 0,
+            'click_rate': round((total_clicked / total_opened * 100), 1) if total_opened > 0 else 0,
+            'bounce_rate': round((total_bounced / total_sent * 100), 1) if total_sent > 0 else 0,
+            'event_counts': event_counts
+        }
+
+    @classmethod
+    def get_recent_events(cls, email_category: str = None, limit: int = 50):
+        """Get recent events, optionally filtered by category."""
+        query = cls.query.order_by(cls.created_at.desc())
+        if email_category:
+            query = query.filter(cls.email_category == email_category)
+        return query.limit(limit).all()
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'recipient_email': self.recipient_email,
+            'email_category': self.email_category,
+            'email_subject': self.email_subject,
+            'event_type': self.event_type,
+            'click_url': self.click_url,
+            'bounce_type': self.bounce_type,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
 
     def __repr__(self):
-        return f'<BriefEmailEvent {self.event_type} for subscriber {self.subscriber_id}>'
+        return f'<EmailEvent {self.event_type} ({self.email_category}) to {self.recipient_email}>'
+
+
+# Backward compatibility alias
+BriefEmailEvent = EmailEvent
 
 
 class DailyQuestion(db.Model):

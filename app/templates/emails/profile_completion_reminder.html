@@ -1,0 +1,35 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Complete Your Profile{% endblock %}
+
+{% block content %}
+<p>Hi {{ username }},</p>
+
+<p>Your Society Speaks profile is almost complete! A complete profile helps you:</p>
+
+<ul style="margin: 20px 0; padding-left: 20px; color: #374151;">
+    <li style="margin-bottom: 8px;">Build credibility in discussions</li>
+    <li style="margin-bottom: 8px;">Connect with like-minded participants</li>
+    <li style="margin-bottom: 8px;">Get personalised content recommendations</li>
+</ul>
+
+{% if missing_fields %}
+<div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 0 8px 8px 0;">
+    <p style="margin: 0 0 12px 0; font-weight: 600; color: #92400e;">Missing information:</p>
+    <ul style="margin: 0; padding-left: 20px; color: #92400e;">
+        {% for field in missing_fields %}
+        <li style="margin-bottom: 4px;">{{ field }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block cta_url %}{{ profile_url }}{% endblock %}
+{% block cta_text %}Complete Your Profile{% endblock %}
+
+{% block footer_text %}
+<p style="color: #6b7280; font-size: 14px; margin-top: 24px;">
+    This is a one-time reminder. You can update your profile anytime from your account settings.
+</p>
+{% endblock %}

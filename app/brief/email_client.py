@@ -165,8 +165,13 @@ class ResendClient:
         Returns:
             str: HTML email content
         """
-        # Get unsubscribe URL
-        unsubscribe_url = f"https://societyspeaks.com/brief/unsubscribe/{subscriber.magic_token}"
+        # Get base URL from config or env
+        import os
+        base_url = os.environ.get('BASE_URL', 'https://societyspeaks.io').rstrip('/')
+        
+        # Build URLs
+        unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
+        preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
 
         # Render template
         # Note: This assumes template exists at templates/emails/daily_brief.html
@@ -175,7 +180,9 @@ class ResendClient:
                 'emails/daily_brief.html',
                 brief=brief,
                 subscriber=subscriber,
-                unsubscribe_url=unsubscribe_url
+                unsubscribe_url=unsubscribe_url,
+                preferences_url=preferences_url,
+                base_url=base_url
             )
             return html
         except Exception as e:

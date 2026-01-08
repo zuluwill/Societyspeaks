@@ -9,9 +9,8 @@ from flask_login import current_user
 from datetime import date, datetime, timedelta
 from app.brief import brief_bp
 from app import db, limiter
-from app.models import DailyBrief, BriefItem, DailyBriefSubscriber, BriefTeam, User
+from app.models import DailyBrief, BriefItem, DailyBriefSubscriber, BriefTeam, User, EmailEvent
 from app.brief.email_client import send_brief_to_subscriber
-from app.models import BriefEmailEvent
 import re
 import logging
 import hmac
@@ -273,6 +272,79 @@ def magic_link(token):
     return redirect(url_for('brief.today'))
 
 
+@brief_bp.route('/brief/preferences/<token>', methods=['GET', 'POST'])
+def manage_preferences(token):
+    """Manage subscriber preferences (timezone, send hour)"""
+    # Use safe token lookup (prevents timing attacks by using constant-time comparison internally)
+    subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
+
+    if not subscriber:
+        flash('Invalid preferences link. Please use the link from your email.', 'error')
+        return redirect(url_for('brief.subscribe'))
+    
+    # Check token expiration for security (but allow unsubscribed users to manage preferences)
+    if subscriber.magic_token_expires and subscriber.magic_token_expires < datetime.utcnow():
+        # Regenerate token for active subscribers
+        if subscriber.status == 'active':
+            subscriber.generate_magic_token(expires_hours=168)  # 7 days
+            db.session.commit()
+        flash('Your link has expired. Please check your latest email for a new link.', 'warning')
+        return redirect(url_for('brief.today'))
+
+    if request.method == 'POST':
+        # Update timezone
+        new_timezone = request.form.get('timezone', 'UTC')
+        # Validate timezone
+        try:
+            import pytz
+            pytz.timezone(new_timezone)
+            subscriber.timezone = new_timezone
+        except Exception:
+            subscriber.timezone = 'UTC'
+
+        # Update send hour
+        new_hour = request.form.get('preferred_send_hour', '18')
+        try:
+            hour = int(new_hour)
+            if hour in [6, 8, 18]:
+                subscriber.preferred_send_hour = hour
+        except (ValueError, TypeError):
+            pass
+
+        # Handle resubscribe
+        if request.form.get('resubscribe') and subscriber.status == 'unsubscribed':
+            subscriber.status = 'active'
+            subscriber.unsubscribed_at = None
+            flash('Welcome back! You have been resubscribed to the Daily Brief.', 'success')
+        
+        db.session.commit()
+        flash('Your preferences have been updated.', 'success')
+        return redirect(url_for('brief.manage_preferences', token=token))
+
+    # Common timezones for dropdown
+    common_timezones = [
+        ('UTC', 'UTC (Coordinated Universal Time)'),
+        ('America/New_York', 'Eastern Time (US)'),
+        ('America/Chicago', 'Central Time (US)'),
+        ('America/Denver', 'Mountain Time (US)'),
+        ('America/Los_Angeles', 'Pacific Time (US)'),
+        ('Europe/London', 'London (GMT/BST)'),
+        ('Europe/Paris', 'Paris (CET/CEST)'),
+        ('Europe/Berlin', 'Berlin (CET/CEST)'),
+        ('Asia/Tokyo', 'Tokyo (JST)'),
+        ('Asia/Shanghai', 'Shanghai (CST)'),
+        ('Asia/Singapore', 'Singapore (SGT)'),
+        ('Australia/Sydney', 'Sydney (AEST/AEDT)'),
+    ]
+
+    return render_template(
+        'brief/preferences.html',
+        subscriber=subscriber,
+        token=token,
+        common_timezones=common_timezones
+    )
+
+
 @brief_bp.route('/brief/methodology')
 def methodology():
     """Explain how the brief works"""
@@ -465,13 +537,17 @@ def admin_test_send():
 @brief_bp.route('/brief/webhooks/resend', methods=['POST'])
 def resend_webhook():
     """
-    Handle Resend email webhooks for analytics tracking.
+    Unified Resend webhook handler for ALL email types.
     
     Resend sends events: email.sent, email.delivered, email.opened,
     email.clicked, email.bounced, email.complained
     
+    Uses EmailAnalytics service for DRY event processing.
+    
     Docs: https://resend.com/docs/dashboard/webhooks/introduction
     """
+    from app.lib.email_analytics import EmailAnalytics
+    
     try:
         # Verify webhook signature (Resend uses svix for webhooks)
         webhook_secret = os.environ.get('RESEND_WEBHOOK_SECRET')
@@ -506,22 +582,18 @@ def resend_webhook():
             expected_sig_b64 = base64.urlsafe_b64encode(expected_sig).decode('utf-8')
             
             # Svix sends signatures as "v1,<sig> v1,<sig2>" or just "v1,<sig>"
-            # We need to extract the base64 part after "v1,"
             signatures = svix_signature.split(' ')
             valid = False
             for sig_entry in signatures:
-                # Split "v1,<signature>" on comma to get just the signature
                 if ',' in sig_entry:
                     version, sig_value = sig_entry.split(',', 1)
-                    # Compare using timing-safe comparison
-                    # Also try standard b64 in case urlsafe differs
                     standard_sig = base64.b64encode(expected_sig).decode('utf-8')
                     if hmac.compare_digest(sig_value, expected_sig_b64) or hmac.compare_digest(sig_value, standard_sig):
                         valid = True
                         break
             
             if not valid:
-                logger.warning(f"Invalid webhook signature. Expected variations of: {expected_sig_b64[:20]}...")
+                logger.warning(f"Invalid webhook signature")
                 return jsonify({'error': 'Invalid signature'}), 401
         
         # Get webhook payload
@@ -532,52 +604,31 @@ def resend_webhook():
             return jsonify({'status': 'ignored'}), 200
         
         event_type = payload.get('type')
-        data = payload.get('data', {})
-        
         if not event_type:
             return jsonify({'status': 'ignored'}), 200
         
         logger.info(f"Resend webhook received: {event_type}")
         
-        # Extract email address from recipient
-        to_email = None
-        if 'to' in data and isinstance(data['to'], list) and len(data['to']) > 0:
-            to_email = data['to'][0]
+        # Use unified EmailAnalytics service (DRY)
+        event = EmailAnalytics.record_from_webhook(payload)
         
-        # Find subscriber by email
-        subscriber = None
-        if to_email:
-            subscriber = DailyBriefSubscriber.query.filter_by(email=to_email).first()
-        
-        # Create event record
-        event = BriefEmailEvent(
-            subscriber_id=subscriber.id if subscriber else None,
-            resend_email_id=data.get('email_id'),
-            event_type=event_type,
-            click_url=data.get('click', {}).get('link') if event_type == 'email.clicked' else None,
-            bounce_type=data.get('bounce', {}).get('type') if event_type == 'email.bounced' else None,
-            user_agent=request.headers.get('User-Agent'),
-            ip_address=request.remote_addr
-        )
-        db.session.add(event)
-        
-        # Update subscriber analytics
-        if subscriber:
-            if event_type == 'email.opened':
-                subscriber.total_opens = (subscriber.total_opens or 0) + 1
-                subscriber.last_opened_at = datetime.utcnow()
-            elif event_type == 'email.clicked':
-                subscriber.total_clicks = (subscriber.total_clicks or 0) + 1
-                subscriber.last_clicked_at = datetime.utcnow()
-            elif event_type == 'email.bounced':
-                subscriber.status = 'bounced'
-                logger.warning(f"Subscriber {to_email} bounced, marking as bounced")
-            elif event_type == 'email.complained':
-                subscriber.status = 'unsubscribed'
-                subscriber.unsubscribed_at = datetime.utcnow()
-                logger.warning(f"Subscriber {to_email} complained, unsubscribing")
-        
-        db.session.commit()
+        if event:
+            # Also update subscriber-specific analytics for brief subscribers
+            data = payload.get('data', {})
+            to_list = data.get('to', [])
+            to_email = to_list[0] if to_list else None
+            
+            if to_email:
+                subscriber = DailyBriefSubscriber.query.filter_by(email=to_email).first()
+                if subscriber:
+                    normalized_type = event_type.replace('email.', '')
+                    if normalized_type == 'opened':
+                        subscriber.total_opens = (subscriber.total_opens or 0) + 1
+                        subscriber.last_opened_at = datetime.utcnow()
+                    elif normalized_type == 'clicked':
+                        subscriber.total_clicks = (subscriber.total_clicks or 0) + 1
+                        subscriber.last_clicked_at = datetime.utcnow()
+                    db.session.commit()
         
         return jsonify({'status': 'processed'}), 200
         
@@ -589,45 +640,44 @@ def resend_webhook():
 
 @brief_bp.route('/brief/admin/analytics')
 def admin_analytics():
-    """View email analytics dashboard"""
+    """
+    Unified email analytics dashboard.
+    Uses EmailAnalytics service for DRY stats retrieval.
+    """
     from flask_login import current_user
+    from app.lib.email_analytics import EmailAnalytics
     
     if not current_user.is_authenticated or not current_user.is_admin:
         flash('Admin access required', 'error')
         return redirect(url_for('brief.today'))
     
-    # Get aggregate stats
-    total_subscribers = DailyBriefSubscriber.query.filter_by(status='active').count()
-    total_opens = db.session.query(db.func.sum(DailyBriefSubscriber.total_opens)).scalar() or 0
-    total_clicks = db.session.query(db.func.sum(DailyBriefSubscriber.total_clicks)).scalar() or 0
-    total_sent = db.session.query(db.func.sum(DailyBriefSubscriber.total_briefs_received)).scalar() or 0
+    # Get filter params
+    category_filter = request.args.get('category', None)
+    days = request.args.get('days', 7, type=int)
     
-    # Calculate rates
-    open_rate = (total_opens / total_sent * 100) if total_sent > 0 else 0
-    click_rate = (total_clicks / total_sent * 100) if total_sent > 0 else 0
+    # Get unified stats using DRY service
+    dashboard_stats = EmailAnalytics.get_dashboard_stats(days=days)
     
-    # Recent events
-    recent_events = BriefEmailEvent.query.order_by(
-        BriefEmailEvent.created_at.desc()
-    ).limit(50).all()
+    # Get recent events (optionally filtered)
+    recent_events = EmailAnalytics.get_recent_events(category=category_filter, limit=50)
     
-    # Events by type (last 7 days)
-    week_ago = datetime.utcnow() - timedelta(days=7)
-    event_counts = db.session.query(
-        BriefEmailEvent.event_type,
-        db.func.count(BriefEmailEvent.id)
-    ).filter(
-        BriefEmailEvent.created_at >= week_ago
-    ).group_by(BriefEmailEvent.event_type).all()
+    # Get stats for selected category or overall
+    if category_filter:
+        stats = dashboard_stats['by_category'].get(category_filter, dashboard_stats['overall'])
+    else:
+        stats = dashboard_stats['overall']
     
     return render_template(
-        'brief/admin_analytics.html',
-        total_subscribers=total_subscribers,
-        total_sent=total_sent,
-        total_opens=total_opens,
-        total_clicks=total_clicks,
-        open_rate=round(open_rate, 1),
-        click_rate=round(click_rate, 1),
+        'admin/email_analytics.html',
+        stats=stats,
+        dashboard_stats=dashboard_stats,
         recent_events=recent_events,
-        event_counts=dict(event_counts)
+        category_filter=category_filter,
+        days=days,
+        categories={
+            'auth': 'Authentication',
+            'daily_brief': 'Daily Brief',
+            'daily_question': 'Daily Question',
+            'discussion': 'Discussion Notifications'
+        }
     )

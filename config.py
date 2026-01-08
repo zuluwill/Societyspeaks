@@ -123,13 +123,30 @@ class Config:
         REDIS_URL = None
         RATELIMIT_STORAGE_URL = 'memory://'  # Use memory fallback for rate limiting
 
-    # Mail Configuration
+    # ===========================================================================
+    # EMAIL CONFIGURATION
+    # ===========================================================================
+    
+    # Resend API (Primary email provider - used for all transactional emails)
+    RESEND_API_KEY = os.getenv('RESEND_API_KEY')
+    RESEND_FROM_EMAIL = os.getenv('RESEND_FROM_EMAIL', 'Society Speaks <hello@societyspeaks.io>')
+    RESEND_DAILY_FROM_EMAIL = os.getenv('RESEND_DAILY_FROM_EMAIL', 'Daily Questions <daily@societyspeaks.io>')
+    BASE_URL = os.getenv('BASE_URL', 'https://societyspeaks.io')
+    
+    # Validate Resend API key in production
+    if not RESEND_API_KEY and os.getenv('FLASK_ENV') == 'production':
+        logging.warning("RESEND_API_KEY not set in production - email sending will fail")
+    
+    # Legacy SMTP Configuration (kept for backwards compatibility, not actively used)
     MAIL_SERVER = 'smtp.googlemail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
     MAIL_USERNAME = os.getenv('EMAIL_USER')
     MAIL_PASSWORD = os.getenv('EMAIL_PASS')
     MAIL_DEFAULT_SENDER = os.getenv('EMAIL_USER')
+    
+    # DEPRECATED: Loops.so API (kept for backwards compatibility during migration)
+    # Migration to Resend complete Jan 2026 - can be removed after confirming no issues
     LOOPS_API_KEY = os.getenv('LOOPS_API_KEY')
 
     # Admin Configuration
