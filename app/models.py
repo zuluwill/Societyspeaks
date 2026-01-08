@@ -145,15 +145,33 @@ class DiscussionParticipant(db.Model):
     user = db.relationship('User', backref='discussion_participations')
 
     @classmethod
-    def track_participant(cls, discussion_id, user_id=None, participant_identifier=None):
-        """Track a new participant in a discussion"""
+    def track_participant(cls, discussion_id, user_id=None, participant_identifier=None, commit=True):
+        """
+        Track a participant in a discussion.
+
+        Args:
+            discussion_id: ID of the discussion
+            user_id: ID of the user (optional, for authenticated users)
+            participant_identifier: External identifier (optional, for anonymous users)
+            commit: Whether to commit the transaction (default True)
+
+        Returns:
+            DiscussionParticipant instance
+
+        Raises:
+            ValueError: If both user_id and participant_identifier are None
+        """
+        # Validate that at least one identifier is provided
+        if user_id is None and participant_identifier is None:
+            raise ValueError("Either user_id or participant_identifier must be provided")
+
         # Check if participant already exists
         existing = cls.query.filter_by(
             discussion_id=discussion_id,
             user_id=user_id,
             participant_identifier=participant_identifier
         ).first()
-        
+
         if not existing:
             participant = cls(
                 discussion_id=discussion_id,
@@ -161,13 +179,36 @@ class DiscussionParticipant(db.Model):
                 participant_identifier=participant_identifier
             )
             db.session.add(participant)
-            db.session.commit()
-            return participant
         else:
             # Update last activity
             existing.last_activity = datetime.utcnow()
+            participant = existing
+
+        if commit:
             db.session.commit()
-            return existing
+
+        return participant
+
+    def increment_response_count(self, commit=True):
+        """
+        Atomically increment the response count for this participant.
+
+        Args:
+            commit: Whether to commit the transaction (default True)
+
+        Note:
+            This uses a database-level atomic increment to prevent race conditions.
+        """
+        # Use atomic update to prevent race conditions
+        self.__class__.query.filter_by(id=self.id).update({
+            'response_count': self.__class__.response_count + 1,
+            'last_activity': datetime.utcnow()
+        }, synchronize_session=False)
+
+        if commit:
+            db.session.commit()
+            # Refresh to get updated values
+            db.session.refresh(self)
 
 
 class IndividualProfile(db.Model):

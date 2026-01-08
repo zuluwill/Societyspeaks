@@ -33,14 +33,27 @@ class CoverageAnalyzer:
         self.articles = self._get_topic_articles()
 
     def _get_topic_articles(self) -> List[NewsArticle]:
-        """Get all articles associated with this topic"""
+        """
+        Get all articles associated with this topic.
+
+        Uses eager loading to prevent N+1 query issues when accessing article sources.
+        """
         # TrendingTopic.articles returns TrendingTopicArticle instances
         # We need to extract the actual NewsArticle objects
         if not hasattr(self.topic, 'articles'):
             return []
 
         article_links = self.topic.articles.all()  # lazy='dynamic' requires .all()
-        return [link.article for link in article_links if link.article]
+        article_ids = [link.article.id for link in article_links if link.article]
+
+        if not article_ids:
+            return []
+
+        # Eager load sources to prevent N+1 queries when iterating through articles
+        from sqlalchemy.orm import joinedload
+        return NewsArticle.query.filter(
+            NewsArticle.id.in_(article_ids)
+        ).options(joinedload(NewsArticle.source)).all()
 
     def calculate_distribution(self) -> Dict:
         """

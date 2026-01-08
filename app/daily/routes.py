@@ -344,6 +344,54 @@ def generate_share_snippet(question, user_response):
     }
 
 
+def sync_daily_reason_to_statement(statement_id, user_id, vote, reason):
+    """
+    Sync a daily question reason to a statement response.
+    Updates existing response or creates new one to prevent duplicates.
+
+    Args:
+        statement_id: ID of the statement to add response to
+        user_id: ID of the user submitting the response
+        vote: Vote value (1=agree, -1=disagree, 0=unsure)
+        reason: The reason/response text
+
+    Returns:
+        tuple: (Response object, is_new boolean)
+    """
+    from app.models import Response
+
+    # Check if user already has a response on this statement
+    existing_response = Response.query.filter_by(
+        statement_id=statement_id,
+        user_id=user_id
+    ).first()
+
+    position_map = {1: 'pro', -1: 'con', 0: 'neutral'}
+    position = position_map.get(vote, 'neutral')
+
+    if existing_response:
+        # Update existing response content instead of creating duplicate
+        existing_response.content = reason
+        existing_response.position = position
+        current_app.logger.info(
+            f"Daily question reason updated existing response on statement {statement_id}"
+        )
+        return existing_response, False
+    else:
+        # Create new Response for the linked statement
+        statement_response = Response(
+            statement_id=statement_id,
+            user_id=user_id,
+            position=position,
+            content=reason
+        )
+        db.session.add(statement_response)
+        current_app.logger.info(
+            f"Daily question reason synced as response to statement {statement_id}"
+        )
+        return statement_response, True
+
+
 @daily_bp.route('/daily/subscribe', methods=['GET', 'POST'])
 @limiter.limit("5 per minute")
 def subscribe():
@@ -571,44 +619,24 @@ def vote():
                 # If user provided a reason and is authenticated, sync as a Response
                 # This makes the reason visible in the discussion's response thread
                 if reason and current_user.is_authenticated:
-                    # Check if user already has a response on this statement to prevent duplicates
-                    existing_response = Response.query.filter_by(
+                    # Use helper function to sync reason to statement response
+                    statement_response, is_new = sync_daily_reason_to_statement(
                         statement_id=question.source_statement_id,
-                        user_id=current_user.id
-                    ).first()
-                    
-                    if existing_response:
-                        # Update existing response content instead of creating duplicate
-                        existing_response.content = reason
-                        position_map = {1: 'pro', -1: 'con', 0: 'neutral'}
-                        existing_response.position = position_map.get(new_vote, 'neutral')
-                        current_app.logger.info(
-                            f"Daily question reason updated existing response on statement {question.source_statement_id}"
-                        )
-                    else:
-                        # Create new Response for the linked statement
-                        position_map = {1: 'pro', -1: 'con', 0: 'neutral'}
-                        position = position_map.get(new_vote, 'neutral')
-                        
-                        statement_response = Response(
-                            statement_id=question.source_statement_id,
-                            user_id=current_user.id,
-                            position=position,
-                            content=reason
-                        )
-                        db.session.add(statement_response)
-                        
-                        # Update participant response_count for accurate analytics
+                        user_id=current_user.id,
+                        vote=new_vote,
+                        reason=reason
+                    )
+
+                    # Only increment response count if this is a new response
+                    if is_new:
+                        # Track participant and increment response count atomically
+                        # Use commit=False to keep within the outer transaction
                         participant = DiscussionParticipant.track_participant(
                             discussion_id=question.source_discussion_id,
-                            user_id=current_user.id
+                            user_id=current_user.id,
+                            commit=False
                         )
-                        participant.response_count = (participant.response_count or 0) + 1
-                        participant.last_activity = datetime.utcnow()
-                        
-                        current_app.logger.info(
-                            f"Daily question reason synced as response to statement {question.source_statement_id}"
-                        )
+                        participant.increment_response_count(commit=False)
         
         subscriber_id = session.get('daily_subscriber_id')
         if subscriber_id:
@@ -617,12 +645,25 @@ def vote():
                 subscriber.update_participation_streak(has_reason=bool(reason))
         
         db.session.commit()
-        
+
         return redirect(url_for('daily.today'))
-    
-    except Exception as e:
+
+    except ValueError as e:
+        # Validation errors (e.g., from track_participant)
         db.session.rollback()
-        current_app.logger.error(f"Error submitting daily vote: {e}")
+        current_app.logger.warning(f"Validation error submitting daily vote: {e}")
+        return jsonify({'success': False, 'error': 'Invalid request data'}), 400
+
+    except db.exc.IntegrityError as e:
+        # Database constraint violations (e.g., duplicate votes)
+        db.session.rollback()
+        current_app.logger.warning(f"Integrity error submitting daily vote: {e}")
+        return jsonify({'success': False, 'error': 'Duplicate vote detected'}), 409
+
+    except Exception as e:
+        # Catch-all for unexpected errors
+        db.session.rollback()
+        current_app.logger.error(f"Unexpected error submitting daily vote: {e}", exc_info=True)
         return jsonify({'success': False, 'error': 'Failed to submit vote'}), 500
 
 
