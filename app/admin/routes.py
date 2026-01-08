@@ -10,7 +10,7 @@ from datetime import date, datetime, timedelta
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
 from app.utils import upload_to_object_storage  
-from app.email_utils import send_email
+# Note: send_email removed during Resend migration. Using inline Resend call for admin welcome emails.
 from app.admin import admin_bp
 from sqlalchemy.orm import joinedload
 import time
@@ -306,22 +306,72 @@ def handle_user_reassignment(profile, user_form, profile_type):
 
 
 def send_welcome_email(email, username, password):
-    subject = "Welcome to SocietySpeaks - Your Account Details"
-    body = f"""
-    Hello {username},
-
-    An administrator has created a profile for you on SocietySpeaks. 
-    You can login with the following credentials:
-
-    Username: {username}
-    Password: {password}
-
-    Please login and change your password immediately.
-
-    Best regards,
-    The SocietySpeaks Team
+    """Send welcome email to admin-created users via Resend"""
+    import os
+    import requests
+    
+    api_key = os.environ.get('RESEND_API_KEY')
+    if not api_key:
+        current_app.logger.error("RESEND_API_KEY not set - cannot send admin welcome email")
+        return
+    
+    base_url = os.environ.get('BASE_URL', 'https://societyspeaks.io')
+    from_email = os.environ.get('RESEND_FROM_EMAIL', 'Society Speaks <hello@societyspeaks.io>')
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; border-bottom: 2px solid #1e40af; padding-bottom: 20px; margin-bottom: 20px;">
+            <h1 style="margin: 0; font-size: 24px; color: #1e40af;">Welcome to Society Speaks</h1>
+        </div>
+        
+        <p>Hello {username},</p>
+        
+        <p>An administrator has created an account for you on Society Speaks.</p>
+        
+        <div style="background-color: #f8fafc; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0;"><strong>Username:</strong> {username}</p>
+            <p style="margin: 0 0 10px 0;"><strong>Email:</strong> {email}</p>
+            <p style="margin: 0;"><strong>Temporary Password:</strong> {password}</p>
+        </div>
+        
+        <p style="color: #dc2626;"><strong>Important:</strong> Please login and change your password immediately.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{base_url}/auth/login" style="background-color: #1e40af; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600;">Login Now</a>
+        </div>
+        
+        <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+            Best regards,<br>
+            The Society Speaks Team
+        </p>
+    </body>
+    </html>
     """
-    send_email(email, subject, body)
+    
+    try:
+        response = requests.post(
+            'https://api.resend.com/emails',
+            json={
+                'from': from_email,
+                'to': [email],
+                'subject': 'Welcome to Society Speaks - Your Account Details',
+                'html': html_content
+            },
+            headers={
+                'Authorization': f'Bearer {api_key}',
+                'Content-Type': 'application/json'
+            },
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            current_app.logger.info(f"Admin welcome email sent to {email}")
+        else:
+            current_app.logger.error(f"Failed to send admin welcome email: {response.status_code} - {response.text}")
+    except Exception as e:
+        current_app.logger.error(f"Error sending admin welcome email: {e}")
 
 
 @admin_bp.route('/discussions/<int:discussion_id>/delete', methods=['POST'])

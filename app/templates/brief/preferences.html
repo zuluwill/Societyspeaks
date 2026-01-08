@@ -1,0 +1,154 @@
+{% extends "layout.html" %}
+
+{% block title %}Manage Preferences - Daily Brief{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-lg mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-2xl font-bold text-gray-900">Brief Preferences</h1>
+            <p class="text-gray-600 mt-2">Manage your Daily Brief subscription</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+            <div class="p-4 rounded-lg {{ 'bg-green-100 text-green-700' if category == 'success' else 'bg-red-100 text-red-700' }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            {# Account Info #}
+            <div class="bg-gradient-to-r from-amber-600 to-amber-500 px-6 py-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-white font-medium">{{ subscriber.email }}</p>
+                        <p class="text-amber-100 text-sm">
+                            {% if subscriber.status == 'active' %}
+                            <span class="inline-flex items-center">
+                                <span class="w-2 h-2 bg-green-400 rounded-full mr-1.5"></span>
+                                Active subscription
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center">
+                                <span class="w-2 h-2 bg-gray-400 rounded-full mr-1.5"></span>
+                                Unsubscribed
+                            </span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <form action="{{ url_for('brief.manage_preferences', token=token) }}" method="POST" class="p-6 space-y-6">
+                {# Timezone Selection #}
+                <div>
+                    <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">
+                        Your Timezone
+                    </label>
+                    <select name="timezone" id="timezone" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500">
+                        {% for tz_value, tz_label in common_timezones %}
+                        <option value="{{ tz_value }}" {% if subscriber.timezone == tz_value %}selected{% endif %}>
+                            {{ tz_label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <p class="mt-1 text-sm text-gray-500">We'll send your brief at the right time for your location.</p>
+                </div>
+
+                {# Send Hour Selection #}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Delivery Time
+                    </label>
+                    <div class="space-y-3">
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="radio" name="preferred_send_hour" value="6" 
+                                   {% if subscriber.preferred_send_hour == 6 %}checked{% endif %}
+                                   class="w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500">
+                            <div class="ml-3">
+                                <span class="text-sm font-medium text-gray-900">☀️ Early Morning (6:00 AM)</span>
+                                <p class="text-xs text-gray-500">Start your day informed</p>
+                            </div>
+                        </label>
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="radio" name="preferred_send_hour" value="8" 
+                                   {% if subscriber.preferred_send_hour == 8 %}checked{% endif %}
+                                   class="w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500">
+                            <div class="ml-3">
+                                <span class="text-sm font-medium text-gray-900">🌅 Morning (8:00 AM)</span>
+                                <p class="text-xs text-gray-500">Perfect with your morning coffee</p>
+                            </div>
+                        </label>
+                        <label class="flex items-center cursor-pointer group">
+                            <input type="radio" name="preferred_send_hour" value="18" 
+                                   {% if subscriber.preferred_send_hour == 18 %}checked{% endif %}
+                                   class="w-4 h-4 text-amber-600 border-gray-300 focus:ring-amber-500">
+                            <div class="ml-3">
+                                <span class="text-sm font-medium text-gray-900">🌆 Evening (6:00 PM)</span>
+                                <p class="text-xs text-gray-500">Catch up on the day's news</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                {# Save Button #}
+                <button type="submit" 
+                        class="w-full px-6 py-3 bg-amber-600 text-white font-semibold rounded-lg 
+                               hover:bg-amber-700 transition-colors duration-200 flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Save Preferences
+                </button>
+
+                {# Resubscribe Option #}
+                {% if subscriber.status == 'unsubscribed' %}
+                <div class="pt-6 border-t border-gray-200">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h3 class="font-medium text-blue-900 mb-2">Miss the Daily Brief?</h3>
+                        <p class="text-sm text-blue-700 mb-3">You previously unsubscribed. Click below to start receiving briefs again.</p>
+                        <button type="submit" name="resubscribe" value="1"
+                                class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
+                            Resubscribe
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </form>
+
+            {# Unsubscribe Section #}
+            {% if subscriber.status == 'active' %}
+            <div class="px-6 pb-6">
+                <div class="pt-6 border-t border-gray-200">
+                    <p class="text-sm text-gray-500 mb-3">Don't want to receive the Daily Brief anymore?</p>
+                    <a href="{{ url_for('brief.unsubscribe', token=token) }}" 
+                       class="text-sm text-red-600 hover:text-red-800 hover:underline">
+                        Unsubscribe from Daily Brief
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mt-6 text-center">
+            <a href="{{ url_for('brief.today') }}" class="text-amber-600 hover:text-amber-800 text-sm">
+                ← Back to Today's Brief
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

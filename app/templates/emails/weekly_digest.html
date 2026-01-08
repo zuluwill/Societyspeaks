@@ -1,0 +1,78 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Your Weekly Discussion Digest{% endblock %}
+
+{% block content %}
+<p>Hi {{ username }},</p>
+
+<p>Here's what's been happening in your discussions this week:</p>
+
+{% if discussions_with_activity %}
+<div style="margin: 24px 0;">
+    {% for discussion in discussions_with_activity %}
+    <div style="background-color: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 16px; border-left: 4px solid #1e40af;">
+        <h3 style="margin: 0 0 8px 0; font-size: 16px; color: #1e40af;">
+            <a href="{{ discussion.url }}" style="color: #1e40af; text-decoration: none;">{{ discussion.title }}</a>
+        </h3>
+        <div style="font-size: 14px; color: #6b7280;">
+            {% if discussion.new_participants > 0 %}
+            <span style="display: inline-block; margin-right: 16px;">
+                👥 {{ discussion.new_participants }} new participant{% if discussion.new_participants != 1 %}s{% endif %}
+            </span>
+            {% endif %}
+            {% if discussion.new_responses > 0 %}
+            <span style="display: inline-block; margin-right: 16px;">
+                💬 {{ discussion.new_responses }} new response{% if discussion.new_responses != 1 %}s{% endif %}
+            </span>
+            {% endif %}
+            {% if discussion.new_votes > 0 %}
+            <span style="display: inline-block;">
+                🗳️ {{ discussion.new_votes }} new vote{% if discussion.new_votes != 1 %}s{% endif %}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="background-color: #f3f4f6; border-radius: 8px; padding: 24px; margin: 24px 0; text-align: center;">
+    <p style="margin: 0; color: #6b7280;">No new activity in your discussions this week.</p>
+    <p style="margin: 12px 0 0 0; color: #6b7280;">Start a new discussion or join an existing one!</p>
+</div>
+{% endif %}
+
+{% if trending_topics %}
+<div style="margin: 32px 0 24px 0;">
+    <h3 style="margin: 0 0 16px 0; font-size: 16px; color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">
+        🔥 Trending This Week
+    </h3>
+    <ul style="margin: 0; padding-left: 20px; color: #374151;">
+        {% for topic in trending_topics[:5] %}
+        <li style="margin-bottom: 8px;">
+            <a href="{{ topic.url }}" style="color: #1e40af; text-decoration: none;">{{ topic.title }}</a>
+            <span style="color: #9ca3af; font-size: 13px;">({{ topic.participant_count }} participants)</span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div style="background-color: #eff6ff; border-radius: 8px; padding: 16px; margin: 24px 0;">
+    <p style="margin: 0; font-size: 14px; color: #1e40af;">
+        <strong>📊 Your Stats This Week:</strong><br>
+        Discussions created: {{ stats.discussions_created }}<br>
+        Votes cast: {{ stats.votes_cast }}<br>
+        Responses written: {{ stats.responses_written }}
+    </p>
+</div>
+{% endblock %}
+
+{% block cta_url %}{{ dashboard_url }}{% endblock %}
+{% block cta_text %}View Your Dashboard{% endblock %}
+
+{% block footer_text %}
+<p style="color: #6b7280; font-size: 14px; margin-top: 24px;">
+    You're receiving this because you opted into weekly digests. 
+    <a href="{{ settings_url }}" style="color: #1e40af;">Manage your preferences</a>
+</p>
+{% endblock %}

@@ -7,7 +7,10 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 from app.utils import get_recent_activity
 from itsdangerous import URLSafeTimedSerializer
-from app.email_utils import send_password_reset_email, send_welcome_email, send_profile_completion_reminder_email, get_missing_individual_profile_fields,get_missing_company_profile_fields
+# Email functions (migrated from Loops to Resend)
+from app.resend_client import send_password_reset_email, send_welcome_email
+# Profile utilities (not email-related)
+from app.email_utils import get_missing_individual_profile_fields, get_missing_company_profile_fields
 try:
     import posthog
 except ImportError:
@@ -167,8 +170,23 @@ def login():
             else get_missing_company_profile_fields(profile)
         )
 
+        # Send profile completion reminder if there are missing fields
         if missing_fields:
-            send_profile_completion_reminder_email(user)
+            from app.resend_client import send_profile_completion_reminder_email
+            
+            # Build profile edit URL
+            if isinstance(profile, IndividualProfile):
+                profile_url = url_for('profiles.edit_individual_profile', 
+                                     username=profile.slug, _external=True)
+            else:
+                profile_url = url_for('profiles.edit_company_profile', 
+                                     company_name=profile.slug, _external=True)
+            
+            # Send reminder (don't block login on email failure)
+            try:
+                send_profile_completion_reminder_email(user, missing_fields, profile_url)
+            except Exception as e:
+                current_app.logger.error(f"Failed to send profile reminder: {e}")
 
         # Redirect to the dashboard if the user has a complete or partially complete profile
         return redirect(url_for('auth.dashboard'))
