@@ -571,21 +571,35 @@ def vote():
                 # If user provided a reason and is authenticated, sync as a Response
                 # This makes the reason visible in the discussion's response thread
                 if reason and current_user.is_authenticated:
-                    # Map vote to position: agree=pro, disagree=con, unsure=neutral
-                    position_map = {1: 'pro', -1: 'con', 0: 'neutral'}
-                    position = position_map.get(new_vote, 'neutral')
-                    
-                    # Create a Response for the linked statement
-                    statement_response = Response(
+                    # Check if user already has a response on this statement to prevent duplicates
+                    existing_response = Response.query.filter_by(
                         statement_id=question.source_statement_id,
-                        user_id=current_user.id,
-                        position=position,
-                        content=reason
-                    )
-                    db.session.add(statement_response)
-                    current_app.logger.info(
-                        f"Daily question reason synced as response to statement {question.source_statement_id}"
-                    )
+                        user_id=current_user.id
+                    ).first()
+                    
+                    if existing_response:
+                        # Update existing response content instead of creating duplicate
+                        existing_response.content = reason
+                        position_map = {1: 'pro', -1: 'con', 0: 'neutral'}
+                        existing_response.position = position_map.get(new_vote, 'neutral')
+                        current_app.logger.info(
+                            f"Daily question reason updated existing response on statement {question.source_statement_id}"
+                        )
+                    else:
+                        # Create new Response for the linked statement
+                        position_map = {1: 'pro', -1: 'con', 0: 'neutral'}
+                        position = position_map.get(new_vote, 'neutral')
+                        
+                        statement_response = Response(
+                            statement_id=question.source_statement_id,
+                            user_id=current_user.id,
+                            position=position,
+                            content=reason
+                        )
+                        db.session.add(statement_response)
+                        current_app.logger.info(
+                            f"Daily question reason synced as response to statement {question.source_statement_id}"
+                        )
         
         subscriber_id = session.get('daily_subscriber_id')
         if subscriber_id:
