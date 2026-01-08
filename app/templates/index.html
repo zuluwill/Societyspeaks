@@ -202,71 +202,88 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div class="flex flex-col md:flex-row md:items-center gap-8 lg:gap-12">
             <div class="md:w-5/12 space-y-4">
-                <div class="inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">
-                    5 minutes a day
+                <div class="inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">
+                    Stop doomscrolling. Start understanding.
                 </div>
                 <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-                    The Daily Brief
+                    Cut Through the Noise in 5 Minutes
                 </h2>
                 <p class="text-lg text-gray-600">
-                    Get the news that matters, curated for sense-making. 3-5 stories daily with multi-perspective coverage analysis, delivered straight to your inbox.
+                    Tired of news that makes you anxious but not informed? The Daily Brief translates partisan spin into shared facts, so you can understand today's debates before they become tomorrow's shouting matches.
                 </p>
-                <div class="flex flex-wrap gap-4">
+                <div class="mt-2 space-y-3">
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-gray-700"><strong>See every side at once</strong> - Know what left, right, and center are saying before the talking points go viral</p>
+                    </div>
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-gray-700"><strong>AI filters out clickbait</strong> - Only stories with real civic impact, scored for signal over noise</p>
+                    </div>
+                    <div class="flex items-start">
+                        <svg class="w-5 h-5 text-green-600 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <p class="text-gray-700"><strong>Feel informed, not overwhelmed</strong> - End your day knowing what matters, ready to discuss respectfully</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-4 pt-2">
                     <a href="{{ url_for('brief.subscribe') }}" 
-                       class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+                       class="inline-flex items-center rounded-md bg-green-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-green-500">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                         </svg>
-                        Start Free Trial
+                        Try 14 Days Free
                         <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
                     </a>
-                    <a href="{{ url_for('brief.archive') }}" 
-                       class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-                        Browse Archive
+                    <a href="{{ url_for('brief.today') }}" 
+                       class="inline-flex items-center rounded-md bg-white px-5 py-3 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                        See Today's Brief
                     </a>
                 </div>
             </div>
             <div class="md:w-7/12">
-                <div class="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-6 lg:p-8">
-                    <div class="space-y-4">
-                        <div class="flex items-center text-sm text-gray-500">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                            </svg>
-                            Delivered daily at 6pm
+                <div class="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-xl p-6 lg:p-8 border border-green-100">
+                    <div class="space-y-5">
+                        <div class="text-center">
+                            <p class="text-sm font-medium text-green-800 mb-1">Every evening at 6pm</p>
+                            <p class="text-2xl font-bold text-gray-900">Your 5-Minute Clarity Ritual</p>
                         </div>
                         <div class="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
-                            <p class="text-gray-800 font-medium">What you get:</p>
-                            <ul class="mt-3 space-y-2 text-gray-600 text-sm">
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    3-5 curated stories from trusted sources
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    Multi-perspective coverage analysis
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    "So What?" context for each story
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                    </svg>
-                                    Links to primary sources for verification
-                                </li>
-                            </ul>
+                            <div class="space-y-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm">1</div>
+                                    <div class="ml-3">
+                                        <p class="font-medium text-gray-900">3-5 stories that actually matter</p>
+                                        <p class="text-sm text-gray-500">Curated from 100+ sources, ranked by civic impact</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm">2</div>
+                                    <div class="ml-3">
+                                        <p class="font-medium text-gray-900">Multi-perspective breakdown</p>
+                                        <p class="text-sm text-gray-500">See how different outlets cover the same story</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-sm">3</div>
+                                    <div class="ml-3">
+                                        <p class="font-medium text-gray-900">"So what?" context</p>
+                                        <p class="text-sm text-gray-500">Why it matters and what to watch for next</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <p class="text-xs text-gray-500 text-center">No credit card required. 14-day free trial.</p>
+                        <div class="text-center">
+                            <p class="text-sm text-gray-600 italic">"Finally, news that helps me understand instead of just react."</p>
+                            <p class="text-xs text-gray-400 mt-1">No credit card required</p>
+                        </div>
                     </div>
                 </div>
             </div>
