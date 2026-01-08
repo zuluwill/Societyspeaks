@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for, abort
 from flask_login import login_required, current_user
-from app.models import Discussion, IndividualProfile, CompanyProfile
+from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestion
 from app import db
 from datetime import datetime
 from slugify import slugify
@@ -48,6 +48,9 @@ def index():
     )
     discussions = pagination.items
 
+    # Get today's daily question for the homepage preview
+    daily_question = DailyQuestion.get_today()
+
     return render_template('index.html',
                          featured_discussions=featured_discussions,
                          discussions=discussions,
@@ -55,7 +58,8 @@ def index():
                          search=search,
                          country=country,
                          city=city,
-                         topic=topic)
+                         topic=topic,
+                         daily_question=daily_question)
 
 
 @main_bp.route('/about')
