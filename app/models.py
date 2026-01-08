@@ -330,6 +330,11 @@ class Discussion(db.Model):
     company_profile_id = db.Column(db.Integer, db.ForeignKey('company_profile.id'), nullable=True)
     views = db.relationship('DiscussionView', backref='discussion', lazy='dynamic')
 
+    # Bluesky posting schedule (for staggered posts throughout the day)
+    bluesky_scheduled_at = db.Column(db.DateTime, nullable=True)  # When to post to Bluesky
+    bluesky_posted_at = db.Column(db.DateTime, nullable=True)  # When actually posted
+    bluesky_post_uri = db.Column(db.String(500), nullable=True)  # Bluesky post URI after posting
+
     # Constants for geographic scope
     SCOPE_GLOBAL = 'global'
     SCOPE_COUNTRY = 'country'
