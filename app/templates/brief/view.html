@@ -306,16 +306,32 @@
             {% endfor %}
         </div>
 
-        <div class="bg-white rounded-xl shadow-md p-6 mt-8 mb-12 text-center">
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Share Tomorrow's Brief</h3>
-            <p class="text-gray-600 mb-4">Know someone who'd benefit from sense-making over sensationalism?</p>
-            <button onclick="navigator.share ? navigator.share({title: '{{ brief.title }}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'))" 
-                    class="inline-flex items-center px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-                </svg>
-                Share This Brief
-            </button>
+        <!-- Support Message -->
+        <div class="bg-gradient-to-br from-blue-800 to-indigo-900 rounded-2xl shadow-xl p-8 mt-8 text-center">
+            <div class="max-w-xl mx-auto">
+                <h3 class="text-xl font-bold text-white mb-3">Help Us Bring Nuance Back to News</h3>
+                <p class="text-blue-200 mb-6 leading-relaxed">
+                    The Daily Brief is built on open source technology, designed to cut through noise and help you understand what actually matters. By subscribing, you're supporting independent, transparent journalism infrastructure that anyone can inspect, improve, or build upon.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a href="{{ url_for('brief.subscribe') }}" class="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-800 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        Support Our Work
+                    </a>
+                    <button onclick="navigator.share ? navigator.share({title: '{{ brief.title }}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'))" 
+                            class="inline-flex items-center justify-center px-6 py-3 bg-blue-700 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                        </svg>
+                        Share This Brief
+                    </button>
+                </div>
+                <p class="text-blue-300 text-sm mt-4">
+                    100% of subscriptions fund open source development
+                </p>
+            </div>
         </div>
 
         <div class="text-center text-sm text-gray-500 pb-8">
