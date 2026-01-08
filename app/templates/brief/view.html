@@ -23,6 +23,33 @@
             {% for item in items %}
             <article class="rounded-2xl shadow-lg border overflow-hidden {% if item.is_underreported %}bg-amber-50 border-amber-300{% else %}bg-white border-gray-100{% endif %}">
                 <div class="p-6 sm:p-8">
+                    <!-- Thematic Section Heading -->
+                    {% if item.trending_topic and item.trending_topic.primary_topic %}
+                    {% set topic_lower = item.trending_topic.primary_topic.lower() %}
+                    <div class="mb-3">
+                        <span class="text-xs font-bold tracking-widest uppercase
+                            {% if topic_lower in ['economy', 'business', 'finance', 'capital'] %}text-emerald-600
+                            {% elif topic_lower in ['technology', 'tech', 'digital', 'ai'] %}text-violet-600
+                            {% elif topic_lower in ['health', 'healthcare', 'medicine'] %}text-red-600
+                            {% elif topic_lower in ['environment', 'climate'] %}text-teal-600
+                            {% elif topic_lower in ['culture', 'society', 'arts'] %}text-fuchsia-600
+                            {% elif topic_lower in ['international', 'world', 'global', 'geopolitics'] %}text-blue-600
+                            {% elif topic_lower in ['policy', 'politics', 'government'] %}text-orange-600
+                            {% else %}text-slate-500{% endif %}">
+                            {% if topic_lower in ['economy', 'business', 'finance'] %}CAPITAL
+                            {% elif topic_lower in ['technology', 'tech', 'digital', 'ai'] %}TECHNOLOGY
+                            {% elif topic_lower in ['health', 'healthcare', 'medicine'] %}100-YEAR LIFE
+                            {% elif topic_lower in ['environment', 'climate'] %}OUR PLANET
+                            {% elif topic_lower in ['culture', 'society', 'arts'] %}CULTURE
+                            {% elif topic_lower in ['international', 'world', 'global', 'geopolitics'] %}WORLD
+                            {% elif topic_lower in ['policy', 'politics', 'government'] %}POLICY
+                            {% elif topic_lower in ['education'] %}LEARNING
+                            {% elif topic_lower in ['science'] %}SCIENCE
+                            {% else %}{{ item.trending_topic.primary_topic|upper }}{% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    
                     {% if item.is_underreported %}
                     <div class="mb-5">
                         <span class="inline-flex items-center px-3 py-1.5 rounded-md bg-amber-500 text-white text-xs font-bold uppercase tracking-wider">
@@ -34,7 +61,7 @@
 
                     <div class="flex items-start gap-4 mb-5">
                         {% if not item.is_underreported %}
-                        <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-800 text-white flex items-center justify-center font-bold text-lg">
+                        <div class="flex-shrink-0 w-9 h-9 rounded-full bg-blue-800 text-white flex items-center justify-center font-bold text-base">
                             {{ item.position }}
                         </div>
                         {% endif %}
@@ -199,9 +226,34 @@
                     {% endif %}
                     {% endif %}
 
+                    <!-- Original News Sources -->
+                    {% if item.trending_topic and item.trending_topic.articles %}
+                    {% set topic_articles = item.trending_topic.articles.all()[:5] %}
+                    {% if topic_articles %}
+                    <div class="mb-6">
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">📰 Read the Original Sources</p>
+                        <div class="space-y-2">
+                            {% for topic_article in topic_articles %}
+                            {% if topic_article.article and topic_article.article.url %}
+                            <a href="{{ topic_article.article.url }}" target="_blank" rel="noopener" 
+                               class="block p-3 rounded-lg border-l-3 border-l-blue-500 bg-slate-50 hover:bg-blue-50 transition-colors group">
+                                <p class="text-sm font-medium text-gray-800 group-hover:text-blue-700 leading-snug">
+                                    {{ topic_article.article.title[:90] }}{% if topic_article.article.title|length > 90 %}...{% endif %}
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    {{ topic_article.article.source_name }}{% if topic_article.article.published_at %} &bull; {{ topic_article.article.published_at.strftime('%d %b %Y') }}{% endif %}
+                                </p>
+                            </a>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+
                     {% if item.verification_links %}
                     <div class="mb-6">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Verify It Yourself</p>
+                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">🔗 Verify It Yourself</p>
                         <div class="space-y-2">
                             {% for link in item.verification_links %}
                             <a href="{{ link.url }}" target="_blank" rel="noopener" 
