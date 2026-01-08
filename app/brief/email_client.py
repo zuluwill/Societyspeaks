@@ -165,9 +165,9 @@ class ResendClient:
         Returns:
             str: HTML email content
         """
-        # Get base URL from config or env
-        import os
-        base_url = os.environ.get('BASE_URL', 'https://societyspeaks.io').rstrip('/')
+        # Get base URL from config or env (APP_BASE_URL is the primary, fallback to SITE_URL)
+        base_url = os.environ.get('APP_BASE_URL') or os.environ.get('SITE_URL', 'https://societyspeaks.io')
+        base_url = base_url.rstrip('/')
         
         # Build URLs
         unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
@@ -239,7 +239,7 @@ class ResendClient:
             {items_html}
 
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; text-align: center;">
-                <p><a href="{unsubscribe_url}" style="color: #666;">Unsubscribe</a> | <a href="https://societyspeaks.com/brief/archive" style="color: #666;">View Archive</a> | <a href="https://societyspeaks.com/brief/methodology" style="color: #666;">How We Work</a></p>
+                <p><a href="{unsubscribe_url}" style="color: #666;">Unsubscribe</a> | <a href="https://societyspeaks.io/brief/archive" style="color: #666;">View Archive</a> | <a href="https://societyspeaks.io/brief/methodology" style="color: #666;">How We Work</a></p>
                 <p style="margin-top: 10px;">Society Speaks – Sense-making, not sensationalism</p>
             </div>
         </body>
