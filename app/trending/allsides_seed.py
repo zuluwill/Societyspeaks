@@ -94,6 +94,16 @@ ALLSIDES_RATINGS = {
         'source': 'allsides',
         'notes': 'US magazine with left-leaning editorial perspective'
     },
+    'Foreign Policy': {
+        'leaning': 0,  # Center
+        'source': 'allsides',
+        'notes': 'Leading global affairs publication, non-partisan'
+    },
+    'War on the Rocks': {
+        'leaning': 0,  # Center
+        'source': 'manual',
+        'notes': 'National security and defense analysis, academic/expert focus'
+    },
 
     # Podcasts (Assessed based on content and hosts)
     'The News Agents': {
@@ -130,6 +140,21 @@ ALLSIDES_RATINGS = {
         'leaning': 0,  # Center
         'source': 'manual',
         'notes': 'Philosophy/lifestyle focused, generally apolitical'
+    },
+    'Lex Fridman Podcast': {
+        'leaning': 0,  # Center
+        'source': 'manual',
+        'notes': 'Long-form conversations on AI, science, philosophy with diverse guests'
+    },
+    'Huberman Lab': {
+        'leaning': 0,  # Center
+        'source': 'manual',
+        'notes': 'Neuroscience and science-based health, generally apolitical'
+    },
+    'The Ezra Klein Show': {
+        'leaning': -1,  # Lean Left
+        'source': 'manual',
+        'notes': 'NYT politics and policy podcast, center-left editorial perspective'
     },
 }
 
