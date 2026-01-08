@@ -337,21 +337,41 @@ class BriefEmailScheduler:
 
     def send_todays_brief_hourly(self) -> Optional[dict]:
         """
-        Send today's brief to subscribers at current UTC hour.
+        Send the latest brief to subscribers at current UTC hour.
 
         Called every hour by scheduler.
+        
+        Logic: The brief is generated at 5pm UTC and published at 6pm UTC.
+        - Before 6pm UTC: Send yesterday's brief (today's isn't ready yet)
+        - After 6pm UTC: Send today's brief
 
         Returns:
             dict: Send results, or None if no brief published
         """
-        from datetime import date
+        from datetime import date, timedelta
 
-        # Get today's published brief
+        current_hour = datetime.utcnow().hour
         today = date.today()
-        brief = DailyBrief.get_today()
+        
+        # Brief is published at 6pm UTC (18:00)
+        # Before that, morning subscribers should get yesterday's brief
+        BRIEF_PUBLISH_HOUR = 18
+        
+        if current_hour < BRIEF_PUBLISH_HOUR:
+            # Morning hours - send yesterday's brief
+            brief_date = today - timedelta(days=1)
+            brief = DailyBrief.get_by_date(brief_date)
+            if not brief:
+                # Fallback to today's if yesterday's doesn't exist
+                brief = DailyBrief.get_today()
+            else:
+                logger.info(f"Morning send: using yesterday's brief ({brief_date})")
+        else:
+            # Evening hours - send today's brief
+            brief = DailyBrief.get_today()
 
         if not brief:
-            logger.info("No published brief for today, skipping send")
+            logger.info("No published brief available, skipping send")
             return None
 
         # Get subscribers for this hour
