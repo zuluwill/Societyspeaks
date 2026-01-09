@@ -1,0 +1,93 @@
+Let me do a comprehensive audit to check if we've truly addressed all N+1 patterns:
+
+[3 tools called]
+
+I found several more potential N+1 issues. Let me check where these are used:
+
+[6 tools called]
+
+Found **2 more N+1 issues** with `item_count`. Let me fix them:
+
+[9 tools called]
+
+All fixes pushed. Here's a **comprehensive summary of all N+1 fixes** and **best practices going forward**:
+
+---
+
+## ✅ All N+1 Fixes Applied
+
+| Route/Model | Issue | Fix |
+|-------------|-------|-----|
+| `discussions/routes.py:view_discussion` | `creator`, `source_article_links` lazy loaded | Added `joinedload` with nested relations |
+| `daily/routes.py:get_source_articles` | Lazy chain through `source_discussion` | Direct query with `joinedload` |
+| `statements.py:list_responses` | Recursive child queries | Pre-fetch all, build tree in-memory |
+| `statements.py:get_response_children` | Per-child user + has_children queries | `joinedload` + batch subquery |
+| `trending/routes.py:view_articles` | `article.source` lazy loaded | Added `joinedload(NewsArticle.source)` |
+| `trending/routes.py:view_topic` | Nested `articles.article.source` | Nested `joinedload` chain |
+| `statements.py:view_statement` | `response.user` lazy loaded | Added `joinedload(Response.user)` |
+| `admin/routes.py:list_daily_questions` | `q.response_count` per row | Batch COUNT query + caching |
+| `brief/admin.py:dashboard` | `brief.item_count` per row | Batch COUNT query + caching |
+| `brief/routes.py:archive` | `brief.item_count` per row | Batch COUNT query + caching |
+
+---
+
+## 📚 Best Practices to Prevent Future N+1s
+
+### 1. **Avoid Query-Executing Properties in Models**
+```python
+# ❌ BAD - triggers query every access
+@property
+def item_count(self):
+    return self.items.count()
+
+# ✅ GOOD - check for cached value first
+@property
+def item_count(self):
+    if hasattr(self, '_cached_item_count'):
+        return self._cached_item_count
+    return self.items.count()
+```
+
+### 2. **Batch Fetch Counts in List Routes**
+```python
+# In routes that display lists:
+brief_ids = [b.id for b in briefs]
+counts = db.session.query(
+    BriefItem.brief_id,
+    func.count(BriefItem.id)
+).filter(BriefItem.brief_id.in_(brief_ids)).group_by(BriefItem.brief_id).all()
+
+for brief in briefs:
+    brief._cached_item_count = counts.get(brief.id, 0)
+```
+
+### 3. **Use `joinedload` for Relationships Accessed in Templates**
+```python
+# If template does {{ item.user.name }}
+query = Model.query.options(joinedload(Model.user)).all()
+```
+
+### 4. **Test with SQL Logging Enabled**
+```python
+# In development config:
+SQLALCHEMY_ECHO = True
+# Or:
+import logging
+logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+```
+
+---
+
+## 🔍 Remaining Lower-Priority Items
+
+These properties execute queries but are **not used in list loops** (single-item views only):
+
+- `DailyQuestion.vote_percentages` - used in edit form (single question)
+- `TrendingTopic.has_trusted_source` - used in pipeline logic, not templates
+- `DailyBriefTeam.current_seat_count` - low-traffic admin views
+
+These are acceptable for now but could be optimized if they start appearing in Sentry.
+
+---
+
+You should now be free of N+1 regressions! 🎉
