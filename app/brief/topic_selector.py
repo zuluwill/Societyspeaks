@@ -189,10 +189,15 @@ class TopicSelector:
 
             # Check geographic diversity (prefer mix of scopes)
             # Allow multiple topics from same country if different scopes
-            if topic.geographic_scope and topic.geographic_countries:
-                countries = topic.geographic_countries.split(',')
+            # Note: geographic_scope/geographic_countries are on articles, not topics
+            # Use getattr for safe access as these may not exist on TrendingTopic
+            geo_scope = getattr(topic, 'geographic_scope', None)
+            geo_countries = getattr(topic, 'geographic_countries', None)
+            
+            if geo_scope and geo_countries:
+                countries = geo_countries.split(',')
                 # If it's national/local, check if we already have same country
-                if topic.geographic_scope in ['national', 'local']:
+                if geo_scope in ['national', 'local']:
                     if any(c.strip() in used_geographic_countries for c in countries):
                         logger.debug(f"Skipping '{topic.title[:40]}...' - country already covered")
                         continue
@@ -201,8 +206,8 @@ class TopicSelector:
             selected.append(topic)
             if topic.primary_topic:
                 used_categories.add(topic.primary_topic)
-            if topic.geographic_countries:
-                for country in topic.geographic_countries.split(','):
+            if geo_countries:
+                for country in geo_countries.split(','):
                     used_geographic_countries.add(country.strip())
 
             logger.info(f"Selected topic #{len(selected)}: '{topic.title}' (score={score:.2f})")

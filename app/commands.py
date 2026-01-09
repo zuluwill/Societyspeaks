@@ -214,7 +214,7 @@ def init_commands(app):
             for i, topic in enumerate(topics, 1):
                 click.echo(f"{i}. {topic.title}")
                 click.echo(f"   Civic: {topic.civic_score:.2f} | Quality: {topic.quality_score:.2f} | Sources: {topic.source_count}")
-                click.echo(f"   Category: {topic.primary_topic} | Scope: {topic.geographic_scope}")
+                click.echo(f"   Category: {topic.primary_topic} | Scope: {getattr(topic, 'geographic_scope', 'N/A')}")
                 click.echo()
 
         except Exception as e:
