@@ -104,8 +104,10 @@ def view_articles():
     status = request.args.get('status', '')
     keyword = request.args.get('keyword', '').strip()
     
-    query = NewsArticle.query
-    
+    query = NewsArticle.query.options(
+        db.joinedload(NewsArticle.source)
+    )
+
     if search:
         query = query.filter(
             db.or_(
@@ -161,12 +163,19 @@ def view_articles():
 @admin_required
 def view_topic(topic_id):
     """View topic details."""
-    topic = TrendingTopic.query.get_or_404(topic_id)
-    
+    from app.models import TrendingTopicArticle, NewsArticle
+    from sqlalchemy.orm import joinedload
+
+    topic = TrendingTopic.query.options(
+        joinedload(TrendingTopic.articles)
+        .joinedload(TrendingTopicArticle.article)
+        .joinedload(NewsArticle.source)
+    ).get_or_404(topic_id)
+
     recent_discussions = Discussion.query.filter_by(
         has_native_statements=True
     ).order_by(Discussion.created_at.desc()).limit(20).all()
-    
+
     return render_template(
         'trending/topic_detail.html',
         topic=topic,
