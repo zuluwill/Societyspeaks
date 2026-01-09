@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, Blueprint,
 from flask_login import login_required, current_user
 from app import db, limiter
 from app.discussions.forms import CreateDiscussionForm
-from app.models import Discussion, DiscussionParticipant, TrendingTopic
+from app.models import Discussion, DiscussionParticipant, TrendingTopic, DiscussionSourceArticle, NewsArticle, NewsSource
 from app.utils import get_recent_activity
 from app.middleware import track_discussion_view 
 from app.email_utils import create_discussion_notification
@@ -156,7 +156,13 @@ def view_discussion(discussion_id, slug):
     from app.models import Statement
     from sqlalchemy import desc, func
     
-    discussion = Discussion.query.get_or_404(discussion_id)
+    # Eager load creator and source_article_links with nested article.source to prevent N+1 queries
+    discussion = Discussion.query.options(
+        joinedload(Discussion.creator),
+        joinedload(Discussion.source_article_links)
+        .joinedload(DiscussionSourceArticle.article)
+        .joinedload(NewsArticle.source)
+    ).get_or_404(discussion_id)
     # Redirect if the slug in the URL doesn't match the discussion's slug
     if discussion.slug != slug:
         return redirect(url_for('discussions.view_discussion', 
@@ -173,9 +179,10 @@ def view_discussion(discussion_id, slug):
         form = StatementForm()
         sort = request.args.get('sort', 'progressive')
         
-        # Base query with eager loading of user data to prevent N+1 queries
+        # Base query with eager loading of user data and responses to prevent N+1 queries
         query = Statement.query.options(
-            joinedload(Statement.user)
+            joinedload(Statement.user),
+            joinedload(Statement.responses)
         ).filter_by(
             discussion_id=discussion_id,
             is_deleted=False
