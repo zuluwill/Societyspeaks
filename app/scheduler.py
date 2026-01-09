@@ -495,6 +495,7 @@ def init_scheduler(app):
                         logger.warning("No brief exists for today!")
 
             except Exception as e:
+                db.session.rollback()
                 logger.error(f"Auto-publish failed: {e}", exc_info=True)
 
 
