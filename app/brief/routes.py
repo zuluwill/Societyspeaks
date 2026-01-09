@@ -207,8 +207,12 @@ def subscribe():
 
             logger.info(f"New brief subscriber: {email}")
 
-            # Send welcome email (optional - implement later)
-            # send_brief_welcome_email(subscriber)
+            try:
+                from app.brief.email_client import ResendClient
+                email_client = ResendClient()
+                email_client.send_welcome(subscriber)
+            except Exception as e:
+                logger.error(f"Failed to send welcome email to {email}: {e}")
 
             flash('Successfully subscribed! Check your email for the first brief.', 'success')
             return redirect(url_for('brief.subscribe_success'))
