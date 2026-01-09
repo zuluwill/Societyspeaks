@@ -1702,7 +1702,14 @@ class DailyQuestion(db.Model):
     
     @property
     def response_count(self):
-        """Total number of responses to this daily question"""
+        """Total number of responses to this daily question.
+        
+        Uses cached count if available (set by batch queries in admin routes)
+        to prevent N+1 query issues.
+        """
+        # Check for cached count (set by admin list routes to prevent N+1)
+        if hasattr(self, '_cached_response_count'):
+            return self._cached_response_count
         return DailyQuestionResponse.query.filter_by(daily_question_id=self.id).count()
     
     @property

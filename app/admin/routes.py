@@ -518,12 +518,31 @@ def log_admin_access():
 @login_required
 @admin_required
 def list_daily_questions():
+    from sqlalchemy import func
+    
     page = request.args.get('page', 1, type=int)
     per_page = 20
     
+    # Get paginated questions
     questions = DailyQuestion.query.order_by(
         DailyQuestion.question_date.desc()
     ).paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Batch fetch response counts for all questions on this page (prevents N+1)
+    question_ids = [q.id for q in questions.items]
+    response_counts = {}
+    if question_ids:
+        counts = db.session.query(
+            DailyQuestionResponse.daily_question_id,
+            func.count(DailyQuestionResponse.id)
+        ).filter(
+            DailyQuestionResponse.daily_question_id.in_(question_ids)
+        ).group_by(DailyQuestionResponse.daily_question_id).all()
+        response_counts = {qid: count for qid, count in counts}
+    
+    # Attach counts to question objects to avoid N+1 in template
+    for q in questions.items:
+        q._cached_response_count = response_counts.get(q.id, 0)
     
     today = date.today()
     todays_question = DailyQuestion.get_today()
