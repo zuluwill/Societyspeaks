@@ -50,10 +50,28 @@ def today():
             items=items
         )
 
-    # No brief available for subscribers
+    # No brief available for today - show most recent brief instead
     if not brief:
-        flash("Today's brief is being prepared. Check back soon!", 'info')
-        return render_template('brief/no_brief.html')
+        # Find the most recent published brief
+        latest_brief = DailyBrief.query.filter_by(
+            status='published'
+        ).order_by(DailyBrief.date.desc()).first()
+        
+        if latest_brief:
+            items = latest_brief.items.order_by(BriefItem.position).all()
+            flash("Today's brief publishes at 6pm UTC. Here's the most recent brief.", 'info')
+            return render_template(
+                'brief/view.html',
+                brief=latest_brief,
+                items=items,
+                subscriber=subscriber,
+                is_subscriber=is_subscriber,
+                is_today=False,
+                waiting_for_today=True
+            )
+        else:
+            flash("Today's brief publishes at 6pm UTC. Check back soon!", 'info')
+            return render_template('brief/no_brief.html')
 
     # Get items ordered by position
     items = brief.items.order_by(BriefItem.position).all()
