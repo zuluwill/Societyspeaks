@@ -179,10 +179,11 @@ def view_discussion(discussion_id, slug):
         form = StatementForm()
         sort = request.args.get('sort', 'progressive')
         
-        # Base query with eager loading of user data and responses to prevent N+1 queries
+        # Base query with eager loading of user data and responses (with their users) to prevent N+1 queries
+        from app.models import Response
         query = Statement.query.options(
             joinedload(Statement.user),
-            joinedload(Statement.responses)
+            joinedload(Statement.responses).joinedload(Response.user)
         ).filter_by(
             discussion_id=discussion_id,
             is_deleted=False
