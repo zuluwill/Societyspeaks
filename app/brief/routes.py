@@ -202,6 +202,8 @@ def subscribe():
                 existing.preferred_send_hour = preferred_hour
                 existing.generate_magic_token()
                 existing.start_trial()
+                # Clear welcome_email_sent_at to allow re-sending for reactivated subscribers
+                existing.welcome_email_sent_at = None
                 db.session.commit()
 
                 try:

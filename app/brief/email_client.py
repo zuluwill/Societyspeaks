@@ -254,17 +254,23 @@ class ResendClient:
         """
         return html
 
-    def send_welcome(self, subscriber: DailyBriefSubscriber) -> bool:
+    def send_welcome(self, subscriber: DailyBriefSubscriber, force: bool = False) -> bool:
         """
         Send welcome email to new daily brief subscriber.
 
         Args:
             subscriber: DailyBriefSubscriber instance
+            force: If True, send even if welcome email was already sent (for manual resends)
 
         Returns:
             bool: True if sent successfully
         """
         try:
+            # Safety check: prevent duplicate welcome emails
+            if subscriber.welcome_email_sent_at and not force:
+                logger.warning(f"Welcome email already sent to {subscriber.email} at {subscriber.welcome_email_sent_at}, skipping (use force=True to override)")
+                return True  # Return True since email was already sent successfully
+
             base_url = os.environ.get('APP_BASE_URL') or os.environ.get('SITE_URL', 'https://societyspeaks.io')
             base_url = base_url.rstrip('/')
 
@@ -297,6 +303,9 @@ class ResendClient:
             success = self._send_with_retry(email_data)
 
             if success:
+                # Record that welcome email was sent to prevent duplicates
+                subscriber.welcome_email_sent_at = datetime.utcnow()
+                db.session.commit()
                 logger.info(f"Sent welcome email to {subscriber.email}")
             else:
                 logger.error(f"Failed to send welcome email to {subscriber.email}")
