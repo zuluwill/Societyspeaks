@@ -954,6 +954,10 @@ class TrendingTopic(db.Model):
     # Primary topic category for the discussion
     primary_topic = db.Column(db.String(50))  # Maps to Discussion.TOPICS
     
+    # Geographic scope (derived from source articles)
+    geographic_scope = db.Column(db.String(20), default='global')  # 'global', 'country', 'regional'
+    geographic_countries = db.Column(db.String(500))  # Comma-separated: "UK, US" or None for global
+    
     source_count = db.Column(db.Integer, default=0)  # Number of unique sources
     
     # Embedding for question-level deduplication (last 30 days)

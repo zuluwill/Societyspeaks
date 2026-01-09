@@ -570,6 +570,8 @@ def bulk_article_action():
     
     elif action == 'create_topic':
         try:
+            from app.trending.clustering import generate_neutral_question, get_embeddings, extract_geographic_info_from_articles
+            
             title = generate_neutral_question(articles)
             if not title:
                 title = f"Discussion: {articles[0].title[:100]}"
@@ -579,11 +581,16 @@ def bulk_article_action():
             embeddings = get_embeddings([combined])
             topic_embedding = embeddings[0] if embeddings else None
             
+            # Extract geographic info from source articles
+            geographic_scope, geographic_countries = extract_geographic_info_from_articles(articles)
+            
             topic = TrendingTopic(
                 title=title,
                 description=articles[0].summary or '',
                 topic_embedding=topic_embedding,
                 source_count=len(set(a.source_id for a in articles)),
+                geographic_scope=geographic_scope,
+                geographic_countries=geographic_countries,
                 status='pending_review',
                 hold_until=datetime.utcnow()
             )
