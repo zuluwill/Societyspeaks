@@ -144,10 +144,6 @@ class Config:
     MAIL_USERNAME = os.getenv('EMAIL_USER')
     MAIL_PASSWORD = os.getenv('EMAIL_PASS')
     MAIL_DEFAULT_SENDER = os.getenv('EMAIL_USER')
-    
-    # DEPRECATED: Loops.so API (kept for backwards compatibility during migration)
-    # Migration to Resend complete Jan 2026 - can be removed after confirming no issues
-    LOOPS_API_KEY = os.getenv('LOOPS_API_KEY')
 
     # Admin Configuration
     ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@example.com')

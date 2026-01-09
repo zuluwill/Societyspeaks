@@ -1902,6 +1902,21 @@ class DailyQuestionSubscriber(db.Model):
             
         return subscriber
     
+    def has_received_email_today(self):
+        """Check if subscriber already received daily question email today (prevents duplicate sends)"""
+        from datetime import date as date_type
+        if not self.last_email_sent:
+            return False
+        return self.last_email_sent.date() == date_type.today()
+    
+    def can_receive_email(self):
+        """Full eligibility check including duplicate prevention"""
+        if not self.is_active:
+            return False
+        if self.has_received_email_today():
+            return False
+        return True
+    
     def update_participation_streak(self, has_reason=False):
         """Update participation streak after a vote"""
         from datetime import date
