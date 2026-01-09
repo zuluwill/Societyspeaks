@@ -170,6 +170,7 @@ class ResendClient:
         base_url = base_url.rstrip('/')
         
         # Build URLs
+        magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
         unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
         preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
 
@@ -180,6 +181,7 @@ class ResendClient:
                 'emails/daily_brief.html',
                 brief=brief,
                 subscriber=subscriber,
+                magic_link_url=magic_link_url,
                 unsubscribe_url=unsubscribe_url,
                 preferences_url=preferences_url,
                 base_url=base_url
@@ -188,14 +190,15 @@ class ResendClient:
         except Exception as e:
             logger.error(f"Template rendering failed: {e}")
             # Fallback to simple HTML
-            return self._fallback_html(brief, unsubscribe_url)
+            return self._fallback_html(brief, magic_link_url, unsubscribe_url)
 
-    def _fallback_html(self, brief: DailyBrief, unsubscribe_url: str) -> str:
+    def _fallback_html(self, brief: DailyBrief, magic_link_url: str, unsubscribe_url: str) -> str:
         """
         Generate simple HTML email if template rendering fails.
 
         Args:
             brief: DailyBrief instance
+            magic_link_url: Magic link to view brief on website
             unsubscribe_url: Unsubscribe link
 
         Returns:
@@ -230,6 +233,10 @@ class ResendClient:
                 <p style="margin: 5px 0 0 0; font-size: 14px; color: #666;">{brief.date.strftime('%A, %B %d, %Y')}</p>
             </div>
 
+            <div style="text-align: center; margin-bottom: 25px;">
+                <a href="{magic_link_url}" style="display: inline-block; background-color: #d97706; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 14px;">View on Website</a>
+            </div>
+
             <div style="margin-bottom: 30px; padding: 15px; background: #fffbf0; border-left: 4px solid #f0ad4e;">
                 <p style="margin: 0; font-size: 14px; font-style: italic;">
                     {brief.intro_text}
@@ -239,7 +246,7 @@ class ResendClient:
             {items_html}
 
             <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; text-align: center;">
-                <p><a href="{unsubscribe_url}" style="color: #666;">Unsubscribe</a> | <a href="https://societyspeaks.io/brief/archive" style="color: #666;">View Archive</a> | <a href="https://societyspeaks.io/brief/methodology" style="color: #666;">How We Work</a></p>
+                <p><a href="{magic_link_url}" style="color: #d97706; font-weight: 600;">View on Website</a> | <a href="{unsubscribe_url}" style="color: #666;">Unsubscribe</a> | <a href="https://societyspeaks.io/brief/archive" style="color: #666;">View Archive</a></p>
                 <p style="margin-top: 10px;">Society Speaks – Sense-making, not sensationalism</p>
             </div>
         </body>
