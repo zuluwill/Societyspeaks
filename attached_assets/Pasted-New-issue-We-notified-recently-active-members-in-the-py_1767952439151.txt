@@ -1,0 +1,55 @@
+New issue
+We notified recently active members in the python-flask project of this issue
+ISSUE
+ProgrammingError brief_admin.dashboard
+(psycopg2.errors.UndefinedColumn) column trending_topic.geographic_scope does not exist LINE 1: ....
+ID: b16b6c3a49b84b7b8e54dee399fa203d
+Jan. 9, 2026, 9:52:50 a.m. GMT
+Project	python-flask
+environment	production
+Level	error
+Exception
+
+UndefinedColumn: column trending_topic.geographic_scope does not exist
+LINE 1: ...ic.primary_topic AS trending_topic_primary_topic, trending_t...
+                                                             ^
+
+  File "sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "sqlalchemy/engine/default.py", line 941, in do_execute
+    cursor.execute(statement, parameters)
+
+ProgrammingError: (psycopg2.errors.UndefinedColumn) column trending_topic.geographic_scope does not exist
+LINE 1: ...ic.primary_topic AS trending_topic_primary_topic, trending_t...
+                                                             ^
+
+[SQL: SELECT trending_topic.id AS trending_topic_id, trending_topic.title AS trending_topic_title, trending_topic.description AS trending_topic_description, trending_topic.canonical_tags AS trending_topic_canonical_tags, trending_topic.topic_slug AS trending_topic_topic_slug, trending_topic.civic_score AS trending_topic_civic_score, trending_topic.quality_score AS trending_topic_quality_score, trending_topic.audience_score AS trending_topic_audience_score, trending_topic.risk_flag AS trending_topic_risk_flag, trending_topic.risk_reason AS trending_topic_risk_reason, trending_topic.primary_topic AS trending_topic_primary_topic, trending_topic.geographic_scope AS trending_topic_geographic_scope, trending_topic.geographic_countries AS trending_topic_geographic_countries, trending_topic....
+(16 additional frame(s) were not displayed)
+...
+  File "app/brief/admin.py", line 37, in decorated_function
+    return f(*args, **kwargs)
+  File "app/brief/admin.py", line 54, in dashboard
+    candidate_topics = select_todays_topics(limit=10)
+  File "app/brief/topic_selector.py", line 283, in select_todays_topics
+    return selector.select_topics(limit)
+  File "app/brief/topic_selector.py", line 64, in select_topics
+    candidates = self._get_candidate_topics()
+  File "app/brief/topic_selector.py", line 99, in _get_candidate_topics
+    ).all()
+Request
+
+URL	https://societyspeaks.io/admin/brief/
+Method	GET
+User
+
+Message
+
+Unhandled Exception: (psycopg2.errors.UndefinedColumn) column trending_topic.geographic_scope does not exist
+LINE 1: ...ic.primary_topic AS trending_topic_primary_topic, trending_t...
+                                                             ^
+
+[SQL: SELECT trending_topic.id AS trending_topic_id, trending_topic.title AS trending_topic_title, trending_topic.description AS trending_topic_description, trending_topic.canonical_tags AS trending_topic_canonical_tags, trending_topic.topic_slug AS trending_topic_topic_slug, trending_topic.civic_score AS trending_topic_civic_score, trending_topic.quality_score AS trending_topic_quality_score, trending_topic.audience_score AS trending_topic_audience_score, trending_topic.risk_flag AS trending_topic_risk_flag, trending_topic.risk_reason AS trending_topic_risk_reason, trending_topic.primary_topic AS trending_topic_primary_topic, trending_topic.geographic_scope AS trending_topic_geographic_scope, trending_topic.geographic_countries AS trending_topic_geographic_count...
+Tags
+
+browser = Chrome 143  browser.name = Chrome  client_os = macOS client_os.name = macOS  device = Mac  device.family = Mac environment = production  handled = yes  level = error  logger = app mechanism = logging  runtime = CPython 3.11.13  runtime.name = CPython server_name = nixos  transaction = brief_admin.dashboard url = https://societyspeaks.io/admin/brief/
+Mute this alert
