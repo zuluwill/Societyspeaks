@@ -186,6 +186,13 @@ def subscribe():
                 existing.start_trial()
                 db.session.commit()
 
+                try:
+                    from app.brief.email_client import ResendClient
+                    email_client = ResendClient()
+                    email_client.send_welcome(existing)
+                except Exception as e:
+                    logger.error(f"Failed to send welcome email to {email}: {e}")
+
                 flash('Welcome back! Your subscription has been reactivated.', 'success')
                 return redirect(url_for('brief.subscribe_success'))
 
