@@ -2,16 +2,22 @@
 """
 Email utilities - helper functions and wrappers.
 All actual email sending is done via Resend (see app/resend_client.py).
+
+Note: RateLimiter is kept here as it's used by app/brief/email_client.py
 """
-import os
 import time
 import threading
 from flask import current_app, url_for
-from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestionSubscriber
+from app.models import IndividualProfile, CompanyProfile
 
 
 class RateLimiter:
-    """Thread-safe rate limiter for API calls"""
+    """Thread-safe rate limiter for API calls.
+    
+    Used by:
+    - app/brief/email_client.py for brief email sending
+    - app/resend_client.py for transactional emails
+    """
     def __init__(self, rate_per_second):
         self.rate = rate_per_second
         self.min_interval = 1.0 / rate_per_second

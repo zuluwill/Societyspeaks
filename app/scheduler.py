@@ -120,7 +120,10 @@ def init_scheduler(app):
         """
         with app.app_context():
             from app import db
-            from app.models import ConsensusAnalysis, Discussion, NewsArticle, TrendingTopic
+            from app.models import (
+                ConsensusAnalysis, Discussion, NewsArticle, TrendingTopic, 
+                TrendingTopicArticle, DiscussionSourceArticle
+            )
             from datetime import timedelta
             
             logger.info("Starting cleanup of old data")
@@ -128,29 +131,84 @@ def init_scheduler(app):
             cutoff_30_days = datetime.utcnow() - timedelta(days=30)
             cutoff_7_days = datetime.utcnow() - timedelta(days=7)
             
-            low_relevance_deleted = NewsArticle.query.filter(
-                NewsArticle.fetched_at < cutoff_7_days,
-                NewsArticle.relevance_score.isnot(None),
-                NewsArticle.relevance_score < 0.3
-            ).delete(synchronize_session=False)
-            db.session.commit()
-            if low_relevance_deleted > 0:
-                logger.info(f"Deleted {low_relevance_deleted} low-relevance articles (>7 days old)")
+            # Get IDs of articles linked to published discussions (we want to KEEP these)
+            # These preserve source attribution for user-facing content
+            articles_in_discussions = db.session.query(
+                DiscussionSourceArticle.article_id
+            ).distinct().subquery()
             
-            old_articles = NewsArticle.query.filter(
-                NewsArticle.fetched_at < cutoff_30_days
-            ).delete(synchronize_session=False)
-            db.session.commit()
-            if old_articles > 0:
-                logger.info(f"Deleted {old_articles} old news articles (>30 days)")
+            # Clean up low-relevance articles (with foreign key handling)
+            # EXCLUDE articles that are linked to discussions - we keep those
+            try:
+                low_relevance_article_ids = db.session.query(NewsArticle.id).filter(
+                    NewsArticle.fetched_at < cutoff_7_days,
+                    NewsArticle.relevance_score.isnot(None),
+                    NewsArticle.relevance_score < 0.3,
+                    NewsArticle.id.notin_(articles_in_discussions)  # Keep discussion sources
+                ).all()
+                low_relevance_ids = [a[0] for a in low_relevance_article_ids]
+                
+                if low_relevance_ids:
+                    # First delete references in trending_topic_article
+                    refs_deleted = TrendingTopicArticle.query.filter(
+                        TrendingTopicArticle.article_id.in_(low_relevance_ids)
+                    ).delete(synchronize_session=False)
+                    db.session.commit()
+                    if refs_deleted > 0:
+                        logger.info(f"Deleted {refs_deleted} topic-article references for low-relevance articles")
+                    
+                    # Now safe to delete the articles
+                    low_relevance_deleted = NewsArticle.query.filter(
+                        NewsArticle.id.in_(low_relevance_ids)
+                    ).delete(synchronize_session=False)
+                    db.session.commit()
+                    if low_relevance_deleted > 0:
+                        logger.info(f"Deleted {low_relevance_deleted} low-relevance articles (>7 days old)")
+            except Exception as e:
+                logger.error(f"Error cleaning up low-relevance articles: {e}")
+                db.session.rollback()
             
-            old_discarded = TrendingTopic.query.filter(
-                TrendingTopic.status == 'discarded',
-                TrendingTopic.created_at < cutoff_30_days
-            ).delete(synchronize_session=False)
-            db.session.commit()
-            if old_discarded > 0:
-                logger.info(f"Deleted {old_discarded} old discarded topics")
+            # Clean up old articles (with foreign key handling)
+            # EXCLUDE articles that are linked to discussions - we keep those
+            try:
+                old_article_ids = db.session.query(NewsArticle.id).filter(
+                    NewsArticle.fetched_at < cutoff_30_days,
+                    NewsArticle.id.notin_(articles_in_discussions)  # Keep discussion sources
+                ).all()
+                old_ids = [a[0] for a in old_article_ids]
+                
+                if old_ids:
+                    # First delete references in trending_topic_article
+                    old_refs_deleted = TrendingTopicArticle.query.filter(
+                        TrendingTopicArticle.article_id.in_(old_ids)
+                    ).delete(synchronize_session=False)
+                    db.session.commit()
+                    if old_refs_deleted > 0:
+                        logger.info(f"Deleted {old_refs_deleted} topic-article references for old articles")
+                    
+                    # Now safe to delete the articles
+                    old_articles = NewsArticle.query.filter(
+                        NewsArticle.id.in_(old_ids)
+                    ).delete(synchronize_session=False)
+                    db.session.commit()
+                    if old_articles > 0:
+                        logger.info(f"Deleted {old_articles} old news articles (>30 days)")
+            except Exception as e:
+                logger.error(f"Error cleaning up old articles: {e}")
+                db.session.rollback()
+            
+            # Clean up discarded topics
+            try:
+                old_discarded = TrendingTopic.query.filter(
+                    TrendingTopic.status == 'discarded',
+                    TrendingTopic.created_at < cutoff_30_days
+                ).delete(synchronize_session=False)
+                db.session.commit()
+                if old_discarded > 0:
+                    logger.info(f"Deleted {old_discarded} old discarded topics")
+            except Exception as e:
+                logger.error(f"Error cleaning up discarded topics: {e}")
+                db.session.rollback()
             
             logger.info("Starting cleanup of old consensus analyses")
             

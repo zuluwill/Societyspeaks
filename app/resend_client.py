@@ -897,6 +897,7 @@ def send_daily_question_to_all_subscribers() -> int:
     CHUNK_SIZE = 500
     total_sent = 0
     total_failed = 0
+    skipped_duplicates = 0
     offset = 0
 
     while True:
@@ -910,8 +911,20 @@ def send_daily_question_to_all_subscribers() -> int:
         if not subscribers:
             break
 
-        # Generate magic tokens for all subscribers in this chunk
+        # Filter out subscribers who already received today's email (duplicate prevention)
+        eligible_subscribers = []
         for subscriber in subscribers:
+            if subscriber.can_receive_email():
+                eligible_subscribers.append(subscriber)
+            else:
+                skipped_duplicates += 1
+        
+        if not eligible_subscribers:
+            offset += CHUNK_SIZE
+            continue
+
+        # Generate magic tokens for eligible subscribers in this chunk
+        for subscriber in eligible_subscribers:
             subscriber.generate_magic_token()
         
         try:
@@ -923,7 +936,7 @@ def send_daily_question_to_all_subscribers() -> int:
             continue
 
         # Send batch
-        results = client.send_daily_question_batch(subscribers, question)
+        results = client.send_daily_question_batch(eligible_subscribers, question)
         total_sent += results['sent']
         total_failed += results['failed']
 
@@ -946,8 +959,8 @@ def send_daily_question_to_all_subscribers() -> int:
 
     logger.info(
         f"Daily question #{question.question_number} complete: "
-        f"{total_sent} sent, {total_failed} failed of {total_subscribers} "
-        f"in {elapsed_total:.1f} seconds ({final_rate:.1f} emails/sec)"
+        f"{total_sent} sent, {total_failed} failed, {skipped_duplicates} skipped (already sent) "
+        f"of {total_subscribers} in {elapsed_total:.1f} seconds ({final_rate:.1f} emails/sec)"
     )
 
     return total_sent
