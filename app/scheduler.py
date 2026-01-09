@@ -197,15 +197,40 @@ def init_scheduler(app):
                 logger.error(f"Error cleaning up old articles: {e}")
                 db.session.rollback()
             
-            # Clean up discarded topics
+            # Clean up discarded topics (with foreign key handling)
+            # Note: Only delete topics that are NOT referenced by BriefItem (used in Daily Brief)
             try:
-                old_discarded = TrendingTopic.query.filter(
+                from app.models import BriefItem
+                
+                # Get IDs of topics used in briefs (we want to KEEP these)
+                topics_in_briefs = db.session.query(
+                    BriefItem.trending_topic_id
+                ).distinct().subquery()
+                
+                # Find discarded topics to delete
+                discarded_topic_ids = db.session.query(TrendingTopic.id).filter(
                     TrendingTopic.status == 'discarded',
-                    TrendingTopic.created_at < cutoff_30_days
-                ).delete(synchronize_session=False)
-                db.session.commit()
-                if old_discarded > 0:
-                    logger.info(f"Deleted {old_discarded} old discarded topics")
+                    TrendingTopic.created_at < cutoff_30_days,
+                    TrendingTopic.id.notin_(topics_in_briefs)  # Keep topics used in briefs
+                ).all()
+                discarded_ids = [t[0] for t in discarded_topic_ids]
+                
+                if discarded_ids:
+                    # First delete TrendingTopicArticle references
+                    topic_refs_deleted = TrendingTopicArticle.query.filter(
+                        TrendingTopicArticle.topic_id.in_(discarded_ids)
+                    ).delete(synchronize_session=False)
+                    db.session.commit()
+                    if topic_refs_deleted > 0:
+                        logger.info(f"Deleted {topic_refs_deleted} topic-article references for discarded topics")
+                    
+                    # Now safe to delete the topics
+                    old_discarded = TrendingTopic.query.filter(
+                        TrendingTopic.id.in_(discarded_ids)
+                    ).delete(synchronize_session=False)
+                    db.session.commit()
+                    if old_discarded > 0:
+                        logger.info(f"Deleted {old_discarded} old discarded topics")
             except Exception as e:
                 logger.error(f"Error cleaning up discarded topics: {e}")
                 db.session.rollback()

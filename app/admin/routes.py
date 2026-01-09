@@ -378,14 +378,63 @@ def send_welcome_email(email, username, password):
 @login_required
 @admin_required
 def delete_discussion(discussion_id):
+    """Delete a discussion and all its related data (handles foreign keys properly)"""
+    from app.models import (
+        DiscussionView, Notification, DiscussionParticipant, Statement,
+        StatementVote, Response, StatementEvidence, StatementFlag,
+        ConsensusAnalysis, DiscussionSourceArticle, TrendingTopic,
+        BriefItem, DailyQuestion, DailyQuestionSelection
+    )
+    
     discussion = Discussion.query.get_or_404(discussion_id)
+    discussion_title = discussion.title
+    
     try:
+        # Delete in order of dependencies (children first, then parent)
+        
+        # 1. Clear nullable FK references (set to NULL instead of delete)
+        TrendingTopic.query.filter_by(merged_into_discussion_id=discussion_id).update(
+            {'merged_into_discussion_id': None}, synchronize_session=False
+        )
+        TrendingTopic.query.filter_by(discussion_id=discussion_id).update(
+            {'discussion_id': None}, synchronize_session=False
+        )
+        BriefItem.query.filter_by(discussion_id=discussion_id).update(
+            {'discussion_id': None}, synchronize_session=False
+        )
+        DailyQuestion.query.filter_by(source_discussion_id=discussion_id).update(
+            {'source_discussion_id': None}, synchronize_session=False
+        )
+        DailyQuestionSelection.query.filter_by(source_discussion_id=discussion_id).update(
+            {'source_discussion_id': None}, synchronize_session=False
+        )
+        
+        # 2. Delete statement-related data (deepest children first)
+        statement_ids = [s.id for s in Statement.query.filter_by(discussion_id=discussion_id).all()]
+        if statement_ids:
+            StatementFlag.query.filter(StatementFlag.statement_id.in_(statement_ids)).delete(synchronize_session=False)
+            StatementEvidence.query.filter(StatementEvidence.statement_id.in_(statement_ids)).delete(synchronize_session=False)
+            Response.query.filter(Response.statement_id.in_(statement_ids)).delete(synchronize_session=False)
+            StatementVote.query.filter(StatementVote.statement_id.in_(statement_ids)).delete(synchronize_session=False)
+        
+        # 3. Delete direct children of discussion
+        Statement.query.filter_by(discussion_id=discussion_id).delete(synchronize_session=False)
+        StatementVote.query.filter_by(discussion_id=discussion_id).delete(synchronize_session=False)
+        ConsensusAnalysis.query.filter_by(discussion_id=discussion_id).delete(synchronize_session=False)
+        DiscussionSourceArticle.query.filter_by(discussion_id=discussion_id).delete(synchronize_session=False)
+        DiscussionParticipant.query.filter_by(discussion_id=discussion_id).delete(synchronize_session=False)
+        DiscussionView.query.filter_by(discussion_id=discussion_id).delete(synchronize_session=False)
+        Notification.query.filter_by(discussion_id=discussion_id).delete(synchronize_session=False)
+        
+        # 4. Finally delete the discussion
         db.session.delete(discussion)
         db.session.commit()
+        
+        current_app.logger.info(f"Admin deleted discussion '{discussion_title}' (ID: {discussion_id})")
         flash('Discussion deleted successfully!', 'success')
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error deleting discussion: {str(e)}")
+        current_app.logger.error(f"Error deleting discussion {discussion_id}: {str(e)}")
         flash('Error deleting discussion. Please try again.', 'error')
     
     return redirect(url_for('admin.list_discussions'))

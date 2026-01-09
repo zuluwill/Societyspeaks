@@ -61,12 +61,129 @@ def change_password():
 @settings_bp.route('/delete-account', methods=['POST'])
 @login_required
 def delete_account():
+    """Delete user account and all related data (handles foreign keys properly)"""
+    from app.models import (
+        IndividualProfile, CompanyProfile, Discussion, Notification,
+        DiscussionParticipant, Statement, StatementVote, Response,
+        StatementFlag, ApiKey, DailyQuestionSubscriber, DailyQuestionResponse,
+        ProfileView, DiscussionView, StatementEvidence, ConsensusAnalysis,
+        DiscussionSourceArticle, TrendingTopic, BriefItem, DailyQuestion,
+        DailyQuestionSelection
+    )
+    
     user = User.query.get(current_user.id)
-    if user:
-        # Remove user account and related data
+    if not user:
+        flash('Account deletion failed. Please try again.', 'error')
+        return redirect(url_for('settings.view_settings'))
+    
+    user_id = user.id
+    
+    try:
+        # 1. Clear nullable FK references (set to NULL instead of delete)
+        # These reference the user but can exist without them
+        DiscussionView.query.filter_by(viewer_id=user_id).update(
+            {'viewer_id': None}, synchronize_session=False
+        )
+        ProfileView.query.filter_by(viewer_id=user_id).update(
+            {'viewer_id': None}, synchronize_session=False
+        )
+        DiscussionParticipant.query.filter_by(user_id=user_id).update(
+            {'user_id': None}, synchronize_session=False
+        )
+        Statement.query.filter_by(user_id=user_id).update(
+            {'user_id': None}, synchronize_session=False
+        )
+        StatementVote.query.filter_by(user_id=user_id).update(
+            {'user_id': None}, synchronize_session=False
+        )
+        StatementEvidence.query.filter_by(added_by_user_id=user_id).update(
+            {'added_by_user_id': None}, synchronize_session=False
+        )
+        StatementFlag.query.filter_by(reviewed_by_user_id=user_id).update(
+            {'reviewed_by_user_id': None}, synchronize_session=False
+        )
+        TrendingTopic.query.filter_by(reviewed_by_id=user_id).update(
+            {'reviewed_by_id': None}, synchronize_session=False
+        )
+        DailyQuestion.query.filter_by(created_by_id=user_id).update(
+            {'created_by_id': None}, synchronize_session=False
+        )
+        DailyQuestionResponse.query.filter_by(user_id=user_id).update(
+            {'user_id': None}, synchronize_session=False
+        )
+        DailyQuestionSubscriber.query.filter_by(user_id=user_id).update(
+            {'user_id': None}, synchronize_session=False
+        )
+        
+        # 2. Delete user's created content that can't exist without them
+        # Delete responses (requires user_id)
+        Response.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+        
+        # Delete flags created by user
+        StatementFlag.query.filter_by(flagger_user_id=user_id).delete(synchronize_session=False)
+        
+        # Delete notifications
+        Notification.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+        
+        # Delete API keys
+        ApiKey.query.filter_by(user_id=user_id).delete(synchronize_session=False)
+        
+        # 3. Handle user's discussions (delete them completely)
+        user_discussion_ids = [d.id for d in Discussion.query.filter_by(creator_id=user_id).all()]
+        for disc_id in user_discussion_ids:
+            # Clear references to this discussion
+            TrendingTopic.query.filter_by(merged_into_discussion_id=disc_id).update(
+                {'merged_into_discussion_id': None}, synchronize_session=False
+            )
+            TrendingTopic.query.filter_by(discussion_id=disc_id).update(
+                {'discussion_id': None}, synchronize_session=False
+            )
+            BriefItem.query.filter_by(discussion_id=disc_id).update(
+                {'discussion_id': None}, synchronize_session=False
+            )
+            DailyQuestion.query.filter_by(source_discussion_id=disc_id).update(
+                {'source_discussion_id': None}, synchronize_session=False
+            )
+            DailyQuestionSelection.query.filter_by(source_discussion_id=disc_id).update(
+                {'source_discussion_id': None}, synchronize_session=False
+            )
+            
+            # Delete discussion's children
+            stmt_ids = [s.id for s in Statement.query.filter_by(discussion_id=disc_id).all()]
+            if stmt_ids:
+                StatementFlag.query.filter(StatementFlag.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
+                StatementEvidence.query.filter(StatementEvidence.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
+                Response.query.filter(Response.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
+                StatementVote.query.filter(StatementVote.statement_id.in_(stmt_ids)).delete(synchronize_session=False)
+            
+            Statement.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+            StatementVote.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+            ConsensusAnalysis.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+            DiscussionSourceArticle.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+            DiscussionParticipant.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+            DiscussionView.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+            Notification.query.filter_by(discussion_id=disc_id).delete(synchronize_session=False)
+        
+        Discussion.query.filter_by(creator_id=user_id).delete(synchronize_session=False)
+        
+        # 4. Delete profiles
+        if user.individual_profile:
+            ProfileView.query.filter_by(individual_profile_id=user.individual_profile.id).delete(synchronize_session=False)
+            db.session.delete(user.individual_profile)
+        if user.company_profile:
+            ProfileView.query.filter_by(company_profile_id=user.company_profile.id).delete(synchronize_session=False)
+            db.session.delete(user.company_profile)
+        
+        # 5. Finally delete the user
         db.session.delete(user)
         db.session.commit()
+        
+        current_app.logger.info(f"User deleted their account (ID: {user_id})")
         flash('Your account has been deleted successfully.', 'success')
         return redirect(url_for('auth.logout'))
-    flash('Account deletion failed. Please try again.', 'error')
-    return redirect(url_for('settings.view_settings'))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting user account {user_id}: {str(e)}")
+        flash('Account deletion failed. Please try again.', 'error')
+        return redirect(url_for('settings.view_settings'))
