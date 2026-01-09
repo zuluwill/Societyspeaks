@@ -1302,6 +1302,7 @@ class DailyBriefSubscriber(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_sent_at = db.Column(db.DateTime)
     total_briefs_received = db.Column(db.Integer, default=0)
+    welcome_email_sent_at = db.Column(db.DateTime)  # Prevents duplicate welcome emails
 
     # Email analytics
     total_opens = db.Column(db.Integer, default=0)

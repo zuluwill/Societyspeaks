@@ -347,3 +347,31 @@ def init_commands(app):
 
         except Exception as e:
             click.echo(f"Error creating subscriber: {str(e)}", err=True)
+
+    @app.cli.command('brief-resend-welcome')
+    @click.argument('email')
+    @click.option('--force', is_flag=True, help='Force resend even if already sent')
+    def brief_resend_welcome_cmd(email, force):
+        """Resend welcome email to a brief subscriber (admin use)"""
+        try:
+            subscriber = DailyBriefSubscriber.query.filter_by(email=email).first()
+            if not subscriber:
+                click.echo(f"✗ Subscriber not found: {email}", err=True)
+                return
+
+            if subscriber.welcome_email_sent_at and not force:
+                click.echo(f"✗ Welcome email already sent at {subscriber.welcome_email_sent_at}")
+                click.echo("  Use --force to resend anyway")
+                return
+
+            from app.brief.email_client import ResendClient
+            client = ResendClient()
+            success = client.send_welcome(subscriber, force=force)
+
+            if success:
+                click.echo(f"✓ Welcome email sent to {email}")
+            else:
+                click.echo(f"✗ Failed to send welcome email", err=True)
+
+        except Exception as e:
+            click.echo(f"Error: {str(e)}", err=True)
