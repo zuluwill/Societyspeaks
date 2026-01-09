@@ -112,7 +112,12 @@ def publish_topic(
         slug = f"{base_slug}-{counter}"
         counter += 1
     
-    geographic_scope, country = _extract_geographic_info(topic)
+    # Use topic's stored geographic data if available, otherwise extract from articles
+    if topic.geographic_scope and topic.geographic_scope != 'global':
+        geographic_scope = topic.geographic_scope
+        country = topic.geographic_countries.split(',')[0].strip() if topic.geographic_countries else None
+    else:
+        geographic_scope, country = _extract_geographic_info(topic)
     
     clean_description = strip_html_tags(topic.description) if topic.description else ""
     

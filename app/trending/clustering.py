@@ -13,10 +13,59 @@ from typing import List, Dict, Optional, Tuple
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.metrics.pairwise import cosine_similarity
 
+from collections import Counter
+
 from app import db
 from app.models import NewsArticle, TrendingTopic, TrendingTopicArticle, Discussion
 
 logger = logging.getLogger(__name__)
+
+
+def extract_geographic_info_from_articles(articles: List[NewsArticle]) -> tuple:
+    """
+    Extract geographic scope and countries from a list of articles.
+    
+    Returns (geographic_scope, geographic_countries_string)
+    """
+    scopes = []
+    countries_list = []
+    
+    for article in articles:
+        if article.geographic_scope and article.geographic_scope != 'unknown':
+            scopes.append(article.geographic_scope)
+        if article.geographic_countries:
+            countries_list.append(article.geographic_countries)
+        elif article.source and article.source.country:
+            countries_list.append(article.source.country)
+    
+    # Determine scope
+    if scopes:
+        scope_counts = Counter(scopes)
+        most_common_scope = scope_counts.most_common(1)[0][0]
+        if most_common_scope in ('national', 'local', 'regional'):
+            geographic_scope = 'country'
+        else:
+            geographic_scope = 'global'
+    else:
+        geographic_scope = 'global'
+    
+    # Determine countries
+    if countries_list:
+        all_countries = []
+        for c in countries_list:
+            all_countries.extend([x.strip() for x in c.split(',')])
+        
+        if 'Global' in all_countries:
+            geographic_countries = None
+        else:
+            # Take top 3 most common countries
+            country_counts = Counter(all_countries)
+            top_countries = [c for c, _ in country_counts.most_common(3)]
+            geographic_countries = ', '.join(top_countries) if top_countries else None
+    else:
+        geographic_countries = None
+    
+    return geographic_scope, geographic_countries
 
 
 def get_embeddings(texts: List[str]) -> Optional[List[List[float]]]:
@@ -193,11 +242,16 @@ def create_topic_from_cluster(
     
     unique_sources = len(set(a.source_id for a in articles))
     
+    # Extract geographic info from source articles
+    geographic_scope, geographic_countries = extract_geographic_info_from_articles(articles)
+    
     topic = TrendingTopic(
         title=title,
         description=articles[0].summary or '',
         topic_embedding=topic_embedding,
         source_count=unique_sources,
+        geographic_scope=geographic_scope,
+        geographic_countries=geographic_countries,
         status='pending',
         hold_until=datetime.utcnow() + timedelta(minutes=hold_minutes)
     )
