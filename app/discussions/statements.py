@@ -507,8 +507,11 @@ def view_statement(statement_id):
             user_id=current_user.id
         ).first()
     
-    # Get responses
-    responses = Response.query.filter_by(
+    # Get responses with eager loading to prevent N+1 queries
+    from sqlalchemy.orm import joinedload
+    responses = Response.query.options(
+        joinedload(Response.user)
+    ).filter_by(
         statement_id=statement_id,
         is_deleted=False
     ).order_by(Response.created_at.desc()).all()
@@ -849,23 +852,38 @@ def list_responses(statement_id):
     """
     List all responses for a statement (threaded structure)
     Returns JSON for AJAX or HTML for direct access
+    
+    Uses a single query with eager loading to prevent N+1 queries.
     """
+    from sqlalchemy.orm import joinedload, selectinload
+    
     statement = Statement.query.get_or_404(statement_id)
     
-    # Get top-level responses (no parent)
-    responses = Response.query.filter_by(
+    # Fetch ALL responses for this statement with eager loading of users
+    # This prevents N+1 queries when building the tree
+    all_responses = Response.query.options(
+        joinedload(Response.user)
+    ).filter_by(
         statement_id=statement_id,
-        parent_response_id=None,
         is_deleted=False
     ).order_by(Response.created_at.asc()).all()
     
+    # Build a lookup dict for efficient child finding
+    response_by_id = {r.id: r for r in all_responses}
+    children_by_parent = {}
+    top_level = []
+    
+    for response in all_responses:
+        if response.parent_response_id is None:
+            top_level.append(response)
+        else:
+            if response.parent_response_id not in children_by_parent:
+                children_by_parent[response.parent_response_id] = []
+            children_by_parent[response.parent_response_id].append(response)
+    
     def build_response_tree(response):
-        """Recursively build response tree"""
-        children = Response.query.filter_by(
-            parent_response_id=response.id,
-            is_deleted=False
-        ).order_by(Response.created_at.asc()).all()
-        
+        """Build response tree from pre-loaded data (no additional queries)"""
+        children = children_by_parent.get(response.id, [])
         return {
             'id': response.id,
             'content': response.content,
@@ -879,14 +897,14 @@ def list_responses(statement_id):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify({
             'statement_id': statement.id,
-            'response_count': len(responses),
-            'responses': [build_response_tree(r) for r in responses]
+            'response_count': len(all_responses),
+            'responses': [build_response_tree(r) for r in top_level]
         })
     
     # Return HTML for direct access
     return render_template('discussions/list_responses.html',
                          statement=statement,
-                         responses=responses)
+                         responses=top_level)
 
 
 @statements_bp.route('/api/responses/<int:response_id>/children')
@@ -894,13 +912,31 @@ def get_response_children(response_id):
     """
     Get child responses for lazy loading in threaded view
     Used for expanding/collapsing threads
+    
+    Uses eager loading and subquery for has_children to prevent N+1 queries.
     """
+    from sqlalchemy.orm import joinedload
+    from sqlalchemy import exists, and_
+    
     response = Response.query.get_or_404(response_id)
     
-    children = Response.query.filter_by(
+    # Eager load user relationship to prevent N+1
+    children = Response.query.options(
+        joinedload(Response.user)
+    ).filter_by(
         parent_response_id=response_id,
         is_deleted=False
     ).order_by(Response.created_at.asc()).all()
+    
+    # Get all child IDs that have children (single query instead of N queries)
+    child_ids = [c.id for c in children]
+    has_children_set = set()
+    if child_ids:
+        subquery = db.session.query(Response.parent_response_id).filter(
+            Response.parent_response_id.in_(child_ids),
+            Response.is_deleted == False
+        ).distinct().all()
+        has_children_set = {row[0] for row in subquery}
     
     return jsonify({
         'response_id': response_id,
@@ -910,7 +946,7 @@ def get_response_children(response_id):
             'position': child.position,
             'user': child.user.name if child.user else 'Unknown',
             'created_at': child.created_at.isoformat(),
-            'has_children': Response.query.filter_by(parent_response_id=child.id, is_deleted=False).count() > 0
+            'has_children': child.id in has_children_set
         } for child in children]
     })
 

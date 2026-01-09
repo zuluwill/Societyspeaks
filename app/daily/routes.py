@@ -13,14 +13,26 @@ DAILY_CLIENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
 
 
 def get_source_articles(question, limit=5):
-    """Get source articles from the source discussion if available"""
-    if question.source_discussion and question.source_discussion.source_article_links:
-        articles = []
-        for link in question.source_discussion.source_article_links[:limit]:
-            if link.article:
-                articles.append(link.article)
-        return articles
-    return []
+    """Get source articles from the source discussion if available.
+    
+    Uses a direct query with eager loading to prevent N+1 queries when
+    accessing article.source.name in templates.
+    """
+    from app.models import DiscussionSourceArticle, NewsArticle
+    from sqlalchemy.orm import joinedload
+    
+    if not question.source_discussion_id:
+        return []
+    
+    # Query directly with eager loading to prevent N+1
+    links = DiscussionSourceArticle.query.options(
+        joinedload(DiscussionSourceArticle.article)
+        .joinedload(NewsArticle.source)
+    ).filter_by(
+        discussion_id=question.source_discussion_id
+    ).limit(limit).all()
+    
+    return [link.article for link in links if link.article]
 
 
 def get_related_discussions(question, limit=3):
