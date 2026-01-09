@@ -117,7 +117,7 @@ class UnderreportedDetector:
             'coverage_gaps': gaps,
             'published_at': topic.published_at,
             'primary_topic': topic.primary_topic,
-            'geographic_scope': topic.geographic_scope
+            'geographic_scope': getattr(topic, 'geographic_scope', None)
         }
 
     def _identify_coverage_gaps(self, coverage: Dict) -> List[str]:

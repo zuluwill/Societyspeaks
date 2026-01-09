@@ -1,4 +1,51 @@
-<!-- cc8e25cf-415b-43da-877a-dd3f0cdd780b 787b10fb-4c4f-45c9-a7bf-931c99a90c14 -->
+---
+name: Build Native Debate & Consensus System
+overview: ""
+todos:
+  - id: 6bbf64fb-83d1-401a-8432-936006d306de
+    content: Design and create database schema (Argument, ArgumentVote, ArgumentRelationship, Evidence, UserAPIKey models)
+    status: pending
+  - id: 5fc82b66-40b7-49fe-8eb2-a1922f21437e
+    content: Create Alembic migration script with new tables and discussion_mode field
+    status: pending
+  - id: aba956da-7f9f-407d-abc2-a6940f3fc52e
+    content: Build core argument API routes (create, list, vote, edit, delete)
+    status: pending
+  - id: c5b4f8b3-2bc5-49d8-afe5-dfdf7af714e3
+    content: Create basic argument submission and voting UI
+    status: pending
+  - id: 8c114eba-4de9-4443-98f8-e95ff4863dc2
+    content: Implement pro/con argument tree structure and visualization
+    status: pending
+  - id: adbff6d1-ef2a-4537-a96b-33758d21164c
+    content: Build evidence linking system with citation formatting
+    status: pending
+  - id: 1af6f9fa-ddc6-4bb6-9acd-904ba1934355
+    content: Implement nested threading and sorting options
+    status: pending
+  - id: be6847e0-44ac-4b43-b79b-9b54c32c7818
+    content: Build non-LLM consensus clustering engine with sklearn/UMAP/HDBSCAN
+    status: pending
+  - id: 3d5b9697-21ac-4ed8-844b-1fccaf101209
+    content: Create interactive cluster visualizations with Plotly/D3.js
+    status: pending
+  - id: 6e4f1717-8b86-4555-9778-84431a97670d
+    content: Build consensus dashboard showing clusters, agreement, and divisions
+    status: pending
+  - id: e3d6d218-773c-421a-8460-0e2f7b2fd2dc
+    content: Implement secure user API key management with encryption
+    status: pending
+  - id: 9c86e82b-76e5-4f97-9268-85f78cd73d92
+    content: Add optional LLM features (summarization, semantic clustering, moderation)
+    status: pending
+  - id: 267a55a5-dae3-4e26-9b48-fba46724a443
+    content: Create tools to migrate existing pol.is discussions to native format
+    status: pending
+  - id: edd4706b-8724-4e19-b4c9-cdaa613765bc
+    content: Performance optimization, mobile responsiveness, and documentation
+    status: pending
+---
+
 # Build Native Debate & Consensus System
 
 ## Overview
@@ -737,20 +784,3 @@ Update docs:
 - Performance (page load times, clustering time)
 - LLM adoption rate (% users adding API keys)
 - Discussion depth (argument tree depth, evidence citations)
-
-### To-dos
-
-- [ ] Design and create database schema (Argument, ArgumentVote, ArgumentRelationship, Evidence, UserAPIKey models)
-- [ ] Create Alembic migration script with new tables and discussion_mode field
-- [ ] Build core argument API routes (create, list, vote, edit, delete)
-- [ ] Create basic argument submission and voting UI
-- [ ] Implement pro/con argument tree structure and visualization
-- [ ] Build evidence linking system with citation formatting
-- [ ] Implement nested threading and sorting options
-- [ ] Build non-LLM consensus clustering engine with sklearn/UMAP/HDBSCAN
-- [ ] Create interactive cluster visualizations with Plotly/D3.js
-- [ ] Build consensus dashboard showing clusters, agreement, and divisions
-- [ ] Implement secure user API key management with encryption
-- [ ] Add optional LLM features (summarization, semantic clustering, moderation)
-- [ ] Create tools to migrate existing pol.is discussions to native format
-- [ ] Performance optimization, mobile responsiveness, and documentation
