@@ -1142,7 +1142,13 @@ class DailyBrief(db.Model):
 
     @property
     def item_count(self):
-        """Number of items in this brief"""
+        """Number of items in this brief.
+        
+        Uses cached count if available (set by batch queries in routes)
+        to prevent N+1 query issues.
+        """
+        if hasattr(self, '_cached_item_count'):
+            return self._cached_item_count
         return self.items.count()
 
     @classmethod
