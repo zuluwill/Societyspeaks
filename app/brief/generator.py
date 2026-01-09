@@ -69,19 +69,31 @@ class BriefGenerator:
 
         logger.info(f"Generating brief for {brief_date} with {len(selected_topics)} topics")
 
-        # Check if brief already exists
-        existing = DailyBrief.query.filter_by(date=brief_date).first()
-        if existing:
-            logger.warning(f"Brief already exists for {brief_date}, updating...")
-            brief = existing
-        else:
-            brief = DailyBrief(
-                date=brief_date,
-                status='draft',
-                auto_selected=True
-            )
-            db.session.add(brief)
-            db.session.flush()  # Get brief.id
+        # Check if brief already exists with row-level locking to prevent race conditions
+        try:
+            existing = DailyBrief.query.filter_by(date=brief_date).with_for_update().first()
+            if existing:
+                if existing.status in ('ready', 'published'):
+                    logger.info(f"Brief for {brief_date} already {existing.status}, skipping generation")
+                    return existing
+                logger.warning(f"Brief already exists for {brief_date} with status '{existing.status}', updating...")
+                brief = existing
+            else:
+                brief = DailyBrief(
+                    date=brief_date,
+                    status='draft',
+                    auto_selected=True
+                )
+                db.session.add(brief)
+                db.session.flush()  # Get brief.id
+        except Exception as e:
+            # Handle race condition - another process may have created the brief
+            db.session.rollback()
+            existing = DailyBrief.query.filter_by(date=brief_date).first()
+            if existing:
+                logger.info(f"Brief for {brief_date} was created by another process, returning existing")
+                return existing
+            raise e
 
         # Generate brief-level content
         brief.title = self._generate_brief_title(selected_topics)
