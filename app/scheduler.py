@@ -467,6 +467,7 @@ def init_scheduler(app):
         If admin already published/skipped, this does nothing
         """
         with app.app_context():
+            from app import db
             from app.models import DailyBrief
             from datetime import date
 
