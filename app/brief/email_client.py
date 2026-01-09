@@ -247,6 +247,59 @@ class ResendClient:
         """
         return html
 
+    def send_welcome(self, subscriber: DailyBriefSubscriber) -> bool:
+        """
+        Send welcome email to new daily brief subscriber.
+
+        Args:
+            subscriber: DailyBriefSubscriber instance
+
+        Returns:
+            bool: True if sent successfully
+        """
+        try:
+            base_url = os.environ.get('APP_BASE_URL') or os.environ.get('SITE_URL', 'https://societyspeaks.io')
+            base_url = base_url.rstrip('/')
+
+            magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
+            preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
+            unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
+
+            trial_end_date = subscriber.trial_ends_at.strftime('%B %d, %Y') if subscriber.trial_ends_at else 'N/A'
+
+            html_content = render_template(
+                'emails/daily_brief_welcome.html',
+                subscriber=subscriber,
+                magic_link_url=magic_link_url,
+                preferences_url=preferences_url,
+                unsubscribe_url=unsubscribe_url,
+                base_url=base_url,
+                preferred_hour=subscriber.preferred_send_hour,
+                timezone=subscriber.timezone,
+                trial_end_date=trial_end_date
+            )
+
+            email_data = {
+                'from': self.from_email,
+                'to': [subscriber.email],
+                'subject': 'Welcome to the Daily Brief - Your Trial Has Started!',
+                'html': html_content
+            }
+
+            self.rate_limiter.acquire()
+            success = self._send_with_retry(email_data)
+
+            if success:
+                logger.info(f"Sent welcome email to {subscriber.email}")
+            else:
+                logger.error(f"Failed to send welcome email to {subscriber.email}")
+
+            return success
+
+        except Exception as e:
+            logger.error(f"Error sending welcome email to {subscriber.email}: {e}")
+            return False
+
 
 class BriefEmailScheduler:
     """
