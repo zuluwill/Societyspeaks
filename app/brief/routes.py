@@ -134,6 +134,9 @@ def view_date(date_str):
 @limiter.limit("60/minute")
 def archive():
     """Browse brief archive"""
+    from sqlalchemy import func
+    from app.models import BriefItem
+    
     page = request.args.get('page', 1, type=int)
     per_page = 30
 
@@ -154,6 +157,20 @@ def archive():
     )
 
     briefs = pagination.items
+    
+    # Batch fetch item counts to prevent N+1 queries
+    brief_ids = [b.id for b in briefs]
+    if brief_ids:
+        counts = db.session.query(
+            BriefItem.brief_id,
+            func.count(BriefItem.id)
+        ).filter(
+            BriefItem.brief_id.in_(brief_ids)
+        ).group_by(BriefItem.brief_id).all()
+        item_counts = {bid: count for bid, count in counts}
+        
+        for brief in briefs:
+            brief._cached_item_count = item_counts.get(brief.id, 0)
 
     return render_template(
         'brief/archive.html',

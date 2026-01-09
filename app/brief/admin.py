@@ -42,6 +42,8 @@ def admin_required(f):
 @admin_required
 def dashboard():
     """Admin dashboard for briefs"""
+    from sqlalchemy import func
+    
     # Get today's brief
     today_brief = DailyBrief.query.filter_by(date=date.today()).first()
 
@@ -49,6 +51,27 @@ def dashboard():
     recent_briefs = DailyBrief.query.order_by(
         DailyBrief.date.desc()
     ).limit(10).all()
+    
+    # Batch fetch item counts to prevent N+1 queries
+    brief_ids = [b.id for b in recent_briefs]
+    if today_brief and today_brief.id not in brief_ids:
+        brief_ids.append(today_brief.id)
+    
+    item_counts = {}
+    if brief_ids:
+        counts = db.session.query(
+            BriefItem.brief_id,
+            func.count(BriefItem.id)
+        ).filter(
+            BriefItem.brief_id.in_(brief_ids)
+        ).group_by(BriefItem.brief_id).all()
+        item_counts = {bid: count for bid, count in counts}
+    
+    # Cache counts on brief objects
+    for brief in recent_briefs:
+        brief._cached_item_count = item_counts.get(brief.id, 0)
+    if today_brief:
+        today_brief._cached_item_count = item_counts.get(today_brief.id, 0)
 
     # Get upcoming candidate topics
     candidate_topics = select_todays_topics(limit=10)
