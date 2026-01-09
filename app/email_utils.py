@@ -174,24 +174,9 @@ def send_email(recipient_email, data_variables, transactional_id, use_rate_limit
 
 #send a password reset email
 def send_password_reset_email(user, token):
-    # Transactional ID for the password reset email
-    transactional_id = "cm34ll2e604fmynht3l8jns9p"
-
-    # Generate the reset URL
-    reset_url = url_for('auth.password_reset', token=token, _external=True)
-
-    # Prepare data variables
-    data_variables = {
-        "username": user.username or "User",  # Use username as fallback
-        "resetUrl": reset_url
-    }
-
-    # Send the email with the reset link
-    send_email(
-        recipient_email=user.email,
-        data_variables=data_variables,
-        transactional_id=transactional_id
-    )
+    """Send password reset email via Resend"""
+    from app.resend_client import send_password_reset_email as resend_send_password_reset
+    return resend_send_password_reset(user, token)
 
 
 
