@@ -379,3 +379,50 @@ def test_send():
         flash(f'Error: {str(e)}', 'error')
 
     return redirect(url_for('brief_admin.preview', date_str=brief.date.isoformat()))
+
+
+@brief_admin_bp.route('/send-to-subscriber', methods=['POST'])
+@admin_required
+def send_to_subscriber():
+    """Manually send today's brief to a specific subscriber"""
+    email = request.form.get('email')
+    brief_date_str = request.form.get('brief_date', date.today().isoformat())
+    
+    if not email:
+        flash('Email address required.', 'error')
+        return redirect(url_for('brief_admin.dashboard'))
+    
+    try:
+        from app.brief.email_client import send_brief_to_subscriber
+        from app.models import DailyBriefSubscriber
+        
+        subscriber = DailyBriefSubscriber.query.filter_by(email=email).first()
+        if not subscriber:
+            flash(f'Subscriber not found: {email}', 'error')
+            return redirect(url_for('brief_admin.dashboard'))
+        
+        if subscriber.status != 'active':
+            flash(f'Subscriber is not active: {email} (status: {subscriber.status})', 'error')
+            return redirect(url_for('brief_admin.dashboard'))
+        
+        brief = DailyBrief.query.filter_by(date=datetime.strptime(brief_date_str, '%Y-%m-%d').date()).first()
+        if not brief:
+            flash(f'No brief found for {brief_date_str}', 'error')
+            return redirect(url_for('brief_admin.dashboard'))
+        
+        if brief.status != 'published':
+            flash(f'Brief is not published (status: {brief.status})', 'error')
+            return redirect(url_for('brief_admin.dashboard'))
+        
+        success = send_brief_to_subscriber(email, brief_date_str)
+        
+        if success:
+            flash(f'Brief sent to {email}', 'success')
+        else:
+            flash(f'Failed to send brief to {email}. Check logs.', 'error')
+    
+    except Exception as e:
+        logger.error(f"Manual send failed: {e}", exc_info=True)
+        flash(f'Error: {str(e)}', 'error')
+    
+    return redirect(url_for('brief_admin.dashboard'))
