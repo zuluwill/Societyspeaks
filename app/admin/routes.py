@@ -381,7 +381,7 @@ def delete_discussion(discussion_id):
     """Delete a discussion and all its related data (handles foreign keys properly)"""
     from app.models import (
         DiscussionView, Notification, DiscussionParticipant, Statement,
-        StatementVote, Response, StatementEvidence, StatementFlag,
+        StatementVote, Response, StatementFlag,
         ConsensusAnalysis, DiscussionSourceArticle, TrendingTopic,
         BriefItem, DailyQuestion, DailyQuestionSelection
     )
@@ -413,7 +413,6 @@ def delete_discussion(discussion_id):
         statement_ids = [s.id for s in Statement.query.filter_by(discussion_id=discussion_id).all()]
         if statement_ids:
             StatementFlag.query.filter(StatementFlag.statement_id.in_(statement_ids)).delete(synchronize_session=False)
-            StatementEvidence.query.filter(StatementEvidence.statement_id.in_(statement_ids)).delete(synchronize_session=False)
             Response.query.filter(Response.statement_id.in_(statement_ids)).delete(synchronize_session=False)
             StatementVote.query.filter(StatementVote.statement_id.in_(statement_ids)).delete(synchronize_session=False)
         
@@ -568,6 +567,9 @@ def create_daily_question():
     if request.method == 'POST':
         try:
             question_date_str = request.form.get('question_date')
+            if not question_date_str:
+                flash('Question date is required', 'error')
+                return redirect(url_for('admin.create_daily_question'))
             question_date = datetime.strptime(question_date_str, '%Y-%m-%d').date()
             
             existing = DailyQuestion.query.filter_by(question_date=question_date).first()
