@@ -1,0 +1,649 @@
+# BuildError: Could not build url for endpoint 'admin.admin_dashboard'. Did you mean 'admin.dashboard' instead?
+
+**Issue ID:** 87523949
+**Project:** python-flask
+**Date:** 09/01/2026, 19:44:56
+## Issue Summary
+Typo in Admin Dashboard URL in Template
+**What's wrong:** BuildError: **'admin.admin_dashboard' endpoint not found**; **suggests 'admin.dashboard'**. Occurred in `email_analytics.html` template.
+**In the trace:** N/A
+**Possible cause:** A **typo in the template's `url_for` call** for the admin dashboard link.
+
+## Tags
+
+- **browser:** Chrome 143
+- **browser.name:** Chrome
+- **client_os:** macOS
+- **client_os.name:** macOS
+- **device:** Mac
+- **device.family:** Mac
+- **environment:** production
+- **handled:** yes
+- **level:** error
+- **logger:** app
+- **mechanism:** logging
+- **runtime:** CPython 3.11.13
+- **runtime.name:** CPython
+- **server_name:** nixos
+- **transaction:** brief.admin_analytics
+- **url:** https://societyspeaks.io/brief/admin/analytics
+
+## Exception
+
+### Exception 1
+**Type:** BuildError
+**Value:** Could not build url for endpoint 'admin.admin_dashboard'. Did you mean 'admin.dashboard' instead?
+
+#### Stacktrace
+
+```
+ build in werkzeug/routing/map.py [Line 919] (Not in app)
+        else:
+            values = {}
+
+        rv = self._partial_build(endpoint, values, method, append_unknown)
+        if rv is None:
+            raise BuildError(endpoint, values, method, self)  <-- SUSPECT LINE
+
+        domain_part, path, websocket = rv
+        host = self.get_host(domain_part)
+
+        if url_scheme is None:
+---
+Variable values:
+{
+  "append_unknown": "True",
+  "endpoint": "'admin.admin_dashboard'",
+  "force_external": "False",
+  "method": "None",
+  "rv": "None",
+  "self": "<werkzeug.routing.map.MapAdapter object at 0x7f4d335be0d0>",
+  "url_scheme": "None",
+  "values": {}
+}
+
+=======
+ url_for in flask/app.py [Line 1060] (Not in app)
+            raise ValueError("When specifying '_scheme', '_external' must be True.")
+
+        self.inject_url_defaults(endpoint, values)
+
+        try:
+            rv = url_adapter.build(  # type: ignore[union-attr]  <-- SUSPECT LINE
+                endpoint,
+                values,
+                method=_method,
+                url_scheme=_scheme,
+                force_external=_external,
+---
+Variable values:
+{
+  "_anchor": "None",
+  "_external": "False",
+  "_method": "None",
+  "_scheme": "None",
+  "blueprint_name": "'brief'",
+  "endpoint": "'admin.admin_dashboard'",
+  "req_ctx": "<RequestContext 'https://societyspeaks.io/brief/admin/analytics' [GET] of app>",
+  "self": "<Flask 'app'>",
+  "url_adapter": "<werkzeug.routing.map.MapAdapter object at 0x7f4d335be0d0>",
+  "values": {
+    "_anchor": "None",
+    "_external": "False",
+    "_method": "None",
+    "_scheme": "None"
+  }
+}
+
+=======
+ url_for in flask/app.py [Line 1071] (Not in app)
+            )
+        except BuildError as error:
+            values.update(
+                _anchor=_anchor, _method=_method, _scheme=_scheme, _external=_external
+            )
+            return self.handle_url_build_error(error, endpoint, values)  <-- SUSPECT LINE
+
+        if _anchor is not None:
+            _anchor = _url_quote(_anchor, safe="%!#$&'()*+,/:;=?@")
+            rv = f"{rv}#{_anchor}"
+
+---
+Variable values:
+{
+  "_anchor": "None",
+  "_external": "False",
+  "_method": "None",
+  "_scheme": "None",
+  "blueprint_name": "'brief'",
+  "endpoint": "'admin.admin_dashboard'",
+  "req_ctx": "<RequestContext 'https://societyspeaks.io/brief/admin/analytics' [GET] of app>",
+  "self": "<Flask 'app'>",
+  "url_adapter": "<werkzeug.routing.map.MapAdapter object at 0x7f4d335be0d0>",
+  "values": {
+    "_anchor": "None",
+    "_external": "False",
+    "_method": "None",
+    "_scheme": "None"
+  }
+}
+
+=======
+ block 'content' in /home/runner/workspace/app/templates/admin/email_analytics.html [Line 263] (In app)
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6">
+        <a href="{{ url_for('admin.admin_dashboard') }}" class="text-blue-600 hover:text-blue-800">&larr; Back to Admin Dashboard</a>  <-- SUSPECT LINE
+    </div>
+</div>
+{% endblock %}
+---
+Variable values:
+{
+  "config": {
+    "APPLICATION_ROOT": "'/'",
+    "DEBUG": "False",
+    "PERMANENT_SESSION_LIFETIME": "datetime.timedelta(days=7)",
+    "PROPAGATE_EXCEPTIONS": "None",
+    "SECRET_KEY": "[Filtered]",
+    "SERVER_NAME": "None",
+    "SESSION_COOKIE_DOMAIN": "None",
+    "SESSION_COOKIE_NAME": "'session'",
+    "TESTING": "False",
+    "USE_X_SENDFILE": "False"
+  },
+  "cycler": "<class 'jinja2.utils.Cycler'>",
+  "dict": "<class 'dict'>",
+  "get_flashed_messages": "<function get_flashed_messages at 0x7f4d5228fce0>",
+  "joiner": "<class 'jinja2.utils.Joiner'>",
+  "lipsum": "<function generate_lorem_ipsum at 0x7f4d520bc040>",
+  "namespace": "<class 'jinja2.utils.Namespace'>",
+  "range": "<class 'range'>",
+  "request": "<Request 'https://societyspeaks.io/brief/admin/analytics' [GET]>",
+  "url_for": "<bound method Flask.url_for of <Flask 'app'>>"
+}
+
+=======
+ top-level template code in /home/runner/workspace/app/templates/layout.html [Line 363] (In app)
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}  <-- SUSPECT LINE
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900">
+        <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+---
+Variable values:
+{
+  "config": {
+    "APPLICATION_ROOT": "'/'",
+    "DEBUG": "False",
+    "PERMANENT_SESSION_LIFETIME": "datetime.timedelta(days=7)",
+    "PROPAGATE_EXCEPTIONS": "None",
+    "SECRET_KEY": "[Filtered]",
+    "SERVER_NAME": "None",
+    "SESSION_COOKIE_DOMAIN": "None",
+    "SESSION_COOKIE_NAME": "'session'",
+    "TESTING": "False",
+    "USE_X_SENDFILE": "False"
+  },
+  "cycler": "<class 'jinja2.utils.Cycler'>",
+  "dict": "<class 'dict'>",
+  "get_flashed_messages": "<function get_flashed_messages at 0x7f4d5228fce0>",
+  "joiner": "<class 'jinja2.utils.Joiner'>",
+  "lipsum": "<function generate_lorem_ipsum at 0x7f4d520bc040>",
+  "namespace": "<class 'jinja2.utils.Namespace'>",
+  "range": "<class 'range'>",
+  "request": "<Request 'https://societyspeaks.io/brief/admin/analytics' [GET]>",
+  "url_for": "<bound method Flask.url_for of <Flask 'app'>>"
+}
+
+=======
+ top-level template code in /home/runner/workspace/app/templates/admin/email_analytics.html [Line 1] (In app)
+{% extends "layout.html" %}  <-- SUSPECT LINE
+{% block title %}Email Analytics - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    {# Header #}
+---
+Variable values:
+{
+  "config": {
+    "APPLICATION_ROOT": "'/'",
+    "DEBUG": "False",
+    "PERMANENT_SESSION_LIFETIME": "datetime.timedelta(days=7)",
+    "PROPAGATE_EXCEPTIONS": "None",
+    "SECRET_KEY": "[Filtered]",
+    "SERVER_NAME": "None",
+    "SESSION_COOKIE_DOMAIN": "None",
+    "SESSION_COOKIE_NAME": "'session'",
+    "TESTING": "False",
+    "USE_X_SENDFILE": "False"
+  },
+  "cycler": "<class 'jinja2.utils.Cycler'>",
+  "dict": "<class 'dict'>",
+  "get_flashed_messages": "<function get_flashed_messages at 0x7f4d5228fce0>",
+  "joiner": "<class 'jinja2.utils.Joiner'>",
+  "lipsum": "<function generate_lorem_ipsum at 0x7f4d520bc040>",
+  "namespace": "<class 'jinja2.utils.Namespace'>",
+  "range": "<class 'range'>",
+  "request": "<Request 'https://societyspeaks.io/brief/admin/analytics' [GET]>",
+  "url_for": "<bound method Flask.url_for of <Flask 'app'>>"
+}
+
+=======
+ handle_exception in jinja2/environment.py [Line 936] (Not in app)
+        """Exception handling helper.  This is used internally to either raise
+        rewritten exceptions or return a rendered traceback for the template.
+        """
+        from .debug import rewrite_traceback_stack
+
+        raise rewrite_traceback_stack(source=source)  <-- SUSPECT LINE
+
+    def join_path(self, template: str, parent: str) -> str:
+        """Join a template with the parent.  By default all the lookups are
+        relative to the loader root so this method returns the `template`
+        parameter unchanged, but if the paths should be relative to the
+---
+Variable values:
+{
+  "rewrite_traceback_stack": "<function rewrite_traceback_stack at 0x7f4d30f87f60>",
+  "self": "<flask.templating.Environment object at 0x7f4d4d7f9950>",
+  "source": "None"
+}
+
+=======
+ render in jinja2/environment.py [Line 1301] (Not in app)
+        ctx = self.new_context(dict(*args, **kwargs))
+
+        try:
+            return self.environment.concat(self.root_render_func(ctx))  # type: ignore
+        except Exception:
+            self.environment.handle_exception()  <-- SUSPECT LINE
+
+    async def render_async(self, *args: t.Any, **kwargs: t.Any) -> str:
+        """This works similar to :meth:`render` but returns a coroutine
+        that when awaited returns the entire rendered template string.  This
+        requires the async feature to be enabled.
+---
+Variable values:
+{
+  "args": [
+    {
+      "categories": {
+        "auth": "[Filtered]",
+        "daily_brief": "'Daily Brief'",
+        "daily_question": "'Daily Question'",
+        "discussion": "'Discussion Notifications'"
+      },
+      "category_filter": "None",
+      "current_user": "<User 14>",
+      "dashboard_stats": {
+        "by_category": "[Filtered]",
+        "overall": "{\"bounce_rate\":\"0\",\"click_rate\":\"0\",\"delivery_rate\":\"0\",\"open_rate\":\"0\",\"total_bounced\":\"0\",\"total_clicked\":\"0\",\"total_complained\":\"0\",\"total_delivered\":\"0\",\"total_opened\":\"0\",\"total_sent\":\"0\"}",
+        "period_days": "7",
+        "subscribers": "{\"brief\":\"6\",\"question\":\"60\",\"users\":\"71\"}"
+      },
+      "days": "7",
+      "g": "<flask.g of 'app'>",
+      "recent_events": [],
+      "request": "<Request 'https://societyspeaks.io/brief/admin/analytics' [GET]>",
+      "session": {
+        "_fresh": "True",
+        "_id": "'298b968c7cc6733cc4f394bb8d2d1f10375c634e1400c559903df7fd4f9f8b708750b5fa113ccf8d6e306e5de02f54da739f53f3822d29aacb4c60a217abff23'",
+        "_permanent": "True",
+        "_user_id": "'14'",
+        "csrf_token": "[Filtered]",
+        "daily_fingerprint": "'94fd780f111f0a20c9b058c370edbd3988232916dead06816cf0d891c255a204'",
+        "daily_subscriber_id": "32",
+        "daily_subscriber_token": "[Filtered]",
+        "fingerprint": "'04111d8fedb9eee543c8208c0f5ef123349b191ead81ab2268ad30479d69c793'",
+        "statement_vote_fingerprint": "'7f8c77298af8a1f457e2257e9def68b3e8d26686eaafb3e23572f678f02cfe16'"
+      },
+      "stats": {
+        "bounce_rate": "0",
+        "click_rate": "0",
+        "delivery_rate": "0",
+        "open_rate": "0",
+        "total_bounced": "0",
+        "total_clicked": "0",
+        "total_complained": "0",
+        "total_delivered": "0",
+        "total_opened": "0",
+        "total_sent": "0"
+      }
+    }
+  ],
+  "ctx": {
+    "config": {
+      "APPLICATION_ROOT": "'/'",
+      "DEBUG": "False",
+      "PERMANENT_SESSION_LIFETIME": "datetime.timedelta(days=7)",
+      "PROPAGATE_EXCEPTIONS": "None",
+      "SECRET_KEY": "[Filtered]",
+      "SERVER_NAME": "None",
+      "SESSION_COOKIE_DOMAIN": "None",
+      "SESSION_COOKIE_NAME": "'session'",
+      "TESTING": "False",
+      "USE_X_SENDFILE": "False"
+    },
+    "cycler": "<class 'jinja2.utils.Cycler'>",
+    "dict": "<class 'd..."
+  }
+}
+
+=======
+ _render in flask/templating.py [Line 133] (Not in app)
+def _render(app: Flask, template: Template, context: dict[str, t.Any]) -> str:
+    app.update_template_context(context)
+    before_render_template.send(
+        app, _async_wrapper=app.ensure_sync, template=template, context=context
+    )
+    rv = template.render(context)  <-- SUSPECT LINE
+    template_rendered.send(
+        app, _async_wrapper=app.ensure_sync, template=template, context=context
+    )
+    return rv
+
+---
+Variable values:
+{
+  "app": "<Flask 'app'>",
+  "context": {
+    "categories": {
+      "auth": "[Filtered]",
+      "daily_brief": "'Daily Brief'",
+      "daily_question": "'Daily Question'",
+      "discussion": "'Discussion Notifications'"
+    },
+    "category_filter": "None",
+    "current_user": "<User 14>",
+    "dashboard_stats": {
+      "by_category": {
+        "auth": "[Filtered]",
+        "daily_brief": "{\"bounce_rate\":\"0\",\"click_rate\":\"0\",\"delivery_rate\":\"0\",\"open_rate\":\"0\",\"total_bounced\":\"0\",\"total_clicked\":\"0\",\"total_complained\":\"0\",\"total_delivered\":\"0\",\"total_opened\":\"0\",\"total_sent\":\"0\"}",
+        "daily_question": "{\"bounce_rate\":\"0\",\"click_rate\":\"0\",\"delivery_rate\":\"0\",\"open_rate\":\"0\",\"total_bounced\":\"0\",\"total_clicked\":\"0\",\"total_complained\":\"0\",\"total_delivered\":\"0\",\"total_opened\":\"0\",\"total_sent\":\"0\"}",
+        "discussion": "{\"bounce_rate\":\"0\",\"click_rate\":\"0\",\"delivery_rate\":\"0\",\"open_rate\":\"0\",\"total_bounced\":\"0\",\"total_clicked\":\"0\",\"total_complained\":\"0\",\"total_delivered\":\"0\",\"total_opened\":\"0\",\"total_sent\":\"0\"}"
+      },
+      "overall": {
+        "bounce_rate": "0",
+        "click_rate": "0",
+        "delivery_rate": "0",
+        "open_rate": "0",
+        "total_bounced": "0",
+        "total_clicked": "0",
+        "total_complained": "0",
+        "total_delivered": "0",
+        "total_opened": "0",
+        "total_sent": "0"
+      },
+      "period_days": "7",
+      "subscribers": {
+        "brief": "6",
+        "question": "60",
+        "users": "71"
+      }
+    },
+    "days": "7",
+    "g": "<flask.g of 'app'>",
+    "recent_events": [],
+    "request": "<Request 'https://societyspeaks.io/brief/admin/analytics' [GET]>",
+    "session": {
+      "_fresh": "True",
+      "_id": "'298b968c7cc6733cc4f394bb8d2d1f10375c634e1400c559903df7fd4f9f8b708750b5fa113ccf8d6e306e5de02f54da739f53f3822d29aacb4c60a217abff23'",
+      "_permanent": "True",
+      "_user_id": "'14'",
+      "csrf_token": "[Filtered]",
+      "daily_fingerprint": "'94fd780f111f0a20c9b058c370edbd3988232916dead06816cf0d891c255a204'",
+      "daily_subscriber_id": "32",
+      "daily_subscriber_token": "[Filtered]",
+      "fingerprint": "'04111d8fedb9eee543c8208c0f5ef123349b191ead81ab2268ad30479d69c793'",
+      "statement_vote_fingerprint": "'7f8c77298af8a1f457e2257e9def68b3e8d26686eaafb3e23572f678f02cfe16'"
+    },
+    "stats": {
+      "bounce_rate": "0",
+      "click_rate": "0",
+      "delivery_rate": "0",
+      "open_rate": "0",
+      "total_bounced": "0",
+      "total_clicked": "0",
+      "total_complained": "0",
+      "total_delivered": "0",
+      "total_opened": "0",
+      "total_sent": "0"
+    }
+  },
+  "template": "<Template 'admin/email_analytics.html'>"
+}
+
+=======
+ render_template in flask/templating.py [Line 152] (Not in app)
+        a list is given, the first name to exist will be rendered.
+    :param context: The variables to make available in the template.
+    """
+    app = current_app._get_current_object()  # type: ignore[attr-defined]
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+    return _render(app, template, context)  <-- SUSPECT LINE
+
+
+def render_template_string(source: str, **context: t.Any) -> str:
+    """Render a template from the given source string with the given
+    context.
+---
+Variable values:
+{
+  "app": "<Flask 'app'>",
+  "context": {
+    "categories": {
+      "auth": "[Filtered]",
+      "daily_brief": "'Daily Brief'",
+      "daily_question": "'Daily Question'",
+      "discussion": "'Discussion Notifications'"
+    },
+    "category_filter": "None",
+    "current_user": "<User 14>",
+    "dashboard_stats": {
+      "by_category": {
+        "auth": "[Filtered]",
+        "daily_brief": "{\"bounce_rate\":\"0\",\"click_rate\":\"0\",\"delivery_rate\":\"0\",\"open_rate\":\"0\",\"total_bounced\":\"0\",\"total_clicked\":\"0\",\"total_complained\":\"0\",\"total_delivered\":\"0\",\"total_opened\":\"0\",\"total_sent\":\"0\"}",
+        "daily_question": "{\"bounce_rate\":\"0\",\"click_rate\":\"0\",\"delivery_rate\":\"0\",\"open_rate\":\"0\",\"total_bounced\":\"0\",\"total_clicked\":\"0\",\"total_complained\":\"0\",\"total_delivered\":\"0\",\"total_opened\":\"0\",\"total_sent\":\"0\"}",
+        "discussion": "{\"bounce_rate\":\"0\",\"click_rate\":\"0\",\"delivery_rate\":\"0\",\"open_rate\":\"0\",\"total_bounced\":\"0\",\"total_clicked\":\"0\",\"total_complained\":\"0\",\"total_delivered\":\"0\",\"total_opened\":\"0\",\"total_sent\":\"0\"}"
+      },
+      "overall": {
+        "bounce_rate": "0",
+        "click_rate": "0",
+        "delivery_rate": "0",
+        "open_rate": "0",
+        "total_bounced": "0",
+        "total_clicked": "0",
+        "total_complained": "0",
+        "total_delivered": "0",
+        "total_opened": "0",
+        "total_sent": "0"
+      },
+      "period_days": "7",
+      "subscribers": {
+        "brief": "6",
+        "question": "60",
+        "users": "71"
+      }
+    },
+    "days": "7",
+    "g": "<flask.g of 'app'>",
+    "recent_events": [],
+    "request": "<Request 'https://societyspeaks.io/brief/admin/analytics' [GET]>",
+    "session": {
+      "_fresh": "True",
+      "_id": "'298b968c7cc6733cc4f394bb8d2d1f10375c634e1400c559903df7fd4f9f8b708750b5fa113ccf8d6e306e5de02f54da739f53f3822d29aacb4c60a217abff23'",
+      "_permanent": "True",
+      "_user_id": "'14'",
+      "csrf_token": "[Filtered]",
+      "daily_fingerprint": "'94fd780f111f0a20c9b058c370edbd3988232916dead06816cf0d891c255a204'",
+      "daily_subscriber_id": "32",
+      "daily_subscriber_token": "[Filtered]",
+      "fingerprint": "'04111d8fedb9eee543c8208c0f5ef123349b191ead81ab2268ad30479d69c793'",
+      "statement_vote_fingerprint": "'7f8c77298af8a1f457e2257e9def68b3e8d26686eaafb3e23572f678f02cfe16'"
+    },
+    "stats": {
+      "bounce_rate": "0",
+      "click_rate": "0",
+      "delivery_rate": "0",
+      "open_rate": "0",
+      "total_bounced": "0",
+      "total_clicked": "0",
+      "total_complained": "0",
+      "total_delivered": "0",
+      "total_opened": "0",
+      "total_sent": "0"
+    }
+  },
+  "template": "<Template 'admin/email_analytics.html'>",
+  "template_name_or_list": "'admin/email_analytics.html'"
+}
+
+=======
+ admin_analytics in app/brief/routes.py [Line 726] (In app)
+    if category_filter:
+        stats = dashboard_stats['by_category'].get(category_filter, dashboard_stats['overall'])
+    else:
+        stats = dashboard_stats['overall']
+    
+    return render_template(  <-- SUSPECT LINE
+        'admin/email_analytics.html',
+        stats=stats,
+        dashboard_stats=dashboard_stats,
+        recent_events=recent_events,
+        category_filter=category_filter,
+---
+Variable values:
+{
+  "EmailAnalytics": "<class 'app.lib.email_analytics.EmailAnalytics'>",
+  "category_filter": "None",
+  "current_user": "<User 14>",
+  "dashboard_stats": {
+    "by_category": {
+      "auth": null,
+      "daily_brief": {
+        "bounce_rate": "0",
+        "click_rate": "0",
+        "delivery_rate": "0",
+        "open_rate": "0",
+        "total_bounced": "0",
+        "total_clicked": "0",
+        "total_complained": "0",
+        "total_delivered": "0",
+        "total_opened": "0",
+        "total_sent": "0"
+      },
+      "daily_question": {
+        "bounce_rate": "0",
+        "click_rate": "0",
+        "delivery_rate": "0",
+        "open_rate": "0",
+        "total_bounced": "0",
+        "total_clicked": "0",
+        "total_complained": "0",
+        "total_delivered": "0",
+        "total_opened": "0",
+        "total_sent": "0"
+      },
+      "discussion": {
+        "bounce_rate": "0",
+        "click_rate": "0",
+        "delivery_rate": "0",
+        "open_rate": "0",
+        "total_bounced": "0",
+        "total_clicked": "0",
+        "total_complained": "0",
+        "total_delivered": "0",
+        "total_opened": "0",
+        "total_sent": "0"
+      }
+    },
+    "overall": {
+      "bounce_rate": "0",
+      "click_rate": "0",
+      "delivery_rate": "0",
+      "open_rate": "0",
+      "total_bounced": "0",
+      "total_clicked": "0",
+      "total_complained": "0",
+      "total_delivered": "0",
+      "total_opened": "0",
+      "total_sent": "0"
+    },
+    "period_days": "7",
+    "subscribers": {
+      "brief": "6",
+      "question": "60",
+      "users": "71"
+    }
+  },
+  "days": "7",
+  "recent_events": [],
+  "stats": {
+    "bounce_rate": "0",
+    "click_rate": "0",
+    "delivery_rate": "0",
+    "open_rate": "0",
+    "total_bounced": "0",
+    "total_clicked": "0",
+    "total_complained": "0",
+    "total_delivered": "0",
+    "total_opened": "0",
+    "total_sent": "0"
+  }
+}
+
+=======
+ dispatch_request in flask/app.py [Line 852] (Not in app)
+            and req.method == "OPTIONS"
+        ):
+            return self.make_default_options_response()
+        # otherwise dispatch to the handler for that endpoint
+        view_args: dict[str, t.Any] = req.view_args  # type: ignore[assignment]
+        return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  <-- SUSPECT LINE
+
+    def full_dispatch_request(self) -> Response:
+        """Dispatches the request and on top of that performs request
+        pre and postprocessing as well as HTTP exception catching and
+        error handling.
+---
+Variable values:
+{
+  "req": "<Request 'https://societyspeaks.io/brief/admin/analytics' [GET]>",
+  "rule": "<Rule '/brief/admin/analytics' (OPTIONS, GET, HEAD) -> brief.admin_analytics>",
+  "self": "<Flask 'app'>",
+  "view_args": {}
+}
+
+=======
+ full_dispatch_request in flask/app.py [Line 867] (Not in app)
+
+        try:
+            request_started.send(self, _async_wrapper=self.ensure_sync)
+            rv = self.preprocess_request()
+            if rv is None:
+                rv = self.dispatch_request()  <-- SUSPECT LINE
+        except Exception as e:
+            rv = self.handle_user_exception(e)
+        return self.finalize_request(rv)
+
+    def finalize_request(
+---
+Variable values:
+{
+  "e": "BuildError('admin.admin_dashboard', {}, None)",
+  "rv": "None",
+  "self": "<Flask 'app'>"
+}
+
+=======
+```
