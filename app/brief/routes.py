@@ -27,12 +27,12 @@ def today():
     """Show today's brief"""
     brief = DailyBrief.get_today()
     
-    # Check if user is subscriber (active status required) or admin
+    # Check if user is subscriber (must be eligible - active + valid subscription) or admin
     subscriber = None
     is_subscriber = False
     if 'brief_subscriber_id' in session:
         subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
-        if subscriber and subscriber.status == 'active':
+        if subscriber and subscriber.is_subscribed_eligible():
             is_subscriber = True
     
     # Admins can see full brief content
@@ -98,12 +98,12 @@ def view_date(date_str):
 
     brief = DailyBrief.get_by_date(brief_date)
     
-    # Check if user is subscriber (active status required) or admin
+    # Check if user is subscriber (must be eligible - active + valid subscription) or admin
     subscriber = None
     is_subscriber = False
     if 'brief_subscriber_id' in session:
         subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
-        if subscriber and subscriber.status == 'active':
+        if subscriber and subscriber.is_subscribed_eligible():
             is_subscriber = True
     
     # Admins can see full brief content

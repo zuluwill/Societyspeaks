@@ -16,7 +16,7 @@
         </div>
 
         <!-- Stats Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
             <div class="bg-white rounded-lg shadow-sm p-4">
                 <p class="text-sm text-gray-500">Total</p>
                 <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
@@ -30,8 +30,12 @@
                 <p class="text-2xl font-bold text-blue-600">{{ stats.trial }}</p>
             </div>
             <div class="bg-white rounded-lg shadow-sm p-4">
-                <p class="text-sm text-gray-500">Individual</p>
-                <p class="text-2xl font-bold text-purple-600">{{ stats.individual }}</p>
+                <p class="text-sm text-gray-500">Free</p>
+                <p class="text-2xl font-bold text-emerald-600">{{ stats.free or 0 }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <p class="text-sm text-gray-500">Paid</p>
+                <p class="text-2xl font-bold text-purple-600">{{ stats.individual + stats.get('team', 0) }}</p>
             </div>
             <div class="bg-white rounded-lg shadow-sm p-4">
                 <p class="text-sm text-gray-500">Unsubscribed</p>
@@ -45,12 +49,14 @@
                 <h3 class="text-lg font-semibold text-gray-900">Add Subscriber</h3>
             </div>
             <form action="{{ url_for('brief_admin.add_subscriber') }}" method="POST" class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                     <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                         <input type="email" name="email" required placeholder="email@example.com"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
                         <select name="timezone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                             <option value="UTC">UTC</option>
                             <option value="America/New_York">Eastern (US)</option>
@@ -60,6 +66,18 @@
                         </select>
                     </div>
                     <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Access Type</label>
+                        <select name="tier" id="add-tier-select" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="trial">Trial</option>
+                            <option value="free">Free (Permanent)</option>
+                        </select>
+                    </div>
+                    <div id="trial-days-container">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Trial Days</label>
+                        <input type="number" name="trial_days" value="14" min="1" max="365"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-end">
                         <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
                             Add Subscriber
                         </button>
@@ -78,15 +96,39 @@
                 <textarea name="emails" rows="4" 
                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="email1@example.com, email2@example.com&#10;email3@example.com"></textarea>
-                <div class="flex items-center justify-between mt-4">
-                    <span class="text-sm text-gray-500">Duplicates will be skipped automatically</span>
-                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
-                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        Import Emails
-                    </button>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                        <select name="timezone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="UTC">UTC</option>
+                            <option value="America/New_York">Eastern (US)</option>
+                            <option value="America/Los_Angeles">Pacific (US)</option>
+                            <option value="Europe/London">London</option>
+                            <option value="Europe/Paris">Paris</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Access Type</label>
+                        <select name="tier" id="bulk-tier-select" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="trial">Trial</option>
+                            <option value="free">Free (Permanent)</option>
+                        </select>
+                    </div>
+                    <div id="bulk-trial-days-container">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Trial Days</label>
+                        <input type="number" name="trial_days" value="14" min="1" max="365"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" class="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            Import
+                        </button>
+                    </div>
                 </div>
+                <p class="text-sm text-gray-500 mt-2">Duplicates will be skipped automatically</p>
             </form>
         </div>
 
@@ -107,7 +149,7 @@
                             <input type="checkbox" id="select-all-subs" class="rounded border-gray-300">
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tier</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timezone</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Briefs</th>
@@ -116,7 +158,7 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for subscriber in subscribers %}
-                    <tr class="{% if subscriber.status != 'active' %}bg-gray-50{% endif %}">
+                    <tr class="{% if subscriber.status != 'active' %}bg-gray-50{% elif subscriber.is_trial_expired %}bg-red-50{% endif %}">
                         <td class="px-4 py-4">
                             <input type="checkbox" name="subscriber_ids" value="{{ subscriber.id }}" class="sub-checkbox rounded border-gray-300">
                         </td>
@@ -124,13 +166,23 @@
                             {{ subscriber.email }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
-                                {% if subscriber.tier == 'trial' %}bg-blue-100 text-blue-800
-                                {% elif subscriber.tier == 'individual' %}bg-green-100 text-green-800
-                                {% elif subscriber.tier == 'team' %}bg-purple-100 text-purple-800
-                                {% else %}bg-gray-100 text-gray-800{% endif %}">
-                                {{ subscriber.tier }}
-                            </span>
+                            <div class="flex flex-col gap-1">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                    {% if subscriber.tier == 'free' %}bg-emerald-100 text-emerald-800
+                                    {% elif subscriber.tier == 'trial' %}
+                                        {% if subscriber.is_trial_expired %}bg-red-100 text-red-800
+                                        {% else %}bg-blue-100 text-blue-800{% endif %}
+                                    {% elif subscriber.tier == 'individual' %}bg-purple-100 text-purple-800
+                                    {% elif subscriber.tier == 'team' %}bg-indigo-100 text-indigo-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ subscriber.subscription_status_display }}
+                                </span>
+                                {% if subscriber.tier == 'trial' and subscriber.trial_ends_at %}
+                                <span class="text-xs text-gray-500">
+                                    Expires: {{ subscriber.trial_ends_at.strftime('%b %d, %Y') }}
+                                </span>
+                                {% endif %}
+                            </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
@@ -147,17 +199,17 @@
                             {{ subscriber.total_briefs_received or 0 }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-1">
                                 <!-- Toggle Active/Paused -->
                                 <form action="{{ url_for('brief_admin.toggle_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline">
                                     {% if subscriber.status == 'active' %}
-                                    <button type="submit" class="text-yellow-600 hover:text-yellow-800" title="Pause">
+                                    <button type="submit" class="text-yellow-600 hover:text-yellow-800 p-1" title="Pause">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </button>
                                     {% else %}
-                                    <button type="submit" class="text-green-600 hover:text-green-800" title="Activate">
+                                    <button type="submit" class="text-green-600 hover:text-green-800 p-1" title="Activate">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
@@ -167,17 +219,59 @@
                                 
                                 <!-- Resend Brief -->
                                 <form action="{{ url_for('brief_admin.resend_to_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline">
-                                    <button type="submit" class="text-blue-600 hover:text-blue-800" title="Resend Today's Brief">
+                                    <button type="submit" class="text-blue-600 hover:text-blue-800 p-1" title="Resend Today's Brief">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                         </svg>
                                     </button>
                                 </form>
                                 
+                                <!-- Tier Management Dropdown -->
+                                <div class="relative inline-block" x-data="{ open: false }">
+                                    <button @click="open = !open" type="button" class="text-gray-600 hover:text-gray-800 p-1" title="Manage Subscription">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </button>
+                                    <div x-show="open" @click.away="open = false" 
+                                         class="absolute right-0 z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                                        <div class="py-1">
+                                            {% if subscriber.tier != 'free' %}
+                                            <form action="{{ url_for('brief_admin.set_subscriber_tier', subscriber_id=subscriber.id) }}" method="POST">
+                                                <input type="hidden" name="tier" value="free">
+                                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50">
+                                                    ✓ Grant Free Access
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                            {% if subscriber.tier == 'trial' %}
+                                            <form action="{{ url_for('brief_admin.extend_subscriber_trial', subscriber_id=subscriber.id) }}" method="POST" class="px-4 py-2">
+                                                <div class="flex items-center gap-2">
+                                                    <input type="number" name="days" value="14" min="1" max="365" 
+                                                           class="w-16 px-2 py-1 text-sm border border-gray-300 rounded">
+                                                    <button type="submit" class="text-sm text-blue-700 hover:text-blue-900">
+                                                        +days
+                                                    </button>
+                                                </div>
+                                            </form>
+                                            {% endif %}
+                                            {% if subscriber.tier != 'trial' %}
+                                            <form action="{{ url_for('brief_admin.set_subscriber_tier', subscriber_id=subscriber.id) }}" method="POST">
+                                                <input type="hidden" name="tier" value="trial">
+                                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50">
+                                                    ↺ Reset to Trial
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                
                                 <!-- Delete -->
                                 <form action="{{ url_for('brief_admin.delete_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline"
                                       onsubmit="return confirm('Remove {{ subscriber.email }}? This cannot be undone.');">
-                                    <button type="submit" class="text-red-600 hover:text-red-800" title="Remove">
+                                    <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Remove">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
@@ -239,6 +333,8 @@
     </div>
 </div>
 
+<!-- Alpine.js for dropdown interactions -->
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Bulk remove selection
@@ -263,6 +359,40 @@ document.addEventListener('DOMContentLoaded', function() {
     subCheckboxes.forEach(cb => {
         cb.addEventListener('change', updateSubCount);
     });
+    
+    // Show/hide trial days based on tier selection (Add Subscriber form)
+    const tierSelect = document.getElementById('add-tier-select');
+    const trialDaysContainer = document.getElementById('trial-days-container');
+    
+    if (tierSelect && trialDaysContainer) {
+        function updateTrialDaysVisibility() {
+            if (tierSelect.value === 'free') {
+                trialDaysContainer.style.display = 'none';
+            } else {
+                trialDaysContainer.style.display = 'block';
+            }
+        }
+        
+        tierSelect.addEventListener('change', updateTrialDaysVisibility);
+        updateTrialDaysVisibility(); // Initial state
+    }
+    
+    // Show/hide trial days based on tier selection (Bulk Import form)
+    const bulkTierSelect = document.getElementById('bulk-tier-select');
+    const bulkTrialDaysContainer = document.getElementById('bulk-trial-days-container');
+    
+    if (bulkTierSelect && bulkTrialDaysContainer) {
+        function updateBulkTrialDaysVisibility() {
+            if (bulkTierSelect.value === 'free') {
+                bulkTrialDaysContainer.style.display = 'none';
+            } else {
+                bulkTrialDaysContainer.style.display = 'block';
+            }
+        }
+        
+        bulkTierSelect.addEventListener('change', updateBulkTrialDaysVisibility);
+        updateBulkTrialDaysVisibility(); // Initial state
+    }
 });
 </script>
 {% endblock %}

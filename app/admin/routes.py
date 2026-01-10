@@ -954,3 +954,46 @@ def bulk_import_subscribers():
     
     flash(', '.join(msg_parts) if msg_parts else 'No emails processed.', 'success' if added else 'info')
     return redirect(url_for('admin.list_daily_subscribers'))
+
+
+@admin_bp.route('/daily-questions/subscribers/<int:subscriber_id>/resend', methods=['POST'])
+@login_required
+@admin_required
+def resend_daily_question(subscriber_id):
+    """Resend today's daily question to a specific subscriber"""
+    from app.resend_client import get_resend_client
+    
+    subscriber = DailyQuestionSubscriber.query.get_or_404(subscriber_id)
+    
+    # Get today's published question
+    question = DailyQuestion.get_today()
+    
+    if not question:
+        flash('No published daily question for today.', 'error')
+        return redirect(url_for('admin.list_daily_subscribers'))
+    
+    if not subscriber.is_active:
+        flash(f'Subscriber {subscriber.email} is not active.', 'warning')
+        return redirect(url_for('admin.list_daily_subscribers'))
+    
+    try:
+        # Ensure subscriber has a valid magic token
+        if not subscriber.magic_token:
+            subscriber.generate_magic_token()
+            db.session.commit()
+        
+        client = get_resend_client()
+        success = client.send_daily_question(subscriber, question)
+        
+        if success:
+            # Update last_email_sent
+            subscriber.last_email_sent = datetime.utcnow()
+            db.session.commit()
+            flash(f'Daily question resent to {subscriber.email}', 'success')
+        else:
+            flash(f'Failed to resend to {subscriber.email}. Check logs.', 'error')
+    except Exception as e:
+        current_app.logger.error(f"Resend daily question failed: {e}")
+        flash(f'Error: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.list_daily_subscribers'))

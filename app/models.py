@@ -1276,13 +1276,14 @@ class DailyBriefSubscriber(db.Model):
         db.Index('idx_dbs_token', 'magic_token'),
         db.Index('idx_dbs_team', 'team_id'),
         db.Index('idx_dbs_status', 'status'),
+        db.Index('idx_dbs_tier_status', 'tier', 'status'),  # Composite index for tier+status queries
     )
 
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), nullable=False, unique=True)
 
     # Subscription tier
-    tier = db.Column(db.String(20), default='trial')  # trial|individual|team
+    tier = db.Column(db.String(20), default='trial')  # trial|free|individual|team
     trial_started_at = db.Column(db.DateTime)
     trial_ends_at = db.Column(db.DateTime)  # 14-day trial
 
@@ -1348,17 +1349,82 @@ class DailyBriefSubscriber(db.Model):
 
         return subscriber
 
-    def start_trial(self):
-        """Start 14-day free trial"""
+    def start_trial(self, days=14):
+        """Start free trial with specified duration"""
         self.tier = 'trial'
         self.trial_started_at = datetime.utcnow()
-        self.trial_ends_at = datetime.utcnow() + timedelta(days=14)
+        self.trial_ends_at = datetime.utcnow() + timedelta(days=days)
         self.status = 'active'
 
+    def extend_trial(self, additional_days=14):
+        """Extend trial by specified number of days"""
+        if not self.trial_ends_at:
+            self.trial_ends_at = datetime.utcnow()
+        self.trial_ends_at = self.trial_ends_at + timedelta(days=additional_days)
+        self.tier = 'trial'
+
+    def grant_free_access(self):
+        """Grant permanent free access (admin use only)"""
+        self.tier = 'free'
+        self.trial_ends_at = None  # No expiration
+        self.subscription_expires_at = None
+        self.status = 'active'
+
+    @property
+    def trial_days_remaining(self):
+        """Returns days remaining in trial, or None if not on trial"""
+        if self.tier != 'trial' or not self.trial_ends_at:
+            return None
+        remaining = (self.trial_ends_at - datetime.utcnow()).days
+        return max(0, remaining)
+
+    @property
+    def is_trial_expired(self):
+        """Check if trial has expired"""
+        if self.tier != 'trial':
+            return False
+        if not self.trial_ends_at:
+            return True
+        return datetime.utcnow() > self.trial_ends_at
+
+    @property
+    def subscription_status_display(self):
+        """Human-readable subscription status for admin UI"""
+        if self.tier == 'free':
+            return 'Free (Admin)'
+        elif self.tier == 'trial':
+            if self.is_trial_expired:
+                return 'Trial Expired'
+            days = self.trial_days_remaining
+            if days == 0:
+                return 'Trial Expires Today'
+            elif days == 1:
+                return 'Trial: 1 day left'
+            else:
+                return f'Trial: {days} days left'
+        elif self.tier in ['individual', 'team']:
+            if self.subscription_expires_at:
+                if datetime.utcnow() > self.subscription_expires_at:
+                    return f'{self.tier.title()} (Expired)'
+                return f'{self.tier.title()} (Active)'
+            return f'{self.tier.title()} (Pending)'
+        return 'Unknown'
+
     def is_subscribed_eligible(self):
-        """Check if subscriber should receive emails"""
+        """Check if subscriber should receive emails
+        
+        Tier values:
+        - 'trial': 14-day free trial, expires at trial_ends_at
+        - 'free': Admin-granted permanent free access (never expires)
+        - 'individual': Paid individual subscription via Stripe
+        - 'team': Team subscription via Stripe
+        """
         if self.status != 'active':
             return False
+
+        # Admin-granted free tier: always eligible
+        if self.tier == 'free':
+            return True
 
         # During test phase: everyone gets access (check env var)
         import os
@@ -1367,6 +1433,8 @@ class DailyBriefSubscriber(db.Model):
 
         # Post-launch: check subscription status
         if self.tier == 'trial':
+            if not self.trial_ends_at:
+                return False
             return datetime.utcnow() < self.trial_ends_at
 
         if self.tier in ['individual', 'team']:
@@ -1405,7 +1473,10 @@ class DailyBriefSubscriber(db.Model):
             'preferred_send_hour': self.preferred_send_hour,
             'status': self.status,
             'is_eligible': self.is_subscribed_eligible(),
-            'trial_ends_at': self.trial_ends_at.isoformat() if self.trial_ends_at else None
+            'trial_ends_at': self.trial_ends_at.isoformat() if self.trial_ends_at else None,
+            'trial_days_remaining': self.trial_days_remaining,
+            'is_trial_expired': self.is_trial_expired,
+            'subscription_status_display': self.subscription_status_display
         }
 
     def __repr__(self):
