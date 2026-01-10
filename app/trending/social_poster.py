@@ -505,7 +505,7 @@ def generate_x_share_url(
 
 def share_discussion_to_social(
     discussion,
-    base_url: str = None,
+    base_url: Optional[str] = None,
     skip_bluesky: bool = False,
     skip_x: bool = False
 ) -> dict:
