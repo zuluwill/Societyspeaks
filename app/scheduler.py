@@ -299,7 +299,7 @@ def init_scheduler(app):
         """
         Auto-publish up to 5 diverse topics daily.
         Runs once at 8am UTC.
-        Bluesky posts are scheduled for staggered times throughout the day.
+        Bluesky and X posts are scheduled for staggered times throughout the day.
         """
         with app.app_context():
             from app.trending.pipeline import auto_publish_daily
@@ -307,8 +307,8 @@ def init_scheduler(app):
             logger.info("Starting daily auto-publish")
             
             try:
-                published = auto_publish_daily(max_topics=5, schedule_bluesky=True)
-                logger.info(f"Auto-published {published} topics (Bluesky posts scheduled)")
+                published = auto_publish_daily(max_topics=5, schedule_bluesky=True, schedule_x=True)
+                logger.info(f"Auto-published {published} topics (Bluesky and X posts scheduled)")
             except Exception as e:
                 logger.error(f"Daily auto-publish error: {e}", exc_info=True)
             
@@ -332,6 +332,25 @@ def init_scheduler(app):
                     logger.info(f"Posted {posted} scheduled Bluesky posts")
             except Exception as e:
                 logger.error(f"Scheduled Bluesky processing error: {e}", exc_info=True)
+    
+    
+    @scheduler.scheduled_job('cron', minute='*/15', id='process_scheduled_x')
+    def process_scheduled_x():
+        """
+        Process scheduled X/Twitter posts.
+        Runs every 15 minutes to check for posts due to be sent.
+        Posts are scheduled at: 2pm, 4pm, 6pm, 8pm, 10pm UTC
+        (= 9am, 11am, 1pm, 3pm, 5pm EST for US audience)
+        """
+        with app.app_context():
+            from app.trending.social_poster import process_scheduled_x_posts
+            
+            try:
+                posted = process_scheduled_x_posts()
+                if posted > 0:
+                    logger.info(f"Posted {posted} scheduled X posts")
+            except Exception as e:
+                logger.error(f"Scheduled X processing error: {e}", exc_info=True)
     
     
     @scheduler.scheduled_job('cron', hour='9,15,21', id='backfill_orphan_articles')

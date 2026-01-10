@@ -149,6 +149,26 @@ class Config:
     ADMIN_EMAIL = os.getenv('ADMIN_EMAIL', 'admin@example.com')
     ADMIN_USERNAME = os.getenv('ADMIN_USERNAME', 'admin')
 
+    # ===========================================================================
+    # SOCIAL MEDIA CONFIGURATION
+    # ===========================================================================
+    
+    # Bluesky (AT Protocol) - for automatic posting
+    BLUESKY_HANDLE = os.getenv('BLUESKY_HANDLE', 'societyspeaks.bsky.social')
+    BLUESKY_APP_PASSWORD = os.getenv('BLUESKY_APP_PASSWORD')
+    
+    # X/Twitter API - for automatic posting
+    # Get these from https://developer.x.com/portal
+    X_API_KEY = os.getenv('X_API_KEY')  # Consumer API key
+    X_API_SECRET = os.getenv('X_API_SECRET')  # Consumer API secret
+    X_ACCESS_TOKEN = os.getenv('X_ACCESS_TOKEN')  # Access token for @societyspeaksio
+    X_ACCESS_TOKEN_SECRET = os.getenv('X_ACCESS_TOKEN_SECRET')  # Access token secret
+    
+    # Validate X credentials in production (optional - posts will be skipped if not set)
+    if os.getenv('FLASK_ENV') == 'production':
+        if not all([X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET]):
+            logging.info("X API credentials not fully configured - X posting will be skipped")
+
     # Admin Security Settings
     ADMIN_LOGIN_ATTEMPTS = int(os.getenv('ADMIN_LOGIN_ATTEMPTS', '3'))  # Max failed login attempts
     ADMIN_LOGIN_TIMEOUT = int(os.getenv('ADMIN_LOGIN_TIMEOUT', '1800'))  # Timeout in seconds (30 minutes)

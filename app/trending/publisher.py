@@ -88,7 +88,9 @@ def publish_topic(
     topic: TrendingTopic, 
     admin_user: User,
     schedule_bluesky: bool = False,
-    bluesky_slot_index: int = 0
+    schedule_x: bool = False,
+    bluesky_slot_index: int = 0,
+    x_slot_index: int = 0
 ) -> Optional[Discussion]:
     """
     Convert a TrendingTopic into a live Discussion.
@@ -98,7 +100,9 @@ def publish_topic(
         topic: The TrendingTopic to publish
         admin_user: Admin user performing the publish
         schedule_bluesky: If True, schedule Bluesky post for later instead of posting immediately
-        bluesky_slot_index: Which time slot to use for scheduled posting (0-4)
+        schedule_x: If True, schedule X post for later instead of posting immediately
+        bluesky_slot_index: Which time slot to use for scheduled Bluesky posting (0-4)
+        x_slot_index: Which time slot to use for scheduled X posting (0-4)
     """
     if topic.discussion_id:
         logger.warning(f"Topic {topic.id} already published to discussion {topic.discussion_id}")
@@ -167,20 +171,44 @@ def publish_topic(
     logger.info(f"Published topic {topic.id} as discussion {discussion.id}")
     
     try:
-        from app.trending.social_poster import share_discussion_to_social, schedule_bluesky_post
+        from app.trending.social_poster import (
+            share_discussion_to_social, 
+            schedule_bluesky_post,
+            schedule_x_post
+        )
         
-        if schedule_bluesky:
-            # Schedule Bluesky post for later (staggered posting)
-            scheduled_time = schedule_bluesky_post(discussion, slot_index=bluesky_slot_index)
-            if scheduled_time:
-                logger.info(f"Scheduled Bluesky post for {scheduled_time} UTC")
-            # Still generate X share URL
-            social_results = share_discussion_to_social(discussion, skip_bluesky=True)
+        if schedule_bluesky or schedule_x:
+            # Schedule posts for later (staggered posting)
+            # Each platform is isolated - failure in one doesn't affect others
+            if schedule_bluesky:
+                try:
+                    scheduled_time = schedule_bluesky_post(discussion, slot_index=bluesky_slot_index)
+                    if scheduled_time:
+                        logger.info(f"Scheduled Bluesky post for {scheduled_time} UTC")
+                except Exception as e:
+                    logger.error(f"Failed to schedule Bluesky post: {e}")
+            
+            if schedule_x:
+                try:
+                    x_scheduled_time = schedule_x_post(discussion, slot_index=x_slot_index)
+                    if x_scheduled_time:
+                        logger.info(f"Scheduled X post for {x_scheduled_time} UTC")
+                except Exception as e:
+                    logger.error(f"Failed to schedule X post: {e}")
+            
+            # Still generate share URLs
+            social_results = share_discussion_to_social(
+                discussion, 
+                skip_bluesky=schedule_bluesky, 
+                skip_x=schedule_x
+            )
         else:
             # Post immediately (for manual publishes)
             social_results = share_discussion_to_social(discussion)
             if social_results.get('bluesky'):
                 logger.info(f"Shared to Bluesky: {social_results['bluesky']}")
+            if social_results.get('x'):
+                logger.info(f"Shared to X: {social_results['x']}")
     except Exception as e:
         logger.error(f"Failed to share to social media: {e}")
     
