@@ -1,0 +1,41 @@
+New issue
+We notified recently active members in the python-flask project of this issue
+Issue
+ProgrammingError main.index
+(psycopg2.errors.UndefinedColumn) column discussion.x_scheduled_at does not exist LINE 1: ....blu...
+ID: 9f2c6f6648b64bd498ba62641ffd3a9f
+Jan. 10, 2026, 11:14:24 a.m. GMT
+Project	python-flask
+environment	production
+Level	error
+Exception
+UndefinedColumn: column discussion.x_scheduled_at does not exist
+LINE 1: ....bluesky_post_uri AS discussion_bluesky_post_uri, discussion...
+                                                             ^
+
+  File "sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+ProgrammingError: (psycopg2.errors.UndefinedColumn) column discussion.x_scheduled_at does not exist
+LINE 1: ....bluesky_post_uri AS discussion_bluesky_post_uri, discussion...
+                                                             ^
+
+[SQL: SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.has_native_statements AS discussion_has_native_statements, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.individual_profile_id AS d...
+(12 additional frame(s) were not displayed)
+...
+  File "app/routes.py", line 39, in index
+    featured_discussions = Discussion.get_featured()
+  File "app/models.py", line 409, in get_featured
+    .all()
+Request
+URL	http://5e780d24-e991-4dbf-ad8a-a9b9bd6af4d9-00-1y6avpaijgqu4.worf.replit.d…
+Method	GET
+User
+Message
+Unhandled Exception: (psycopg2.errors.UndefinedColumn) column discussion.x_scheduled_at does not exist
+LINE 1: ....bluesky_post_uri AS discussion_bluesky_post_uri, discussion...
+                                                             ^
+
+[SQL: SELECT discussion.id AS discussion_id, discussion.embed_code AS discussion_embed_code, discussion.has_native_statements AS discussion_has_native_statements, discussion.title AS discussion_title, discussion.description AS discussion_description, discussion.keywords AS discussion_keywords, discussion.slug AS discussion_slug, discussion.geographic_scope AS discussion_geographic_scope, discussion.country AS discussion_country, discussion.city AS discussion_city, discussion.creator_id AS discussion_creator_id, discussion.topic AS discussion_topic, discussion.is_featured AS discussion_is_featured, discussion.participant_count AS discussion_participant_count, discussion.created_at AS discussion_created_at, discussion.updated_at AS discussion_updated_at, discussion.indiv...
