@@ -32,7 +32,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div class="bg-white rounded-xl shadow-md p-6">
                 <div class="flex items-center">
                     <div class="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
@@ -57,6 +57,20 @@
                     <div class="ml-4">
                         <p class="text-sm text-gray-500">Trial Users</p>
                         <p class="text-2xl font-bold text-gray-900">{{ trial_subscribers }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Free (Admin)</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ free_subscribers or 0 }}</p>
                     </div>
                 </div>
             </div>

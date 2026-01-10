@@ -80,6 +80,7 @@ def dashboard():
     from app.models import DailyBriefSubscriber
     total_subscribers = DailyBriefSubscriber.query.filter_by(status='active').count()
     trial_subscribers = DailyBriefSubscriber.query.filter_by(tier='trial', status='active').count()
+    free_subscribers = DailyBriefSubscriber.query.filter_by(tier='free', status='active').count()
     paid_subscribers = DailyBriefSubscriber.query.filter(
         DailyBriefSubscriber.tier.in_(['individual', 'team']),
         DailyBriefSubscriber.status == 'active'
@@ -92,6 +93,7 @@ def dashboard():
         candidate_topics=candidate_topics,
         total_subscribers=total_subscribers,
         trial_subscribers=trial_subscribers,
+        free_subscribers=free_subscribers,
         paid_subscribers=paid_subscribers
     )
 
@@ -322,6 +324,7 @@ def subscribers():
         'total': DailyBriefSubscriber.query.count(),
         'active': DailyBriefSubscriber.query.filter_by(status='active').count(),
         'trial': DailyBriefSubscriber.query.filter_by(tier='trial', status='active').count(),
+        'free': DailyBriefSubscriber.query.filter_by(tier='free', status='active').count(),
         'individual': DailyBriefSubscriber.query.filter_by(tier='individual', status='active').count(),
         'team': DailyBriefSubscriber.query.filter_by(tier='team', status='active').count(),
         'unsubscribed': DailyBriefSubscriber.query.filter_by(status='unsubscribed').count()
@@ -435,12 +438,14 @@ def send_to_subscriber():
 @brief_admin_bp.route('/subscribers/add', methods=['POST'])
 @admin_required
 def add_subscriber():
-    """Add a single subscriber by email"""
+    """Add a single subscriber by email with tier selection"""
     from app.models import DailyBriefSubscriber
     
     email = request.form.get('email', '').strip().lower()
     timezone = request.form.get('timezone', 'UTC')
     preferred_hour = request.form.get('preferred_hour', 18, type=int)
+    tier = request.form.get('tier', 'trial')
+    trial_days = request.form.get('trial_days', 14, type=int)
     
     if not email:
         flash('Email address required.', 'error')
@@ -459,11 +464,18 @@ def add_subscriber():
             preferred_send_hour=preferred_hour
         )
         subscriber.generate_magic_token()
-        subscriber.start_trial()
+        
+        # Set tier based on admin selection
+        if tier == 'free':
+            subscriber.grant_free_access()
+        else:
+            subscriber.start_trial(days=trial_days)
+        
         db.session.add(subscriber)
         db.session.commit()
         
-        flash(f'Added {email} as subscriber.', 'success')
+        tier_msg = 'free access' if tier == 'free' else f'{trial_days}-day trial'
+        flash(f'Added {email} with {tier_msg}.', 'success')
     except Exception as e:
         db.session.rollback()
         logger.error(f"Failed to add subscriber: {e}")
@@ -482,6 +494,8 @@ def bulk_import_subscribers():
     emails_text = request.form.get('emails', '')
     timezone = request.form.get('timezone', 'UTC')
     preferred_hour = request.form.get('preferred_hour', 18, type=int)
+    tier = request.form.get('tier', 'trial')
+    trial_days = request.form.get('trial_days', 14, type=int)
     
     # Parse emails (handle comma, newline, space, semicolon separators)
     emails = re.split(r'[,\n\s;]+', emails_text)
@@ -508,7 +522,13 @@ def bulk_import_subscribers():
                 preferred_send_hour=preferred_hour
             )
             subscriber.generate_magic_token()
-            subscriber.start_trial()
+            
+            # Set tier based on admin selection
+            if tier == 'free':
+                subscriber.grant_free_access()
+            else:
+                subscriber.start_trial(days=trial_days)
+            
             db.session.add(subscriber)
             added += 1
         except Exception as e:
@@ -517,7 +537,8 @@ def bulk_import_subscribers():
     
     db.session.commit()
     
-    flash(f'Imported {added} new subscribers. {skipped} skipped (already subscribed).', 'success')
+    tier_msg = 'free access' if tier == 'free' else f'{trial_days}-day trial'
+    flash(f'Imported {added} subscribers with {tier_msg}. {skipped} skipped (already subscribed).', 'success')
     return redirect(url_for('brief_admin.subscribers'))
 
 
@@ -610,5 +631,61 @@ def resend_to_subscriber(subscriber_id):
     except Exception as e:
         logger.error(f"Resend failed: {e}")
         flash(f'Error: {str(e)}', 'error')
+    
+    return redirect(url_for('brief_admin.subscribers'))
+
+
+@brief_admin_bp.route('/subscribers/<int:subscriber_id>/set-tier', methods=['POST'])
+@admin_required
+def set_subscriber_tier(subscriber_id):
+    """Change a subscriber's tier (admin only)"""
+    from app.models import DailyBriefSubscriber
+    
+    subscriber = DailyBriefSubscriber.query.get_or_404(subscriber_id)
+    new_tier = request.form.get('tier')
+    
+    valid_tiers = ['trial', 'free', 'individual', 'team']
+    if new_tier not in valid_tiers:
+        flash(f'Invalid tier: {new_tier}', 'error')
+        return redirect(url_for('brief_admin.subscribers'))
+    
+    old_tier = subscriber.tier
+    
+    if new_tier == 'free':
+        subscriber.grant_free_access()
+        flash(f'{subscriber.email} granted permanent free access.', 'success')
+    elif new_tier == 'trial':
+        # Reset to new 14-day trial
+        subscriber.start_trial(days=14)
+        flash(f'{subscriber.email} reset to 14-day trial.', 'success')
+    else:
+        # For individual/team, just set the tier (Stripe will handle the rest)
+        subscriber.tier = new_tier
+        flash(f'{subscriber.email} tier changed to {new_tier}. Note: Stripe subscription required for paid tiers.', 'info')
+    
+    db.session.commit()
+    logger.info(f"Subscriber {subscriber.email} tier changed from {old_tier} to {new_tier} by {current_user.email}")
+    
+    return redirect(url_for('brief_admin.subscribers'))
+
+
+@brief_admin_bp.route('/subscribers/<int:subscriber_id>/extend-trial', methods=['POST'])
+@admin_required
+def extend_subscriber_trial(subscriber_id):
+    """Extend a subscriber's trial period"""
+    from app.models import DailyBriefSubscriber
+    
+    subscriber = DailyBriefSubscriber.query.get_or_404(subscriber_id)
+    additional_days = request.form.get('days', 14, type=int)
+    
+    if additional_days < 1 or additional_days > 365:
+        flash('Days must be between 1 and 365.', 'error')
+        return redirect(url_for('brief_admin.subscribers'))
+    
+    subscriber.extend_trial(additional_days=additional_days)
+    db.session.commit()
+    
+    logger.info(f"Subscriber {subscriber.email} trial extended by {additional_days} days by {current_user.email}")
+    flash(f'Extended {subscriber.email} trial by {additional_days} days. New expiration: {subscriber.trial_ends_at.strftime("%b %d, %Y")}', 'success')
     
     return redirect(url_for('brief_admin.subscribers'))

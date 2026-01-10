@@ -278,7 +278,10 @@ class ResendClient:
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
             unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
 
+            # Determine subscription type for email content
+            is_free_tier = subscriber.tier == 'free'
             trial_end_date = subscriber.trial_ends_at.strftime('%B %d, %Y') if subscriber.trial_ends_at else 'N/A'
+            trial_days = subscriber.trial_days_remaining if subscriber.tier == 'trial' else None
 
             html_content = render_template(
                 'emails/daily_brief_welcome.html',
@@ -289,13 +292,21 @@ class ResendClient:
                 base_url=base_url,
                 preferred_hour=subscriber.preferred_send_hour,
                 timezone=subscriber.timezone,
-                trial_end_date=trial_end_date
+                trial_end_date=trial_end_date,
+                trial_days=trial_days,
+                is_free_tier=is_free_tier
             )
+
+            # Customize subject based on tier
+            if is_free_tier:
+                subject = 'Welcome to the Daily Brief - Your Free Access is Active!'
+            else:
+                subject = 'Welcome to the Daily Brief - Your Trial Has Started!'
 
             email_data = {
                 'from': self.from_email,
                 'to': [subscriber.email],
-                'subject': 'Welcome to the Daily Brief - Your Trial Has Started!',
+                'subject': subject,
                 'html': html_content
             }
 
