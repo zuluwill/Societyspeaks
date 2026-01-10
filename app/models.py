@@ -335,6 +335,11 @@ class Discussion(db.Model):
     bluesky_posted_at = db.Column(db.DateTime, nullable=True)  # When actually posted
     bluesky_post_uri = db.Column(db.String(500), nullable=True)  # Bluesky post URI after posting
 
+    # X/Twitter posting schedule (mirrors Bluesky pattern)
+    x_scheduled_at = db.Column(db.DateTime, nullable=True)  # When to post to X
+    x_posted_at = db.Column(db.DateTime, nullable=True)  # When actually posted
+    x_post_id = db.Column(db.String(100), nullable=True)  # X tweet ID after posting
+
     # Constants for geographic scope
     SCOPE_GLOBAL = 'global'
     SCOPE_COUNTRY = 'country'

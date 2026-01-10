@@ -159,7 +159,7 @@ def process_held_topics(batch_size: int = 10) -> int:
     return ready_count
 
 
-def auto_publish_daily(max_topics: int = 5, schedule_bluesky: bool = True) -> int:
+def auto_publish_daily(max_topics: int = 5, schedule_bluesky: bool = True, schedule_x: bool = True) -> int:
     """
     Auto-publish up to max_topics diverse topics daily.
     Selects topics from trusted sources with civic relevance.
@@ -170,6 +170,7 @@ def auto_publish_daily(max_topics: int = 5, schedule_bluesky: bool = True) -> in
         max_topics: Maximum topics to publish
         schedule_bluesky: If True, schedule Bluesky posts for staggered times throughout the day
                          (2pm, 4pm, 6pm, 8pm, 10pm UTC = 9am, 11am, 1pm, 3pm, 5pm EST)
+        schedule_x: If True, schedule X posts for staggered times throughout the day
     """
     from app.models import User
     from app.trending.publisher import publish_topic
@@ -218,12 +219,14 @@ def auto_publish_daily(max_topics: int = 5, schedule_bluesky: bool = True) -> in
             continue
         
         try:
-            # Each topic gets a different time slot for staggered Bluesky posting
+            # Each topic gets a different time slot for staggered social posting
             publish_topic(
                 topic, 
                 admin,
                 schedule_bluesky=schedule_bluesky,
-                bluesky_slot_index=published  # 0, 1, 2, 3, 4 for the 5 time slots
+                schedule_x=schedule_x,
+                bluesky_slot_index=published,  # 0, 1, 2, 3, 4 for the 5 time slots
+                x_slot_index=published
             )
             published += 1
             published_keywords.update(title_words)
