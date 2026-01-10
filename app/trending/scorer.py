@@ -267,17 +267,10 @@ def score_articles_with_llm(articles: List[NewsArticle], batch_size: int = 25) -
                 _score_with_anthropic(batch, api_key)
             logger.info(f"Scored batch {i // batch_size + 1} ({len(batch)} articles)")
             
-            # Commit per-batch in order by ID to avoid deadlocks
-            # Sort batch by ID to ensure consistent ordering across processes
-            sorted_batch = sorted(batch, key=lambda a: a.id)
-            for article in sorted_batch:
-                try:
-                    db.session.add(article)
-                    db.session.flush()
-                except Exception as flush_err:
-                    logger.warning(f"Flush failed for article {article.id}: {flush_err}")
-            
+            # Commit entire batch at once to avoid partial commit issues
             try:
+                for article in batch:
+                    db.session.add(article)
                 db.session.commit()
             except Exception as commit_err:
                 logger.error(f"Batch commit failed: {commit_err}")
