@@ -43,18 +43,21 @@ def admin_required(f):
 def dashboard():
     """Trending topics dashboard."""
     from app.trending.topic_signals import get_hot_topics_summary
+    from app.trending.social_poster import get_social_posting_status
     
     stats = get_pipeline_stats()
     queue = get_review_queue()
     sources = NewsSource.query.order_by(NewsSource.name).all()
     hot_topics = get_hot_topics_summary()
+    social_status = get_social_posting_status()
     
     return render_template(
         'trending/dashboard.html',
         stats=stats,
         queue=queue,
         sources=sources,
-        hot_topics=hot_topics
+        hot_topics=hot_topics,
+        social_status=social_status
     )
 
 

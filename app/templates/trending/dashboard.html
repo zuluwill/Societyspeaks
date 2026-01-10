@@ -28,6 +28,87 @@
         </div>
     </div>
 
+    <!-- Social Media Posting Status -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="p-4 border-b">
+            <h2 class="text-xl font-semibold">Social Media Posting Status</h2>
+        </div>
+        <div class="p-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Bluesky Status -->
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.5 14.5c-1.5 0-2.75-.83-3.5-2-.75 1.17-2 2-3.5 2-2.21 0-4-1.79-4-4 0-3 2.5-6 7.5-9 5 3 7.5 6 7.5 9 0 2.21-1.79 4-4 4z"/>
+                        </svg>
+                        <span class="font-medium">Bluesky</span>
+                        {% if social_status.bluesky.configured %}
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">Configured</span>
+                        {% else %}
+                        <span class="bg-red-100 text-red-800 text-xs px-2 py-0.5 rounded">Not Configured</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <p>Handle: <span class="font-mono">{{ social_status.bluesky.handle }}</span></p>
+                    </div>
+                </div>
+
+                <!-- X/Twitter Status -->
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                        </svg>
+                        <span class="font-medium">X (Twitter)</span>
+                        {% if social_status.x.configured %}
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-0.5 rounded">Configured</span>
+                        {% else %}
+                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded">Awaiting Setup</span>
+                        {% endif %}
+                    </div>
+                    <div class="text-sm text-gray-600 space-y-1">
+                        <p>Handle: <span class="font-mono">{{ social_status.x.handle }}</span></p>
+                        {% if social_status.x.configured %}
+                        <div class="mt-3 pt-3 border-t">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-500">Today:</span>
+                                <span class="font-medium {% if social_status.x.is_rate_limited %}text-red-600{% else %}text-green-600{% endif %}">
+                                    {{ social_status.x.posts_today }}/{{ social_status.x.daily_limit }} posts
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-gray-500">This Month:</span>
+                                <span class="font-medium {% if social_status.x.approaching_monthly_limit %}text-orange-600{% else %}text-green-600{% endif %}">
+                                    {{ social_status.x.posts_this_month }}/{{ social_status.x.monthly_limit }} ({{ social_status.x.monthly_usage_percent }}%)
+                                </span>
+                            </div>
+                            <!-- Progress bar for monthly usage -->
+                            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                <div class="h-2 rounded-full {% if social_status.x.monthly_usage_percent >= 90 %}bg-red-500{% elif social_status.x.monthly_usage_percent >= 70 %}bg-orange-500{% else %}bg-green-500{% endif %}" 
+                                     style="width: {{ social_status.x.monthly_usage_percent }}%"></div>
+                            </div>
+                            {% if social_status.x.is_rate_limited %}
+                            <div class="mt-3 bg-red-50 border border-red-200 rounded p-2 text-red-700 text-xs">
+                                ⚠️ {{ social_status.x.rate_limit_reason }}
+                            </div>
+                            {% endif %}
+                            {% if social_status.x.approaching_monthly_limit %}
+                            <div class="mt-3 bg-orange-50 border border-orange-200 rounded p-2 text-orange-700 text-xs">
+                                ⚠️ Approaching monthly limit ({{ social_status.x.monthly_remaining }} posts remaining)
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <p class="mt-2 text-gray-400 text-xs">
+                            Add X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET to environment variables.
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="flex flex-wrap gap-4 mb-8">
         <form action="{{ url_for('trending.trigger_pipeline') }}" method="post">
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
