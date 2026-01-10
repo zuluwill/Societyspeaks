@@ -31,8 +31,10 @@ X_HANDLE = "societyspeaksio"
 # - ~17 posts per day (to stay safe)
 # - Rate limit resets are per 15-minute window
 X_DAILY_POST_LIMIT = 15  # Conservative daily limit (500/month ≈ 16.6/day)
+X_MONTHLY_POST_LIMIT = 500  # Hard monthly limit from X API
 X_RETRY_ATTEMPTS = 3
 X_RETRY_BASE_DELAY = 60  # Base delay in seconds for exponential backoff
+X_MAX_RETRY_WAIT = 900  # 15 minutes max retry wait (caps header-based waits)
 
 # Bluesky rate limits (AT Protocol):
 # - 1666 points per hour (posts cost 3 points each ≈ 555 posts/hour)
@@ -66,18 +68,59 @@ def _get_x_daily_post_count() -> Tuple[int, datetime]:
         return 0, tomorrow_start
 
 
+def _get_x_monthly_post_count() -> Tuple[int, datetime]:
+    """
+    Get the number of X posts made this month and when the count resets.
+    Tracks against the 500/month X API limit.
+    
+    Returns:
+        Tuple of (post_count_this_month, reset_time)
+    """
+    from app.models import Discussion
+    
+    now = datetime.utcnow()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    # Calculate next month start
+    if now.month == 12:
+        next_month_start = month_start.replace(year=now.year + 1, month=1)
+    else:
+        next_month_start = month_start.replace(month=now.month + 1)
+    
+    try:
+        count = Discussion.query.filter(
+            Discussion.x_posted_at.isnot(None),
+            Discussion.x_posted_at >= month_start,
+            Discussion.x_posted_at < next_month_start
+        ).count()
+        return count, next_month_start
+    except Exception as e:
+        logger.error(f"Error getting X monthly post count: {e}")
+        return 0, next_month_start
+
+
 def _is_x_rate_limited() -> Tuple[bool, str]:
     """
-    Check if we're approaching X rate limits.
+    Check if we're approaching X rate limits (both daily and monthly).
     
     Returns:
         Tuple of (is_limited, reason_message)
     """
-    count, reset_time = _get_x_daily_post_count()
+    # Check monthly limit first (hard limit from X API)
+    monthly_count, monthly_reset = _get_x_monthly_post_count()
+    if monthly_count >= X_MONTHLY_POST_LIMIT:
+        days_until_reset = (monthly_reset - datetime.utcnow()).days
+        return True, f"Monthly limit reached ({monthly_count}/{X_MONTHLY_POST_LIMIT}). Resets in {days_until_reset} days."
     
-    if count >= X_DAILY_POST_LIMIT:
-        hours_until_reset = (reset_time - datetime.utcnow()).total_seconds() / 3600
-        return True, f"Daily limit reached ({count}/{X_DAILY_POST_LIMIT}). Resets in {hours_until_reset:.1f} hours."
+    # Warn if approaching monthly limit (90% threshold)
+    if monthly_count >= X_MONTHLY_POST_LIMIT * 0.9:
+        remaining = X_MONTHLY_POST_LIMIT - monthly_count
+        logger.warning(f"Approaching X monthly limit: {monthly_count}/{X_MONTHLY_POST_LIMIT} ({remaining} remaining)")
+    
+    # Check daily limit
+    daily_count, daily_reset = _get_x_daily_post_count()
+    if daily_count >= X_DAILY_POST_LIMIT:
+        hours_until_reset = (daily_reset - datetime.utcnow()).total_seconds() / 3600
+        return True, f"Daily limit reached ({daily_count}/{X_DAILY_POST_LIMIT}). Resets in {hours_until_reset:.1f} hours."
     
     return False, ""
 
@@ -85,6 +128,7 @@ def _is_x_rate_limited() -> Tuple[bool, str]:
 def _handle_x_rate_limit_error(error) -> Tuple[bool, int]:
     """
     Parse X API rate limit error and determine retry strategy.
+    Logs detailed rate limit headers for debugging.
     
     Returns:
         Tuple of (should_retry, wait_seconds)
@@ -93,23 +137,35 @@ def _handle_x_rate_limit_error(error) -> Tuple[bool, int]:
     
     # Check for rate limit indicators
     if '429' in error_str or 'rate limit' in error_str or 'too many requests' in error_str:
-        # Try to extract reset time from error
-        # Tweepy errors often include rate limit info
+        # Try to extract reset time and log headers for debugging
         if hasattr(error, 'response') and error.response is not None:
-            reset_time = error.response.headers.get('x-rate-limit-reset')
-            if reset_time:
+            headers = error.response.headers
+            
+            # Log all rate limit headers for debugging
+            rate_limit = headers.get('x-rate-limit-limit')
+            rate_remaining = headers.get('x-rate-limit-remaining')
+            rate_reset = headers.get('x-rate-limit-reset')
+            
+            logger.warning(
+                f"X rate limit headers: limit={rate_limit}, "
+                f"remaining={rate_remaining}, reset={rate_reset}"
+            )
+            
+            if rate_reset:
                 try:
-                    wait_seconds = int(reset_time) - int(time.time())
+                    wait_seconds = int(rate_reset) - int(time.time())
                     if wait_seconds > 0:
-                        return True, min(wait_seconds + 5, 900)  # Cap at 15 minutes
+                        # Cap at X_MAX_RETRY_WAIT, add 5s buffer
+                        return True, min(wait_seconds + 5, X_MAX_RETRY_WAIT)
                 except (ValueError, TypeError):
                     pass
         
         # Default: wait 15 minutes for rate limit reset
-        return True, 900
+        return True, X_MAX_RETRY_WAIT
     
     # Check for daily limit exceeded
     if 'daily' in error_str and 'limit' in error_str:
+        logger.warning("X daily API limit exceeded - no retry, wait until tomorrow")
         return False, 0  # Don't retry, wait until tomorrow
     
     return False, 0
@@ -163,20 +219,35 @@ def get_social_posting_status() -> dict:
             ]),
             'handle': f'@{X_HANDLE}',
             'daily_limit': X_DAILY_POST_LIMIT,
+            'monthly_limit': X_MONTHLY_POST_LIMIT,
         }
     }
     
     # Add X rate limit status if configured
     if status['x']['configured']:
         try:
-            count, reset_time = _get_x_daily_post_count()
+            # Daily stats
+            daily_count, daily_reset = _get_x_daily_post_count()
+            status['x']['posts_today'] = daily_count
+            status['x']['daily_remaining'] = max(0, X_DAILY_POST_LIMIT - daily_count)
+            status['x']['daily_reset_time'] = daily_reset.isoformat()
+            
+            # Monthly stats
+            monthly_count, monthly_reset = _get_x_monthly_post_count()
+            status['x']['posts_this_month'] = monthly_count
+            status['x']['monthly_remaining'] = max(0, X_MONTHLY_POST_LIMIT - monthly_count)
+            status['x']['monthly_reset_time'] = monthly_reset.isoformat()
+            status['x']['monthly_usage_percent'] = round((monthly_count / X_MONTHLY_POST_LIMIT) * 100, 1)
+            
+            # Overall rate limit status
             is_limited, reason = _is_x_rate_limited()
-            status['x']['posts_today'] = count
-            status['x']['posts_remaining'] = max(0, X_DAILY_POST_LIMIT - count)
-            status['x']['reset_time'] = reset_time.isoformat()
             status['x']['is_rate_limited'] = is_limited
             if is_limited:
                 status['x']['rate_limit_reason'] = reason
+            
+            # Warning flags
+            status['x']['approaching_monthly_limit'] = monthly_count >= X_MONTHLY_POST_LIMIT * 0.9
+            
         except Exception as e:
             status['x']['error'] = str(e)
     
@@ -545,6 +616,9 @@ def process_scheduled_bluesky_posts() -> int:
     Process any discussions that are due to be posted to Bluesky.
     Called by the scheduler every 15 minutes.
     
+    Uses mark-before-post pattern to prevent double-posting if multiple
+    scheduler instances run concurrently.
+    
     Returns:
         Number of posts sent
     """
@@ -575,6 +649,11 @@ def process_scheduled_bluesky_posts() -> int:
     
     for discussion in due_posts:
         try:
+            # CONCURRENT POST HANDLING: Mark as "in progress" before posting
+            # This prevents double-posting if another scheduler instance picks up the same post
+            discussion.bluesky_posted_at = datetime.utcnow()
+            db.session.commit()
+            
             discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
             
             uri = post_to_bluesky(
@@ -584,20 +663,25 @@ def process_scheduled_bluesky_posts() -> int:
             )
             
             if uri:
+                # Update with actual post URI (bluesky_posted_at already set above)
                 discussion.bluesky_post_uri = uri
-                discussion.bluesky_posted_at = datetime.utcnow()
                 db.session.commit()
                 posted_count += 1
                 logger.info(f"Posted discussion {discussion.id} to Bluesky: {uri}")
             else:
-                logger.warning(f"Failed to post discussion {discussion.id} to Bluesky (no URI returned)")
+                # Post failed - clear the bluesky_posted_at so it can be retried
+                discussion.bluesky_posted_at = None
+                db.session.commit()
+                logger.warning(f"Failed to post discussion {discussion.id} to Bluesky (no URI returned) - will retry")
                 
         except Exception as e:
             logger.error(f"Error posting discussion {discussion.id} to Bluesky: {e}")
             try:
-                db.session.rollback()
+                # Clear bluesky_posted_at on error so it can be retried
+                discussion.bluesky_posted_at = None
+                db.session.commit()
             except Exception:
-                pass
+                db.session.rollback()
             continue
     
     return posted_count
@@ -653,11 +737,20 @@ def process_scheduled_x_posts() -> int:
     Process any discussions that are due to be posted to X.
     Called by the scheduler every 15 minutes.
     
+    Uses mark-before-post pattern to prevent double-posting if multiple
+    scheduler instances run concurrently.
+    
     Returns:
         Number of posts sent
     """
     from app import db
     from app.models import Discussion
+    
+    # Check rate limit once at the start (optimization)
+    is_limited, limit_reason = _is_x_rate_limited()
+    if is_limited:
+        logger.warning(f"X rate limit reached, skipping all scheduled posts: {limit_reason}")
+        return 0
     
     try:
         now = datetime.utcnow()
@@ -683,6 +776,11 @@ def process_scheduled_x_posts() -> int:
     
     for discussion in due_posts:
         try:
+            # CONCURRENT POST HANDLING: Mark as "in progress" before posting
+            # This prevents double-posting if another scheduler instance picks up the same post
+            discussion.x_posted_at = datetime.utcnow()
+            db.session.commit()
+            
             discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
             
             tweet_id = post_to_x(
@@ -692,20 +790,25 @@ def process_scheduled_x_posts() -> int:
             )
             
             if tweet_id:
+                # Update with actual tweet ID (x_posted_at already set above)
                 discussion.x_post_id = tweet_id
-                discussion.x_posted_at = datetime.utcnow()
                 db.session.commit()
                 posted_count += 1
                 logger.info(f"Posted discussion {discussion.id} to X: {tweet_id}")
             else:
-                logger.warning(f"Failed to post discussion {discussion.id} to X (no ID returned)")
+                # Post failed - clear the x_posted_at so it can be retried
+                discussion.x_posted_at = None
+                db.session.commit()
+                logger.warning(f"Failed to post discussion {discussion.id} to X (no ID returned) - will retry")
                 
         except Exception as e:
             logger.error(f"Error posting discussion {discussion.id} to X: {e}")
             try:
-                db.session.rollback()
+                # Clear x_posted_at on error so it can be retried
+                discussion.x_posted_at = None
+                db.session.commit()
             except Exception:
-                pass
+                db.session.rollback()
             continue
     
     return posted_count
