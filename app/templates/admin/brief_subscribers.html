@@ -10,11 +10,13 @@
                 <a href="{{ url_for('brief_admin.dashboard') }}" class="text-gray-500 hover:text-gray-700 text-sm mb-2 inline-block">
                     ← Back to Dashboard
                 </a>
-                <h1 class="text-2xl font-bold text-gray-900">Subscribers</h1>
+                <h1 class="text-2xl font-bold text-gray-900">Brief Subscribers</h1>
+                <p class="mt-1 text-gray-500">{{ stats.active }} active of {{ stats.total }} total subscribers</p>
             </div>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
             <div class="bg-white rounded-lg shadow-sm p-4">
                 <p class="text-sm text-gray-500">Total</p>
                 <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
@@ -28,26 +30,96 @@
                 <p class="text-2xl font-bold text-blue-600">{{ stats.trial }}</p>
             </div>
             <div class="bg-white rounded-lg shadow-sm p-4">
+                <p class="text-sm text-gray-500">Individual</p>
+                <p class="text-2xl font-bold text-purple-600">{{ stats.individual }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
                 <p class="text-sm text-gray-500">Unsubscribed</p>
                 <p class="text-2xl font-bold text-gray-400">{{ stats.unsubscribed }}</p>
             </div>
         </div>
 
+        <!-- Add Single Subscriber -->
+        <div class="bg-white rounded-xl shadow-sm mb-8">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Add Subscriber</h3>
+            </div>
+            <form action="{{ url_for('brief_admin.add_subscriber') }}" method="POST" class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-2">
+                        <input type="email" name="email" required placeholder="email@example.com"
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <select name="timezone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <option value="UTC">UTC</option>
+                            <option value="America/New_York">Eastern (US)</option>
+                            <option value="America/Los_Angeles">Pacific (US)</option>
+                            <option value="Europe/London">London</option>
+                            <option value="Europe/Paris">Paris</option>
+                        </select>
+                    </div>
+                    <div>
+                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                            Add Subscriber
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Bulk Import -->
+        <div class="bg-white rounded-xl shadow-sm mb-8">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Bulk Import Emails</h3>
+                <p class="text-sm text-gray-500 mt-1">Paste a list of email addresses (comma, newline, or space separated)</p>
+            </div>
+            <form action="{{ url_for('brief_admin.bulk_import_subscribers') }}" method="POST" class="p-6">
+                <textarea name="emails" rows="4" 
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="email1@example.com, email2@example.com&#10;email3@example.com"></textarea>
+                <div class="flex items-center justify-between mt-4">
+                    <span class="text-sm text-gray-500">Duplicates will be skipped automatically</span>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        Import Emails
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Subscribers Table -->
         <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">All Subscribers</h3>
+            </div>
+            
+            {% if subscribers %}
+            <form action="{{ url_for('brief_admin.bulk_remove_subscribers') }}" method="POST" id="bulk-remove-form"
+                  onsubmit="return confirm('Remove selected subscribers? This cannot be undone.');">
+            <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                            <input type="checkbox" id="select-all-subs" class="rounded border-gray-300">
+                        </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tier</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timezone</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Briefs Received</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Briefs</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for subscriber in subscribers %}
-                    <tr>
+                    <tr class="{% if subscriber.status != 'active' %}bg-gray-50{% endif %}">
+                        <td class="px-4 py-4">
+                            <input type="checkbox" name="subscriber_ids" value="{{ subscriber.id }}" class="sub-checkbox rounded border-gray-300">
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ subscriber.email }}
                         </td>
@@ -63,6 +135,7 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
                                 {% if subscriber.status == 'active' %}bg-green-100 text-green-800
+                                {% elif subscriber.status == 'paused' %}bg-yellow-100 text-yellow-800
                                 {% else %}bg-gray-100 text-gray-800{% endif %}">
                                 {{ subscriber.status }}
                             </span>
@@ -71,25 +144,79 @@
                             {{ subscriber.timezone }} @ {{ subscriber.preferred_send_hour }}:00
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ subscriber.created_at.strftime('%Y-%m-%d') if subscriber.created_at else 'N/A' }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ subscriber.total_briefs_received or 0 }}
                         </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">No subscribers yet</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex items-center space-x-2">
+                                <!-- Toggle Active/Paused -->
+                                <form action="{{ url_for('brief_admin.toggle_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline">
+                                    {% if subscriber.status == 'active' %}
+                                    <button type="submit" class="text-yellow-600 hover:text-yellow-800" title="Pause">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="text-green-600 hover:text-green-800" title="Activate">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                    </button>
+                                    {% endif %}
+                                </form>
+                                
+                                <!-- Resend Brief -->
+                                <form action="{{ url_for('brief_admin.resend_to_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline">
+                                    <button type="submit" class="text-blue-600 hover:text-blue-800" title="Resend Today's Brief">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    </button>
+                                </form>
+                                
+                                <!-- Delete -->
+                                <form action="{{ url_for('brief_admin.delete_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline"
+                                      onsubmit="return confirm('Remove {{ subscriber.email }}? This cannot be undone.');">
+                                    <button type="submit" class="text-red-600 hover:text-red-800" title="Remove">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
+            
+            <!-- Bulk Remove Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                <span class="text-sm text-gray-500" id="sub-selected-count">0 selected</span>
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed" id="bulk-remove-btn" disabled>
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Remove Selected
+                </button>
+            </div>
+            </form>
+            {% else %}
+            <div class="px-6 py-12 text-center">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900">No subscribers yet</h3>
+                <p class="mt-2 text-gray-500">Use the form above to add subscribers.</p>
+            </div>
+            {% endif %}
 
             {% if pagination.pages > 1 %}
             <div class="px-6 py-4 border-t border-gray-200">
                 <nav class="flex items-center justify-between">
                     <div class="text-sm text-gray-500">
-                        Showing {{ ((pagination.page - 1) * pagination.per_page) + 1 }} - {{ pagination.page * pagination.per_page }} of {{ pagination.total }}
+                        Showing {{ ((pagination.page - 1) * pagination.per_page) + 1 }} - {{ [pagination.page * pagination.per_page, pagination.total] | min }} of {{ pagination.total }}
                     </div>
                     <div class="flex gap-2">
                         {% if pagination.has_prev %}
@@ -111,4 +238,31 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Bulk remove selection
+    const selectAllSubs = document.getElementById('select-all-subs');
+    const subCheckboxes = document.querySelectorAll('.sub-checkbox');
+    const subSelectedCount = document.getElementById('sub-selected-count');
+    const bulkRemoveBtn = document.getElementById('bulk-remove-btn');
+    
+    function updateSubCount() {
+        const checked = document.querySelectorAll('.sub-checkbox:checked').length;
+        if (subSelectedCount) subSelectedCount.textContent = checked + ' selected';
+        if (bulkRemoveBtn) bulkRemoveBtn.disabled = checked === 0;
+    }
+    
+    if (selectAllSubs) {
+        selectAllSubs.addEventListener('change', function() {
+            subCheckboxes.forEach(cb => cb.checked = this.checked);
+            updateSubCount();
+        });
+    }
+    
+    subCheckboxes.forEach(cb => {
+        cb.addEventListener('change', updateSubCount);
+    });
+});
+</script>
 {% endblock %}
