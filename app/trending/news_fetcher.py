@@ -393,6 +393,135 @@ def seed_default_sources():
             'country': 'United States',
             'political_leaning': 0  # Center - tech/business analysis
         },
+        # New sources added
+        {
+            'name': 'Farnam Street',
+            'feed_url': 'https://fs.blog/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - wisdom/mental models
+        },
+        {
+            'name': 'The Dispatch',
+            'feed_url': 'https://thedispatch.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0.3  # Centre-Right - fact-based conservative
+        },
+        {
+            'name': 'Semafor',
+            'feed_url': 'https://www.semafor.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - global news
+        },
+        {
+            'name': 'Rest of World',
+            'feed_url': 'https://restofworld.org/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - international tech/society
+        },
+        {
+            'name': 'The Conversation',
+            'feed_url': 'https://theconversation.com/articles.atom',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - academic experts
+        },
+        {
+            'name': 'The Spectator',
+            'feed_url': 'https://www.spectator.co.uk/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United Kingdom',
+            'political_leaning': 0.4  # Centre-Right - British conservative
+        },
+        {
+            'name': 'New Statesman',
+            'feed_url': 'https://www.newstatesman.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United Kingdom',
+            'political_leaning': -0.4  # Centre-Left - British progressive
+        },
+        {
+            'name': 'National Review',
+            'feed_url': 'https://www.nationalreview.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 0.6  # Right - traditional conservative
+        },
+        {
+            'name': 'The American Conservative',
+            'feed_url': 'https://www.theamericanconservative.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'United States',
+            'political_leaning': 0.5  # Right - paleoconservative
+        },
+        {
+            'name': 'Reason',
+            'feed_url': 'https://reason.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 0.4  # Centre-Right - libertarian
+        },
+        {
+            'name': 'Quillette',
+            'feed_url': 'https://quillette.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'Australia',
+            'political_leaning': 0.3  # Centre-Right - intellectual/heterodox
+        },
+        {
+            'name': 'The Free Press',
+            'feed_url': 'https://www.thefp.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 0.2  # Centre-Right - Bari Weiss
+        },
+        {
+            'name': 'City Journal',
+            'feed_url': 'https://www.city-journal.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 0.5  # Right - urban policy conservative
+        },
+        {
+            'name': 'The Critic',
+            'feed_url': 'https://thecritic.co.uk/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'United Kingdom',
+            'political_leaning': 0.4  # Centre-Right - British intellectual
+        },
+        {
+            'name': 'Acquired Podcast',
+            'feed_url': 'https://feeds.megaphone.fm/acquired',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - business deep dives
+        },
+        {
+            'name': 'The Commentary Magazine',
+            'feed_url': 'https://www.commentary.org/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 0.6  # Right - neoconservative
+        },
     ]
     
     try:
