@@ -1,0 +1,84 @@
+{#
+  Reusable reason input component for daily question voting.
+  
+  Parameters:
+    - show_initially: bool - Whether to show the section immediately (email flow) or hidden (web flow)
+    - submit_button_text: str - Text for the submit button (if include_submit_button is true)
+    - show_skip_hint: bool - Whether to show "You can skip the reason" hint
+    - include_submit_button: bool - Whether to include the submit button (false for question.html which has custom JS)
+    - button_type: str - "submit" or "button" (default: "submit")
+    - input_id_prefix: str - Prefix for input IDs to avoid conflicts (default: "")
+  
+  Usage:
+    {% set show_initially = true %}
+    {% set include_submit_button = true %}
+    {% include 'daily/_reason_input.html' %}
+    
+  Note: Parent template must provide `current_user` context.
+#}
+
+{% set prefix = input_id_prefix | default('') %}
+{% set initially_visible = show_initially | default(false) %}
+{% set button_text = submit_button_text | default('Submit My Response') %}
+{% set show_hint = show_skip_hint | default(true) %}
+{% set show_button = include_submit_button | default(true) %}
+{% set btn_type = button_type | default('submit') %}
+
+<div id="{{ prefix }}reasonSection" class="{% if not initially_visible %}hidden{% endif %} mt-6">
+    <label for="{{ prefix }}reason" class="block text-sm font-medium text-gray-700 mb-2">
+        Add a short reason (optional)
+    </label>
+    <textarea id="{{ prefix }}reason" name="reason" rows="3" maxlength="500"
+              class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              placeholder="Share why you feel this way... (max 500 characters)"></textarea>
+    <p class="text-sm text-gray-500 mt-1">
+        <span id="{{ prefix }}charCount">0</span>/500 characters
+    </p>
+    
+    <div id="{{ prefix }}visibilitySection" class="mt-4 p-4 bg-gray-50 rounded-lg {% if not initially_visible %}hidden{% endif %}">
+        <label class="block text-sm font-medium text-gray-700 mb-3">
+            How should your reason be shared?
+        </label>
+        <div class="space-y-2">
+            {% if current_user.is_authenticated %}
+            <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition">
+                <input type="radio" name="reason_visibility" value="public_named" class="mt-0.5 mr-3 text-blue-600" checked>
+                <div>
+                    <span class="text-sm font-medium text-gray-900">Public (with my name)</span>
+                    <p class="text-xs text-gray-500">Others can see your reason with your display name</p>
+                </div>
+            </label>
+            {% endif %}
+            <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition">
+                <input type="radio" name="reason_visibility" value="public_anonymous" class="mt-0.5 mr-3 text-blue-600" {% if not current_user.is_authenticated %}checked{% endif %}>
+                <div>
+                    <span class="text-sm font-medium text-gray-900">Public (anonymous)</span>
+                    <p class="text-xs text-gray-500">Others can see your reason, but not who wrote it</p>
+                </div>
+            </label>
+            <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-gray-400 hover:bg-gray-50 cursor-pointer transition">
+                <input type="radio" name="reason_visibility" value="private" class="mt-0.5 mr-3 text-gray-600">
+                <div>
+                    <span class="text-sm font-medium text-gray-900">Private</span>
+                    <p class="text-xs text-gray-500">Only you can see your reason</p>
+                </div>
+            </label>
+        </div>
+    </div>
+    
+    {% if show_button %}
+    <button type="{{ btn_type }}" id="{{ prefix }}submitVoteBtn"
+            class="mt-4 w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        {{ button_text }}
+    </button>
+    {% endif %}
+    
+    {% if show_hint %}
+    <p class="text-xs text-gray-400 mt-2 text-center">
+        You can skip the reason and submit directly, or take your time to explain.
+    </p>
+    {% endif %}
+</div>
