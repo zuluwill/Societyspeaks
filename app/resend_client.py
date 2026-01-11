@@ -392,6 +392,26 @@ class ResendEmailClient:
 
         return success
 
+    def _build_vote_urls(self, subscriber, question_id: int) -> dict:
+        """
+        Build question-specific one-click vote URLs.
+        
+        DRY helper method used by both single and batch email sending.
+
+        Args:
+            subscriber: DailyQuestionSubscriber with generate_vote_token method
+            question_id: The daily question ID to bind the token to
+
+        Returns:
+            dict with 'agree', 'disagree', 'unsure' URLs
+        """
+        vote_token = subscriber.generate_vote_token(question_id)
+        return {
+            'agree': f"{self.base_url}/daily/v/{vote_token}/agree",
+            'disagree': f"{self.base_url}/daily/v/{vote_token}/disagree",
+            'unsure': f"{self.base_url}/daily/v/{vote_token}/unsure",
+        }
+
     def send_daily_question(self, subscriber, question) -> bool:
         """
         Send daily question email to a single subscriber.
@@ -406,11 +426,9 @@ class ResendEmailClient:
         magic_link_url = f"{self.base_url}/daily/m/{subscriber.magic_token}"
         question_url = f"{self.base_url}/daily/{question.question_date.isoformat()}"
         unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.magic_token}"
-        
-        # One-click vote URLs
-        vote_agree_url = f"{self.base_url}/daily/v/{subscriber.magic_token}/agree"
-        vote_disagree_url = f"{self.base_url}/daily/v/{subscriber.magic_token}/disagree"
-        vote_unsure_url = f"{self.base_url}/daily/v/{subscriber.magic_token}/unsure"
+
+        # Generate question-specific vote URLs using helper
+        vote_urls = self._build_vote_urls(subscriber, question.id)
 
         # Build streak message
         streak_message = ""
@@ -431,9 +449,9 @@ class ResendEmailClient:
                 question_url=question_url,
                 streak_message=streak_message,
                 unsubscribe_url=unsubscribe_url,
-                vote_agree_url=vote_agree_url,
-                vote_disagree_url=vote_disagree_url,
-                vote_unsure_url=vote_unsure_url,
+                vote_agree_url=vote_urls['agree'],
+                vote_disagree_url=vote_urls['disagree'],
+                vote_unsure_url=vote_urls['unsure'],
                 base_url=self.base_url
             )
         except Exception as e:
@@ -472,11 +490,9 @@ class ResendEmailClient:
         magic_link_url = f"{self.base_url}/daily/m/{subscriber.magic_token}"
         question_url = f"{self.base_url}/daily/{question.question_date.isoformat()}"
         unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.magic_token}"
-        
-        # One-click vote URLs
-        vote_agree_url = f"{self.base_url}/daily/v/{subscriber.magic_token}/agree"
-        vote_disagree_url = f"{self.base_url}/daily/v/{subscriber.magic_token}/disagree"
-        vote_unsure_url = f"{self.base_url}/daily/v/{subscriber.magic_token}/unsure"
+
+        # Generate question-specific vote URLs using helper (DRY)
+        vote_urls = self._build_vote_urls(subscriber, question.id)
 
         streak_message = ""
         if subscriber.current_streak > 1:
@@ -495,9 +511,9 @@ class ResendEmailClient:
             question_url=question_url,
             streak_message=streak_message,
             unsubscribe_url=unsubscribe_url,
-            vote_agree_url=vote_agree_url,
-            vote_disagree_url=vote_disagree_url,
-            vote_unsure_url=vote_unsure_url,
+            vote_agree_url=vote_urls['agree'],
+            vote_disagree_url=vote_urls['disagree'],
+            vote_unsure_url=vote_urls['unsure'],
             base_url=self.base_url
         )
 
