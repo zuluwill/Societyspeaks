@@ -6,6 +6,7 @@
 <div class="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-lg mx-auto">
         <div class="bg-white rounded-2xl shadow-xl p-8">
+            {# Vote confirmation header #}
             <div class="text-center mb-6">
                 <span class="text-6xl">{{ vote_emoji }}</span>
             </div>
@@ -23,17 +24,84 @@
                 You selected <span class="font-semibold text-gray-900">{{ vote_label }}</span>
             </p>
             
-            <form method="POST" action="{{ url_for('daily.one_click_vote', token=token, vote_choice=vote_choice) }}">
-                {# Reason input - same as web flow for consistent experience #}
-                {% set show_initially = true %}
-                {% set include_submit_button = true %}
-                {% set button_type = 'submit' %}
-                {% set submit_button_text = 'Submit My Vote' %}
-                {% set show_skip_hint = true %}
-                {% include 'daily/_reason_input.html' %}
+            {# PRIMARY ACTION: Quick submit without reason #}
+            <form id="quickVoteForm" method="POST" action="{{ url_for('daily.one_click_vote', token=token, vote_choice=vote_choice) }}">
+                <button type="submit" 
+                        class="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center text-lg">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Submit My Vote
+                </button>
             </form>
             
-            <div class="text-center mt-4">
+            {# OPTIONAL: Expandable reason section #}
+            <div class="mt-6">
+                <button type="button" id="toggleReasonBtn"
+                        class="w-full py-3 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors duration-200 flex items-center justify-center">
+                    <svg id="toggleIcon" class="w-5 h-5 mr-2 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add a reason (optional)
+                </button>
+                
+                {# Collapsible reason form #}
+                <div id="reasonFormContainer" class="hidden mt-4">
+                    <form id="reasonVoteForm" method="POST" action="{{ url_for('daily.one_click_vote', token=token, vote_choice=vote_choice) }}">
+                        <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
+                            Share why you feel this way
+                        </label>
+                        <textarea id="reason" name="reason" rows="3" maxlength="500"
+                                  class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                  placeholder="Your perspective helps others understand different viewpoints..."></textarea>
+                        <p class="text-sm text-gray-500 mt-1">
+                            <span id="charCount">0</span>/500 characters
+                        </p>
+                        
+                        {# Visibility options - shown when user types #}
+                        <div id="visibilitySection" class="hidden mt-4 p-4 bg-gray-50 rounded-lg">
+                            <label class="block text-sm font-medium text-gray-700 mb-3">
+                                How should your reason be shared?
+                            </label>
+                            <div class="space-y-2">
+                                {% if current_user.is_authenticated %}
+                                <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition">
+                                    <input type="radio" name="reason_visibility" value="public_named" class="mt-0.5 mr-3 text-blue-600" checked>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-900">Public (with my name)</span>
+                                        <p class="text-xs text-gray-500">Others can see your reason with your display name</p>
+                                    </div>
+                                </label>
+                                {% endif %}
+                                <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition">
+                                    <input type="radio" name="reason_visibility" value="public_anonymous" class="mt-0.5 mr-3 text-blue-600" {% if not current_user.is_authenticated %}checked{% endif %}>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-900">Public (anonymous)</span>
+                                        <p class="text-xs text-gray-500">Others can see your reason, but not who wrote it</p>
+                                    </div>
+                                </label>
+                                <label class="flex items-start p-3 rounded-lg border border-gray-200 hover:border-gray-400 hover:bg-gray-50 cursor-pointer transition">
+                                    <input type="radio" name="reason_visibility" value="private" class="mt-0.5 mr-3 text-gray-600">
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-900">Private</span>
+                                        <p class="text-xs text-gray-500">Only you can see your reason</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" 
+                                class="mt-4 w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Submit with Reason
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center mt-6">
                 <a href="{{ url_for('daily.today') }}" class="text-sm text-gray-500 hover:text-gray-700">
                     Or vote on the full page instead
                 </a>
@@ -43,16 +111,39 @@
 </div>
 
 <script>
-// Character count functionality for reason textarea
 document.addEventListener('DOMContentLoaded', function() {
+    const toggleBtn = document.getElementById('toggleReasonBtn');
+    const toggleIcon = document.getElementById('toggleIcon');
+    const reasonContainer = document.getElementById('reasonFormContainer');
     const textarea = document.getElementById('reason');
     const charCount = document.getElementById('charCount');
     const visibilitySection = document.getElementById('visibilitySection');
     
+    // Toggle reason section
+    toggleBtn.addEventListener('click', function() {
+        const isHidden = reasonContainer.classList.contains('hidden');
+        reasonContainer.classList.toggle('hidden');
+        
+        // Rotate icon: + becomes -
+        if (isHidden) {
+            toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />';
+            textarea.focus();
+        } else {
+            toggleIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />';
+        }
+    });
+    
+    // Character count and visibility toggle
     if (textarea && charCount) {
         textarea.addEventListener('input', function() {
             charCount.textContent = this.value.length;
-            // Visibility section is already visible since show_initially=true
+            
+            // Show visibility options when user starts typing
+            if (this.value.length > 0) {
+                visibilitySection.classList.remove('hidden');
+            } else {
+                visibilitySection.classList.add('hidden');
+            }
         });
     }
 });
