@@ -1,6 +1,6 @@
 """Add vote token improvements: email_question_id, unsubscribe tracking, anonymous responses
 
-Revision ID: a1b2c3d4e5f6
+Revision ID: de16e9f9813c
 Revises: e7f6296de849
 Create Date: 2026-01-11 16:00:00.000000
 
@@ -17,7 +17,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a1b2c3d4e5f6'
+revision = 'de16e9f9813c'
 down_revision = 'e7f6296de849'
 branch_labels = None
 depends_on = None
