@@ -109,12 +109,13 @@ class TopicSelector:
             cutoff = datetime.utcnow() - timedelta(hours=hours)
             
             # Get all potentially eligible topics (basic filters)
+            # Order by published_at desc to ensure most recent topics are considered first
             candidates = TrendingTopic.query.filter(
                 TrendingTopic.status == 'published',
                 TrendingTopic.published_at >= cutoff,
                 TrendingTopic.source_count >= self.MIN_SOURCES,
                 ~TrendingTopic.id.in_(self.recent_topic_ids)  # Exclude recently featured
-            ).all()
+            ).order_by(TrendingTopic.published_at.desc()).all()
             
             if candidates:
                 if hours > 24:

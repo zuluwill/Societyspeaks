@@ -1071,6 +1071,10 @@ class TrendingTopicArticle(db.Model):
     """
     Join table linking TrendingTopic to NewsArticle.
     Allows many-to-many with additional metadata.
+    
+    Foreign Key Behavior:
+    - topic_id: CASCADE - auto-delete when topic is deleted
+    - article_id: CASCADE - auto-delete when article is deleted
     """
     __tablename__ = 'trending_topic_article'
     __table_args__ = (
@@ -1080,8 +1084,8 @@ class TrendingTopicArticle(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id'), nullable=False)
-    article_id = db.Column(db.Integer, db.ForeignKey('news_article.id'), nullable=False)
+    topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id', ondelete='CASCADE'), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey('news_article.id', ondelete='CASCADE'), nullable=False)
     
     # When this article was added to the topic
     added_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -1097,6 +1101,10 @@ class DiscussionSourceArticle(db.Model):
     """
     Join table linking Discussion to NewsArticle for news-based discussions.
     Preserves source attribution when topics are published as discussions.
+    
+    Foreign Key Behavior:
+    - discussion_id: CASCADE - auto-delete when discussion is deleted
+    - article_id: SET NULL - preserve link record but clear article reference when article deleted
     """
     __tablename__ = 'discussion_source_article'
     __table_args__ = (
@@ -1106,8 +1114,8 @@ class DiscussionSourceArticle(db.Model):
     )
     
     id = db.Column(db.Integer, primary_key=True)
-    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
-    article_id = db.Column(db.Integer, db.ForeignKey('news_article.id'), nullable=False)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id', ondelete='CASCADE'), nullable=False)
+    article_id = db.Column(db.Integer, db.ForeignKey('news_article.id', ondelete='CASCADE'), nullable=False)
     added_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -1202,11 +1210,12 @@ class BriefItem(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    brief_id = db.Column(db.Integer, db.ForeignKey('daily_brief.id'), nullable=False)
+    brief_id = db.Column(db.Integer, db.ForeignKey('daily_brief.id', ondelete='CASCADE'), nullable=False)
     position = db.Column(db.Integer, nullable=False)  # Display order 1-5
 
     # Source (DRY - reference existing TrendingTopic)
-    trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id'), nullable=False)
+    # RESTRICT prevents deleting topics that are used in briefs
+    trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id', ondelete='RESTRICT'), nullable=False)
 
     # Generated content (LLM-created for brief context)
     headline = db.Column(db.String(200))  # Shorter, punchier than TrendingTopic title

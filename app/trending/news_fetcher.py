@@ -102,9 +102,11 @@ def clean_summary(text: str) -> Optional[str]:
     text = text.strip(' .,;:-_')
     
     if len(text) < 50:
+        logger.debug(f"Rejected summary: too short ({len(text)} chars after cleaning)")
         return None
     
     if len(text) < len(original_text) * 0.3:
+        logger.debug(f"Rejected summary: too much content removed ({len(text)}/{len(original_text)} chars)")
         return None
     
     return text[:2000] if len(text) > 2000 else text
@@ -125,6 +127,35 @@ class NewsFetcher:
     
     def __init__(self):
         self.guardian_api_key = os.environ.get('GUARDIAN_API_KEY')
+    
+    def _handle_fetch_error(self, source: NewsSource, error: Exception) -> None:
+        """
+        Handle a fetch error for a source (DRY utility method).
+        
+        - Logs the error
+        - Increments fetch_error_count
+        - Auto-disables source after MAX_CONSECUTIVE_ERRORS
+        - Handles transaction rollback/commit
+        """
+        logger.error(f"Error fetching from {source.name}: {error}")
+        db.session.rollback()
+        
+        try:
+            source = db.session.merge(source)
+            source.fetch_error_count = (source.fetch_error_count or 0) + 1
+            
+            # Auto-disable sources with too many consecutive errors
+            if source.fetch_error_count >= self.MAX_CONSECUTIVE_ERRORS:
+                logger.warning(
+                    f"Auto-disabling {source.name} after {source.fetch_error_count} "
+                    f"consecutive errors. Re-enable manually after fixing."
+                )
+                source.is_active = False
+            
+            db.session.commit()
+        except Exception as inner_e:
+            logger.error(f"Error updating error count for {source.name}: {inner_e}")
+            db.session.rollback()
     
     def fetch_all_sources(self) -> List[NewsArticle]:
         """
@@ -167,25 +198,7 @@ class NewsFetcher:
                 
             except Exception as e:
                 failed_sources += 1
-                logger.error(f"Error fetching from {source.name}: {e}")
-                db.session.rollback()
-                
-                try:
-                    source = db.session.merge(source)
-                    source.fetch_error_count = (source.fetch_error_count or 0) + 1
-                    
-                    # Auto-disable sources with too many consecutive errors
-                    if source.fetch_error_count >= self.MAX_CONSECUTIVE_ERRORS:
-                        logger.warning(
-                            f"Auto-disabling {source.name} after {source.fetch_error_count} "
-                            f"consecutive errors. Re-enable manually after fixing."
-                        )
-                        source.is_active = False
-                    
-                    db.session.commit()
-                except Exception as inner_e:
-                    logger.error(f"Error updating error count for {source.name}: {inner_e}")
-                    db.session.rollback()
+                self._handle_fetch_error(source, e)
         
         logger.info(
             f"Fetch complete: {len(all_articles)} articles from "
@@ -336,6 +349,16 @@ class NewsFetcher:
             except requests.exceptions.RequestException as req_err:
                 logger.warning(f"HTTP error fetching {source.name}: {req_err}")
                 return []
+            
+            # Validate content type before parsing (catches JSON APIs, HTML error pages, etc.)
+            content_type = response.headers.get('Content-Type', '').lower()
+            valid_feed_types = ('xml', 'rss', 'atom', 'text/plain', 'application/octet-stream')
+            if not any(t in content_type for t in valid_feed_types):
+                # Some feeds don't set proper content-type, so also check if content looks like XML
+                content_preview = feed_content[:500].decode('utf-8', errors='ignore').strip()
+                if not content_preview.startswith(('<?xml', '<rss', '<feed', '<')):
+                    logger.warning(f"Unexpected content type for {source.name}: {content_type}")
+                    return []
             
             # Parse the feed content
             feed = feedparser.parse(feed_content)
