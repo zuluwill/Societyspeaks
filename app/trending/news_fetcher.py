@@ -793,14 +793,6 @@ def seed_default_sources():
             'political_leaning': 0.5  # Centre-Right - British intellectual
         },
         {
-            'name': 'Quillette',
-            'feed_url': 'https://quillette.com/feed/',
-            'source_type': 'rss',
-            'reputation_score': 0.75,
-            'country': 'Australia',
-            'political_leaning': 0.5  # Centre-Right - heterodox/intellectual
-        },
-        {
             'name': 'Marginal Revolution',
             'feed_url': 'https://feeds.feedburner.com/marginalrevolution/feed',
             'source_type': 'rss',
