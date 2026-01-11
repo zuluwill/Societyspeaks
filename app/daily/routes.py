@@ -709,15 +709,27 @@ def one_click_vote(token, vote_choice):
         fingerprint = get_session_fingerprint()
         new_vote = VOTE_MAP[vote_choice]
 
-        # Create the daily question response (no reason yet - that comes after)
+        # Get optional reason from form (same as web flow for consistent experience)
+        reason = request.form.get('reason', '').strip()
+        reason_visibility = request.form.get('reason_visibility', DEFAULT_EMAIL_VOTE_VISIBILITY)
+
+        # Validate visibility using constants
+        if reason_visibility not in VALID_VISIBILITY_OPTIONS:
+            reason_visibility = DEFAULT_EMAIL_VOTE_VISIBILITY
+
+        # Truncate reason if too long
+        if reason and len(reason) > 500:
+            reason = reason[:500]
+
+        # Create the daily question response (now includes reason if provided)
         response = DailyQuestionResponse(
             daily_question_id=question.id,
             email_question_id=email_question_id,  # Track which question the email was about
             user_id=current_user.id if current_user.is_authenticated else None,
             session_fingerprint=fingerprint if not current_user.is_authenticated else None,
             vote=new_vote,
-            reason=None,
-            reason_visibility=DEFAULT_EMAIL_VOTE_VISIBILITY,
+            reason=reason if reason else None,
+            reason_visibility=reason_visibility if reason else DEFAULT_EMAIL_VOTE_VISIBILITY,
             voted_via_email=True
         )
         db.session.add(response)
@@ -725,17 +737,30 @@ def one_click_vote(token, vote_choice):
         # Sync vote to statement if linked to discussion (uses shared helper)
         sync_vote_to_statement(question, new_vote, fingerprint)
 
-        # Update subscriber streak
-        subscriber.update_participation_streak(has_reason=False)
+        # If user provided a reason, sync as a Response to the linked discussion
+        if reason and reason_visibility != 'private':
+            if question.source_statement_id and question.source_discussion_id:
+                sync_daily_reason_to_statement(
+                    statement_id=question.source_statement_id,
+                    user_id=current_user.id if current_user.is_authenticated else None,
+                    vote=new_vote,
+                    reason=reason,
+                    is_anonymous=(reason_visibility == 'public_anonymous' or not current_user.is_authenticated),
+                    session_fingerprint=fingerprint if not current_user.is_authenticated else None
+                )
+
+        # Update subscriber streak (now tracks if reason was provided)
+        subscriber.update_participation_streak(has_reason=bool(reason))
 
         db.session.commit()
 
         current_app.logger.info(
             f"One-click email vote recorded: {vote_choice} for question #{question.question_number} "
             f"(email_q#{email_question_id}) by subscriber {subscriber.id}"
+            f"{' with reason' if reason else ''}"
         )
 
-        flash('Vote recorded! Share your reasoning below if you\'d like.', 'success')
+        flash('Vote recorded! Thanks for participating.', 'success')
         return redirect(url_for('daily.today'))
         
     except Exception as e:
