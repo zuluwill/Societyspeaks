@@ -151,7 +151,7 @@ class CoverageAnalyzer:
             'sensationalism_avg': round(avg_sensationalism, 2) if avg_sensationalism else None,
             'unknown_sources': [s.name for s in unknown_sources],
             'coverage_notes': coverage_notes,
-            'has_sufficient_coverage': total_known >= 2  # Need at least 2 sources
+            'has_sufficient_coverage': total_known >= 1  # Allow single-source topics with high quality
         }
 
     def _empty_distribution(self) -> Dict:
