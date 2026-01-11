@@ -254,6 +254,7 @@ def today():
     
     if has_voted:
         participation_data = get_discussion_participation_data(question)
+        public_reasons = get_public_reasons(question)
         return render_template('daily/results.html',
                              question=question,
                              user_response=user_response,
@@ -264,7 +265,8 @@ def today():
                              source_discussion=question.source_discussion,
                              source_articles=get_source_articles(question),
                              related_discussions=get_related_discussions(question),
-                             participation=participation_data)
+                             participation=participation_data,
+                             public_reasons=public_reasons)
     else:
         return render_template('daily/question.html',
                              question=question)
@@ -291,6 +293,7 @@ def by_date(date_str):
     
     if has_voted or not is_today:
         participation_data = get_discussion_participation_data(question)
+        public_reasons = get_public_reasons(question)
         return render_template('daily/results.html',
                              question=question,
                              user_response=user_response,
@@ -302,7 +305,8 @@ def by_date(date_str):
                              source_discussion=question.source_discussion,
                              source_articles=get_source_articles(question),
                              related_discussions=get_related_discussions(question),
-                             participation=participation_data)
+                             participation=participation_data,
+                             public_reasons=public_reasons)
     else:
         return render_template('daily/question.html',
                              question=question)
@@ -356,7 +360,7 @@ def generate_share_snippet(question, user_response):
     }
 
 
-def sync_daily_reason_to_statement(statement_id, user_id, vote, reason):
+def sync_daily_reason_to_statement(statement_id, user_id, vote, reason, is_anonymous=False):
     """
     Sync a daily question reason to a statement response.
     Updates existing response or creates new one to prevent duplicates.
@@ -366,6 +370,7 @@ def sync_daily_reason_to_statement(statement_id, user_id, vote, reason):
         user_id: ID of the user submitting the response
         vote: Vote value (1=agree, -1=disagree, 0=unsure)
         reason: The reason/response text
+        is_anonymous: Whether the response should be marked as anonymous
 
     Returns:
         tuple: (Response object, is_new boolean)
@@ -385,23 +390,40 @@ def sync_daily_reason_to_statement(statement_id, user_id, vote, reason):
         # Update existing response content instead of creating duplicate
         existing_response.content = reason
         existing_response.position = position
+        if hasattr(existing_response, 'is_anonymous'):
+            existing_response.is_anonymous = is_anonymous
         current_app.logger.info(
             f"Daily question reason updated existing response on statement {statement_id}"
         )
         return existing_response, False
     else:
         # Create new Response for the linked statement
-        statement_response = Response(
-            statement_id=statement_id,
-            user_id=user_id,
-            position=position,
-            content=reason
-        )
+        response_kwargs = {
+            'statement_id': statement_id,
+            'user_id': user_id,
+            'position': position,
+            'content': reason
+        }
+        # Add is_anonymous if the model supports it
+        statement_response = Response(**response_kwargs)
+        if hasattr(statement_response, 'is_anonymous'):
+            statement_response.is_anonymous = is_anonymous
         db.session.add(statement_response)
         current_app.logger.info(
-            f"Daily question reason synced as response to statement {statement_id}"
+            f"Daily question reason synced as response to statement {statement_id} (anonymous={is_anonymous})"
         )
         return statement_response, True
+
+
+def get_public_reasons(question, limit=10):
+    """Get public reasons from other users for this question."""
+    reasons = DailyQuestionResponse.query.filter(
+        DailyQuestionResponse.daily_question_id == question.id,
+        DailyQuestionResponse.reason.isnot(None),
+        DailyQuestionResponse.reason != '',
+        DailyQuestionResponse.reason_visibility.in_(['public_named', 'public_anonymous'])
+    ).order_by(DailyQuestionResponse.created_at.desc()).limit(limit).all()
+    return reasons
 
 
 @daily_bp.route('/daily/subscribe', methods=['GET', 'POST'])
@@ -495,6 +517,142 @@ def magic_link(token):
     return redirect(url_for('daily.today'))
 
 
+@daily_bp.route('/daily/v/<token>/<vote_choice>', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")
+def one_click_vote(token, vote_choice):
+    """One-click vote from email - shows confirmation page (GET) then records vote (POST).
+    
+    Bot protection:
+    - Two-step process: GET shows confirmation, POST records vote
+    - This prevents mail scanners/link prefetchers from registering votes
+    - Rate limiting (10/min)
+    - Token validation (expires in 48h)
+    """
+    from app.models import StatementVote, Statement
+    
+    # Validate vote choice
+    vote_map = {'agree': 1, 'disagree': -1, 'unsure': 0}
+    if vote_choice not in vote_map:
+        flash('Invalid vote option.', 'error')
+        return redirect(url_for('daily.today'))
+    
+    # Verify subscriber token
+    subscriber = DailyQuestionSubscriber.verify_magic_token(token)
+    if not subscriber:
+        flash('This link has expired or is invalid. Please subscribe again.', 'warning')
+        return redirect(url_for('daily.subscribe'))
+    
+    # Set up session
+    session['daily_subscriber_id'] = subscriber.id
+    session['daily_subscriber_token'] = token
+    session.modified = True
+    
+    # Log in if user has account
+    if subscriber.user:
+        login_user(subscriber.user)
+    
+    # Get the most recent question (to handle emails from recent days)
+    question = DailyQuestion.get_today()
+    if not question:
+        # Fallback: get most recent published question
+        question = DailyQuestion.query.filter(
+            DailyQuestion.is_published == True
+        ).order_by(DailyQuestion.question_date.desc()).first()
+    
+    if not question:
+        flash('No question available.', 'info')
+        return redirect(url_for('daily.today'))
+    
+    # Check if already voted
+    if has_user_voted(question):
+        flash('You have already voted on this question.', 'info')
+        return redirect(url_for('daily.today'))
+    
+    vote_labels = {'agree': 'Agree', 'disagree': 'Disagree', 'unsure': 'Unsure'}
+    vote_emojis = {'agree': '👍', 'disagree': '👎', 'unsure': '🤔'}
+    
+    # GET request: Show confirmation page (prevents mail scanner prefetch from voting)
+    if request.method == 'GET':
+        return render_template('daily/confirm_vote.html',
+                             question=question,
+                             vote_choice=vote_choice,
+                             vote_label=vote_labels.get(vote_choice, vote_choice.title()),
+                             vote_emoji=vote_emojis.get(vote_choice, ''),
+                             token=token)
+    
+    # POST request: Record the vote
+    try:
+        fingerprint = get_session_fingerprint()
+        new_vote = vote_map[vote_choice]
+        
+        # Create the daily question response (no reason yet - that comes after)
+        response = DailyQuestionResponse(
+            daily_question_id=question.id,
+            user_id=current_user.id if current_user.is_authenticated else None,
+            session_fingerprint=fingerprint if not current_user.is_authenticated else None,
+            vote=new_vote,
+            reason=None,
+            reason_visibility='public_anonymous',  # Default for email votes
+            voted_via_email=True
+        )
+        db.session.add(response)
+        
+        # Sync vote to statement if linked to discussion
+        if question.source_statement_id and question.source_discussion_id:
+            statement = Statement.query.get(question.source_statement_id)
+            if statement:
+                # Check for existing statement vote
+                existing_statement_vote = None
+                if current_user.is_authenticated:
+                    existing_statement_vote = StatementVote.query.filter_by(
+                        statement_id=question.source_statement_id,
+                        user_id=current_user.id
+                    ).first()
+                elif fingerprint:
+                    existing_statement_vote = StatementVote.query.filter_by(
+                        statement_id=question.source_statement_id,
+                        session_fingerprint=fingerprint
+                    ).first()
+                
+                if not existing_statement_vote:
+                    # Create new statement vote
+                    stmt_vote = StatementVote(
+                        statement_id=question.source_statement_id,
+                        discussion_id=question.source_discussion_id,
+                        user_id=current_user.id if current_user.is_authenticated else None,
+                        session_fingerprint=fingerprint if not current_user.is_authenticated else None,
+                        vote=new_vote
+                    )
+                    db.session.add(stmt_vote)
+                    
+                    # Update statement vote counts
+                    if new_vote == 1:
+                        statement.vote_count_agree = (statement.vote_count_agree or 0) + 1
+                    elif new_vote == -1:
+                        statement.vote_count_disagree = (statement.vote_count_disagree or 0) + 1
+                    else:
+                        statement.vote_count_unsure = (statement.vote_count_unsure or 0) + 1
+        
+        # Update subscriber streak
+        subscriber.update_participation_streak(has_reason=False)
+        
+        db.session.commit()
+        
+        current_app.logger.info(
+            f"One-click email vote recorded: {vote_choice} for question #{question.question_number} "
+            f"by subscriber {subscriber.id}"
+        )
+        
+        flash('Vote recorded! Share your reasoning below if you\'d like.', 'success')
+        return redirect(url_for('daily.today'))
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error processing one-click vote: {e}", exc_info=True)
+        flash('There was an error recording your vote. Please try again.', 'error')
+        return redirect(url_for('daily.today'))
+
+
 @daily_bp.route('/daily/vote', methods=['POST'])
 @limiter.limit("10 per minute")
 def vote():
@@ -529,6 +687,15 @@ def vote():
         flash('Please select a vote option.', 'error')
         return redirect(url_for('daily.today'))
     reason = request.form.get('reason', '').strip()
+    reason_visibility = request.form.get('reason_visibility', 'public_anonymous')
+    
+    # Validate visibility
+    if reason_visibility not in ('public_named', 'public_anonymous', 'private'):
+        reason_visibility = 'public_anonymous'
+    
+    # Only allow public_named for authenticated users
+    if reason_visibility == 'public_named' and not current_user.is_authenticated:
+        reason_visibility = 'public_anonymous'
     
     vote_map = {'agree': 1, 'disagree': -1, 'unsure': 0}
     if vote_value not in vote_map:
@@ -544,7 +711,9 @@ def vote():
             user_id=current_user.id if current_user.is_authenticated else None,
             session_fingerprint=get_session_fingerprint() if not current_user.is_authenticated else None,
             vote=vote_map[vote_value],
-            reason=reason if reason else None
+            reason=reason if reason else None,
+            reason_visibility=reason_visibility if reason else 'public_anonymous',
+            voted_via_email=False
         )
         db.session.add(response)
         
@@ -616,27 +785,31 @@ def vote():
                         f"statement {question.source_statement_id}"
                     )
                 
-                # If user provided a reason and is authenticated, sync as a Response
+                # If user provided a reason, sync as a Response
                 # This makes the reason visible in the discussion's response thread
-                if reason and current_user.is_authenticated:
-                    # Use helper function to sync reason to statement response
-                    statement_response, is_new = sync_daily_reason_to_statement(
-                        statement_id=question.source_statement_id,
-                        user_id=current_user.id,
-                        vote=new_vote,
-                        reason=reason
-                    )
-
-                    # Only increment response count if this is a new response
-                    if is_new:
-                        # Track participant and increment response count atomically
-                        # Use commit=False to keep within the outer transaction
-                        participant = DiscussionParticipant.track_participant(
-                            discussion_id=question.source_discussion_id,
+                # For authenticated users: sync with their user_id
+                # For anonymous users with public visibility: sync as anonymous response
+                if reason and reason_visibility != 'private':
+                    if current_user.is_authenticated:
+                        # Use helper function to sync reason to statement response
+                        statement_response, is_new = sync_daily_reason_to_statement(
+                            statement_id=question.source_statement_id,
                             user_id=current_user.id,
-                            commit=False
+                            vote=new_vote,
+                            reason=reason,
+                            is_anonymous=(reason_visibility == 'public_anonymous')
                         )
-                        participant.increment_response_count(commit=False)
+
+                        # Only increment response count if this is a new response
+                        if is_new:
+                            # Track participant and increment response count atomically
+                            # Use commit=False to keep within the outer transaction
+                            participant = DiscussionParticipant.track_participant(
+                                discussion_id=question.source_discussion_id,
+                                user_id=current_user.id,
+                                commit=False
+                            )
+                            participant.increment_response_count(commit=False)
         
         subscriber_id = session.get('daily_subscriber_id')
         if subscriber_id:

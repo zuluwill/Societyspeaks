@@ -1896,6 +1896,13 @@ class DailyQuestionResponse(db.Model):
     
     reason = db.Column(db.String(500), nullable=True)
     
+    # Visibility for reason: 'public_named', 'public_anonymous', 'private'
+    # Defaults to 'public_anonymous' for email subscribers, 'public_named' for logged-in users
+    reason_visibility = db.Column(db.String(20), default='public_anonymous')
+    
+    # Track if vote was submitted via one-click email (no reason prompt shown initially)
+    voted_via_email = db.Column(db.Boolean, default=False)
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     daily_question = db.relationship('DailyQuestion', backref='responses')
@@ -1935,8 +1942,24 @@ class DailyQuestionResponse(db.Model):
             'vote_label': self.vote_label,
             'vote_emoji': self.vote_emoji,
             'reason': self.reason,
+            'reason_visibility': self.reason_visibility,
+            'voted_via_email': self.voted_via_email,
             'created_at': self.created_at.isoformat()
         }
+    
+    @property
+    def display_name(self):
+        """Return display name based on visibility setting"""
+        if self.reason_visibility == 'public_named' and self.user:
+            return self.user.display_name or self.user.email.split('@')[0]
+        elif self.reason_visibility == 'public_anonymous':
+            return 'Someone'
+        return None
+    
+    @property
+    def is_reason_public(self):
+        """Check if the reason should be publicly visible"""
+        return self.reason and self.reason_visibility in ('public_named', 'public_anonymous')
     
     def __repr__(self):
         return f'<DailyQuestionResponse {self.vote_label} on Q#{self.daily_question_id}>'
