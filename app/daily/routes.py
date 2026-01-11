@@ -426,6 +426,84 @@ def get_public_reasons(question, limit=10):
     return reasons
 
 
+def sync_vote_to_statement(question, vote_value, fingerprint):
+    """
+    Sync a daily question vote to the linked statement in the discussion.
+    
+    Args:
+        question: DailyQuestion object with source_statement_id and source_discussion_id
+        vote_value: Vote value (1=agree, -1=disagree, 0=unsure)
+        fingerprint: Session fingerprint for anonymous users
+        
+    Returns:
+        tuple: (created_new_vote: bool, updated_existing: bool)
+    """
+    from app.models import StatementVote, Statement
+    
+    if not question.source_statement_id or not question.source_discussion_id:
+        return False, False
+    
+    statement = Statement.query.get(question.source_statement_id)
+    if not statement:
+        return False, False
+    
+    # Check for existing statement vote
+    existing_vote = None
+    if current_user.is_authenticated:
+        existing_vote = StatementVote.query.filter_by(
+            statement_id=question.source_statement_id,
+            user_id=current_user.id
+        ).first()
+    elif fingerprint:
+        existing_vote = StatementVote.query.filter_by(
+            statement_id=question.source_statement_id,
+            session_fingerprint=fingerprint
+        ).first()
+    
+    if existing_vote:
+        # Update existing vote if different
+        old_vote = existing_vote.vote
+        if old_vote != vote_value:
+            # Adjust counts
+            if old_vote == 1:
+                statement.vote_count_agree = max(0, (statement.vote_count_agree or 0) - 1)
+            elif old_vote == -1:
+                statement.vote_count_disagree = max(0, (statement.vote_count_disagree or 0) - 1)
+            elif old_vote == 0:
+                statement.vote_count_unsure = max(0, (statement.vote_count_unsure or 0) - 1)
+            
+            if vote_value == 1:
+                statement.vote_count_agree = (statement.vote_count_agree or 0) + 1
+            elif vote_value == -1:
+                statement.vote_count_disagree = (statement.vote_count_disagree or 0) + 1
+            else:
+                statement.vote_count_unsure = (statement.vote_count_unsure or 0) + 1
+            
+            existing_vote.vote = vote_value
+            return False, True
+        return False, False
+    else:
+        # Create new statement vote
+        stmt_vote = StatementVote(
+            statement_id=question.source_statement_id,
+            discussion_id=question.source_discussion_id,
+            user_id=current_user.id if current_user.is_authenticated else None,
+            session_fingerprint=fingerprint if not current_user.is_authenticated else None,
+            vote=vote_value
+        )
+        db.session.add(stmt_vote)
+        
+        # Update statement vote counts
+        if vote_value == 1:
+            statement.vote_count_agree = (statement.vote_count_agree or 0) + 1
+        elif vote_value == -1:
+            statement.vote_count_disagree = (statement.vote_count_disagree or 0) + 1
+        else:
+            statement.vote_count_unsure = (statement.vote_count_unsure or 0) + 1
+        
+        return True, False
+
+
 @daily_bp.route('/daily/subscribe', methods=['GET', 'POST'])
 @limiter.limit("5 per minute")
 def subscribe():
@@ -597,41 +675,8 @@ def one_click_vote(token, vote_choice):
         )
         db.session.add(response)
         
-        # Sync vote to statement if linked to discussion
-        if question.source_statement_id and question.source_discussion_id:
-            statement = Statement.query.get(question.source_statement_id)
-            if statement:
-                # Check for existing statement vote
-                existing_statement_vote = None
-                if current_user.is_authenticated:
-                    existing_statement_vote = StatementVote.query.filter_by(
-                        statement_id=question.source_statement_id,
-                        user_id=current_user.id
-                    ).first()
-                elif fingerprint:
-                    existing_statement_vote = StatementVote.query.filter_by(
-                        statement_id=question.source_statement_id,
-                        session_fingerprint=fingerprint
-                    ).first()
-                
-                if not existing_statement_vote:
-                    # Create new statement vote
-                    stmt_vote = StatementVote(
-                        statement_id=question.source_statement_id,
-                        discussion_id=question.source_discussion_id,
-                        user_id=current_user.id if current_user.is_authenticated else None,
-                        session_fingerprint=fingerprint if not current_user.is_authenticated else None,
-                        vote=new_vote
-                    )
-                    db.session.add(stmt_vote)
-                    
-                    # Update statement vote counts
-                    if new_vote == 1:
-                        statement.vote_count_agree = (statement.vote_count_agree or 0) + 1
-                    elif new_vote == -1:
-                        statement.vote_count_disagree = (statement.vote_count_disagree or 0) + 1
-                    else:
-                        statement.vote_count_unsure = (statement.vote_count_unsure or 0) + 1
+        # Sync vote to statement if linked to discussion (uses shared helper)
+        sync_vote_to_statement(question, new_vote, fingerprint)
         
         # Update subscriber streak
         subscriber.update_participation_streak(has_reason=False)
@@ -705,111 +750,52 @@ def vote():
         reason = reason[:500]
     
     try:
+        fingerprint = get_session_fingerprint()
+        new_vote = vote_map[vote_value]
+        
         # Create the daily question response
         response = DailyQuestionResponse(
             daily_question_id=question.id,
             user_id=current_user.id if current_user.is_authenticated else None,
-            session_fingerprint=get_session_fingerprint() if not current_user.is_authenticated else None,
-            vote=vote_map[vote_value],
+            session_fingerprint=fingerprint if not current_user.is_authenticated else None,
+            vote=new_vote,
             reason=reason if reason else None,
             reason_visibility=reason_visibility if reason else 'public_anonymous',
             voted_via_email=False
         )
         db.session.add(response)
         
-        # If linked to a discussion statement, sync the vote to StatementVote
-        # This makes the daily question vote count toward consensus analysis
-        if question.source_statement_id and question.source_discussion_id:
-            statement = Statement.query.get(question.source_statement_id)
-            if statement:
-                fingerprint = get_session_fingerprint()
-                new_vote = vote_map[vote_value]
+        # Sync vote to statement if linked to discussion (uses shared helper)
+        created_new, updated = sync_vote_to_statement(question, new_vote, fingerprint)
+        
+        if created_new:
+            current_app.logger.info(
+                f"Daily question vote synced to discussion {question.source_discussion_id}, "
+                f"statement {question.source_statement_id}"
+            )
+        elif updated:
+            current_app.logger.info(
+                f"Daily question vote updated existing vote in discussion {question.source_discussion_id}"
+            )
+        
+        # If user provided a reason, sync as a Response
+        if reason and reason_visibility != 'private' and current_user.is_authenticated:
+            if question.source_statement_id and question.source_discussion_id:
+                statement_response, is_new = sync_daily_reason_to_statement(
+                    statement_id=question.source_statement_id,
+                    user_id=current_user.id,
+                    vote=new_vote,
+                    reason=reason,
+                    is_anonymous=(reason_visibility == 'public_anonymous')
+                )
                 
-                # Check if user already has a vote on this statement
-                existing_statement_vote = None
-                if current_user.is_authenticated:
-                    existing_statement_vote = StatementVote.query.filter_by(
-                        statement_id=question.source_statement_id,
-                        user_id=current_user.id
-                    ).first()
-                elif fingerprint:
-                    existing_statement_vote = StatementVote.query.filter_by(
-                        statement_id=question.source_statement_id,
-                        session_fingerprint=fingerprint
-                    ).first()
-                
-                if existing_statement_vote:
-                    # Update existing vote to match daily question vote
-                    old_vote = existing_statement_vote.vote
-                    if old_vote != new_vote:
-                        # Adjust vote counts for the change
-                        if old_vote == 1:
-                            statement.vote_count_agree = max(0, (statement.vote_count_agree or 0) - 1)
-                        elif old_vote == -1:
-                            statement.vote_count_disagree = max(0, (statement.vote_count_disagree or 0) - 1)
-                        elif old_vote == 0:
-                            statement.vote_count_unsure = max(0, (statement.vote_count_unsure or 0) - 1)
-                        
-                        if new_vote == 1:
-                            statement.vote_count_agree = (statement.vote_count_agree or 0) + 1
-                        elif new_vote == -1:
-                            statement.vote_count_disagree = (statement.vote_count_disagree or 0) + 1
-                        else:
-                            statement.vote_count_unsure = (statement.vote_count_unsure or 0) + 1
-                        
-                        existing_statement_vote.vote = new_vote
-                        current_app.logger.info(
-                            f"Daily question vote updated existing vote in discussion {question.source_discussion_id}"
-                        )
-                else:
-                    # Create new statement vote
-                    stmt_vote = StatementVote(
-                        statement_id=question.source_statement_id,
+                if is_new:
+                    participant = DiscussionParticipant.track_participant(
                         discussion_id=question.source_discussion_id,
-                        user_id=current_user.id if current_user.is_authenticated else None,
-                        session_fingerprint=fingerprint if not current_user.is_authenticated else None,
-                        vote=new_vote
+                        user_id=current_user.id,
+                        commit=False
                     )
-                    db.session.add(stmt_vote)
-                    
-                    # Update statement vote counts
-                    if new_vote == 1:
-                        statement.vote_count_agree = (statement.vote_count_agree or 0) + 1
-                    elif new_vote == -1:
-                        statement.vote_count_disagree = (statement.vote_count_disagree or 0) + 1
-                    else:
-                        statement.vote_count_unsure = (statement.vote_count_unsure or 0) + 1
-                    
-                    current_app.logger.info(
-                        f"Daily question vote synced to discussion {question.source_discussion_id}, "
-                        f"statement {question.source_statement_id}"
-                    )
-                
-                # If user provided a reason, sync as a Response
-                # This makes the reason visible in the discussion's response thread
-                # For authenticated users: sync with their user_id
-                # For anonymous users with public visibility: sync as anonymous response
-                if reason and reason_visibility != 'private':
-                    if current_user.is_authenticated:
-                        # Use helper function to sync reason to statement response
-                        statement_response, is_new = sync_daily_reason_to_statement(
-                            statement_id=question.source_statement_id,
-                            user_id=current_user.id,
-                            vote=new_vote,
-                            reason=reason,
-                            is_anonymous=(reason_visibility == 'public_anonymous')
-                        )
-
-                        # Only increment response count if this is a new response
-                        if is_new:
-                            # Track participant and increment response count atomically
-                            # Use commit=False to keep within the outer transaction
-                            participant = DiscussionParticipant.track_participant(
-                                discussion_id=question.source_discussion_id,
-                                user_id=current_user.id,
-                                commit=False
-                            )
-                            participant.increment_response_count(commit=False)
+                    participant.increment_response_count(commit=False)
         
         subscriber_id = session.get('daily_subscriber_id')
         if subscriber_id:
