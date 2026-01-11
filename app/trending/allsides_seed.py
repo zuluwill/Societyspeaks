@@ -291,11 +291,6 @@ ALLSIDES_RATINGS = {
         'source': 'manual',
         'notes': 'British intellectual magazine, skeptical/conservative'
     },
-    'Quillette': {
-        'leaning': 0.5,  # Centre-Right
-        'source': 'manual',
-        'notes': 'Australian heterodox/intellectual magazine'
-    },
     'Marginal Revolution': {
         'leaning': 0.5,  # Centre-Right
         'source': 'manual',
