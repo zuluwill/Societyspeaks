@@ -720,13 +720,17 @@ class Response(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Nullable for anonymous
     parent_response_id = db.Column(db.Integer, db.ForeignKey('response.id'), nullable=True)
-    
+
+    # Support for anonymous responses (synced from daily questions)
+    session_fingerprint = db.Column(db.String(64), nullable=True)
+    is_anonymous = db.Column(db.Boolean, default=False)
+
     position = db.Column(db.String(20))  # 'pro', 'con', 'neutral'
     content = db.Column(db.Text)  # Optional elaboration
     is_deleted = db.Column(db.Boolean, default=False)
-    
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -1902,7 +1906,11 @@ class DailyQuestionResponse(db.Model):
     
     # Track if vote was submitted via one-click email (no reason prompt shown initially)
     voted_via_email = db.Column(db.Boolean, default=False)
-    
+
+    # Track which question the email was about (for analytics on vote mismatch patterns)
+    # If user clicks old email link, this will differ from daily_question_id
+    email_question_id = db.Column(db.Integer, db.ForeignKey('daily_question.id'), nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     daily_question = db.relationship('DailyQuestion', backref='responses')
@@ -1993,16 +2001,104 @@ class DailyQuestionSubscriber(db.Model):
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_email_sent = db.Column(db.DateTime)
-    
+
+    # Track unsubscribe reason: 'too_frequent', 'not_interested', 'content_quality', 'other'
+    unsubscribe_reason = db.Column(db.String(50), nullable=True)
+    unsubscribed_at = db.Column(db.DateTime, nullable=True)
+
     user = db.relationship('User', backref='daily_subscription')
     
     def generate_magic_token(self, expires_hours=48):
-        """Generate a new magic link token"""
+        """Generate a new magic link token for login/authentication"""
         import secrets
         self.magic_token = secrets.token_urlsafe(32)
         self.token_expires_at = datetime.utcnow() + timedelta(hours=expires_hours)
         return self.magic_token
-    
+
+    def generate_vote_token(self, question_id, expires_hours=None):
+        """
+        Generate a question-specific vote token with longer expiration (7 days default).
+
+        Uses signed tokens that embed the question_id, preventing old email links
+        from voting on wrong questions. More secure than reusing magic_token.
+
+        Args:
+            question_id: The daily question ID this token is for
+            expires_hours: Token expiration in hours (default from constants)
+
+        Returns:
+            Signed token string containing subscriber_id and question_id
+        """
+        from app.daily.constants import VOTE_TOKEN_EXPIRY_HOURS
+        
+        if expires_hours is None:
+            expires_hours = VOTE_TOKEN_EXPIRY_HOURS
+            
+        s = Serializer(current_app.config['SECRET_KEY'])
+        token = s.dumps({
+            'subscriber_id': self.id,
+            'question_id': question_id,
+            'type': 'vote'
+        })
+        
+        current_app.logger.debug(
+            f"Generated vote token for subscriber {self.id}, question {question_id} "
+            f"(expires in {expires_hours}h)"
+        )
+        return token
+
+    @staticmethod
+    def verify_vote_token(token, max_age=None):
+        """
+        Verify a question-specific vote token and return (subscriber, question_id, error) tuple.
+
+        Args:
+            token: The signed token to verify
+            max_age: Maximum token age in seconds (default from constants)
+
+        Returns:
+            Tuple of (DailyQuestionSubscriber, question_id, error_code) where:
+            - Success: (subscriber, question_id, None)
+            - Expired token: (None, None, 'expired')
+            - Invalid/tampered token: (None, None, 'invalid')
+            - Wrong token type: (None, None, 'invalid_type')
+            - Subscriber not found/inactive: (None, None, 'subscriber_not_found')
+        """
+        from itsdangerous import SignatureExpired, BadSignature
+        from app.daily.constants import VOTE_TOKEN_EXPIRY_SECONDS
+        
+        if max_age is None:
+            max_age = VOTE_TOKEN_EXPIRY_SECONDS
+            
+        s = Serializer(current_app.config['SECRET_KEY'])
+        
+        try:
+            data = s.loads(token, max_age=max_age)
+        except SignatureExpired:
+            current_app.logger.info(f"Vote token expired")
+            return None, None, 'expired'
+        except BadSignature:
+            current_app.logger.warning(f"Invalid vote token signature")
+            return None, None, 'invalid'
+        except Exception as e:
+            current_app.logger.error(f"Unexpected error verifying vote token: {e}")
+            return None, None, 'invalid'
+
+        if data.get('type') != 'vote':
+            current_app.logger.warning(f"Token type mismatch: expected 'vote', got '{data.get('type')}'")
+            return None, None, 'invalid_type'
+
+        subscriber = DailyQuestionSubscriber.query.filter_by(
+            id=data.get('subscriber_id'),
+            is_active=True
+        ).first()
+
+        if not subscriber:
+            current_app.logger.info(f"Subscriber {data.get('subscriber_id')} not found or inactive")
+            return None, None, 'subscriber_not_found'
+
+        return subscriber, data.get('question_id'), None
+
     @staticmethod
     def verify_magic_token(token):
         """Verify magic token and return subscriber if valid"""
@@ -2010,13 +2106,13 @@ class DailyQuestionSubscriber(db.Model):
             magic_token=token,
             is_active=True
         ).first()
-        
+
         if not subscriber:
             return None
-            
+
         if subscriber.token_expires_at and subscriber.token_expires_at < datetime.utcnow():
             return None
-            
+
         return subscriber
     
     def has_received_email_today(self):

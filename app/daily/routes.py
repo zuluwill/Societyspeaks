@@ -1,7 +1,12 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app, make_response
 from flask_login import current_user, login_user
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from app.daily import daily_bp
+from app.daily.constants import (
+    VOTE_MAP, VOTE_TO_POSITION, VOTE_LABELS, VOTE_EMOJIS,
+    VOTE_GRACE_PERIOD_DAYS, VALID_UNSUBSCRIBE_REASONS, 
+    VALID_VISIBILITY_OPTIONS, DEFAULT_EMAIL_VOTE_VISIBILITY
+)
 from app import db, limiter
 from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant
 import hashlib
@@ -360,57 +365,66 @@ def generate_share_snippet(question, user_response):
     }
 
 
-def sync_daily_reason_to_statement(statement_id, user_id, vote, reason, is_anonymous=False):
+def sync_daily_reason_to_statement(statement_id, user_id, vote, reason, is_anonymous=False, session_fingerprint=None):
     """
     Sync a daily question reason to a statement response.
     Updates existing response or creates new one to prevent duplicates.
+    Now supports anonymous responses from email subscribers.
 
     Args:
         statement_id: ID of the statement to add response to
-        user_id: ID of the user submitting the response
+        user_id: ID of the user submitting the response (None for anonymous)
         vote: Vote value (1=agree, -1=disagree, 0=unsure)
         reason: The reason/response text
         is_anonymous: Whether the response should be marked as anonymous
+        session_fingerprint: Session fingerprint for anonymous users (optional)
 
     Returns:
         tuple: (Response object, is_new boolean)
     """
     from app.models import Response
 
-    # Check if user already has a response on this statement
-    existing_response = Response.query.filter_by(
-        statement_id=statement_id,
-        user_id=user_id
-    ).first()
+    # Check if user/session already has a response on this statement
+    if user_id:
+        existing_response = Response.query.filter_by(
+            statement_id=statement_id,
+            user_id=user_id
+        ).first()
+    elif session_fingerprint:
+        existing_response = Response.query.filter_by(
+            statement_id=statement_id,
+            session_fingerprint=session_fingerprint
+        ).first()
+    else:
+        # No user_id or fingerprint - can't check for duplicates, create new
+        existing_response = None
 
-    position_map = {1: 'pro', -1: 'con', 0: 'neutral'}
-    position = position_map.get(vote, 'neutral')
+    position = VOTE_TO_POSITION.get(vote, 'neutral')
 
     if existing_response:
         # Update existing response content instead of creating duplicate
         existing_response.content = reason
         existing_response.position = position
-        if hasattr(existing_response, 'is_anonymous'):
-            existing_response.is_anonymous = is_anonymous
+        existing_response.is_anonymous = is_anonymous
         current_app.logger.info(
-            f"Daily question reason updated existing response on statement {statement_id}"
+            f"Daily question reason updated existing response on statement {statement_id} "
+            f"(anonymous={is_anonymous})"
         )
         return existing_response, False
     else:
         # Create new Response for the linked statement
-        response_kwargs = {
-            'statement_id': statement_id,
-            'user_id': user_id,
-            'position': position,
-            'content': reason
-        }
-        # Add is_anonymous if the model supports it
-        statement_response = Response(**response_kwargs)
-        if hasattr(statement_response, 'is_anonymous'):
-            statement_response.is_anonymous = is_anonymous
+        statement_response = Response(
+            statement_id=statement_id,
+            user_id=user_id,
+            session_fingerprint=session_fingerprint,
+            position=position,
+            content=reason,
+            is_anonymous=is_anonymous
+        )
         db.session.add(statement_response)
         current_app.logger.info(
-            f"Daily question reason synced as response to statement {statement_id} (anonymous={is_anonymous})"
+            f"Daily question reason synced as response to statement {statement_id} "
+            f"(anonymous={is_anonymous}, user_id={user_id}, has_fingerprint={bool(session_fingerprint)})"
         )
         return statement_response, True
 
@@ -556,18 +570,41 @@ def subscribe_success():
     return render_template('daily/subscribe_success.html')
 
 
-@daily_bp.route('/daily/unsubscribe/<token>')
+@daily_bp.route('/daily/unsubscribe/<token>', methods=['GET', 'POST'])
 def unsubscribe(token):
-    """Unsubscribe from daily question emails"""
+    """Unsubscribe from daily question emails with optional reason tracking"""
     subscriber = DailyQuestionSubscriber.query.filter_by(magic_token=token).first()
 
     if not subscriber:
         flash('Invalid unsubscribe link.', 'error')
         return redirect(url_for('daily.today'))
 
+    # If already unsubscribed, just show confirmation
+    if not subscriber.is_active:
+        return render_template('daily/unsubscribed.html', email=subscriber.email)
+
+    # GET: Show unsubscribe confirmation form with reason options
+    if request.method == 'GET':
+        return render_template('daily/unsubscribe_confirm.html',
+                             email=subscriber.email,
+                             token=token)
+
+    # POST: Process unsubscribe with reason
+    reason = request.form.get('reason', 'not_specified')
+
+    # Validate reason using constants
+    if reason not in VALID_UNSUBSCRIBE_REASONS:
+        reason = 'not_specified'
+
     # Update database (source of truth for subscription status)
     subscriber.is_active = False
+    subscriber.unsubscribe_reason = reason
+    subscriber.unsubscribed_at = datetime.utcnow()
     db.session.commit()
+
+    current_app.logger.info(
+        f"Subscriber {subscriber.id} ({subscriber.email}) unsubscribed. Reason: {reason}"
+    )
 
     # Note: With Resend, unsubscribe is handled by List-Unsubscribe headers
     # and our database is the source of truth. No external API call needed.
@@ -599,46 +636,58 @@ def magic_link(token):
 @limiter.limit("10 per minute")
 def one_click_vote(token, vote_choice):
     """One-click vote from email - shows confirmation page (GET) then records vote (POST).
-    
+
     Bot protection:
     - Two-step process: GET shows confirmation, POST records vote
     - This prevents mail scanners/link prefetchers from registering votes
     - Rate limiting (10/min)
-    - Token validation (expires in 48h)
+    - Token validation (expires in 7 days)
+    - Question-specific tokens prevent voting on wrong question
     """
     from app.models import StatementVote, Statement
-    
-    # Validate vote choice
-    vote_map = {'agree': 1, 'disagree': -1, 'unsure': 0}
-    if vote_choice not in vote_map:
+
+    # Validate vote choice using constants
+    if vote_choice not in VOTE_MAP:
         flash('Invalid vote option.', 'error')
         return redirect(url_for('daily.today'))
+
+    # Verify subscriber token and extract question_id (returns differentiated errors)
+    subscriber, email_question_id, error = DailyQuestionSubscriber.verify_vote_token(token)
     
-    # Verify subscriber token
-    subscriber = DailyQuestionSubscriber.verify_magic_token(token)
-    if not subscriber:
-        flash('This link has expired or is invalid. Please subscribe again.', 'warning')
-        return redirect(url_for('daily.subscribe'))
-    
+    if error:
+        # Provide user-friendly error messages based on error type
+        error_messages = {
+            'expired': 'This vote link has expired. Please check your latest email for today\'s question.',
+            'invalid': 'This vote link is invalid. Please use the link from your email.',
+            'invalid_type': 'This link cannot be used for voting. Please check your latest email.',
+            'subscriber_not_found': 'Your subscription was not found. Please subscribe again.'
+        }
+        flash(error_messages.get(error, 'This vote link is invalid.'), 'warning')
+        return redirect(url_for('daily.subscribe') if error == 'subscriber_not_found' else url_for('daily.today'))
+
     # Set up session
     session['daily_subscriber_id'] = subscriber.id
-    session['daily_subscriber_token'] = token
     session.modified = True
-    
+
     # Log in if user has account
     if subscriber.user:
         login_user(subscriber.user)
-    
-    # Get the most recent question (to handle emails from recent days)
-    question = DailyQuestion.get_today()
+
+    # Get the specific question this email was about
+    question = DailyQuestion.query.get(email_question_id)
     if not question:
-        # Fallback: get most recent published question
-        question = DailyQuestion.query.filter(
-            DailyQuestion.is_published == True
-        ).order_by(DailyQuestion.question_date.desc()).first()
-    
-    if not question:
-        flash('No question available.', 'info')
+        flash('This question is no longer available.', 'info')
+        return redirect(url_for('daily.today'))
+
+    # Check if question is in the future (shouldn't happen, but handle edge case)
+    today = date.today()
+    if question.question_date > today:
+        flash('This question isn\'t available yet. Please check back later.', 'info')
+        return redirect(url_for('daily.today'))
+
+    # Check if question is still current (within grace period)
+    if question.question_date < (today - timedelta(days=VOTE_GRACE_PERIOD_DAYS)):
+        flash(f'This question expired on {question.question_date}. Please check today\'s question!', 'info')
         return redirect(url_for('daily.today'))
     
     # Check if already voted
@@ -646,48 +695,46 @@ def one_click_vote(token, vote_choice):
         flash('You have already voted on this question.', 'info')
         return redirect(url_for('daily.today'))
     
-    vote_labels = {'agree': 'Agree', 'disagree': 'Disagree', 'unsure': 'Unsure'}
-    vote_emojis = {'agree': '👍', 'disagree': '👎', 'unsure': '🤔'}
-    
     # GET request: Show confirmation page (prevents mail scanner prefetch from voting)
     if request.method == 'GET':
         return render_template('daily/confirm_vote.html',
                              question=question,
                              vote_choice=vote_choice,
-                             vote_label=vote_labels.get(vote_choice, vote_choice.title()),
-                             vote_emoji=vote_emojis.get(vote_choice, ''),
+                             vote_label=VOTE_LABELS.get(VOTE_MAP.get(vote_choice), vote_choice.title()),
+                             vote_emoji=VOTE_EMOJIS.get(vote_choice, ''),
                              token=token)
     
     # POST request: Record the vote
     try:
         fingerprint = get_session_fingerprint()
-        new_vote = vote_map[vote_choice]
-        
+        new_vote = VOTE_MAP[vote_choice]
+
         # Create the daily question response (no reason yet - that comes after)
         response = DailyQuestionResponse(
             daily_question_id=question.id,
+            email_question_id=email_question_id,  # Track which question the email was about
             user_id=current_user.id if current_user.is_authenticated else None,
             session_fingerprint=fingerprint if not current_user.is_authenticated else None,
             vote=new_vote,
             reason=None,
-            reason_visibility='public_anonymous',  # Default for email votes
+            reason_visibility=DEFAULT_EMAIL_VOTE_VISIBILITY,
             voted_via_email=True
         )
         db.session.add(response)
-        
+
         # Sync vote to statement if linked to discussion (uses shared helper)
         sync_vote_to_statement(question, new_vote, fingerprint)
-        
+
         # Update subscriber streak
         subscriber.update_participation_streak(has_reason=False)
-        
+
         db.session.commit()
-        
+
         current_app.logger.info(
             f"One-click email vote recorded: {vote_choice} for question #{question.question_number} "
-            f"by subscriber {subscriber.id}"
+            f"(email_q#{email_question_id}) by subscriber {subscriber.id}"
         )
-        
+
         flash('Vote recorded! Share your reasoning below if you\'d like.', 'success')
         return redirect(url_for('daily.today'))
         
@@ -732,18 +779,18 @@ def vote():
         flash('Please select a vote option.', 'error')
         return redirect(url_for('daily.today'))
     reason = request.form.get('reason', '').strip()
-    reason_visibility = request.form.get('reason_visibility', 'public_anonymous')
+    reason_visibility = request.form.get('reason_visibility', DEFAULT_EMAIL_VOTE_VISIBILITY)
     
-    # Validate visibility
-    if reason_visibility not in ('public_named', 'public_anonymous', 'private'):
-        reason_visibility = 'public_anonymous'
+    # Validate visibility using constants
+    if reason_visibility not in VALID_VISIBILITY_OPTIONS:
+        reason_visibility = DEFAULT_EMAIL_VOTE_VISIBILITY
     
     # Only allow public_named for authenticated users
     if reason_visibility == 'public_named' and not current_user.is_authenticated:
         reason_visibility = 'public_anonymous'
     
-    vote_map = {'agree': 1, 'disagree': -1, 'unsure': 0}
-    if vote_value not in vote_map:
+    # Validate vote value using constants
+    if vote_value not in VOTE_MAP:
         return jsonify({'success': False, 'error': 'Invalid vote value'}), 400
     
     if reason and len(reason) > 500:
@@ -751,7 +798,7 @@ def vote():
     
     try:
         fingerprint = get_session_fingerprint()
-        new_vote = vote_map[vote_value]
+        new_vote = VOTE_MAP[vote_value]
         
         # Create the daily question response
         response = DailyQuestionResponse(
@@ -778,18 +825,20 @@ def vote():
                 f"Daily question vote updated existing vote in discussion {question.source_discussion_id}"
             )
         
-        # If user provided a reason, sync as a Response
-        if reason and reason_visibility != 'private' and current_user.is_authenticated:
+        # If user provided a reason, sync as a Response (supports both authenticated and anonymous)
+        if reason and reason_visibility != 'private':
             if question.source_statement_id and question.source_discussion_id:
                 statement_response, is_new = sync_daily_reason_to_statement(
                     statement_id=question.source_statement_id,
-                    user_id=current_user.id,
+                    user_id=current_user.id if current_user.is_authenticated else None,
                     vote=new_vote,
                     reason=reason,
-                    is_anonymous=(reason_visibility == 'public_anonymous')
+                    is_anonymous=(reason_visibility == 'public_anonymous' or not current_user.is_authenticated),
+                    session_fingerprint=fingerprint if not current_user.is_authenticated else None
                 )
-                
-                if is_new:
+
+                # Track participation for authenticated users
+                if is_new and current_user.is_authenticated:
                     participant = DiscussionParticipant.track_participant(
                         discussion_id=question.source_discussion_id,
                         user_id=current_user.id,

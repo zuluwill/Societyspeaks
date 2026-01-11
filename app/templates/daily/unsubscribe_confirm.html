@@ -1,0 +1,96 @@
+{% extends "layout.html" %}
+
+{% block title %}Unsubscribe - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-100 rounded-full mb-4">
+                <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+
+            <h1 id="unsubscribe-heading" class="text-2xl font-bold text-gray-900 mb-2">Confirm Unsubscribe</h1>
+            <p class="text-gray-600">{{ email }}</p>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <p class="text-gray-700 mb-6">
+                We're sorry to see you go! Before you unsubscribe, would you mind telling us why?
+            </p>
+
+            <form method="POST" action="{{ url_for('daily.unsubscribe', token=token) }}" aria-labelledby="unsubscribe-heading">
+                <fieldset>
+                    <legend class="sr-only">Reason for unsubscribing</legend>
+                    <div class="space-y-3 mb-6" role="radiogroup" aria-label="Select your reason for unsubscribing">
+                        <label for="reason_too_frequent" class="flex items-start p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition">
+                            <input type="radio" id="reason_too_frequent" name="reason" value="too_frequent" 
+                                   class="mt-1 mr-3 text-blue-600 focus:ring-blue-500" 
+                                   aria-describedby="reason_too_frequent_desc">
+                            <div>
+                                <div class="font-medium text-gray-900">Too frequent</div>
+                                <div id="reason_too_frequent_desc" class="text-sm text-gray-500">I'm getting too many emails</div>
+                            </div>
+                        </label>
+
+                        <label for="reason_not_interested" class="flex items-start p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition">
+                            <input type="radio" id="reason_not_interested" name="reason" value="not_interested" 
+                                   class="mt-1 mr-3 text-blue-600 focus:ring-blue-500"
+                                   aria-describedby="reason_not_interested_desc">
+                            <div>
+                                <div class="font-medium text-gray-900">Not interested</div>
+                                <div id="reason_not_interested_desc" class="text-sm text-gray-500">The topics don't interest me</div>
+                            </div>
+                        </label>
+
+                        <label for="reason_content_quality" class="flex items-start p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition">
+                            <input type="radio" id="reason_content_quality" name="reason" value="content_quality" 
+                                   class="mt-1 mr-3 text-blue-600 focus:ring-blue-500"
+                                   aria-describedby="reason_content_quality_desc">
+                            <div>
+                                <div class="font-medium text-gray-900">Content quality</div>
+                                <div id="reason_content_quality_desc" class="text-sm text-gray-500">The questions or analysis could be better</div>
+                            </div>
+                        </label>
+
+                        <label for="reason_other" class="flex items-start p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition">
+                            <input type="radio" id="reason_other" name="reason" value="other" 
+                                   class="mt-1 mr-3 text-blue-600 focus:ring-blue-500"
+                                   aria-describedby="reason_other_desc">
+                            <div>
+                                <div class="font-medium text-gray-900">Other reason</div>
+                                <div id="reason_other_desc" class="text-sm text-gray-500">Something else</div>
+                            </div>
+                        </label>
+
+                        <label for="reason_not_specified" class="flex items-start p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition">
+                            <input type="radio" id="reason_not_specified" name="reason" value="not_specified" 
+                                   class="mt-1 mr-3 text-blue-600 focus:ring-blue-500" checked>
+                            <div>
+                                <div class="font-medium text-gray-900">Prefer not to say</div>
+                            </div>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <div class="flex gap-3">
+                    <button type="submit"
+                            class="flex-1 py-3 px-6 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200">
+                        Confirm Unsubscribe
+                    </button>
+                    <a href="{{ url_for('daily.today') }}"
+                       class="flex-1 py-3 px-6 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg text-center transition-colors duration-200">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+
+            <p class="text-xs text-gray-500 text-center mt-6">
+                Your feedback helps us improve Society Speaks for everyone.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
