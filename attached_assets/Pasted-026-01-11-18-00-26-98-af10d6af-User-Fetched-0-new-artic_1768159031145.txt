@@ -1,0 +1,180 @@
+026-01-11 18:00:26.98
+af10d6af
+User
+Fetched 0 new articles from All-In Podcast
+2026-01-11 18:00:27.99
+af10d6af
+User
+Fetched 0 new articles from Foreign Affairs
+2026-01-11 18:00:29.13
+af10d6af
+User
+Fetched 0 new articles from War on the Rocks
+2026-01-11 18:00:35.07
+af10d6af
+User
+Fetched 0 new articles from Modern Wisdom
+2026-01-11 18:00:39.53
+af10d6af
+User
+Fetched 0 new articles from The Ezra Klein Show
+2026-01-11 18:00:40.70
+af10d6af
+User
+Fetched 11 new articles from BBC News
+2026-01-11 18:00:42.51
+af10d6af
+User
+Fetched 2 new articles from Axios
+2026-01-11 18:00:44.14
+af10d6af
+User
+Fetched 4 new articles from Financial Times
+2026-01-11 18:00:45.08
+af10d6af
+User
+Fetched 0 new articles from Stratechery
+2026-01-11 18:00:48.04
+af10d6af
+User
+Fetched 0 new articles from Huberman Lab
+2026-01-11 18:00:48.95
+af10d6af
+User
+Fetched 0 new articles from Foreign Policy
+2026-01-11 18:00:50.21
+af10d6af
+User
+Fetched 8 new articles from Bloomberg
+2026-01-11 18:00:51.55
+af10d6af
+User
+Fetched 17 new articles from The Independent
+2026-01-11 18:00:52.75
+af10d6af
+User
+Fetched 4 new articles from The Atlantic
+2026-01-11 18:00:56.88
+af10d6af
+User
+Fetched 0 new articles from Diary of a CEO
+2026-01-11 18:00:58.17
+af10d6af
+User
+Fetched 4 new articles from The Telegraph
+2026-01-11 18:01:01.26
+af10d6af
+User
+Fetched 0 new articles from The Rest Is Politics
+2026-01-11 18:01:05.49
+af10d6af
+User
+Fetched 0 new articles from Lex Fridman Podcast
+2026-01-11 18:01:07.10
+af10d6af
+User
+Fetched 19 new articles from Guardian
+2026-01-11 18:01:08.26
+af10d6af
+User
+Fetched 1 new articles from The New Yorker
+2026-01-11 18:01:09.41
+af10d6af
+User
+Fetched 5 new articles from Politico EU
+2026-01-11 18:01:10.36
+af10d6af
+User
+Fetched 4 new articles from TechCrunch
+2026-01-11 18:01:14.34
+af10d6af
+User
+Fetched 0 new articles from Triggernometry
+2026-01-11 18:01:14.39
+af10d6af
+User
+Fetched 79 new articles
+2026-01-11 18:01:18.45
+af10d6af
+User
+Pre-filter: 71 to score, 8 skipped
+2026-01-11 18:01:33.61
+af10d6af
+User
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-01-11 18:01:33.77
+af10d6af
+User
+Scored batch 1 (25 articles)
+2026-01-11 18:01:48.54
+af10d6af
+User
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-01-11 18:01:48.55
+af10d6af
+User
+Scored batch 2 (25 articles)
+2026-01-11 18:01:59.98
+af10d6af
+User
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-01-11 18:01:59.98
+af10d6af
+User
+Scored batch 3 (21 articles)
+2026-01-11 18:02:02.12
+af10d6af
+User
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-01-11 18:02:04.20
+af10d6af
+User
+Created 54 clusters
+2026-01-11 18:02:05.85
+af10d6af
+User
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-01-11 18:02:06.95
+af10d6af
+User
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-01-11 18:02:24.77
+af10d6af
+User
+Backfilled article 4007 to topic 2695 (similarity: 0.96)
+2026-01-11 18:02:44.04
+af10d6af
+User
+Backfilled article 4016 to topic 2645 (similarity: 0.78)
+2026-01-11 18:02:58.67
+af10d6af
+User
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-01-11 18:02:58.95
+af10d6af
+User
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-01-11 18:03:24.42
+af10d6af
+User
+Backfilled article 4038 to topic 1502 (similarity: 0.78)
+2026-01-11 18:04:11.25
+af10d6af
+User
+Backfilled article 4055 to topic 2690 (similarity: 0.80)
+2026-01-11 18:04:58.85
+af10d6af
+User
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+2026-01-11 18:04:59.94
+af10d6af
+User
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+2026-01-11 18:05:20.04
+af10d6af
+User
+Backfilled article 4071 to topic 2696 (similarity: 0.87)
+2026-01-11 18:05:57.97
+af10d6af
+User
+/home/runner/workspace/app/discussions/routes.py:62: SAWarning: Coercing Subquery object into a select() for use in IN(); please pass a select() construct explicitly

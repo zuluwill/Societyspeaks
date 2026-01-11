@@ -31,7 +31,7 @@ class TopicSelector:
     MIN_ITEMS = 3
     MAX_ITEMS = 5
     MIN_CIVIC_SCORE = 0.6
-    MIN_SOURCES = 2
+    MIN_SOURCES = 1  # Allow single-source topics for brief
     MAX_IMBALANCE = 0.8  # Allow some imbalance, but not extreme
     EXCLUSION_DAYS = 30
 
