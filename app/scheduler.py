@@ -29,7 +29,15 @@ def init_scheduler(app):
         logger.warning("Scheduler already initialized")
         return scheduler
     
-    scheduler = BackgroundScheduler()
+    # Configure scheduler with generous misfire handling
+    # This allows jobs to run even if app restarts around scheduled time
+    scheduler = BackgroundScheduler(
+        job_defaults={
+            'coalesce': True,  # Combine multiple missed runs into one
+            'max_instances': 1,  # Only one instance of each job at a time
+            'misfire_grace_time': 3600  # Allow jobs to run up to 1 hour late
+        }
+    )
     
     # Add jobs with app context
     @scheduler.scheduled_job('interval', hours=6, id='auto_cluster_discussions')
