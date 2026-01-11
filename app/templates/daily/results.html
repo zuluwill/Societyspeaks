@@ -131,6 +131,33 @@
                     {{ stats.total }} response{% if stats.total != 1 %}s{% endif %} recorded
                 </p>
             </div>
+            
+            {% if public_reasons and public_reasons|length > 0 %}
+            <div class="border-t pt-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">What Others Are Saying</h3>
+                <div class="space-y-4">
+                    {% for response in public_reasons %}
+                    {% if not user_response or response.id != user_response.id %}
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex items-start gap-3">
+                            <span class="text-2xl flex-shrink-0">{{ response.vote_emoji }}</span>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-gray-700 text-sm">{{ response.reason }}</p>
+                                <p class="text-xs text-gray-400 mt-2">
+                                    {% if response.reason_visibility == 'public_named' and response.user %}
+                                        {{ response.user.display_name or 'Anonymous' }}
+                                    {% else %}
+                                        Anonymous participant
+                                    {% endif %}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             <div class="border-t pt-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Invite Others to Participate</h3>

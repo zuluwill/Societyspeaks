@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}Confirm Your Vote - Daily Question #{{ question.question_number }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-blue-50 to-white py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div class="mb-6">
+                <span class="text-6xl">{{ vote_emoji }}</span>
+            </div>
+            
+            <h1 class="text-2xl font-bold text-gray-900 mb-4">
+                Confirm Your Vote
+            </h1>
+            
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <p class="text-sm text-gray-500 mb-2">Daily Question #{{ question.question_number }}</p>
+                <p class="text-gray-900 font-medium">{{ question.question_text }}</p>
+            </div>
+            
+            <p class="text-gray-600 mb-6">
+                You selected <span class="font-semibold text-gray-900">{{ vote_label }}</span>
+            </p>
+            
+            <form method="POST" action="{{ url_for('daily.one_click_vote', token=token, vote_choice=vote_choice) }}">
+                <button type="submit" 
+                        class="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Submit My Vote
+                </button>
+            </form>
+            
+            <a href="{{ url_for('daily.today') }}" class="inline-block mt-4 text-sm text-gray-500 hover:text-gray-700">
+                Or vote on the full page instead
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
