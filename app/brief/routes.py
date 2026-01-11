@@ -198,7 +198,7 @@ def subscribe():
         import pytz
         try:
             pytz.timezone(timezone)
-        except:
+        except (pytz.UnknownTimeZoneError, KeyError):
             timezone = 'UTC'
 
         # Validate preferred hour

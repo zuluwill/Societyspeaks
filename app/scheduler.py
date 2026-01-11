@@ -130,7 +130,7 @@ def init_scheduler(app):
             from app import db
             from app.models import (
                 ConsensusAnalysis, Discussion, NewsArticle, TrendingTopic, 
-                TrendingTopicArticle, DiscussionSourceArticle
+                TrendingTopicArticle, DiscussionSourceArticle, BriefItem
             )
             from datetime import timedelta
             
@@ -176,12 +176,20 @@ def init_scheduler(app):
                 logger.error(f"Error cleaning up low-relevance articles: {e}")
                 db.session.rollback()
             
+            # Also check if articles are in briefs via topics (prevents losing source attribution)
+            articles_in_brief_topics = db.session.query(
+                TrendingTopicArticle.article_id
+            ).join(
+                BriefItem, BriefItem.trending_topic_id == TrendingTopicArticle.topic_id
+            ).distinct().subquery()
+            
             # Clean up old articles (with foreign key handling)
-            # EXCLUDE articles that are linked to discussions - we keep those
+            # EXCLUDE articles that are linked to discussions OR briefs - we keep those
             try:
                 old_article_ids = db.session.query(NewsArticle.id).filter(
                     NewsArticle.fetched_at < cutoff_30_days,
-                    NewsArticle.id.notin_(articles_in_discussions)  # Keep discussion sources
+                    NewsArticle.id.notin_(articles_in_discussions),  # Keep discussion sources
+                    NewsArticle.id.notin_(articles_in_brief_topics)  # Keep brief sources
                 ).all()
                 old_ids = [a[0] for a in old_article_ids]
                 
@@ -386,18 +394,30 @@ def init_scheduler(app):
         """
         Auto-publish today's daily question and schedule upcoming questions.
         Runs at 7:30am UTC (before email send).
+        
+        Idempotency: auto_publish_todays_question checks if question already published
         """
         with app.app_context():
             from app.daily.auto_selection import auto_publish_todays_question, auto_schedule_upcoming_questions
+            from app.models import DailyQuestion
+            from datetime import date
             
             logger.info("Starting daily question auto-publish")
             
             try:
-                question = auto_publish_todays_question()
-                if question:
-                    logger.info(f"Published daily question #{question.question_number}")
+                # Idempotency check - skip if question already published today
+                existing = DailyQuestion.query.filter_by(
+                    question_date=date.today(),
+                    status='published'
+                ).first()
+                if existing:
+                    logger.info(f"Daily question #{existing.question_number} already published, skipping")
                 else:
-                    logger.warning("No daily question available to publish")
+                    question = auto_publish_todays_question()
+                    if question:
+                        logger.info(f"Published daily question #{question.question_number}")
+                    else:
+                        logger.warning("No daily question available to publish")
                 
                 scheduled = auto_schedule_upcoming_questions(days_ahead=7)
                 logger.info(f"Auto-scheduled {scheduled} upcoming questions")
@@ -459,14 +479,23 @@ def init_scheduler(app):
         Generate daily brief at 5:00pm UTC
         Auto-selects topics and creates draft brief
         Admin has 45-60 min to review before auto-publish
+        
+        Idempotency: Checks if brief already exists with ready/published status
         """
         with app.app_context():
             from app.brief.generator import generate_daily_brief
+            from app.models import DailyBrief
             from datetime import date
 
             logger.info("Starting daily brief generation")
 
             try:
+                # Idempotency check - skip if brief already exists
+                existing = DailyBrief.query.filter_by(date=date.today()).first()
+                if existing and existing.status in ('ready', 'published'):
+                    logger.info(f"Brief already exists with status '{existing.status}', skipping generation")
+                    return
+                
                 brief = generate_daily_brief(
                     brief_date=date.today(),
                     auto_publish=True  # Sets status to 'ready' not 'published'
