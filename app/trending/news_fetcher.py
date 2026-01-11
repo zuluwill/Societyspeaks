@@ -20,37 +20,24 @@ from app.models import NewsSource, NewsArticle
 logger = logging.getLogger(__name__)
 
 
-def strip_html_tags(text: str) -> str:
-    """Remove HTML tags from text, preserving the text content."""
-    if not text:
-        return ""
-    text = re.sub(r'<br\s*/?>', ' ', text)
-    text = re.sub(r'<p\s*/?>', ' ', text)
-    text = re.sub(r'</p>', ' ', text)
-    text = re.sub(r'<[^>]+>', '', text)
-    text = re.sub(r'&nbsp;', ' ', text)
-    text = re.sub(r'&amp;', '&', text)
-    text = re.sub(r'&lt;', '<', text)
-    text = re.sub(r'&gt;', '>', text)
-    text = re.sub(r'&quot;', '"', text)
-    text = re.sub(r'&#39;', "'", text)
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
+# Pre-compiled HTML tag patterns for performance
+HTML_PATTERNS = [
+    (re.compile(r'<br\s*/?>'), ' '),
+    (re.compile(r'<p\s*/?>'), ' '),
+    (re.compile(r'</p>'), ' '),
+    (re.compile(r'<[^>]+>'), ''),
+    (re.compile(r'&nbsp;'), ' '),
+    (re.compile(r'&amp;'), '&'),
+    (re.compile(r'&lt;'), '<'),
+    (re.compile(r'&gt;'), '>'),
+    (re.compile(r'&quot;'), '"'),
+    (re.compile(r'&#39;'), "'"),
+    (re.compile(r'\s+'), ' '),
+]
 
-
-def clean_summary(text: str) -> Optional[str]:
-    """
-    Clean promotional content, ads, and credits from article/podcast summaries.
-    Returns cleaned text or None if nothing meaningful remains.
-    """
-    if not text:
-        return None
-    
-    text = strip_html_tags(text)
-    
-    original_text = text
-    
-    promo_patterns = [
+# Pre-compiled promotional content patterns for performance
+PROMO_PATTERNS = [
+    re.compile(pattern, re.IGNORECASE | re.MULTILINE) for pattern in [
         r'_{3,}.*',
         r'-{5,}.*',
         r'Get more from .+? with .+?\.',
@@ -75,13 +62,43 @@ def clean_summary(text: str) -> Optional[str]:
         r'This (?:episode|show|podcast) is (?:powered|sponsored|supported) by.*',
         r'[🎉🎧📧✅⚡️🔗💰🎁➼]',
     ]
+]
+
+# Cleanup patterns (also pre-compiled)
+CLEANUP_WHITESPACE = re.compile(r'\s+')
+CLEANUP_PUNCTUATION_COMMA = re.compile(r'\s*[,;]\s*[,;]+')
+CLEANUP_PUNCTUATION_PERIOD = re.compile(r'[.!?]\s*[.!?]+')
+
+
+def strip_html_tags(text: str) -> str:
+    """Remove HTML tags from text, preserving the text content."""
+    if not text:
+        return ""
+    for pattern, replacement in HTML_PATTERNS:
+        text = pattern.sub(replacement, text)
+    return text.strip()
+
+
+def clean_summary(text: str) -> Optional[str]:
+    """
+    Clean promotional content, ads, and credits from article/podcast summaries.
+    Returns cleaned text or None if nothing meaningful remains.
+    """
+    if not text:
+        return None
     
-    for pattern in promo_patterns:
-        text = re.sub(pattern, '', text, flags=re.IGNORECASE | re.MULTILINE)
+    text = strip_html_tags(text)
     
-    text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'\s*[,;]\s*[,;]+', ',', text)
-    text = re.sub(r'[.!?]\s*[.!?]+', '.', text)
+    original_text = text
+    
+    # Apply pre-compiled promotional patterns
+    for pattern in PROMO_PATTERNS:
+        text = pattern.sub('', text)
+    
+    # Apply pre-compiled cleanup patterns
+    text = CLEANUP_WHITESPACE.sub(' ', text)
+    text = CLEANUP_PUNCTUATION_COMMA.sub(',', text)
+    text = CLEANUP_PUNCTUATION_PERIOD.sub('.', text)
     text = text.strip(' .,;:-_')
     
     if len(text) < 50:
@@ -94,13 +111,31 @@ def clean_summary(text: str) -> Optional[str]:
 
 
 class NewsFetcher:
-    """Fetches news from curated sources."""
+    """
+    Fetches news from curated sources.
+    
+    Error Handling:
+    - Each source is fetched independently; failures don't affect other sources
+    - Failed sources increment fetch_error_count for monitoring
+    - Sources with 5+ consecutive errors are auto-disabled
+    - All errors are logged for debugging
+    """
+    
+    MAX_CONSECUTIVE_ERRORS = 5  # Auto-disable sources after this many failures
     
     def __init__(self):
         self.guardian_api_key = os.environ.get('GUARDIAN_API_KEY')
     
     def fetch_all_sources(self) -> List[NewsArticle]:
-        """Fetch articles from all active sources."""
+        """
+        Fetch articles from all active sources.
+        
+        Each source is fetched independently - a failure in one source
+        will NOT affect other sources. This ensures pipeline resilience.
+        
+        Returns:
+            List of newly fetched NewsArticle instances
+        """
         try:
             sources = NewsSource.query.filter_by(is_active=True).all()
         except Exception as e:
@@ -109,6 +144,10 @@ class NewsFetcher:
             return []
         
         all_articles = []
+        successful_sources = 0
+        failed_sources = 0
+        
+        logger.info(f"Starting fetch from {len(sources)} active sources")
         
         for source in sources:
             try:
@@ -122,21 +161,83 @@ class NewsFetcher:
                 
                 all_articles.extend(articles)
                 source.last_fetched_at = datetime.utcnow()
-                source.fetch_error_count = 0
+                source.fetch_error_count = 0  # Reset on success
                 db.session.commit()
+                successful_sources += 1
                 
             except Exception as e:
+                failed_sources += 1
                 logger.error(f"Error fetching from {source.name}: {e}")
                 db.session.rollback()
+                
                 try:
                     source = db.session.merge(source)
-                    source.fetch_error_count += 1
+                    source.fetch_error_count = (source.fetch_error_count or 0) + 1
+                    
+                    # Auto-disable sources with too many consecutive errors
+                    if source.fetch_error_count >= self.MAX_CONSECUTIVE_ERRORS:
+                        logger.warning(
+                            f"Auto-disabling {source.name} after {source.fetch_error_count} "
+                            f"consecutive errors. Re-enable manually after fixing."
+                        )
+                        source.is_active = False
+                    
                     db.session.commit()
                 except Exception as inner_e:
                     logger.error(f"Error updating error count for {source.name}: {inner_e}")
                     db.session.rollback()
         
+        logger.info(
+            f"Fetch complete: {len(all_articles)} articles from "
+            f"{successful_sources} sources ({failed_sources} failed)"
+        )
+        
         return all_articles
+    
+    def check_source_health(self, source: NewsSource) -> dict:
+        """
+        Check if a source's RSS feed is accessible and valid.
+        
+        Args:
+            source: NewsSource to check
+            
+        Returns:
+            dict with status, message, and entry_count
+        """
+        try:
+            if source.source_type == 'guardian':
+                if not self.guardian_api_key:
+                    return {'status': 'error', 'message': 'Guardian API key not configured', 'entry_count': 0}
+                return {'status': 'ok', 'message': 'Guardian API configured', 'entry_count': None}
+            
+            response = requests.get(
+                source.feed_url,
+                timeout=10,
+                headers={'User-Agent': 'SocietySpeaks/1.0 (Health Check)'}
+            )
+            response.raise_for_status()
+            
+            feed = feedparser.parse(response.content)
+            
+            if feed.bozo and not feed.entries:
+                return {
+                    'status': 'error',
+                    'message': f'Malformed feed: {feed.bozo_exception}',
+                    'entry_count': 0
+                }
+            
+            return {
+                'status': 'ok',
+                'message': 'Feed accessible and valid',
+                'entry_count': len(feed.entries)
+            }
+            
+        except requests.exceptions.Timeout:
+            return {'status': 'error', 'message': 'Timeout', 'entry_count': 0}
+        except requests.exceptions.RequestException as e:
+            return {'status': 'error', 'message': str(e), 'entry_count': 0}
+        except Exception as e:
+            return {'status': 'error', 'message': str(e), 'entry_count': 0}
     
     def _fetch_guardian(self, source: NewsSource) -> List[NewsArticle]:
         """Fetch from Guardian API."""
@@ -204,14 +305,59 @@ class NewsFetcher:
         return articles
     
     def _fetch_rss(self, source: NewsSource) -> List[NewsArticle]:
-        """Fetch from RSS feed."""
+        """
+        Fetch from RSS feed with proper error handling.
+        
+        Uses requests with timeout for network resilience,
+        then parses with feedparser. Handles malformed feeds gracefully.
+        """
         articles = []
         
         try:
-            feed = feedparser.parse(source.feed_url)
+            # Validate URL format
+            if not source.feed_url or not source.feed_url.startswith(('http://', 'https://')):
+                logger.warning(f"Invalid feed URL for {source.name}: {source.feed_url}")
+                return []
+            
+            # Fetch with timeout using requests for better control
+            try:
+                response = requests.get(
+                    source.feed_url,
+                    timeout=15,  # 15 second timeout
+                    headers={
+                        'User-Agent': 'SocietySpeaks/1.0 (News Aggregator; +https://societyspeaks.io)'
+                    }
+                )
+                response.raise_for_status()
+                feed_content = response.content
+            except requests.exceptions.Timeout:
+                logger.warning(f"Timeout fetching RSS from {source.name} ({source.feed_url})")
+                return []
+            except requests.exceptions.RequestException as req_err:
+                logger.warning(f"HTTP error fetching {source.name}: {req_err}")
+                return []
+            
+            # Parse the feed content
+            feed = feedparser.parse(feed_content)
+            
+            # Check for feed parsing errors (bozo flag)
+            if feed.bozo and not feed.entries:
+                logger.warning(f"Malformed feed from {source.name}: {feed.bozo_exception}")
+                return []
+            elif feed.bozo:
+                # Feed has issues but still has entries - log warning but continue
+                logger.debug(f"Feed {source.name} has minor issues: {feed.bozo_exception}")
+            
+            # Check if feed has any entries
+            if not feed.entries:
+                logger.info(f"No entries found in feed for {source.name}")
+                return []
             
             for entry in feed.entries[:20]:
                 external_id = entry.get('id') or entry.get('link', '')
+                
+                if not external_id:
+                    continue  # Skip entries without any identifier
                 
                 try:
                     existing = NewsArticle.query.filter_by(
@@ -226,19 +372,39 @@ class NewsFetcher:
                     db.session.rollback()
                     continue
                 
+                # Parse publication date with fallback
                 published_at = None
                 if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                    published_at = datetime(*entry.published_parsed[:6])
+                    try:
+                        published_at = datetime(*entry.published_parsed[:6])
+                    except (ValueError, TypeError):
+                        pass  # Invalid date, leave as None
+                elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
+                    try:
+                        published_at = datetime(*entry.updated_parsed[:6])
+                    except (ValueError, TypeError):
+                        pass
                 
-                raw_summary = entry.get('summary', '')
+                # Get and clean summary
+                raw_summary = entry.get('summary', '') or entry.get('description', '')
                 cleaned_summary = clean_summary(raw_summary) if raw_summary else None
+                
+                # Get title with fallback
+                title = entry.get('title', '')
+                if not title:
+                    continue  # Skip entries without titles
+                
+                # Get URL with validation
+                url = entry.get('link', '')
+                if not url or not url.startswith(('http://', 'https://')):
+                    continue  # Skip entries without valid URLs
                 
                 article = NewsArticle(
                     source_id=source.id,
                     external_id=external_id[:500],
-                    title=entry.get('title', '')[:500],
+                    title=title[:500],
                     summary=cleaned_summary,
-                    url=entry.get('link', '')[:1000],
+                    url=url[:1000],
                     published_at=published_at
                 )
                 
@@ -257,133 +423,179 @@ class NewsFetcher:
 
 
 def seed_default_sources():
-    """Add default trusted news sources."""
+    """
+    Add or update default trusted news sources.
+    
+    Updates existing sources with new field values (country, political_leaning, etc.)
+    to ensure consistency across the database.
+    """
     default_sources = [
+        # ==========================================================================
+        # CENTRE-LEFT SOURCES
+        # ==========================================================================
         {
             'name': 'The Guardian',
             'feed_url': 'https://content.guardianapis.com/search',
             'source_type': 'guardian',
-            'reputation_score': 0.85
-        },
-        {
-            'name': 'BBC News',
-            'feed_url': 'http://feeds.bbci.co.uk/news/rss.xml',
-            'source_type': 'rss',
-            'reputation_score': 0.9
-        },
-        {
-            'name': 'Financial Times',
-            'feed_url': 'https://www.ft.com/rss/home',
-            'source_type': 'rss',
-            'reputation_score': 0.9
-        },
-        {
-            'name': 'The Economist',
-            'feed_url': 'https://www.economist.com/the-world-this-week/rss.xml',
-            'source_type': 'rss',
-            'reputation_score': 0.9
-        },
-        {
-            'name': 'Politico EU',
-            'feed_url': 'https://www.politico.eu/feed/',
-            'source_type': 'rss',
-            'reputation_score': 0.8
-        },
-        {
-            'name': 'UnHerd',
-            'feed_url': 'https://unherd.com/feed/',
-            'source_type': 'rss',
-            'reputation_score': 0.75
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': -1.0  # Lean Left
         },
         {
             'name': 'The Atlantic',
             'feed_url': 'https://www.theatlantic.com/feed/all/',
             'source_type': 'rss',
-            'reputation_score': 0.85
-        },
-        {
-            'name': 'Foreign Affairs',
-            'feed_url': 'https://www.foreignaffairs.com/rss.xml',
-            'source_type': 'rss',
-            'reputation_score': 0.9
-        },
-        {
-            'name': 'Bloomberg',
-            'feed_url': 'https://feeds.bloomberg.com/markets/news.rss',
-            'source_type': 'rss',
-            'reputation_score': 0.85
-        },
-        {
-            'name': 'TechCrunch',
-            'feed_url': 'https://techcrunch.com/feed/',
-            'source_type': 'rss',
-            'reputation_score': 0.75
-        },
-        {
-            'name': 'Axios',
-            'feed_url': 'https://api.axios.com/feed/',
-            'source_type': 'rss',
-            'reputation_score': 0.8
-        },
-        {
-            'name': 'The Telegraph',
-            'feed_url': 'https://www.telegraph.co.uk/rss.xml',
-            'source_type': 'rss',
-            'reputation_score': 0.8
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': -1.0  # Lean Left
         },
         {
             'name': 'The Independent',
             'feed_url': 'https://www.independent.co.uk/rss',
             'source_type': 'rss',
-            'reputation_score': 0.75
+            'reputation_score': 0.75,
+            'country': 'United Kingdom',
+            'political_leaning': -1.0  # Lean Left
         },
         {
             'name': 'The New Yorker',
             'feed_url': 'https://www.newyorker.com/feed/everything',
             'source_type': 'rss',
-            'reputation_score': 0.9
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': -2.0  # Left
         },
         {
-            'name': 'The News Agents',
-            'feed_url': 'https://feeds.captivate.fm/the-news-agents/',
+            'name': 'New Statesman',
+            'feed_url': 'https://www.newstatesman.com/feed',
             'source_type': 'rss',
-            'reputation_score': 0.85
+            'reputation_score': 0.8,
+            'country': 'United Kingdom',
+            'political_leaning': -1.0  # Lean Left - British progressive
         },
         {
-            'name': 'The Rest Is Politics',
-            'feed_url': 'https://feeds.acast.com/public/shows/the-rest-is-politics',
+            'name': 'The Intercept',
+            'feed_url': 'https://theintercept.com/feed/?rss',
             'source_type': 'rss',
-            'reputation_score': 0.9
+            'reputation_score': 0.75,
+            'country': 'United States',
+            'political_leaning': -1.5  # Left - investigative journalism
         },
         {
-            'name': 'Triggernometry',
-            'feed_url': 'https://feeds.megaphone.fm/AALT9618167458',
+            'name': 'ProPublica',
+            'feed_url': 'https://www.propublica.org/feeds/propublica/main',
             'source_type': 'rss',
-            'reputation_score': 0.8
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': -0.5  # Lean Left - investigative, non-profit
         },
         {
-            'name': 'All-In Podcast',
-            'feed_url': 'https://allinchamathjason.libsyn.com/rss',
+            'name': 'Slow Boring',
+            'feed_url': 'https://www.slowboring.com/feed',
             'source_type': 'rss',
-            'reputation_score': 0.85
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': -0.5  # Lean Left - Matt Yglesias policy analysis
         },
         {
-            'name': 'The Tim Ferriss Show',
-            'feed_url': 'https://timferriss.libsyn.com/rss',
+            'name': 'Noahpinion',
+            'feed_url': 'https://www.noahpinion.blog/feed',
             'source_type': 'rss',
-            'reputation_score': 0.85
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': -0.5  # Lean Left - Noah Smith economics
         },
         {
-            'name': 'Diary of a CEO',
-            'feed_url': 'https://feeds.megaphone.fm/thediaryofaceo',
+            'name': 'Commonweal',
+            'feed_url': 'https://www.commonwealmagazine.org/rss.xml',
             'source_type': 'rss',
-            'reputation_score': 0.8
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': -0.5  # Lean Left - Catholic intellectual, social justice
         },
         {
-            'name': 'Modern Wisdom',
-            'feed_url': 'https://feeds.megaphone.fm/SIXMSB5088139739',
+            'name': 'Matt Taibbi',
+            'feed_url': 'https://www.racket.news/feed',
             'source_type': 'rss',
-            'reputation_score': 0.8
+            'reputation_score': 0.75,
+            'country': 'United States',
+            'political_leaning': -1.0  # Lean Left - heterodox, anti-establishment
+        },
+        {
+            'name': 'Freddie deBoer',
+            'feed_url': 'https://freddiedeboer.substack.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'United States',
+            'political_leaning': -1.5  # Left - education, mental health, socialist
+        },
+        
+        # ==========================================================================
+        # CENTRE SOURCES
+        # ==========================================================================
+        {
+            'name': 'BBC News',
+            'feed_url': 'http://feeds.bbci.co.uk/news/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre
+        },
+        {
+            'name': 'Financial Times',
+            'feed_url': 'https://www.ft.com/rss/home',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre
+        },
+        {
+            'name': 'The Economist',
+            'feed_url': 'https://www.economist.com/the-world-this-week/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre (classical liberal)
+        },
+        {
+            'name': 'Politico EU',
+            'feed_url': 'https://www.politico.eu/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'Belgium',
+            'political_leaning': 0  # Centre
+        },
+        {
+            'name': 'Foreign Affairs',
+            'feed_url': 'https://www.foreignaffairs.com/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - academic foreign policy
+        },
+        {
+            'name': 'Bloomberg',
+            'feed_url': 'https://feeds.bloomberg.com/markets/news.rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - business news
+        },
+        {
+            'name': 'Axios',
+            'feed_url': 'https://api.axios.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 0  # Centre
+        },
+        {
+            'name': 'TechCrunch',
+            'feed_url': 'https://techcrunch.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - tech news
         },
         {
             'name': 'Stratechery',
@@ -391,9 +603,8 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.9,
             'country': 'United States',
-            'political_leaning': 0  # Center - tech/business analysis
+            'political_leaning': 0  # Centre - tech/business analysis
         },
-        # New sources added
         {
             'name': 'Farnam Street',
             'feed_url': 'https://fs.blog/feed/',
@@ -401,14 +612,6 @@ def seed_default_sources():
             'reputation_score': 0.85,
             'country': 'United States',
             'political_leaning': 0  # Centre - wisdom/mental models
-        },
-        {
-            'name': 'The Dispatch',
-            'feed_url': 'https://thedispatch.com/feed/',
-            'source_type': 'rss',
-            'reputation_score': 0.85,
-            'country': 'United States',
-            'political_leaning': 0.3  # Centre-Right - fact-based conservative
         },
         {
             'name': 'Semafor',
@@ -435,36 +638,112 @@ def seed_default_sources():
             'political_leaning': 0  # Centre - academic experts
         },
         {
+            'name': 'Al Jazeera English',
+            'feed_url': 'https://www.aljazeera.com/xml/rss/all.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'Qatar',
+            'political_leaning': 0  # Centre - non-Western global perspective
+        },
+        {
+            'name': 'Lawfare',
+            'feed_url': 'https://www.lawfaremedia.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - legal/national security analysis
+        },
+        {
+            'name': 'Foreign Policy',
+            'feed_url': 'https://foreignpolicy.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - international affairs
+        },
+        {
+            'name': 'War on the Rocks',
+            'feed_url': 'https://warontherocks.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - defense/security analysis
+        },
+        {
+            'name': 'MIT Technology Review',
+            'feed_url': 'https://www.technologyreview.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - AI, biotech, climate tech
+        },
+        {
+            'name': 'Carbon Brief',
+            'feed_url': 'https://www.carbonbrief.org/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - climate science/policy, factual
+        },
+        {
+            'name': 'South China Morning Post',
+            'feed_url': 'https://www.scmp.com/rss/4/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'Hong Kong',
+            'political_leaning': 0  # Centre - Asia/China coverage (China News feed)
+        },
+        {
+            'name': 'Ars Technica',
+            'feed_url': 'https://feeds.arstechnica.com/arstechnica/index',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - deep tech analysis
+        },
+        {
+            'name': 'Brookings Institution',
+            'feed_url': 'https://www.brookings.edu/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': -0.3  # Slight Lean Left - think tank, research-backed
+        },
+        
+        # ==========================================================================
+        # CENTRE-RIGHT SOURCES
+        # ==========================================================================
+        {
+            'name': 'UnHerd',
+            'feed_url': 'https://unherd.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'United Kingdom',
+            'political_leaning': 0.5  # Centre-Right - contrarian
+        },
+        {
+            'name': 'The Telegraph',
+            'feed_url': 'https://www.telegraph.co.uk/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United Kingdom',
+            'political_leaning': 1.5  # Lean Right to Right
+        },
+        {
+            'name': 'The Dispatch',
+            'feed_url': 'https://thedispatch.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0.5  # Centre-Right - fact-based conservative
+        },
+        {
             'name': 'The Spectator',
             'feed_url': 'https://www.spectator.co.uk/feed/',
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United Kingdom',
-            'political_leaning': 0.4  # Centre-Right - British conservative
-        },
-        {
-            'name': 'New Statesman',
-            'feed_url': 'https://www.newstatesman.com/feed',
-            'source_type': 'rss',
-            'reputation_score': 0.8,
-            'country': 'United Kingdom',
-            'political_leaning': -0.4  # Centre-Left - British progressive
-        },
-        {
-            'name': 'National Review',
-            'feed_url': 'https://www.nationalreview.com/feed/',
-            'source_type': 'rss',
-            'reputation_score': 0.8,
-            'country': 'United States',
-            'political_leaning': 0.6  # Right - traditional conservative
-        },
-        {
-            'name': 'The American Conservative',
-            'feed_url': 'https://www.theamericanconservative.com/feed/',
-            'source_type': 'rss',
-            'reputation_score': 0.75,
-            'country': 'United States',
-            'political_leaning': 0.5  # Right - paleoconservative
+            'political_leaning': 1.0  # Lean Right - British conservative magazine
         },
         {
             'name': 'Reason',
@@ -472,7 +751,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 0.4  # Centre-Right - libertarian
+            'political_leaning': 0.5  # Centre-Right - libertarian
         },
         {
             'name': 'The Free Press',
@@ -480,15 +759,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 0.2  # Centre-Right - Bari Weiss
-        },
-        {
-            'name': 'City Journal',
-            'feed_url': 'https://www.city-journal.org/rss',
-            'source_type': 'rss',
-            'reputation_score': 0.8,
-            'country': 'United States',
-            'political_leaning': 0.5  # Right - urban policy conservative
+            'political_leaning': 0.5  # Centre-Right - heterodox journalism
         },
         {
             'name': 'The Critic',
@@ -496,15 +767,75 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.75,
             'country': 'United Kingdom',
-            'political_leaning': 0.4  # Centre-Right - British intellectual
+            'political_leaning': 0.5  # Centre-Right - British intellectual
         },
         {
-            'name': 'Acquired Podcast',
-            'feed_url': 'https://feeds.simplecast.com/JGE3yC0V',
+            'name': 'Quillette',
+            'feed_url': 'https://quillette.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'Australia',
+            'political_leaning': 0.5  # Centre-Right - heterodox/intellectual
+        },
+        {
+            'name': 'Marginal Revolution',
+            'feed_url': 'https://feeds.feedburner.com/marginalrevolution/feed',
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United States',
-            'political_leaning': 0  # Centre - business deep dives
+            'political_leaning': 0.5  # Centre-Right - Tyler Cowen economics, libertarian-leaning
+        },
+        {
+            'name': 'Cato Institute',
+            'feed_url': 'https://www.cato.org/blog/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 0.5  # Centre-Right - libertarian think tank (Cato@Liberty blog)
+        },
+        {
+            'name': 'Manhattan Institute',
+            'feed_url': 'https://www.manhattan-institute.org/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 1.0  # Lean Right - pairs with City Journal
+        },
+        {
+            'name': 'Andrew Sullivan',
+            'feed_url': 'https://andrewsullivan.substack.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 0.5  # Centre-Right - heterodox conservative
+        },
+        
+        # ==========================================================================
+        # RIGHT SOURCES
+        # ==========================================================================
+        {
+            'name': 'National Review',
+            'feed_url': 'https://www.nationalreview.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 1.5  # Right - traditional conservative
+        },
+        {
+            'name': 'The American Conservative',
+            'feed_url': 'https://www.theamericanconservative.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'United States',
+            'political_leaning': 1.0  # Lean Right - paleoconservative
+        },
+        {
+            'name': 'City Journal',
+            'feed_url': 'https://www.city-journal.org/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 1.0  # Lean Right - urban policy conservative
         },
         {
             'name': 'The Commentary Magazine',
@@ -512,19 +843,203 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 0.6  # Right - neoconservative
+            'political_leaning': 1.5  # Right - neoconservative
+        },
+        {
+            'name': 'First Things',
+            'feed_url': 'https://www.firstthings.com/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 1.5  # Right - religious conservative intellectual
+        },
+        {
+            'name': 'Christianity Today',
+            'feed_url': 'https://www.christianitytoday.com/ct/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'United States',
+            'political_leaning': 1.0  # Lean Right - evangelical, nuanced
+        },
+        
+        # ==========================================================================
+        # PODCASTS (Assessed based on content and hosts)
+        # ==========================================================================
+        {
+            'name': 'The News Agents',
+            'feed_url': 'https://feeds.captivate.fm/the-news-agents/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': -1.0  # Lean Left - UK political podcast
+        },
+        {
+            'name': 'The Rest Is Politics',
+            'feed_url': 'https://feeds.acast.com/public/shows/the-rest-is-politics',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - left and right hosts
+        },
+        {
+            'name': 'Triggernometry',
+            'feed_url': 'https://feeds.megaphone.fm/AALT9618167458',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United Kingdom',
+            'political_leaning': 0.5  # Centre-Right - libertarian/classical liberal
+        },
+        {
+            'name': 'All-In Podcast',
+            'feed_url': 'https://allinchamathjason.libsyn.com/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0.5  # Centre-Right - tech/business, libertarian lean
+        },
+        {
+            'name': 'The Tim Ferriss Show',
+            'feed_url': 'https://timferriss.libsyn.com/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - lifestyle/business, apolitical
+        },
+        {
+            'name': 'Diary of a CEO',
+            'feed_url': 'https://feeds.megaphone.fm/thediaryofaceo',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - business/entrepreneurship, apolitical
+        },
+        {
+            'name': 'Modern Wisdom',
+            'feed_url': 'https://feeds.megaphone.fm/SIXMSB5088139739',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - philosophy/lifestyle, apolitical
+        },
+        {
+            'name': 'Acquired Podcast',
+            'feed_url': 'https://feeds.simplecast.com/JGE3yC0V',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - business deep dives, apolitical
         },
     ]
     
     try:
+        added = 0
+        updated = 0
+        
         for source_data in default_sources:
             existing = NewsSource.query.filter_by(name=source_data['name']).first()
-            if not existing:
+            
+            if existing:
+                # Update existing source with new field values
+                fields_to_update = ['feed_url', 'source_type', 'reputation_score', 'country', 'political_leaning']
+                source_updated = False
+                
+                for field in fields_to_update:
+                    if field in source_data:
+                        current_value = getattr(existing, field, None)
+                        new_value = source_data[field]
+                        
+                        # Update if field is None or different
+                        if current_value is None or current_value != new_value:
+                            setattr(existing, field, new_value)
+                            source_updated = True
+                
+                if source_updated:
+                    updated += 1
+                    logger.info(f"Updated source: {source_data['name']}")
+            else:
+                # Add new source
                 source = NewsSource(**source_data)
                 db.session.add(source)
-                logger.info(f"Added default source: {source_data['name']}")
+                added += 1
+                logger.info(f"Added new source: {source_data['name']}")
         
         db.session.commit()
+        logger.info(f"Source seeding complete: {added} added, {updated} updated")
+        
     except Exception as e:
         logger.error(f"Error seeding default sources: {e}")
         db.session.rollback()
+
+
+def check_all_sources_health() -> dict:
+    """
+    Check the health of all configured news sources.
+    
+    Useful for debugging and verifying RSS feeds work before going live.
+    
+    Returns:
+        dict: {
+            'total': int,
+            'healthy': int,
+            'unhealthy': int,
+            'sources': [{'name': str, 'status': str, 'message': str, 'entry_count': int}]
+        }
+    
+    Usage in Flask shell:
+        from app.trending.news_fetcher import check_all_sources_health
+        results = check_all_sources_health()
+        for s in results['sources']:
+            if s['status'] != 'ok':
+                print(f"FAILED: {s['name']} - {s['message']}")
+    """
+    fetcher = NewsFetcher()
+    sources = NewsSource.query.filter_by(is_active=True).all()
+    
+    results = {
+        'total': len(sources),
+        'healthy': 0,
+        'unhealthy': 0,
+        'sources': []
+    }
+    
+    for source in sources:
+        health = fetcher.check_source_health(source)
+        source_result = {
+            'name': source.name,
+            'feed_url': source.feed_url,
+            'status': health['status'],
+            'message': health['message'],
+            'entry_count': health.get('entry_count', 0)
+        }
+        results['sources'].append(source_result)
+        
+        if health['status'] == 'ok':
+            results['healthy'] += 1
+        else:
+            results['unhealthy'] += 1
+    
+    logger.info(f"Health check complete: {results['healthy']}/{results['total']} healthy")
+    
+    return results
+
+
+def reset_disabled_sources():
+    """
+    Re-enable sources that were auto-disabled due to errors.
+    
+    Use after fixing feed URLs or when a source comes back online.
+    
+    Returns:
+        int: Number of sources re-enabled
+    """
+    disabled = NewsSource.query.filter_by(is_active=False).all()
+    count = 0
+    
+    for source in disabled:
+        source.is_active = True
+        source.fetch_error_count = 0
+        count += 1
+        logger.info(f"Re-enabled source: {source.name}")
+    
+    db.session.commit()
+    return count
