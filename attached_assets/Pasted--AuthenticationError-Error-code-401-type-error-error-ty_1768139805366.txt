@@ -1,0 +1,176 @@
+# AuthenticationError: Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CWz4A9zhCUzQqiKZRVxAo'}
+
+**Issue ID:** 87117811
+**Project:** python-flask
+**Date:** 10/01/2026, 17:00:33
+## Issue Summary
+Anthropic API Authentication Failure: Invalid API Key
+**What's wrong:** Authentication error: **401 invalid x-api-key** from Anthropic API.
+**In the trace:** No session-related issues identified.
+**Possible cause:** The **x-api-key** used for Anthropic API calls may be **expired, revoked, or incorrectly configured**.
+
+## Tags
+
+- **environment:** production
+- **handled:** no
+- **level:** error
+- **mechanism:** anthropic
+- **runtime:** CPython 3.11.13
+- **runtime.name:** CPython
+- **server_name:** nixos
+
+## Exception
+
+### Exception 1
+**Type:** AuthenticationError
+**Value:** Error code: 401 - {'type': 'error', 'error': {'type': 'authentication_error', 'message': 'invalid x-api-key'}, 'request_id': 'req_011CWz4A9zhCUzQqiKZRVxAo'}
+
+#### Stacktrace
+
+```
+ request in anthropic/_base_client.py [Line 1114] (Not in app)
+                # to completion before attempting to access the response text.
+                if not err.response.is_closed:
+                    err.response.read()
+
+                log.debug("Re-raising status error")
+                raise self._make_status_error_from_response(err.response) from None  <-- SUSPECT LINE
+
+            break
+
+        assert response is not None, "could not resolve response (should never happen)"
+        return self._process_response(
+---
+Variable values:
+{
+  "cast_to": "<class 'anthropic.types.message.Message'>",
+  "input_options": "[Filtered]",
+  "max_retries": "2",
+  "options": "[Filtered]"
+}
+
+=======
+ post in anthropic/_base_client.py [Line 1326] (Not in app)
+        stream_cls: type[_StreamT] | None = None,
+    ) -> ResponseT | _StreamT:
+        opts = FinalRequestOptions.construct(
+            method="post", url=path, json_data=body, files=to_httpx_files(files), **options
+        )
+        return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))  <-- SUSPECT LINE
+
+    def patch(
+        self,
+        path: str,
+        *,
+---
+Variable values:
+{
+  "body": {
+    "max_tokens": "[Filtered]",
+    "messages": [
+      {
+        "content": "'You are a senior editor reviewing news briefing content for quality issues.\\n\\nTOPIC: What are the potential implications of international interventions on domestic stability and public safety in countries like Venezuela?\\n\\nGENERATED CONTENT:\\nHeadline: Trump Claims US Will Control Venezuela\\'s Future\\n\\nBullets:\\n- Former President Donald Trump asserts that the US will \\'run\\' Venezuela, raising doubts among analysts about the feasibility of such claims.\\n- The statement comes amid ongoing political turmoil in Venezuela, where Nicolás Maduro has faced international condemnation and economic sanctions.\\n- In a separate incident, two girls aged 14 and 15 were confirmed dead in a bar fire in Switzerland, highlighting ongoing safety concerns in public venues.\\n- The US\\'s involvement in Venezuela could escalate tensions in the region, with potential implications for diplomatic relations and humanitarian aid.\\n\\nPersonal Impact: If you are a Venezuelan expatriate, this may affect your family\\'s situation an...",
+        "role": "'user'"
+      }
+    ],
+    "model": "'claude-3-haiku-20240307'",
+    "system": "'You are a news editor creating calm, neutral briefings. Respond only in valid JSON.'",
+    "temperature": "0.3"
+  },
+  "cast_to": "<class 'anthropic.types.message.Message'>",
+  "files": "None",
+  "options": {
+    "timeout": "Timeout(connect=5.0, read=600, write=600, pool=600)"
+  },
+  "opts": "[Filtered]"
+}
+
+=======
+ create in anthropic/resources/messages/messages.py [Line 930] (Not in app)
+                f"The model '{model}' is deprecated and will reach end-of-life on {DEPRECATED_MODELS[model]}.\nPlease migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resources/model-deprecations for more information.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
+        return self._post(  <-- SUSPECT LINE
+            "/v1/messages",
+            body=maybe_transform(
+                {
+                    "max_tokens": max_tokens,
+                    "messages": messages,
+---
+Variable values:
+{
+  "max_tokens": "[Filtered]",
+  "messages": [
+    {
+      "content": "'You are a senior editor reviewing news briefing content for quality issues.\\n\\nTOPIC: What are the potential implications of international interventions on domestic stability and public safety in countries like Venezuela?\\n\\nGENERATED CONTENT:\\nHeadline: Trump Claims US Will Control Venezuela\\'s Future\\n\\nBullets:\\n- Former President Donald Trump asserts that the US will \\'run\\' Venezuela, raising doubts among analysts about the feasibility of such claims.\\n- The statement comes amid ongoing political turmoil in Venezuela, where Nicolás Maduro has faced international condemnation and economic sanctions.\\n- In a separate incident, two girls aged 14 and 15 were confirmed dead in a bar fire in Switzerland, highlighting ongoing safety concerns in public venues.\\n- The US\\'s involvement in Venezuela could escalate tensions in the region, with potential implications for diplomatic relations and humanitarian aid.\\n\\nPersonal Impact: If you are a Venezuelan expatriate, this may affect your family\\'s situation an...",
+      "role": "'user'"
+    }
+  ],
+  "metadata": "<anthropic.Omit object at 0x7fe2ea57ae10>",
+  "model": "'claude-3-haiku-20240307'",
+  "self": "<anthropic.resources.messages.messages.Messages object at 0x7fe2cc680390>",
+  "service_tier": "<anthropic.Omit object at 0x7fe2ea57ae10>",
+  "stop_sequences": "<anthropic.Omit object at 0x7fe2ea57ae10>",
+  "stream": "<anthropic.Omit object at 0x7fe2ea57ae10>",
+  "system": "'You are a news editor creating calm, neutral briefings. Respond only in valid JSON.'",
+  "temperature": "0.3"
+}
+
+=======
+ wrapper in anthropic/_utils/_utils.py [Line 282] (Not in app)
+                    if len(missing) > 1:
+                        msg = f"Missing required arguments: {human_join([quote(arg) for arg in missing])}"
+                    else:
+                        msg = f"Missing required argument: {quote(missing[0])}"
+                raise TypeError(msg)
+            return func(*args, **kwargs)  <-- SUSPECT LINE
+
+        return wrapper  # type: ignore
+
+    return inner
+
+---
+Variable values:
+{
+  "_": "<anthropic.resources.messages.messages.Messages object at 0x7fe2cc680390>",
+  "args": [
+    "<anthropic.resources.messages.messages.Messages object at 0x7fe2cc680390>"
+  ],
+  "func": "<function Messages.create at 0x7fe2ea0c0c20>",
+  "given_params": [
+    "'system'",
+    "'temperature'",
+    "'self'",
+    "'model'",
+    "'messages'",
+    "[Filtered]"
+  ],
+  "i": "0",
+  "key": "'messages'",
+  "kwargs": {
+    "max_tokens": "[Filtered]",
+    "messages": [
+      {
+        "content": "'You are a senior editor reviewing news briefing content for quality issues.\\n\\nTOPIC: What are the potential implications of international interventions on domestic stability and public safety in countries like Venezuela?\\n\\nGENERATED CONTENT:\\nHeadline: Trump Claims US Will Control Venezuela\\'s Future\\n\\nBullets:\\n- Former President Donald Trump asserts that the US will \\'run\\' Venezuela, raising doubts among analysts about the feasibility of such claims.\\n- The statement comes amid ongoing political turmoil in Venezuela, where Nicolás Maduro has faced international condemnation and economic sanctions.\\n- In a separate incident, two girls aged 14 and 15 were confirmed dead in a bar fire in Switzerland, highlighting ongoing safety concerns in public venues.\\n- The US\\'s involvement in Venezuela could escalate tensions in the region, with potential implications for diplomatic relations and humanitarian aid.\\n\\nPersonal Impact: If you are a Venezuelan expatriate, this may affect your family\\'s situation an...",
+        "role": "'user'"
+      }
+    ],
+    "model": "'claude-3-haiku-20240307'",
+    "system": "'You are a news editor creating calm, neutral briefings. Respond only in valid JSON.'",
+    "temperature": "0.3"
+  },
+  "matches": "True",
+  "positional": [
+    "'self'"
+  ],
+  "variant": [
+    "[Filtered]",
+    "'messages'",
+    "'model'"
+  ]
+}
+
+=======
+```
