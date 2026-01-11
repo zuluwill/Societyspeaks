@@ -429,11 +429,11 @@ Respond ONLY with valid JSON:
 Be strict but fair. If content is specific, concrete, and well-written, give credit."""
 
         try:
-            # Call opposite LLM for validation
+            # Call opposite LLM for validation with explicit key
             if validation_provider == 'openai':
-                response = self._call_openai(critique_prompt)
+                response = self._call_openai(critique_prompt, api_key=validation_key)
             else:
-                response = self._call_anthropic(critique_prompt)
+                response = self._call_anthropic(critique_prompt, api_key=validation_key)
 
             data = extract_json(response)
 
@@ -795,11 +795,13 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
         else:
             raise ValueError(f"Unknown LLM provider: {self.provider}")
 
-    def _call_openai(self, prompt: str) -> str:
+    def _call_openai(self, prompt: str, api_key: Optional[str] = None) -> str:
         """Call OpenAI API"""
         import openai
 
-        client = openai.OpenAI(api_key=self.api_key)
+        # Use provided key or fall back to self.api_key, then environment
+        key = api_key or self.api_key or os.environ.get('OPENAI_API_KEY')
+        client = openai.OpenAI(api_key=key)
 
         try:
             response = client.chat.completions.create(
@@ -822,11 +824,13 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
             logger.error(f"OpenAI API error: {e}")
             raise
 
-    def _call_anthropic(self, prompt: str) -> str:
+    def _call_anthropic(self, prompt: str, api_key: Optional[str] = None) -> str:
         """Call Anthropic API"""
         import anthropic
 
-        client = anthropic.Anthropic(api_key=self.api_key)
+        # Use provided key or fall back to self.api_key, then environment
+        key = api_key or self.api_key or os.environ.get('ANTHROPIC_API_KEY')
+        client = anthropic.Anthropic(api_key=key)
 
         try:
             message = client.messages.create(
