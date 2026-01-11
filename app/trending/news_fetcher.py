@@ -412,7 +412,7 @@ def seed_default_sources():
         },
         {
             'name': 'Semafor',
-            'feed_url': 'https://www.semafor.com/feed',
+            'feed_url': 'https://www.semafor.com/rss.xml',
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
@@ -475,14 +475,6 @@ def seed_default_sources():
             'political_leaning': 0.4  # Centre-Right - libertarian
         },
         {
-            'name': 'Quillette',
-            'feed_url': 'https://quillette.com/feed/',
-            'source_type': 'rss',
-            'reputation_score': 0.75,
-            'country': 'Australia',
-            'political_leaning': 0.3  # Centre-Right - intellectual/heterodox
-        },
-        {
             'name': 'The Free Press',
             'feed_url': 'https://www.thefp.com/feed',
             'source_type': 'rss',
@@ -492,7 +484,7 @@ def seed_default_sources():
         },
         {
             'name': 'City Journal',
-            'feed_url': 'https://www.city-journal.org/feed',
+            'feed_url': 'https://www.city-journal.org/rss',
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
@@ -508,7 +500,7 @@ def seed_default_sources():
         },
         {
             'name': 'Acquired Podcast',
-            'feed_url': 'https://feeds.megaphone.fm/acquired',
+            'feed_url': 'https://feeds.simplecast.com/JGE3yC0V',
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United States',

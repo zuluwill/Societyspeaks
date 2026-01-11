@@ -161,6 +161,82 @@ ALLSIDES_RATINGS = {
         'source': 'manual',
         'notes': 'NYT politics and policy podcast, center-left editorial perspective'
     },
+    # New sources added
+    'Farnam Street': {
+        'leaning': 0,  # Center
+        'source': 'manual',
+        'notes': 'Mental models and decision-making wisdom, apolitical'
+    },
+    'The Dispatch': {
+        'leaning': 0.5,  # Center to Lean Right
+        'source': 'manual',
+        'notes': 'Fact-based conservative journalism, Jonah Goldberg'
+    },
+    'Semafor': {
+        'leaning': 0,  # Center
+        'source': 'manual',
+        'notes': 'Global news with transparent sourcing'
+    },
+    'Rest of World': {
+        'leaning': 0,  # Center
+        'source': 'manual',
+        'notes': 'International tech and society coverage'
+    },
+    'The Conversation': {
+        'leaning': 0,  # Center
+        'source': 'manual',
+        'notes': 'Academic experts writing for public audience'
+    },
+    'The Spectator': {
+        'leaning': 1,  # Lean Right
+        'source': 'allsides',
+        'notes': 'British conservative magazine, oldest continuously published'
+    },
+    'New Statesman': {
+        'leaning': -1,  # Lean Left
+        'source': 'allsides',
+        'notes': 'British progressive magazine'
+    },
+    'National Review': {
+        'leaning': 1.5,  # Right
+        'source': 'allsides',
+        'notes': 'Leading American conservative magazine, founded by William F. Buckley'
+    },
+    'The American Conservative': {
+        'leaning': 1,  # Lean Right to Right
+        'source': 'allsides',
+        'notes': 'Paleoconservative and realist foreign policy perspective'
+    },
+    'Reason': {
+        'leaning': 0.5,  # Center to Lean Right (Libertarian)
+        'source': 'allsides',
+        'notes': 'Libertarian magazine, free minds and free markets'
+    },
+    'The Free Press': {
+        'leaning': 0.5,  # Center to Lean Right
+        'source': 'manual',
+        'notes': 'Bari Weiss publication, heterodox/independent journalism'
+    },
+    'City Journal': {
+        'leaning': 1,  # Lean Right
+        'source': 'manual',
+        'notes': 'Manhattan Institute, urban policy conservative perspective'
+    },
+    'The Critic': {
+        'leaning': 0.5,  # Center to Lean Right
+        'source': 'manual',
+        'notes': 'British intellectual magazine, skeptical/conservative'
+    },
+    'Acquired Podcast': {
+        'leaning': 0,  # Center
+        'source': 'manual',
+        'notes': 'Business deep dives, apolitical tech/business focus'
+    },
+    'The Commentary Magazine': {
+        'leaning': 1.5,  # Right
+        'source': 'manual',
+        'notes': 'Neoconservative intellectual magazine'
+    },
 }
 
 
