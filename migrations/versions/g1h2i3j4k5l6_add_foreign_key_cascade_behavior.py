@@ -1,7 +1,7 @@
 """Add foreign key cascade behavior
 
 Revision ID: g1h2i3j4k5l6
-Revises: f740175127e3
+Revises: de16e9f9813c
 Create Date: 2026-01-11
 
 This migration adds proper ON DELETE behavior to foreign keys to prevent
@@ -21,7 +21,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic
 revision = 'g1h2i3j4k5l6'
-down_revision = 'f740175127e3'
+down_revision = 'de16e9f9813c'
 branch_labels = None
 depends_on = None
 
