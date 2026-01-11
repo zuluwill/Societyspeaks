@@ -559,20 +559,20 @@ def init_scheduler(app):
                 logger.error(f"Brief email sending failed: {e}", exc_info=True)
 
 
-    @scheduler.scheduled_job('cron', hour=2, id='update_allsides_ratings')
+    @scheduler.scheduled_job('cron', day=1, hour=2, id='update_allsides_ratings')
     def update_allsides_ratings_monthly():
         """
         Update AllSides political leaning ratings monthly
         Runs at 2am UTC on the 1st of each month
+        
+        Uses APScheduler's day parameter to ensure it only runs on day 1,
+        rather than checking in the function body (which would fail if
+        server is down on the 1st).
         """
         with app.app_context():
             from app.trending.allsides_seed import update_source_leanings
 
-            # Only run on first day of month
-            if datetime.utcnow().day != 1:
-                return
-
-            logger.info("Updating AllSides ratings")
+            logger.info("Updating AllSides ratings (monthly job)")
 
             try:
                 results = update_source_leanings()

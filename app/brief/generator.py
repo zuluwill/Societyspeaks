@@ -29,12 +29,16 @@ class BriefGenerator:
     - Per-item bullet summaries (2-3 bullets)
     - Verification links (extracted from articles)
     - CTA text for discussions
+    
+    Handles missing LLM keys gracefully by using fallback content generation.
     """
 
     def __init__(self):
         self.api_key, self.provider = get_system_api_key()
-        if not self.api_key:
-            raise ValueError("No LLM API key found. Set OPENAI_API_KEY or ANTHROPIC_API_KEY")
+        self.llm_available = bool(self.api_key)
+        
+        if not self.llm_available:
+            logger.warning("No LLM API key found. Brief will use fallback content generation.")
 
     def generate_brief(
         self,
@@ -761,7 +765,13 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
 
         Returns:
             str: LLM response text
+            
+        Raises:
+            ValueError: If no LLM provider is available
         """
+        if not self.llm_available:
+            raise ValueError("No LLM API key configured")
+        
         if self.provider == 'openai':
             return self._call_openai(prompt)
         elif self.provider == 'anthropic':
@@ -827,27 +837,89 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
 def generate_daily_brief(brief_date: Optional[date] = None, auto_publish: bool = True) -> Optional[DailyBrief]:
     """
     Convenience function to generate today's brief.
+    
+    This function is designed to be robust and not crash the scheduler:
+    - Returns None if no topics available (not an error)
+    - Catches and logs all exceptions
+    - Provides detailed logging for debugging
 
     Args:
         brief_date: Date to generate for (default: today)
         auto_publish: Set to 'ready' status if True
 
     Returns:
-        DailyBrief instance, or None if no topics available
+        DailyBrief instance, or None if generation fails or no topics available
     """
-    from app.brief.topic_selector import select_topics_for_date
+    from app.brief.topic_selector import select_topics_for_date, TopicSelector
 
     if brief_date is None:
         brief_date = date.today()
 
-    # Select topics
-    selector_import = select_topics_for_date
-    topics = selector_import(brief_date, limit=5)
+    logger.info(f"Starting daily brief generation for {brief_date}")
 
-    if not topics:
-        logger.warning(f"No topics available for brief on {brief_date} - skipping generation")
+    # Select topics with detailed logging
+    try:
+        topics = select_topics_for_date(brief_date, limit=5)
+    except Exception as e:
+        logger.error(f"Topic selection failed for {brief_date}: {e}", exc_info=True)
         return None
 
+    if not topics:
+        # Log diagnostic info to help debug why no topics
+        try:
+            from app.models import TrendingTopic
+            from datetime import datetime, timedelta
+            
+            cutoff_24h = datetime.utcnow() - timedelta(hours=24)
+            cutoff_48h = datetime.utcnow() - timedelta(hours=48)
+            cutoff_72h = datetime.utcnow() - timedelta(hours=72)
+            
+            published_24h = TrendingTopic.query.filter(
+                TrendingTopic.status == 'published',
+                TrendingTopic.published_at >= cutoff_24h
+            ).count()
+            
+            published_48h = TrendingTopic.query.filter(
+                TrendingTopic.status == 'published',
+                TrendingTopic.published_at >= cutoff_48h
+            ).count()
+            
+            published_72h = TrendingTopic.query.filter(
+                TrendingTopic.status == 'published',
+                TrendingTopic.published_at >= cutoff_72h
+            ).count()
+            
+            total_published = TrendingTopic.query.filter_by(status='published').count()
+            
+            logger.warning(
+                f"No topics available for brief on {brief_date}. "
+                f"Diagnostic: {published_24h} topics in 24h, {published_48h} in 48h, "
+                f"{published_72h} in 72h, {total_published} total published. "
+                f"Check if trending pipeline is running and publishing topics."
+            )
+        except Exception as diag_e:
+            logger.warning(f"No topics available for brief on {brief_date} (diagnostic failed: {diag_e})")
+        
+        return None
+
+    logger.info(f"Selected {len(topics)} topics for brief generation")
+
+    # Validate selection
+    try:
+        selector = TopicSelector(brief_date)
+        validation = selector.validate_selection(topics)
+        if not validation['valid']:
+            logger.warning(f"Topic selection has issues: {validation['issues']}")
+        logger.info(f"Selection summary: {validation['summary']}")
+    except Exception as val_e:
+        logger.warning(f"Topic validation failed (continuing anyway): {val_e}")
+
     # Generate brief
-    generator = BriefGenerator()
-    return generator.generate_brief(brief_date, topics, auto_publish)
+    try:
+        generator = BriefGenerator()
+        brief = generator.generate_brief(brief_date, topics, auto_publish)
+        logger.info(f"Brief generated successfully: {brief.title} ({brief.item_count} items)")
+        return brief
+    except Exception as e:
+        logger.error(f"Brief generation failed for {brief_date}: {e}", exc_info=True)
+        return None

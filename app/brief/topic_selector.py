@@ -22,15 +22,22 @@ class TopicSelector:
     Selection criteria (in order of priority):
     1. Published in last 24 hours
     2. Civic score >= 0.6 (public importance)
-    3. Source diversity (min 2 sources, balanced coverage preferred)
+    3. Source diversity (min 1 source, but single-source topics require higher quality)
     4. Topic diversity (max 1 per category)
     5. Geographic diversity (mix of scopes)
     6. Not recently featured in brief (30-day exclusion)
+    
+    Quality compensation for single-source topics:
+    - Single-source topics require civic_score >= 0.7 (vs 0.6 for multi-source)
+    - Single-source topics require quality_score >= 0.7
+    - This ensures single-source topics still meet a high quality bar
     """
 
     MIN_ITEMS = 3
     MAX_ITEMS = 5
     MIN_CIVIC_SCORE = 0.6
+    MIN_CIVIC_SCORE_SINGLE_SOURCE = 0.7  # Higher bar for single-source topics
+    MIN_QUALITY_SCORE_SINGLE_SOURCE = 0.7  # Quality check for single-source
     MIN_SOURCES = 1  # Allow single-source topics for brief
     MAX_IMBALANCE = 0.8  # Allow some imbalance, but not extreme
     EXCLUSION_DAYS = 30
@@ -83,24 +90,68 @@ class TopicSelector:
     def _get_candidate_topics(self) -> List[TrendingTopic]:
         """
         Get candidate topics that meet basic criteria.
+        
+        Applies compensating quality checks for single-source topics:
+        - Single-source topics require higher civic_score (0.7 vs 0.6)
+        - Single-source topics require higher quality_score (0.7)
+        
+        Uses progressive lookback: starts with 24h, extends to 48h, then 72h
+        if no candidates found. This prevents brief failures on slow news days.
 
         Returns:
             List of TrendingTopic instances
         """
-        # Published topics from last 24 hours
-        cutoff = datetime.utcnow() - timedelta(hours=24)
+        # Progressive lookback: try 24h, then 48h, then 72h
+        lookback_hours = [24, 48, 72]
+        candidates = []
+        
+        for hours in lookback_hours:
+            cutoff = datetime.utcnow() - timedelta(hours=hours)
+            
+            # Get all potentially eligible topics (basic filters)
+            candidates = TrendingTopic.query.filter(
+                TrendingTopic.status == 'published',
+                TrendingTopic.published_at >= cutoff,
+                TrendingTopic.source_count >= self.MIN_SOURCES,
+                ~TrendingTopic.id.in_(self.recent_topic_ids)  # Exclude recently featured
+            ).all()
+            
+            if candidates:
+                if hours > 24:
+                    logger.info(f"Extended lookback to {hours}h to find {len(candidates)} candidates")
+                break
+        
+        if not candidates:
+            logger.warning("No candidates found even with 72h lookback")
 
-        candidates = TrendingTopic.query.filter(
-            TrendingTopic.status == 'published',
-            TrendingTopic.published_at >= cutoff,
-            TrendingTopic.civic_score >= self.MIN_CIVIC_SCORE,
-            TrendingTopic.source_count >= self.MIN_SOURCES,
-            ~TrendingTopic.id.in_(self.recent_topic_ids)  # Exclude recently featured
-        ).all()
-
-        # Filter by coverage balance
+        # Filter by quality criteria with compensation for single-source topics
         filtered = []
         for topic in candidates:
+            # Apply compensating quality checks for single-source topics
+            if topic.source_count == 1:
+                # Single-source topics need higher civic_score
+                if topic.civic_score < self.MIN_CIVIC_SCORE_SINGLE_SOURCE:
+                    logger.debug(f"Excluding single-source topic '{topic.title[:50]}...' - "
+                                f"civic_score {topic.civic_score:.2f} < {self.MIN_CIVIC_SCORE_SINGLE_SOURCE}")
+                    continue
+                
+                # Single-source topics need higher quality_score
+                quality_score = getattr(topic, 'quality_score', 0) or 0
+                if quality_score < self.MIN_QUALITY_SCORE_SINGLE_SOURCE:
+                    logger.debug(f"Excluding single-source topic '{topic.title[:50]}...' - "
+                                f"quality_score {quality_score:.2f} < {self.MIN_QUALITY_SCORE_SINGLE_SOURCE}")
+                    continue
+                    
+                logger.info(f"Accepting single-source topic '{topic.title[:50]}...' - "
+                           f"meets quality thresholds (civic={topic.civic_score:.2f}, quality={quality_score:.2f})")
+            else:
+                # Multi-source topics use standard civic_score threshold
+                if topic.civic_score < self.MIN_CIVIC_SCORE:
+                    logger.debug(f"Excluding topic '{topic.title[:50]}...' - "
+                                f"civic_score {topic.civic_score:.2f} < {self.MIN_CIVIC_SCORE}")
+                    continue
+            
+            # Check coverage balance
             analyzer = CoverageAnalyzer(topic)
             coverage = analyzer.calculate_distribution()
 
@@ -111,6 +162,7 @@ class TopicSelector:
                 else:
                     logger.info(f"Excluding topic '{topic.title}' due to coverage imbalance: {coverage['imbalance_score']}")
 
+        logger.info(f"Topic selection: {len(candidates)} candidates -> {len(filtered)} after quality filters")
         return filtered
 
     def _calculate_brief_score(self, topic: TrendingTopic) -> float:
@@ -127,30 +179,43 @@ class TopicSelector:
         Returns:
             float: Score from 0-1 (higher = higher priority)
         """
+        # Safely get scores with defaults for None values
+        civic_score = topic.civic_score if topic.civic_score is not None else 0.5
+        quality_score = topic.quality_score if topic.quality_score is not None else 0.5
+        source_count = topic.source_count if topic.source_count is not None else 1
+        
         # Calculate average personal relevance from articles
-        article_links = topic.articles.all() if hasattr(topic, 'articles') else []
-        articles = [link.article for link in article_links if link.article]
-        personal_scores = [a.personal_relevance_score for a in articles if a.personal_relevance_score is not None]
-        avg_personal_relevance = sum(personal_scores) / len(personal_scores) if personal_scores else 0.5
+        try:
+            article_links = topic.articles.all() if hasattr(topic, 'articles') else []
+            articles = [link.article for link in article_links if link.article]
+            personal_scores = [a.personal_relevance_score for a in articles if a.personal_relevance_score is not None]
+            avg_personal_relevance = sum(personal_scores) / len(personal_scores) if personal_scores else 0.5
+        except Exception as e:
+            logger.warning(f"Error calculating personal relevance for topic {topic.id}: {e}")
+            avg_personal_relevance = 0.5
 
         base_score = (
-            topic.civic_score * 0.35 +
-            topic.quality_score * 0.25 +
+            civic_score * 0.35 +
+            quality_score * 0.25 +
             avg_personal_relevance * 0.15 +
-            min(topic.source_count / 10, 1.0) * 0.15  # Cap at 10 sources
+            min(source_count / 10, 1.0) * 0.15  # Cap at 10 sources
         )
 
-        # Coverage balance bonus
-        analyzer = CoverageAnalyzer(topic)
-        coverage = analyzer.calculate_distribution()
-        balance_bonus = (1 - coverage['imbalance_score']) * 0.1
+        # Coverage balance bonus (with error handling)
+        try:
+            analyzer = CoverageAnalyzer(topic)
+            coverage = analyzer.calculate_distribution()
+            imbalance_score = coverage.get('imbalance_score', 0.5)
+            balance_bonus = (1 - imbalance_score) * 0.1
+        except Exception as e:
+            logger.warning(f"Error calculating coverage for topic {topic.id}: {e}")
+            balance_bonus = 0.05  # Default to mid-range
 
         total_score = base_score + balance_bonus
 
         logger.debug(f"Topic '{topic.title[:50]}...' scored {total_score:.2f} "
-                    f"(civic={topic.civic_score:.2f}, quality={topic.quality_score:.2f}, "
-                    f"personal={avg_personal_relevance:.2f}, sources={topic.source_count}, "
-                    f"balance={1-coverage['imbalance_score']:.2f})")
+                    f"(civic={civic_score:.2f}, quality={quality_score:.2f}, "
+                    f"personal={avg_personal_relevance:.2f}, sources={source_count})")
 
         return total_score
 
@@ -224,6 +289,10 @@ class TopicSelector:
     def validate_selection(self, topics: List[TrendingTopic]) -> dict:
         """
         Validate that selection meets quality standards.
+        
+        Applies appropriate thresholds based on source count:
+        - Single-source topics: higher civic_score and quality_score required
+        - Multi-source topics: standard civic_score threshold
 
         Returns:
             dict: {
@@ -245,10 +314,30 @@ class TopicSelector:
         if len(categories) != len(set(categories)):
             issues.append("Duplicate categories detected")
 
-        # Check civic scores
-        low_civic = [t for t in topics if t.civic_score < self.MIN_CIVIC_SCORE]
+        # Check civic scores with source-count-aware thresholds
+        low_civic = []
+        low_quality_single_source = []
+        single_source_count = 0
+        
+        for t in topics:
+            if t.source_count == 1:
+                single_source_count += 1
+                # Single-source topics have higher thresholds
+                if t.civic_score < self.MIN_CIVIC_SCORE_SINGLE_SOURCE:
+                    low_civic.append(t)
+                quality_score = getattr(t, 'quality_score', 0) or 0
+                if quality_score < self.MIN_QUALITY_SCORE_SINGLE_SOURCE:
+                    low_quality_single_source.append(t)
+            else:
+                # Multi-source topics use standard threshold
+                if t.civic_score < self.MIN_CIVIC_SCORE:
+                    low_civic.append(t)
+        
         if low_civic:
             issues.append(f"{len(low_civic)} topics below civic threshold")
+        
+        if low_quality_single_source:
+            issues.append(f"{len(low_quality_single_source)} single-source topics below quality threshold")
 
         # Check source counts
         low_sources = [t for t in topics if t.source_count < self.MIN_SOURCES]
@@ -257,6 +346,8 @@ class TopicSelector:
 
         summary = {
             'count': len(topics),
+            'single_source_count': single_source_count,
+            'multi_source_count': len(topics) - single_source_count,
             'avg_civic_score': sum(t.civic_score for t in topics) / len(topics) if topics else 0,
             'avg_source_count': sum(t.source_count for t in topics) / len(topics) if topics else 0,
             'categories': list(set(categories))
