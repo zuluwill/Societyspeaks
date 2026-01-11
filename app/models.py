@@ -1913,7 +1913,8 @@ class DailyQuestionResponse(db.Model):
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    daily_question = db.relationship('DailyQuestion', backref='responses')
+    daily_question = db.relationship('DailyQuestion', foreign_keys=[daily_question_id], backref='responses')
+    email_question = db.relationship('DailyQuestion', foreign_keys=[email_question_id], backref='email_responses')
     user = db.relationship('User', backref='daily_question_responses')
     
     @validates('vote')
