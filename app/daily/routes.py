@@ -502,7 +502,8 @@ def get_public_reasons(question, limit=10, get_all=False):
         DailyQuestionResponse.daily_question_id == question.id,
         DailyQuestionResponse.reason.isnot(None),
         DailyQuestionResponse.reason != '',
-        DailyQuestionResponse.reason_visibility.in_(['public_named', 'public_anonymous'])
+        DailyQuestionResponse.reason_visibility.in_(['public_named', 'public_anonymous']),
+        DailyQuestionResponse.is_hidden == False  # Exclude flagged/hidden responses (matches base_query)
     ).group_by(DailyQuestionResponse.vote).all()
 
     vote_distribution = {vote: count for vote, count in vote_counts}
@@ -1056,9 +1057,14 @@ def report_response():
     """Submit a flag/report for an inappropriate daily question response"""
     try:
         data = request.get_json()
+        
+        # Handle missing JSON body
+        if not data:
+            return jsonify({'success': False, 'message': 'Invalid request format'}), 400
+            
         response_id = data.get('response_id')
         reason = data.get('reason')
-        details = data.get('details', '').strip()
+        details = data.get('details', '').strip() if data.get('details') else ''
 
         # Validate inputs
         if not response_id or not reason:
@@ -1068,10 +1074,14 @@ def report_response():
         if reason not in valid_reasons:
             return jsonify({'success': False, 'message': 'Invalid reason'}), 400
 
-        # Check if response exists
-        response = DailyQuestionResponse.query.get(response_id)
+        # Check if response exists - use with_for_update() to prevent race conditions
+        response = DailyQuestionResponse.query.filter_by(id=response_id).with_for_update().first()
         if not response:
             return jsonify({'success': False, 'message': 'Response not found'}), 404
+
+        # Don't allow flagging responses that are already hidden
+        if response.is_hidden:
+            return jsonify({'success': False, 'message': 'This response has already been reviewed'}), 400
 
         # Don't allow flagging your own response
         if current_user.is_authenticated and response.user_id == current_user.id:
@@ -1105,7 +1115,7 @@ def report_response():
 
         db.session.add(flag)
 
-        # Increment flag count on response
+        # Increment flag count on response (row is locked, so this is safe)
         response.flag_count += 1
 
         # Auto-hide after 3 flags
@@ -1114,9 +1124,6 @@ def report_response():
             current_app.logger.warning(
                 f"Auto-hiding daily response {response_id} after reaching 3 flags"
             )
-
-            # TODO: Send email notification to admin
-            # send_admin_notification(f"Response {response_id} auto-hidden", response)
 
         db.session.commit()
 
