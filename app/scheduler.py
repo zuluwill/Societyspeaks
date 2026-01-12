@@ -555,13 +555,13 @@ def init_scheduler(app):
                 logger.error(f"Auto-publish failed: {e}", exc_info=True)
 
 
-    @scheduler.scheduled_job('cron', minute=5, id='send_brief_emails')
+    @scheduler.scheduled_job('cron', minute=10, id='send_brief_emails')
     def send_brief_emails_hourly():
         """
-        Send brief emails 5 minutes past each hour
+        Send brief emails 10 minutes past each hour
         Offset from minute=0 to avoid race condition with auto_publish_brief at 18:00 UTC
         Checks which subscribers should receive at this UTC hour based on their timezone
-        Example: At 18:05 UTC, sends to subscribers with preferred_hour=18:
+        Example: At 18:10 UTC, sends to subscribers with preferred_hour=18:
         - UK users with preferred_hour=18 (6pm UK time)
         - EST users with preferred_hour=13 (1pm EST = 18:00 UTC)
         - PST users with preferred_hour=10 (10am PST = 18:00 UTC)
