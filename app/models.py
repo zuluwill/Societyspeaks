@@ -2032,8 +2032,8 @@ class DailyQuestionResponseFlag(db.Model):
 
     # Relationships
     response = db.relationship('DailyQuestionResponse', backref='flags')
-    flagged_by = db.relationship('User', foreign_keys=[flagged_by_user_id], backref='flags_submitted')
-    reviewed_by = db.relationship('User', foreign_keys=[reviewed_by_user_id], backref='flags_reviewed')
+    flagged_by = db.relationship('User', foreign_keys=[flagged_by_user_id], backref='daily_response_flags_submitted')
+    reviewed_by = db.relationship('User', foreign_keys=[reviewed_by_user_id], backref='daily_response_flags_reviewed')
 
     def to_dict(self):
         return {
