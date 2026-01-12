@@ -1,0 +1,242 @@
+{% extends "layout.html" %}
+
+{% block title %}Statement Flags - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Statement Flags</h1>
+            <p class="mt-1 text-gray-500">{{ pending_count }} pending, {{ reviewed_count }} reviewed, {{ dismissed_count }} dismissed</p>
+        </div>
+        <a href="{{ url_for('admin.dashboard') }}"
+           class="mt-4 sm:mt-0 inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+            Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="bg-white rounded-xl shadow-sm mb-6">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <a href="{{ url_for('admin.list_statement_flags', status='pending') }}"
+                   class="{% if status_filter == 'pending' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
+                    Pending ({{ pending_count }})
+                </a>
+                <a href="{{ url_for('admin.list_statement_flags', status='reviewed') }}"
+                   class="{% if status_filter == 'reviewed' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
+                    Reviewed ({{ reviewed_count }})
+                </a>
+                <a href="{{ url_for('admin.list_statement_flags', status='dismissed') }}"
+                   class="{% if status_filter == 'dismissed' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
+                    Dismissed ({{ dismissed_count }})
+                </a>
+                <a href="{{ url_for('admin.list_statement_flags', status='all') }}"
+                   class="{% if status_filter == 'all' %}border-blue-500 text-blue-600{% else %}border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300{% endif %} whitespace-nowrap py-4 px-6 border-b-2 font-medium text-sm transition">
+                    All
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    {% if flags.items %}
+    <div class="bg-white rounded-xl shadow-sm">
+        <form action="{{ url_for('admin.bulk_review_statement_flags') }}" method="POST" id="bulk-form">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            {% if status_filter == 'pending' %}
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                                <input type="checkbox" id="select-all" class="rounded border-gray-300">
+                            </th>
+                            {% endif %}
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statement</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Flagged By</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            {% if status_filter == 'pending' %}
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            {% else %}
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reviewed By</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for flag in flags.items %}
+                        <tr class="hover:bg-gray-50">
+                            {% if status_filter == 'pending' %}
+                            <td class="px-4 py-4">
+                                <input type="checkbox" name="flag_ids" value="{{ flag.id }}" class="flag-checkbox rounded border-gray-300">
+                            </td>
+                            {% endif %}
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900 max-w-md">
+                                    <p class="line-clamp-2">{{ flag.statement.text[:100] }}{% if flag.statement.text|length > 100 %}...{% endif %}</p>
+                                    {% if flag.additional_context %}
+                                    <p class="text-xs text-gray-500 mt-1">Context: {{ flag.additional_context[:80] }}...</p>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% set reason_colors = {
+                                    'spam': 'bg-red-100 text-red-800',
+                                    'offensive': 'bg-orange-100 text-orange-800',
+                                    'off_topic': 'bg-yellow-100 text-yellow-800',
+                                    'duplicate': 'bg-blue-100 text-blue-800'
+                                } %}
+                                <span class="px-2 py-1 text-xs font-medium rounded-full {{ reason_colors.get(flag.flag_reason, 'bg-gray-100 text-gray-800') }}">
+                                    {{ flag.flag_reason.replace('_', ' ').title() }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if flag.flagger %}
+                                <span class="text-sm text-gray-900">{{ flag.flagger.username }}</span>
+                                {% else %}
+                                <span class="text-sm text-gray-400">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if flag.status == 'pending' %}
+                                <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Pending</span>
+                                {% elif flag.status == 'reviewed' %}
+                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Reviewed</span>
+                                {% elif flag.status == 'dismissed' %}
+                                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">Dismissed</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ flag.created_at.strftime('%b %d, %Y') }}
+                            </td>
+                            {% if status_filter == 'pending' %}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="flex items-center space-x-2">
+                                    <form action="{{ url_for('admin.review_statement_flag', flag_id=flag.id) }}" method="POST" class="inline"
+                                          onsubmit="return confirm('Approve this flag and hide the statement?');">
+                                        <input type="hidden" name="action" value="approve">
+                                        <button type="submit" class="text-green-600 hover:text-green-800" title="Approve & Hide">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('admin.review_statement_flag', flag_id=flag.id) }}" method="POST" class="inline"
+                                          onsubmit="return confirm('Dismiss this flag?');">
+                                        <input type="hidden" name="action" value="dismiss">
+                                        <button type="submit" class="text-gray-600 hover:text-gray-800" title="Dismiss">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                            {% else %}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% if flag.reviewer %}
+                                {{ flag.reviewer.username }}
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if status_filter == 'pending' and flags.items %}
+            <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                <span class="text-sm text-gray-500" id="selected-count">0 selected</span>
+                <div class="flex items-center space-x-3">
+                    <button type="submit" name="action" value="approve"
+                            class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            id="bulk-approve-btn" disabled
+                            onclick="return confirm('Approve selected flags and hide statements?');">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Approve Selected
+                    </button>
+                    <button type="submit" name="action" value="dismiss"
+                            class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            id="bulk-dismiss-btn" disabled
+                            onclick="return confirm('Dismiss selected flags?');">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Dismiss Selected
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </form>
+
+        <!-- Pagination -->
+        {% if flags.pages > 1 %}
+        <nav class="flex justify-center items-center py-6 border-t border-gray-200">
+            <div class="flex space-x-2">
+                {% if flags.has_prev %}
+                <a href="{{ url_for('admin.list_statement_flags', page=flags.prev_num, status=status_filter, reason=reason_filter) }}"
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Previous
+                </a>
+                {% endif %}
+
+                <span class="px-4 py-2 text-sm font-medium text-gray-700">
+                    Page {{ flags.page }} of {{ flags.pages }}
+                </span>
+
+                {% if flags.has_next %}
+                <a href="{{ url_for('admin.list_statement_flags', page=flags.next_num, status=status_filter, reason=reason_filter) }}"
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Next
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl shadow-sm">
+        <div class="px-6 py-12 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+            </svg>
+            <h3 class="mt-4 text-lg font-medium text-gray-900">No flags found</h3>
+            <p class="mt-2 text-gray-500">No statement flags match the selected filters.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const selectAll = document.getElementById('select-all');
+    const checkboxes = document.querySelectorAll('.flag-checkbox');
+    const selectedCount = document.getElementById('selected-count');
+    const bulkApproveBtn = document.getElementById('bulk-approve-btn');
+    const bulkDismissBtn = document.getElementById('bulk-dismiss-btn');
+
+    function updateCount() {
+        const checked = document.querySelectorAll('.flag-checkbox:checked').length;
+        if (selectedCount) selectedCount.textContent = checked + ' selected';
+        if (bulkApproveBtn) bulkApproveBtn.disabled = checked === 0;
+        if (bulkDismissBtn) bulkDismissBtn.disabled = checked === 0;
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateCount();
+        });
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateCount);
+    });
+});
+</script>
+{% endblock %}
