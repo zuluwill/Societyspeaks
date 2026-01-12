@@ -1,0 +1,51 @@
+New issue
+We notified recently active members in the python-flask project of this issue
+ISSUE
+ProgrammingError daily.today
+(psycopg2.errors.UndefinedFunction) function julianday(timestamp without time zone) does not exis...
+ID: 50fd42a7738a4ee0a638c19e65343bc9
+Jan. 12, 2026, 11:28:49 a.m. GMT
+Project	python-flask
+environment	production
+Level	error
+Exception
+
+UndefinedFunction: function julianday(timestamp without time zone) does not exist
+LINE 3: ...eason) / CAST(300.0 AS FLOAT)) * 0.7 + CASE WHEN (julianday(...
+                                                             ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+  File "sqlalchemy/engine/base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+ProgrammingError: (psycopg2.errors.UndefinedFunction) function julianday(timestamp without time zone) does not exist
+LINE 3: ...eason) / CAST(300.0 AS FLOAT)) * 0.7 + CASE WHEN (julianday(...
+                                                             ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+[SQL: SELECT daily_question_response.id AS daily_question_response_id, daily_question_response.daily_question_id AS daily_question_response_daily_question_id, daily_question_response.user_id AS daily_question_response_user_id, daily_question_response.session_fingerprint AS daily_question_response_session_fingerprint, daily_question_response.vote AS daily_question_response_vote, daily_question_response.reason AS daily_question_response_reason, daily_question_response.reason_visibility AS daily_question_response_reason_visibility, daily_question_response.voted_via_email AS daily_question_response_voted_via_email, daily_question_response.email_question_id AS daily_question...
+(12 additional frame(s) were not displayed)
+...
+  File "app/daily/routes.py", line 262, in today
+    public_reasons = get_public_reasons(question, limit=6)  # Show 6 in preview
+  File "app/daily/routes.py", line 553, in get_public_reasons
+    ).limit(sample_size).all()
+Request
+
+URL	https://societyspeaks.io/daily
+Method	GET
+User
+
+Message
+
+Unhandled Exception: (psycopg2.errors.UndefinedFunction) function julianday(timestamp without time zone) does not exist
+LINE 3: ...eason) / CAST(300.0 AS FLOAT)) * 0.7 + CASE WHEN (julianday(...
+                                                             ^
+HINT:  No function matches the given name and argument types. You might need to add explicit type casts.
+
+[SQL: SELECT daily_question_response.id AS daily_question_response_id, daily_question_response.daily_question_id AS daily_question_response_daily_question_id, daily_question_response.user_id AS daily_question_response_user_id, daily_question_response.session_fingerprint AS daily_question_response_session_fingerprint, daily_question_response.vote AS daily_question_response_vote, daily_question_response.reason AS daily_question_response_reason, daily_question_response.reason_visibility AS daily_question_response_reason_visibility, daily_question_response.voted_via_email AS daily_question_response_voted_via_email, daily_question_response.email_question...
+Tags
+
+browser = Chrome 143  browser.name = Chrome  client_os = macOS client_os.name = macOS  device = Mac  device.family = Mac environment = production  handled = yes  level = error  logger = app mechanism = logging  runtime = CPython 3.11.13  runtime.name = CPython server_name = nixos  transaction = daily.today url = https://societyspeaks.io/daily

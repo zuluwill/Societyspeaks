@@ -139,9 +139,11 @@ def create_app():
         posthog.debug = env != "production"
 
     # Initialize Talisman with simplified CSP
+    # Note: force_https=False because Replit's proxy handles HTTPS termination
+    # The proxy receives HTTPS requests and forwards them as HTTP internally
     Talisman(
         app,
-        force_https=env == 'production',
+        force_https=False,  # Replit proxy handles HTTPS
         session_cookie_secure=env == 'production',
         content_security_policy=csp,
         content_security_policy_nonce_in=None  # Disable nonces
