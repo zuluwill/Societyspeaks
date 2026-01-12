@@ -306,6 +306,138 @@
             {% endfor %}
         </div>
 
+        <!-- Same Story, Different Lens Section -->
+        {% if brief.lens_check %}
+        <article class="rounded-2xl shadow-lg border border-purple-200 overflow-hidden bg-gradient-to-br from-purple-50 to-indigo-50 mt-8">
+            <div class="p-6 sm:p-8">
+                <!-- Header -->
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-purple-600 text-white">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </span>
+                    <div>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">Same Story, Different Lens</h2>
+                        <p class="text-sm text-purple-700">How outlets across the spectrum frame the same news</p>
+                    </div>
+                </div>
+
+                <!-- Story Summary -->
+                <div class="bg-white rounded-xl p-5 mb-6 border border-purple-100">
+                    <p class="text-xs font-bold text-purple-600 uppercase tracking-wide mb-2">The Story</p>
+                    <p class="text-gray-800 font-medium leading-relaxed">{{ brief.lens_check.story_summary }}</p>
+                    {% if brief.lens_check.selection_criteria %}
+                    <p class="text-xs text-gray-500 mt-3">
+                        Based on {{ brief.lens_check.selection_criteria.total_sources }} sources 
+                        ({{ brief.lens_check.selection_criteria.left_sources }}L / {{ brief.lens_check.selection_criteria.centre_sources }}C / {{ brief.lens_check.selection_criteria.right_sources }}R)
+                    </p>
+                    {% endif %}
+                </div>
+
+                <!-- Three Perspectives Grid -->
+                <div class="grid md:grid-cols-3 gap-4 mb-6">
+                    <!-- Left Perspective -->
+                    {% if brief.lens_check.perspectives.left %}
+                    <div class="bg-white rounded-xl p-5 border-t-4 border-blue-500">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-100 text-blue-700 text-sm font-bold flex-shrink-0">L</span>
+                            <span class="text-sm font-bold text-blue-700 uppercase tracking-wide">Left</span>
+                            <span class="text-xs text-gray-500">({{ brief.lens_check.perspectives.left.source_count }} sources)</span>
+                        </div>
+                        {% if brief.lens_check.perspectives.left.emphasis %}
+                        <p class="text-xs text-gray-600 mb-3">
+                            <span class="font-semibold">Emphasis:</span> {{ brief.lens_check.perspectives.left.emphasis }}
+                        </p>
+                        {% endif %}
+                        <div class="space-y-3">
+                            {% for headline in brief.lens_check.perspectives.left.headlines %}
+                            <a href="{{ headline.url }}" target="_blank" rel="noopener" class="block group">
+                                <p class="text-sm text-gray-800 group-hover:text-blue-700 font-medium leading-snug break-words">"{{ headline.title }}"</p>
+                                <p class="text-xs text-gray-500 mt-1">— {{ headline.source }}</p>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Centre Perspective -->
+                    {% if brief.lens_check.perspectives.centre %}
+                    <div class="bg-white rounded-xl p-5 border-t-4 border-purple-500">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-100 text-purple-700 text-sm font-bold flex-shrink-0">C</span>
+                            <span class="text-sm font-bold text-purple-700 uppercase tracking-wide">Centre</span>
+                            <span class="text-xs text-gray-500">({{ brief.lens_check.perspectives.centre.source_count }} sources)</span>
+                        </div>
+                        {% if brief.lens_check.perspectives.centre.emphasis %}
+                        <p class="text-xs text-gray-600 mb-3">
+                            <span class="font-semibold">Emphasis:</span> {{ brief.lens_check.perspectives.centre.emphasis }}
+                        </p>
+                        {% endif %}
+                        <div class="space-y-3">
+                            {% for headline in brief.lens_check.perspectives.centre.headlines %}
+                            <a href="{{ headline.url }}" target="_blank" rel="noopener" class="block group">
+                                <p class="text-sm text-gray-800 group-hover:text-purple-700 font-medium leading-snug break-words">"{{ headline.title }}"</p>
+                                <p class="text-xs text-gray-500 mt-1">— {{ headline.source }}</p>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Right Perspective -->
+                    {% if brief.lens_check.perspectives.right %}
+                    <div class="bg-white rounded-xl p-5 border-t-4 border-red-500">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-100 text-red-700 text-sm font-bold flex-shrink-0">R</span>
+                            <span class="text-sm font-bold text-red-700 uppercase tracking-wide">Right</span>
+                            <span class="text-xs text-gray-500">({{ brief.lens_check.perspectives.right.source_count }} sources)</span>
+                        </div>
+                        {% if brief.lens_check.perspectives.right.emphasis %}
+                        <p class="text-xs text-gray-600 mb-3">
+                            <span class="font-semibold">Emphasis:</span> {{ brief.lens_check.perspectives.right.emphasis }}
+                        </p>
+                        {% endif %}
+                        <div class="space-y-3">
+                            {% for headline in brief.lens_check.perspectives.right.headlines %}
+                            <a href="{{ headline.url }}" target="_blank" rel="noopener" class="block group">
+                                <p class="text-sm text-gray-800 group-hover:text-red-700 font-medium leading-snug break-words">"{{ headline.title }}"</p>
+                                <p class="text-xs text-gray-500 mt-1">— {{ headline.source }}</p>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Contrast Analysis -->
+                {% if brief.lens_check.contrast_analysis %}
+                <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-5 mb-4">
+                    <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">💡 The Contrast</p>
+                    <p class="text-amber-900 leading-relaxed">{{ brief.lens_check.contrast_analysis }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Omissions -->
+                {% if brief.lens_check.omissions %}
+                <div class="bg-slate-50 border-l-4 border-slate-400 rounded-r-lg p-5 mb-4">
+                    <p class="text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">🔍 What's Missing</p>
+                    <p class="text-slate-700 leading-relaxed">{{ brief.lens_check.omissions }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Methodology Note -->
+                <div class="text-center pt-4 border-t border-purple-100">
+                    <p class="text-xs text-gray-500">
+                        Source classifications based on <a href="https://allsides.com/media-bias" target="_blank" rel="noopener" class="text-purple-600 hover:underline">AllSides media bias ratings</a>.
+                        <a href="{{ url_for('brief.methodology') }}" class="text-purple-600 hover:underline ml-1">Learn more about our methodology</a>.
+                    </p>
+                </div>
+            </div>
+        </article>
+        {% endif %}
+
         <!-- Support Message -->
         <div class="bg-gradient-to-br from-blue-800 to-indigo-900 rounded-2xl shadow-xl p-8 mt-8 text-center">
             <div class="max-w-xl mx-auto">

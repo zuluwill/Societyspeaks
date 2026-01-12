@@ -105,6 +105,73 @@
                 </div>
                 {% endfor %}
             </div>
+
+            <!-- Lens Check Preview -->
+            {% if brief.lens_check %}
+            <div class="p-6 bg-purple-50 border-t border-purple-200">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-600 text-white text-sm">👁</span>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">Same Story, Different Lens</h3>
+                        <p class="text-xs text-purple-600">Cross-perspective headline comparison</p>
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-4 mb-4">
+                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-1">Story Summary</p>
+                    <p class="text-gray-800">{{ brief.lens_check.story_summary }}</p>
+                    {% if brief.lens_check.selection_criteria %}
+                    <p class="text-xs text-gray-500 mt-2">
+                        Sources: {{ brief.lens_check.selection_criteria.total_sources }} total 
+                        ({{ brief.lens_check.selection_criteria.left_sources }}L / 
+                        {{ brief.lens_check.selection_criteria.centre_sources }}C / 
+                        {{ brief.lens_check.selection_criteria.right_sources }}R) • 
+                        Balance: {{ (brief.lens_check.selection_criteria.coverage_balance_score * 100)|int }}%
+                    </p>
+                    {% endif %}
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-3 mb-4">
+                    {% for perspective, color in [('left', 'blue'), ('centre', 'purple'), ('right', 'red')] %}
+                    {% if brief.lens_check.perspectives.get(perspective) %}
+                    <div class="bg-white rounded-lg p-3 border-t-4 border-{{ color }}-500">
+                        <p class="text-xs font-bold text-{{ color }}-700 uppercase mb-2">
+                            {{ perspective|upper }} ({{ brief.lens_check.perspectives[perspective].source_count }})
+                        </p>
+                        {% if brief.lens_check.perspectives[perspective].emphasis %}
+                        <p class="text-xs text-gray-600 mb-2">Emphasis: {{ brief.lens_check.perspectives[perspective].emphasis }}</p>
+                        {% endif %}
+                        {% for headline in brief.lens_check.perspectives[perspective].headlines %}
+                        <p class="text-sm text-gray-800 mb-1">"{{ headline.title[:60] }}..."</p>
+                        <p class="text-xs text-gray-500 mb-2">— {{ headline.source }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+                {% if brief.lens_check.contrast_analysis %}
+                <div class="bg-amber-50 border-l-4 border-amber-400 p-3 rounded mb-3">
+                    <p class="text-xs font-bold text-amber-700 uppercase mb-1">Contrast</p>
+                    <p class="text-sm text-amber-900">{{ brief.lens_check.contrast_analysis }}</p>
+                </div>
+                {% endif %}
+
+                {% if brief.lens_check.omissions %}
+                <div class="bg-gray-50 border-l-4 border-gray-400 p-3 rounded">
+                    <p class="text-xs font-bold text-gray-600 uppercase mb-1">What's Missing</p>
+                    <p class="text-sm text-gray-700">{{ brief.lens_check.omissions }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="p-6 bg-gray-50 border-t border-gray-200">
+                <p class="text-sm text-gray-500 italic">
+                    📭 No "Same Story, Different Lens" section for this brief. 
+                    This happens when no story has sufficient cross-spectrum coverage (≥2 sources per perspective).
+                </p>
+            </div>
+            {% endif %}
         </div>
 
         <div class="bg-white rounded-xl shadow-md p-6">

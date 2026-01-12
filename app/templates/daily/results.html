@@ -134,29 +134,205 @@
             
             {% if public_reasons and public_reasons|length > 0 %}
             <div class="border-t pt-6 mb-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">What Others Are Saying</h3>
-                <div class="space-y-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        What Others Are Saying
+                        {% if reasons_stats and reasons_stats.total_count > 0 %}
+                        <span class="text-sm font-normal text-gray-500 ml-2">
+                            (Showing {{ public_reasons|length }} of {{ reasons_stats.total_count }})
+                        </span>
+                        {% endif %}
+                    </h3>
+                    {% if reasons_stats and reasons_stats.total_count > public_reasons|length %}
+                    <button onclick="openCommentsModal()" class="text-sm text-blue-600 hover:text-blue-800 font-medium transition flex items-center gap-1">
+                        View All {{ reasons_stats.total_count }}
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                    {% endif %}
+                </div>
+
+                {% if reasons_stats %}
+                <div class="flex flex-wrap gap-2 mb-4 text-xs">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 text-blue-700">
+                        <span class="w-2 h-2 bg-blue-600 rounded-full mr-1"></span>
+                        {{ reasons_stats.agree_count }} Agree
+                    </span>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full bg-red-100 text-red-700">
+                        <span class="w-2 h-2 bg-red-600 rounded-full mr-1"></span>
+                        {{ reasons_stats.disagree_count }} Disagree
+                    </span>
+                    <span class="inline-flex items-center px-2 py-1 rounded-full bg-yellow-100 text-yellow-700">
+                        <span class="w-2 h-2 bg-yellow-600 rounded-full mr-1"></span>
+                        {{ reasons_stats.unsure_count }} Unsure
+                    </span>
+                </div>
+                {% endif %}
+
+                <!-- Desktop: Vertical Stack -->
+                <div class="hidden sm:block space-y-4">
                     {% for response in public_reasons %}
                     {% if not user_response or response.id != user_response.id %}
-                    <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="bg-gray-50 rounded-lg p-4 relative group">
                         <div class="flex items-start gap-3">
                             <span class="text-2xl flex-shrink-0">{{ response.vote_emoji }}</span>
                             <div class="flex-1 min-w-0">
                                 <p class="text-gray-700 text-sm">{{ response.reason }}</p>
-                                <p class="text-xs text-gray-400 mt-2">
-                                    {% if response.reason_visibility == 'public_named' and response.user %}
-                                        {{ response.user.display_name or 'Anonymous' }}
-                                    {% else %}
-                                        Anonymous participant
-                                    {% endif %}
-                                </p>
+                                <div class="flex items-center justify-between mt-2">
+                                    <p class="text-xs text-gray-400">
+                                        {% if response.reason_visibility == 'public_named' and response.user %}
+                                            {{ response.user.display_name or 'Anonymous' }}
+                                        {% else %}
+                                            Anonymous participant
+                                        {% endif %}
+                                    </p>
+                                    <button onclick="openReportModal({{ response.id }})"
+                                            class="text-xs text-gray-400 hover:text-red-600 transition opacity-0 group-hover:opacity-100 flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                                        </svg>
+                                        Report
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                     {% endif %}
                     {% endfor %}
                 </div>
+
+                <!-- Mobile: Horizontal Swipeable Carousel -->
+                <div class="sm:hidden">
+                    <div class="relative">
+                        <!-- Carousel Container -->
+                        <div id="comments-carousel" class="overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-smooth flex gap-4 pb-4 -mx-4 px-4">
+                            {% for response in public_reasons %}
+                            {% if not user_response or response.id != user_response.id %}
+                            <div class="bg-gray-50 rounded-lg p-4 snap-start flex-shrink-0 w-[85%]">
+                                <div class="flex items-start gap-3">
+                                    <span class="text-2xl flex-shrink-0">{{ response.vote_emoji }}</span>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-gray-700 text-sm">{{ response.reason }}</p>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <p class="text-xs text-gray-400">
+                                                {% if response.reason_visibility == 'public_named' and response.user %}
+                                                    {{ response.user.display_name or 'Anonymous' }}
+                                                {% else %}
+                                                    Anonymous participant
+                                                {% endif %}
+                                            </p>
+                                            <button onclick="openReportModal({{ response.id }})"
+                                                    class="text-xs text-gray-400 hover:text-red-600 transition flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                                                </svg>
+                                                Report
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Scroll Indicator Dots -->
+                        <div class="flex justify-center gap-2 mt-3">
+                            {% set visible_reasons = public_reasons|selectattr('id', 'ne', user_response.id if user_response else -1)|list %}
+                            {% for response in visible_reasons %}
+                            <div class="carousel-dot w-2 h-2 rounded-full bg-gray-300 transition-all duration-200" data-index="{{ loop.index0 }}"></div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Swipe Hint (shows once) -->
+                        <div id="swipe-hint" class="absolute top-1/2 right-4 -translate-y-1/2 pointer-events-none opacity-0 animate-fade-in-out">
+                            <div class="bg-blue-600 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                                Swipe for more
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Carousel JavaScript -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const carousel = document.getElementById('comments-carousel');
+                    const dots = document.querySelectorAll('.carousel-dot');
+                    const swipeHint = document.getElementById('swipe-hint');
+
+                    if (!carousel || dots.length === 0) return;
+
+                    // Show swipe hint on first visit
+                    const hasSeenHint = localStorage.getItem('hasSeenCommentsSwipeHint');
+                    if (!hasSeenHint && dots.length > 1) {
+                        setTimeout(() => {
+                            swipeHint.style.opacity = '1';
+                            setTimeout(() => {
+                                swipeHint.style.opacity = '0';
+                                localStorage.setItem('hasSeenCommentsSwipeHint', 'true');
+                            }, 2000);
+                        }, 500);
+                    }
+
+                    // Update active dot based on scroll position
+                    function updateActiveDot() {
+                        const scrollLeft = carousel.scrollLeft;
+                        const cardWidth = carousel.children[0]?.offsetWidth + 16; // card width + gap
+                        const activeIndex = Math.round(scrollLeft / cardWidth);
+
+                        dots.forEach((dot, index) => {
+                            if (index === activeIndex) {
+                                dot.classList.remove('bg-gray-300');
+                                dot.classList.add('bg-blue-600', 'w-6');
+                            } else {
+                                dot.classList.remove('bg-blue-600', 'w-6');
+                                dot.classList.add('bg-gray-300');
+                            }
+                        });
+                    }
+
+                    // Smooth scroll on dot click
+                    dots.forEach((dot, index) => {
+                        dot.classList.add('cursor-pointer');
+                        dot.addEventListener('click', () => {
+                            const cardWidth = carousel.children[0]?.offsetWidth + 16;
+                            carousel.scrollTo({
+                                left: index * cardWidth,
+                                behavior: 'smooth'
+                            });
+                        });
+                    });
+
+                    // Update on scroll
+                    carousel.addEventListener('scroll', updateActiveDot);
+
+                    // Initialize
+                    updateActiveDot();
+                });
+            </script>
+
+            <!-- Animations CSS -->
+            <style>
+                .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                }
+                .scrollbar-hide {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                }
+                @keyframes fade-in-out {
+                    0%, 100% { opacity: 0; }
+                    20%, 80% { opacity: 1; }
+                }
+                .animate-fade-in-out {
+                    animation: fade-in-out 3s ease-in-out;
+                }
+            </style>
             {% endif %}
 
             <div class="border-t pt-6">
@@ -412,5 +588,235 @@
         </div>
     </div>
 </div>
+
+<!-- Comments Modal -->
+<div id="comments-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+    <div id="comments-modal-content" class="transform transition-all duration-200 scale-95">
+        <!-- Content will be loaded here -->
+    </div>
+</div>
+
+<!-- Modal JavaScript -->
+<script>
+    const modal = document.getElementById('comments-modal');
+    const modalContent = document.getElementById('comments-modal-content');
+    const questionDate = '{{ question.question_date.strftime("%Y-%m-%d") }}';
+
+    function openCommentsModal() {
+        // Fetch all comments
+        fetch(`/daily/${questionDate}/comments`)
+            .then(response => response.text())
+            .then(html => {
+                modalContent.innerHTML = html;
+                modal.classList.remove('hidden');
+                // Trigger animation
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modalContent.querySelector('[class*="scale"]').classList.remove('scale-95');
+                    modalContent.querySelector('[class*="scale"]').classList.add('scale-100');
+                }, 10);
+                // Prevent body scroll
+                document.body.style.overflow = 'hidden';
+            })
+            .catch(error => {
+                console.error('Error loading comments:', error);
+                alert('Failed to load comments. Please try again.');
+            });
+    }
+
+    function closeCommentsModal() {
+        modal.classList.add('opacity-0');
+        modalContent.querySelector('[class*="scale"]')?.classList.remove('scale-100');
+        modalContent.querySelector('[class*="scale"]')?.classList.add('scale-95');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modalContent.innerHTML = '';
+            document.body.style.overflow = '';
+        }, 200);
+    }
+
+    // Close on background click
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeCommentsModal();
+        }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+            closeCommentsModal();
+        }
+    });
+</script>
+
+<!-- Report Modal -->
+<div id="report-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all duration-200 scale-95" id="report-modal-content">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-gray-900">Report Response</h3>
+            <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <p class="text-sm text-gray-600 mb-4">Help us maintain a respectful community. Why are you reporting this response?</p>
+
+        <form id="report-form" class="space-y-4">
+            <input type="hidden" id="report-response-id" name="response_id">
+
+            <div class="space-y-2">
+                <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                    <input type="radio" name="reason" value="spam" class="mt-1 mr-3" required>
+                    <div>
+                        <div class="font-medium text-gray-900">Spam</div>
+                        <div class="text-xs text-gray-500">Unwanted commercial content or repetitive posts</div>
+                    </div>
+                </label>
+
+                <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                    <input type="radio" name="reason" value="harassment" class="mt-1 mr-3" required>
+                    <div>
+                        <div class="font-medium text-gray-900">Harassment or Hate Speech</div>
+                        <div class="text-xs text-gray-500">Abusive, threatening, or discriminatory content</div>
+                    </div>
+                </label>
+
+                <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                    <input type="radio" name="reason" value="misinformation" class="mt-1 mr-3" required>
+                    <div>
+                        <div class="font-medium text-gray-900">Misinformation</div>
+                        <div class="text-xs text-gray-500">False or misleading information</div>
+                    </div>
+                </label>
+
+                <label class="flex items-start p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                    <input type="radio" name="reason" value="other" class="mt-1 mr-3" required>
+                    <div>
+                        <div class="font-medium text-gray-900">Other</div>
+                        <div class="text-xs text-gray-500">Something else that violates community guidelines</div>
+                    </div>
+                </label>
+            </div>
+
+            <div>
+                <label for="report-details" class="block text-sm font-medium text-gray-700 mb-1">
+                    Additional details (optional)
+                </label>
+                <textarea id="report-details" name="details" rows="3" maxlength="500"
+                          class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Provide any additional context..."></textarea>
+            </div>
+
+            <div class="flex gap-3">
+                <button type="button" onclick="closeReportModal()"
+                        class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium">
+                    Submit Report
+                </button>
+            </div>
+        </form>
+
+        <div id="report-success" class="hidden text-center py-8">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+            <h4 class="text-lg font-bold text-gray-900 mb-2">Report Submitted</h4>
+            <p class="text-sm text-gray-600 mb-4">Thank you for helping maintain our community standards. We'll review this report promptly.</p>
+            <button onclick="closeReportModal()"
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Report Modal JavaScript -->
+<script>
+    const reportModal = document.getElementById('report-modal');
+    const reportModalContent = document.getElementById('report-modal-content');
+    const reportForm = document.getElementById('report-form');
+    const reportSuccess = document.getElementById('report-success');
+
+    function openReportModal(responseId) {
+        document.getElementById('report-response-id').value = responseId;
+        reportForm.classList.remove('hidden');
+        reportSuccess.classList.add('hidden');
+        reportForm.reset();
+
+        reportModal.classList.remove('hidden');
+        setTimeout(() => {
+            reportModal.classList.remove('opacity-0');
+            reportModalContent.classList.remove('scale-95');
+            reportModalContent.classList.add('scale-100');
+        }, 10);
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeReportModal() {
+        reportModal.classList.add('opacity-0');
+        reportModalContent.classList.remove('scale-100');
+        reportModalContent.classList.add('scale-95');
+        setTimeout(() => {
+            reportModal.classList.add('hidden');
+            reportForm.reset();
+            document.body.style.overflow = '';
+        }, 200);
+    }
+
+    // Handle report form submission
+    reportForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(reportForm);
+        const data = {
+            response_id: formData.get('response_id'),
+            reason: formData.get('reason'),
+            details: formData.get('details')
+        };
+
+        fetch('/daily/report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                reportForm.classList.add('hidden');
+                reportSuccess.classList.remove('hidden');
+            } else {
+                alert(result.message || 'Failed to submit report. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error submitting report:', error);
+            alert('Failed to submit report. Please try again.');
+        });
+    });
+
+    // Close on background click
+    reportModal.addEventListener('click', function(e) {
+        if (e.target === reportModal) {
+            closeReportModal();
+        }
+    });
+
+    // Close on Escape key (for report modal too)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !reportModal.classList.contains('hidden')) {
+            closeReportModal();
+        }
+    });
+</script>
 
 {% endblock %}

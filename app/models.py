@@ -1152,6 +1152,11 @@ class DailyBrief(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     published_at = db.Column(db.DateTime)
 
+    # "Same Story, Different Lens" cross-perspective analysis
+    # Shows how left/centre/right outlets frame the same story differently
+    # Generated automatically during brief creation - see app/brief/lens_check.py
+    lens_check = db.Column(db.JSON)
+
     # Relationships
     items = db.relationship('BriefItem', backref='brief', lazy='dynamic',
                            cascade='all, delete-orphan', order_by='BriefItem.position')
@@ -1189,6 +1194,7 @@ class DailyBrief(db.Model):
             'status': self.status,
             'item_count': self.item_count,
             'items': [item.to_dict() for item in self.items.order_by(BriefItem.position)],
+            'lens_check': self.lens_check,
             'published_at': self.published_at.isoformat() if self.published_at else None,
             'created_at': self.created_at.isoformat()
         }
@@ -1920,11 +1926,19 @@ class DailyQuestionResponse(db.Model):
     # If user clicks old email link, this will differ from daily_question_id
     email_question_id = db.Column(db.Integer, db.ForeignKey('daily_question.id'), nullable=True)
 
+    # Moderation flags
+    is_hidden = db.Column(db.Boolean, default=False)  # Hidden by admin or auto-flagged
+    flag_count = db.Column(db.Integer, default=0)  # Number of user flags
+    reviewed_by_admin = db.Column(db.Boolean, default=False)  # Admin has reviewed
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    reviewed_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     daily_question = db.relationship('DailyQuestion', foreign_keys=[daily_question_id], backref='responses')
     email_question = db.relationship('DailyQuestion', foreign_keys=[email_question_id], backref='email_responses')
-    user = db.relationship('User', backref='daily_question_responses')
+    user = db.relationship('User', foreign_keys=[user_id], backref='daily_question_responses')
+    reviewed_by = db.relationship('User', foreign_keys=[reviewed_by_user_id], backref='reviewed_comments')
     
     @validates('vote')
     def validate_vote(self, key, vote):
@@ -1981,6 +1995,59 @@ class DailyQuestionResponse(db.Model):
     
     def __repr__(self):
         return f'<DailyQuestionResponse {self.vote_label} on Q#{self.daily_question_id}>'
+
+
+class DailyQuestionResponseFlag(db.Model):
+    """
+    User flags for inappropriate daily question responses.
+    Enables community moderation and admin review.
+    """
+    __tablename__ = 'daily_question_response_flag'
+    __table_args__ = (
+        db.Index('idx_dqrf_response', 'response_id'),
+        db.Index('idx_dqrf_status', 'status'),
+        db.Index('idx_dqrf_created', 'created_at'),
+        # Prevent duplicate flags from same user on same response
+        db.UniqueConstraint('response_id', 'flagged_by_fingerprint', name='uq_response_flag_fingerprint'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    response_id = db.Column(db.Integer, db.ForeignKey('daily_question_response.id'), nullable=False)
+
+    # Who flagged (can be anonymous via fingerprint)
+    flagged_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    flagged_by_fingerprint = db.Column(db.String(64), nullable=True)
+
+    # Flag details
+    reason = db.Column(db.String(50), nullable=False)  # 'spam', 'harassment', 'misinformation', 'other'
+    details = db.Column(db.String(500), nullable=True)  # Optional explanation
+
+    # Status tracking
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'reviewed_valid', 'reviewed_invalid', 'dismissed'
+    reviewed_at = db.Column(db.DateTime, nullable=True)
+    reviewed_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    review_notes = db.Column(db.String(500), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    response = db.relationship('DailyQuestionResponse', backref='flags')
+    flagged_by = db.relationship('User', foreign_keys=[flagged_by_user_id], backref='flags_submitted')
+    reviewed_by = db.relationship('User', foreign_keys=[reviewed_by_user_id], backref='flags_reviewed')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'response_id': self.response_id,
+            'reason': self.reason,
+            'details': self.details,
+            'status': self.status,
+            'created_at': self.created_at.isoformat(),
+            'reviewed_at': self.reviewed_at.isoformat() if self.reviewed_at else None
+        }
+
+    def __repr__(self):
+        return f'<DailyQuestionResponseFlag {self.reason} on Response#{self.response_id}>'
 
 
 class DailyQuestionSubscriber(db.Model):

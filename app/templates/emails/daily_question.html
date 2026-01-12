@@ -85,22 +85,23 @@
                         Tap to vote:
                     </td>
                 </tr>
-                <tr>
+                <!-- Desktop: Horizontal row (hidden on mobile) -->
+                <tr class="vote-buttons-row">
                     <td align="center">
                         <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                             <tr>
                                 <td style="padding: 0 6px;">
-                                    <a href="{{ vote_agree_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #2563eb; border-radius: 8px;">
+                                    <a href="{{ vote_agree_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #2563eb; border-radius: 8px; white-space: nowrap;">
                                         &#10003; Agree
                                     </a>
                                 </td>
                                 <td style="padding: 0 6px;">
-                                    <a href="{{ vote_disagree_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #dc2626; border-radius: 8px;">
+                                    <a href="{{ vote_disagree_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #dc2626; border-radius: 8px; white-space: nowrap;">
                                         &#10007; Disagree
                                     </a>
                                 </td>
                                 <td style="padding: 0 6px;">
-                                    <a href="{{ vote_unsure_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #d97706; border-radius: 8px;">
+                                    <a href="{{ vote_unsure_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 24px; background-color: #d97706; border-radius: 8px; white-space: nowrap;">
                                         ? Unsure
                                     </a>
                                 </td>
@@ -108,6 +109,36 @@
                         </table>
                     </td>
                 </tr>
+                <!-- Mobile: Stacked buttons (hidden on desktop, shown on mobile via media query) -->
+                <!--[if !mso]><!-->
+                <tr>
+                    <td align="center">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="vote-buttons-stack" style="display: none; max-width: 280px; margin: 0 auto;">
+                            <tr>
+                                <td style="padding-bottom: 10px;">
+                                    <a href="{{ vote_agree_url }}" target="_blank" class="vote-btn-mobile" style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 24px; background-color: #2563eb; border-radius: 8px; text-align: center; white-space: nowrap;">
+                                        &#10003; Agree
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom: 10px;">
+                                    <a href="{{ vote_disagree_url }}" target="_blank" class="vote-btn-mobile" style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 24px; background-color: #dc2626; border-radius: 8px; text-align: center; white-space: nowrap;">
+                                        &#10007; Disagree
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <a href="{{ vote_unsure_url }}" target="_blank" class="vote-btn-mobile" style="display: block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 16px 24px; background-color: #d97706; border-radius: 8px; text-align: center; white-space: nowrap;">
+                                        ? Unsure
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <!--<![endif]-->
             </table>
         </td>
     </tr>
