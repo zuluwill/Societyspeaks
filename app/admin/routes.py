@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic
+from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from app.admin.forms import UserAssignmentForm
 from functools import wraps
@@ -997,5 +997,352 @@ def resend_daily_question(subscriber_id):
     except Exception as e:
         current_app.logger.error(f"Resend daily question failed: {e}")
         flash(f'Error: {str(e)}', 'error')
-    
+
     return redirect(url_for('admin.list_daily_subscribers'))
+
+
+# ============================================================================
+# FLAG MODERATION ROUTES
+# ============================================================================
+
+@admin_bp.route('/flags/statements')
+@login_required
+@admin_required
+def list_statement_flags():
+    """View all statement flags for admin review"""
+    from sqlalchemy import func
+
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    status_filter = request.args.get('status', 'pending')
+    reason_filter = request.args.get('reason', None)
+
+    # Build query
+    query = StatementFlag.query.options(
+        joinedload(StatementFlag.statement),
+        joinedload(StatementFlag.flagger),
+        joinedload(StatementFlag.reviewer)
+    )
+
+    # Apply filters
+    if status_filter and status_filter != 'all':
+        query = query.filter(StatementFlag.status == status_filter)
+
+    if reason_filter and reason_filter != 'all':
+        query = query.filter(StatementFlag.flag_reason == reason_filter)
+
+    # Order by newest first
+    query = query.order_by(StatementFlag.created_at.desc())
+
+    # Paginate
+    flags = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # Get counts for summary
+    pending_count = StatementFlag.query.filter_by(status='pending').count()
+    reviewed_count = StatementFlag.query.filter_by(status='reviewed').count()
+    dismissed_count = StatementFlag.query.filter_by(status='dismissed').count()
+
+    return render_template(
+        'admin/flags/statement_flags.html',
+        flags=flags,
+        status_filter=status_filter,
+        reason_filter=reason_filter,
+        pending_count=pending_count,
+        reviewed_count=reviewed_count,
+        dismissed_count=dismissed_count
+    )
+
+
+@admin_bp.route('/flags/statements/<int:flag_id>/review', methods=['POST'])
+@login_required
+@admin_required
+def review_statement_flag(flag_id):
+    """Review a single statement flag"""
+    flag = StatementFlag.query.get_or_404(flag_id)
+    action = request.form.get('action')  # 'approve', 'dismiss'
+    review_notes = request.form.get('review_notes', '')
+
+    try:
+        statement = flag.statement
+        if not statement:
+            flash('Statement no longer exists.', 'error')
+            return redirect(url_for('admin.list_statement_flags'))
+
+        if action == 'approve':
+            flag.status = 'reviewed'
+            statement.is_deleted = True
+            statement.mod_status = -1  # Mark as rejected for consistency
+            flash_msg = 'Flag approved and statement marked as deleted.'
+        elif action == 'dismiss':
+            flag.status = 'dismissed'
+            flash_msg = 'Flag dismissed.'
+        else:
+            flash('Invalid action.', 'error')
+            return redirect(url_for('admin.list_statement_flags'))
+
+        flag.reviewed_by_user_id = current_user.id
+        flag.reviewed_at = datetime.utcnow()
+        if review_notes:
+            flag.additional_context = review_notes
+
+        db.session.commit()
+        current_app.logger.info(f"Admin {current_user.username} {action}ed statement flag {flag_id}")
+        flash(flash_msg, 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error reviewing statement flag {flag_id}: {e}")
+        flash('Error reviewing flag. Please try again.', 'error')
+
+    return redirect(url_for('admin.list_statement_flags'))
+
+
+@admin_bp.route('/flags/statements/bulk-review', methods=['POST'])
+@login_required
+@admin_required
+def bulk_review_statement_flags():
+    """Bulk review statement flags"""
+    flag_ids = request.form.getlist('flag_ids')
+    action = request.form.get('action')  # 'approve', 'dismiss'
+
+    if not flag_ids:
+        flash('No flags selected.', 'warning')
+        return redirect(url_for('admin.list_statement_flags'))
+
+    if action not in ['approve', 'dismiss']:
+        flash('Invalid action.', 'error')
+        return redirect(url_for('admin.list_statement_flags'))
+
+    processed = 0
+    skipped = 0
+    try:
+        for flag_id in flag_ids:
+            flag = StatementFlag.query.get(int(flag_id))
+            if not flag or flag.status != 'pending':
+                skipped += 1
+                continue
+
+            statement = flag.statement
+            if not statement:
+                skipped += 1
+                continue
+
+            if action == 'approve':
+                flag.status = 'reviewed'
+                statement.is_deleted = True
+                statement.mod_status = -1
+            else:
+                flag.status = 'dismissed'
+
+            flag.reviewed_by_user_id = current_user.id
+            flag.reviewed_at = datetime.utcnow()
+            processed += 1
+
+        db.session.commit()
+        action_word = 'approved' if action == 'approve' else 'dismissed'
+
+        msg_parts = [f'{processed} flag(s) {action_word}']
+        if skipped > 0:
+            msg_parts.append(f'{skipped} skipped (already reviewed or deleted)')
+
+        flash('. '.join(msg_parts) + '.', 'success')
+        current_app.logger.info(f"Admin {current_user.username} bulk {action_word} {processed} statement flags ({skipped} skipped)")
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error bulk reviewing statement flags: {e}")
+        flash('Error processing flags. Please try again.', 'error')
+
+    return redirect(url_for('admin.list_statement_flags'))
+
+
+@admin_bp.route('/flags/responses')
+@login_required
+@admin_required
+def list_response_flags():
+    """View all daily question response flags for admin review"""
+    from sqlalchemy import func
+
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    status_filter = request.args.get('status', 'pending')
+    reason_filter = request.args.get('reason', None)
+
+    # Build query
+    query = DailyQuestionResponseFlag.query.options(
+        joinedload(DailyQuestionResponseFlag.response).joinedload(DailyQuestionResponse.daily_question),
+        joinedload(DailyQuestionResponseFlag.flagged_by),
+        joinedload(DailyQuestionResponseFlag.reviewed_by)
+    )
+
+    # Apply filters
+    if status_filter and status_filter != 'all':
+        query = query.filter(DailyQuestionResponseFlag.status == status_filter)
+
+    if reason_filter and reason_filter != 'all':
+        query = query.filter(DailyQuestionResponseFlag.reason == reason_filter)
+
+    # Order by newest first
+    query = query.order_by(DailyQuestionResponseFlag.created_at.desc())
+
+    # Paginate
+    flags = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    # Get counts for summary
+    pending_count = DailyQuestionResponseFlag.query.filter_by(status='pending').count()
+    reviewed_valid_count = DailyQuestionResponseFlag.query.filter_by(status='reviewed_valid').count()
+    reviewed_invalid_count = DailyQuestionResponseFlag.query.filter_by(status='reviewed_invalid').count()
+    dismissed_count = DailyQuestionResponseFlag.query.filter_by(status='dismissed').count()
+
+    return render_template(
+        'admin/flags/response_flags.html',
+        flags=flags,
+        status_filter=status_filter,
+        reason_filter=reason_filter,
+        pending_count=pending_count,
+        reviewed_valid_count=reviewed_valid_count,
+        reviewed_invalid_count=reviewed_invalid_count,
+        dismissed_count=dismissed_count
+    )
+
+
+@admin_bp.route('/flags/responses/<int:flag_id>/review', methods=['POST'])
+@login_required
+@admin_required
+def review_response_flag(flag_id):
+    """Review a single response flag and take action"""
+    flag = DailyQuestionResponseFlag.query.get_or_404(flag_id)
+    action = request.form.get('action')  # 'valid', 'invalid', 'dismiss'
+    review_notes = request.form.get('review_notes', '')
+
+    try:
+        response = flag.response
+        if not response:
+            flash('Response no longer exists.', 'error')
+            return redirect(url_for('admin.list_response_flags'))
+
+        if action == 'valid':
+            flag.status = 'reviewed_valid'
+            response.is_hidden = True
+            response.reviewed_by_admin = True
+            response.reviewed_at = datetime.utcnow()
+            response.reviewed_by_user_id = current_user.id
+            flash_msg = 'Flag validated and response hidden.'
+        elif action == 'invalid':
+            flag.status = 'reviewed_invalid'
+
+            # CRITICAL: Only restore if NO OTHER valid flags exist
+            other_valid_flags = DailyQuestionResponseFlag.query.filter(
+                DailyQuestionResponseFlag.response_id == response.id,
+                DailyQuestionResponseFlag.id != flag_id,
+                DailyQuestionResponseFlag.status.in_(['pending', 'reviewed_valid'])
+            ).count()
+
+            if other_valid_flags == 0:
+                response.is_hidden = False
+                flash_msg = 'Flag marked as invalid. Response restored.'
+            else:
+                flash_msg = f'Flag marked as invalid, but response remains hidden ({other_valid_flags} other flag(s) pending/valid).'
+
+            response.reviewed_by_admin = True
+            response.reviewed_at = datetime.utcnow()
+            response.reviewed_by_user_id = current_user.id
+        elif action == 'dismiss':
+            flag.status = 'dismissed'
+            flash_msg = 'Flag dismissed.'
+        else:
+            flash('Invalid action.', 'error')
+            return redirect(url_for('admin.list_response_flags'))
+
+        flag.reviewed_by_user_id = current_user.id
+        flag.reviewed_at = datetime.utcnow()
+        if review_notes:
+            flag.review_notes = review_notes
+
+        db.session.commit()
+        current_app.logger.info(f"Admin {current_user.username} marked response flag {flag_id} as {action}")
+        flash(flash_msg, 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error reviewing response flag {flag_id}: {e}")
+        flash('Error reviewing flag. Please try again.', 'error')
+
+    return redirect(url_for('admin.list_response_flags'))
+
+
+@admin_bp.route('/flags/responses/bulk-review', methods=['POST'])
+@login_required
+@admin_required
+def bulk_review_response_flags():
+    """Bulk review response flags"""
+    flag_ids = request.form.getlist('flag_ids')
+    action = request.form.get('action')  # 'valid', 'invalid', 'dismiss'
+
+    if not flag_ids:
+        flash('No flags selected.', 'warning')
+        return redirect(url_for('admin.list_response_flags'))
+
+    if action not in ['valid', 'invalid', 'dismiss']:
+        flash('Invalid action.', 'error')
+        return redirect(url_for('admin.list_response_flags'))
+
+    processed = 0
+    skipped = 0
+    try:
+        for flag_id in flag_ids:
+            flag = DailyQuestionResponseFlag.query.get(int(flag_id))
+            if not flag or flag.status != 'pending':
+                skipped += 1
+                continue
+
+            response = flag.response
+            if not response:
+                skipped += 1
+                continue
+
+            if action == 'valid':
+                flag.status = 'reviewed_valid'
+                response.is_hidden = True
+                response.reviewed_by_admin = True
+                response.reviewed_at = datetime.utcnow()
+                response.reviewed_by_user_id = current_user.id
+            elif action == 'invalid':
+                flag.status = 'reviewed_invalid'
+
+                # CRITICAL: Only restore if NO OTHER valid flags exist
+                other_valid_flags = DailyQuestionResponseFlag.query.filter(
+                    DailyQuestionResponseFlag.response_id == response.id,
+                    DailyQuestionResponseFlag.id != flag.id,
+                    DailyQuestionResponseFlag.status.in_(['pending', 'reviewed_valid'])
+                ).count()
+
+                if other_valid_flags == 0:
+                    response.is_hidden = False
+
+                response.reviewed_by_admin = True
+                response.reviewed_at = datetime.utcnow()
+                response.reviewed_by_user_id = current_user.id
+            else:
+                flag.status = 'dismissed'
+
+            flag.reviewed_by_user_id = current_user.id
+            flag.reviewed_at = datetime.utcnow()
+            processed += 1
+
+        db.session.commit()
+        action_msg = {
+            'valid': 'validated',
+            'invalid': 'marked invalid',
+            'dismiss': 'dismissed'
+        }.get(action, 'processed')
+
+        msg_parts = [f'{processed} flag(s) {action_msg}']
+        if skipped > 0:
+            msg_parts.append(f'{skipped} skipped (already reviewed or deleted)')
+
+        flash('. '.join(msg_parts) + '.', 'success')
+        current_app.logger.info(f"Admin {current_user.username} bulk {action_msg} {processed} response flags ({skipped} skipped)")
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error bulk reviewing response flags: {e}")
+        flash('Error processing flags. Please try again.', 'error')
+
+    return redirect(url_for('admin.list_response_flags'))
