@@ -8,7 +8,7 @@ from app.daily.constants import (
     VALID_VISIBILITY_OPTIONS, DEFAULT_EMAIL_VOTE_VISIBILITY
 )
 from app import db, limiter
-from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant
+from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionResponseFlag, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant
 import hashlib
 import re
 import secrets
@@ -259,7 +259,8 @@ def today():
     
     if has_voted:
         participation_data = get_discussion_participation_data(question)
-        public_reasons = get_public_reasons(question)
+        public_reasons = get_public_reasons(question, limit=6)  # Show 6 in preview
+        reasons_stats = get_public_reasons_stats(question)
         return render_template('daily/results.html',
                              question=question,
                              user_response=user_response,
@@ -271,7 +272,8 @@ def today():
                              source_articles=get_source_articles(question),
                              related_discussions=get_related_discussions(question),
                              participation=participation_data,
-                             public_reasons=public_reasons)
+                             public_reasons=public_reasons,
+                             reasons_stats=reasons_stats)
     else:
         return render_template('daily/question.html',
                              question=question)
@@ -298,7 +300,8 @@ def by_date(date_str):
     
     if has_voted or not is_today:
         participation_data = get_discussion_participation_data(question)
-        public_reasons = get_public_reasons(question)
+        public_reasons = get_public_reasons(question, limit=6)  # Show 6 in preview
+        reasons_stats = get_public_reasons_stats(question)
         return render_template('daily/results.html',
                              question=question,
                              user_response=user_response,
@@ -311,10 +314,38 @@ def by_date(date_str):
                              source_articles=get_source_articles(question),
                              related_discussions=get_related_discussions(question),
                              participation=participation_data,
-                             public_reasons=public_reasons)
+                             public_reasons=public_reasons,
+                             reasons_stats=reasons_stats)
     else:
         return render_template('daily/question.html',
                              question=question)
+
+
+@daily_bp.route('/daily/<date_str>/comments')
+def view_all_comments(date_str):
+    """View all comments for a daily question (for modal view)"""
+    try:
+        question_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    question = DailyQuestion.query.filter_by(question_date=question_date).first()
+    if not question:
+        return jsonify({'error': 'Question not found'}), 404
+
+    # Get all public reasons
+    all_reasons = get_public_reasons(question, get_all=True)
+    reasons_stats = get_public_reasons_stats(question)
+    user_response = get_user_response(question)
+
+    # Filter out user's own response
+    filtered_reasons = [r for r in all_reasons if not user_response or r.id != user_response.id]
+
+    return render_template('daily/comments_modal.html',
+                         question=question,
+                         reasons=filtered_reasons,
+                         reasons_stats=reasons_stats,
+                         user_response=user_response)
 
 
 @daily_bp.route('/daily/api/status')
@@ -429,15 +460,134 @@ def sync_daily_reason_to_statement(statement_id, user_id, vote, reason, is_anony
         return statement_response, True
 
 
-def get_public_reasons(question, limit=10):
-    """Get public reasons from other users for this question."""
-    reasons = DailyQuestionResponse.query.filter(
+def get_public_reasons(question, limit=10, get_all=False):
+    """
+    Get public reasons from other users for this question.
+
+    Uses representative sampling to ensure diversity of perspectives:
+    - Shows mix of Agree/Disagree/Unsure responses
+    - Prioritizes longer, more thoughtful responses
+    - Balances recency with quality
+
+    Args:
+        question: DailyQuestion object
+        limit: Number of responses to return for preview (default: 10)
+        get_all: If True, return all public reasons (for modal view)
+
+    Returns:
+        List of DailyQuestionResponse objects
+    """
+    from sqlalchemy import func, case
+
+    base_query = DailyQuestionResponse.query.filter(
+        DailyQuestionResponse.daily_question_id == question.id,
+        DailyQuestionResponse.reason.isnot(None),
+        DailyQuestionResponse.reason != '',
+        DailyQuestionResponse.reason_visibility.in_(['public_named', 'public_anonymous']),
+        DailyQuestionResponse.is_hidden == False  # Exclude flagged/hidden responses
+    )
+
+    # If getting all, just return by recency
+    if get_all:
+        return base_query.order_by(DailyQuestionResponse.created_at.desc()).all()
+
+    # For preview: Use representative sampling strategy
+    # Goal: Show diverse perspectives, prioritize quality
+
+    # Get count by vote type to ensure diversity
+    vote_counts = db.session.query(
+        DailyQuestionResponse.vote,
+        func.count(DailyQuestionResponse.id)
+    ).filter(
         DailyQuestionResponse.daily_question_id == question.id,
         DailyQuestionResponse.reason.isnot(None),
         DailyQuestionResponse.reason != '',
         DailyQuestionResponse.reason_visibility.in_(['public_named', 'public_anonymous'])
-    ).order_by(DailyQuestionResponse.created_at.desc()).limit(limit).all()
-    return reasons
+    ).group_by(DailyQuestionResponse.vote).all()
+
+    vote_distribution = {vote: count for vote, count in vote_counts}
+    total_responses = sum(vote_distribution.values())
+
+    if total_responses == 0:
+        return []
+
+    # Calculate how many to take from each perspective (proportional but guaranteed minimum)
+    samples_per_vote = {}
+    remaining_limit = limit
+
+    # Guarantee at least 1 from each perspective that exists (up to 3)
+    for vote in [1, -1, 0]:  # Agree, Disagree, Unsure
+        if vote in vote_distribution and remaining_limit > 0:
+            samples_per_vote[vote] = 1
+            remaining_limit -= 1
+
+    # Distribute remaining slots proportionally
+    if remaining_limit > 0:
+        for vote, count in vote_distribution.items():
+            proportion = count / total_responses
+            additional = max(0, int(proportion * limit) - samples_per_vote.get(vote, 0))
+            samples_per_vote[vote] = samples_per_vote.get(vote, 0) + min(additional, remaining_limit)
+            remaining_limit -= min(additional, remaining_limit)
+            if remaining_limit <= 0:
+                break
+
+    # Collect responses from each perspective
+    selected_responses = []
+
+    for vote, sample_size in samples_per_vote.items():
+        if sample_size > 0:
+            # Prioritize longer responses (more thoughtful) with recency balance
+            # Score: 70% based on length, 30% based on recency
+            vote_responses = base_query.filter(
+                DailyQuestionResponse.vote == vote
+            ).order_by(
+                # Length score (longer = more thoughtful, cap at 300 chars)
+                (func.length(DailyQuestionResponse.reason) / 300.0 * 0.7 +
+                 # Recency score (newer = higher, relative to question date)
+                 case(
+                     (func.julianday(DailyQuestionResponse.created_at) -
+                      func.julianday(question.question_date), 1),
+                     else_=0.1
+                 ) * 0.3).desc()
+            ).limit(sample_size).all()
+
+            selected_responses.extend(vote_responses)
+
+    # Shuffle to avoid showing all Agree, then all Disagree, then all Unsure
+    import random
+    random.shuffle(selected_responses)
+
+    return selected_responses[:limit]
+
+
+def get_public_reasons_stats(question):
+    """
+    Get statistics about public reasons for display.
+
+    Returns:
+        dict with total_count and count by vote type
+    """
+    from sqlalchemy import func
+
+    stats = db.session.query(
+        DailyQuestionResponse.vote,
+        func.count(DailyQuestionResponse.id)
+    ).filter(
+        DailyQuestionResponse.daily_question_id == question.id,
+        DailyQuestionResponse.reason.isnot(None),
+        DailyQuestionResponse.reason != '',
+        DailyQuestionResponse.reason_visibility.in_(['public_named', 'public_anonymous']),
+        DailyQuestionResponse.is_hidden == False  # Exclude flagged/hidden responses
+    ).group_by(DailyQuestionResponse.vote).all()
+
+    vote_counts = {vote: count for vote, count in stats}
+
+    return {
+        'total_count': sum(vote_counts.values()),
+        'agree_count': vote_counts.get(1, 0),
+        'disagree_count': vote_counts.get(-1, 0),
+        'unsure_count': vote_counts.get(0, 0)
+    }
 
 
 def sync_vote_to_statement(question, vote_value, fingerprint):
@@ -898,6 +1048,88 @@ def vote():
         db.session.rollback()
         current_app.logger.error(f"Unexpected error submitting daily vote: {e}", exc_info=True)
         return jsonify({'success': False, 'error': 'Failed to submit vote'}), 500
+
+
+@daily_bp.route('/daily/report', methods=['POST'])
+@limiter.limit("5 per hour")
+def report_response():
+    """Submit a flag/report for an inappropriate daily question response"""
+    try:
+        data = request.get_json()
+        response_id = data.get('response_id')
+        reason = data.get('reason')
+        details = data.get('details', '').strip()
+
+        # Validate inputs
+        if not response_id or not reason:
+            return jsonify({'success': False, 'message': 'Missing required fields'}), 400
+
+        valid_reasons = ['spam', 'harassment', 'misinformation', 'other']
+        if reason not in valid_reasons:
+            return jsonify({'success': False, 'message': 'Invalid reason'}), 400
+
+        # Check if response exists
+        response = DailyQuestionResponse.query.get(response_id)
+        if not response:
+            return jsonify({'success': False, 'message': 'Response not found'}), 404
+
+        # Don't allow flagging your own response
+        if current_user.is_authenticated and response.user_id == current_user.id:
+            return jsonify({'success': False, 'message': 'You cannot report your own response'}), 400
+
+        # Get fingerprint for anonymous flagging
+        fingerprint = session.get('session_fingerprint')
+        if not fingerprint:
+            fingerprint = hashlib.sha256(
+                f"{request.headers.get('User-Agent', '')}{request.remote_addr}{secrets.token_urlsafe(16)}".encode()
+            ).hexdigest()
+            session['session_fingerprint'] = fingerprint
+
+        # Check for duplicate flag
+        existing_flag = DailyQuestionResponseFlag.query.filter_by(
+            response_id=response_id,
+            flagged_by_fingerprint=fingerprint
+        ).first()
+
+        if existing_flag:
+            return jsonify({'success': False, 'message': 'You have already reported this response'}), 400
+
+        # Create flag
+        flag = DailyQuestionResponseFlag(
+            response_id=response_id,
+            flagged_by_user_id=current_user.id if current_user.is_authenticated else None,
+            flagged_by_fingerprint=fingerprint,
+            reason=reason,
+            details=details[:500] if details else None
+        )
+
+        db.session.add(flag)
+
+        # Increment flag count on response
+        response.flag_count += 1
+
+        # Auto-hide after 3 flags
+        if response.flag_count >= 3 and not response.is_hidden:
+            response.is_hidden = True
+            current_app.logger.warning(
+                f"Auto-hiding daily response {response_id} after reaching 3 flags"
+            )
+
+            # TODO: Send email notification to admin
+            # send_admin_notification(f"Response {response_id} auto-hidden", response)
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'message': 'Report submitted successfully',
+            'flag_count': response.flag_count
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error submitting flag: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': 'Failed to submit report'}), 500
 
 
 def get_subscriber_streak():

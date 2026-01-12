@@ -127,6 +127,20 @@ class BriefGenerator:
                 logger.warning(f"Failed to generate underreported item: {e}")
                 # Non-critical - continue without it
 
+        # Generate "Same Story, Different Lens" cross-perspective analysis
+        # Shows how outlets across the political spectrum frame the same story differently
+        try:
+            from app.brief.lens_check import generate_lens_check
+            lens_check_data = generate_lens_check(brief_date)
+            if lens_check_data:
+                brief.lens_check = lens_check_data
+                logger.info(f"Generated lens check for topic: {lens_check_data.get('topic_title', 'unknown')[:50]}")
+            else:
+                logger.info("No story met lens check criteria - section will be omitted")
+        except Exception as e:
+            logger.warning(f"Failed to generate lens check: {e}")
+            # Non-critical - continue without it
+
         # Set status
         brief.status = 'ready' if auto_publish else 'draft'
         brief.created_at = datetime.utcnow()
@@ -395,7 +409,13 @@ class BriefGenerator:
             logger.info(f"Validation provider {validation_provider} not available - skipping multi-model validation")
             return (True, [], 7)  # Accept without validation, score 7/10
 
+        # Get current year for date validation
+        current_year = datetime.now().year
+        
         critique_prompt = f"""You are a senior editor reviewing news briefing content for quality issues.
+
+TODAY'S DATE: {datetime.now().strftime('%d %B %Y')}
+CURRENT YEAR: {current_year}
 
 TOPIC: {topic_title}
 
@@ -417,7 +437,8 @@ Review this content and check for these quality problems:
 4. SENSATIONAL FRAMING: Uses emotional language, exaggeration, or clickbait patterns
 5. UNCLEAR REFERENCES: Uses "this", "it", "they" without clear antecedents
 6. PASSIVE VOICE: Uses passive constructions that obscure responsibility
-7. MISSING PERSONAL RELEVANCE: Personal impact statement doesn't explain direct relevance to readers
+7. MISSING PERSONAL RELEVANCE: Personal impact only addresses local/obvious impacts without explaining global/macro relevance. For international stories, MUST include why it matters to people worldwide (energy prices, markets, geopolitics, supply chains, etc.)
+8. DATE ERRORS: Any dates that seem wrong for current news (e.g., mentioning 2024 or 2025 when we're in {current_year}). Flag references to past years unless clearly referring to historical context.
 
 Respond ONLY with valid JSON:
 {{
@@ -466,6 +487,11 @@ Be strict but fair. If content is specific, concrete, and well-written, give cre
                 'perspectives': dict with 'left', 'center', 'right' viewpoints
             }
         """
+        # Get current date for context (prevents date hallucination)
+        current_date = datetime.now()
+        current_year = current_date.year
+        date_context = current_date.strftime('%d %B %Y')
+        
         # Prepare article summaries for context
         article_context = []
         source_perspectives = {'left': [], 'center': [], 'right': []}
@@ -474,10 +500,15 @@ Be strict but fair. If content is specific, concrete, and well-written, give cre
             summary = article.summary[:300] if article.summary else article.title
             source_name = article.source.name if article.source else 'Unknown'
             
+            # Include article publication date if available
+            pub_date = ""
+            if article.published_at:
+                pub_date = f" ({article.published_at.strftime('%d %b %Y')})"
+            
             # Get political leaning from source (-2 to +2 scale)
             leaning_score = article.source.political_leaning if article.source and article.source.political_leaning is not None else 0
             
-            article_context.append(f"{i}. [{source_name}] {article.title}\n   {summary}")
+            article_context.append(f"{i}. [{source_name}]{pub_date} {article.title}\n   {summary}")
             
             # Collect perspectives by leaning score
             if leaning_score <= -1:  # Left or Lean Left
@@ -490,6 +521,16 @@ Be strict but fair. If content is specific, concrete, and well-written, give cre
         article_text = '\n'.join(article_context)
 
         prompt = f"""You are a senior news analyst creating a Tortoise Media-style briefing. Generate rich, analytical content from these articles about the same story.
+
+TODAY'S DATE: {date_context}
+CURRENT YEAR: {current_year}
+
+CRITICAL DATE RULES:
+- We are in {current_year}. Any reference to years MUST be accurate.
+- Only use dates, statistics, and figures that appear in the source articles.
+- NEVER invent or hallucinate dates, percentages, or numbers.
+- If an article mentions a survey or statistic, use the date from that article.
+- When in doubt, say "according to recent data" rather than inventing a year.
 
 ARTICLES:
 {article_text}
@@ -516,15 +557,23 @@ Generate a comprehensive news item with:
 
    Each bullet must include at least one concrete detail (number, date, named person/organization).
 
-3. PERSONAL IMPACT: One sentence (max 25 words) explaining direct personal relevance.
-   - Must be specific and actionable
-   - Target: ordinary citizens, not policy wonks
-   - Include timeframe if relevant
-
+3. PERSONAL IMPACT: Two-part explanation of why this matters (2 sentences max, 50 words total).
+   
+   Our audience is GLOBAL (English-speaking worldwide), so always provide BOTH:
+   
+   a) MICRO/LOCAL: Direct impact on those in the affected region (if applicable)
+   b) MACRO/GLOBAL: Why this matters to everyone else, globally
+   
+   For international stories, the global angle is MORE important than the local one.
+   Think: energy prices, supply chains, geopolitical stability, economic ripples, 
+   precedent-setting, refugee flows, trade impacts, market effects, security implications.
+   
    Examples:
-   ✓ GOOD: "If you have student loans, this changes your repayment timeline by 6-18 months."
-   ✓ GOOD: "Your local council will need to implement this by June 2026."
-   ✓ GOOD: "Mortgage holders could see rates drop 0.25-0.5% within 3 months."
+   ✓ GOOD (Ukraine story): "For Ukrainians: 1.5 million face weeks without heating. Globally: this escalation could push European gas prices up 10-15% and tests NATO's resolve heading into winter."
+   ✓ GOOD (China-Taiwan): "For Taiwan: increased military presence disrupts shipping. For everyone: 60% of global semiconductors transit this strait, so expect tech supply chain jitters."
+   ✓ GOOD (UK policy): "For UK residents: council tax bills may rise £200/year. Internationally: this signals how wealthy nations are funding climate transition costs."
+   ✓ GOOD (US Fed decision): "If you hold dollar assets or have a mortgage, expect rate impacts within 3 months. Emerging markets will feel capital flow pressure."
+   ✗ BAD: "Residents in affected areas may face disruptions." (obvious, no global context)
    ✗ BAD: "This could affect many people." (vague, no specifics)
 
 4. SO WHAT: One paragraph (2-3 sentences) explaining concrete, real-world impact.
@@ -666,8 +715,28 @@ Return JSON:
         """
         # Start with source articles as "reporting" tier
         links = []
+        seen_urls = set()  # Track URLs to prevent duplicates
+        seen_sources = set()  # Track source names to prevent same source appearing twice
 
-        for article in articles[:3]:  # Top 3 articles
+        for article in articles[:6]:  # Check more articles but dedupe
+            # Skip articles without URLs
+            if not article.url:
+                continue
+            
+            # Skip if we've already seen this URL
+            if article.url in seen_urls:
+                continue
+            
+            # Skip if we've already included this source (one article per source)
+            # Allow multiple 'Unknown' sources only if we have fewer than 3 links
+            source_name = article.source.name if article.source else None
+            if source_name and source_name in seen_sources:
+                continue
+            
+            # Only add up to 3 unique source articles
+            if len(links) >= 3:
+                break
+            
             # Check if likely paywalled
             is_paywalled = any(domain in article.url for domain in [
                 'ft.com', 'economist.com', 'wsj.com', 'nytimes.com',
@@ -678,9 +747,13 @@ Return JSON:
                 'tier': 'reporting',
                 'url': article.url,
                 'type': 'news_article',
-                'description': f"{article.source.name} coverage",
+                'description': f"{source_name} coverage" if source_name else "News coverage",
                 'is_paywalled': is_paywalled
             })
+            
+            seen_urls.add(article.url)
+            if source_name:  # Only track named sources
+                seen_sources.add(source_name)
 
         # Try to extract primary sources via LLM
         try:

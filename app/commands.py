@@ -220,6 +220,81 @@ def init_commands(app):
         except Exception as e:
             click.echo(f"Error testing selection: {str(e)}", err=True)
 
+    @app.cli.command('test-lens-check')
+    @click.option('--date', default=None, help='Date in YYYY-MM-DD format (default: today)')
+    def test_lens_check_cmd(date):
+        """Test lens check generation (Same Story, Different Lens)"""
+        from app.brief.lens_check import generate_lens_check
+        import json
+        
+        try:
+            if date:
+                check_date = datetime.strptime(date, '%Y-%m-%d').date()
+            else:
+                check_date = date_type.today()
+            
+            click.echo(f"Generating lens check for {check_date}...")
+            click.echo("This finds stories with cross-spectrum coverage and analyzes framing differences.\n")
+            
+            result = generate_lens_check(check_date)
+            
+            if not result:
+                click.echo("✗ No story met lens check criteria")
+                click.echo("  Criteria: At least 2 sources per perspective (left/centre/right)")
+                click.echo("  Tip: Run 'flask test-topic-selection' to see available topics")
+                return
+            
+            click.echo(f"✓ Lens check generated!\n")
+            click.echo(f"📰 Story: {result.get('story_summary', 'N/A')}")
+            click.echo(f"   Topic ID: {result.get('topic_id')}")
+            click.echo()
+            
+            # Selection criteria
+            criteria = result.get('selection_criteria', {})
+            click.echo(f"📊 Selection Criteria:")
+            click.echo(f"   Total sources: {criteria.get('total_sources', 'N/A')}")
+            click.echo(f"   Left: {criteria.get('left_sources', 0)} | Centre: {criteria.get('centre_sources', 0)} | Right: {criteria.get('right_sources', 0)}")
+            click.echo(f"   Balance score: {criteria.get('coverage_balance_score', 'N/A')}")
+            click.echo()
+            
+            # Perspectives
+            for perspective in ['left', 'centre', 'right']:
+                data = result.get('perspectives', {}).get(perspective, {})
+                if data:
+                    click.echo(f"{'🔵' if perspective == 'left' else '🟣' if perspective == 'centre' else '🔴'} {perspective.upper()} ({data.get('source_count', 0)} sources)")
+                    if data.get('emphasis'):
+                        click.echo(f"   Emphasis: {data['emphasis']}")
+                    for headline in data.get('headlines', []):
+                        click.echo(f"   • \"{headline.get('title', 'N/A')[:60]}...\"")
+                        click.echo(f"     — {headline.get('source', 'Unknown')}")
+                    click.echo()
+            
+            # Contrast
+            if result.get('contrast_analysis'):
+                click.echo(f"💡 Contrast: {result['contrast_analysis']}")
+                click.echo()
+            
+            # Omissions
+            if result.get('omissions'):
+                click.echo(f"🔍 What's Missing: {result['omissions']}")
+                click.echo()
+
+            # Metadata (performance and cost tracking)
+            metadata = result.get('metadata', {})
+            if metadata:
+                click.echo(f"⚡ Performance Metrics:")
+                click.echo(f"   Generation time: {metadata.get('generation_time_seconds', 'N/A')}s")
+                click.echo(f"   API calls: {metadata.get('api_calls_made', 'N/A')}")
+                click.echo(f"   Total tokens: {metadata.get('total_tokens_used', 'N/A')}")
+                click.echo()
+
+            click.echo(f"Methodology version: {result.get('methodology_version', 'N/A')}")
+
+        except Exception as e:
+            click.echo(f"Error generating lens check: {str(e)}", err=True)
+            import traceback
+            traceback.print_exc()
+
     @app.cli.command('show-underreported')
     @click.option('--days', default=7, help='Lookback window in days')
     @click.option('--limit', default=10, help='Number of stories to show')

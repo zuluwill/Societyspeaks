@@ -453,6 +453,221 @@
                     </tr>
                     {% endfor %}
 
+                    <!-- Same Story, Different Lens Section -->
+                    {% if brief.lens_check %}
+                    <tr>
+                        <td class="mobile-padding" style="padding: 32px 28px; background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 100%); border-bottom: 1px solid #e2e8f0;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                
+                                <!-- Section Header -->
+                                <tr>
+                                    <td style="padding-bottom: 16px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td width="40" height="40" align="center" valign="middle" style="background-color: #7c3aed; border-radius: 50%;">
+                                                    <span style="font-size: 18px;">👁</span>
+                                                </td>
+                                                <td style="padding-left: 12px;">
+                                                    <p style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">Same Story, Different Lens</p>
+                                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #6d28d9; margin: 4px 0 0 0;">How outlets across the spectrum frame the same news</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Story Summary -->
+                                <tr>
+                                    <td style="padding-bottom: 20px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #ffffff; border-radius: 8px; border: 1px solid #e9d5ff;">
+                                            <tr>
+                                                <td style="padding: 16px;">
+                                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #7c3aed; text-transform: uppercase; margin: 0 0 8px 0;">THE STORY</p>
+                                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.5; color: #1f2937; font-weight: 500; margin: 0;">{{ brief.lens_check.story_summary }}</p>
+                                                    {% if brief.lens_check.selection_criteria %}
+                                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #6b7280; margin: 10px 0 0 0;">
+                                                        Based on {{ brief.lens_check.selection_criteria.total_sources }} sources ({{ brief.lens_check.selection_criteria.left_sources }}L / {{ brief.lens_check.selection_criteria.centre_sources }}C / {{ brief.lens_check.selection_criteria.right_sources }}R)
+                                                    </p>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+
+                                <!-- Left Perspective -->
+                                {% if brief.lens_check.perspectives.left and brief.lens_check.perspectives.left.headlines %}
+                                <tr>
+                                    <td style="padding-bottom: 12px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #ffffff; border-radius: 8px; border-top: 4px solid #3b82f6;">
+                                            <tr>
+                                                <td style="padding: 16px;">
+                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td>
+                                                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td width="24" height="24" align="center" style="background-color: #dbeafe; border-radius: 50%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; color: #1d4ed8;">L</td>
+                                                                        <td style="padding-left: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 700; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.5px;">LEFT</td>
+                                                                        <td style="padding-left: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #6b7280;">({{ brief.lens_check.perspectives.left.source_count }} sources)</td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                        {% if brief.lens_check.perspectives.left.emphasis %}
+                                                        <tr>
+                                                            <td style="padding-top: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #4b5563;">
+                                                                <span style="font-weight: 600;">Emphasis:</span> {{ brief.lens_check.perspectives.left.emphasis }}
+                                                            </td>
+                                                        </tr>
+                                                        {% endif %}
+                                                        {% for headline in brief.lens_check.perspectives.left.headlines %}
+                                                        <tr>
+                                                            <td style="padding-top: 10px; padding-left: 12px; border-left: 2px solid #dbeafe; word-wrap: break-word; word-break: break-word;">
+                                                                <a href="{{ headline.url }}" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #1f2937; text-decoration: none; font-weight: 500; line-height: 1.4; word-wrap: break-word;">"{{ headline.title }}"</a>
+                                                                <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">— {{ headline.source }}</p>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+                                <!-- Centre Perspective -->
+                                {% if brief.lens_check.perspectives.centre and brief.lens_check.perspectives.centre.headlines %}
+                                <tr>
+                                    <td style="padding-bottom: 12px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #ffffff; border-radius: 8px; border-top: 4px solid #a855f7;">
+                                            <tr>
+                                                <td style="padding: 16px;">
+                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td>
+                                                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td width="24" height="24" align="center" style="background-color: #f3e8ff; border-radius: 50%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; color: #7c3aed;">C</td>
+                                                                        <td style="padding-left: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 700; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.5px;">CENTRE</td>
+                                                                        <td style="padding-left: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #6b7280;">({{ brief.lens_check.perspectives.centre.source_count }} sources)</td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                        {% if brief.lens_check.perspectives.centre.emphasis %}
+                                                        <tr>
+                                                            <td style="padding-top: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #4b5563;">
+                                                                <span style="font-weight: 600;">Emphasis:</span> {{ brief.lens_check.perspectives.centre.emphasis }}
+                                                            </td>
+                                                        </tr>
+                                                        {% endif %}
+                                                        {% for headline in brief.lens_check.perspectives.centre.headlines %}
+                                                        <tr>
+                                                            <td style="padding-top: 10px; padding-left: 12px; border-left: 2px solid #f3e8ff; word-wrap: break-word; word-break: break-word;">
+                                                                <a href="{{ headline.url }}" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #1f2937; text-decoration: none; font-weight: 500; line-height: 1.4; word-wrap: break-word;">"{{ headline.title }}"</a>
+                                                                <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">— {{ headline.source }}</p>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+                                <!-- Right Perspective -->
+                                {% if brief.lens_check.perspectives.right and brief.lens_check.perspectives.right.headlines %}
+                                <tr>
+                                    <td style="padding-bottom: 16px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #ffffff; border-radius: 8px; border-top: 4px solid #ef4444;">
+                                            <tr>
+                                                <td style="padding: 16px;">
+                                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                                                        <tr>
+                                                            <td>
+                                                                <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                                                    <tr>
+                                                                        <td width="24" height="24" align="center" style="background-color: #fee2e2; border-radius: 50%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; color: #dc2626;">R</td>
+                                                                        <td style="padding-left: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; font-weight: 700; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px;">RIGHT</td>
+                                                                        <td style="padding-left: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #6b7280;">({{ brief.lens_check.perspectives.right.source_count }} sources)</td>
+                                                                    </tr>
+                                                                </table>
+                                                            </td>
+                                                        </tr>
+                                                        {% if brief.lens_check.perspectives.right.emphasis %}
+                                                        <tr>
+                                                            <td style="padding-top: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #4b5563;">
+                                                                <span style="font-weight: 600;">Emphasis:</span> {{ brief.lens_check.perspectives.right.emphasis }}
+                                                            </td>
+                                                        </tr>
+                                                        {% endif %}
+                                                        {% for headline in brief.lens_check.perspectives.right.headlines %}
+                                                        <tr>
+                                                            <td style="padding-top: 10px; padding-left: 12px; border-left: 2px solid #fee2e2; word-wrap: break-word; word-break: break-word;">
+                                                                <a href="{{ headline.url }}" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #1f2937; text-decoration: none; font-weight: 500; line-height: 1.4; word-wrap: break-word;">"{{ headline.title }}"</a>
+                                                                <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #6b7280; margin: 4px 0 0 0;">— {{ headline.source }}</p>
+                                                            </td>
+                                                        </tr>
+                                                        {% endfor %}
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+                                <!-- Contrast Analysis -->
+                                {% if brief.lens_check.contrast_analysis %}
+                                <tr>
+                                    <td style="padding-bottom: 12px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #fefce8; border-left: 4px solid #eab308; border-radius: 0 6px 6px 0;">
+                                            <tr>
+                                                <td style="padding: 14px 16px;">
+                                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #a16207; text-transform: uppercase; margin: 0 0 6px 0;">💡 THE CONTRAST</p>
+                                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #713f12; margin: 0;">{{ brief.lens_check.contrast_analysis }}</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+                                <!-- Omissions -->
+                                {% if brief.lens_check.omissions %}
+                                <tr>
+                                    <td style="padding-bottom: 12px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f8fafc; border-left: 4px solid #94a3b8; border-radius: 0 6px 6px 0;">
+                                            <tr>
+                                                <td style="padding: 14px 16px;">
+                                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #475569; text-transform: uppercase; margin: 0 0 6px 0;">🔍 WHAT'S MISSING</p>
+                                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.5; color: #334155; margin: 0;">{{ brief.lens_check.omissions }}</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                {% endif %}
+
+                                <!-- Methodology Note -->
+                                <tr>
+                                    <td align="center" style="padding-top: 8px;">
+                                        <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #6b7280; margin: 0;">
+                                            Source classifications based on <a href="https://allsides.com/media-bias" target="_blank" style="color: #7c3aed; text-decoration: underline;">AllSides media bias ratings</a>.
+                                            <a href="{{ base_url }}/brief/methodology" target="_blank" style="color: #7c3aed; text-decoration: underline;">Our methodology</a>.
+                                        </p>
+                                    </td>
+                                </tr>
+
+                            </table>
+                        </td>
+                    </tr>
+                    {% endif %}
+
                     <!-- Thank You Message -->
                     <tr>
                         <td style="background: linear-gradient(135deg, #1e40af 0%, #312e81 100%); padding: 32px 28px;">
