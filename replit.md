@@ -22,6 +22,29 @@ The platform integrates Pol.is for discussion dynamics, supports topic categoriz
 ### System Design Choices
 PostgreSQL serves as the primary database, configured for connection pooling and health checks. Performance is optimized through pagination, eager loading, database indexing, and Redis caching. Logging is centralized, and configuration uses `config.py` with environment variables for API keys. A `SparsityAwareScaler` adapted from Pol.is innovations is used in consensus clustering to better identify diverse opinion groups. A "Participation Gate" requires users to vote on 5+ statements before viewing consensus analysis to prevent anchoring bias.
 
+### Community Moderation System (January 2026)
+The platform includes a community-driven moderation system for daily question responses:
+- Users can flag inappropriate responses (spam, harassment, misinformation)
+- Responses are auto-hidden after receiving 3 community flags
+- Anonymous flagging is supported via session fingerprints
+- Rate limiting (5 flags/hour) prevents abuse
+- Row-level locking prevents race conditions in flag counting
+- Admin review workflow allows unhiding responses if flags are dismissed
+
+### Lens Check Optimization (January 2026)
+The "Same Story, Different Lens" feature for Daily Briefs includes:
+- Parallel LLM calls (3x speedup) for perspective analysis
+- Retry logic with exponential backoff for API resilience
+- Thread-safe token usage tracking for cost monitoring
+- Enhanced JSON validation with type checking
+
+### Comment UX Enhancements (January 2026)
+Public comments on daily questions use representative sampling:
+- Diversity guarantees: at least 1 comment from each perspective (Agree/Disagree/Unsure)
+- Quality scoring: 70% length weighting, 30% recency
+- Hidden responses excluded from counts and display
+- Stats API for perspective badges
+
 ### Daily Question Email Voting
 Daily question emails include one-click vote buttons (Agree/Disagree/Unsure) that use a two-step confirmation flow to prevent mail scanner prefetch attacks. Users can optionally share their reasoning with three visibility levels: public with name (authenticated users only), public anonymous, or private. Public reasons are displayed on the results page. The visibility selector appears dynamically when users start typing a reason. Votes and public reasons from authenticated users are synced to linked discussion statements.
 
