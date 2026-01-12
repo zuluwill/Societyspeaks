@@ -16,6 +16,7 @@ from flask import current_app
 
 from app import db
 from app.models import NewsSource, NewsArticle
+from sqlalchemy.exc import IntegrityError
 
 logger = logging.getLogger(__name__)
 
@@ -307,8 +308,30 @@ class NewsFetcher:
                 db.session.add(article)
                 articles.append(article)
             
-            db.session.commit()
-            logger.info(f"Fetched {len(articles)} new articles from Guardian")
+            try:
+                db.session.commit()
+                logger.info(f"Fetched {len(articles)} new articles from Guardian")
+            except IntegrityError as e:
+                # Handle race condition where another process inserted the same article
+                db.session.rollback()
+                logger.warning(f"Guardian: Duplicate article detected, retrying one by one: {e}")
+                # Retry adding articles one by one to save what we can
+                saved_count = 0
+                for article in articles:
+                    try:
+                        existing = NewsArticle.query.filter_by(
+                            source_id=article.source_id,
+                            external_id=article.external_id
+                        ).first()
+                        if not existing:
+                            db.session.add(article)
+                            db.session.commit()
+                            saved_count += 1
+                    except IntegrityError:
+                        db.session.rollback()
+                        continue
+                logger.info(f"Guardian: Saved {saved_count} articles after retry")
+                articles = articles[:saved_count]
             
         except Exception as e:
             logger.error(f"Guardian API error: {e}")
@@ -434,8 +457,30 @@ class NewsFetcher:
                 db.session.add(article)
                 articles.append(article)
             
-            db.session.commit()
-            logger.info(f"Fetched {len(articles)} new articles from {source.name}")
+            try:
+                db.session.commit()
+                logger.info(f"Fetched {len(articles)} new articles from {source.name}")
+            except IntegrityError as e:
+                # Handle race condition where another process inserted the same article
+                db.session.rollback()
+                logger.warning(f"{source.name}: Duplicate article detected, retrying one by one: {e}")
+                # Retry adding articles one by one to save what we can
+                saved_count = 0
+                for article in articles:
+                    try:
+                        existing = NewsArticle.query.filter_by(
+                            source_id=article.source_id,
+                            external_id=article.external_id
+                        ).first()
+                        if not existing:
+                            db.session.add(article)
+                            db.session.commit()
+                            saved_count += 1
+                    except IntegrityError:
+                        db.session.rollback()
+                        continue
+                logger.info(f"{source.name}: Saved {saved_count} articles after retry")
+                articles = articles[:saved_count]
             
         except Exception as e:
             logger.error(f"RSS feed error for {source.name}: {e}")

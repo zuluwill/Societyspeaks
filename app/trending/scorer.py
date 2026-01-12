@@ -22,6 +22,7 @@ import re
 from typing import Dict, List, Optional, Tuple, Any
 
 from app.models import NewsArticle, TrendingTopic
+from sqlalchemy.exc import IntegrityError
 
 logger = logging.getLogger(__name__)
 
@@ -272,6 +273,17 @@ def score_articles_with_llm(articles: List[NewsArticle], batch_size: int = 25) -
                 for article in batch:
                     db.session.add(article)
                 db.session.commit()
+            except IntegrityError as commit_err:
+                # Handle race condition with duplicate articles
+                logger.warning(f"Batch commit failed due to duplicate: {commit_err}")
+                db.session.rollback()
+                # Try committing articles one by one
+                for article in batch:
+                    try:
+                        db.session.add(article)
+                        db.session.commit()
+                    except IntegrityError:
+                        db.session.rollback()
             except Exception as commit_err:
                 logger.error(f"Batch commit failed: {commit_err}")
                 db.session.rollback()
