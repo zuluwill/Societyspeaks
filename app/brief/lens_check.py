@@ -68,7 +68,7 @@ from functools import wraps
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from app import db
-from app.models import TrendingTopic, NewsArticle, NewsSource, TopicArticle
+from app.models import TrendingTopic, NewsArticle, NewsSource, TrendingTopicArticle
 from app.trending.scorer import extract_json, get_system_api_key
 
 logger = logging.getLogger(__name__)
