@@ -539,17 +539,18 @@ def get_public_reasons(question, limit=10, get_all=False):
         if sample_size > 0:
             # Prioritize longer responses (more thoughtful) with recency balance
             # Score: 70% based on length, 30% based on recency
+            # Use PostgreSQL-compatible date extraction (EXTRACT EPOCH)
             vote_responses = base_query.filter(
                 DailyQuestionResponse.vote == vote
             ).order_by(
                 # Length score (longer = more thoughtful, cap at 300 chars)
-                (func.length(DailyQuestionResponse.reason) / 300.0 * 0.7 +
-                 # Recency score (newer = higher, relative to question date)
-                 case(
-                     (func.julianday(DailyQuestionResponse.created_at) -
-                      func.julianday(question.question_date), 1),
-                     else_=0.1
-                 ) * 0.3).desc()
+                (func.least(func.length(DailyQuestionResponse.reason), 300) / 300.0 * 0.7 +
+                 # Recency score (newer = higher) - normalize days since question to 0-1 range
+                 # Extract epoch difference in days, cap at 7 days, invert so newer = higher
+                 func.greatest(0, 1 - func.extract('epoch', 
+                     DailyQuestionResponse.created_at - func.cast(question.question_date, db.DateTime)
+                 ) / 86400.0 / 7.0) * 0.3
+                ).desc()
             ).limit(sample_size).all()
 
             selected_responses.extend(vote_responses)
