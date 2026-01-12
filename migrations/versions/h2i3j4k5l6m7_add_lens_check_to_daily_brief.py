@@ -42,6 +42,7 @@ Create Date: 2026-01-11
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 
 # revision identifiers, used by Alembic.
@@ -51,11 +52,22 @@ branch_labels = None
 depends_on = None
 
 
+def column_exists(table_name, column_name):
+    """Check if a column already exists in the table."""
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    columns = [col['name'] for col in inspector.get_columns(table_name)]
+    return column_name in columns
+
+
 def upgrade():
     # Add lens_check JSON field to daily_brief table
     # This stores the cross-perspective headline comparison analysis
-    op.add_column('daily_brief', sa.Column('lens_check', sa.JSON(), nullable=True))
+    # Only add if it doesn't already exist (idempotent migration)
+    if not column_exists('daily_brief', 'lens_check'):
+        op.add_column('daily_brief', sa.Column('lens_check', sa.JSON(), nullable=True))
 
 
 def downgrade():
-    op.drop_column('daily_brief', 'lens_check')
+    if column_exists('daily_brief', 'lens_check'):
+        op.drop_column('daily_brief', 'lens_check')
