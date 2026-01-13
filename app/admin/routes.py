@@ -13,6 +13,7 @@ from app.utils import upload_to_object_storage
 # Note: send_email removed during Resend migration. Using inline Resend call for admin welcome emails.
 from app.admin import admin_bp
 from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import IntegrityError
 import time
 
 
@@ -607,6 +608,16 @@ def create_daily_question():
             flash(f'Daily question #{question.question_number} created successfully!', 'success')
             return redirect(url_for('admin.list_daily_questions'))
             
+        except IntegrityError as e:
+            db.session.rollback()
+            error_str = str(e).lower()
+            if 'question_date' in error_str or 'uq_daily_question_date' in error_str:
+                flash(f'A question already exists for {question_date}. Another user may have created it.', 'error')
+            elif 'question_number' in error_str:
+                flash('Question number conflict. Please try again.', 'error')
+            else:
+                current_app.logger.error(f"Database integrity error creating daily question: {e}")
+                flash('Database error creating daily question. Please try again.', 'error')
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error creating daily question: {e}")
