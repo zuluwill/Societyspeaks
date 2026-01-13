@@ -24,14 +24,179 @@ from app.models import (
     db
 )
 from app.brief.coverage_analyzer import CoverageAnalyzer
-from app import limiter
+from app import limiter, cache
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
 # Thresholds matching CoverageAnalyzer
 LEFT_THRESHOLD = -0.5
 RIGHT_THRESHOLD = 0.5
+
+# Cache key for dashboard data
+DASHBOARD_CACHE_KEY = 'news_dashboard_data'
+DASHBOARD_CACHE_TTL = 180  # 3 minutes
+
+# Podcast detection keywords
+PODCAST_KEYWORDS = ['podcast', 'show', 'huberman', 'ferriss', 'fridman', 'ezra klein', 
+                   'triggernometry', 'all-in', 'acquired', 'modern wisdom', 'diary of a ceo',
+                   'news agents', 'rest is politics']
+
+
+def _is_podcast(name: str) -> bool:
+    """Check if a source name matches podcast patterns."""
+    name_lower = name.lower()
+    return any(kw in name_lower for kw in PODCAST_KEYWORDS)
+
+
+def _get_dashboard_data():
+    """
+    Fetch and organize dashboard data with Redis caching.
+    Returns cached data if available, otherwise fetches from DB.
+    """
+    # Try cache first
+    cached = cache.get(DASHBOARD_CACHE_KEY)
+    if cached:
+        logger.debug("News dashboard: serving from cache")
+        return json.loads(cached)
+    
+    logger.debug("News dashboard: cache miss, fetching from database")
+    
+    # Get all active sources with their political leanings
+    sources = NewsSource.query.filter(
+        NewsSource.is_active == True
+    ).order_by(NewsSource.political_leaning.nullsfirst()).all()
+
+    # Categorize sources by leaning
+    left_sources = []
+    center_sources = []
+    right_sources = []
+    
+    for source in sources:
+        leaning = source.political_leaning or 0
+        source_is_podcast = _is_podcast(source.name)
+        source_data = {
+            'id': source.id,
+            'name': source.name,
+            'leaning': leaning,
+            'leaning_label': get_leaning_label(leaning),
+            'country': source.country,
+            'source_type': 'podcast' if source_is_podcast else 'news',
+            'is_podcast': source_is_podcast
+        }
+        if leaning <= LEFT_THRESHOLD:
+            left_sources.append(source_data)
+        elif leaning >= RIGHT_THRESHOLD:
+            right_sources.append(source_data)
+        else:
+            center_sources.append(source_data)
+
+    # Get articles from last 24 hours with eager-loaded sources
+    cutoff = datetime.utcnow() - timedelta(hours=24)
+    
+    # Get all source IDs
+    source_ids = [s.id for s in sources]
+    
+    # Fetch all articles from last 24 hours - no hard limit
+    # Uses composite index on (published_at DESC, source_id)
+    articles = NewsArticle.query.filter(
+        NewsArticle.published_at >= cutoff,
+        NewsArticle.source_id.in_(source_ids)
+    ).options(
+        joinedload(NewsArticle.source)
+    ).order_by(NewsArticle.published_at.desc()).all()
+
+    # Prepare article data organized by source leaning
+    left_articles = []
+    center_articles = []
+    right_articles = []
+    
+    # Build source lookup for podcast detection
+    source_lookup = {s['id']: s for s in left_sources + center_sources + right_sources}
+    
+    for article in articles:
+        source = article.source
+        if not source:
+            continue
+            
+        leaning = source.political_leaning or 0
+        source_info = source_lookup.get(source.id, {})
+        article_data = {
+            'id': article.id,
+            'title': article.title,
+            'url': article.url,
+            'summary': article.summary,
+            'published_at': article.published_at.isoformat() if article.published_at else None,
+            'source_id': source.id,
+            'source_name': source.name,
+            'source_leaning': leaning,
+            'leaning_label': get_leaning_label(leaning),
+            'sensationalism_score': article.sensationalism_score,
+            'relevance_score': article.relevance_score,
+            'is_podcast': source_info.get('is_podcast', False),
+            'source_type': source_info.get('source_type', 'news')
+        }
+        
+        if leaning <= LEFT_THRESHOLD:
+            left_articles.append(article_data)
+        elif leaning >= RIGHT_THRESHOLD:
+            right_articles.append(article_data)
+        else:
+            center_articles.append(article_data)
+
+    # Calculate coverage balance
+    total_articles = len(left_articles) + len(center_articles) + len(right_articles)
+    coverage = {
+        'left_pct': round((len(left_articles) / total_articles * 100)) if total_articles > 0 else 0,
+        'center_pct': round((len(center_articles) / total_articles * 100)) if total_articles > 0 else 0,
+        'right_pct': round((len(right_articles) / total_articles * 100)) if total_articles > 0 else 0,
+        'left_count': len(left_articles),
+        'center_count': len(center_articles),
+        'right_count': len(right_articles),
+        'total': total_articles
+    }
+
+    # Track which sources actually have articles (for filter dropdown)
+    sources_with_articles = set()
+    for article in left_articles + center_articles + right_articles:
+        sources_with_articles.add(article['source_id'])
+    
+    # Filter source lists to only include those with articles
+    left_sources = [s for s in left_sources if s['id'] in sources_with_articles]
+    center_sources = [s for s in center_sources if s['id'] in sources_with_articles]
+    right_sources = [s for s in right_sources if s['id'] in sources_with_articles]
+
+    logger.info(
+        f"News dashboard: {total_articles} articles from {len(sources)} sources "
+        f"({len(left_articles)} left, {len(center_articles)} center, {len(right_articles)} right)"
+    )
+
+    result = {
+        'left_articles': left_articles,
+        'center_articles': center_articles,
+        'right_articles': right_articles,
+        'left_sources': left_sources,
+        'center_sources': center_sources,
+        'right_sources': right_sources,
+        'coverage': coverage
+    }
+    
+    # Cache the result
+    try:
+        cache.set(DASHBOARD_CACHE_KEY, json.dumps(result), timeout=DASHBOARD_CACHE_TTL)
+    except Exception as e:
+        logger.warning(f"Failed to cache dashboard data: {e}")
+    
+    return result
+
+
+def _parse_cached_articles(articles: List[Dict]) -> List[Dict]:
+    """Convert ISO date strings back to datetime objects for template rendering."""
+    for article in articles:
+        if article.get('published_at'):
+            article['published_at'] = datetime.fromisoformat(article['published_at'])
+    return articles
 
 
 @news_bp.route('/news')
@@ -61,135 +226,23 @@ def dashboard():
         return render_template('news/landing.html')
 
     try:
-        # Get all active sources with their political leanings
-        sources = NewsSource.query.filter(
-            NewsSource.is_active == True
-        ).order_by(NewsSource.political_leaning.nullsfirst()).all()
-
-        # Categorize sources by leaning
-        left_sources = []
-        center_sources = []
-        right_sources = []
+        # Get cached or fresh dashboard data
+        data = _get_dashboard_data()
         
-        # Identify podcasts by name patterns
-        podcast_keywords = ['podcast', 'show', 'huberman', 'ferriss', 'fridman', 'ezra klein', 
-                           'triggernometry', 'all-in', 'acquired', 'modern wisdom', 'diary of a ceo',
-                           'news agents', 'rest is politics']
-        
-        def is_podcast(name):
-            name_lower = name.lower()
-            return any(kw in name_lower for kw in podcast_keywords)
-        
-        for source in sources:
-            leaning = source.political_leaning or 0
-            source_is_podcast = is_podcast(source.name)
-            source_data = {
-                'id': source.id,
-                'name': source.name,
-                'leaning': leaning,
-                'leaning_label': get_leaning_label(leaning),
-                'country': source.country,
-                'source_type': 'podcast' if source_is_podcast else 'news',
-                'is_podcast': source_is_podcast
-            }
-            if leaning <= LEFT_THRESHOLD:
-                left_sources.append(source_data)
-            elif leaning >= RIGHT_THRESHOLD:
-                right_sources.append(source_data)
-            else:
-                center_sources.append(source_data)
-
-        # Get articles from last 24 hours with eager-loaded sources
-        # First, get the latest article from each source to ensure representation
-        cutoff = datetime.utcnow() - timedelta(hours=24)
-        
-        # Get all source IDs
-        source_ids = [s.id for s in sources]
-        
-        # Fetch all articles from last 24 hours - no hard limit
-        # to ensure every source is represented
-        articles = NewsArticle.query.filter(
-            NewsArticle.published_at >= cutoff,
-            NewsArticle.source_id.in_(source_ids)
-        ).options(
-            joinedload(NewsArticle.source)
-        ).order_by(NewsArticle.published_at.desc()).all()
-
-        # Prepare article data organized by source leaning
-        left_articles = []
-        center_articles = []
-        right_articles = []
-        
-        # Build source lookup for podcast detection
-        source_lookup = {s['id']: s for s in left_sources + center_sources + right_sources}
-        
-        for article in articles:
-            source = article.source
-            if not source:
-                continue
-                
-            leaning = source.political_leaning or 0
-            source_info = source_lookup.get(source.id, {})
-            article_data = {
-                'id': article.id,
-                'title': article.title,
-                'url': article.url,
-                'summary': article.summary,
-                'published_at': article.published_at,
-                'source_id': source.id,
-                'source_name': source.name,
-                'source_leaning': leaning,
-                'leaning_label': get_leaning_label(leaning),
-                'sensationalism_score': article.sensationalism_score,
-                'relevance_score': article.relevance_score,
-                'is_podcast': source_info.get('is_podcast', False),
-                'source_type': source_info.get('source_type', 'news')
-            }
-            
-            if leaning <= LEFT_THRESHOLD:
-                left_articles.append(article_data)
-            elif leaning >= RIGHT_THRESHOLD:
-                right_articles.append(article_data)
-            else:
-                center_articles.append(article_data)
-
-        # Calculate coverage balance
-        total_articles = len(left_articles) + len(center_articles) + len(right_articles)
-        coverage = {
-            'left_pct': round((len(left_articles) / total_articles * 100)) if total_articles > 0 else 0,
-            'center_pct': round((len(center_articles) / total_articles * 100)) if total_articles > 0 else 0,
-            'right_pct': round((len(right_articles) / total_articles * 100)) if total_articles > 0 else 0,
-            'left_count': len(left_articles),
-            'center_count': len(center_articles),
-            'right_count': len(right_articles),
-            'total': total_articles
-        }
-
-        # Track which sources actually have articles (for filter dropdown)
-        sources_with_articles = set()
-        for article in left_articles + center_articles + right_articles:
-            sources_with_articles.add(article['source_id'])
-        
-        # Filter source lists to only include those with articles
-        left_sources = [s for s in left_sources if s['id'] in sources_with_articles]
-        center_sources = [s for s in center_sources if s['id'] in sources_with_articles]
-        right_sources = [s for s in right_sources if s['id'] in sources_with_articles]
-
-        logger.info(
-            f"News dashboard: {total_articles} articles from {len(sources)} sources "
-            f"({len(left_articles)} left, {len(center_articles)} center, {len(right_articles)} right)"
-        )
+        # Parse datetime strings for template rendering
+        left_articles = _parse_cached_articles(data['left_articles'])
+        center_articles = _parse_cached_articles(data['center_articles'])
+        right_articles = _parse_cached_articles(data['right_articles'])
 
         return render_template(
             'news/dashboard.html',
             left_articles=left_articles,
             center_articles=center_articles,
             right_articles=right_articles,
-            left_sources=left_sources,
-            center_sources=center_sources,
-            right_sources=right_sources,
-            all_sources=sources,
-            coverage=coverage,
+            left_sources=data['left_sources'],
+            center_sources=data['center_sources'],
+            right_sources=data['right_sources'],
+            coverage=data['coverage'],
             subscriber=subscriber,
             today=date.today()
         )
