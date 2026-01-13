@@ -27,6 +27,29 @@ AVOID_REPEAT_DAYS = 30
 MIN_CIVIC_SCORE = 0.5
 
 
+def is_duplicate_date_error(error):
+    """Check if an IntegrityError is due to duplicate question_date.
+    
+    Handles different database backends (PostgreSQL, SQLite, MySQL).
+    """
+    error_str = str(error).lower()
+    orig = getattr(error, 'orig', None)
+    
+    if orig:
+        orig_args = getattr(orig, 'args', ())
+        if orig_args:
+            orig_str = str(orig_args).lower()
+            if 'question_date' in orig_str or 'uq_daily_question_date' in orig_str:
+                return True
+        pgcode = getattr(orig, 'pgcode', None)
+        if pgcode == '23505':
+            if 'uq_daily_question_date' in error_str or 'question_date' in error_str:
+                return True
+    
+    return ('uq_daily_question_date' in error_str or 
+            ('duplicate' in error_str and 'question_date' in error_str))
+
+
 def get_eligible_discussions(days_to_avoid=AVOID_REPEAT_DAYS):
     """Get discussions that haven't been used recently"""
     cutoff = datetime.utcnow() - timedelta(days=days_to_avoid)
@@ -144,13 +167,21 @@ def select_next_question_source():
     return None
 
 
+class DuplicateDateError(Exception):
+    """Raised when a question already exists for the specified date"""
+    pass
+
+
 def create_daily_question_from_source(question_date, source_info, created_by_id=None):
-    """Create a DailyQuestion from the selected source"""
+    """Create a DailyQuestion from the selected source.
+    
+    Raises:
+        DuplicateDateError: If a question already exists for this date (concurrent scheduling)
+        IntegrityError: For other database integrity issues
+    """
     source = source_info['source']
     source_type = source_info['source_type']
     statement = source_info.get('statement')
-    
-    next_number = DailyQuestion.get_next_question_number()
     
     source_discussion_id = None
     source_statement_id = None
@@ -167,38 +198,56 @@ def create_daily_question_from_source(question_date, source_info, created_by_id=
         if hasattr(source, 'discussion') and source.discussion:
             source_discussion_id = source.discussion.id
     
-    question = DailyQuestion(
-        question_date=question_date,
-        question_number=next_number,
-        question_text=source_info['question_text'],
-        context=source_info.get('context'),
-        topic_category=source_info.get('topic_category'),
-        source_type=source_type,
-        source_discussion_id=source_discussion_id,
-        source_trending_topic_id=source_trending_topic_id,
-        source_statement_id=source_statement_id,
-        status='scheduled',
-        created_by_id=created_by_id
-    )
-    
-    db.session.add(question)
-    
-    selection = DailyQuestionSelection(
-        source_type=source_type,
-        source_discussion_id=source_discussion_id,
-        source_trending_topic_id=source_trending_topic_id,
-        source_statement_id=source_statement_id,
-        question_date=question_date
-    )
-    db.session.add(selection)
-    
-    db.session.commit()
-    
-    selection.daily_question_id = question.id
-    db.session.commit()
-    
-    current_app.logger.info(f"Auto-created daily question #{next_number} for {question_date} from {source_type}")
-    return question
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            next_number = DailyQuestion.get_next_question_number()
+            
+            question = DailyQuestion(
+                question_date=question_date,
+                question_number=next_number,
+                question_text=source_info['question_text'],
+                context=source_info.get('context'),
+                topic_category=source_info.get('topic_category'),
+                source_type=source_type,
+                source_discussion_id=source_discussion_id,
+                source_trending_topic_id=source_trending_topic_id,
+                source_statement_id=source_statement_id,
+                status='scheduled',
+                created_by_id=created_by_id
+            )
+            
+            db.session.add(question)
+            db.session.flush()
+            
+            selection = DailyQuestionSelection(
+                source_type=source_type,
+                source_discussion_id=source_discussion_id,
+                source_trending_topic_id=source_trending_topic_id,
+                source_statement_id=source_statement_id,
+                question_date=question_date,
+                daily_question_id=question.id
+            )
+            db.session.add(selection)
+            
+            db.session.commit()
+            
+            current_app.logger.info(f"Auto-created daily question #{next_number} for {question_date} from {source_type}")
+            return question
+            
+        except IntegrityError as e:
+            db.session.rollback()
+            
+            if is_duplicate_date_error(e):
+                current_app.logger.info(f"Question for {question_date} already exists (concurrent scheduling)")
+                raise DuplicateDateError(f"Question already exists for {question_date}")
+            
+            error_str = str(e).lower()
+            if 'question_number' in error_str and attempt < max_retries - 1:
+                current_app.logger.warning(f"Question number conflict, retrying (attempt {attempt + 1})")
+                continue
+            
+            raise
 
 
 def auto_schedule_upcoming_questions(days_ahead=7):
@@ -218,12 +267,8 @@ def auto_schedule_upcoming_questions(days_ahead=7):
             try:
                 create_daily_question_from_source(target_date, source_info)
                 scheduled_count += 1
-            except IntegrityError as e:
-                db.session.rollback()
-                if 'uq_daily_question_date' in str(e) or 'duplicate key' in str(e).lower():
-                    current_app.logger.info(f"Question for {target_date} already exists (concurrent scheduling), skipping")
-                else:
-                    current_app.logger.error(f"Database integrity error scheduling question for {target_date}: {e}")
+            except DuplicateDateError:
+                pass
             except Exception as e:
                 current_app.logger.error(f"Error auto-scheduling question for {target_date}: {e}")
                 db.session.rollback()
@@ -244,14 +289,12 @@ def auto_publish_todays_question():
         if source_info:
             try:
                 question = create_daily_question_from_source(today, source_info)
-            except IntegrityError as e:
+            except DuplicateDateError:
+                question = DailyQuestion.query.filter_by(question_date=today).first()
+            except Exception as e:
+                current_app.logger.error(f"Error creating today's question: {e}")
                 db.session.rollback()
-                if 'uq_daily_question_date' in str(e) or 'duplicate key' in str(e).lower():
-                    current_app.logger.info(f"Question for {today} already exists (concurrent scheduling), fetching existing")
-                    question = DailyQuestion.query.filter_by(question_date=today).first()
-                else:
-                    current_app.logger.error(f"Database integrity error creating today's question: {e}")
-                    return None
+                return None
         else:
             current_app.logger.warning("No content available for today's daily question")
             return None
