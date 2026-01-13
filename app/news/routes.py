@@ -230,6 +230,9 @@ def prepare_news_page_data(topics: List[TrendingTopic]) -> List[Dict]:
             # Check if in today's brief (using pre-loaded map)
             brief_item = brief_items_map.get(topic.id)
 
+            # Get source links organized by leaning
+            source_links = get_source_links(topic)
+
             if brief_item:
                 # Use cached brief data (FREE, instant)
                 result.append({
@@ -248,7 +251,9 @@ def prepare_news_page_data(topics: List[TrendingTopic]) -> List[Dict]:
                     'personal_impact': brief_item.personal_impact,
                     'sensationalism': brief_item.sensationalism_label or 'unknown',
                     'is_lazy_load': False,
-                    'dominant_leaning': get_dominant_leaning(brief_item.coverage_distribution)
+                    'dominant_leaning': get_dominant_leaning(brief_item.coverage_distribution),
+                    'civic_score': topic.civic_score,
+                    'source_links': source_links
                 })
             else:
                 # Compute coverage (fast, ~50ms, no LLM)
@@ -268,7 +273,9 @@ def prepare_news_page_data(topics: List[TrendingTopic]) -> List[Dict]:
                         coverage.get('sensationalism_avg', 0)
                     ),
                     'is_lazy_load': True,
-                    'dominant_leaning': get_dominant_leaning(coverage.get('distribution', {}))
+                    'dominant_leaning': get_dominant_leaning(coverage.get('distribution', {})),
+                    'civic_score': topic.civic_score,
+                    'source_links': source_links
                 })
 
         except Exception as e:
@@ -277,6 +284,49 @@ def prepare_news_page_data(topics: List[TrendingTopic]) -> List[Dict]:
             continue
 
     return result
+
+
+def get_source_links(topic: TrendingTopic) -> Dict:
+    """
+    Get article links organized by political leaning.
+
+    Returns:
+        dict: {
+            'left': [{'name': 'Guardian', 'url': 'https://...', 'title': '...'}],
+            'center': [...],
+            'right': [...]
+        }
+    """
+    source_links = {'left': [], 'center': [], 'right': []}
+
+    try:
+        article_links = topic.articles.all() if hasattr(topic.articles, 'all') else topic.articles
+        for link in article_links:
+            article = link.article
+            if not article:
+                continue
+
+            source = article.source
+            source_name = source.name if source else 'Unknown'
+            leaning = source.political_leaning if source else 0
+
+            link_data = {
+                'name': source_name,
+                'url': article.url,
+                'title': article.title
+            }
+
+            if leaning is not None and leaning <= -0.5:
+                source_links['left'].append(link_data)
+            elif leaning is not None and leaning >= 0.5:
+                source_links['right'].append(link_data)
+            else:
+                source_links['center'].append(link_data)
+
+    except Exception as e:
+        logger.warning(f"Error getting source links for topic {topic.id}: {e}")
+
+    return source_links
 
 
 def get_dominant_leaning(distribution: dict) -> str:
