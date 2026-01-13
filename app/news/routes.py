@@ -30,9 +30,13 @@ import json
 
 logger = logging.getLogger(__name__)
 
-# Thresholds matching CoverageAnalyzer
-LEFT_THRESHOLD = -0.5
-RIGHT_THRESHOLD = 0.5
+# Import thresholds from CoverageAnalyzer (single source of truth)
+LEFT_THRESHOLD = CoverageAnalyzer.LEFT_THRESHOLD
+RIGHT_THRESHOLD = CoverageAnalyzer.RIGHT_THRESHOLD
+
+# Article limits to prevent unbounded queries
+MAX_TOTAL_ARTICLES = 500  # Max articles to fetch from DB
+MAX_ARTICLES_PER_COLUMN = 150  # Max articles per leaning column
 
 # Cache key for dashboard data
 DASHBOARD_CACHE_KEY = 'news_dashboard_data'
@@ -98,14 +102,14 @@ def _get_dashboard_data():
     # Get all source IDs
     source_ids = [s.id for s in sources]
     
-    # Fetch all articles from last 24 hours - no hard limit
+    # Fetch articles from last 24 hours with hard limit for scalability
     # Uses composite index on (published_at DESC, source_id)
     articles = NewsArticle.query.filter(
         NewsArticle.published_at >= cutoff,
         NewsArticle.source_id.in_(source_ids)
     ).options(
         joinedload(NewsArticle.source)
-    ).order_by(NewsArticle.published_at.desc()).all()
+    ).order_by(NewsArticle.published_at.desc()).limit(MAX_TOTAL_ARTICLES).all()
 
     # Prepare article data organized by source leaning
     left_articles = []
@@ -144,6 +148,11 @@ def _get_dashboard_data():
             right_articles.append(article_data)
         else:
             center_articles.append(article_data)
+
+    # Apply per-column limits (articles already sorted by published_at desc)
+    left_articles = left_articles[:MAX_ARTICLES_PER_COLUMN]
+    center_articles = center_articles[:MAX_ARTICLES_PER_COLUMN]
+    right_articles = right_articles[:MAX_ARTICLES_PER_COLUMN]
 
     # Calculate coverage balance
     total_articles = len(left_articles) + len(center_articles) + len(right_articles)
