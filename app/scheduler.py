@@ -280,7 +280,25 @@ def init_scheduler(app):
                     logger.error(f"Error cleaning up analyses for discussion {discussion_id}: {e}")
                     db.session.rollback()
                     continue
-            
+
+            # Clean up old news perspective cache entries (keep last 7 days)
+            try:
+                from app.models import NewsPerspectiveCache
+                from datetime import date
+
+                cutoff_date = date.today() - timedelta(days=7)
+                deleted_perspectives = NewsPerspectiveCache.query.filter(
+                    NewsPerspectiveCache.generated_date < cutoff_date
+                ).delete()
+
+                if deleted_perspectives > 0:
+                    db.session.commit()
+                    logger.info(f"Deleted {deleted_perspectives} old news perspective cache entries")
+
+            except Exception as e:
+                logger.error(f"Error cleaning up news perspective cache: {e}")
+                db.session.rollback()
+
             logger.info("Cleanup task complete")
     
     

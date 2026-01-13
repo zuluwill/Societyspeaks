@@ -1284,6 +1284,98 @@ class BriefItem(db.Model):
         return f'<BriefItem {self.position}. {self.headline}>'
 
 
+class NewsPerspectiveCache(db.Model):
+    """
+    Cache for perspective analysis generated on news transparency page.
+
+    Separate from BriefItem to avoid coupling. Caches LLM-generated perspectives
+    for topics that appear on /news but weren't in the daily brief.
+    """
+    __tablename__ = 'news_perspective_cache'
+    __table_args__ = (
+        db.Index('idx_npc_topic_date', 'trending_topic_id', 'generated_date'),
+        db.UniqueConstraint('trending_topic_id', 'generated_date', name='uq_npc_topic_date'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id', ondelete='CASCADE'), nullable=False)
+
+    # Generated content (LLM-created)
+    perspectives = db.Column(db.JSON)  # {'left': '...', 'center': '...', 'right': '...'}
+    so_what = db.Column(db.Text)  # "So what?" analysis
+    personal_impact = db.Column(db.Text)  # "Why This Matters To You"
+
+    # Cache metadata
+    generated_date = db.Column(db.Date, nullable=False)  # Date generated for (allows re-generation)
+    generated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    trending_topic = db.relationship('TrendingTopic', backref='news_perspective_cache')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'trending_topic_id': self.trending_topic_id,
+            'perspectives': self.perspectives,
+            'so_what': self.so_what,
+            'personal_impact': self.personal_impact,
+            'generated_date': self.generated_date.isoformat() if self.generated_date else None,
+            'generated_at': self.generated_at.isoformat() if self.generated_at else None
+        }
+
+    def __repr__(self):
+        return f'<NewsPerspectiveCache topic_id={self.trending_topic_id} date={self.generated_date}>'
+
+
+class AdminSettings(db.Model):
+    """
+    Key-value store for admin configuration settings.
+
+    Allows adjusting system parameters (like news page quality thresholds)
+    without code deployments. Settings can be updated via admin UI.
+    """
+    __tablename__ = 'admin_settings'
+
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.JSON, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    # Relationships
+    updated_by = db.relationship('User', backref='admin_settings')
+
+    @classmethod
+    def get(cls, key: str, default=None):
+        """Get setting value by key, or return default if not found."""
+        setting = cls.query.filter_by(key=key).first()
+        return setting.value if setting else default
+
+    @classmethod
+    def set(cls, key: str, value, user_id: int = None):
+        """Set setting value, creating or updating as needed."""
+        setting = cls.query.filter_by(key=key).first()
+        if setting:
+            setting.value = value
+            setting.updated_by_id = user_id
+        else:
+            setting = cls(key=key, value=value, updated_by_id=user_id)
+            db.session.add(setting)
+        db.session.commit()
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'key': self.key,
+            'value': self.value,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'updated_by_id': self.updated_by_id
+        }
+
+    def __repr__(self):
+        return f'<AdminSettings {self.key}>'
+
+
 class DailyBriefSubscriber(db.Model):
     """
     Subscribers to daily brief (separate from daily question).

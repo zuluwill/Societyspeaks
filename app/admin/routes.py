@@ -1357,3 +1357,104 @@ def bulk_review_response_flags():
         flash('Error processing flags. Please try again.', 'error')
 
     return redirect(url_for('admin.list_response_flags'))
+
+
+@admin_bp.route('/news-settings', methods=['GET', 'POST'])
+@login_required
+def news_settings():
+    """
+    Configure news transparency page quality thresholds.
+
+    Allows admins to adjust:
+    - Minimum civic score
+    - Minimum quality score
+    - Maximum sensationalism
+    - Lookback hours (time range)
+    """
+    if not current_user.is_admin:
+        flash('Admin access required', 'error')
+        return redirect(url_for('main.index'))
+
+    from app.models import AdminSettings
+    from app.news.selector import NewsPageSelector, get_topic_leaning
+    from app.brief.coverage_analyzer import CoverageAnalyzer
+
+    if request.method == 'POST':
+        try:
+            settings = {
+                'min_civic_score': float(request.form.get('min_civic_score', 0.5)),
+                'min_quality_score': float(request.form.get('min_quality_score', 0.4)),
+                'max_sensationalism': float(request.form.get('max_sensationalism', 0.8)),
+                'lookback_hours': int(request.form.get('lookback_hours', 24))
+            }
+
+            # Validate ranges
+            if not (0 <= settings['min_civic_score'] <= 1):
+                flash('Civic score must be between 0 and 1', 'error')
+                return redirect(url_for('admin.news_settings'))
+
+            if not (0 <= settings['min_quality_score'] <= 1):
+                flash('Quality score must be between 0 and 1', 'error')
+                return redirect(url_for('admin.news_settings'))
+
+            if not (0 <= settings['max_sensationalism'] <= 1):
+                flash('Sensationalism must be between 0 and 1', 'error')
+                return redirect(url_for('admin.news_settings'))
+
+            if not (1 <= settings['lookback_hours'] <= 168):  # 1 hour to 1 week
+                flash('Lookback hours must be between 1 and 168', 'error')
+                return redirect(url_for('admin.news_settings'))
+
+            AdminSettings.set('news_page_thresholds', settings, current_user.id)
+            flash('News page settings updated successfully', 'success')
+            current_app.logger.info(f"Admin {current_user.username} updated news page settings: {settings}")
+
+        except ValueError as e:
+            flash(f'Invalid value: {e}', 'error')
+        except Exception as e:
+            current_app.logger.error(f"Error updating news settings: {e}")
+            flash('Error updating settings. Please try again.', 'error')
+
+        return redirect(url_for('admin.news_settings'))
+
+    # GET request - load current settings and stats
+    selector = NewsPageSelector()
+    settings = selector.get_current_settings()
+
+    # Get preview stats
+    try:
+        topics = selector.select_topics()
+
+        # Calculate statistics
+        left_count = sum(1 for t in topics if get_topic_leaning(t) == 'left')
+        center_count = sum(1 for t in topics if get_topic_leaning(t) == 'center')
+        right_count = sum(1 for t in topics if get_topic_leaning(t) == 'right')
+
+        avg_civic = sum(t.civic_score for t in topics) / len(topics) if topics else 0
+        avg_quality = sum(t.quality_score for t in topics) / len(topics) if topics else 0
+
+        stats = {
+            'total_topics': len(topics),
+            'left_count': left_count,
+            'center_count': center_count,
+            'right_count': right_count,
+            'avg_civic_score': round(avg_civic, 2),
+            'avg_quality_score': round(avg_quality, 2)
+        }
+
+    except Exception as e:
+        current_app.logger.error(f"Error loading news stats: {e}")
+        stats = {
+            'total_topics': 0,
+            'left_count': 0,
+            'center_count': 0,
+            'right_count': 0,
+            'avg_civic_score': 0,
+            'avg_quality_score': 0
+        }
+
+    return render_template(
+        'admin/news_settings.html',
+        settings=settings,
+        stats=stats
+    )
