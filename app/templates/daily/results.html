@@ -325,6 +325,14 @@
                     -ms-overflow-style: none;
                     scrollbar-width: none;
                 }
+                #comments-carousel {
+                    -webkit-overflow-scrolling: touch;
+                    touch-action: pan-x;
+                    scroll-snap-type: x mandatory;
+                }
+                #comments-carousel > div {
+                    scroll-snap-align: start;
+                }
                 @keyframes fade-in-out {
                     0%, 100% { opacity: 0; }
                     20%, 80% { opacity: 1; }
