@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/pricing_card.html" import pricing_card, subscription_benefits, mission_callout %}
 
 {% block title %}News Transparency Dashboard - Society Speaks{% endblock %}
 
@@ -212,87 +213,12 @@
                     Your £5/month subscription includes both the News Transparency Dashboard and the Daily Brief newsletter.
                 </p>
                 
-                <div class="space-y-4">
-                    <div class="flex items-start gap-3">
-                        <svg class="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <div>
-                            <p class="font-semibold text-gray-900">News Transparency Dashboard</p>
-                            <p class="text-gray-600 text-sm">60+ sources, real-time updates, filter and compare</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <svg class="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <div>
-                            <p class="font-semibold text-gray-900">Daily Brief by Email</p>
-                            <p class="text-gray-600 text-sm">3-5 curated stories with left/centre/right analysis</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <svg class="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <div>
-                            <p class="font-semibold text-gray-900">Sensationalism Scores</p>
-                            <p class="text-gray-600 text-sm">AI-powered analysis helps you avoid clickbait</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start gap-3">
-                        <svg class="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <div>
-                            <p class="font-semibold text-gray-900">Cancel Anytime</p>
-                            <p class="text-gray-600 text-sm">No long-term commitment, no questions asked</p>
-                        </div>
-                    </div>
-                </div>
+                <!-- Subscription Benefits (shared component) -->
+                {{ subscription_benefits() }}
             </div>
             
-            <!-- Pricing Card -->
-            <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
-                <div class="text-center mb-6">
-                    <p class="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-2">Daily Brief + Dashboard</p>
-                    <div class="flex items-baseline justify-center gap-2">
-                        <span class="text-5xl font-bold text-gray-900">£5</span>
-                        <span class="text-gray-500">/month</span>
-                    </div>
-                    <p class="text-gray-500 mt-2">or £50/year (save 17%)</p>
-                </div>
-                
-                <div class="space-y-3 mb-8">
-                    <div class="flex items-center gap-2 text-gray-700">
-                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <span>14-day free trial</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-gray-700">
-                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <span>No credit card required</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-gray-700">
-                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                        </svg>
-                        <span>Full access during trial</span>
-                    </div>
-                </div>
-                
-                <a href="{{ url_for('brief.subscribe') }}"
-                   class="block w-full bg-emerald-600 text-white text-center px-6 py-4 rounded-lg font-bold text-lg hover:bg-emerald-500 transition-colors shadow-lg">
-                    Start Free Trial
-                </a>
-                
-                <p class="text-center text-sm text-gray-500 mt-4">
-                    Join readers who want news without the spin
-                </p>
-            </div>
+            <!-- Pricing Card (shared component) -->
+            {{ pricing_card() }}
         </div>
     </div>
 </div>
