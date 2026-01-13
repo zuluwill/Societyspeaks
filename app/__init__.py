@@ -394,6 +394,11 @@ def create_app():
     app.register_blueprint(brief_admin_bp)
     app.logger.debug("Daily brief admin blueprint registered")
 
+    # Register news transparency blueprint
+    from app.news import news_bp
+    app.register_blueprint(news_bp)
+    app.logger.debug("News transparency blueprint registered")
+
     app.logger.debug("All registered routes:")
     app.logger.debug(app.url_map)
 
