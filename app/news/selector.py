@@ -8,10 +8,8 @@ organized by political spectrum diversity.
 
 from datetime import datetime, timedelta
 from typing import List
-from sqlalchemy.orm import joinedload
-from app.models import TrendingTopic, TrendingTopicArticle, NewsArticle, AdminSettings
+from app.models import TrendingTopic, AdminSettings
 from app.brief.coverage_analyzer import CoverageAnalyzer
-from app import db
 import logging
 
 logger = logging.getLogger(__name__)
@@ -54,12 +52,8 @@ class NewsPageSelector:
         """
         cutoff = datetime.utcnow() - timedelta(hours=self.lookback_hours)
 
-        # Query with eager loading to prevent N+1 queries
-        candidates = TrendingTopic.query.options(
-            joinedload(TrendingTopic.articles)
-            .joinedload(TrendingTopicArticle.article)
-            .joinedload(NewsArticle.source)
-        ).filter(
+        # Query topics (articles relationship is lazy='dynamic', accessed on-demand)
+        candidates = TrendingTopic.query.filter(
             TrendingTopic.status == 'published',
             TrendingTopic.published_at >= cutoff,
             TrendingTopic.civic_score >= self.min_civic_score,
