@@ -61,6 +61,22 @@
                 </button>
             </div>
             
+            <!-- Content Type Filter -->
+            <div class="flex gap-2 border-l pl-4 ml-2">
+                <button onclick="filterByType('all')" data-type="all"
+                        class="type-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-gray-800 text-white">
+                    All Content
+                </button>
+                <button onclick="filterByType('news')" data-type="news"
+                        class="type-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
+                    News Only
+                </button>
+                <button onclick="filterByType('podcast')" data-type="podcast"
+                        class="type-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200">
+                    Podcasts Only
+                </button>
+            </div>
+            
             <!-- Source Filter Dropdown -->
             <div class="relative">
                 <button onclick="toggleSourceFilter()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors">
@@ -90,7 +106,7 @@
                         <div class="text-xs font-bold text-blue-600 uppercase px-2 py-1">Left-leaning</div>
                         {% for source in left_sources %}
                         <label class="source-item flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer" data-name="{{ source.name|lower }}">
-                            <input type="checkbox" value="{{ source.id }}" class="source-checkbox rounded text-blue-600" checked onchange="applySourceFilter()">
+                            <input type="checkbox" value="{{ source.id }}" class="source-checkbox rounded text-blue-600" checked onchange="applyAllFilters()">
                             <span class="text-sm text-gray-700">{{ source.name }}</span>
                         </label>
                         {% endfor %}
@@ -101,7 +117,7 @@
                         <div class="text-xs font-bold text-purple-600 uppercase px-2 py-1">Center</div>
                         {% for source in center_sources %}
                         <label class="source-item flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer" data-name="{{ source.name|lower }}">
-                            <input type="checkbox" value="{{ source.id }}" class="source-checkbox rounded text-purple-600" checked onchange="applySourceFilter()">
+                            <input type="checkbox" value="{{ source.id }}" class="source-checkbox rounded text-purple-600" checked onchange="applyAllFilters()">
                             <span class="text-sm text-gray-700">{{ source.name }}</span>
                         </label>
                         {% endfor %}
@@ -112,7 +128,7 @@
                         <div class="text-xs font-bold text-red-600 uppercase px-2 py-1">Right-leaning</div>
                         {% for source in right_sources %}
                         <label class="source-item flex items-center gap-2 px-2 py-1.5 hover:bg-gray-50 rounded cursor-pointer" data-name="{{ source.name|lower }}">
-                            <input type="checkbox" value="{{ source.id }}" class="source-checkbox rounded text-red-600" checked onchange="applySourceFilter()">
+                            <input type="checkbox" value="{{ source.id }}" class="source-checkbox rounded text-red-600" checked onchange="applyAllFilters()">
                             <span class="text-sm text-gray-700">{{ source.name }}</span>
                         </label>
                         {% endfor %}
@@ -140,11 +156,16 @@
             <div class="space-y-4" id="left-articles">
                 {% for article in left_articles %}
                 <div class="article-card bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow" 
-                     data-source-id="{{ article.source_id }}" data-leaning="left">
-                    <div class="flex items-center gap-2 mb-2">
+                     data-source-id="{{ article.source_id }}" data-leaning="left" data-type="{{ article.source_type }}">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
                         <span class="inline-block bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded">
                             {{ article.source_name }}
                         </span>
+                        {% if article.is_podcast %}
+                        <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded">
+                            Podcast
+                        </span>
+                        {% endif %}
                         <span class="text-xs text-gray-400">
                             {{ article.published_at.strftime('%H:%M') if article.published_at else '' }}
                         </span>
@@ -154,8 +175,22 @@
                         {{ article.title }}
                     </a>
                     {% if article.summary %}
-                    <p class="text-sm text-gray-600 line-clamp-2">{{ article.summary[:150] }}{% if article.summary|length > 150 %}...{% endif %}</p>
+                    <p class="text-sm text-gray-600 line-clamp-2 mb-2">{{ article.summary[:150] }}{% if article.summary|length > 150 %}...{% endif %}</p>
                     {% endif %}
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        {% if article.sensationalism_score is not none %}
+                        {% set sens_pct = (article.sensationalism_score * 100)|int %}
+                        <span class="text-xs px-2 py-0.5 rounded {% if sens_pct <= 30 %}bg-green-100 text-green-700{% elif sens_pct <= 60 %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">
+                            Sensationalism: {{ sens_pct }}%
+                        </span>
+                        {% endif %}
+                        {% if article.relevance_score is not none %}
+                        {% set rel_pct = (article.relevance_score * 100)|int %}
+                        <span class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+                            Civic Relevance: {{ rel_pct }}%
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -174,11 +209,16 @@
             <div class="space-y-4" id="center-articles">
                 {% for article in center_articles %}
                 <div class="article-card bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow" 
-                     data-source-id="{{ article.source_id }}" data-leaning="center">
-                    <div class="flex items-center gap-2 mb-2">
+                     data-source-id="{{ article.source_id }}" data-leaning="center" data-type="{{ article.source_type }}">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
                         <span class="inline-block bg-purple-100 text-purple-700 text-xs font-medium px-2 py-0.5 rounded">
                             {{ article.source_name }}
                         </span>
+                        {% if article.is_podcast %}
+                        <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded">
+                            Podcast
+                        </span>
+                        {% endif %}
                         <span class="text-xs text-gray-400">
                             {{ article.published_at.strftime('%H:%M') if article.published_at else '' }}
                         </span>
@@ -188,8 +228,22 @@
                         {{ article.title }}
                     </a>
                     {% if article.summary %}
-                    <p class="text-sm text-gray-600 line-clamp-2">{{ article.summary[:150] }}{% if article.summary|length > 150 %}...{% endif %}</p>
+                    <p class="text-sm text-gray-600 line-clamp-2 mb-2">{{ article.summary[:150] }}{% if article.summary|length > 150 %}...{% endif %}</p>
                     {% endif %}
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        {% if article.sensationalism_score is not none %}
+                        {% set sens_pct = (article.sensationalism_score * 100)|int %}
+                        <span class="text-xs px-2 py-0.5 rounded {% if sens_pct <= 30 %}bg-green-100 text-green-700{% elif sens_pct <= 60 %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">
+                            Sensationalism: {{ sens_pct }}%
+                        </span>
+                        {% endif %}
+                        {% if article.relevance_score is not none %}
+                        {% set rel_pct = (article.relevance_score * 100)|int %}
+                        <span class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+                            Civic Relevance: {{ rel_pct }}%
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -208,11 +262,16 @@
             <div class="space-y-4" id="right-articles">
                 {% for article in right_articles %}
                 <div class="article-card bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow" 
-                     data-source-id="{{ article.source_id }}" data-leaning="right">
-                    <div class="flex items-center gap-2 mb-2">
+                     data-source-id="{{ article.source_id }}" data-leaning="right" data-type="{{ article.source_type }}">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
                         <span class="inline-block bg-red-100 text-red-700 text-xs font-medium px-2 py-0.5 rounded">
                             {{ article.source_name }}
                         </span>
+                        {% if article.is_podcast %}
+                        <span class="inline-block bg-indigo-100 text-indigo-700 text-xs font-medium px-2 py-0.5 rounded">
+                            Podcast
+                        </span>
+                        {% endif %}
                         <span class="text-xs text-gray-400">
                             {{ article.published_at.strftime('%H:%M') if article.published_at else '' }}
                         </span>
@@ -222,8 +281,22 @@
                         {{ article.title }}
                     </a>
                     {% if article.summary %}
-                    <p class="text-sm text-gray-600 line-clamp-2">{{ article.summary[:150] }}{% if article.summary|length > 150 %}...{% endif %}</p>
+                    <p class="text-sm text-gray-600 line-clamp-2 mb-2">{{ article.summary[:150] }}{% if article.summary|length > 150 %}...{% endif %}</p>
                     {% endif %}
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        {% if article.sensationalism_score is not none %}
+                        {% set sens_pct = (article.sensationalism_score * 100)|int %}
+                        <span class="text-xs px-2 py-0.5 rounded {% if sens_pct <= 30 %}bg-green-100 text-green-700{% elif sens_pct <= 60 %}bg-yellow-100 text-yellow-700{% else %}bg-red-100 text-red-700{% endif %}">
+                            Sensationalism: {{ sens_pct }}%
+                        </span>
+                        {% endif %}
+                        {% if article.relevance_score is not none %}
+                        {% set rel_pct = (article.relevance_score * 100)|int %}
+                        <span class="text-xs px-2 py-0.5 rounded {% if rel_pct >= 70 %}bg-green-100 text-green-700{% elif rel_pct >= 40 %}bg-blue-100 text-blue-700{% else %}bg-gray-100 text-gray-600{% endif %}">
+                            Civic Relevance: {{ rel_pct }}%
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
             </div>
@@ -233,12 +306,31 @@
 
 <script>
 let currentLeaning = 'all';
+let currentType = 'all';
 let selectedSources = new Set();
 
 // Initialize all sources as selected
 document.querySelectorAll('.source-checkbox').forEach(cb => {
     selectedSources.add(cb.value);
 });
+
+function filterByType(type) {
+    currentType = type;
+    const buttons = document.querySelectorAll('.type-btn');
+    
+    // Update button styles
+    buttons.forEach(btn => {
+        if (btn.dataset.type === type) {
+            btn.classList.remove('bg-gray-100', 'text-gray-700');
+            btn.classList.add('bg-gray-800', 'text-white');
+        } else {
+            btn.classList.remove('bg-gray-800', 'text-white');
+            btn.classList.add('bg-gray-100', 'text-gray-700');
+        }
+    });
+    
+    applyAllFilters();
+}
 
 function filterByLeaning(leaning) {
     currentLeaning = leaning;
@@ -265,7 +357,7 @@ function filterByLeaning(leaning) {
         }
     });
     
-    applySourceFilter();
+    applyAllFilters();
 }
 
 function toggleSourceFilter() {
@@ -295,7 +387,7 @@ function selectAllSources() {
         cb.checked = true;
         selectedSources.add(cb.value);
     });
-    applySourceFilter();
+    applyAllFilters();
 }
 
 function clearAllSources() {
@@ -303,10 +395,10 @@ function clearAllSources() {
         cb.checked = false;
     });
     selectedSources.clear();
-    applySourceFilter();
+    applyAllFilters();
 }
 
-function applySourceFilter() {
+function applyAllFilters() {
     selectedSources.clear();
     document.querySelectorAll('.source-checkbox:checked').forEach(cb => {
         selectedSources.add(cb.value);
@@ -322,15 +414,17 @@ function applySourceFilter() {
         badge.classList.add('hidden');
     }
     
-    // Filter articles
+    // Filter articles by source, leaning, and content type
     document.querySelectorAll('.article-card').forEach(card => {
         const sourceId = card.dataset.sourceId;
         const leaning = card.dataset.leaning;
+        const type = card.dataset.type;
         
         const matchesLeaning = currentLeaning === 'all' || leaning === currentLeaning;
         const matchesSource = selectedSources.has(sourceId);
+        const matchesType = currentType === 'all' || type === currentType;
         
-        card.style.display = (matchesLeaning && matchesSource) ? 'block' : 'none';
+        card.style.display = (matchesLeaning && matchesSource && matchesType) ? 'block' : 'none';
     });
 }
 </script>
