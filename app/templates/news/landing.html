@@ -1,199 +1,350 @@
 {% extends "layout.html" %}
 
-{% block title %}News Transparency - Society Speaks{% endblock %}
+{% block title %}News Transparency Dashboard - Society Speaks{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="bg-gradient-to-r from-blue-800 to-blue-600 text-white py-16 px-4">
-    <div class="max-w-4xl mx-auto text-center">
-        <h1 class="text-5xl font-bold mb-4">News Transparency Dashboard</h1>
-        <p class="text-2xl text-blue-100 mb-6">
-            See today's news from across the political spectrum
-        </p>
-        <p class="text-lg text-blue-200 max-w-2xl mx-auto">
-            Understand how left, center, and right-leaning outlets frame the same stories.
-            Get beyond the headlines with our automated bias analysis.
-        </p>
+<!-- Hero Section with CTA above the fold -->
+<div class="bg-gradient-to-r from-blue-800 to-blue-600 text-white py-12 px-4">
+    <div class="max-w-6xl mx-auto">
+        <div class="grid lg:grid-cols-2 gap-8 items-center">
+            <!-- Left: Copy and CTA -->
+            <div class="space-y-6">
+                <div class="inline-flex rounded-full bg-blue-700 px-3 py-1 text-sm font-semibold text-blue-100">
+                    Included with Daily Brief subscription
+                </div>
+                <h1 class="text-4xl lg:text-5xl font-bold leading-tight">
+                    News Transparency Dashboard
+                </h1>
+                <p class="text-xl text-blue-100">
+                    See today's news from 60+ sources organised by political leaning. Filter by source, compare coverage, and spot what your usual outlets aren't telling you.
+                </p>
+                
+                <!-- Pricing CTA -->
+                <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20">
+                    <div class="flex items-baseline gap-2 mb-3">
+                        <span class="text-3xl font-bold">£5</span>
+                        <span class="text-blue-200">/month</span>
+                        <span class="text-sm text-blue-200 ml-2">or £50/year (save 17%)</span>
+                    </div>
+                    <p class="text-blue-100 text-sm mb-4">
+                        Includes the Daily Brief delivered to your inbox + full dashboard access
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <a href="{{ url_for('brief.subscribe') }}"
+                           class="inline-flex items-center justify-center bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors shadow-lg">
+                            Start 14-Day Free Trial
+                            <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                            </svg>
+                        </a>
+                        <a href="{{ url_for('brief.today') }}"
+                           class="inline-flex items-center justify-center border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white/10 transition-colors">
+                            See Example Brief
+                        </a>
+                    </div>
+                    <p class="text-xs text-blue-200 mt-3">
+                        No credit card required for trial
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Right: Dashboard Preview -->
+            <div class="relative">
+                <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
+                    <!-- Mock Dashboard Header -->
+                    <div class="bg-gradient-to-r from-blue-700 to-blue-500 text-white p-4">
+                        <p class="text-sm font-semibold">News Transparency Dashboard</p>
+                        <p class="text-xs text-blue-200">Monday, 13 January 2026</p>
+                    </div>
+                    <!-- Coverage Balance -->
+                    <div class="p-4 border-b">
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Today's Coverage Balance</p>
+                        <div class="w-full h-3 rounded-full overflow-hidden mb-2" style="display: flex; background-color: #e5e7eb;">
+                            <div style="width: 28%; background-color: #3b82f6;"></div>
+                            <div style="width: 44%; background-color: #a855f7;"></div>
+                            <div style="width: 28%; background-color: #ef4444;"></div>
+                        </div>
+                        <div class="flex justify-between text-xs">
+                            <span class="text-blue-600 font-medium">28% Left</span>
+                            <span class="text-purple-600 font-medium">44% Center</span>
+                            <span class="text-red-600 font-medium">28% Right</span>
+                        </div>
+                    </div>
+                    <!-- Mock Article Cards -->
+                    <div class="p-4 grid grid-cols-3 gap-2">
+                        <div class="space-y-2">
+                            <div class="bg-blue-50 rounded p-2">
+                                <span class="inline-block bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded mb-1">Guardian</span>
+                                <div class="h-2 bg-blue-200 rounded w-full mb-1"></div>
+                                <div class="h-2 bg-blue-100 rounded w-3/4"></div>
+                            </div>
+                            <div class="bg-blue-50 rounded p-2">
+                                <span class="inline-block bg-blue-100 text-blue-700 text-xs px-1.5 py-0.5 rounded mb-1">NYT</span>
+                                <div class="h-2 bg-blue-200 rounded w-full mb-1"></div>
+                                <div class="h-2 bg-blue-100 rounded w-2/3"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="bg-purple-50 rounded p-2">
+                                <span class="inline-block bg-purple-100 text-purple-700 text-xs px-1.5 py-0.5 rounded mb-1">Reuters</span>
+                                <div class="h-2 bg-purple-200 rounded w-full mb-1"></div>
+                                <div class="h-2 bg-purple-100 rounded w-4/5"></div>
+                            </div>
+                            <div class="bg-purple-50 rounded p-2">
+                                <span class="inline-block bg-purple-100 text-purple-700 text-xs px-1.5 py-0.5 rounded mb-1">BBC</span>
+                                <div class="h-2 bg-purple-200 rounded w-full mb-1"></div>
+                                <div class="h-2 bg-purple-100 rounded w-3/4"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="bg-red-50 rounded p-2">
+                                <span class="inline-block bg-red-100 text-red-700 text-xs px-1.5 py-0.5 rounded mb-1">WSJ</span>
+                                <div class="h-2 bg-red-200 rounded w-full mb-1"></div>
+                                <div class="h-2 bg-red-100 rounded w-2/3"></div>
+                            </div>
+                            <div class="bg-red-50 rounded p-2">
+                                <span class="inline-block bg-red-100 text-red-700 text-xs px-1.5 py-0.5 rounded mb-1">Telegraph</span>
+                                <div class="h-2 bg-red-200 rounded w-full mb-1"></div>
+                                <div class="h-2 bg-red-100 rounded w-4/5"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Blur overlay -->
+                    <div class="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent"></div>
+                </div>
+                <!-- Stats badge -->
+                <div class="absolute -bottom-4 -right-4 bg-emerald-500 text-white rounded-lg px-4 py-2 shadow-lg">
+                    <p class="text-2xl font-bold">60+</p>
+                    <p class="text-xs">Sources monitored daily</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Value Proposition -->
+<!-- Trust Signals -->
+<div class="bg-gray-50 border-b py-6">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="flex flex-wrap justify-center items-center gap-8 text-sm text-gray-500">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>Updated every hour</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>Left, Centre, and Right sources</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>AI-scored for sensationalism</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>Cancel anytime</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features Grid -->
 <div class="max-w-6xl mx-auto px-4 py-16">
-    <div class="grid md:grid-cols-3 gap-8 mb-12">
-        <!-- Feature 1 -->
-        <div class="text-center">
-            <div class="bg-blue-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">Break Out of Your Echo Chamber</h2>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+            Most people only see news from outlets that confirm their existing views. Our dashboard shows you what every side is saying.
+        </p>
+    </div>
+    
+    <div class="grid md:grid-cols-3 gap-8">
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
             </div>
-            <h3 class="text-xl font-bold mb-2">Coverage Balance</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Coverage Balance</h3>
             <p class="text-gray-600">
-                Visual breakdown showing which outlets (left/center/right) covered each story
+                See at a glance how coverage splits across the political spectrum. Spot stories that only one side is covering.
             </p>
         </div>
 
-        <!-- Feature 2 -->
-        <div class="text-center">
-            <div class="bg-purple-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                 </svg>
             </div>
-            <h3 class="text-xl font-bold mb-2">Multiple Perspectives</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Filter by Source</h3>
             <p class="text-gray-600">
-                See how different political leanings emphasize different aspects of the same story
+                Choose which outlets to include. Compare mainstream media with independent sources. Separate news from podcasts.
             </p>
         </div>
 
-        <!-- Feature 3 -->
-        <div class="text-center">
-            <div class="bg-amber-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-10 h-10 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-4">
+                <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
             </div>
-            <h3 class="text-xl font-bold mb-3">Blindspot Detection</h3>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Quality Scores</h3>
             <p class="text-gray-600">
-                Get alerted when one political perspective is significantly underrepresented
+                Each article is scored for sensationalism and civic relevance. Focus on substance, skip the clickbait.
             </p>
         </div>
     </div>
+</div>
 
-    <!-- Sample Preview -->
-    <div class="bg-gray-50 rounded-lg p-8 mb-12">
-        <h2 class="text-3xl font-bold text-center mb-8">What You Get</h2>
-
-        <div class="bg-white rounded-lg shadow-lg p-6 max-w-3xl mx-auto">
-            <div class="flex gap-2 mb-4">
-                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full">POLICY</span>
-                <span class="bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full">Low Sensationalism</span>
-            </div>
-
-            <h3 class="text-2xl font-bold mb-4">Example: Climate Policy Announcement</h3>
-
-            <div class="mb-4">
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Coverage Balance</p>
-                <div class="w-full h-3 rounded-full overflow-hidden mb-2" style="display: flex; background-color: #e5e7eb;">
-                    <div style="width: 30%; background-color: #3b82f6;"></div>
-                    <div style="width: 40%; background-color: #a855f7;"></div>
-                    <div style="width: 30%; background-color: #ef4444;"></div>
+<!-- What's Included Section -->
+<div class="bg-gray-50 py-16">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Everything in One Subscription</h2>
+                <p class="text-lg text-gray-600 mb-8">
+                    Your £5/month subscription includes both the News Transparency Dashboard and the Daily Brief newsletter.
+                </p>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <div>
+                            <p class="font-semibold text-gray-900">News Transparency Dashboard</p>
+                            <p class="text-gray-600 text-sm">60+ sources, real-time updates, filter and compare</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <div>
+                            <p class="font-semibold text-gray-900">Daily Brief by Email</p>
+                            <p class="text-gray-600 text-sm">3-5 curated stories with left/centre/right analysis</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <div>
+                            <p class="font-semibold text-gray-900">Sensationalism Scores</p>
+                            <p class="text-gray-600 text-sm">AI-powered analysis helps you avoid clickbait</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-emerald-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <div>
+                            <p class="font-semibold text-gray-900">Cancel Anytime</p>
+                            <p class="text-gray-600 text-sm">No long-term commitment, no questions asked</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex justify-between text-xs">
-                    <span class="text-blue-600 font-medium">30% Left</span>
-                    <span class="text-purple-600 font-medium">40% Center</span>
-                    <span class="text-red-600 font-medium">30% Right</span>
-                </div>
             </div>
-
-            <div class="bg-blue-50 p-4 rounded border-l-4 border-blue-500 mb-4">
-                <p class="text-sm text-gray-600 italic">Full perspectives, analysis, and context available to subscribers...</p>
-            </div>
-
-            <div class="text-center py-4">
-                <div class="inline-block bg-gradient-to-r from-gray-100 to-gray-200 text-gray-400 px-6 py-2 rounded-lg">
-                    <span>🔒 Subscribe to see full analysis</span>
+            
+            <!-- Pricing Card -->
+            <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
+                <div class="text-center mb-6">
+                    <p class="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-2">Daily Brief + Dashboard</p>
+                    <div class="flex items-baseline justify-center gap-2">
+                        <span class="text-5xl font-bold text-gray-900">£5</span>
+                        <span class="text-gray-500">/month</span>
+                    </div>
+                    <p class="text-gray-500 mt-2">or £50/year (save 17%)</p>
                 </div>
+                
+                <div class="space-y-3 mb-8">
+                    <div class="flex items-center gap-2 text-gray-700">
+                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>14-day free trial</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-gray-700">
+                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>No credit card required</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-gray-700">
+                        <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        <span>Full access during trial</span>
+                    </div>
+                </div>
+                
+                <a href="{{ url_for('brief.subscribe') }}"
+                   class="block w-full bg-emerald-600 text-white text-center px-6 py-4 rounded-lg font-bold text-lg hover:bg-emerald-500 transition-colors shadow-lg">
+                    Start Free Trial
+                </a>
+                
+                <p class="text-center text-sm text-gray-500 mt-4">
+                    Join readers who want news without the spin
+                </p>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- CTA Section -->
-    <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-12 text-center text-white">
-        <h2 class="text-4xl font-bold mb-4">Start Your 14-Day Free Trial</h2>
-        <p class="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Get full access to the News Transparency Dashboard plus the Daily Brief delivered to your inbox every evening
+<!-- Independence Section (reused concept from homepage) -->
+<div class="max-w-4xl mx-auto px-4 py-16">
+    <div class="bg-blue-50 rounded-2xl p-8 border border-blue-100 text-center">
+        <svg class="w-12 h-12 text-blue-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+        <h3 class="text-2xl font-bold text-blue-900 mb-3">Reader-Funded, Not Ad-Funded</h3>
+        <p class="text-blue-800 max-w-2xl mx-auto mb-6">
+            Your subscription keeps Society Speaks independent. We have no advertisers to please and no engagement metrics to optimise. Just balanced news for informed citizens.
         </p>
-
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-6">
-            <a href="{{ url_for('brief.subscribe') }}"
-               class="inline-block bg-white text-blue-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg">
-                Try 14 Days Free
-            </a>
-            <a href="{{ url_for('brief.methodology') }}"
-               class="inline-block text-white border-2 border-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-blue-600 transition-colors">
-                Learn How It Works
-            </a>
+        <div class="flex flex-wrap justify-center gap-6 text-sm text-blue-700">
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                </svg>
+                No ads
+            </span>
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                </svg>
+                No clickbait
+            </span>
+            <span class="flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                </svg>
+                No outrage farming
+            </span>
         </div>
-
-        <p class="text-sm text-blue-200">
-            No credit card required • Cancel anytime • Full access during trial
-        </p>
     </div>
+</div>
 
-    <!-- Benefits List -->
-    <div class="mt-16 grid md:grid-cols-2 gap-8">
-        <div>
-            <h3 class="text-2xl font-bold mb-4">What's Included</h3>
-            <ul class="space-y-3">
-                <li class="flex items-start">
-                    <svg class="w-6 h-6 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span>News Transparency Dashboard with all topics from today</span>
-                </li>
-                <li class="flex items-start">
-                    <svg class="w-6 h-6 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span>Coverage analysis from 60+ trusted news sources</span>
-                </li>
-                <li class="flex items-start">
-                    <svg class="w-6 h-6 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span>Perspective analysis showing left/center/right framing</span>
-                </li>
-                <li class="flex items-start">
-                    <svg class="w-6 h-6 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span>Daily Brief delivered to your inbox every evening</span>
-                </li>
-                <li class="flex items-start">
-                    <svg class="w-6 h-6 text-green-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
-                    <span>Sensationalism ratings and verification links</span>
-                </li>
-            </ul>
-        </div>
-
-        <div>
-            <h3 class="text-2xl font-bold mb-4">Why Subscribe?</h3>
-            <ul class="space-y-3">
-                <li class="flex items-start">
-                    <svg class="w-6 h-6 text-blue-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                    <span>Break out of your echo chamber with balanced news</span>
-                </li>
-                <li class="flex items-start">
-                    <svg class="w-6 h-6 text-blue-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                    <span>Save time with curated, analyzed news in one place</span>
-                </li>
-                <li class="flex items-start">
-                    <svg class="w-6 h-6 text-blue-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                    <span>Understand the full story, not just one perspective</span>
-                </li>
-                <li class="flex items-start">
-                    <svg class="w-6 h-6 text-blue-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                    <span>Make informed decisions with complete context</span>
-                </li>
-                <li class="flex items-start">
-                    <svg class="w-6 h-6 text-blue-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                    <span>Support independent, non-partisan news analysis</span>
-                </li>
-            </ul>
-        </div>
+<!-- Final CTA -->
+<div class="bg-gradient-to-r from-blue-600 to-blue-700 py-12">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold text-white mb-4">Ready to See the Full Picture?</h2>
+        <p class="text-xl text-blue-100 mb-8">
+            Start your 14-day free trial and see what balanced news looks like.
+        </p>
+        <a href="{{ url_for('brief.subscribe') }}"
+           class="inline-flex items-center bg-white text-blue-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg">
+            Start Free Trial
+            <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </a>
+        <p class="text-blue-200 text-sm mt-4">£5/month after trial ends</p>
     </div>
 </div>
 {% endblock %}
