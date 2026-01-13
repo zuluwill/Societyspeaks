@@ -1,0 +1,169 @@
+Best practices for each:
+
+1) Hard limit (100 per column, 300 total)
+
+
+[5 tools called]
+
+
+## Best practices for the three items
+
+### 1. Hard limit (100 per column, 300 total)
+
+Best practice: apply at the database level, make it configurable, and document it.
+
+Implementation approach:
+
+```python
+# Option A: Module-level constants (simple, good for MVP)
+MAX_ARTICLES_PER_COLUMN = 100
+MAX_TOTAL_ARTICLES = 300
+
+# Option B: AdminSettings (flexible, no code changes needed)
+# Store in AdminSettings.get('news_dashboard_limits', {
+#     'max_per_column': 100,
+#     'max_total': 300
+# })
+```
+
+Apply limit in SQL (not in Python):
+```python
+# ✅ GOOD: Limit at database level
+articles = NewsArticle.query.filter(...).order_by(
+    NewsArticle.published_at.desc()
+).limit(MAX_TOTAL_ARTICLES).all()
+
+# Then split into columns and limit each
+left_articles = left_articles[:MAX_ARTICLES_PER_COLUMN]
+center_articles = center_articles[:MAX_ARTICLES_PER_COLUMN]
+right_articles = right_articles[:MAX_ARTICLES_PER_COLUMN]
+```
+
+Why this approach:
+- Database does the work (efficient)
+- Consistent with your codebase pattern (see `brief/routes.py:141` using `per_page`)
+- Configurable via AdminSettings if needed later
+- Clear and maintainable
+
+Recommendation: Start with module constants, move to AdminSettings if you need runtime changes.
+
+---
+
+### 2. `is_podcast` as database flag
+
+Best practice: add a column, backfill, and migrate the detection logic.
+
+Implementation steps:
+
+1. Create migration:
+```python
+# migrations/versions/XXXX_add_is_podcast_to_news_source.py
+def upgrade():
+    op.add_column('news_source', 
+        sa.Column('is_podcast', sa.Boolean(), nullable=True, default=None))
+    # Backfill based on existing keyword logic
+    op.execute("""
+        UPDATE news_source 
+        SET is_podcast = CASE 
+            WHEN LOWER(name) LIKE '%podcast%' 
+              OR LOWER(name) LIKE '%show%'
+              OR LOWER(name) LIKE '%huberman%'
+              -- ... other keywords
+            THEN TRUE 
+            ELSE FALSE 
+        END
+    """)
+    # Then set NOT NULL after backfill
+    op.alter_column('news_source', 'is_podcast', nullable=False)
+```
+
+2. Update model:
+```python
+# app/models.py
+class NewsSource(db.Model):
+    # ... existing fields ...
+    is_podcast = db.Column(db.Boolean, default=False, nullable=False)
+```
+
+3. Update detection logic:
+```python
+# app/news/routes.py
+# Remove PODCAST_KEYWORDS and _is_podcast function
+# Just use: source.is_podcast
+```
+
+4. Optional: add index if filtering is common:
+```python
+db.Index('idx_news_source_podcast', 'is_podcast')
+```
+
+Why this approach:
+- Single source of truth (database)
+- Faster than keyword matching
+- Easier to maintain (no keyword list)
+- Can be set manually for edge cases
+
+Recommendation: Do this as a migration. The keyword approach is fine for MVP, but a database flag is cleaner long-term.
+
+---
+
+### 3. Import thresholds from CoverageAnalyzer
+
+Best practice: single source of truth, avoid duplication.
+
+Current state:
+- `CoverageAnalyzer` has: `LEFT_THRESHOLD = -0.5`, `RIGHT_THRESHOLD = 0.5`
+- `app/news/routes.py` duplicates: `LEFT_THRESHOLD = -0.5`, `RIGHT_THRESHOLD = 0.5`
+
+Solution:
+```python
+# app/news/routes.py
+from app.brief.coverage_analyzer import CoverageAnalyzer
+
+# Use class constants directly
+LEFT_THRESHOLD = CoverageAnalyzer.LEFT_THRESHOLD
+RIGHT_THRESHOLD = CoverageAnalyzer.RIGHT_THRESHOLD
+
+# Or even better, use them directly:
+if leaning <= CoverageAnalyzer.LEFT_THRESHOLD:
+    # ...
+```
+
+Why this approach:
+- Single source of truth
+- No duplication
+- Changes propagate automatically
+- Clear dependency
+
+Recommendation: Import from `CoverageAnalyzer`. This is a quick cleanup.
+
+---
+
+## Priority ranking
+
+1. Hard limit (100/300) — do first
+   - Prevents scalability issues
+   - Quick to implement
+   - High impact
+
+2. Import thresholds — do next
+   - Quick cleanup
+   - Prevents future bugs
+   - Low risk
+
+3. `is_podcast` database flag — do later
+   - Requires migration
+   - Backfill needed
+   - Can wait until you need it
+
+---
+
+## Summary
+
+| Item | Best Practice | Complexity | Priority |
+|------|--------------|------------|----------|
+| Hard Limit | Module constants → AdminSettings | Low | High |
+| `is_podcast` Flag | Database column + migration | Medium | Medium |
+| Import Thresholds | Import from CoverageAnalyzer | Low | Low |
+
+All three are straightforward. The hard limit is the most important for production readiness.
