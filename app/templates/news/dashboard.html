@@ -9,7 +9,10 @@
         <h1 class="text-4xl font-bold mb-2">News Transparency Dashboard</h1>
         <p class="text-xl text-blue-100">{{ today.strftime('%A, %B %d, %Y') }}</p>
         <p class="text-lg text-blue-200 mt-2">
-            {{ coverage.total }} articles from {{ left_sources|length + center_sources|length + right_sources|length }} sources across the political spectrum
+            {{ coverage.total }} articles from {{ left_sources|length + center_sources|length + right_sources|length }} sources with content today
+        </p>
+        <p class="text-sm text-blue-300 mt-1">
+            We monitor 60+ sources daily across the political spectrum
         </p>
     </div>
 </div>
