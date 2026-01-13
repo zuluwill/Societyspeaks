@@ -11,6 +11,7 @@ Avoids repeating content within a configurable time window.
 
 from datetime import date, datetime, timedelta
 from flask import current_app
+from sqlalchemy.exc import IntegrityError
 from app import db
 from app.models import (
     DailyQuestion, 
@@ -217,6 +218,12 @@ def auto_schedule_upcoming_questions(days_ahead=7):
             try:
                 create_daily_question_from_source(target_date, source_info)
                 scheduled_count += 1
+            except IntegrityError as e:
+                db.session.rollback()
+                if 'uq_daily_question_date' in str(e) or 'duplicate key' in str(e).lower():
+                    current_app.logger.info(f"Question for {target_date} already exists (concurrent scheduling), skipping")
+                else:
+                    current_app.logger.error(f"Database integrity error scheduling question for {target_date}: {e}")
             except Exception as e:
                 current_app.logger.error(f"Error auto-scheduling question for {target_date}: {e}")
                 db.session.rollback()
@@ -235,12 +242,21 @@ def auto_publish_todays_question():
     if not question:
         source_info = select_next_question_source()
         if source_info:
-            question = create_daily_question_from_source(today, source_info)
+            try:
+                question = create_daily_question_from_source(today, source_info)
+            except IntegrityError as e:
+                db.session.rollback()
+                if 'uq_daily_question_date' in str(e) or 'duplicate key' in str(e).lower():
+                    current_app.logger.info(f"Question for {today} already exists (concurrent scheduling), fetching existing")
+                    question = DailyQuestion.query.filter_by(question_date=today).first()
+                else:
+                    current_app.logger.error(f"Database integrity error creating today's question: {e}")
+                    return None
         else:
             current_app.logger.warning("No content available for today's daily question")
             return None
     
-    if question.status != 'published':
+    if question and question.status != 'published':
         question.status = 'published'
         question.published_at = datetime.utcnow()
         db.session.commit()
