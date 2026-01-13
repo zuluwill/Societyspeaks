@@ -105,7 +105,7 @@
         <h3 class="text-lg font-semibold text-blue-900 mb-2">Webhook Setup</h3>
         <p class="text-blue-800 mb-4">To receive email events, configure the webhook in your Resend dashboard:</p>
         <div class="bg-white rounded p-4 font-mono text-sm break-all">
-            https://societyspeaks.com/brief/webhooks/resend
+            {{ config.get('APP_BASE_URL', 'https://societyspeaks.io') }}/brief/webhooks/resend
         </div>
         <p class="text-sm text-blue-700 mt-3">Select events: email.sent, email.delivered, email.opened, email.clicked, email.bounced, email.complained</p>
     </div>
