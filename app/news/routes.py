@@ -2,7 +2,7 @@
 News Transparency Routes
 
 Main routes:
-- /news: Dashboard showing all topics from last 24h (subscriber-only)
+- /news: Dashboard showing articles from all 60+ sources (subscriber-only)
 - /api/news/perspectives/<id>: Lazy-load perspectives (subscriber-only)
 """
 
@@ -10,6 +10,7 @@ from flask import render_template, session, jsonify, current_app, request
 from flask_login import current_user
 from datetime import date, datetime, timedelta
 from typing import List, Dict
+from sqlalchemy.orm import joinedload
 from app.news import news_bp
 from app.news.selector import NewsPageSelector, get_topic_leaning
 from app.models import (
@@ -18,6 +19,8 @@ from app.models import (
     BriefItem,
     DailyBrief,
     NewsPerspectiveCache,
+    NewsSource,
+    NewsArticle,
     db
 )
 from app.brief.coverage_analyzer import CoverageAnalyzer
@@ -26,6 +29,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# Thresholds matching CoverageAnalyzer
+LEFT_THRESHOLD = -0.5
+RIGHT_THRESHOLD = 0.5
+
 
 @news_bp.route('/news')
 @limiter.limit("60/minute")
@@ -33,8 +40,8 @@ def dashboard():
     """
     News transparency dashboard - subscriber only.
 
-    Shows all published topics from last 24h with coverage analysis.
-    Brief topics show full cached data, others show coverage with lazy-load button.
+    Shows top articles from all 60+ sources across the political spectrum.
+    Users can filter by source and by political leaning.
     """
     # Check subscriber eligibility (reuse brief pattern)
     subscriber = None
@@ -53,37 +60,118 @@ def dashboard():
     if not is_subscriber:
         return render_template('news/landing.html')
 
-    # Get topics for today
     try:
-        selector = NewsPageSelector()
-        topics = selector.select_topics()
+        # Get all active sources with their political leanings
+        sources = NewsSource.query.filter(
+            NewsSource.is_active == True
+        ).order_by(NewsSource.political_leaning.nullsfirst()).all()
 
-        # Limit to 50 topics for performance (pagination can be added later if needed)
-        if len(topics) > 50:
-            logger.info(f"Limiting dashboard to 50 topics (from {len(topics)} total)")
-            topics = topics[:50]
+        # Categorize sources by leaning
+        left_sources = []
+        center_sources = []
+        right_sources = []
+        
+        for source in sources:
+            leaning = source.political_leaning or 0
+            source_data = {
+                'id': source.id,
+                'name': source.name,
+                'leaning': leaning,
+                'leaning_label': get_leaning_label(leaning),
+                'country': source.country
+            }
+            if leaning <= LEFT_THRESHOLD:
+                left_sources.append(source_data)
+            elif leaning >= RIGHT_THRESHOLD:
+                right_sources.append(source_data)
+            else:
+                center_sources.append(source_data)
 
-        # Prepare hybrid data (brief vs non-brief)
-        topic_data = prepare_news_page_data(topics)
+        # Get articles from last 24 hours with eager-loaded sources
+        # First, get the latest article from each source to ensure representation
+        cutoff = datetime.utcnow() - timedelta(hours=24)
+        
+        # Get all source IDs
+        source_ids = [s.id for s in sources]
+        
+        # Fetch all articles from last 24 hours - no hard limit
+        # to ensure every source is represented
+        articles = NewsArticle.query.filter(
+            NewsArticle.published_at >= cutoff,
+            NewsArticle.source_id.in_(source_ids)
+        ).options(
+            joinedload(NewsArticle.source)
+        ).order_by(NewsArticle.published_at.desc()).all()
 
-        # Group by leaning for filter UI
-        left_topics = [t for t in topic_data if t['dominant_leaning'] == 'left']
-        center_topics = [t for t in topic_data if t['dominant_leaning'] == 'center']
-        right_topics = [t for t in topic_data if t['dominant_leaning'] == 'right']
+        # Prepare article data organized by source leaning
+        left_articles = []
+        center_articles = []
+        right_articles = []
+        
+        for article in articles:
+            source = article.source
+            if not source:
+                continue
+                
+            leaning = source.political_leaning or 0
+            article_data = {
+                'id': article.id,
+                'title': article.title,
+                'url': article.url,
+                'summary': article.summary,
+                'published_at': article.published_at,
+                'source_id': source.id,
+                'source_name': source.name,
+                'source_leaning': leaning,
+                'leaning_label': get_leaning_label(leaning),
+                'sensationalism_score': article.sensationalism_score
+            }
+            
+            if leaning <= LEFT_THRESHOLD:
+                left_articles.append(article_data)
+            elif leaning >= RIGHT_THRESHOLD:
+                right_articles.append(article_data)
+            else:
+                center_articles.append(article_data)
+
+        # Calculate coverage balance
+        total_articles = len(left_articles) + len(center_articles) + len(right_articles)
+        coverage = {
+            'left_pct': round((len(left_articles) / total_articles * 100)) if total_articles > 0 else 0,
+            'center_pct': round((len(center_articles) / total_articles * 100)) if total_articles > 0 else 0,
+            'right_pct': round((len(right_articles) / total_articles * 100)) if total_articles > 0 else 0,
+            'left_count': len(left_articles),
+            'center_count': len(center_articles),
+            'right_count': len(right_articles),
+            'total': total_articles
+        }
+
+        # Track which sources actually have articles (for filter dropdown)
+        sources_with_articles = set()
+        for article in left_articles + center_articles + right_articles:
+            sources_with_articles.add(article['source_id'])
+        
+        # Filter source lists to only include those with articles
+        left_sources = [s for s in left_sources if s['id'] in sources_with_articles]
+        center_sources = [s for s in center_sources if s['id'] in sources_with_articles]
+        right_sources = [s for s in right_sources if s['id'] in sources_with_articles]
 
         logger.info(
-            f"News dashboard: {len(topics)} topics total "
-            f"({len(left_topics)} left, {len(center_topics)} center, {len(right_topics)} right)"
+            f"News dashboard: {total_articles} articles from {len(sources)} sources "
+            f"({len(left_articles)} left, {len(center_articles)} center, {len(right_articles)} right)"
         )
 
         return render_template(
             'news/dashboard.html',
-            topics=topic_data,
-            left_topics=left_topics,
-            center_topics=center_topics,
-            right_topics=right_topics,
+            left_articles=left_articles,
+            center_articles=center_articles,
+            right_articles=right_articles,
+            left_sources=left_sources,
+            center_sources=center_sources,
+            right_sources=right_sources,
+            all_sources=sources,
+            coverage=coverage,
             subscriber=subscriber,
-            total_topics=len(topics),
             today=date.today()
         )
 
@@ -93,6 +181,22 @@ def dashboard():
             'errors/500.html',
             error_message="Failed to load news dashboard. Please try again later."
         ), 500
+
+
+def get_leaning_label(leaning: float) -> str:
+    """Convert numeric leaning to human-readable label."""
+    if leaning is None:
+        return 'Unknown'
+    if leaning <= -1.5:
+        return 'Left'
+    elif leaning <= -0.5:
+        return 'Lean Left'
+    elif leaning >= 1.5:
+        return 'Right'
+    elif leaning >= 0.5:
+        return 'Lean Right'
+    else:
+        return 'Center'
 
 
 @news_bp.route('/api/news/perspectives/<int:topic_id>', methods=['POST'])
