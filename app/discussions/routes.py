@@ -150,6 +150,15 @@ def create_discussion():
     return render_template('discussions/create_discussion.html', form=form)
 
 
+@discussions_bp.route('/<int:discussion_id>', methods=['GET'])
+def view_discussion_redirect(discussion_id):
+    """Redirect discussion URLs without slug to the canonical URL with slug."""
+    discussion = Discussion.query.get_or_404(discussion_id)
+    return redirect(url_for('discussions.view_discussion', 
+                          discussion_id=discussion.id, 
+                          slug=discussion.slug), code=301)
+
+
 @discussions_bp.route('/<int:discussion_id>/<slug>', methods=['GET'])
 @track_discussion_view
 def view_discussion(discussion_id, slug):
