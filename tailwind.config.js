@@ -9,6 +9,13 @@ module.exports = {
     './app/**/*.py',
     './app/static/**/*.js',
   ],
+  safelist: [
+    'snap-x',
+    'snap-mandatory',
+    'snap-start',
+    'scroll-smooth',
+    'overflow-x-auto',
+  ],
   darkMode: 'class',
   theme: {
     extend: {
