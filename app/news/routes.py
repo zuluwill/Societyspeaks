@@ -212,6 +212,9 @@ def prepare_news_page_data(topics: List[TrendingTopic]) -> List[Dict]:
     - Brief topics: Full analysis + perspectives (cached, free)
     - Other topics: Coverage only, perspectives lazy-loaded (LLM on-demand)
     """
+    from sqlalchemy.orm import joinedload
+    from app.models import TrendingTopicArticle, NewsArticle
+
     result = []
 
     # Batch load all brief items for today to prevent N+1 queries
@@ -225,13 +228,16 @@ def prepare_news_page_data(topics: List[TrendingTopic]) -> List[Dict]:
         ).all()
     }
 
+    # Batch prefetch all article links for all topics in a single query
+    source_links_map = batch_prefetch_source_links(topic_ids)
+
     for topic in topics:
         try:
             # Check if in today's brief (using pre-loaded map)
             brief_item = brief_items_map.get(topic.id)
 
-            # Get source links organized by leaning
-            source_links = get_source_links(topic)
+            # Get source links from prefetched map
+            source_links = source_links_map.get(topic.id, {'left': [], 'center': [], 'right': []})
 
             if brief_item:
                 # Use cached brief data (FREE, instant)
@@ -286,24 +292,43 @@ def prepare_news_page_data(topics: List[TrendingTopic]) -> List[Dict]:
     return result
 
 
-def get_source_links(topic: TrendingTopic) -> Dict:
+def batch_prefetch_source_links(topic_ids: List[int]) -> Dict[int, Dict]:
     """
-    Get article links organized by political leaning.
+    Batch prefetch all article links for multiple topics in a single query.
+
+    This eliminates N+1 queries by fetching all TrendingTopicArticle rows
+    along with their NewsArticle and NewsSource data in one shot.
+
+    Args:
+        topic_ids: List of TrendingTopic IDs to fetch
 
     Returns:
-        dict: {
-            'left': [{'name': 'Guardian', 'url': 'https://...', 'title': '...'}],
-            'center': [...],
-            'right': [...]
-        }
+        dict: {topic_id: {'left': [...], 'center': [...], 'right': [...]}}
     """
-    source_links = {'left': [], 'center': [], 'right': []}
+    from sqlalchemy.orm import joinedload
+    from app.models import TrendingTopicArticle, NewsArticle
+
+    # Thresholds matching CoverageAnalyzer
+    LEFT_THRESHOLD = -0.5
+    RIGHT_THRESHOLD = 0.5
+
+    # Initialize empty result for all topics
+    result = {tid: {'left': [], 'center': [], 'right': []} for tid in topic_ids}
+
+    if not topic_ids:
+        return result
 
     try:
-        article_links = topic.articles.all() if hasattr(topic.articles, 'all') else topic.articles
+        # Single query to get all article links with eager loading
+        article_links = TrendingTopicArticle.query.filter(
+            TrendingTopicArticle.topic_id.in_(topic_ids)
+        ).options(
+            joinedload(TrendingTopicArticle.article).joinedload(NewsArticle.source)
+        ).all()
+
         for link in article_links:
             article = link.article
-            if not article:
+            if not article or not article.url:
                 continue
 
             source = article.source
@@ -313,20 +338,24 @@ def get_source_links(topic: TrendingTopic) -> Dict:
             link_data = {
                 'name': source_name,
                 'url': article.url,
-                'title': article.title
+                'title': article.title or 'Read Article'
             }
 
-            if leaning is not None and leaning <= -0.5:
-                source_links['left'].append(link_data)
-            elif leaning is not None and leaning >= 0.5:
-                source_links['right'].append(link_data)
+            topic_links = result.get(link.topic_id)
+            if not topic_links:
+                continue
+
+            if leaning is not None and leaning <= LEFT_THRESHOLD:
+                topic_links['left'].append(link_data)
+            elif leaning is not None and leaning >= RIGHT_THRESHOLD:
+                topic_links['right'].append(link_data)
             else:
-                source_links['center'].append(link_data)
+                topic_links['center'].append(link_data)
 
     except Exception as e:
-        logger.warning(f"Error getting source links for topic {topic.id}: {e}")
+        logger.warning(f"Error batch prefetching source links: {e}")
 
-    return source_links
+    return result
 
 
 def get_dominant_leaning(distribution: dict) -> str:
