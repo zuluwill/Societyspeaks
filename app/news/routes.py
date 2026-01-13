@@ -264,7 +264,7 @@ def prepare_news_page_data(topics: List[TrendingTopic]) -> List[Dict]:
                     'perspectives': None,  # Lazy-loaded
                     'so_what': None,
                     'personal_impact': None,
-                    'sensationalism': CoverageAnalyzer.get_sensationalism_label(
+                    'sensationalism': analyzer.get_sensationalism_label(
                         coverage.get('sensationalism_avg', 0)
                     ),
                     'is_lazy_load': True,
