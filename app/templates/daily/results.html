@@ -267,14 +267,30 @@
 
                     if (!carousel || dots.length === 0) return;
 
+                    // Safe localStorage helper (handles Safari Private Browsing)
+                    function safeGetItem(key) {
+                        try {
+                            return localStorage.getItem(key);
+                        } catch (e) {
+                            return null;
+                        }
+                    }
+                    function safeSetItem(key, value) {
+                        try {
+                            localStorage.setItem(key, value);
+                        } catch (e) {
+                            // Storage unavailable (e.g., Safari Private Browsing)
+                        }
+                    }
+
                     // Show swipe hint on first visit
-                    const hasSeenHint = localStorage.getItem('hasSeenCommentsSwipeHint');
+                    const hasSeenHint = safeGetItem('hasSeenCommentsSwipeHint');
                     if (!hasSeenHint && dots.length > 1) {
                         setTimeout(() => {
                             swipeHint.style.opacity = '1';
                             setTimeout(() => {
                                 swipeHint.style.opacity = '0';
-                                localStorage.setItem('hasSeenCommentsSwipeHint', 'true');
+                                safeSetItem('hasSeenCommentsSwipeHint', 'true');
                             }, 2000);
                         }, 500);
                     }
@@ -327,10 +343,12 @@
                 }
                 #comments-carousel {
                     -webkit-overflow-scrolling: touch;
-                    touch-action: pan-x;
+                    touch-action: pan-x pan-y;
+                    -webkit-scroll-snap-type: x mandatory;
                     scroll-snap-type: x mandatory;
                 }
                 #comments-carousel > div {
+                    -webkit-scroll-snap-align: start;
                     scroll-snap-align: start;
                 }
                 @keyframes fade-in-out {
