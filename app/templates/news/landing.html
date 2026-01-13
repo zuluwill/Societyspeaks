@@ -297,35 +297,96 @@
     </div>
 </div>
 
-<!-- Independence Section (reused concept from homepage) -->
-<div class="max-w-4xl mx-auto px-4 py-16">
-    <div class="bg-blue-50 rounded-2xl p-8 border border-blue-100 text-center">
-        <svg class="w-12 h-12 text-blue-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-        </svg>
-        <h3 class="text-2xl font-bold text-blue-900 mb-3">Reader-Funded, Not Ad-Funded</h3>
-        <p class="text-blue-800 max-w-2xl mx-auto mb-6">
-            Your subscription keeps Society Speaks independent. We have no advertisers to please and no engagement metrics to optimise. Just balanced news for informed citizens.
-        </p>
-        <div class="flex flex-wrap justify-center gap-6 text-sm text-blue-700">
-            <span class="flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
-                </svg>
-                No ads
-            </span>
-            <span class="flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
-                </svg>
-                No clickbait
-            </span>
-            <span class="flex items-center gap-1">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
-                </svg>
-                No outrage farming
-            </span>
+<!-- Mission Section - Open Source & Nuanced Discussion -->
+<div class="bg-gradient-to-b from-gray-50 to-white py-16">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-4">More Than a News Dashboard</h2>
+            <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                Your subscription funds something bigger: open-source tools for nuanced public discussion.
+            </p>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Nuanced Discussion -->
+            <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Where We Started: Nuanced Discussion</h3>
+                <p class="text-gray-600 mb-4">
+                    Society Speaks was built to make disagreement useful again. We use machine learning to find where people actually agree, reveal bridge ideas that unite opposing groups, and surface genuine divisions worth addressing.
+                </p>
+                <p class="text-gray-600">
+                    The Daily Question, consensus clustering, and public deliberation tools are <strong>free for everyone</strong> because informed civic participation shouldn't have a paywall.
+                </p>
+            </div>
+            
+            <!-- Open Source -->
+            <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                    </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-3">Open Source, Transparent, Non-Profit</h3>
+                <p class="text-gray-600 mb-4">
+                    Our entire codebase is open source under the AGPL-3.0 license. Anyone can inspect, fork, or contribute to our consensus-building tools. No hidden algorithms, no black boxes.
+                </p>
+                <p class="text-gray-600">
+                    Your £5/month subscription directly funds the infrastructure, development, and news analysis that keeps these tools running and improving.
+                </p>
+            </div>
+        </div>
+        
+        <!-- What Your Subscription Funds -->
+        <div class="mt-12 bg-blue-50 rounded-2xl p-8 border border-blue-100">
+            <div class="text-center mb-6">
+                <h3 class="text-xl font-bold text-blue-900">What Your Subscription Funds</h3>
+            </div>
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <p class="font-medium text-blue-900">Daily Question</p>
+                    <p class="text-sm text-blue-700">Free for all</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                    </div>
+                    <p class="font-medium text-blue-900">Consensus Analysis</p>
+                    <p class="text-sm text-blue-700">Free for all</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                        </svg>
+                    </div>
+                    <p class="font-medium text-blue-900">Public Discussions</p>
+                    <p class="text-sm text-blue-700">Free for all</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-2">
+                        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                        </svg>
+                    </div>
+                    <p class="font-medium text-blue-900">Open Source</p>
+                    <p class="text-sm text-blue-700">AGPL-3.0 License</p>
+                </div>
+            </div>
+            <p class="text-center text-blue-800 mt-6 text-sm">
+                Subscribers fund the platform. Everyone benefits from better public discourse.
+            </p>
         </div>
     </div>
 </div>
