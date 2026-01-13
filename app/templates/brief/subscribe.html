@@ -172,6 +172,30 @@
                     </span>
                 </div>
 
+                <!-- News Transparency Dashboard Highlight -->
+                <div class="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl p-5 border border-emerald-200">
+                    <div class="flex items-start gap-4">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-1">Also Included</p>
+                            <h4 class="font-bold text-gray-900 mb-1">News Transparency Dashboard</h4>
+                            <p class="text-sm text-gray-600">
+                                See today's news from <strong>60+ sources</strong> organised by political leaning. Filter by outlet, compare coverage, and spot what your usual sources aren't telling you.
+                            </p>
+                            <a href="{{ url_for('news.dashboard') }}" class="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-700 mt-2">
+                                Learn more
+                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                     <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
                         <svg class="w-5 h-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -191,6 +215,12 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                             <span><strong>Coverage analysis</strong> showing left/centre/right perspectives</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span><strong>News Transparency Dashboard</strong> with 60+ sources by political leaning</span>
                         </li>
                         <li class="flex items-start">
                             <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
