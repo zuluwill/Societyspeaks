@@ -71,14 +71,26 @@ def dashboard():
         center_sources = []
         right_sources = []
         
+        # Identify podcasts by name patterns
+        podcast_keywords = ['podcast', 'show', 'huberman', 'ferriss', 'fridman', 'ezra klein', 
+                           'triggernometry', 'all-in', 'acquired', 'modern wisdom', 'diary of a ceo',
+                           'news agents', 'rest is politics']
+        
+        def is_podcast(name):
+            name_lower = name.lower()
+            return any(kw in name_lower for kw in podcast_keywords)
+        
         for source in sources:
             leaning = source.political_leaning or 0
+            source_is_podcast = is_podcast(source.name)
             source_data = {
                 'id': source.id,
                 'name': source.name,
                 'leaning': leaning,
                 'leaning_label': get_leaning_label(leaning),
-                'country': source.country
+                'country': source.country,
+                'source_type': 'podcast' if source_is_podcast else 'news',
+                'is_podcast': source_is_podcast
             }
             if leaning <= LEFT_THRESHOLD:
                 left_sources.append(source_data)
@@ -108,12 +120,16 @@ def dashboard():
         center_articles = []
         right_articles = []
         
+        # Build source lookup for podcast detection
+        source_lookup = {s['id']: s for s in left_sources + center_sources + right_sources}
+        
         for article in articles:
             source = article.source
             if not source:
                 continue
                 
             leaning = source.political_leaning or 0
+            source_info = source_lookup.get(source.id, {})
             article_data = {
                 'id': article.id,
                 'title': article.title,
@@ -124,7 +140,10 @@ def dashboard():
                 'source_name': source.name,
                 'source_leaning': leaning,
                 'leaning_label': get_leaning_label(leaning),
-                'sensationalism_score': article.sensationalism_score
+                'sensationalism_score': article.sensationalism_score,
+                'relevance_score': article.relevance_score,
+                'is_podcast': source_info.get('is_podcast', False),
+                'source_type': source_info.get('source_type', 'news')
             }
             
             if leaning <= LEFT_THRESHOLD:
