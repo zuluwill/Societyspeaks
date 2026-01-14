@@ -535,7 +535,7 @@ def init_scheduler(app):
                         logger.info(f"Posted daily question #{question.question_number} to X: {tweet_id}")
                         
                         # Track with PostHog
-                        if posthog:
+                        if posthog.project_api_key:
                             try:
                                 posthog.capture(
                                     distinct_id='system',
@@ -568,7 +568,7 @@ def init_scheduler(app):
                         logger.info(f"Posted daily question #{question.question_number} to Bluesky: {bluesky_uri}")
                         
                         # Track with PostHog
-                        if posthog:
+                        if posthog.project_api_key:
                             try:
                                 posthog.capture(
                                     distinct_id='system',
@@ -627,7 +627,7 @@ def init_scheduler(app):
                         logger.info(f"Posted weekly insights to X: {tweet_id}")
                         
                         # Track with PostHog
-                        if posthog:
+                        if posthog.project_api_key:
                             try:
                                 posthog.capture(
                                     distinct_id='system',
@@ -656,7 +656,7 @@ def init_scheduler(app):
                         logger.info(f"Posted weekly insights to Bluesky: {bluesky_uri}")
                         
                         # Track with PostHog
-                        if posthog:
+                        if posthog.project_api_key:
                             try:
                                 posthog.capture(
                                     distinct_id='system',
@@ -723,7 +723,7 @@ def init_scheduler(app):
                         logger.info(f"Posted daily brief to X: {tweet_id}")
                         
                         # Track with PostHog
-                        if posthog:
+                        if posthog.project_api_key:
                             try:
                                 posthog.capture(
                                     distinct_id='system',
@@ -756,7 +756,7 @@ def init_scheduler(app):
                         logger.info(f"Posted daily brief to Bluesky: {bluesky_uri}")
                         
                         # Track with PostHog
-                        if posthog:
+                        if posthog.project_api_key:
                             try:
                                 posthog.capture(
                                     distinct_id='system',
