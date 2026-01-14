@@ -589,7 +589,7 @@ def init_scheduler(app):
                 logger.error(f"Error posting daily question to social media: {e}", exc_info=True)
     
     
-    @scheduler.scheduled_job('cron', day_of_week='sunday', hour=17, minute=0, id='post_weekly_insights')
+    @scheduler.scheduled_job('cron', day_of_week='sun', hour=17, minute=0, id='post_weekly_insights')
     def post_weekly_insights():
         """
         Post weekly insights (value-first content, 80/20 rule).
