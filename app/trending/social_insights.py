@@ -783,82 +783,82 @@ def generate_daily_question_post(
     platform: str = 'x'
 ) -> str:
     """
-    Generate daily question post optimized for sign-ups.
+    Generate daily question post optimized for engagement.
     
-    Goal: Drive subscriptions to daily question emails.
+    Best practices (2025):
+    - X: 280 chars, URLs count as 23 chars
+    - Bluesky: 300 chars, URL in link card embed (not in text)
+    - 1-2 hashtags max, never start with hashtag
     
-    Uses existing DailyQuestion model data.
+    Goal: Drive responses and subscriptions.
     """
-    from app.trending.social_poster import get_topic_hashtags
+    # Character limits
+    URL_CHARS = 23  # X shortens all URLs to 23 chars
+    MAX_CHARS = 280 if platform == 'x' else 300
     
-    # Get response stats (reuse existing model properties)
-    response_count = question.response_count
+    # For Bluesky, URL goes in link card embed, not in text
+    # This saves ~23 chars for more content
+    include_url_in_text = (platform == 'x')
     
-    # Get stats if available (reuse existing DailyQuestionResponse model)
-    stats = None
-    try:
-        from app.models import DailyQuestionResponse
+    # Get response stats for social proof
+    response_count = question.response_count or 0
+    
+    # Build components
+    # Truncate question text if too long (keep it readable)
+    question_text = question.question_text
+    max_question_len = 150 if platform == 'x' else 180
+    if len(question_text) > max_question_len:
+        question_text = question_text[:max_question_len-3].rsplit(' ', 1)[0] + "..."
+    
+    hook = f"Today's Daily Question:\n\n\"{question_text}\""
+    
+    # Social proof (only if meaningful count)
+    social_proof = ""
+    if response_count >= PARTICIPANT_DISPLAY_THRESHOLD:
+        social_proof = f"\n\n{response_count} responses"
+    
+    # Short CTA
+    cta = "\n\nWhere do YOU stand?"
+    
+    # Single hashtag, placed at end
+    hashtag = " #DailyQuestion"
+    
+    if include_url_in_text:
+        # X: Include URL in text (counts as 23 chars)
+        base_url = f"https://societyspeaks.io/daily/{question.question_date.strftime('%Y-%m-%d')}"
+        question_url = _add_utm_params(base_url, platform, 'social', 'daily_question')
         
-        total = DailyQuestionResponse.query.filter_by(
-            daily_question_id=question.id
-        ).count()
+        # Calculate available space
+        available = MAX_CHARS - URL_CHARS - len(hashtag) - 4  # 4 for newlines
         
-        if total > 0:
-            agree = DailyQuestionResponse.query.filter_by(
-                daily_question_id=question.id,
-                vote=1
-            ).count()
-            disagree = DailyQuestionResponse.query.filter_by(
-                daily_question_id=question.id,
-                vote=-1
-            ).count()
-            unsure = DailyQuestionResponse.query.filter_by(
-                daily_question_id=question.id,
-                vote=0
-            ).count()
-            
-            stats = {
-                'agree_pct': int((agree / total) * 100),
-                'disagree_pct': int((disagree / total) * 100),
-                'unsure_pct': int((unsure / total) * 100)
-            }
-    except Exception as e:
-        logger.warning(f"Could not get daily question stats: {e}")
+        # Build post fitting within limit
+        core = f"{hook}{social_proof}{cta}"
+        if len(core) > available:
+            # Truncate hook (question text)
+            core = f"{hook}{cta}"
+            if len(core) > available:
+                excess = len(core) - available + 3
+                question_text = question_text[:len(question_text)-excess].rsplit(' ', 1)[0] + "..."
+                hook = f"Today's Daily Question:\n\n\"{question_text}\""
+                core = f"{hook}{cta}"
+        
+        post = f"{core}{hashtag}\n\n{question_url}"
+    else:
+        # Bluesky: No URL in text (goes in embed)
+        available = MAX_CHARS - len(hashtag) - 2
+        
+        core = f"{hook}{social_proof}{cta}"
+        if len(core) > available:
+            core = f"{hook}{cta}"
+            if len(core) > available:
+                excess = len(core) - available + 3
+                question_text = question_text[:len(question_text)-excess].rsplit(' ', 1)[0] + "..."
+                hook = f"Today's Daily Question:\n\n\"{question_text}\""
+                core = f"{hook}{cta}"
+        
+        post = f"{core}{hashtag}"
     
-    # Hook
-    hook = f"Today's Daily Question:\n\n\"{question.question_text}\""
-    
-    # Social proof
-    social_proof = f"\n\n📊 {response_count} responses so far" if response_count > 0 else ""
-    
-    # Results (curiosity gap - drives clicks)
-    results = ""
-    if stats:
-        results = f"\n🟦 {stats['agree_pct']}% Agree | 🟥 {stats['disagree_pct']}% Disagree | 🟨 {stats['unsure_pct']}% Unsure"
-    
-    # CTA (conversion-optimized for sign-ups)
-    cta = "\n\nGet tomorrow's question in your inbox:\nhttps://societyspeaks.io/daily/subscribe\n\nOr answer today's:"
-    
-    # URL with UTM params
-    base_url = f"https://societyspeaks.io/daily/{question.question_date.strftime('%Y-%m-%d')}"
-    question_url = _add_utm_params(base_url, platform, 'social', 'daily_question')
-    
-    max_length = 280 if platform == 'x' else 300
-    
-    post = f"{hook}{social_proof}{results}{cta}\n\n{question_url}\n\n#DailyQuestion #CivicEngagement"
-    
-    # Truncate if needed
-    if len(post) > max_length:
-        # Keep hook, CTA, URL; trim stats
-        overhead = len(f"{hook}{cta}\n\n{question_url}\n\n#DailyQuestion #CivicEngagement")
-        remaining = max_length - overhead - 10
-        if remaining > 20 and social_proof:
-            social_proof = f"\n\n📊 {response_count} responses"
-            post = f"{hook}{social_proof}{cta}\n\n{question_url}\n\n#DailyQuestion #CivicEngagement"
-        else:
-            post = f"{hook}{cta}\n\n{question_url}\n\n#DailyQuestion #CivicEngagement"
-    
-    return post[:max_length]
+    return post[:MAX_CHARS]
 
 
 def generate_daily_brief_post(
@@ -866,60 +866,94 @@ def generate_daily_brief_post(
     platform: str = 'x'
 ) -> str:
     """
-    Generate daily brief post optimized for subscriptions.
+    Generate daily brief post optimized for engagement.
     
-    Goal: Drive subscriptions to Daily Brief.
+    Best practices (2025):
+    - X: 280 chars, URLs count as 23 chars
+    - Bluesky: 300 chars, URL in link card embed (not in text)
+    - 1-2 hashtags max, never start with hashtag
     
-    Uses existing DailyBrief model data.
+    Goal: Drive brief views and subscriptions.
     """
     from app.models import BriefItem
     
-    # Get first 3 items for teaser (reuse existing relationship)
-    items = BriefItem.query.filter_by(
+    # Character limits
+    URL_CHARS = 23
+    MAX_CHARS = 280 if platform == 'x' else 300
+    
+    # For Bluesky, URL goes in link card embed
+    include_url_in_text = (platform == 'x')
+    
+    # Get first item for teaser
+    item = BriefItem.query.filter_by(
         brief_id=brief.id
-    ).order_by(BriefItem.position.asc()).limit(3).all()
+    ).order_by(BriefItem.position.asc()).first()
     
-    # Hook
-    hook = f"Today's Daily Brief: {brief.item_count} stories that matter"
+    # Build hook with story count
+    hook = f"Today's Brief: {brief.item_count} stories that matter"
     
-    # Teaser (value proposition)
-    teaser = "\n\n📰 What you need to know (not what algorithms want you to see):\n"
-    for item in items:
-        # Get headline from related trending topic (reuse existing relationship)
+    # One headline teaser
+    teaser = ""
+    headline = None  # Initialize headline
+    if item:
         if item.trending_topic:
-            headline = item.trending_topic.title[:60]
+            headline = item.trending_topic.title[:80]
         elif item.discussion:
-            headline = item.discussion.title[:60]
-        else:
-            headline = "Story"
-        teaser += f"- {headline}...\n"
+            headline = item.discussion.title[:80]
+        if headline:
+            teaser = f"\n\n📰 {headline}"
     
-    # CTA (conversion-optimized for subscriptions)
-    cta = "\n\nGet the full brief (3-5 stories daily):\nhttps://societyspeaks.io/brief/subscribe\n\nFree for 7 days, then £5/month"
+    # Short CTA
+    cta = "\n\nRead the full brief:"
     
-    # URL with UTM params
-    base_url = f"https://societyspeaks.io/brief/{brief.date.strftime('%Y-%m-%d')}"
-    brief_url = _add_utm_params(base_url, platform, 'social', 'daily_brief')
+    # Single hashtag
+    hashtag = " #DailyBrief"
     
-    max_length = 280 if platform == 'x' else 300
-    
-    post = f"{hook}{teaser}{cta}\n\n{brief_url}\n\n#DailyBrief #News #CivicEngagement"
-    
-    # Truncate if needed
-    if len(post) > max_length:
-        # Keep hook, CTA, URL; trim teaser
-        overhead = len(f"{hook}{cta}\n\n{brief_url}\n\n#DailyBrief #News")
-        remaining = max_length - overhead - 10
-        if remaining > 30 and items:
-            if items[0].trending_topic:
-                headline = items[0].trending_topic.title[:remaining]
-            elif items[0].discussion:
-                headline = items[0].discussion.title[:remaining]
+    if include_url_in_text:
+        # X: Include URL in text
+        base_url = f"https://societyspeaks.io/brief/{brief.date.strftime('%Y-%m-%d')}"
+        brief_url = _add_utm_params(base_url, platform, 'social', 'daily_brief')
+        
+        available = MAX_CHARS - URL_CHARS - len(hashtag) - 4
+        
+        core = f"{hook}{teaser}{cta}"
+        if len(core) > available:
+            # Truncate teaser
+            if teaser:
+                remaining = available - len(f"{hook}{cta}") - 5
+                if remaining > 30 and item:
+                    headline_text = headline[:remaining-3] + "..." if headline and len(headline) > remaining else (headline or "")
+                    teaser = f"\n\n📰 {headline_text}"
+                    core = f"{hook}{teaser}{cta}"
+                else:
+                    core = f"{hook}{cta}"
             else:
-                headline = "Story"
-            teaser = f"\n\n📰 {headline}..."
-            post = f"{hook}{teaser}{cta}\n\n{brief_url}\n\n#DailyBrief #News"
-        else:
-            post = f"{hook}{cta}\n\n{brief_url}\n\n#DailyBrief #News"
+                core = f"{hook}{cta}"
+        
+        if len(core) > available:
+            core = core[:available-3] + "..."
+        
+        post = f"{core}{hashtag}\n\n{brief_url}"
+    else:
+        # Bluesky: No URL in text
+        available = MAX_CHARS - len(hashtag) - 2
+        
+        core = f"{hook}{teaser}{cta}"
+        if len(core) > available:
+            if teaser:
+                remaining = available - len(f"{hook}{cta}") - 5
+                if remaining > 30 and headline:
+                    headline_text = headline[:remaining-3] + "..." if len(headline) > remaining else headline
+                    teaser = f"\n\n📰 {headline_text}"
+                    core = f"{hook}{teaser}{cta}"
+                else:
+                    core = f"{hook}{cta}"
+            else:
+                core = f"{hook}{cta}"
+        
+        if len(core) > available:
+            core = core[:available-3] + "..."
+        
+        post = f"{core}{hashtag}"
     
-    return post[:max_length]
+    return post[:MAX_CHARS]

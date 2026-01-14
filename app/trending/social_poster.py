@@ -12,7 +12,7 @@ import os
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Dict
 from urllib.parse import quote
 
 from flask import url_for
@@ -41,6 +41,44 @@ X_MAX_RETRY_WAIT = 900  # 15 minutes max retry wait (caps header-based waits)
 # - Much more generous than X
 BLUESKY_RETRY_ATTEMPTS = 3
 BLUESKY_RETRY_BASE_DELAY = 30
+
+# Platform character limits
+BLUESKY_CHAR_LIMIT = 300
+X_CHAR_LIMIT = 280
+X_URL_CHAR_COUNT = 23  # t.co shortening always uses 23 chars
+
+# Bluesky handle
+BLUESKY_HANDLE = "societyspeaks.bsky.social"
+
+
+def _count_chars(text: str) -> int:
+    """
+    Count the number of characters in text.
+    Counts all characters including newlines and spaces.
+    """
+    return len(text)
+
+
+def _enforce_char_limit(text: str, max_chars: int, suffix: str = "...") -> str:
+    """
+    Enforce character limit by truncating text.
+    
+    Tries to keep text readable by truncating at word boundary.
+    """
+    if _count_chars(text) <= max_chars:
+        return text
+    
+    # Calculate how much we need to trim
+    target = max_chars - len(suffix)
+    if target <= 0:
+        return text[:max_chars]
+    
+    # Truncate at word boundary
+    truncated = text[:target]
+    if ' ' in truncated:
+        truncated = truncated.rsplit(' ', 1)[0]
+    
+    return truncated.rstrip() + suffix
 
 
 def _get_x_daily_post_count() -> Tuple[int, datetime]:
@@ -174,8 +212,6 @@ def _handle_x_rate_limit_error(error) -> Tuple[bool, int]:
 # These are: 2pm, 4pm, 6pm, 8pm, 10pm UTC = 9am, 11am, 1pm, 3pm, 5pm EST
 BLUESKY_POST_HOURS_UTC = [14, 16, 18, 20, 22]
 
-BLUESKY_HANDLE = "societyspeaks.bsky.social"
-
 PODCAST_HANDLES_X = [
     "@RestIsPolitics",
     "@TheNewsAgents",
@@ -254,22 +290,27 @@ def get_social_posting_status() -> dict:
     return status
 
 
-def get_topic_hashtags(topic: str) -> List[str]:
-    """Generate relevant hashtags based on discussion topic."""
+def get_topic_hashtags(topic: str, max_count: int = 2) -> List[str]:
+    """
+    Generate relevant hashtags based on discussion topic.
+    
+    Best practice (2025): 1-2 hashtags max for optimal engagement.
+    """
     topic_tags = {
-        'Politics': ['#Politics', '#Democracy', '#PublicPolicy'],
-        'Geopolitics': ['#Geopolitics', '#ForeignPolicy', '#WorldNews'],
-        'Economy': ['#Economy', '#Finance', '#Markets'],
-        'Business': ['#Business', '#Entrepreneurship', '#Innovation'],
-        'Technology': ['#Tech', '#AI', '#Innovation'],
-        'Healthcare': ['#Healthcare', '#PublicHealth', '#NHS'],
-        'Environment': ['#Climate', '#Environment', '#Sustainability'],
-        'Education': ['#Education', '#Learning', '#Schools'],
-        'Society': ['#Society', '#Culture', '#Community'],
-        'Infrastructure': ['#Infrastructure', '#Transport', '#Cities'],
-        'Culture': ['#Culture', '#Arts', '#Media'],
+        'Politics': ['#Politics', '#Democracy'],
+        'Geopolitics': ['#Geopolitics', '#WorldNews'],
+        'Economy': ['#Economy', '#Finance'],
+        'Business': ['#Business', '#Innovation'],
+        'Technology': ['#Tech', '#AI'],
+        'Healthcare': ['#Healthcare', '#PublicHealth'],
+        'Environment': ['#Climate', '#Environment'],
+        'Education': ['#Education', '#Schools'],
+        'Society': ['#Society', '#Community'],
+        'Infrastructure': ['#Infrastructure', '#Cities'],
+        'Culture': ['#Culture', '#Media'],
     }
-    return topic_tags.get(topic, ['#PublicDebate'])
+    tags = topic_tags.get(topic, ['#PublicDebate'])
+    return tags[:max_count]
 
 
 def generate_post_text(
@@ -347,22 +388,122 @@ def generate_post_text(
     return post[:max_length]
 
 
+def _fetch_link_card_metadata(url: str) -> Optional[Dict]:
+    """
+    Fetch OpenGraph metadata for link card preview.
+    Returns dict with title, description, and optional image URL.
+    """
+    import requests
+    from bs4 import BeautifulSoup
+    
+    try:
+        headers = {'User-Agent': 'SocietySpeaksBot/1.0'}
+        response = requests.get(url, headers=headers, timeout=10)
+        response.raise_for_status()
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        metadata = {
+            'uri': url,
+            'title': '',
+            'description': '',
+            'image_url': None
+        }
+        
+        # Get OpenGraph tags
+        og_title = soup.find('meta', property='og:title')
+        og_desc = soup.find('meta', property='og:description')
+        og_image = soup.find('meta', property='og:image')
+        
+        # Fallback to standard tags
+        title_tag = soup.find('title')
+        desc_tag = soup.find('meta', attrs={'name': 'description'})
+        
+        metadata['title'] = (og_title.get('content', '') if og_title else 
+                            title_tag.text if title_tag else url)[:300]
+        metadata['description'] = (og_desc.get('content', '') if og_desc else 
+                                   desc_tag.get('content', '') if desc_tag else '')[:500]
+        if og_image:
+            metadata['image_url'] = og_image.get('content', '')
+        
+        return metadata
+    except Exception as e:
+        logger.warning(f"Failed to fetch link card metadata: {e}")
+        return None
+
+
+def _generate_bluesky_post_text(
+    title: str,
+    topic: str,
+    discussion=None,
+    custom_text: Optional[str] = None,
+    max_chars: int = BLUESKY_CHAR_LIMIT
+) -> Tuple[str, Optional[str]]:
+    """
+    Generate Bluesky post text within character limit.
+    
+    Best practices (2025):
+    - 300 character limit
+    - URL NOT included in text (will be in link card embed)
+    - 1-2 hashtags max, placed mid-text or at end
+    - Never start with hashtag
+    
+    Returns (text, hook_variant)
+    """
+    import re
+    hook_variant = None
+    
+    if custom_text:
+        # Remove any URL from custom text (will be in link card)
+        text = re.sub(r'https?://\S+', '', custom_text).strip()
+        # Clean up extra whitespace
+        text = re.sub(r'\n\s*\n\s*\n', '\n\n', text).strip()
+    elif discussion:
+        try:
+            from app.trending.social_insights import generate_data_driven_post
+            post_text, hook_variant = generate_data_driven_post(
+                discussion,
+                platform='bluesky',
+                return_variant=True
+            )
+            # Remove URL from generated text (will be in link card)
+            text = re.sub(r'https?://\S+', '', post_text).strip()
+            text = re.sub(r'\n\s*\n\s*\n', '\n\n', text).strip()
+        except Exception as e:
+            logger.warning(f"Failed to generate data-driven post: {e}")
+            text = f"New debate: {title}\n\nWhere do YOU stand? Join the discussion."
+            hook_variant = 'fallback'
+    else:
+        # Simple format without URL - limit hashtags to 1
+        hashtags = get_topic_hashtags(topic, max_count=1)
+        hashtag_text = f" {hashtags[0]}" if hashtags else ""
+        text = f"New debate: {title}\n\nWhere do YOU stand? Join the discussion.{hashtag_text}"
+        hook_variant = 'simple'
+    
+    # Final character limit enforcement using shared helper
+    text = _enforce_char_limit(text, max_chars)
+    
+    return text, hook_variant
+
+
 def post_to_bluesky(
     title: str,
     topic: str,
     discussion_url: str,
     retry_count: int = 0,
-    discussion=None,  # Optional: Discussion object for data-driven posts
-    custom_text: Optional[str] = None  # Optional: Custom post text (for daily questions/brief)
+    discussion=None,
+    custom_text: Optional[str] = None
 ) -> Optional[str]:
     """
-    Post a discussion announcement to Bluesky with retry logic.
+    Post to Bluesky with proper link card embed and facets.
+    
+    Best practices (2025):
+    - 300 character limit for text
+    - Use external embed for link cards (rich preview)
+    - If embed fails, include URL in text with facet for clickability
+    - Always ensure link is accessible to users
     
     Returns the post URI if successful, None otherwise.
-    
-    Features:
-    - Exponential backoff retry on transient errors
-    - Graceful handling of rate limits and API errors
     """
     app_password = os.environ.get('BLUESKY_APP_PASSWORD')
     
@@ -371,51 +512,106 @@ def post_to_bluesky(
         return None
     
     try:
-        from atproto import Client, client_utils
+        from atproto import Client, models, client_utils
+        import requests
         
         client = Client()
         client.login(BLUESKY_HANDLE, app_password)
-
-        # Track hook variant for A/B testing
-        hook_variant = None
-
-        # Use custom text if provided (for daily questions/brief), otherwise generate
-        if custom_text:
-            text = custom_text
-        elif discussion:
-            # Use data-driven post with A/B testing
-            try:
-                from app.trending.social_insights import generate_data_driven_post
-                text, hook_variant = generate_data_driven_post(
-                    discussion,
-                    platform='bluesky',
-                    return_variant=True
+        
+        # Generate post text (without URL initially - URL may go in embed)
+        text, hook_variant = _generate_bluesky_post_text(
+            title, topic, discussion, custom_text, max_chars=280  # Leave room for URL fallback
+        )
+        
+        # Build external embed (link card)
+        embed = None
+        embed_success = False
+        try:
+            metadata = _fetch_link_card_metadata(discussion_url)
+            if metadata:
+                thumb_blob = None
+                
+                # Upload thumbnail if available
+                if metadata.get('image_url'):
+                    try:
+                        img_response = requests.get(
+                            metadata['image_url'],
+                            headers={'User-Agent': 'SocietySpeaksBot/1.0'},
+                            timeout=10
+                        )
+                        if img_response.status_code == 200:
+                            img_data = img_response.content
+                            upload_response = client.upload_blob(img_data)
+                            thumb_blob = upload_response.blob
+                    except Exception as e:
+                        logger.debug(f"Failed to upload thumbnail: {e}")
+                
+                # Create external embed (link card)
+                external = models.AppBskyEmbedExternal.External(
+                    uri=discussion_url,
+                    title=metadata.get('title', title)[:300],
+                    description=metadata.get('description', '')[:500],
+                    thumb=thumb_blob
                 )
-            except Exception as e:
-                logger.warning(f"Failed to generate data-driven post: {e}")
-                text = generate_post_text(title, topic, discussion_url, platform='bluesky')
-        else:
-            # Generate post text (basic format)
-            text = generate_post_text(
-                title,
-                topic,
-                discussion_url,
-                platform='bluesky'
-            )
+                embed = models.AppBskyEmbedExternal.Main(external=external)
+                embed_success = True
+        except Exception as e:
+            logger.warning(f"Failed to create link card embed: {e}")
         
-        text_builder = client_utils.TextBuilder()
-        
-        parts = text.split(discussion_url)
-        if len(parts) == 2:
-            text_builder.text(parts[0])
+        # If embed failed, add URL to text with facet for clickability
+        if not embed_success:
+            url_length = _count_chars(discussion_url)
+            
+            # Absolute guard: if URL alone exceeds limit, we cannot post safely
+            if url_length > BLUESKY_CHAR_LIMIT:
+                logger.error(f"URL too long for Bluesky ({url_length} chars > {BLUESKY_CHAR_LIMIT}), cannot post")
+                return None
+            
+            # Calculate space: URL + newlines
+            url_space = url_length + 2  # \n\n before URL
+            available_for_text = BLUESKY_CHAR_LIMIT - url_space
+            
+            # Handle edge case: URL leaves no room for meaningful text
+            if available_for_text < 15:
+                # Very long URL - post just the URL with minimal text
+                text = "Join"
+                logger.warning(f"URL very long ({url_length} chars), using minimal text")
+            elif available_for_text < 50:
+                # Long URL - use short text
+                text = "Join the debate"
+                logger.warning(f"URL long ({url_length} chars), using short text")
+            else:
+                # Normal case - enforce limit on text portion
+                text = _enforce_char_limit(text, available_for_text)
+            
+            # Final assembly with guaranteed length check loop
+            final_text = f"{text}\n\n{discussion_url}"
+            while _count_chars(final_text) > BLUESKY_CHAR_LIMIT:
+                if len(text) <= 4:
+                    # Absolute minimum - just post the URL
+                    text = ""
+                    final_text = discussion_url
+                    break
+                # Keep trimming until we fit
+                text = text[:-4].rstrip()
+                if text and not text.endswith("..."):
+                    text = text.rsplit(' ', 1)[0] + "..." if ' ' in text else text + "..."
+                final_text = f"{text}\n\n{discussion_url}" if text else discussion_url
+            
+            # Build with facets for clickable link
+            text_builder = client_utils.TextBuilder()
+            if text:
+                text_builder.text(text + "\n\n")
             text_builder.link(discussion_url, discussion_url)
-            text_builder.text(parts[1])
+            
+            post = client.send_post(text_builder)
+            logger.info(f"Posted to Bluesky with URL in text (embed failed): {post.uri}")
         else:
-            text_builder.text(text)
+            # With embed, text can use full limit
+            text = _enforce_char_limit(text, BLUESKY_CHAR_LIMIT)
+            post = client.send_post(text=text, embed=embed)
         
-        post = client.send_post(text_builder)
-        
-        logger.info(f"Posted to Bluesky: {post.uri}")
+        logger.info(f"Posted to Bluesky with link card: {post.uri}")
 
         # Record for engagement tracking
         try:
@@ -473,29 +669,135 @@ def post_to_bluesky(
         return None
 
 
+def _count_x_chars(text: str, url: str = None) -> int:
+    """
+    Count X/Twitter character length accounting for t.co URL shortening.
+    All URLs are shortened to exactly 23 characters.
+    """
+    import re
+    if url and url in text:
+        # Replace URL with placeholder of t.co length
+        text = text.replace(url, 'X' * X_URL_CHAR_COUNT)
+    else:
+        # Replace any URL with placeholder
+        text = re.sub(r'https?://\S+', 'X' * X_URL_CHAR_COUNT, text)
+    return _count_chars(text)
+
+
+def _generate_x_post_text(
+    title: str,
+    topic: str,
+    discussion_url: str,
+    discussion=None,
+    custom_text: Optional[str] = None
+) -> Tuple[str, Optional[str]]:
+    """
+    Generate X/Twitter post text within character limit.
+    
+    Best practices (2025):
+    - 280 character limit total
+    - URLs count as exactly 23 characters (t.co shortening)
+    - 1-2 hashtags max, mid-text placement (never start with hashtag)
+    - URL at end for rich preview card
+    
+    Returns (text, hook_variant)
+    """
+    import re
+    
+    hook_variant = None
+    
+    # Get 1-2 relevant hashtags (enforced limit)
+    hashtags = get_topic_hashtags(topic, max_count=2)
+    hashtag_text = ' '.join(hashtags) if hashtags else ''
+    
+    # Calculate available space for text (URL + separator)
+    available_for_text = X_CHAR_LIMIT - X_URL_CHAR_COUNT - 2  # 2 for \n\n
+    
+    if custom_text:
+        # Clean up custom text
+        text = re.sub(r'https?://\S+', '', custom_text).strip()
+        text = re.sub(r'\n\s*\n\s*\n', '\n\n', text).strip()
+        
+        # Enforce length
+        text = _enforce_char_limit(text, available_for_text)
+        final_text = f"{text}\n\n{discussion_url}"
+            
+    elif discussion:
+        try:
+            from app.trending.social_insights import generate_data_driven_post
+            post_text, hook_variant = generate_data_driven_post(
+                discussion,
+                platform='x',
+                return_variant=True
+            )
+            # Clean and rebuild
+            text = re.sub(r'https?://\S+', '', post_text).strip()
+            text = re.sub(r'\n\s*\n\s*\n', '\n\n', text).strip()
+            
+            # Ensure hashtags are present (mid-text, not at start)
+            if hashtag_text and hashtag_text not in text:
+                # Add hashtags before last paragraph
+                if '\n\n' in text:
+                    parts = text.rsplit('\n\n', 1)
+                    text = f"{parts[0]} {hashtag_text}\n\n{parts[1]}"
+                else:
+                    text = f"{text} {hashtag_text}"
+            
+            # Enforce length
+            text = _enforce_char_limit(text, available_for_text)
+            final_text = f"{text}\n\n{discussion_url}"
+            
+        except Exception as e:
+            logger.warning(f"Failed to generate data-driven post for X: {e}")
+            hook_variant = 'fallback'
+            cta = "Where do YOU stand?"
+            # Calculate space: URL(23) + separator(2) + cta + hashtags + buffers
+            cta_space = _count_chars(cta) + _count_chars(hashtag_text) + 4
+            title_space = available_for_text - cta_space
+            title_text = _enforce_char_limit(title, title_space)
+            final_text = f"{title_text} {hashtag_text}\n\n{cta}\n\n{discussion_url}"
+    else:
+        # Simple format with hashtags
+        hook_variant = 'simple'
+        cta = "Where do YOU stand?"
+        # Calculate space for title
+        prefix = "New debate: "
+        cta_space = _count_chars(cta) + _count_chars(hashtag_text) + _count_chars(prefix) + 4
+        title_space = available_for_text - cta_space
+        title_text = _enforce_char_limit(title, title_space)
+        final_text = f"{prefix}{title_text} {hashtag_text}\n\n{cta}\n\n{discussion_url}"
+    
+    # Final safety check with X-specific counting
+    final_length = _count_x_chars(final_text, discussion_url)
+    if final_length > X_CHAR_LIMIT:
+        logger.warning(f"X post too long ({final_length} chars), applying final truncation")
+        # Extract text portion and truncate further
+        text_part = final_text.rsplit('\n\n' + discussion_url, 1)[0] if discussion_url in final_text else final_text
+        overage = final_length - X_CHAR_LIMIT + 3
+        text_part = text_part[:-overage].rsplit(' ', 1)[0] + "..."
+        final_text = f"{text_part}\n\n{discussion_url}"
+    
+    return final_text, hook_variant
+
+
 def post_to_x(
     title: str,
     topic: str,
     discussion_url: str,
     retry_count: int = 0,
-    discussion=None,  # Optional: Discussion object for data-driven posts
-    custom_text: Optional[str] = None  # Optional: Custom post text (for daily questions/brief)
+    discussion=None,
+    custom_text: Optional[str] = None
 ) -> Optional[str]:
     """
-    Post a discussion announcement to X/Twitter with rate limit handling.
+    Post to X/Twitter with proper character limits and link card support.
+    
+    Best practices (2025):
+    - 280 character limit
+    - URLs count as 23 characters (t.co shortening)
+    - 1-2 hashtags max, never start with hashtag
+    - URL at end gets rich link card preview
     
     Returns the tweet ID if successful, None otherwise.
-    
-    Features:
-    - Proactive rate limit checking (daily post count)
-    - Exponential backoff retry on transient rate limits
-    - Graceful handling of API errors
-    
-    Requires environment variables:
-    - X_API_KEY: Consumer API key
-    - X_API_SECRET: Consumer API secret
-    - X_ACCESS_TOKEN: Access token for @societyspeaksio
-    - X_ACCESS_TOKEN_SECRET: Access token secret
     """
     api_key = os.environ.get('X_API_KEY')
     api_secret = os.environ.get('X_API_SECRET')
@@ -521,34 +823,12 @@ def post_to_x(
             consumer_secret=api_secret,
             access_token=access_token,
             access_token_secret=access_token_secret,
-            wait_on_rate_limit=False  # We handle rate limits ourselves
+            wait_on_rate_limit=False
         )
 
-        # Track hook variant for A/B testing
-        hook_variant = None
-
-        # Use custom text if provided (for daily questions/brief), otherwise generate
-        if custom_text:
-            text = custom_text
-        elif discussion:
-            # Use data-driven post with A/B testing
-            try:
-                from app.trending.social_insights import generate_data_driven_post
-                text, hook_variant = generate_data_driven_post(
-                    discussion,
-                    platform='x',
-                    return_variant=True
-                )
-            except Exception as e:
-                logger.warning(f"Failed to generate data-driven post: {e}")
-                text = generate_post_text(title, topic, discussion_url, platform='x')
-        else:
-            # Generate post text (basic format)
-            text = generate_post_text(
-                title,
-                topic,
-                discussion_url,
-                platform='x'
+        # Generate properly formatted text with character limits
+        text, hook_variant = _generate_x_post_text(
+            title, topic, discussion_url, discussion, custom_text
             )
 
         # Post the tweet

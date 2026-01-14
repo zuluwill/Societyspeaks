@@ -66,8 +66,15 @@ Daily question emails include one-click vote buttons (Agree/Disagree/Unsure) tha
 - **OpenAI/Anthropic APIs**: For LLM-based scoring, embeddings, and content generation within the "News-to-Deliberation Compiler."
 
 ### Social Media Integration
-- **Bluesky (AT Protocol)**: Automatic posting of news discussions with staggered scheduling (2pm, 4pm, 6pm, 8pm, 10pm UTC = 9am, 11am, 1pm, 3pm, 5pm EST) to maximize US audience engagement across different timezones.
-- **X/Twitter**: One-click share links.
+- **Bluesky (AT Protocol)**: Automatic posting of news discussions with staggered scheduling (2pm, 4pm, 6pm, 8pm, 10pm UTC = 9am, 11am, 1pm, 3pm, 5pm EST) to maximize US audience engagement across different timezones. Uses external embed link cards with OpenGraph metadata for rich previews, with fallback to URL facets if embed creation fails.
+- **X/Twitter**: Automatic posting with 280 character limit compliance (URLs count as 23 chars via t.co shortening).
+
+### Social Media Best Practices (January 2026)
+- **Character limits**: Bluesky 300 chars, X 280 chars (URLs = 23 chars)
+- **Hashtag strategy**: 1-2 hashtags max, placed mid-text (never start with hashtag)
+- **Link cards**: Bluesky uses external embeds for rich previews; X auto-generates preview for trailing URLs
+- **Fallback handling**: Guaranteed clickable links on Bluesky via embed or URL facets
+- **Edge cases**: Very long URLs handled with graduated fallback text to ensure compliance
 
 ### Development & Security Tools
 - **Flask Extensions**: For security, forms, and database management.
