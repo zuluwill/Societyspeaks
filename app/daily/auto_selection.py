@@ -6,25 +6,268 @@ Selects the next daily question from curated content sources:
 2. Published trending topics with high civic scores
 3. Statements from active discussions
 
+Uses ENGAGEMENT-WEIGHTED SELECTION to maximize participation:
+- Civic relevance score
+- Timeliness (recency of topic)
+- Statement clarity (shorter = higher engagement)
+- Historical performance (learn from past questions)
+- Position diversity (alternate pro/con/neutral)
+
 Avoids repeating content within a configurable time window.
 """
 
 from datetime import date, datetime, timedelta
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 from app import db
 from app.models import (
-    DailyQuestion, 
+    DailyQuestion,
     DailyQuestionSelection,
-    Discussion, 
+    Discussion,
     TrendingTopic,
-    Statement
+    Statement,
+    DailyQuestionResponse
 )
 import random
+import math
 
 
 AVOID_REPEAT_DAYS = 30
 MIN_CIVIC_SCORE = 0.5
+
+# Engagement scoring weights
+WEIGHT_CIVIC = 0.25        # Civic importance
+WEIGHT_TIMELINESS = 0.25   # How recent/relevant
+WEIGHT_CLARITY = 0.20      # Statement clarity (shorter = better)
+WEIGHT_CONTROVERSY = 0.15  # Potential for divided opinions (engagement driver)
+WEIGHT_HISTORICAL = 0.15   # Learn from past performance
+
+
+def calculate_timeliness_score(created_at):
+    """
+    Score based on recency. Newer content is more engaging.
+    Returns 0-1 score with exponential decay over 14 days.
+    """
+    if not created_at:
+        return 0.5  # Default for missing dates
+
+    days_old = (datetime.utcnow() - created_at).days
+    # Exponential decay: score = e^(-days/7)
+    # 0 days = 1.0, 7 days = 0.37, 14 days = 0.14
+    return math.exp(-days_old / 7)
+
+
+def calculate_clarity_score(text):
+    """
+    Score based on statement clarity. Shorter, clearer statements engage better.
+    Optimal length: 50-100 characters. Penalize very short or very long.
+    """
+    if not text:
+        return 0.5
+
+    length = len(text)
+
+    # Optimal range: 50-100 chars
+    if 50 <= length <= 100:
+        return 1.0
+    elif length < 50:
+        # Too short might lack context
+        return 0.7 + (length / 50) * 0.3
+    elif length <= 150:
+        # Slightly long is okay
+        return 1.0 - ((length - 100) / 100) * 0.3
+    else:
+        # Long statements lose engagement
+        return max(0.3, 0.7 - ((length - 150) / 200) * 0.4)
+
+
+def calculate_controversy_potential(statement_text):
+    """
+    Estimate controversy potential from statement text.
+    Controversial (divisive) topics drive more engagement.
+
+    Looks for indicators of debatable claims.
+    """
+    if not statement_text:
+        return 0.5
+
+    text_lower = statement_text.lower()
+
+    # Words that indicate debatable positions (higher controversy)
+    divisive_indicators = [
+        'should', 'must', 'need to', 'have to', 'ought to',
+        'best', 'worst', 'better', 'worse',
+        'always', 'never', 'every', 'none',
+        'right', 'wrong', 'fair', 'unfair',
+        'too much', 'too little', 'enough', 'not enough',
+        'ban', 'allow', 'require', 'mandatory', 'optional'
+    ]
+
+    # Words that indicate neutral/factual statements (lower controversy)
+    neutral_indicators = [
+        'may', 'might', 'could', 'perhaps', 'possibly',
+        'some', 'sometimes', 'often', 'occasionally'
+    ]
+
+    divisive_count = sum(1 for indicator in divisive_indicators if indicator in text_lower)
+    neutral_count = sum(1 for indicator in neutral_indicators if indicator in text_lower)
+
+    # Base score of 0.5, adjusted by indicators
+    score = 0.5 + (divisive_count * 0.1) - (neutral_count * 0.05)
+    return max(0.2, min(1.0, score))
+
+
+def get_historical_performance(topic_category=None, days_lookback=30):
+    """
+    Learn from historical daily question performance.
+    Returns average response rate for similar topics.
+    """
+    cutoff = datetime.utcnow() - timedelta(days=days_lookback)
+
+    query = db.session.query(
+        func.avg(func.count(DailyQuestionResponse.id))
+    ).join(DailyQuestion).filter(
+        DailyQuestion.question_date >= cutoff.date(),
+        DailyQuestion.status == 'published'
+    )
+
+    if topic_category:
+        query = query.filter(DailyQuestion.topic_category == topic_category)
+
+    query = query.group_by(DailyQuestion.id)
+
+    # Get average responses per question
+    results = db.session.query(
+        DailyQuestion.topic_category,
+        func.count(DailyQuestionResponse.id).label('response_count')
+    ).outerjoin(DailyQuestionResponse).filter(
+        DailyQuestion.question_date >= cutoff.date(),
+        DailyQuestion.status == 'published'
+    ).group_by(DailyQuestion.id, DailyQuestion.topic_category).all()
+
+    if not results:
+        return 0.5  # No history, neutral score
+
+    # Calculate average by category
+    category_totals = {}
+    category_counts = {}
+    overall_total = 0
+    overall_count = 0
+
+    for cat, count in results:
+        overall_total += count
+        overall_count += 1
+        if cat:
+            category_totals[cat] = category_totals.get(cat, 0) + count
+            category_counts[cat] = category_counts.get(cat, 0) + 1
+
+    overall_avg = overall_total / overall_count if overall_count > 0 else 0
+
+    if topic_category and topic_category in category_totals:
+        cat_avg = category_totals[topic_category] / category_counts[topic_category]
+        # Score relative to overall average
+        if overall_avg > 0:
+            return min(1.0, cat_avg / (overall_avg * 2))
+
+    return 0.5  # Neutral for unknown categories
+
+
+def calculate_statement_engagement_score(statement, discussion=None):
+    """
+    Calculate comprehensive engagement score for a statement.
+    Returns 0-1 score where higher = more likely to engage users.
+    """
+    scores = {}
+
+    # 1. Civic relevance (from discussion topic if available)
+    if discussion and hasattr(discussion, 'civic_score') and discussion.civic_score:
+        scores['civic'] = discussion.civic_score
+    else:
+        scores['civic'] = 0.6  # Default moderate civic value
+
+    # 2. Timeliness
+    created_at = statement.created_at if hasattr(statement, 'created_at') else None
+    scores['timeliness'] = calculate_timeliness_score(created_at)
+
+    # 3. Clarity
+    text = statement.content if hasattr(statement, 'content') else str(statement)
+    scores['clarity'] = calculate_clarity_score(text)
+
+    # 4. Controversy potential
+    scores['controversy'] = calculate_controversy_potential(text)
+
+    # 5. Historical performance
+    topic = discussion.topic if discussion and hasattr(discussion, 'topic') else None
+    scores['historical'] = get_historical_performance(topic)
+
+    # Weighted combination
+    total_score = (
+        scores['civic'] * WEIGHT_CIVIC +
+        scores['timeliness'] * WEIGHT_TIMELINESS +
+        scores['clarity'] * WEIGHT_CLARITY +
+        scores['controversy'] * WEIGHT_CONTROVERSY +
+        scores['historical'] * WEIGHT_HISTORICAL
+    )
+
+    return total_score, scores
+
+
+def calculate_topic_engagement_score(topic):
+    """
+    Calculate engagement score for a trending topic.
+    """
+    scores = {}
+
+    # 1. Civic score (direct from topic)
+    scores['civic'] = topic.civic_score or 0.5
+
+    # 2. Timeliness
+    scores['timeliness'] = calculate_timeliness_score(topic.created_at)
+
+    # 3. Quality score as proxy for clarity
+    scores['clarity'] = topic.quality_score or 0.5
+
+    # 4. Controversy potential from seed statements
+    if topic.seed_statements:
+        controversy_scores = [calculate_controversy_potential(s) for s in topic.seed_statements[:3]]
+        scores['controversy'] = sum(controversy_scores) / len(controversy_scores)
+    else:
+        scores['controversy'] = 0.5
+
+    # 5. Historical performance
+    scores['historical'] = get_historical_performance(topic.topic)
+
+    # Weighted combination
+    total_score = (
+        scores['civic'] * WEIGHT_CIVIC +
+        scores['timeliness'] * WEIGHT_TIMELINESS +
+        scores['clarity'] * WEIGHT_CLARITY +
+        scores['controversy'] * WEIGHT_CONTROVERSY +
+        scores['historical'] * WEIGHT_HISTORICAL
+    )
+
+    return total_score, scores
+
+
+def weighted_random_choice(items, scores):
+    """
+    Select item using weighted random selection based on engagement scores.
+    Higher scores = higher probability of selection, but not deterministic.
+    """
+    if not items or not scores:
+        return None
+
+    if len(items) != len(scores):
+        return random.choice(items)
+
+    # Ensure all scores are positive
+    min_score = min(scores)
+    if min_score <= 0:
+        scores = [s - min_score + 0.1 for s in scores]
+
+    # Use scores as weights for random selection
+    return random.choices(items, weights=scores, k=1)[0]
 
 
 def is_duplicate_date_error(error):
@@ -106,63 +349,147 @@ def get_eligible_statements(days_to_avoid=AVOID_REPEAT_DAYS):
 
 def select_next_question_source():
     """
-    Select the next question source using priority order:
+    Select the next question source using ENGAGEMENT-WEIGHTED selection.
+
+    Priority order:
     1. Seed statements from curated discussions (THE main source)
     2. High-quality trending topics (use their seed statements)
     3. Direct statements as fallback
-    
+
+    Selection is weighted by engagement potential:
+    - Civic relevance
+    - Timeliness (recent topics)
+    - Statement clarity
+    - Controversy potential (divisive = engaging)
+    - Historical performance of similar topics
+
     Key insight: Daily questions should be actual voteable statements,
     not just discussion titles. Users need specific claims to agree/disagree with.
     """
+    # Try discussions first - collect all eligible statements with scores
     discussions = get_eligible_discussions()
-    if discussions:
-        for discussion in discussions[:10]:
-            seed_statements = Statement.query.filter_by(
-                discussion_id=discussion.id,
-                is_seed=True
-            ).all()
-            if seed_statements:
-                selected_statement = random.choice(seed_statements)
-                return {
-                    'source_type': 'discussion',
-                    'source': discussion,
-                    'statement': selected_statement,
-                    'question_text': selected_statement.content,
-                    'context': discussion.title,
-                    'topic_category': discussion.topic,
-                    'discussion_slug': discussion.slug
-                }
-    
+    all_discussion_statements = []
+
+    for discussion in discussions[:15]:  # Check more discussions
+        seed_statements = Statement.query.filter_by(
+            discussion_id=discussion.id,
+            is_seed=True
+        ).all()
+        for stmt in seed_statements:
+            score, breakdown = calculate_statement_engagement_score(stmt, discussion)
+            all_discussion_statements.append({
+                'statement': stmt,
+                'discussion': discussion,
+                'score': score,
+                'breakdown': breakdown
+            })
+
+    if all_discussion_statements:
+        # Sort by score and take top candidates
+        all_discussion_statements.sort(key=lambda x: x['score'], reverse=True)
+        top_candidates = all_discussion_statements[:10]
+
+        # Weighted random selection from top candidates
+        scores = [c['score'] for c in top_candidates]
+        selected = weighted_random_choice(top_candidates, scores)
+
+        if selected:
+            current_app.logger.info(
+                f"Selected statement with engagement score {selected['score']:.2f} "
+                f"(civic={selected['breakdown']['civic']:.2f}, "
+                f"timeliness={selected['breakdown']['timeliness']:.2f}, "
+                f"clarity={selected['breakdown']['clarity']:.2f}, "
+                f"controversy={selected['breakdown']['controversy']:.2f})"
+            )
+            return {
+                'source_type': 'discussion',
+                'source': selected['discussion'],
+                'statement': selected['statement'],
+                'question_text': selected['statement'].content,
+                'context': selected['discussion'].title,
+                'topic_category': selected['discussion'].topic,
+                'discussion_slug': selected['discussion'].slug,
+                'engagement_score': selected['score']
+            }
+
+    # Try trending topics with engagement scoring
     topics = get_eligible_trending_topics()
     if topics:
-        # Filter to only include topics that have seed statements (proper statements, not questions)
         topics_with_statements = [topic for topic in topics if topic.seed_statements]
         if topics_with_statements:
-            selected = random.choice(topics_with_statements[:5])
-            question_text = selected.seed_statements[0]
-            return {
-                'source_type': 'trending',
-                'source': selected,
-                'statement': None,
-                'question_text': question_text,
-                'context': selected.summary[:300] if selected.summary else None,
-                'topic_category': selected.topic,
-                'discussion_slug': None
-            }
-    
+            # Score each topic
+            scored_topics = []
+            for topic in topics_with_statements:
+                score, breakdown = calculate_topic_engagement_score(topic)
+                scored_topics.append({
+                    'topic': topic,
+                    'score': score,
+                    'breakdown': breakdown
+                })
+
+            # Sort and take top candidates
+            scored_topics.sort(key=lambda x: x['score'], reverse=True)
+            top_topics = scored_topics[:8]
+
+            # Weighted random selection
+            scores = [t['score'] for t in top_topics]
+            selected = weighted_random_choice(top_topics, scores)
+
+            if selected:
+                topic = selected['topic']
+                # Also score the seed statements and pick best one
+                seed_scores = [
+                    (s, calculate_controversy_potential(s))
+                    for s in topic.seed_statements[:5]
+                ]
+                seed_scores.sort(key=lambda x: x[1], reverse=True)
+                best_statement = seed_scores[0][0] if seed_scores else topic.seed_statements[0]
+
+                current_app.logger.info(
+                    f"Selected trending topic with engagement score {selected['score']:.2f}"
+                )
+                return {
+                    'source_type': 'trending',
+                    'source': topic,
+                    'statement': None,
+                    'question_text': best_statement,
+                    'context': topic.summary[:300] if topic.summary else None,
+                    'topic_category': topic.topic,
+                    'discussion_slug': None,
+                    'engagement_score': selected['score']
+                }
+
+    # Fallback to standalone statements with scoring
     statements = get_eligible_statements()
     if statements:
-        selected = random.choice(statements[:10])
-        return {
-            'source_type': 'statement',
-            'source': selected,
-            'statement': selected,
-            'question_text': selected.content,
-            'context': selected.discussion.title if selected.discussion else None,
-            'topic_category': selected.discussion.topic if selected.discussion else None,
-            'discussion_slug': selected.discussion.slug if selected.discussion else None
-        }
-    
+        scored_statements = []
+        for stmt in statements[:20]:
+            score, breakdown = calculate_statement_engagement_score(stmt, stmt.discussion)
+            scored_statements.append({
+                'statement': stmt,
+                'score': score,
+                'breakdown': breakdown
+            })
+
+        scored_statements.sort(key=lambda x: x['score'], reverse=True)
+        top_statements = scored_statements[:10]
+
+        scores = [s['score'] for s in top_statements]
+        selected = weighted_random_choice(top_statements, scores)
+
+        if selected:
+            stmt = selected['statement']
+            return {
+                'source_type': 'statement',
+                'source': stmt,
+                'statement': stmt,
+                'question_text': stmt.content,
+                'context': stmt.discussion.title if stmt.discussion else None,
+                'topic_category': stmt.discussion.topic if stmt.discussion else None,
+                'discussion_slug': stmt.discussion.slug if stmt.discussion else None,
+                'engagement_score': selected['score']
+            }
+
     return None
 
 
