@@ -125,19 +125,7 @@ def get_historical_performance(topic_category=None, days_lookback=30):
     """
     cutoff = datetime.utcnow() - timedelta(days=days_lookback)
 
-    query = db.session.query(
-        func.avg(func.count(DailyQuestionResponse.id))
-    ).join(DailyQuestion).filter(
-        DailyQuestion.question_date >= cutoff.date(),
-        DailyQuestion.status == 'published'
-    )
-
-    if topic_category:
-        query = query.filter(DailyQuestion.topic_category == topic_category)
-
-    query = query.group_by(DailyQuestion.id)
-
-    # Get average responses per question
+    # Get response counts per question with proper grouping
     results = db.session.query(
         DailyQuestion.topic_category,
         func.count(DailyQuestionResponse.id).label('response_count')
@@ -261,13 +249,16 @@ def weighted_random_choice(items, scores):
     if len(items) != len(scores):
         return random.choice(items)
 
-    # Ensure all scores are positive
-    min_score = min(scores)
-    if min_score <= 0:
-        scores = [s - min_score + 0.1 for s in scores]
+    # Make a copy to avoid mutating the original list
+    weights = list(scores)
 
-    # Use scores as weights for random selection
-    return random.choices(items, weights=scores, k=1)[0]
+    # Ensure all weights are positive
+    min_weight = min(weights)
+    if min_weight <= 0:
+        weights = [w - min_weight + 0.1 for w in weights]
+
+    # Use weights for random selection
+    return random.choices(items, weights=weights, k=1)[0]
 
 
 def is_duplicate_date_error(error):
