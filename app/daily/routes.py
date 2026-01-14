@@ -9,6 +9,7 @@ from app.daily.constants import (
 )
 from app import db, limiter
 from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionResponseFlag, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant
+from app.trending.conversion_tracking import track_social_click
 import hashlib
 import re
 import secrets
@@ -239,6 +240,10 @@ def get_discussion_participation_data(question):
 @daily_bp.route('/daily')
 def today():
     """Display today's daily question"""
+    # Track social media clicks (conversion tracking)
+    user_id = str(current_user.id) if current_user.is_authenticated else None
+    track_social_click(request, user_id)
+    
     question = DailyQuestion.get_today()
     
     if not question:
@@ -705,6 +710,22 @@ def subscribe():
             
             from app.resend_client import send_daily_question_welcome_email
             send_daily_question_welcome_email(subscriber)
+            
+            # Track conversion with PostHog
+            try:
+                import posthog
+                if posthog:
+                    posthog.capture(
+                        distinct_id=str(user.id) if user else email,
+                        event='daily_question_subscribed',
+                        properties={
+                            'email': email,
+                            'source': 'social' if 'utm_source' in request.referrer or any(d in request.referrer for d in ['twitter.com', 'x.com', 'bsky.social']) else 'direct',
+                            'referrer': request.referrer
+                        }
+                    )
+            except Exception as e:
+                current_app.logger.warning(f"PostHog tracking error: {e}")
             
             flash('You have successfully subscribed to daily civic questions!', 'success')
             return redirect(url_for('daily.subscribe_success'))

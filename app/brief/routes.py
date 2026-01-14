@@ -11,6 +11,7 @@ from app.brief import brief_bp
 from app import db, limiter
 from app.models import DailyBrief, BriefItem, DailyBriefSubscriber, BriefTeam, User, EmailEvent
 from app.brief.email_client import send_brief_to_subscriber
+from app.trending.conversion_tracking import track_social_click
 import re
 import logging
 import hmac
@@ -25,6 +26,10 @@ logger = logging.getLogger(__name__)
 @limiter.limit("60/minute")
 def today():
     """Show today's brief"""
+    # Track social media clicks (conversion tracking)
+    user_id = str(current_user.id) if current_user.is_authenticated else None
+    track_social_click(request, user_id)
+    
     brief = DailyBrief.get_today()
     
     # Check if user is subscriber (must be eligible - active + valid subscription) or admin
@@ -258,6 +263,23 @@ def subscribe():
             except Exception as e:
                 logger.error(f"Failed to send welcome email to {email}: {e}")
 
+            # Track conversion with PostHog
+            try:
+                import posthog
+                if posthog:
+                    posthog.capture(
+                        distinct_id=str(user.id) if user else email,
+                        event='daily_brief_subscribed',
+                        properties={
+                            'email': email,
+                            'source': 'social' if request.referrer and ('utm_source' in request.referrer or any(d in request.referrer for d in ['twitter.com', 'x.com', 'bsky.social'])) else 'direct',
+                            'referrer': request.referrer,
+                            'subscription_type': subscription_type
+                        }
+                    )
+            except Exception as e:
+                logger.warning(f"PostHog tracking error: {e}")
+            
             flash('Successfully subscribed! Check your email for the first brief.', 'success')
             return redirect(url_for('brief.subscribe_success'))
 

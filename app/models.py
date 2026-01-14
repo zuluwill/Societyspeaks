@@ -2382,3 +2382,77 @@ class DailyQuestionSelection(db.Model):
         return query.first() is not None
 
 
+class SocialPostEngagement(db.Model):
+    """
+    Tracks engagement metrics for social media posts over time.
+
+    Stores likes, retweets/reposts, replies, and impressions for posts
+    on X and Bluesky. Updated periodically by scheduler job.
+    """
+    __tablename__ = 'social_post_engagement'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Link to discussion (nullable for non-discussion posts like daily brief)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=True, index=True)
+    discussion = db.relationship('Discussion', backref=db.backref('social_engagements', lazy='dynamic'))
+
+    # Platform and post identifier
+    platform = db.Column(db.String(20), nullable=False)  # 'x' or 'bluesky'
+    post_id = db.Column(db.String(500), nullable=False)  # Tweet ID or Bluesky URI
+
+    # Content type for tracking different post types
+    content_type = db.Column(db.String(50), nullable=False, default='discussion')  # 'discussion', 'daily_question', 'daily_brief', 'weekly_insights'
+
+    # Hook variant used (for A/B testing)
+    hook_variant = db.Column(db.String(50), nullable=True)
+
+    # Engagement metrics
+    likes = db.Column(db.Integer, default=0)
+    reposts = db.Column(db.Integer, default=0)  # Retweets on X, reposts on Bluesky
+    replies = db.Column(db.Integer, default=0)
+    quotes = db.Column(db.Integer, default=0)
+    impressions = db.Column(db.Integer, default=0)  # Views/impressions if available
+    clicks = db.Column(db.Integer, default=0)  # Link clicks if available
+
+    # Timestamps
+    posted_at = db.Column(db.DateTime, nullable=False)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Unique constraint on platform + post_id
+    __table_args__ = (
+        db.UniqueConstraint('platform', 'post_id', name='uq_platform_post_id'),
+    )
+
+    @property
+    def total_engagement(self) -> int:
+        """Total engagement (likes + reposts + replies + quotes)."""
+        return (self.likes or 0) + (self.reposts or 0) + (self.replies or 0) + (self.quotes or 0)
+
+    @property
+    def engagement_rate(self) -> float:
+        """Engagement rate as percentage of impressions."""
+        if not self.impressions or self.impressions == 0:
+            return 0.0
+        return (self.total_engagement / self.impressions) * 100
+
+    def to_dict(self) -> dict:
+        return {
+            'id': self.id,
+            'platform': self.platform,
+            'post_id': self.post_id,
+            'content_type': self.content_type,
+            'hook_variant': self.hook_variant,
+            'likes': self.likes,
+            'reposts': self.reposts,
+            'replies': self.replies,
+            'quotes': self.quotes,
+            'impressions': self.impressions,
+            'clicks': self.clicks,
+            'total_engagement': self.total_engagement,
+            'engagement_rate': self.engagement_rate,
+            'posted_at': self.posted_at.isoformat() if self.posted_at else None,
+            'last_updated': self.last_updated.isoformat() if self.last_updated else None,
+        }
+

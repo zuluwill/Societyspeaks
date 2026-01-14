@@ -8,6 +8,7 @@ from app.middleware import track_discussion_view
 from app.email_utils import create_discussion_notification
 from app.webhook_security import webhook_required, webhook_with_timestamp
 from app.discussions.consensus import get_user_vote_count, PARTICIPATION_THRESHOLD
+from app.trending.conversion_tracking import track_social_click
 from sqlalchemy.orm import joinedload
 import json
 import os
@@ -162,6 +163,10 @@ def view_discussion_redirect(discussion_id):
 @discussions_bp.route('/<int:discussion_id>/<slug>', methods=['GET'])
 @track_discussion_view
 def view_discussion(discussion_id, slug):
+    # Track social media clicks (conversion tracking)
+    user_id = str(current_user.id) if current_user.is_authenticated else None
+    track_social_click(request, user_id)
+    
     from app.models import Statement
     from sqlalchemy import desc, func
     

@@ -276,17 +276,31 @@ def generate_post_text(
     title: str,
     topic: str,
     discussion_url: str,
-    platform: str = 'bluesky'
+    platform: str = 'bluesky',
+    discussion=None  # Optional: pass Discussion object to use insights
 ) -> str:
     """
     Generate social media post text for a discussion.
+    
+    If discussion object is provided, leverages existing consensus/vote data
+    to create more engaging, mission-aligned posts.
     
     Args:
         title: Discussion title
         topic: Discussion topic category
         discussion_url: Full URL to the discussion
         platform: 'bluesky' or 'x'
+        discussion: Optional Discussion object (enables data-driven posts)
     """
+    # If discussion object provided, use insights module (DRY: reuse existing data)
+    if discussion:
+        try:
+            from app.trending.social_insights import generate_data_driven_post
+            return generate_data_driven_post(discussion, platform=platform, use_insights=True)
+        except Exception as e:
+            logger.warning(f"Failed to generate data-driven post, falling back to basic: {e}")
+    
+    # Fallback to basic format (backwards compatible)
     hashtags = get_topic_hashtags(topic)
     
     intro_phrases = [
@@ -337,7 +351,9 @@ def post_to_bluesky(
     title: str,
     topic: str,
     discussion_url: str,
-    retry_count: int = 0
+    retry_count: int = 0,
+    discussion=None,  # Optional: Discussion object for data-driven posts
+    custom_text: Optional[str] = None  # Optional: Custom post text (for daily questions/brief)
 ) -> Optional[str]:
     """
     Post a discussion announcement to Bluesky with retry logic.
@@ -359,8 +375,33 @@ def post_to_bluesky(
         
         client = Client()
         client.login(BLUESKY_HANDLE, app_password)
-        
-        text = generate_post_text(title, topic, discussion_url, platform='bluesky')
+
+        # Track hook variant for A/B testing
+        hook_variant = None
+
+        # Use custom text if provided (for daily questions/brief), otherwise generate
+        if custom_text:
+            text = custom_text
+        elif discussion:
+            # Use data-driven post with A/B testing
+            try:
+                from app.trending.social_insights import generate_data_driven_post
+                text, hook_variant = generate_data_driven_post(
+                    discussion,
+                    platform='bluesky',
+                    return_variant=True
+                )
+            except Exception as e:
+                logger.warning(f"Failed to generate data-driven post: {e}")
+                text = generate_post_text(title, topic, discussion_url, platform='bluesky')
+        else:
+            # Generate post text (basic format)
+            text = generate_post_text(
+                title,
+                topic,
+                discussion_url,
+                platform='bluesky'
+            )
         
         text_builder = client_utils.TextBuilder()
         
@@ -375,6 +416,39 @@ def post_to_bluesky(
         post = client.send_post(text_builder)
         
         logger.info(f"Posted to Bluesky: {post.uri}")
+
+        # Record for engagement tracking
+        try:
+            from app.trending.engagement_tracker import record_post
+            record_post(
+                platform='bluesky',
+                post_id=post.uri,
+                content_type='discussion' if discussion else 'other',
+                discussion_id=discussion.id if discussion else None,
+                hook_variant=hook_variant,
+            )
+        except Exception as e:
+            logger.warning(f"Engagement tracking error: {e}")
+
+        # Track with PostHog
+        try:
+            import posthog
+            if posthog:
+                posthog.capture(
+                    distinct_id='system',
+                    event='social_post_created',
+                    properties={
+                        'platform': 'bluesky',
+                        'post_uri': post.uri,
+                        'has_discussion': discussion is not None,
+                        'has_custom_text': custom_text is not None,
+                        'topic': topic,
+                        'hook_variant': hook_variant,
+                    }
+                )
+        except Exception as e:
+            logger.warning(f"PostHog tracking error: {e}")
+
         return post.uri
         
     except Exception as e:
@@ -389,7 +463,7 @@ def post_to_bluesky(
             wait_seconds = BLUESKY_RETRY_BASE_DELAY * (2 ** retry_count)
             logger.info(f"Bluesky transient error. Waiting {wait_seconds}s before retry {retry_count + 1}/{BLUESKY_RETRY_ATTEMPTS}")
             time.sleep(wait_seconds)
-            return post_to_bluesky(title, topic, discussion_url, retry_count + 1)
+            return post_to_bluesky(title, topic, discussion_url, retry_count + 1, discussion, custom_text)
         
         # Check for authentication errors (don't retry these)
         if 'auth' in error_str or 'invalid' in error_str or 'password' in error_str:
@@ -403,7 +477,9 @@ def post_to_x(
     title: str,
     topic: str,
     discussion_url: str,
-    retry_count: int = 0
+    retry_count: int = 0,
+    discussion=None,  # Optional: Discussion object for data-driven posts
+    custom_text: Optional[str] = None  # Optional: Custom post text (for daily questions/brief)
 ) -> Optional[str]:
     """
     Post a discussion announcement to X/Twitter with rate limit handling.
@@ -447,14 +523,73 @@ def post_to_x(
             access_token_secret=access_token_secret,
             wait_on_rate_limit=False  # We handle rate limits ourselves
         )
-        
-        text = generate_post_text(title, topic, discussion_url, platform='x')
-        
+
+        # Track hook variant for A/B testing
+        hook_variant = None
+
+        # Use custom text if provided (for daily questions/brief), otherwise generate
+        if custom_text:
+            text = custom_text
+        elif discussion:
+            # Use data-driven post with A/B testing
+            try:
+                from app.trending.social_insights import generate_data_driven_post
+                text, hook_variant = generate_data_driven_post(
+                    discussion,
+                    platform='x',
+                    return_variant=True
+                )
+            except Exception as e:
+                logger.warning(f"Failed to generate data-driven post: {e}")
+                text = generate_post_text(title, topic, discussion_url, platform='x')
+        else:
+            # Generate post text (basic format)
+            text = generate_post_text(
+                title,
+                topic,
+                discussion_url,
+                platform='x'
+            )
+
         # Post the tweet
         response = client.create_tweet(text=text)
-        
+
         tweet_id = response.data['id']
         logger.info(f"Posted to X: https://x.com/{X_HANDLE}/status/{tweet_id}")
+
+        # Record for engagement tracking
+        try:
+            from app.trending.engagement_tracker import record_post
+            record_post(
+                platform='x',
+                post_id=tweet_id,
+                content_type='discussion' if discussion else 'other',
+                discussion_id=discussion.id if discussion else None,
+                hook_variant=hook_variant,
+            )
+        except Exception as e:
+            logger.warning(f"Engagement tracking error: {e}")
+
+        # Track with PostHog
+        if response and response.data:
+            try:
+                import posthog
+                if posthog:
+                    posthog.capture(
+                        distinct_id='system',
+                        event='social_post_created',
+                        properties={
+                            'platform': 'x',
+                            'tweet_id': tweet_id,
+                            'has_discussion': discussion is not None,
+                            'has_custom_text': custom_text is not None,
+                            'topic': topic,
+                            'hook_variant': hook_variant,
+                        }
+                    )
+            except Exception as e:
+                logger.warning(f"PostHog tracking error: {e}")
+
         return tweet_id
     
     except Exception as e:
@@ -463,13 +598,13 @@ def post_to_x(
         
         # Check if this is a rate limit error we should retry
         should_retry, wait_seconds = _handle_x_rate_limit_error(e)
-        
+
         if should_retry and retry_count < X_RETRY_ATTEMPTS:
             # Exponential backoff: base_delay * 2^retry_count
             actual_wait = min(wait_seconds, X_RETRY_BASE_DELAY * (2 ** retry_count))
             logger.info(f"X rate limited. Waiting {actual_wait}s before retry {retry_count + 1}/{X_RETRY_ATTEMPTS}")
             time.sleep(actual_wait)
-            return post_to_x(title, topic, discussion_url, retry_count + 1)
+            return post_to_x(title, topic, discussion_url, retry_count + 1, discussion, custom_text)
         
         # Check for duplicate tweet error (not a failure, just skip)
         if 'duplicate' in error_str.lower() or 'already posted' in error_str.lower():
@@ -512,8 +647,11 @@ def share_discussion_to_social(
     """
     Share a discussion to all configured social platforms.
     
+    Leverages existing discussion data (consensus, votes, statements) to create
+    engaging posts that stay true to our mission.
+    
     Args:
-        discussion: Discussion model instance
+        discussion: Discussion model instance (enables data-driven posts)
         base_url: Base URL of the site (e.g., https://societyspeaks.io)
         skip_bluesky: If True, skip immediate Bluesky posting (for scheduled posts)
         skip_x: If True, skip immediate X posting (for scheduled posts)
@@ -534,12 +672,15 @@ def share_discussion_to_social(
     }
     
     # Each platform is isolated - failure in one doesn't affect others
+    # Discussion object is passed to leverage insights (DRY: reuse existing data)
     if not skip_bluesky:
         try:
+            # Pass discussion object to leverage insights (DRY: reuse existing data)
             bluesky_uri = post_to_bluesky(
                 title=discussion.title,
                 topic=discussion.topic or 'Society',
-                discussion_url=discussion_url
+                discussion_url=discussion_url,
+                discussion=discussion
             )
             results['bluesky'] = bluesky_uri
         except Exception as e:
@@ -547,10 +688,12 @@ def share_discussion_to_social(
     
     if not skip_x:
         try:
+            # Pass discussion object to leverage insights (DRY: reuse existing data)
             x_tweet_id = post_to_x(
                 title=discussion.title,
                 topic=discussion.topic or 'Society',
-                discussion_url=discussion_url
+                discussion_url=discussion_url,
+                discussion=discussion
             )
             results['x'] = x_tweet_id
         except Exception as e:
@@ -655,11 +798,13 @@ def process_scheduled_bluesky_posts() -> int:
             db.session.commit()
             
             discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
-            
+
+            # Pass discussion object to leverage insights (DRY: reuse existing data)
             uri = post_to_bluesky(
                 title=discussion.title,
                 topic=discussion.topic or 'Society',
-                discussion_url=discussion_url
+                discussion_url=discussion_url,
+                discussion=discussion
             )
             
             if uri:
@@ -782,11 +927,13 @@ def process_scheduled_x_posts() -> int:
             db.session.commit()
             
             discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
-            
+
+            # Pass discussion object to leverage insights (DRY: reuse existing data)
             tweet_id = post_to_x(
                 title=discussion.title,
                 topic=discussion.topic or 'Society',
-                discussion_url=discussion_url
+                discussion_url=discussion_url,
+                discussion=discussion
             )
             
             if tweet_id:

@@ -485,6 +485,296 @@ def init_scheduler(app):
         )
         email_thread.start()
         logger.info("Daily question email thread launched, scheduler continuing")
+    
+    
+    @scheduler.scheduled_job('cron', hour=14, minute=0, id='post_daily_question_to_social')
+    def post_daily_question_to_social():
+        """
+        Post today's daily question to social media.
+        
+        Timing optimized for UK/USA audience:
+        - 2pm UTC = 9am EST (USA morning) / 2pm UK (afternoon)
+        - Good engagement time for both regions
+        
+        Runs after question is published and emails are sent.
+        """
+        with app.app_context():
+            from app.models import DailyQuestion
+            from app.trending.social_insights import generate_daily_question_post
+            from app.trending.social_poster import post_to_x, post_to_bluesky
+            from datetime import date
+            import posthog
+            
+            try:
+                question = DailyQuestion.query.filter_by(
+                    question_date=date.today(),
+                    status='published'
+                ).first()
+                
+                if not question:
+                    logger.debug("No published daily question today, skipping social post")
+                    return
+                
+                # Generate posts
+                x_post = generate_daily_question_post(question, platform='x')
+                bluesky_post = generate_daily_question_post(question, platform='bluesky')
+                
+                # Post to X
+                try:
+                    x_url = f"https://societyspeaks.io/daily/{question.question_date.strftime('%Y-%m-%d')}"
+                    x_post_text = generate_daily_question_post(question, platform='x')
+                    tweet_id = post_to_x(
+                        title=question.question_text,
+                        topic=question.topic_category or 'Society',
+                        discussion_url=x_url,
+                        discussion=None,  # Daily question, not discussion
+                        custom_text=x_post_text
+                    )
+                    
+                    if tweet_id:
+                        logger.info(f"Posted daily question #{question.question_number} to X: {tweet_id}")
+                        
+                        # Track with PostHog
+                        if posthog:
+                            try:
+                                posthog.capture(
+                                    distinct_id='system',
+                                    event='daily_question_posted_to_x',
+                                    properties={
+                                        'question_id': question.id,
+                                        'question_number': question.question_number,
+                                        'tweet_id': tweet_id,
+                                        'response_count': question.response_count
+                                    }
+                                )
+                            except Exception as e:
+                                logger.warning(f"PostHog tracking error: {e}")
+                except Exception as e:
+                    logger.error(f"Error posting daily question to X: {e}")
+                
+                # Post to Bluesky
+                try:
+                    bluesky_url = f"https://societyspeaks.io/daily/{question.question_date.strftime('%Y-%m-%d')}"
+                    bluesky_post_text = generate_daily_question_post(question, platform='bluesky')
+                    bluesky_uri = post_to_bluesky(
+                        title=question.question_text,
+                        topic=question.topic_category or 'Society',
+                        discussion_url=bluesky_url,
+                        discussion=None,  # Daily question, not discussion
+                        custom_text=bluesky_post_text
+                    )
+                    
+                    if bluesky_uri:
+                        logger.info(f"Posted daily question #{question.question_number} to Bluesky: {bluesky_uri}")
+                        
+                        # Track with PostHog
+                        if posthog:
+                            try:
+                                posthog.capture(
+                                    distinct_id='system',
+                                    event='daily_question_posted_to_bluesky',
+                                    properties={
+                                        'question_id': question.id,
+                                        'question_number': question.question_number,
+                                        'bluesky_uri': bluesky_uri,
+                                        'response_count': question.response_count
+                                    }
+                                )
+                            except Exception as e:
+                                logger.warning(f"PostHog tracking error: {e}")
+                except Exception as e:
+                    logger.error(f"Error posting daily question to Bluesky: {e}")
+                    
+            except Exception as e:
+                logger.error(f"Error posting daily question to social media: {e}", exc_info=True)
+    
+    
+    @scheduler.scheduled_job('cron', day_of_week='sunday', hour=17, minute=0, id='post_weekly_insights')
+    def post_weekly_insights():
+        """
+        Post weekly insights (value-first content, 80/20 rule).
+        
+        Timing: Sunday 5pm UTC = 12pm EST / 5pm UK
+        Good engagement time for both regions.
+        
+        Part of 80/20 strategy: 80% value, 20% promotion.
+        This is value-first content.
+        """
+        with app.app_context():
+            from app.trending.value_content import generate_weekly_insights_post
+            from app.trending.social_poster import post_to_x, post_to_bluesky
+            import posthog
+            
+            try:
+                # Generate value-first content
+                x_post = generate_weekly_insights_post(platform='x')
+                bluesky_post = generate_weekly_insights_post(platform='bluesky')
+                
+                if not x_post:
+                    logger.debug("No weekly insights to post")
+                    return
+                
+                # Post to X
+                try:
+                    tweet_id = post_to_x(
+                        title="Weekly Insights",
+                        topic='Society',
+                        discussion_url="https://societyspeaks.io",
+                        custom_text=x_post
+                    )
+                    
+                    if tweet_id:
+                        logger.info(f"Posted weekly insights to X: {tweet_id}")
+                        
+                        # Track with PostHog
+                        if posthog:
+                            try:
+                                posthog.capture(
+                                    distinct_id='system',
+                                    event='weekly_insights_posted',
+                                    properties={
+                                        'platform': 'x',
+                                        'tweet_id': tweet_id,
+                                        'content_type': 'value_first'
+                                    }
+                                )
+                            except Exception as e:
+                                logger.warning(f"PostHog tracking error: {e}")
+                except Exception as e:
+                    logger.error(f"Error posting weekly insights to X: {e}")
+                
+                # Post to Bluesky
+                try:
+                    bluesky_uri = post_to_bluesky(
+                        title="Weekly Insights",
+                        topic='Society',
+                        discussion_url="https://societyspeaks.io",
+                        custom_text=bluesky_post
+                    )
+                    
+                    if bluesky_uri:
+                        logger.info(f"Posted weekly insights to Bluesky: {bluesky_uri}")
+                        
+                        # Track with PostHog
+                        if posthog:
+                            try:
+                                posthog.capture(
+                                    distinct_id='system',
+                                    event='weekly_insights_posted',
+                                    properties={
+                                        'platform': 'bluesky',
+                                        'post_uri': bluesky_uri,
+                                        'content_type': 'value_first'
+                                    }
+                                )
+                            except Exception as e:
+                                logger.warning(f"PostHog tracking error: {e}")
+                except Exception as e:
+                    logger.error(f"Error posting weekly insights to Bluesky: {e}")
+                    
+            except Exception as e:
+                logger.error(f"Error posting weekly insights: {e}", exc_info=True)
+    
+    
+    @scheduler.scheduled_job('cron', hour=18, minute=30, id='post_daily_brief_to_social')
+    def post_daily_brief_to_social():
+        """
+        Post today's daily brief to social media.
+        
+        Timing optimized for UK/USA audience:
+        - 6:30pm UTC = 1:30pm EST (USA lunch) / 6:30pm UK (evening)
+        - Good engagement time for both regions
+        - Runs 30 minutes after brief is published (6pm UTC)
+        """
+        with app.app_context():
+            from app.models import DailyBrief
+            from app.trending.social_insights import generate_daily_brief_post
+            from app.trending.social_poster import post_to_x, post_to_bluesky
+            from datetime import date
+            import posthog
+            
+            try:
+                brief = DailyBrief.query.filter_by(
+                    date=date.today(),
+                    status='published'
+                ).first()
+                
+                if not brief:
+                    logger.debug("No published daily brief today, skipping social post")
+                    return
+                
+                # Generate posts
+                x_post = generate_daily_brief_post(brief, platform='x')
+                bluesky_post = generate_daily_brief_post(brief, platform='bluesky')
+                
+                # Post to X
+                try:
+                    x_url = f"https://societyspeaks.io/brief/{brief.date.strftime('%Y-%m-%d')}"
+                    x_post_text = generate_daily_brief_post(brief, platform='x')
+                    tweet_id = post_to_x(
+                        title=brief.title,
+                        topic='News',
+                        discussion_url=x_url,
+                        discussion=None,  # Daily brief, not discussion
+                        custom_text=x_post_text
+                    )
+                    
+                    if tweet_id:
+                        logger.info(f"Posted daily brief to X: {tweet_id}")
+                        
+                        # Track with PostHog
+                        if posthog:
+                            try:
+                                posthog.capture(
+                                    distinct_id='system',
+                                    event='daily_brief_posted_to_x',
+                                    properties={
+                                        'brief_id': brief.id,
+                                        'brief_date': brief.date.isoformat(),
+                                        'tweet_id': tweet_id,
+                                        'item_count': brief.item_count
+                                    }
+                                )
+                            except Exception as e:
+                                logger.warning(f"PostHog tracking error: {e}")
+                except Exception as e:
+                    logger.error(f"Error posting daily brief to X: {e}")
+                
+                # Post to Bluesky
+                try:
+                    bluesky_url = f"https://societyspeaks.io/brief/{brief.date.strftime('%Y-%m-%d')}"
+                    bluesky_post_text = generate_daily_brief_post(brief, platform='bluesky')
+                    bluesky_uri = post_to_bluesky(
+                        title=brief.title,
+                        topic='News',
+                        discussion_url=bluesky_url,
+                        discussion=None,  # Daily brief, not discussion
+                        custom_text=bluesky_post_text
+                    )
+                    
+                    if bluesky_uri:
+                        logger.info(f"Posted daily brief to Bluesky: {bluesky_uri}")
+                        
+                        # Track with PostHog
+                        if posthog:
+                            try:
+                                posthog.capture(
+                                    distinct_id='system',
+                                    event='daily_brief_posted_to_bluesky',
+                                    properties={
+                                        'brief_id': brief.id,
+                                        'brief_date': brief.date.isoformat(),
+                                        'bluesky_uri': bluesky_uri,
+                                        'item_count': brief.item_count
+                                    }
+                                )
+                            except Exception as e:
+                                logger.warning(f"PostHog tracking error: {e}")
+                except Exception as e:
+                    logger.error(f"Error posting daily brief to Bluesky: {e}")
+                    
+            except Exception as e:
+                logger.error(f"Error posting daily brief to social media: {e}", exc_info=True)
 
 
     # ==============================================================================
@@ -612,7 +902,7 @@ def init_scheduler(app):
         """
         Update AllSides political leaning ratings monthly
         Runs at 2am UTC on the 1st of each month
-        
+
         Uses APScheduler's day parameter to ensure it only runs on day 1,
         rather than checking in the function body (which would fail if
         server is down on the 1st).
@@ -627,6 +917,26 @@ def init_scheduler(app):
                 logger.info(f"AllSides update complete: {results}")
             except Exception as e:
                 logger.error(f"AllSides update failed: {e}", exc_info=True)
+
+
+    @scheduler.scheduled_job('cron', hour='*/4', minute=30, id='update_social_engagement')
+    def update_social_engagement():
+        """
+        Update engagement metrics for recent social media posts.
+        Runs every 4 hours at :30 to fetch likes, reposts, replies.
+
+        Used for A/B testing and performance measurement.
+        """
+        with app.app_context():
+            from app.trending.engagement_tracker import update_recent_engagements
+
+            logger.info("Updating social media engagement metrics")
+
+            try:
+                updated_count = update_recent_engagements(hours=48, limit=30)
+                logger.info(f"Updated engagement for {updated_count} posts")
+            except Exception as e:
+                logger.error(f"Social engagement update failed: {e}", exc_info=True)
 
 
     logger.info("Scheduler initialized with jobs:")
