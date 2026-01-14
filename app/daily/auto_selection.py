@@ -135,21 +135,20 @@ def select_next_question_source():
     
     topics = get_eligible_trending_topics()
     if topics:
-        selected = random.choice(topics[:5])
-        seed_statements = selected.seed_statements
-        if seed_statements:
-            question_text = seed_statements[0]
-        else:
-            question_text = selected.title
-        return {
-            'source_type': 'trending',
-            'source': selected,
-            'statement': None,
-            'question_text': question_text,
-            'context': selected.summary[:300] if selected.summary else None,
-            'topic_category': selected.topic,
-            'discussion_slug': None
-        }
+        # Filter to only include topics that have seed statements (proper statements, not questions)
+        topics_with_statements = [topic for topic in topics if topic.seed_statements]
+        if topics_with_statements:
+            selected = random.choice(topics_with_statements[:5])
+            question_text = selected.seed_statements[0]
+            return {
+                'source_type': 'trending',
+                'source': selected,
+                'statement': None,
+                'question_text': question_text,
+                'context': selected.summary[:300] if selected.summary else None,
+                'topic_category': selected.topic,
+                'discussion_slug': None
+            }
     
     statements = get_eligible_statements()
     if statements:

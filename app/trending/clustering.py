@@ -282,11 +282,14 @@ def generate_neutral_question(articles: List[NewsArticle]) -> Optional[str]:
     
     headlines = [a.title for a in articles[:5]]
     
-    prompt = f"""Based on these news headlines about the same topic, generate a neutral, 
+    prompt = f"""Based on these news headlines about the same topic, generate a neutral,
 open-ended question suitable for public deliberation. The question should:
 - Be neutral, not leading
 - Invite multiple perspectives
 - Focus on policy/civic implications where possible
+- Use simple, direct language a 12-year-old could understand
+- Avoid bureaucratic jargon and complex terminology
+- Maximum 2 clauses (keep it concise)
 - Be under 150 characters
 
 Headlines:

@@ -158,6 +158,47 @@ def get_user_response(daily_question):
         ).first()
 
 
+def get_user_streak_data():
+    """Get streak data for the current user/subscriber.
+
+    Returns dict with streak info if available, None otherwise.
+    Checks:
+    1. Logged-in user with linked subscriber
+    2. Session-based subscriber (from magic link)
+    """
+    subscriber = None
+
+    # Check for logged-in user with linked subscriber
+    if current_user.is_authenticated:
+        # User might have a linked subscriber via the backref
+        if hasattr(current_user, 'daily_subscription') and current_user.daily_subscription:
+            # daily_subscription is a list due to backref, get first active one
+            subs = current_user.daily_subscription if isinstance(current_user.daily_subscription, list) else [current_user.daily_subscription]
+            for sub in subs:
+                if sub.is_active:
+                    subscriber = sub
+                    break
+
+    # Check for session-based subscriber (from magic link)
+    if not subscriber:
+        subscriber_id = session.get('daily_subscriber_id')
+        if subscriber_id:
+            subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+            if subscriber and not subscriber.is_active:
+                subscriber = None
+
+    if not subscriber:
+        return None
+
+    return {
+        'current_streak': subscriber.current_streak,
+        'longest_streak': subscriber.longest_streak,
+        'thoughtful_participations': subscriber.thoughtful_participations,
+        'is_thoughtful_participant': subscriber.is_thoughtful_participant,
+        'last_participation_date': subscriber.last_participation_date
+    }
+
+
 def get_discussion_participation_data(question):
     """
     Get user's participation data for the linked discussion.
@@ -266,6 +307,7 @@ def today():
         participation_data = get_discussion_participation_data(question)
         public_reasons = get_public_reasons(question, limit=6)  # Show 6 in preview
         reasons_stats = get_public_reasons_stats(question)
+        streak_data = get_user_streak_data()
         return render_template('daily/results.html',
                              question=question,
                              user_response=user_response,
@@ -278,7 +320,8 @@ def today():
                              related_discussions=get_related_discussions(question),
                              participation=participation_data,
                              public_reasons=public_reasons,
-                             reasons_stats=reasons_stats)
+                             reasons_stats=reasons_stats,
+                             streak_data=streak_data)
     else:
         return render_template('daily/question.html',
                              question=question)
@@ -307,6 +350,7 @@ def by_date(date_str):
         participation_data = get_discussion_participation_data(question)
         public_reasons = get_public_reasons(question, limit=6)  # Show 6 in preview
         reasons_stats = get_public_reasons_stats(question)
+        streak_data = get_user_streak_data()
         return render_template('daily/results.html',
                              question=question,
                              user_response=user_response,
@@ -320,7 +364,8 @@ def by_date(date_str):
                              related_discussions=get_related_discussions(question),
                              participation=participation_data,
                              public_reasons=public_reasons,
-                             reasons_stats=reasons_stats)
+                             reasons_stats=reasons_stats,
+                             streak_data=streak_data)
     else:
         return render_template('daily/question.html',
                              question=question)

@@ -74,6 +74,41 @@
             </div>
             {% endif %}
 
+            {% if streak_data and streak_data.current_streak > 0 %}
+            <div class="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-lg p-4 mb-6">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="flex items-center">
+                        <span class="text-2xl mr-3">🔥</span>
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ streak_data.current_streak }}-day streak!</p>
+                            <p class="text-sm text-gray-600">
+                                {% if streak_data.current_streak >= streak_data.longest_streak %}
+                                    Your best streak yet
+                                {% else %}
+                                    Best: {{ streak_data.longest_streak }} days
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    {% if streak_data.is_thoughtful_participant %}
+                    <div class="flex items-center bg-white px-3 py-1 rounded-full border border-purple-200 self-start sm:self-auto">
+                        <span class="text-sm mr-1">💭</span>
+                        <span class="text-xs font-medium text-purple-700">Thoughtful Participant</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% elif streak_data and streak_data.current_streak == 0 and streak_data.longest_streak > 0 %}
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                <div class="flex items-center">
+                    <span class="text-xl mr-3">📊</span>
+                    <div>
+                        <p class="text-sm text-gray-700">Start a new streak! Your best was <span class="font-semibold">{{ streak_data.longest_streak }} days</span>.</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="mb-8">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">
                     {% if is_cold_start %}Early Signal{% else %}Consensus Level{% endif %}
@@ -363,16 +398,24 @@
 
             <div class="border-t pt-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Invite Others to Participate</h3>
-                
+
                 {% set results_share_text = base_share_text ~ ' - What do you think? ' ~ stats.total ~ ' people have weighed in. Add your voice at societyspeaks.io' %}
 
-                <div class="flex justify-center">
+                <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
                     {{ share_button(
                         title="Daily Civic Question - Society Speaks",
                         url=results_url,
                         description=results_share_text,
                         button_style="secondary"
                     ) }}
+
+                    <button onclick="downloadShareCard()"
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Download Share Card
+                    </button>
                 </div>
             </div>
         </div>
@@ -843,6 +886,121 @@
             closeReportModal();
         }
     });
+</script>
+
+<!-- Hidden Share Card for Image Generation -->
+<div id="share-card-container" style="position: absolute; left: -9999px; top: 0;">
+    <div id="share-card" style="width: 600px; height: 315px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%); padding: 32px; font-family: system-ui, -apple-system, sans-serif; position: relative; overflow: hidden;">
+        <!-- Background pattern -->
+        <div style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: rgba(34, 197, 94, 0.1); border-radius: 50%;"></div>
+        <div style="position: absolute; bottom: -30px; left: -30px; width: 150px; height: 150px; background: rgba(34, 197, 94, 0.08); border-radius: 50%;"></div>
+
+        <!-- Content -->
+        <div style="position: relative; z-index: 1;">
+            <!-- Header -->
+            <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                <div style="background: #16a34a; color: white; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                    Daily Civic Question #{{ question.question_number }}
+                </div>
+            </div>
+
+            <!-- Question -->
+            <div style="font-size: 20px; font-weight: 700; color: #1f2937; line-height: 1.4; margin-bottom: 20px; max-height: 84px; overflow: hidden;">
+                {{ question.question_text[:120] }}{% if question.question_text|length > 120 %}...{% endif %}
+            </div>
+
+            <!-- Results bars -->
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 70px; font-size: 13px; color: #374151; font-weight: 500;">Agree</div>
+                    <div style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; overflow: hidden; margin-right: 10px;">
+                        <div style="height: 100%; background: #3b82f6; width: {{ stats.agree }}%; border-radius: 12px;"></div>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 700; color: #1f2937; width: 45px; text-align: right;">{{ stats.agree }}%</div>
+                </div>
+                <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                    <div style="width: 70px; font-size: 13px; color: #374151; font-weight: 500;">Disagree</div>
+                    <div style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; overflow: hidden; margin-right: 10px;">
+                        <div style="height: 100%; background: #ef4444; width: {{ stats.disagree }}%; border-radius: 12px;"></div>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 700; color: #1f2937; width: 45px; text-align: right;">{{ stats.disagree }}%</div>
+                </div>
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 70px; font-size: 13px; color: #374151; font-weight: 500;">Unsure</div>
+                    <div style="flex: 1; height: 24px; background: #e5e7eb; border-radius: 12px; overflow: hidden; margin-right: 10px;">
+                        <div style="height: 100%; background: #9ca3af; width: {{ stats.unsure }}%; border-radius: 12px;"></div>
+                    </div>
+                    <div style="font-size: 14px; font-weight: 700; color: #1f2937; width: 45px; text-align: right;">{{ stats.unsure }}%</div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 12px; color: #6b7280;">{{ stats.total }} responses</div>
+                <div style="display: flex; align-items: center;">
+                    <span style="font-size: 14px; font-weight: 700; color: #16a34a;">societyspeaks.io</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- html2canvas library for share card generation -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTRE8Xg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+    function downloadShareCard() {
+        const btn = event.currentTarget;
+        const originalContent = btn.innerHTML;
+        const shareCard = document.getElementById('share-card');
+        const container = document.getElementById('share-card-container');
+
+        // Show loading state
+        btn.disabled = true;
+        btn.innerHTML = `
+            <svg class="animate-spin w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Generating...
+        `;
+
+        // Temporarily make visible for rendering
+        container.style.position = 'fixed';
+        container.style.left = '0';
+        container.style.top = '0';
+        container.style.zIndex = '-1';
+
+        html2canvas(shareCard, {
+            scale: 2, // Higher quality
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: null
+        }).then(canvas => {
+            // Hide again
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+
+            // Create download link
+            const link = document.createElement('a');
+            link.download = 'society-speaks-question-{{ question.question_number }}.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            // Restore button
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        }).catch(err => {
+            console.error('Error generating share card:', err);
+            alert('Failed to generate share card. Please try again.');
+            container.style.position = 'absolute';
+            container.style.left = '-9999px';
+
+            // Restore button
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+        });
+    }
 </script>
 
 {% endblock %}
