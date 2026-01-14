@@ -146,7 +146,7 @@ class DiscussionParticipant(db.Model):
     user = db.relationship('User', backref='discussion_participations')
 
     @classmethod
-    def track_participant(cls, discussion_id, user_id=None, participant_identifier=None, commit=True):
+    def track_participant(cls, discussion_id, user_id=None, participant_identifier=None, commit=True, return_is_new=False):
         """
         Track a participant in a discussion.
 
@@ -155,9 +155,10 @@ class DiscussionParticipant(db.Model):
             user_id: ID of the user (optional, for authenticated users)
             participant_identifier: External identifier (optional, for anonymous users)
             commit: Whether to commit the transaction (default True)
+            return_is_new: If True, returns tuple (participant, is_new) instead of just participant
 
         Returns:
-            DiscussionParticipant instance
+            DiscussionParticipant instance, or tuple (participant, is_new) if return_is_new=True
 
         Raises:
             ValueError: If both user_id and participant_identifier are None
@@ -172,6 +173,8 @@ class DiscussionParticipant(db.Model):
             user_id=user_id,
             participant_identifier=participant_identifier
         ).first()
+
+        is_new = existing is None
 
         if not existing:
             participant = cls(
@@ -190,6 +193,8 @@ class DiscussionParticipant(db.Model):
         if commit:
             db.session.commit()
 
+        if return_is_new:
+            return participant, is_new
         return participant
 
     def increment_response_count(self, commit=True):
@@ -1882,7 +1887,7 @@ class DailyQuestion(db.Model):
     
     status = db.Column(db.String(20), default='scheduled')
     
-    cold_start_threshold = db.Column(db.Integer, default=50)
+    cold_start_threshold = db.Column(db.Integer, default=20)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)

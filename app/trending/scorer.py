@@ -388,21 +388,65 @@ Rate each headline in order."""
     
     result = json.loads(content)
     scores = result.get('scores', [])
-    
+
     for i, article in enumerate(articles):
         if i < len(scores):
             article.sensationalism_score = float(scores[i].get('s', 0.5))
             article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
             article.personal_relevance_score = float(scores[i].get('p', 0.5))
             article.geographic_scope = scores[i].get('geo', 'unknown')
-            article.geographic_countries = scores[i].get('countries', '')
+
+            # Validate AI-detected countries against article content
+            detected_countries = scores[i].get('countries', '').strip()
+            if detected_countries and _validate_geographic_countries(article, detected_countries):
+                article.geographic_countries = detected_countries
+            else:
+                # Fallback to source country if validation fails or no countries detected
+                article.geographic_countries = article.source.country if article.source and article.source.country else ''
         else:
             article.sensationalism_score = score_sensationalism(article.title)
             article.personal_relevance_score = 0.5
             article.geographic_scope = 'unknown'
-            article.geographic_countries = ''
+            article.geographic_countries = article.source.country if article.source and article.source.country else ''
     
     return articles
+
+
+def _validate_geographic_countries(article: NewsArticle, detected_countries: str) -> bool:
+    """
+    Validate that AI-detected countries appear in the article content.
+    Returns True if validation passes, False if it should fallback to source country.
+    """
+    import re
+
+    if not detected_countries or detected_countries.lower() == 'global':
+        return False
+
+    # Create searchable text from title and summary
+    searchable_text = (article.title + ' ' + (article.summary or '')).lower()
+
+    def word_match(word: str, text: str) -> bool:
+        """Check if word appears as a standalone word (not substring of another word)."""
+        # Use word boundaries to avoid false positives like "us" in "focus"
+        pattern = r'\b' + re.escape(word) + r'\b'
+        return bool(re.search(pattern, text))
+
+    # Check if any detected country appears in the article content
+    detected_list = [c.strip() for c in detected_countries.split(',')]
+    for country in detected_list:
+        country_lower = country.lower()
+        # Check for exact country name (as whole word)
+        if word_match(country_lower, searchable_text):
+            return True
+        # Handle common country name variations
+        if country_lower in ('uk', 'united kingdom'):
+            if word_match('uk', searchable_text) or word_match('united kingdom', searchable_text) or word_match('britain', searchable_text) or word_match('british', searchable_text):
+                return True
+        if country_lower in ('us', 'united states'):
+            if word_match('united states', searchable_text) or word_match('u.s.', searchable_text) or word_match('american', searchable_text) or word_match('america', searchable_text):
+                return True
+
+    return False
 
 
 def _score_with_anthropic(articles: List[NewsArticle], api_key: str) -> List[NewsArticle]:
@@ -461,12 +505,19 @@ Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8, "p": 0.9, "geo"
             article.relevance_score = float(scores[i].get('r', article.relevance_score or 0.5))
             article.personal_relevance_score = float(scores[i].get('p', 0.5))
             article.geographic_scope = scores[i].get('geo', 'unknown')
-            article.geographic_countries = scores[i].get('countries', '')
+
+            # Validate AI-detected countries against article content
+            detected_countries = scores[i].get('countries', '').strip()
+            if detected_countries and _validate_geographic_countries(article, detected_countries):
+                article.geographic_countries = detected_countries
+            else:
+                # Fallback to source country if validation fails or no countries detected
+                article.geographic_countries = article.source.country if article.source and article.source.country else ''
         else:
             article.sensationalism_score = score_sensationalism(article.title)
             article.personal_relevance_score = 0.5
             article.geographic_scope = 'unknown'
-            article.geographic_countries = ''
+            article.geographic_countries = article.source.country if article.source and article.source.country else ''
     
     return articles
 

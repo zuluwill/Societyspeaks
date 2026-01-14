@@ -8,7 +8,8 @@ from flask import render_template, redirect, url_for, flash, request, Blueprint,
 from flask_login import login_required, current_user
 from app import db, limiter
 from app.discussions.statement_forms import StatementForm, VoteForm, ResponseForm, FlagStatementForm
-from app.models import Discussion, Statement, StatementVote, Response, StatementFlag
+from app.models import Discussion, Statement, StatementVote, Response, StatementFlag, DiscussionParticipant
+from app.email_utils import create_discussion_notification
 from sqlalchemy import func, desc, or_
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
@@ -502,7 +503,33 @@ def vote_statement(statement_id):
             )
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")
-    
+
+    # Track participant and send notification to discussion creator
+    try:
+        discussion = statement.discussion
+        user_id = current_user.id if current_user.is_authenticated else None
+        fingerprint = get_statement_vote_fingerprint() if not user_id else None
+
+        # Track participant (returns existing or creates new)
+        participant, is_new = DiscussionParticipant.track_participant(
+            discussion_id=discussion.id,
+            user_id=user_id,
+            participant_identifier=fingerprint,
+            commit=True,
+            return_is_new=True
+        )
+
+        # Notify discussion creator about new participant (not for their own votes)
+        if is_new and discussion.creator_id and discussion.creator_id != user_id:
+            create_discussion_notification(
+                user_id=discussion.creator_id,
+                discussion_id=discussion.id,
+                notification_type='new_participant',
+                additional_data={'participant_count': discussion.participant_count}
+            )
+    except Exception as e:
+        current_app.logger.warning(f"Participant tracking error: {e}")
+
     return jsonify({
         'success': True,
         'vote': vote_value,
