@@ -50,7 +50,11 @@
         {% for topic in trending_topics[:5] %}
         <li style="margin-bottom: 8px;">
             <a href="{{ topic.url }}" style="color: #1e40af; text-decoration: none;">{{ topic.title }}</a>
+            {% if topic.participant_count >= 20 %}
             <span style="color: #9ca3af; font-size: 13px;">({{ topic.participant_count }} participants)</span>
+            {% else %}
+            <span style="color: #9ca3af; font-size: 13px;">(Join the discussion)</span>
+            {% endif %}
         </li>
         {% endfor %}
     </ul>

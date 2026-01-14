@@ -80,6 +80,7 @@ Replace pol.is embeds with a fully native system featuring threaded arguments, p
 **Key Areas to Study**:
 
 1. **Math/Clustering Engine** (`/math` directory - Python 20.7%)
+
    - PCA/dimensionality reduction algorithms
    - User clustering based on voting patterns (NOT text similarity)
    - Consensus detection algorithms
@@ -88,6 +89,7 @@ Replace pol.is embeds with a fully native system featuring threaded arguments, p
    - **Critical**: This is their core innovation - how they group users by opinion similarity
 
 2. **Data Models & Schema** (`/server`)
+
    - Conversation/discussion structure
    - Comment (statement) model
    - Vote model and constraints
@@ -96,6 +98,7 @@ Replace pol.is embeds with a fully native system featuring threaded arguments, p
    - How they handle anonymous vs authenticated users
 
 3. **Client Participation UI** (`/client-participation` - TypeScript 17.2%)
+
    - Statement presentation flow
    - Voting interface (agree/disagree/pass)
    - Real-time feedback mechanisms
@@ -104,6 +107,7 @@ Replace pol.is embeds with a fully native system featuring threaded arguments, p
    - User engagement patterns
 
 4. **Report Generation** (`/client-report`)
+
    - Cluster visualization approach
    - Consensus summary generation
    - Divisive statement highlighting
@@ -111,6 +115,7 @@ Replace pol.is embeds with a fully native system featuring threaded arguments, p
    - How they explain clusters to non-technical users
 
 5. **API Design** (`/server`)
+
    - RESTful endpoint structure
    - Authentication/authorization patterns
    - Rate limiting strategies
@@ -129,24 +134,28 @@ Replace pol.is embeds with a fully native system featuring threaded arguments, p
 During the code review, document answers to:
 
 1. **Clustering**:
+
    - What specific algorithm do they use? (PCA + k-means? t-SNE? UMAP?)
    - How do they determine optimal number of clusters?
    - How often do they recalculate clusters?
    - What's the minimum threshold for clustering (votes/participants)?
 
 2. **Data Model**:
+
    - Do they use Statement vs Argument terminology?
    - How do they handle vote changes?
    - What indexes do they use for performance?
    - How do they prevent vote manipulation?
 
 3. **UX Flow**:
+
    - How many statements do users see at once?
    - Do they prioritize which statements to show first?
    - How do they handle new statements appearing mid-session?
    - What's their onboarding flow?
 
 4. **Performance**:
+
    - How do they scale to conversations with 10K+ participants?
    - What's their caching strategy?
    - Do they use background jobs for clustering?
@@ -162,11 +171,13 @@ During the code review, document answers to:
 **What to Potentially Reuse** (AGPL-3.0 compatible):
 
 1. **Math algorithms** - Their clustering code is the crown jewel
+
    - Consider importing their Python clustering module directly
    - Or adapting it to our needs with proper attribution
    - This could save 2-3 weeks of Phase 3 development
 
 2. **Data model patterns** - Follow their proven schema
+
    - Statement-centric vs argument-centric architecture
    - Vote matrix structure
    - Participant tracking
@@ -188,6 +199,7 @@ During the code review, document answers to:
 At end of Phase 0, produce:
 
 1. **Technical Analysis Document** (`docs/polis-analysis.md`):
+
    - Architecture overview
    - Clustering algorithm breakdown
    - Data model comparison
@@ -195,16 +207,19 @@ At end of Phase 0, produce:
    - Performance insights
 
 2. **Reusability Assessment**:
+
    - List of pol.is components to adapt
    - Components to build from scratch
    - Licensing compliance notes (AGPL-3.0 attribution)
 
 3. **Refined Database Schema**:
+
    - Update Phase 1.1 based on pol.is learnings
    - Ensure compatibility with their clustering approach
    - Document deviations and rationale
 
 4. **Updated Phase 3 Plan**:
+
    - Specific algorithms to use (based on pol.is)
    - Whether to adapt their code or build fresh
    - Updated dependency list
@@ -218,6 +233,7 @@ At end of Phase 0, produce:
 ### 0.5 Tools & Setup
 
 **Clone and explore**:
+
 ```bash
 git clone https://github.com/compdemocracy/polis.git
 cd polis
@@ -225,6 +241,7 @@ cd polis
 ```
 
 **Focus areas** (priority order):
+
 1. `/math` - 🔴 Critical - clustering algorithms
 2. `/server` - 🔴 Critical - data models and API
 3. `/client-participation` - 🟡 Important - UI/UX patterns
@@ -232,6 +249,7 @@ cd polis
 5. `/docs` - 🟢 Helpful - architecture decisions
 
 **Time allocation**:
+
 - Days 1-2: Math/clustering deep dive
 - Days 3-4: Data models and API design
 - Day 5: UI/UX review
@@ -244,6 +262,7 @@ cd polis
 **Replit Secrets Required**:
 
 Existing (already configured):
+
 - `DATABASE_URL` - PostgreSQL connection
 - `REDIS_URL` - Redis cache
 - `SECRET_KEY` - Flask session secret
@@ -252,7 +271,9 @@ Existing (already configured):
 - `WEBHOOK_SECRET` - Webhook validation
 
 New (to add):
+
 - `ENCRYPTION_KEY` - Fernet key for API key encryption (Phase 4)
+
 ```python
 from cryptography.fernet import Fernet
 ENCRYPTION_KEY = Fernet.generate_key()  # Store in Replit secrets
@@ -261,6 +282,7 @@ ENCRYPTION_KEY = Fernet.generate_key()  # Store in Replit secrets
 **Replit Object Storage Integration**:
 
 Evidence attachments → use Replit object storage:
+
 ```python
 # Update Evidence model
 class Evidence(db.Model):
@@ -272,6 +294,7 @@ class Evidence(db.Model):
 **Background Task Strategy** (Replit doesn't support Celery/RQ well):
 
 Use APScheduler instead of task queues:
+
 ```python
 # app/__init__.py
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -283,12 +306,12 @@ def refresh_clustering():
     """Recalculate clustering for active discussions"""
     from app.models import Discussion
     from app.lib.consensus_engine import cluster_users_by_votes
-    
+
     discussions_needing_refresh = Discussion.query.filter(
         Discussion.has_native_statements == True,
         Discussion.participant_count >= 20
     ).all()
-    
+
     for discussion in discussions_needing_refresh:
         try:
             if should_recalculate(discussion.id):
@@ -301,6 +324,7 @@ scheduler.start()
 ```
 
 Add to `requirements.txt`:
+
 ```
 APScheduler==3.10.4
 ```
@@ -308,6 +332,7 @@ APScheduler==3.10.4
 **AGPL-3.0 Compliance Checklist** (if adapting pol.is code):
 
 1. **Attribution in UI** - Add to footer:
+
 ```html
 <footer>
   Consensus clustering powered by algorithms adapted from
@@ -316,6 +341,7 @@ APScheduler==3.10.4
 ```
 
 2. **Copyright notices** - Add to clustering files:
+
 ```python
 # app/lib/consensus_engine.py
 """
@@ -343,6 +369,7 @@ Licensed under AGPL-3.0
 Create new models in `app/models.py`:
 
 **Statement Model** (core claim/proposition)
+
 ```python
 class Statement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -360,6 +387,7 @@ class Statement(db.Model):
 ```
 
 **StatementVote Model** (user positions on statements - THE CORE FOR CLUSTERING)
+
 ```python
 class StatementVote(db.Model):
     __table_args__ = (db.UniqueConstraint('statement_id', 'user_id'),)
@@ -373,6 +401,7 @@ class StatementVote(db.Model):
 ```
 
 **Response Model** (elaborations on why user voted a certain way)
+
 ```python
 class Response(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -384,6 +413,7 @@ class Response(db.Model):
 ```
 
 **Evidence Model** (supporting evidence for responses)
+
 ```python
 class Evidence(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -396,6 +426,7 @@ class Evidence(db.Model):
 ```
 
 **UserAPIKey Model** (for Phase 4)
+
 ```python
 class UserAPIKey(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -412,6 +443,7 @@ class UserAPIKey(db.Model):
 **Cleaner approach**: Add boolean flag instead of enum to Discussion model
 
 Create Alembic migration:
+
 ```python
 # Add to existing Discussion model
 has_native_statements = db.Column(db.Boolean, default=False)
@@ -421,6 +453,7 @@ has_native_statements = db.Column(db.Boolean, default=False)
 ```
 
 Migration strategy:
+
 - All existing discussions: `has_native_statements=False` (keep pol.is embeds)
 - New discussions: Let creator choose mode
 - No automatic conversion - existing pol.is data stays on pol.is servers
@@ -449,11 +482,13 @@ Create `app/discussions/responses.py`:
 **Participant Journey** (keep it simple):
 
 1. **Progressive Disclosure**: Show 1-3 statements at a time
+
    - Prioritize statements with fewest votes
    - Shuffle to avoid order bias
    - Big touch targets for mobile: Agree / Disagree / Skip buttons
 
 2. **Duplicate Detection**: When posting a new statement
+
    - "Looks similar to: [existing statement] - upvote instead?"
    - Simple string similarity for v1 (defer embeddings)
 
@@ -482,18 +517,19 @@ def wilson_score(agree, disagree, confidence=0.95):
     """
     from math import sqrt
     from scipy import stats
-    
+
     n = agree + disagree
     if n == 0:
         return 0
-    
+
     z = stats.norm.ppf(1 - (1 - confidence) / 2)
     phat = agree / n
-    
+
     return (phat + z*z/(2*n) - z * sqrt((phat*(1-phat)+z*z/(4*n))/n))/(1+z*z/n)
 ```
 
 **Sorting Options**:
+
 - **Best**: Wilson score (default)
 - **Controversial**: High controversy score = `1 - |agree_rate - 0.5| * 2`
 - **Recent**: Newest first
@@ -569,35 +605,35 @@ def cluster_users_by_votes(discussion_id):
     Group users based on their voting patterns (the pol.is approach)
     """
     # 1. Build user-statement vote matrix (rows=users, cols=statements)
-    vote_matrix = build_vote_matrix(discussion_id)  
+    vote_matrix = build_vote_matrix(discussion_id)
     # agree=1, disagree=-1, unsure=0, no-vote=NaN
-    
+
     # 2. Start simple: Agglomerative clustering or k-means on PCA
     from sklearn.decomposition import PCA
     from sklearn.cluster import AgglomerativeClustering
-    
+
     pca = PCA(n_components=min(10, n_statements))
     reduced = pca.fit_transform(vote_matrix)
-    
+
     # Try k in range 2-5, pick best silhouette score
     best_k, best_clustering = optimize_k(reduced)
-    
+
     clustering = AgglomerativeClustering(
         n_clusters=best_k,
         metric='cosine',
         linkage='average'
     )
     user_clusters = clustering.fit_predict(reduced)
-    
+
     # 3. Find consensus statements (≥70% overall, ≥60% in each cluster)
     consensus = find_consensus_statements(vote_matrix, user_clusters)
-    
+
     # 4. Find bridge statements (high mean agreement, low variance across clusters)
     bridges = find_bridge_statements(vote_matrix, user_clusters)
-    
+
     # 5. Find divisive statements (cluster disagreement, ~50/50 splits)
     divisive = find_divisive_statements(vote_matrix, user_clusters)
-    
+
     return {
         'user_clusters': user_clusters,
         'consensus': consensus,  # ≥70% overall AND ≥60% each cluster
@@ -608,16 +644,19 @@ def cluster_users_by_votes(discussion_id):
 ```
 
 **Explicit Definitions**:
+
 - **Consensus statement**: ≥70% agree overall AND ≥60% agree in EACH user cluster
 - **Bridge statement**: High mean agreement (≥65%) with low variance across clusters (<0.15)
-- **Divisive statement**: Controversy score = 1 - |agree_rate - 0.5| * 2 (high = controversial)
+- **Divisive statement**: Controversy score = 1 - |agree_rate - 0.5| \* 2 (high = controversial)
 
 **Dependencies to add** (minimal, start here):
+
 ```
 scikit-learn==1.4.0
 ```
 
 **Defer until needed** (>500 users/discussion or poor cluster quality):
+
 - UMAP for better dimensionality reduction
 - HDBSCAN for automatic cluster detection
 - Plotly for server-side rendering (use Chart.js frontend first)

@@ -1,0 +1,21 @@
+Society Speaks (societyspeaks.io) is a public discussion platform that facilitates civic debate and consensus-building. We use X's API v2 exclusively to automatically post announcements about new public discussions to promote civic engagement.
+
+USE CASES:
+1. Automated posting of discussion announcements - When new public discussions are created on our platform (from trending news topics or user-generated content), we automatically post brief announcements to X (@societyspeaksio) that include the discussion topic, a link to our platform, and relevant hashtags.
+
+2. Rate-limited scheduling - We implement strict rate limiting (max 15 posts/day, 500/month) and schedule posts at optimal times throughout the day to respect API limits and avoid overwhelming followers.
+
+DATA USAGE:
+- We only POST content using the create_tweet endpoint
+- We do NOT read, fetch, or analyze any X user data, tweets, profiles, or timelines
+- We do NOT resell any data from X API
+- We only store tweet IDs in our database to prevent duplicate posts and track our own posting history
+
+PURPOSE:
+To promote civic engagement by helping people discover important public discussions about current events, politics, policy, and social issues, and to direct X users to participate in structured, nuanced discussions on our platform.
+
+TECHNICAL:
+- API: POST /2/tweets via Tweepy library
+- Auth: OAuth 1.0a
+- Account: @societyspeaksio
+- No data collection from X - only posting our own content

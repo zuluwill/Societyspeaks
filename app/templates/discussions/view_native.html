@@ -49,6 +49,12 @@
     </div>
 
     <!-- Stats Overview with Progress Indicator -->
+    {# Threshold for showing counts - hide low numbers to avoid cold start perception #}
+    {% set vote_display_threshold = 20 %}
+    {% set total_votes_all = statements|sum(attribute='vote_count_agree') + statements|sum(attribute='vote_count_disagree') + statements|sum(attribute='vote_count_unsure') %}
+
+    {% if total_votes_all >= vote_display_threshold %}
+    <!-- Show detailed stats when we have meaningful participation -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
         <div class="text-center">
             <div class="text-2xl font-bold text-blue-600">{{ statements|length }}</div>
@@ -67,6 +73,17 @@
             <div class="text-sm text-gray-600">Unsure Votes</div>
         </div>
     </div>
+    {% else %}
+    <!-- Encourage participation when counts are low -->
+    <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+        <div class="flex items-center justify-center">
+            <div class="text-center">
+                <div class="text-lg font-semibold text-blue-800 mb-1">🗳️ Be one of the first to share your view</div>
+                <div class="text-sm text-blue-600">{{ statements|length }} statements to vote on • Your perspective matters</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Consensus Readiness Progress (Visible to All) -->
     {% set total_votes = statements|sum(attribute='vote_count_agree') + statements|sum(attribute='vote_count_disagree') + statements|sum(attribute='vote_count_unsure') %}
