@@ -76,6 +76,14 @@ Daily question emails include one-click vote buttons (Agree/Disagree/Unsure) tha
 - **Fallback handling**: Guaranteed clickable links on Bluesky via embed or URL facets
 - **Edge cases**: Very long URLs handled with graduated fallback text to ensure compliance
 
+### Development vs Production Environment (January 2026)
+The scheduler now checks for production environment before running certain jobs:
+- **Email sending**: Daily question emails and brief emails only sent in production
+- **Social media posting**: All scheduled social posts only run in production
+- **Detection method**: Checks REPLIT_DEPLOYMENT, FLASK_ENV, and domain patterns
+- **Purpose**: Prevents duplicate emails/posts when both dev and production are running
+- **Manual testing**: Dev environment scheduler jobs log "Skipping... development environment" instead of executing
+
 ### Development & Security Tools
 - **Flask Extensions**: For security, forms, and database management.
 - **Tailwind CSS**: Utility-first CSS framework.

@@ -19,6 +19,36 @@ logger = logging.getLogger(__name__)
 scheduler = None
 
 
+def _is_production_environment() -> bool:
+    """
+    Check if we're running in the production environment.
+    
+    Used to prevent development environments from sending real emails,
+    social media posts, etc. to avoid duplicates when both dev and prod run.
+    
+    Returns True if:
+    - REPLIT_DEPLOYMENT is set (Replit deployments)
+    - FLASK_ENV is 'production'
+    - Running on the production domain
+    """
+    import os
+    
+    # Replit deployment environment variable
+    if os.environ.get('REPLIT_DEPLOYMENT') == '1':
+        return True
+    
+    # Flask environment check
+    if os.environ.get('FLASK_ENV') == 'production':
+        return True
+    
+    # Check for production domain in REPLIT_DEV_DOMAIN (dev has .replit.dev, prod has actual domain)
+    dev_domain = os.environ.get('REPLIT_DEV_DOMAIN', '')
+    if dev_domain and 'replit.dev' not in dev_domain and 'replit.app' not in dev_domain:
+        return True
+    
+    return False
+
+
 def init_scheduler(app):
     """
     Initialize the APScheduler with Flask app context
@@ -469,7 +499,14 @@ def init_scheduler(app):
         Send daily question email to all subscribers.
         Runs at 8:00am UTC (after question is published).
         Launches in background thread to not block other scheduled jobs.
+        
+        IMPORTANT: Only sends in production to prevent duplicate emails from dev environment.
         """
+        # Skip email sending in development environment to prevent duplicates
+        if not _is_production_environment():
+            logger.info("Skipping daily question email - development environment")
+            return
+            
         if _email_send_in_progress.is_set():
             logger.warning("Daily question email send already in progress, skipping")
             return
@@ -497,7 +534,14 @@ def init_scheduler(app):
         - Good engagement time for both regions
         
         Runs after question is published and emails are sent.
+        
+        IMPORTANT: Only posts in production to prevent duplicates from dev environment.
         """
+        # Skip social posting in development environment to prevent duplicates
+        if not _is_production_environment():
+            logger.info("Skipping daily question social post - development environment")
+            return
+            
         with app.app_context():
             from app.models import DailyQuestion
             from app.trending.social_insights import generate_daily_question_post
@@ -599,7 +643,14 @@ def init_scheduler(app):
         
         Part of 80/20 strategy: 80% value, 20% promotion.
         This is value-first content.
+        
+        IMPORTANT: Only posts in production to prevent duplicates from dev environment.
         """
+        # Skip social posting in development environment to prevent duplicates
+        if not _is_production_environment():
+            logger.info("Skipping weekly insights social post - development environment")
+            return
+            
         with app.app_context():
             from app.trending.value_content import generate_weekly_insights_post
             from app.trending.social_poster import post_to_x, post_to_bluesky
@@ -685,7 +736,14 @@ def init_scheduler(app):
         - 6:30pm UTC = 1:30pm EST (USA lunch) / 6:30pm UK (evening)
         - Good engagement time for both regions
         - Runs 30 minutes after brief is published (6pm UTC)
+        
+        IMPORTANT: Only posts in production to prevent duplicates from dev environment.
         """
+        # Skip social posting in development environment to prevent duplicates
+        if not _is_production_environment():
+            logger.info("Skipping daily brief social post - development environment")
+            return
+            
         with app.app_context():
             from app.models import DailyBrief
             from app.trending.social_insights import generate_daily_brief_post
@@ -873,7 +931,14 @@ def init_scheduler(app):
         - UK users with preferred_hour=18 (6pm UK time)
         - EST users with preferred_hour=13 (1pm EST = 18:00 UTC)
         - PST users with preferred_hour=10 (10am PST = 18:00 UTC)
+        
+        IMPORTANT: Only sends in production to prevent duplicate emails from dev environment.
         """
+        # Skip email sending in development environment to prevent duplicates
+        if not _is_production_environment():
+            logger.info("Skipping brief email send - development environment")
+            return
+            
         with app.app_context():
             from app.brief.email_client import BriefEmailScheduler
 
