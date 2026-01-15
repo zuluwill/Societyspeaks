@@ -122,7 +122,8 @@ def get_source_stats(source_id):
     article_count = NewsArticle.query.filter_by(source_id=source_id).count()
 
     # Calculate engagement score
-    # Formula: (discussion_count * avg_participants) / max(1, days_since_first_discussion)
+    # Formula: (discussion_count * total_participants) / days_since_first_discussion
+    # This rewards both quantity of discussions AND participants while normalizing for time on platform
     engagement_score = 0
     avg_participants = total_participants / max(1, discussion_count)
     
@@ -141,7 +142,8 @@ def get_source_stats(source_id):
         if oldest_discussion:
             from datetime import datetime
             days_since_first = max(1, (datetime.utcnow() - oldest_discussion.created_at).days)
-            engagement_score = round((discussion_count * avg_participants) / days_since_first, 2)
+            # Score = discussions * participants / days (both factors matter independently)
+            engagement_score = round((discussion_count * total_participants) / days_since_first, 2)
 
     return {
         'discussion_count': discussion_count,
