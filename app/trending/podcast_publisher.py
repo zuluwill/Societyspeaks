@@ -22,6 +22,12 @@ from app.models import (
 logger = logging.getLogger(__name__)
 
 
+VALID_TOPICS = [
+    'Healthcare', 'Environment', 'Education', 'Technology', 'Economy', 
+    'Politics', 'Society', 'Infrastructure', 'Geopolitics', 'Business', 'Culture'
+]
+
+
 def strip_html_tags(text: str) -> str:
     """Remove HTML tags from text, preserving the text content."""
     if not text:
@@ -38,6 +44,100 @@ def strip_html_tags(text: str) -> str:
     text = re.sub(r'&#39;', "'", text)
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
+
+
+def detect_article_category(article: NewsArticle) -> str:
+    """
+    Detect the appropriate topic category for an article using AI.
+    Falls back to 'Society' if detection fails.
+    """
+    api_key = os.environ.get('OPENAI_API_KEY')
+    if not api_key:
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if api_key:
+            return _detect_category_anthropic(article, api_key)
+        return 'Society'
+    
+    return _detect_category_openai(article, api_key)
+
+
+def _detect_category_openai(article: NewsArticle, api_key: str) -> str:
+    """Detect category using OpenAI."""
+    try:
+        import openai
+    except ImportError:
+        return 'Society'
+    
+    client = openai.OpenAI(api_key=api_key)
+    
+    title = article.title or ""
+    summary = strip_html_tags(article.summary or "")[:500]
+    
+    prompt = f"""Classify this article into exactly ONE category.
+
+Title: {title}
+Summary: {summary}
+
+Categories: {', '.join(VALID_TOPICS)}
+
+Reply with just the category name, nothing else."""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=20,
+            temperature=0
+        )
+        category = response.choices[0].message.content.strip()
+        if category in VALID_TOPICS:
+            return category
+        for valid in VALID_TOPICS:
+            if valid.lower() in category.lower():
+                return valid
+        return 'Society'
+    except Exception as e:
+        logger.warning(f"Category detection failed: {e}")
+        return 'Society'
+
+
+def _detect_category_anthropic(article: NewsArticle, api_key: str) -> str:
+    """Detect category using Anthropic."""
+    try:
+        import anthropic
+    except ImportError:
+        return 'Society'
+    
+    client = anthropic.Anthropic(api_key=api_key)
+    
+    title = article.title or ""
+    summary = strip_html_tags(article.summary or "")[:500]
+    
+    prompt = f"""Classify this article into exactly ONE category.
+
+Title: {title}
+Summary: {summary}
+
+Categories: {', '.join(VALID_TOPICS)}
+
+Reply with just the category name, nothing else."""
+
+    try:
+        response = client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=20,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        category = response.content[0].text.strip()
+        if category in VALID_TOPICS:
+            return category
+        for valid in VALID_TOPICS:
+            if valid.lower() in category.lower():
+                return valid
+        return 'Society'
+    except Exception as e:
+        logger.warning(f"Category detection failed: {e}")
+        return 'Society'
 
 
 def generate_single_source_seed_statements(article: NewsArticle, count: int = 5) -> List[Dict]:
@@ -241,13 +341,16 @@ def publish_single_source_article(
     if len(clean_summary) > 500:
         clean_summary = clean_summary[:497] + "..."
     
+    topic_category = detect_article_category(article)
+    logger.info(f"Detected category '{topic_category}' for article: {article.title[:50]}...")
+    
     discussion = Discussion(
         title=article.title,
         description=clean_summary,
         slug=slug,
         has_native_statements=True,
         creator_id=admin_user.id,
-        topic='Society',
+        topic=topic_category,
         geographic_scope='global',
         country=country,
         is_featured=False
