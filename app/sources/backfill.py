@@ -4,8 +4,7 @@ Backfill script for source profile fields.
 Generates slugs and sets source categories for existing NewsSource records.
 """
 from app import db
-from app.models import NewsSource
-from app.utils import generate_slug
+from app.models import NewsSource, generate_slug
 import logging
 
 logger = logging.getLogger(__name__)

@@ -86,8 +86,8 @@ def view_source(slug):
     has_pending_claim = source.claim_status == 'pending'
 
     if current_user.is_authenticated:
-        # User must have a company profile and source must be unclaimed
-        if current_user.company_profile and source.claim_status == 'unclaimed':
+        # User must have a company profile and source must be unclaimed or rejected
+        if current_user.company_profile and source.claim_status in ('unclaimed', 'rejected'):
             can_claim = True
         # Check if current user has the pending claim
         if has_pending_claim and source.claim_requested_by_id == current_user.id:
@@ -129,6 +129,8 @@ def claim_source(slug):
         else:
             flash('Another user has already requested to claim this source.', 'error')
         return redirect(url_for('sources.view_source', slug=slug))
+
+    # Note: 'rejected' status is allowed - users can re-apply for rejected sources
 
     if request.method == 'POST':
         # Submit claim request
