@@ -18,22 +18,7 @@ from app.models import (
 )
 
 
-def strip_html_tags(text: str) -> str:
-    """Remove HTML tags from text, preserving the text content."""
-    if not text:
-        return ""
-    text = re.sub(r'<br\s*/?>', ' ', text)
-    text = re.sub(r'<p\s*/?>', ' ', text)
-    text = re.sub(r'</p>', ' ', text)
-    text = re.sub(r'<[^>]+>', '', text)
-    text = re.sub(r'&nbsp;', ' ', text)
-    text = re.sub(r'&amp;', '&', text)
-    text = re.sub(r'&lt;', '<', text)
-    text = re.sub(r'&gt;', '>', text)
-    text = re.sub(r'&quot;', '"', text)
-    text = re.sub(r'&#39;', "'", text)
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
+from app.trending.constants import strip_html_tags
 
 logger = logging.getLogger(__name__)
 
