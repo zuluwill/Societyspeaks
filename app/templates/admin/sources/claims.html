@@ -1,0 +1,166 @@
+{% extends "admin/admin_dashboard.html" %}
+{% from "components/source_logo.html" import source_logo %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-gray-900">Source Claims</h1>
+        <a href="{{ url_for('sources.index') }}"
+           class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+            View All Sources
+        </a>
+    </div>
+
+    <!-- Pending Claims -->
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">
+                Pending Claims
+                {% if pending_claims %}
+                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    {{ pending_claims|length }}
+                </span>
+                {% endif %}
+            </h2>
+            <p class="mt-1 text-sm text-gray-500">Review and approve source claim requests</p>
+        </div>
+
+        {% if pending_claims %}
+        <ul class="divide-y divide-gray-200">
+            {% for source in pending_claims %}
+            <li class="p-4 hover:bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <!-- Source Logo -->
+                        <div class="flex-shrink-0">
+                            {{ source_logo(source, size='sm', rounded='lg') }}
+                        </div>
+
+                        <!-- Source Info -->
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-medium text-gray-900 truncate">{{ source.name }}</h3>
+                            <p class="text-sm text-gray-500">
+                                {{ source.source_category|capitalize if source.source_category else 'News Source' }}
+                                {% if source.country %} | {{ source.country }}{% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Requesting User -->
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                            <p class="text-sm font-medium text-gray-900">
+                                {% if source.claim_requested_by and source.claim_requested_by.company_profile %}
+                                {{ source.claim_requested_by.company_profile.company_name }}
+                                {% else %}
+                                Unknown
+                                {% endif %}
+                            </p>
+                            <p class="text-xs text-gray-500">
+                                Requested {{ source.claim_requested_at.strftime('%b %d, %Y') if source.claim_requested_at else 'Unknown' }}
+                            </p>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex space-x-2">
+                            <form method="POST" action="{{ url_for('admin.approve_source_claim', source_id=source.id) }}" class="inline">
+                                <button type="submit"
+                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Approve
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('admin.reject_source_claim', source_id=source.id) }}" class="inline">
+                                <button type="submit"
+                                        class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                    Reject
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="p-8 text-center">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No pending claims</h3>
+            <p class="mt-1 text-sm text-gray-500">All source claims have been processed.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Claims -->
+    {% if recent_claims %}
+    <div class="bg-white shadow rounded-lg overflow-hidden">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+            <h2 class="text-lg font-medium text-gray-900">Recently Processed</h2>
+            <p class="mt-1 text-sm text-gray-500">Claims processed in the last 30 days</p>
+        </div>
+
+        <ul class="divide-y divide-gray-200">
+            {% for source in recent_claims %}
+            <li class="p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <!-- Source Logo -->
+                        <div class="flex-shrink-0">
+                            {{ source_logo(source, size='sm', rounded='lg') }}
+                        </div>
+
+                        <!-- Source Info -->
+                        <div class="min-w-0">
+                            <h3 class="text-sm font-medium text-gray-900 truncate">{{ source.name }}</h3>
+                            <p class="text-xs text-gray-500">
+                                {% if source.claim_status == 'approved' %}
+                                Claimed by {{ source.claimed_by.company_name if source.claimed_by else 'Unknown' }}
+                                {% else %}
+                                Rejected
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <!-- Status Badge -->
+                        {% if source.claim_status == 'approved' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Approved
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Rejected
+                        </span>
+                        {% endif %}
+
+                        <span class="text-xs text-gray-500">
+                            {{ source.claimed_at.strftime('%b %d, %Y') if source.claimed_at else '' }}
+                        </span>
+
+                        <!-- Revoke button for approved claims -->
+                        {% if source.claim_status == 'approved' %}
+                        <form method="POST" action="{{ url_for('admin.revoke_source_claim', source_id=source.id) }}" class="inline">
+                            <button type="submit"
+                                    onclick="return confirm('Are you sure you want to revoke this claim?')"
+                                    class="text-xs text-red-600 hover:text-red-800">
+                                Revoke
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

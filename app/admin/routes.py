@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag
+from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from app.admin.forms import UserAssignmentForm
 from functools import wraps
@@ -1458,3 +1458,133 @@ def news_settings():
         settings=settings,
         stats=stats
     )
+
+
+# =============================================================================
+# Source Claim Management
+# =============================================================================
+
+@admin_bp.route('/sources/claims')
+@login_required
+@admin_required
+def source_claims():
+    """View and manage pending source claims."""
+    # Get pending claims
+    pending_claims = NewsSource.query.filter(
+        NewsSource.claim_status == 'pending'
+    ).order_by(NewsSource.claim_requested_at.desc()).all()
+
+    # Get recently processed claims (last 30 days)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    recent_claims = NewsSource.query.filter(
+        NewsSource.claim_status.in_(['approved', 'rejected']),
+        NewsSource.claimed_at >= thirty_days_ago
+    ).order_by(NewsSource.claimed_at.desc()).limit(20).all()
+
+    return render_template(
+        'admin/sources/claims.html',
+        pending_claims=pending_claims,
+        recent_claims=recent_claims
+    )
+
+
+@admin_bp.route('/sources/claims/<int:source_id>/approve', methods=['POST'])
+@login_required
+@admin_required
+def approve_source_claim(source_id):
+    """Approve a source claim request."""
+    source = NewsSource.query.get_or_404(source_id)
+
+    if source.claim_status != 'pending':
+        flash('This claim is not pending review.', 'error')
+        return redirect(url_for('admin.source_claims'))
+
+    if not source.claim_requested_by:
+        flash('No user associated with this claim request.', 'error')
+        return redirect(url_for('admin.source_claims'))
+
+    # Get the requesting user's company profile
+    requesting_user = source.claim_requested_by
+    if not requesting_user.company_profile:
+        flash('The requesting user no longer has a company profile.', 'error')
+        source.claim_status = 'unclaimed'
+        source.claim_requested_by_id = None
+        source.claim_requested_at = None
+        db.session.commit()
+        return redirect(url_for('admin.source_claims'))
+
+    # Approve the claim
+    source.claim_status = 'approved'
+    source.claimed_by_profile_id = requesting_user.company_profile.id
+    source.claimed_at = datetime.utcnow()
+
+    try:
+        db.session.commit()
+        current_app.logger.info(
+            f'Source claim approved: {source.name} -> {requesting_user.company_profile.company_name}'
+        )
+        flash(f'Claim for "{source.name}" has been approved.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error approving claim: {str(e)}')
+        flash('An error occurred while approving the claim.', 'error')
+
+    return redirect(url_for('admin.source_claims'))
+
+
+@admin_bp.route('/sources/claims/<int:source_id>/reject', methods=['POST'])
+@login_required
+@admin_required
+def reject_source_claim(source_id):
+    """Reject a source claim request."""
+    source = NewsSource.query.get_or_404(source_id)
+
+    if source.claim_status != 'pending':
+        flash('This claim is not pending review.', 'error')
+        return redirect(url_for('admin.source_claims'))
+
+    # Reject the claim
+    source.claim_status = 'rejected'
+    source.claim_requested_by_id = None
+    source.claim_requested_at = None
+
+    try:
+        db.session.commit()
+        current_app.logger.info(f'Source claim rejected: {source.name}')
+        flash(f'Claim for "{source.name}" has been rejected.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error rejecting claim: {str(e)}')
+        flash('An error occurred while rejecting the claim.', 'error')
+
+    return redirect(url_for('admin.source_claims'))
+
+
+@admin_bp.route('/sources/claims/<int:source_id>/revoke', methods=['POST'])
+@login_required
+@admin_required
+def revoke_source_claim(source_id):
+    """Revoke an approved source claim."""
+    source = NewsSource.query.get_or_404(source_id)
+
+    if source.claim_status != 'approved':
+        flash('This source is not currently claimed.', 'error')
+        return redirect(url_for('admin.source_claims'))
+
+    # Revoke the claim
+    source.claim_status = 'unclaimed'
+    source.claimed_by_profile_id = None
+    source.claimed_at = None
+    source.claim_requested_by_id = None
+    source.claim_requested_at = None
+
+    try:
+        db.session.commit()
+        current_app.logger.info(f'Source claim revoked: {source.name}')
+        flash(f'Claim for "{source.name}" has been revoked.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error revoking claim: {str(e)}')
+        flash('An error occurred while revoking the claim.', 'error')
+
+    return redirect(url_for('admin.source_claims'))

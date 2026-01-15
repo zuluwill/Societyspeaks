@@ -399,6 +399,11 @@ def create_app():
     app.register_blueprint(news_bp)
     app.logger.debug("News transparency blueprint registered")
 
+    # Register sources blueprint (Source Profiles)
+    from app.sources import sources_bp
+    app.register_blueprint(sources_bp, url_prefix='/sources')
+    app.logger.debug("Sources blueprint registered")
+
     app.logger.debug("All registered routes:")
     app.logger.debug(app.url_map)
 
