@@ -1,7 +1,8 @@
 """
-Podcast Publisher
+Single-Source Publisher
 
-Converts podcast episodes into discussions.
+Converts single-source content (podcasts, newsletters) into discussions.
+These sources don't cluster naturally with news, so they get their own discussions.
 Reuses patterns from publisher.py and seed_generator.py (DRY principles).
 """
 
@@ -39,24 +40,25 @@ def strip_html_tags(text: str) -> str:
     return text.strip()
 
 
-def generate_podcast_seed_statements(episode: NewsArticle, count: int = 5) -> List[Dict]:
+def generate_single_source_seed_statements(article: NewsArticle, count: int = 5) -> List[Dict]:
     """
-    Generate seed statements for a podcast episode discussion.
+    Generate seed statements for a single-source article discussion.
     
-    Uses the same LLM approach as trending topics but tailored for podcast content.
+    Works for podcasts, newsletters, and other single-source content.
+    Uses the same LLM approach as trending topics.
     """
     api_key = os.environ.get('OPENAI_API_KEY')
     if not api_key:
         api_key = os.environ.get('ANTHROPIC_API_KEY')
         if api_key:
-            return _generate_with_anthropic(episode, count, api_key)
+            return _generate_with_anthropic(article, count, api_key)
         logger.warning("No LLM API key available for seed generation")
         return []
     
-    return _generate_with_openai(episode, count, api_key)
+    return _generate_with_openai(article, count, api_key)
 
 
-def _generate_with_openai(episode: NewsArticle, count: int, api_key: str) -> List[Dict]:
+def _generate_with_openai(article: NewsArticle, count: int, api_key: str) -> List[Dict]:
     """Generate seeds using OpenAI."""
     try:
         import openai
@@ -70,13 +72,14 @@ def _generate_with_openai(episode: NewsArticle, count: int, api_key: str) -> Lis
         logger.error(f"Failed to create OpenAI client: {e}")
         return []
     
-    source_name = episode.source.name if episode.source else "Unknown Podcast"
-    summary = strip_html_tags(episode.summary or "")[:500]
+    source_name = article.source.name if article.source else "Unknown Source"
+    source_type = article.source.source_category if article.source else "article"
+    summary = strip_html_tags(article.summary or "")[:500]
     
-    prompt = f"""Generate {count} diverse seed statements for a public deliberation based on this podcast episode:
+    prompt = f"""Generate {count} diverse seed statements for a public deliberation based on this {source_type}:
 
-Podcast: {source_name}
-Episode: {episode.title}
+Source: {source_name}
+Title: {article.title}
 {f"Summary: {summary}" if summary else ""}
 
 Requirements:
@@ -122,7 +125,7 @@ Return JSON array: [{{"content": "statement text", "position": "pro/con/neutral"
         return []
 
 
-def _generate_with_anthropic(episode: NewsArticle, count: int, api_key: str) -> List[Dict]:
+def _generate_with_anthropic(article: NewsArticle, count: int, api_key: str) -> List[Dict]:
     """Generate seeds using Anthropic."""
     try:
         import anthropic
@@ -136,13 +139,14 @@ def _generate_with_anthropic(episode: NewsArticle, count: int, api_key: str) -> 
         logger.error(f"Failed to create Anthropic client: {e}")
         return []
     
-    source_name = episode.source.name if episode.source else "Unknown Podcast"
-    summary = strip_html_tags(episode.summary or "")[:500]
+    source_name = article.source.name if article.source else "Unknown Source"
+    source_type = article.source.source_category if article.source else "article"
+    summary = strip_html_tags(article.summary or "")[:500]
     
-    prompt = f"""Generate {count} diverse seed statements for a public deliberation based on this podcast episode:
+    prompt = f"""Generate {count} diverse seed statements for a public deliberation based on this {source_type}:
 
-Podcast: {source_name}
-Episode: {episode.title}
+Source: {source_name}
+Title: {article.title}
 {f"Summary: {summary}" if summary else ""}
 
 Requirements:
@@ -249,7 +253,7 @@ def publish_podcast_episode(
     
     statements_to_add = seed_statements
     if not statements_to_add:
-        statements_to_add = generate_podcast_seed_statements(episode)
+        statements_to_add = generate_single_source_seed_statements(episode)
     
     for stmt_data in statements_to_add:
         statement = Statement(
@@ -352,6 +356,92 @@ def process_recent_podcast_episodes(
                 db.session.rollback()
     
     logger.info(f"Podcast processing complete: {stats}")
+    return stats
+
+
+def process_single_source_articles(
+    source_categories: List[str],
+    days: int = 14,
+    max_per_source: int = 3,
+    admin_user: Optional[User] = None
+) -> Dict:
+    """
+    Process articles from single-source content (podcasts, newsletters, etc.) 
+    and create discussions for them.
+    
+    Generalized version that handles multiple source categories (DRY).
+    
+    Args:
+        source_categories: List of source categories to process (e.g., ['podcast', 'newsletter'])
+        days: Look back period for articles
+        max_per_source: Maximum articles to process per source (prevents flooding)
+        admin_user: Admin user to attribute discussions to
+        
+    Returns:
+        Dict with processing stats
+    """
+    if not admin_user:
+        admin_user = User.query.filter_by(is_admin=True).first()
+        if not admin_user:
+            logger.error("No admin user found for single-source publishing")
+            return {'error': 'No admin user found'}
+    
+    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    
+    sources = NewsSource.query.filter(
+        NewsSource.is_active == True,
+        NewsSource.source_category.in_(source_categories)
+    ).all()
+    
+    stats = {
+        'source_categories': source_categories,
+        'sources_processed': 0,
+        'articles_found': 0,
+        'discussions_created': 0,
+        'already_published': 0,
+        'skipped': 0,
+        'errors': 0
+    }
+    
+    for source in sources:
+        stats['sources_processed'] += 1
+        
+        articles = NewsArticle.query.filter(
+            NewsArticle.source_id == source.id,
+            NewsArticle.fetched_at >= cutoff_date
+        ).order_by(NewsArticle.published_at.desc()).limit(max_per_source * 2).all()
+        
+        published_count = 0
+        
+        for article in articles:
+            if published_count >= max_per_source:
+                break
+                
+            stats['articles_found'] += 1
+            
+            if len(article.title or '') < 20:
+                stats['skipped'] += 1
+                continue
+            
+            existing = Discussion.query.join(DiscussionSourceArticle).filter(
+                DiscussionSourceArticle.article_id == article.id
+            ).first()
+            
+            if existing:
+                stats['already_published'] += 1
+                continue
+            
+            try:
+                discussion = publish_podcast_episode(article, admin_user)
+                if discussion:
+                    stats['discussions_created'] += 1
+                    published_count += 1
+            except Exception as e:
+                logger.error(f"Error publishing article {article.id}: {e}")
+                stats['errors'] += 1
+                db.session.rollback()
+    
+    logger.info(f"Single-source processing complete: {stats}")
     return stats
 
 
