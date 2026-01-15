@@ -30,93 +30,89 @@ logger = logging.getLogger(__name__)
 
 # Version for tracking when ratings were last updated
 # Increment this when making rating changes to force updates
-RATINGS_VERSION = '2026.01.11'
+RATINGS_VERSION = '2026.01.15'
 
 
 # AllSides ratings for news outlets and assessed ratings for podcasts
 # Values must match news_fetcher.py default_sources for consistency
+# Updated January 2026 to reflect AllSides chart v11 (The Guardian moved Left)
 ALLSIDES_RATINGS = {
     # ==========================================================================
-    # LEFT SOURCES (-2 to -1.5)
+    # LEFT SOURCES (≤ -1.5)
     # ==========================================================================
     'The New Yorker': {
         'leaning': -2.0,  # Left
         'source': 'allsides',
         'notes': 'US magazine with left-leaning editorial perspective'
     },
+    'The Guardian': {
+        'leaning': -2.0,  # Left (moved from Lean Left in Nov 2024)
+        'source': 'allsides',
+        'notes': 'British newspaper, rated Left per AllSides chart v10.1'
+    },
+    'The Atlantic': {
+        'leaning': -2.0,  # Left (confirmed July 2025)
+        'source': 'allsides',
+        'notes': 'US magazine with left editorial perspective'
+    },
+    'The Independent': {
+        'leaning': -2.0,  # Left
+        'source': 'allsides',
+        'notes': 'British online newspaper with left perspective'
+    },
     'The Intercept': {
-        'leaning': -1.5,  # Left
+        'leaning': -2.0,  # Left
         'source': 'allsides',
         'notes': 'Progressive investigative journalism, civil liberties focus'
     },
+    'New Statesman': {
+        'leaning': -2.0,  # Left
+        'source': 'allsides',
+        'notes': 'British progressive magazine'
+    },
+    'The Ezra Klein Show': {
+        'leaning': -2.0,  # Left
+        'source': 'manual',
+        'notes': 'NYT politics and policy podcast, left editorial perspective'
+    },
+    'The News Agents': {
+        'leaning': -2.0,  # Left
+        'source': 'manual',
+        'notes': 'UK political podcast, hosts have left backgrounds'
+    },
+    'Matt Taibbi': {
+        'leaning': -2.0,  # Left
+        'source': 'manual',
+        'notes': 'Former Rolling Stone, heterodox anti-establishment left'
+    },
     'Freddie deBoer': {
-        'leaning': -1.5,  # Left
+        'leaning': -2.0,  # Left
         'source': 'manual',
         'notes': 'Education, mental health, socialist perspective'
     },
     
     # ==========================================================================
-    # LEAN LEFT SOURCES (-1 to -0.5)
+    # CENTRE-LEFT SOURCES (-1.0)
     # ==========================================================================
-    'The Guardian': {
-        'leaning': -1.0,  # Lean Left
-        'source': 'allsides',
-        'notes': 'British newspaper with center-left editorial perspective'
-    },
-    'The Atlantic': {
-        'leaning': -1.0,  # Lean Left
-        'source': 'allsides',
-        'notes': 'US magazine with center-left editorial perspective'
-    },
-    'The Independent': {
-        'leaning': -1.0,  # Lean Left
-        'source': 'allsides',
-        'notes': 'British online newspaper with center-left perspective'
-    },
-    'New Statesman': {
-        'leaning': -1.0,  # Lean Left
-        'source': 'allsides',
-        'notes': 'British progressive magazine'
-    },
-    'The News Agents': {
-        'leaning': -1.0,  # Lean Left
-        'source': 'manual',
-        'notes': 'UK political podcast, hosts have center-left backgrounds (BBC, ITV)'
-    },
-    'The Ezra Klein Show': {
-        'leaning': -1.0,  # Lean Left
-        'source': 'manual',
-        'notes': 'NYT politics and policy podcast, center-left editorial perspective'
-    },
     'ProPublica': {
-        'leaning': -0.5,  # Lean Left
+        'leaning': -1.0,  # Centre-Left
         'source': 'allsides',
         'notes': 'Non-profit investigative journalism, data-driven'
     },
     'Slow Boring': {
-        'leaning': -0.5,  # Lean Left
+        'leaning': -1.0,  # Centre-Left
         'source': 'manual',
         'notes': 'Matt Yglesias policy analysis, centre-left wonk'
     },
     'Noahpinion': {
-        'leaning': -0.5,  # Lean Left
+        'leaning': -1.0,  # Centre-Left
         'source': 'manual',
         'notes': 'Noah Smith economics Substack, accessible policy analysis'
     },
     'Commonweal': {
-        'leaning': -0.5,  # Lean Left
+        'leaning': -1.0,  # Centre-Left
         'source': 'manual',
         'notes': 'Catholic intellectual tradition, social justice focus'
-    },
-    'Matt Taibbi': {
-        'leaning': -1.0,  # Lean Left
-        'source': 'manual',
-        'notes': 'Former Rolling Stone, heterodox anti-establishment left'
-    },
-    'Brookings Institution': {
-        'leaning': -0.3,  # Slight Lean Left
-        'source': 'allsides',
-        'notes': 'Think tank, research-backed policy analysis'
     },
     
     # ==========================================================================
@@ -262,108 +258,113 @@ ALLSIDES_RATINGS = {
         'source': 'manual',
         'notes': 'Business deep dives, apolitical tech/business focus'
     },
+    'Brookings Institution': {
+        'leaning': 0,  # Centre (per help page)
+        'source': 'allsides',
+        'notes': 'Think tank, research-backed policy analysis'
+    },
     
     # ==========================================================================
-    # LEAN RIGHT SOURCES (+0.5 to +1)
+    # CENTRE-RIGHT SOURCES (+1.0)
     # ==========================================================================
     'UnHerd': {
-        'leaning': 0.5,  # Centre-Right
+        'leaning': 1.0,  # Centre-Right
         'source': 'manual',
-        'notes': 'Features diverse viewpoints, slight contrarian/right lean'
+        'notes': 'Features diverse viewpoints, contrarian/right lean'
     },
     'The Dispatch': {
-        'leaning': 0.5,  # Centre-Right
+        'leaning': 1.0,  # Centre-Right
         'source': 'manual',
         'notes': 'Fact-based conservative journalism, Jonah Goldberg'
     },
-    'Reason': {
-        'leaning': 0.5,  # Centre-Right (Libertarian)
-        'source': 'allsides',
-        'notes': 'Libertarian magazine, free minds and free markets'
-    },
     'The Free Press': {
-        'leaning': 0.5,  # Centre-Right
+        'leaning': 1.0,  # Centre-Right
         'source': 'manual',
         'notes': 'Bari Weiss publication, heterodox/independent journalism'
     },
+    'Reason': {
+        'leaning': 1.0,  # Centre-Right (Libertarian)
+        'source': 'allsides',
+        'notes': 'Libertarian magazine, free minds and free markets'
+    },
     'The Critic': {
-        'leaning': 0.5,  # Centre-Right
+        'leaning': 1.0,  # Centre-Right
         'source': 'manual',
         'notes': 'British intellectual magazine, skeptical/conservative'
     },
     'Marginal Revolution': {
-        'leaning': 0.5,  # Centre-Right
+        'leaning': 1.0,  # Centre-Right
         'source': 'manual',
         'notes': 'Tyler Cowen economics blog, libertarian-leaning'
     },
     'Cato Institute': {
-        'leaning': 0.5,  # Centre-Right
+        'leaning': 1.0,  # Centre-Right
         'source': 'allsides',
         'notes': 'Libertarian think tank, free markets and civil liberties'
     },
     'Andrew Sullivan': {
-        'leaning': 0.5,  # Centre-Right
+        'leaning': 1.0,  # Centre-Right
         'source': 'manual',
         'notes': 'Former New Republic/Atlantic editor, heterodox conservative'
     },
-    'Manhattan Institute': {
-        'leaning': 1.0,  # Lean Right
-        'source': 'manual',
-        'notes': 'Conservative think tank, pairs with City Journal'
-    },
     'Triggernometry': {
-        'leaning': 0.5,  # Centre-Right
+        'leaning': 1.0,  # Centre-Right
         'source': 'manual',
-        'notes': 'Long-form interviews, slight libertarian/classical liberal lean'
+        'notes': 'Long-form interviews, libertarian/classical liberal lean'
     },
     'All-In Podcast': {
-        'leaning': 0.5,  # Centre-Right
+        'leaning': 1.0,  # Centre-Right
         'source': 'manual',
         'notes': 'Tech/business focus, hosts range center to libertarian-right'
     },
+    
+    # ==========================================================================
+    # RIGHT SOURCES (≥ 1.5)
+    # ==========================================================================
+    'The Telegraph': {
+        'leaning': 2.0,  # Right
+        'source': 'allsides',
+        'notes': 'British newspaper with right editorial stance'
+    },
     'The Spectator': {
-        'leaning': 1.0,  # Lean Right
+        'leaning': 2.0,  # Right
         'source': 'allsides',
         'notes': 'British conservative magazine, oldest continuously published'
     },
+    'National Review': {
+        'leaning': 2.0,  # Right
+        'source': 'allsides',
+        'notes': 'Leading American conservative magazine, founded by William F. Buckley'
+    },
     'The American Conservative': {
-        'leaning': 1.0,  # Lean Right
+        'leaning': 2.0,  # Right
         'source': 'allsides',
         'notes': 'Paleoconservative and realist foreign policy perspective'
     },
     'City Journal': {
-        'leaning': 1.0,  # Lean Right
+        'leaning': 2.0,  # Right
         'source': 'manual',
         'notes': 'Manhattan Institute, urban policy conservative perspective'
     },
-    
-    # ==========================================================================
-    # RIGHT SOURCES (+1.5 to +2)
-    # ==========================================================================
-    'The Telegraph': {
-        'leaning': 1.5,  # Right
-        'source': 'allsides',
-        'notes': 'British newspaper with center-right to right editorial stance'
-    },
-    'National Review': {
-        'leaning': 1.5,  # Right
-        'source': 'allsides',
-        'notes': 'Leading American conservative magazine, founded by William F. Buckley'
+    'Manhattan Institute': {
+        'leaning': 2.0,  # Right
+        'source': 'manual',
+        'notes': 'Conservative think tank, pairs with City Journal'
     },
     'The Commentary Magazine': {
-        'leaning': 1.5,  # Right
+        'leaning': 2.0,  # Right
         'source': 'manual',
         'notes': 'Neoconservative intellectual magazine'
     },
     'First Things': {
-        'leaning': 1.5,  # Right
+        'leaning': 2.0,  # Right
         'source': 'manual',
         'notes': 'Religious conservative intellectual journal'
     },
     'Christianity Today': {
-        'leaning': 1.0,  # Lean Right
+        'leaning': 2.0,  # Right
         'source': 'manual',
-        'notes': 'Evangelical perspective, surprisingly nuanced'
+        'notes': 'Evangelical perspective'
     },
 }
 
@@ -439,7 +440,7 @@ def force_update_all_leanings():
 
 def get_leaning_label(leaning_value):
     """
-    Convert numeric leaning to text label.
+    Convert numeric leaning to text label based on AllSides ratings.
 
     Args:
         leaning_value: Float from -3 to +3
@@ -452,11 +453,11 @@ def get_leaning_label(leaning_value):
     elif leaning_value <= -1.5:
         return 'Left'
     elif leaning_value <= -0.5:
-        return 'Lean Left'
+        return 'Centre-Left'
     elif leaning_value <= 0.5:
-        return 'Center'
+        return 'Centre'
     elif leaning_value <= 1.5:
-        return 'Lean Right'
+        return 'Centre-Right'
     else:
         return 'Right'
 
