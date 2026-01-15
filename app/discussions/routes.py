@@ -293,7 +293,7 @@ def search_discussions():
     city = request.args.get('city')
     keywords = request.args.get('keywords', '')
     page = request.args.get('page', 1, type=int)
-    sort = request.args.get('sort', 'recent')
+    sort = request.args.get('sort', 'popular')
 
     # Use modified fetch_discussions to include sorting
     discussions = fetch_discussions(

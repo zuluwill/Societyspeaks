@@ -22,10 +22,7 @@ from app.models import (
 logger = logging.getLogger(__name__)
 
 
-VALID_TOPICS = [
-    'Healthcare', 'Environment', 'Education', 'Technology', 'Economy', 
-    'Politics', 'Society', 'Infrastructure', 'Geopolitics', 'Business', 'Culture'
-]
+from app.trending.constants import VALID_TOPICS
 
 
 def strip_html_tags(text: str) -> str:

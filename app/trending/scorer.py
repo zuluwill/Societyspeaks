@@ -522,23 +522,7 @@ Return ONLY a JSON array of objects, e.g. [{{"s": 0.2, "r": 0.8, "p": 0.9, "geo"
     return articles
 
 
-VALID_TOPICS = [
-    'Healthcare', 'Environment', 'Education', 'Technology', 'Economy', 
-    'Politics', 'Society', 'Infrastructure', 'Geopolitics', 'Business', 'Culture'
-]
-
-TARGET_AUDIENCE_DESCRIPTION = """
-Our target audience follows podcasts like: The Rest is Politics, Newsagents, Triggernometry, 
-All-In Podcast, UnHerd, Diary of a CEO, Modern Wisdom, Tim Ferriss Show, Louis Theroux.
-
-They value:
-- Nuanced political/policy discussion (not partisan culture war)
-- Geopolitics and international affairs
-- Technology, economics, and entrepreneurship
-- Intellectual depth over sensationalism
-- Contrarian or heterodox perspectives
-- Long-form substantive debate
-"""
+from app.trending.constants import VALID_TOPICS, TARGET_AUDIENCE_DESCRIPTION
 
 
 def score_topic(topic: TrendingTopic) -> TrendingTopic:
