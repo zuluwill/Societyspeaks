@@ -122,21 +122,30 @@ Reply with just the category name, nothing else."""
 def detect_article_geographic(article: NewsArticle) -> Dict:
     """
     Detect geographic scope and country for an article using AI.
-    Returns dict with 'scope' (global/national/local) and 'country'.
+    Returns dict with 'scope' (global/country) and 'country'.
     """
     api_key = os.environ.get('OPENAI_API_KEY')
-    provider = 'openai'
-    if not api_key:
-        api_key = os.environ.get('ANTHROPIC_API_KEY')
-        provider = 'anthropic'
-    if not api_key:
+    if api_key:
+        return _detect_geographic_openai(article, api_key)
+    
+    api_key = os.environ.get('ANTHROPIC_API_KEY')
+    if api_key:
+        return _detect_geographic_anthropic(article, api_key)
+    
+    source_country = article.source.country if article.source else None
+    return {'scope': 'country' if source_country else 'global', 'country': source_country}
+
+
+def _detect_geographic_openai(article: NewsArticle, api_key: str) -> Dict:
+    """Detect geographic scope using OpenAI."""
+    try:
+        import openai
+    except ImportError:
         source_country = article.source.country if article.source else None
         return {'scope': 'global', 'country': source_country}
     
     try:
-        import openai
         client = openai.OpenAI(api_key=api_key)
-        
         title = article.title or ""
         summary = strip_html_tags(article.summary or "")[:300]
         source_country = article.source.country if article.source else "Unknown"
@@ -147,12 +156,7 @@ Title: {title}
 Summary: {summary}
 Source country: {source_country}
 
-Reply in JSON format:
-{{"scope": "global|national|local", "country": "country name or null if truly global", "reason": "brief reason"}}
-
-- Use "national" if the article is primarily about one country's internal affairs
-- Use "local" if about a specific city/region
-- Use "global" only if the topic genuinely affects multiple countries equally"""
+Reply in JSON: {{"scope": "global|national|local", "country": "country name or null"}}"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -161,8 +165,55 @@ Reply in JSON format:
             temperature=0
         )
         
-        content = response.choices[0].message.content.strip()
-        import json as json_module
+        return _parse_geographic_response(response.choices[0].message.content.strip(), article)
+        
+    except Exception as e:
+        logger.warning(f"OpenAI geographic detection failed: {e}")
+        source_country = article.source.country if article.source else None
+        return {'scope': 'global', 'country': source_country}
+
+
+def _detect_geographic_anthropic(article: NewsArticle, api_key: str) -> Dict:
+    """Detect geographic scope using Anthropic."""
+    try:
+        import anthropic
+    except ImportError:
+        source_country = article.source.country if article.source else None
+        return {'scope': 'global', 'country': source_country}
+    
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        title = article.title or ""
+        summary = strip_html_tags(article.summary or "")[:300]
+        source_country = article.source.country if article.source else "Unknown"
+        
+        prompt = f"""Analyze this article's geographic focus.
+
+Title: {title}
+Summary: {summary}
+Source country: {source_country}
+
+Reply in JSON: {{"scope": "global|national|local", "country": "country name or null"}}"""
+
+        response = client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=100,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        return _parse_geographic_response(response.content[0].text.strip(), article)
+        
+    except Exception as e:
+        logger.warning(f"Anthropic geographic detection failed: {e}")
+        source_country = article.source.country if article.source else None
+        return {'scope': 'global', 'country': source_country}
+
+
+def _parse_geographic_response(content: str, article: NewsArticle) -> Dict:
+    """Parse AI response for geographic detection."""
+    import json as json_module
+    
+    try:
         if content.startswith('```'):
             content = content.split('```')[1]
             if content.startswith('json'):
@@ -179,8 +230,8 @@ Reply in JSON format:
         
         return {'scope': scope, 'country': country}
         
-    except Exception as e:
-        logger.warning(f"Geographic detection failed: {e}")
+    except (json_module.JSONDecodeError, IndexError, KeyError) as e:
+        logger.warning(f"Failed to parse geographic response: {e}")
         source_country = article.source.country if article.source else None
         return {'scope': 'global', 'country': source_country}
 
@@ -197,27 +248,34 @@ def generate_article_description(article: NewsArticle) -> str:
         return summary
     
     api_key = os.environ.get('OPENAI_API_KEY')
-    provider = 'openai'
-    if not api_key:
-        api_key = os.environ.get('ANTHROPIC_API_KEY')
-        provider = 'anthropic'
-    if not api_key:
-        return summary or ""
+    if api_key:
+        return _generate_description_openai(article, api_key, summary)
     
+    api_key = os.environ.get('ANTHROPIC_API_KEY')
+    if api_key:
+        return _generate_description_anthropic(article, api_key, summary)
+    
+    return summary or ""
+
+
+def _generate_description_openai(article: NewsArticle, api_key: str, fallback: str) -> str:
+    """Generate description using OpenAI."""
     try:
         import openai
+    except ImportError:
+        return fallback
+    
+    try:
         client = openai.OpenAI(api_key=api_key)
-        
         title = article.title or ""
         source_name = article.source.name if article.source else "Unknown"
         
-        prompt = f"""Write a 1-2 sentence description for this article that provides context for public discussion.
+        prompt = f"""Write a 1-2 sentence description for this article for public discussion.
 
 Source: {source_name}
 Title: {title}
 
-The description should help readers understand what the article is about and why it matters for public debate.
-Keep it under 200 characters. Do not use quotes or attribution."""
+Keep it under 200 characters. No quotes or attribution."""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
@@ -227,13 +285,44 @@ Keep it under 200 characters. Do not use quotes or attribution."""
         )
         
         desc = response.choices[0].message.content.strip()
-        if len(desc) > 500:
-            desc = desc[:497] + "..."
-        return desc
+        return desc[:497] + "..." if len(desc) > 500 else desc
         
     except Exception as e:
-        logger.warning(f"Description generation failed: {e}")
-        return summary or ""
+        logger.warning(f"OpenAI description generation failed: {e}")
+        return fallback
+
+
+def _generate_description_anthropic(article: NewsArticle, api_key: str, fallback: str) -> str:
+    """Generate description using Anthropic."""
+    try:
+        import anthropic
+    except ImportError:
+        return fallback
+    
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        title = article.title or ""
+        source_name = article.source.name if article.source else "Unknown"
+        
+        prompt = f"""Write a 1-2 sentence description for this article for public discussion.
+
+Source: {source_name}
+Title: {title}
+
+Keep it under 200 characters. No quotes or attribution."""
+
+        response = client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=100,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        desc = response.content[0].text.strip()
+        return desc[:497] + "..." if len(desc) > 500 else desc
+        
+    except Exception as e:
+        logger.warning(f"Anthropic description generation failed: {e}")
+        return fallback
 
 
 def generate_single_source_seed_statements(article: NewsArticle, count: int = 5) -> List[Dict]:
