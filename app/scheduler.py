@@ -1027,6 +1027,26 @@ def init_scheduler(app):
                 logger.error(f"Social engagement update failed: {e}", exc_info=True)
 
 
+    @scheduler.scheduled_job('cron', hour=6, id='daily_diversity_check')
+    def daily_diversity_check():
+        """
+        Run daily diversity check to monitor political balance.
+        Runs at 6am UTC daily.
+        Logs warnings/errors if discussions become imbalanced.
+        Supports the mission: "Making Disagreement Useful Again"
+        """
+        with app.app_context():
+            from app.trending.diversity_monitor import run_diversity_check
+
+            try:
+                results = run_diversity_check()
+                status = results['stats']['balance_assessment']['status']
+                ratio = results['stats']['discussions']['left_right_ratio']
+                logger.info(f"Diversity check complete: {status} (L/R ratio: {ratio:.2f})")
+            except Exception as e:
+                logger.error(f"Diversity check failed: {e}", exc_info=True)
+
+
     logger.info("Scheduler initialized with jobs:")
     for job in scheduler.get_jobs():
         logger.info(f"  - {job.id}: {job.trigger}")
