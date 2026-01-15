@@ -26,19 +26,15 @@ from app.trending.constants import VALID_TOPICS
 
 
 def strip_html_tags(text: str) -> str:
-    """Remove HTML tags from text, preserving the text content."""
+    """Remove HTML tags and decode HTML entities from text."""
     if not text:
         return ""
+    import html
     text = re.sub(r'<br\s*/?>', ' ', text)
     text = re.sub(r'<p\s*/?>', ' ', text)
     text = re.sub(r'</p>', ' ', text)
     text = re.sub(r'<[^>]+>', '', text)
-    text = re.sub(r'&nbsp;', ' ', text)
-    text = re.sub(r'&amp;', '&', text)
-    text = re.sub(r'&lt;', '<', text)
-    text = re.sub(r'&gt;', '>', text)
-    text = re.sub(r'&quot;', '"', text)
-    text = re.sub(r'&#39;', "'", text)
+    text = html.unescape(text)
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
@@ -135,6 +131,121 @@ Reply with just the category name, nothing else."""
     except Exception as e:
         logger.warning(f"Category detection failed: {e}")
         return 'Society'
+
+
+def detect_article_geographic(article: NewsArticle) -> Dict:
+    """
+    Detect geographic scope and country for an article using AI.
+    Returns dict with 'scope' (global/national/local) and 'country'.
+    """
+    api_key = os.environ.get('OPENAI_API_KEY')
+    provider = 'openai'
+    if not api_key:
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        provider = 'anthropic'
+    if not api_key:
+        source_country = article.source.country if article.source else None
+        return {'scope': 'global', 'country': source_country}
+    
+    try:
+        import openai
+        client = openai.OpenAI(api_key=api_key)
+        
+        title = article.title or ""
+        summary = strip_html_tags(article.summary or "")[:300]
+        source_country = article.source.country if article.source else "Unknown"
+        
+        prompt = f"""Analyze this article's geographic focus.
+
+Title: {title}
+Summary: {summary}
+Source country: {source_country}
+
+Reply in JSON format:
+{{"scope": "global|national|local", "country": "country name or null if truly global", "reason": "brief reason"}}
+
+- Use "national" if the article is primarily about one country's internal affairs
+- Use "local" if about a specific city/region
+- Use "global" only if the topic genuinely affects multiple countries equally"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=100,
+            temperature=0
+        )
+        
+        content = response.choices[0].message.content.strip()
+        import json as json_module
+        if content.startswith('```'):
+            content = content.split('```')[1]
+            if content.startswith('json'):
+                content = content[4:]
+        
+        data = json_module.loads(content)
+        scope = data.get('scope', 'global')
+        country = data.get('country')
+        
+        if scope not in ('global', 'national', 'local'):
+            scope = 'global'
+        
+        return {'scope': scope, 'country': country}
+        
+    except Exception as e:
+        logger.warning(f"Geographic detection failed: {e}")
+        source_country = article.source.country if article.source else None
+        return {'scope': 'global', 'country': source_country}
+
+
+def generate_article_description(article: NewsArticle) -> str:
+    """
+    Generate a brief contextual description for an article discussion.
+    Provides context that helps users understand what the discussion is about.
+    """
+    summary = strip_html_tags(article.summary or "")
+    if summary and len(summary) > 50:
+        if len(summary) > 500:
+            return summary[:497] + "..."
+        return summary
+    
+    api_key = os.environ.get('OPENAI_API_KEY')
+    provider = 'openai'
+    if not api_key:
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        provider = 'anthropic'
+    if not api_key:
+        return summary or ""
+    
+    try:
+        import openai
+        client = openai.OpenAI(api_key=api_key)
+        
+        title = article.title or ""
+        source_name = article.source.name if article.source else "Unknown"
+        
+        prompt = f"""Write a 1-2 sentence description for this article that provides context for public discussion.
+
+Source: {source_name}
+Title: {title}
+
+The description should help readers understand what the article is about and why it matters for public debate.
+Keep it under 200 characters. Do not use quotes or attribution."""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=100,
+            temperature=0.3
+        )
+        
+        desc = response.choices[0].message.content.strip()
+        if len(desc) > 500:
+            desc = desc[:497] + "..."
+        return desc
+        
+    except Exception as e:
+        logger.warning(f"Description generation failed: {e}")
+        return summary or ""
 
 
 def generate_single_source_seed_statements(article: NewsArticle, count: int = 5) -> List[Dict]:
@@ -332,23 +443,25 @@ def publish_single_source_article(
     
     source_name = article.source.name if article.source else "Unknown"
     source_type = article.source.source_category if article.source else "article"
-    country = article.source.country if article.source else None
-    
-    clean_summary = strip_html_tags(article.summary or "")
-    if len(clean_summary) > 500:
-        clean_summary = clean_summary[:497] + "..."
     
     topic_category = detect_article_category(article)
     logger.info(f"Detected category '{topic_category}' for article: {article.title[:50]}...")
     
+    geo_info = detect_article_geographic(article)
+    geographic_scope = geo_info.get('scope', 'global')
+    country = geo_info.get('country') or (article.source.country if article.source else None)
+    logger.info(f"Detected geography: {geographic_scope}, country: {country}")
+    
+    description = generate_article_description(article)
+    
     discussion = Discussion(
-        title=article.title,
-        description=clean_summary,
+        title=strip_html_tags(article.title),
+        description=description,
         slug=slug,
         has_native_statements=True,
         creator_id=admin_user.id,
         topic=topic_category,
-        geographic_scope='global',
+        geographic_scope=geographic_scope,
         country=country,
         is_featured=False
     )
