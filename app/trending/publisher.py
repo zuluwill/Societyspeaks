@@ -6,8 +6,6 @@ Handles the conversion from TrendingTopic to Discussion + seed Statements.
 """
 
 import logging
-import re
-from collections import Counter
 from datetime import datetime
 from typing import Optional
 
@@ -17,8 +15,11 @@ from app.models import (
     DiscussionSourceArticle, generate_slug
 )
 
-
-from app.trending.constants import strip_html_tags
+from app.trending.constants import (
+    strip_html_tags,
+    extract_geographic_info_from_articles,
+    get_unique_slug,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -28,45 +29,10 @@ def _extract_geographic_info(topic: TrendingTopic) -> tuple:
     Extract geographic scope and countries from source articles.
     Uses AI-detected geographic info from articles if available,
     otherwise falls back to source country.
-    
+
     Returns (geographic_scope, country_string)
     """
-    scopes = []
-    countries_list = []
-    
-    for ta in topic.articles:
-        if ta.article:
-            if ta.article.geographic_scope and ta.article.geographic_scope != 'unknown':
-                scopes.append(ta.article.geographic_scope)
-            if ta.article.geographic_countries:
-                countries_list.append(ta.article.geographic_countries)
-            elif ta.article.source and ta.article.source.country:
-                countries_list.append(ta.article.source.country)
-    
-    if scopes:
-        scope_counts = Counter(scopes)
-        most_common_scope = scope_counts.most_common(1)[0][0]
-        if most_common_scope in ('national', 'local', 'regional'):
-            geographic_scope = 'country'
-        else:
-            geographic_scope = 'global'
-    else:
-        geographic_scope = 'global'
-    
-    if countries_list:
-        all_countries = []
-        for c in countries_list:
-            all_countries.extend([x.strip() for x in c.split(',')])
-        
-        if 'Global' in all_countries:
-            country = None
-        else:
-            country_counts = Counter(all_countries)
-            country = country_counts.most_common(1)[0][0]
-    else:
-        country = None
-    
-    return geographic_scope, country
+    return extract_geographic_info_from_articles(topic.articles)
 
 
 def publish_topic(
@@ -92,15 +58,10 @@ def publish_topic(
     if topic.discussion_id:
         logger.warning(f"Topic {topic.id} already published to discussion {topic.discussion_id}")
         return Discussion.query.get(topic.discussion_id)
-    
-    slug = generate_slug(topic.title)
-    
-    counter = 1
-    base_slug = slug
-    while Discussion.query.filter_by(slug=slug).first():
-        slug = f"{base_slug}-{counter}"
-        counter += 1
-    
+
+    base_slug = generate_slug(topic.title)
+    slug = get_unique_slug(Discussion, base_slug)
+
     # Use topic's stored geographic data if available, otherwise extract from articles
     if topic.geographic_scope and topic.geographic_scope != 'global':
         geographic_scope = topic.geographic_scope

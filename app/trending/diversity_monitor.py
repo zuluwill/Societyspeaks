@@ -7,11 +7,19 @@ Supports the mission: "Making Disagreement Useful Again"
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Tuple
-from collections import Counter
+from typing import Dict, List
 
 from app import db
 from app.models import Discussion, DiscussionSourceArticle, NewsArticle, NewsSource
+from app.trending.constants import (
+    DIVERSITY_BALANCED_MIN,
+    DIVERSITY_BALANCED_MAX,
+    DIVERSITY_IMBALANCED_MIN,
+    DIVERSITY_IMBALANCED_MAX,
+    DIVERSITY_DEFAULT_DAYS,
+    DIVERSITY_DEFAULT_TARGET_DISCUSSIONS,
+    DIVERSITY_STATS_LIMIT,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,15 +40,19 @@ def get_political_leaning_label(value: float) -> str:
         return 'Right'
 
 
-def get_discussion_diversity_stats(days: int = 30) -> Dict:
+def get_discussion_diversity_stats(days: int = DIVERSITY_DEFAULT_DAYS, limit: int = DIVERSITY_STATS_LIMIT) -> Dict:
     """
     Calculate diversity statistics for recent discussions.
-    
+
+    Args:
+        days: Number of days to look back for discussions
+        limit: Maximum number of discussion records to process (prevents slow queries)
+
     Returns:
         Dict with source counts, discussion counts, and balance metrics
     """
     cutoff = datetime.utcnow() - timedelta(days=days)
-    
+
     source_stats = db.session.query(
         NewsSource.political_leaning,
         db.func.count(db.func.distinct(NewsSource.id)).label('source_count')
@@ -48,7 +60,16 @@ def get_discussion_diversity_stats(days: int = 30) -> Dict:
         NewsSource.is_active == True,
         NewsSource.political_leaning.isnot(None)
     ).group_by(NewsSource.political_leaning).all()
-    
+
+    # Use subquery with limit to prevent full table scan on large datasets
+    discussion_ids_subquery = db.session.query(
+        Discussion.id
+    ).filter(
+        Discussion.created_at >= cutoff
+    ).order_by(
+        Discussion.created_at.desc()
+    ).limit(limit).subquery()
+
     discussion_stats = db.session.query(
         NewsSource.political_leaning,
         db.func.count(db.func.distinct(Discussion.id)).label('discussion_count')
@@ -60,7 +81,7 @@ def get_discussion_diversity_stats(days: int = 30) -> Dict:
         Discussion, Discussion.id == DiscussionSourceArticle.discussion_id
     ).filter(
         NewsSource.political_leaning.isnot(None),
-        Discussion.created_at >= cutoff
+        Discussion.id.in_(discussion_ids_subquery)
     ).group_by(NewsSource.political_leaning).all()
     
     source_by_leaning = {}
@@ -116,31 +137,33 @@ def get_discussion_diversity_stats(days: int = 30) -> Dict:
 def assess_balance(source_ratio: float, discussion_ratio: float) -> Dict:
     """
     Assess whether the platform is balanced.
-    
+
     A ratio of 1.0 means perfect left-right balance.
-    Ratios between 0.7 and 1.4 are considered acceptable.
+    Thresholds are configurable via constants.py:
+    - DIVERSITY_BALANCED_MIN/MAX: Warning thresholds
+    - DIVERSITY_IMBALANCED_MIN/MAX: Imbalance thresholds
     """
     issues = []
     status = 'balanced'
-    
-    if discussion_ratio > 2.0:
+
+    if discussion_ratio > DIVERSITY_IMBALANCED_MAX:
         issues.append(f"Discussion ratio heavily favors left-leaning sources ({discussion_ratio:.1f}:1)")
         status = 'imbalanced'
-    elif discussion_ratio > 1.4:
+    elif discussion_ratio > DIVERSITY_BALANCED_MAX:
         issues.append(f"Discussion ratio slightly favors left-leaning sources ({discussion_ratio:.1f}:1)")
         status = 'warning'
-    elif discussion_ratio < 0.5:
+    elif discussion_ratio < DIVERSITY_IMBALANCED_MIN:
         issues.append(f"Discussion ratio heavily favors right-leaning sources (1:{1/discussion_ratio:.1f})")
         status = 'imbalanced'
-    elif discussion_ratio < 0.7:
+    elif discussion_ratio < DIVERSITY_BALANCED_MIN:
         issues.append(f"Discussion ratio slightly favors right-leaning sources (1:{1/discussion_ratio:.1f})")
         status = 'warning'
-    
-    if source_ratio > 2.0:
+
+    if source_ratio > DIVERSITY_IMBALANCED_MAX:
         issues.append(f"Source ratio favors left-leaning sources ({source_ratio:.1f}:1)")
-    elif source_ratio < 0.5:
+    elif source_ratio < DIVERSITY_IMBALANCED_MIN:
         issues.append(f"Source ratio favors right-leaning sources (1:{1/source_ratio:.1f})")
-    
+
     return {
         'status': status,
         'issues': issues,
@@ -152,18 +175,22 @@ def _get_recommendation(status: str, discussion_ratio: float) -> str:
     """Get actionable recommendation based on balance status."""
     if status == 'balanced':
         return "No action needed. Diversity is healthy."
-    elif discussion_ratio > 1.4:
+    elif discussion_ratio > DIVERSITY_BALANCED_MAX:
         return "Consider adding more discussions from right-leaning sources (The Telegraph, National Review, The Dispatch, etc.)"
-    elif discussion_ratio < 0.7:
+    elif discussion_ratio < DIVERSITY_BALANCED_MIN:
         return "Consider adding more discussions from left-leaning sources (The Guardian, The Atlantic, etc.)"
     return "Monitor closely and adjust content selection criteria."
 
 
-def get_underrepresented_sources(target_discussions: int = 3) -> List[Dict]:
+def get_underrepresented_sources(target_discussions: int = DIVERSITY_DEFAULT_TARGET_DISCUSSIONS) -> List[Dict]:
     """
     Find sources that are underrepresented in discussions.
-    
-    Returns list of sources with fewer than target_discussions that have available articles.
+
+    Args:
+        target_discussions: Minimum expected discussions per source
+
+    Returns:
+        List of sources with fewer than target_discussions that have available articles.
     """
     results = db.session.query(
         NewsSource.id,
@@ -202,15 +229,19 @@ def get_underrepresented_sources(target_discussions: int = 3) -> List[Dict]:
     ]
 
 
-def run_diversity_check() -> Dict:
+def run_diversity_check(days: int = DIVERSITY_DEFAULT_DAYS, target_discussions: int = DIVERSITY_DEFAULT_TARGET_DISCUSSIONS) -> Dict:
     """
     Run a complete diversity check and log results.
     Called by scheduler daily.
+
+    Args:
+        days: Number of days to look back for statistics
+        target_discussions: Minimum expected discussions per source
     """
     logger.info("Running daily diversity check")
-    
-    stats = get_discussion_diversity_stats(days=30)
-    underrepresented = get_underrepresented_sources(target_discussions=3)
+
+    stats = get_discussion_diversity_stats(days=days)
+    underrepresented = get_underrepresented_sources(target_discussions=target_discussions)
     
     status = stats['balance_assessment']['status']
     

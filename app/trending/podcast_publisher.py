@@ -18,11 +18,15 @@ from app.models import (
     NewsArticle, NewsSource, Discussion, Statement, User,
     DiscussionSourceArticle, generate_slug
 )
+from app.trending.constants import (
+    VALID_TOPICS,
+    strip_html_tags,
+    get_unique_slug,
+    GEOGRAPHIC_SCOPE_GLOBAL,
+    GEOGRAPHIC_SCOPE_COUNTRY,
+)
 
 logger = logging.getLogger(__name__)
-
-
-from app.trending.constants import VALID_TOPICS, strip_html_tags
 
 
 def detect_article_category(article: NewsArticle) -> str:
@@ -127,13 +131,16 @@ def detect_article_geographic(article: NewsArticle) -> Dict:
     api_key = os.environ.get('OPENAI_API_KEY')
     if api_key:
         return _detect_geographic_openai(article, api_key)
-    
+
     api_key = os.environ.get('ANTHROPIC_API_KEY')
     if api_key:
         return _detect_geographic_anthropic(article, api_key)
-    
+
     source_country = article.source.country if article.source else None
-    return {'scope': 'country' if source_country else 'global', 'country': source_country}
+    return {
+        'scope': GEOGRAPHIC_SCOPE_COUNTRY if source_country else GEOGRAPHIC_SCOPE_GLOBAL,
+        'country': source_country
+    }
 
 
 def _detect_geographic_openai(article: NewsArticle, api_key: str) -> Dict:
@@ -142,14 +149,14 @@ def _detect_geographic_openai(article: NewsArticle, api_key: str) -> Dict:
         import openai
     except ImportError:
         source_country = article.source.country if article.source else None
-        return {'scope': 'global', 'country': source_country}
-    
+        return {'scope': GEOGRAPHIC_SCOPE_GLOBAL, 'country': source_country}
+
     try:
         client = openai.OpenAI(api_key=api_key)
         title = article.title or ""
         summary = strip_html_tags(article.summary or "")[:300]
         source_country = article.source.country if article.source else "Unknown"
-        
+
         prompt = f"""Analyze this article's geographic focus.
 
 Title: {title}
@@ -164,13 +171,13 @@ Reply in JSON: {{"scope": "global|national|local", "country": "country name or n
             max_tokens=100,
             temperature=0
         )
-        
+
         return _parse_geographic_response(response.choices[0].message.content.strip(), article)
-        
+
     except Exception as e:
         logger.warning(f"OpenAI geographic detection failed: {e}")
         source_country = article.source.country if article.source else None
-        return {'scope': 'global', 'country': source_country}
+        return {'scope': GEOGRAPHIC_SCOPE_GLOBAL, 'country': source_country}
 
 
 def _detect_geographic_anthropic(article: NewsArticle, api_key: str) -> Dict:
@@ -179,14 +186,14 @@ def _detect_geographic_anthropic(article: NewsArticle, api_key: str) -> Dict:
         import anthropic
     except ImportError:
         source_country = article.source.country if article.source else None
-        return {'scope': 'global', 'country': source_country}
-    
+        return {'scope': GEOGRAPHIC_SCOPE_GLOBAL, 'country': source_country}
+
     try:
         client = anthropic.Anthropic(api_key=api_key)
         title = article.title or ""
         summary = strip_html_tags(article.summary or "")[:300]
         source_country = article.source.country if article.source else "Unknown"
-        
+
         prompt = f"""Analyze this article's geographic focus.
 
 Title: {title}
@@ -200,40 +207,40 @@ Reply in JSON: {{"scope": "global|national|local", "country": "country name or n
             max_tokens=100,
             messages=[{"role": "user", "content": prompt}]
         )
-        
+
         return _parse_geographic_response(response.content[0].text.strip(), article)
-        
+
     except Exception as e:
         logger.warning(f"Anthropic geographic detection failed: {e}")
         source_country = article.source.country if article.source else None
-        return {'scope': 'global', 'country': source_country}
+        return {'scope': GEOGRAPHIC_SCOPE_GLOBAL, 'country': source_country}
 
 
 def _parse_geographic_response(content: str, article: NewsArticle) -> Dict:
     """Parse AI response for geographic detection."""
     import json as json_module
-    
+
     try:
         if content.startswith('```'):
             content = content.split('```')[1]
             if content.startswith('json'):
                 content = content[4:]
-        
+
         data = json_module.loads(content)
-        scope = data.get('scope', 'global')
+        scope = data.get('scope', GEOGRAPHIC_SCOPE_GLOBAL)
         country = data.get('country')
-        
+
         if scope in ('national', 'local'):
-            scope = 'country'
-        elif scope != 'global':
-            scope = 'global'
-        
+            scope = GEOGRAPHIC_SCOPE_COUNTRY
+        elif scope != GEOGRAPHIC_SCOPE_GLOBAL:
+            scope = GEOGRAPHIC_SCOPE_GLOBAL
+
         return {'scope': scope, 'country': country}
-        
+
     except (json_module.JSONDecodeError, IndexError, KeyError) as e:
         logger.warning(f"Failed to parse geographic response: {e}")
         source_country = article.source.country if article.source else None
-        return {'scope': 'global', 'country': source_country}
+        return {'scope': GEOGRAPHIC_SCOPE_GLOBAL, 'country': source_country}
 
 
 def generate_article_description(article: NewsArticle) -> str:
@@ -509,15 +516,10 @@ def publish_single_source_article(
     if require_seeds and not statements_to_add:
         logger.warning(f"Skipping article {article.id} - no seed statements generated")
         return None
-    
-    slug = generate_slug(article.title)
-    
-    counter = 1
-    base_slug = slug
-    while Discussion.query.filter_by(slug=slug).first():
-        slug = f"{base_slug}-{counter}"
-        counter += 1
-    
+
+    base_slug = generate_slug(article.title)
+    slug = get_unique_slug(Discussion, base_slug)
+
     source_name = article.source.name if article.source else "Unknown"
     source_type = article.source.source_category if article.source else "article"
     
@@ -525,7 +527,7 @@ def publish_single_source_article(
     logger.info(f"Detected category '{topic_category}' for article: {article.title[:50]}...")
     
     geo_info = detect_article_geographic(article)
-    geographic_scope = geo_info.get('scope', 'global')
+    geographic_scope = geo_info.get('scope', GEOGRAPHIC_SCOPE_GLOBAL)
     country = geo_info.get('country') or (article.source.country if article.source else None)
     logger.info(f"Detected geography: {geographic_scope}, country: {country}")
     

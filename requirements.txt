@@ -34,3 +34,7 @@ pandas>=2.0.0
 # Social Media Posting
 atproto>=0.0.30
 tweepy>=4.14.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
