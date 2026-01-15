@@ -22,21 +22,7 @@ from app.models import (
 logger = logging.getLogger(__name__)
 
 
-from app.trending.constants import VALID_TOPICS
-
-
-def strip_html_tags(text: str) -> str:
-    """Remove HTML tags and decode HTML entities from text."""
-    if not text:
-        return ""
-    import html
-    text = re.sub(r'<br\s*/?>', ' ', text)
-    text = re.sub(r'<p\s*/?>', ' ', text)
-    text = re.sub(r'</p>', ' ', text)
-    text = re.sub(r'<[^>]+>', '', text)
-    text = html.unescape(text)
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
+from app.trending.constants import VALID_TOPICS, strip_html_tags
 
 
 def detect_article_category(article: NewsArticle) -> str:
@@ -186,7 +172,9 @@ Reply in JSON format:
         scope = data.get('scope', 'global')
         country = data.get('country')
         
-        if scope not in ('global', 'national', 'local'):
+        if scope in ('national', 'local'):
+            scope = 'country'
+        elif scope != 'global':
             scope = 'global'
         
         return {'scope': scope, 'country': country}

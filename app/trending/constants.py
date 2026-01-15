@@ -1,6 +1,9 @@
 """
-Shared constants for the trending module.
+Shared constants and utilities for the trending module.
 """
+
+import re
+import html
 
 VALID_TOPICS = [
     'Healthcare', 'Environment', 'Education', 'Technology', 'Economy', 
@@ -19,3 +22,16 @@ They value:
 - Contrarian or heterodox perspectives
 - Long-form substantive debate
 """
+
+
+def strip_html_tags(text: str) -> str:
+    """Remove HTML tags and decode HTML entities from text."""
+    if not text:
+        return ""
+    text = re.sub(r'<br\s*/?>', ' ', text)
+    text = re.sub(r'<p\s*/?>', ' ', text)
+    text = re.sub(r'</p>', ' ', text)
+    text = re.sub(r'<[^>]+>', '', text)
+    text = html.unescape(text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
