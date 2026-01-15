@@ -3,10 +3,9 @@
     <div class="text-center mb-6">
         <p class="text-sm font-semibold text-emerald-600 uppercase tracking-wide mb-2">Daily Brief + News Dashboard</p>
         <div class="flex items-baseline justify-center gap-2">
-            <span class="text-4xl sm:text-5xl font-bold text-gray-900">£5</span>
-            <span class="text-gray-500">/month</span>
+            <span class="text-4xl sm:text-5xl font-bold text-gray-900">Free</span>
         </div>
-        <p class="text-gray-500 mt-2">or £50/year (save 17%)</p>
+        <p class="text-gray-500 mt-2">Just sign up to get started</p>
     </div>
     
     <div class="space-y-3 mb-8">
@@ -14,7 +13,13 @@
             <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            <span>14-day free trial</span>
+            <span>Daily Brief delivered to your inbox</span>
+        </div>
+        <div class="flex items-center gap-2 text-gray-700">
+            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>Full News Dashboard access</span>
         </div>
         <div class="flex items-center gap-2 text-gray-700">
             <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,17 +27,11 @@
             </svg>
             <span>No credit card required</span>
         </div>
-        <div class="flex items-center gap-2 text-gray-700">
-            <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            <span>Full access during trial</span>
-        </div>
     </div>
     
     <a href="{{ url_for('brief.subscribe') }}"
        class="block w-full bg-emerald-600 text-white text-center px-6 py-4 rounded-lg font-bold text-lg hover:bg-emerald-500 transition-colors shadow-lg">
-        Start Free Trial
+        Sign Up Free
     </a>
     
     {% if show_tagline %}
@@ -77,8 +76,8 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
         </svg>
         <div>
-            <p class="font-semibold text-gray-900">Cancel Anytime</p>
-            <p class="text-gray-600 text-sm">No long-term commitment, no questions asked</p>
+            <p class="font-semibold text-gray-900">Always Free</p>
+            <p class="text-gray-600 text-sm">No payment required, just sign up with your email</p>
         </div>
     </div>
 </div>
@@ -91,9 +90,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
         </svg>
         <div>
-            <h3 class="font-semibold text-blue-900 mb-1">Open Source & Reader-Funded</h3>
+            <h3 class="font-semibold text-blue-900 mb-1">Open Source & Free for Everyone</h3>
             <p class="text-sm text-blue-800">
-                Your <strong>£5/month</strong> or <strong>£50/year</strong> subscription funds the Daily Brief and keeps Society Speaks' core tools open, public, free, and non-profit-seeking.
+                Society Speaks is committed to keeping our core tools open, public, and free. Sign up to access the Daily Brief and News Dashboard at no cost.
             </p>
         </div>
     </div>
