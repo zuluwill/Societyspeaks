@@ -882,13 +882,79 @@ class NewsSource(db.Model):
 
     last_fetched_at = db.Column(db.DateTime)
     fetch_error_count = db.Column(db.Integer, default=0)
-    
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
+    # Source profile fields
+    slug = db.Column(db.String(200), unique=True, nullable=True)
+    source_category = db.Column(db.String(50), default='newspaper')  # 'podcast', 'newspaper', 'magazine', 'broadcaster'
+
+    # Basic branding (for unclaimed sources)
+    logo_url = db.Column(db.String(500), nullable=True)
+    website_url = db.Column(db.String(500), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+
+    # Claiming fields
+    claim_status = db.Column(db.String(20), default='unclaimed')  # 'unclaimed', 'pending', 'approved', 'rejected'
+    claimed_by_profile_id = db.Column(db.Integer, db.ForeignKey('company_profile.id', ondelete='SET NULL'), nullable=True)
+    claimed_at = db.Column(db.DateTime, nullable=True)
+    claim_requested_at = db.Column(db.DateTime, nullable=True)
+    claim_requested_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
+
     # Relationships
     articles = db.relationship('NewsArticle', backref='source', lazy='dynamic')
-    
+    claimed_by = db.relationship('CompanyProfile', backref='claimed_sources', foreign_keys=[claimed_by_profile_id])
+    claim_requested_by = db.relationship('User', backref='source_claims', foreign_keys=[claim_requested_by_id])
+
+    @property
+    def is_claimed(self):
+        """Check if source has been claimed and approved."""
+        return self.claim_status == 'approved' and self.claimed_by_profile_id is not None
+
+    @property
+    def display_logo(self):
+        """
+        Return logo info as a dict for template rendering.
+
+        Returns:
+            dict with 'type' ('profile' or 'url') and 'src' (filename or URL),
+            or None if no logo is available.
+        """
+        if self.is_claimed and self.claimed_by and self.claimed_by.logo:
+            return {'type': 'profile', 'src': self.claimed_by.logo}
+        if self.logo_url:
+            return {'type': 'url', 'src': self.logo_url}
+        return None
+
+    @property
+    def display_description(self):
+        """Return claimed profile description, or basic description."""
+        if self.is_claimed and self.claimed_by and self.claimed_by.description:
+            return self.claimed_by.description
+        return self.description
+
+    @property
+    def political_leaning_label(self):
+        """Return human-readable political leaning label."""
+        if self.political_leaning is None:
+            return 'Unknown'
+        if self.political_leaning <= -1.5:
+            return 'Left'
+        elif self.political_leaning <= -0.5:
+            return 'Lean Left'
+        elif self.political_leaning <= 0.5:
+            return 'Centre'
+        elif self.political_leaning <= 1.5:
+            return 'Lean Right'
+        else:
+            return 'Right'
+
+    def generate_slug(self):
+        """Generate URL-friendly slug from name."""
+        from app.utils import generate_slug
+        self.slug = generate_slug(self.name)
+
     def __repr__(self):
         return f'<NewsSource {self.name}>'
 

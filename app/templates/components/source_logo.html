@@ -1,0 +1,42 @@
+{# Source Logo Component
+   Renders a source logo with fallback to initial letter placeholder.
+
+   Parameters:
+   - source: NewsSource object
+   - size: 'sm' (48px), 'md' (96px), 'lg' (128px) - defaults to 'md'
+   - rounded: 'lg', 'xl', 'full' - defaults to 'lg'
+#}
+
+{% macro source_logo(source, size='md', rounded='lg') %}
+{% set sizes = {
+    'sm': {'container': 'w-12 h-12', 'text': 'text-lg'},
+    'md': {'container': 'w-24 h-24 sm:w-32 sm:h-32', 'text': 'text-3xl sm:text-4xl'},
+    'lg': {'container': 'w-32 h-32', 'text': 'text-4xl'}
+} %}
+{% set size_classes = sizes.get(size, sizes['md']) %}
+{% set rounded_class = 'rounded-' ~ rounded %}
+
+{% if source.display_logo %}
+    {% if source.display_logo.type == 'profile' %}
+    <img src="{{ url_for('profiles.get_image', filename=source.display_logo.src) }}"
+         alt="{{ source.name }}"
+         class="{{ size_classes.container }} {{ rounded_class }} object-cover{% if size == 'md' %} border-4 border-white shadow-lg{% endif %}"
+         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <div class="{{ size_classes.container }} {{ rounded_class }} bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center{% if size == 'md' %} border-4 border-white shadow-lg{% endif %} hidden">
+        <span class="text-white {{ size_classes.text }} font-bold">{{ source.name[:1].upper() }}</span>
+    </div>
+    {% else %}
+    <img src="{{ source.display_logo.src }}"
+         alt="{{ source.name }}"
+         class="{{ size_classes.container }} {{ rounded_class }} object-cover{% if size == 'md' %} border-4 border-white shadow-lg{% endif %}"
+         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+    <div class="{{ size_classes.container }} {{ rounded_class }} bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center{% if size == 'md' %} border-4 border-white shadow-lg{% endif %} hidden">
+        <span class="text-white {{ size_classes.text }} font-bold">{{ source.name[:1].upper() }}</span>
+    </div>
+    {% endif %}
+{% else %}
+<div class="{{ size_classes.container }} {{ rounded_class }} bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center{% if size == 'md' %} border-4 border-white shadow-lg{% endif %}">
+    <span class="text-white {{ size_classes.text }} font-bold">{{ source.name[:1].upper() }}</span>
+</div>
+{% endif %}
+{% endmacro %}
