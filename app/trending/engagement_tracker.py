@@ -13,6 +13,8 @@ import logging
 from typing import Optional, Dict, List
 from datetime import datetime, timedelta
 
+from app.db_retry import with_db_retry, cleanup_db_session
+
 logger = logging.getLogger(__name__)
 
 # Flag to track if table exists (checked once per process)
@@ -218,6 +220,7 @@ def fetch_bluesky_engagement(post_uri: str) -> Optional[Dict]:
         return None
 
 
+@with_db_retry()
 def update_engagement(engagement_id: int) -> bool:
     """
     Update engagement metrics for a specific tracked post.
@@ -237,7 +240,6 @@ def update_engagement(engagement_id: int) -> bool:
             logger.warning(f"Engagement record {engagement_id} not found")
             return False
 
-        # Fetch current metrics based on platform
         if engagement.platform == 'x':
             metrics = fetch_x_engagement(engagement.post_id)
         elif engagement.platform == 'bluesky':
@@ -249,7 +251,6 @@ def update_engagement(engagement_id: int) -> bool:
         if not metrics:
             return False
 
-        # Update record
         engagement.likes = metrics.get('likes', 0)
         engagement.reposts = metrics.get('reposts', 0)
         engagement.replies = metrics.get('replies', 0)
@@ -272,6 +273,8 @@ def update_engagement(engagement_id: int) -> bool:
         except Exception:
             pass
         return False
+    finally:
+        cleanup_db_session()
 
 
 def update_recent_engagements(hours: int = 48, limit: int = 50) -> int:
