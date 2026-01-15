@@ -120,12 +120,31 @@
         const iconClose = document.getElementById('admin-menu-icon-close');
 
         if (menuBtn && mobileMenu) {
-            menuBtn.addEventListener('click', function() {
+            function toggleAdminMenu(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 const isHidden = mobileMenu.classList.contains('hidden');
                 mobileMenu.classList.toggle('hidden');
                 iconOpen.classList.toggle('hidden');
                 iconClose.classList.toggle('hidden');
                 menuBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+            }
+
+            menuBtn.addEventListener('click', toggleAdminMenu);
+            menuBtn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                toggleAdminMenu(e);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!mobileMenu.classList.contains('hidden')) {
+                    if (!menuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+                        mobileMenu.classList.add('hidden');
+                        iconOpen.classList.remove('hidden');
+                        iconClose.classList.add('hidden');
+                        menuBtn.setAttribute('aria-expanded', 'false');
+                    }
+                }
             });
         }
     });
