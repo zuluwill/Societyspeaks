@@ -247,16 +247,19 @@ def auto_publish_daily(max_topics: int = 5, schedule_bluesky: bool = True, sched
         
         topic_leaning = _get_topic_political_leaning(topic)
         
-        if published >= 2:
-            left_count = published_leanings.get('left', 0) + published_leanings.get('centre-left', 0)
-            right_count = published_leanings.get('right', 0) + published_leanings.get('centre-right', 0)
-            
-            if topic_leaning in ('left', 'centre-left') and left_count > right_count + 1:
-                logger.info(f"Skipping topic {topic.id} - would create political imbalance (left-leaning): {topic.title[:40]}...")
+        left_count = published_leanings.get('left', 0) + published_leanings.get('centre-left', 0)
+        right_count = published_leanings.get('right', 0) + published_leanings.get('centre-right', 0)
+        
+        if topic_leaning in ('left', 'centre-left'):
+            new_left = left_count + 1
+            if new_left > right_count + 1:
+                logger.info(f"Skipping topic {topic.id} - would create political imbalance ({new_left}:{right_count} L:R): {topic.title[:40]}...")
                 skipped_balance += 1
                 continue
-            elif topic_leaning in ('right', 'centre-right') and right_count > left_count + 1:
-                logger.info(f"Skipping topic {topic.id} - would create political imbalance (right-leaning): {topic.title[:40]}...")
+        elif topic_leaning in ('right', 'centre-right'):
+            new_right = right_count + 1
+            if new_right > left_count + 1:
+                logger.info(f"Skipping topic {topic.id} - would create political imbalance ({left_count}:{new_right} L:R): {topic.title[:40]}...")
                 skipped_balance += 1
                 continue
         

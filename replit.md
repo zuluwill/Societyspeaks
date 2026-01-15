@@ -74,6 +74,16 @@ Political leanings follow AllSides.com ratings (chart v10.1/v11) with 5 categori
 - **Version tracking**: RATINGS_VERSION in allsides_seed.py tracks updates (currently '2026.01.15')
 - **Notable updates**: The Guardian, The Atlantic moved to "Left" per AllSides Nov 2024 review
 
+### Political Diversity System (January 2026)
+Ensures balanced representation across the political spectrum to avoid echo chambers:
+- **File**: app/trending/diversity_monitor.py
+- **Daily monitoring**: Scheduler runs at 6am UTC, logs balance status (balanced/warning/imbalanced)
+- **Balance targets**: L/R ratio between 0.7-1.4 is acceptable; >2.0 or <0.5 triggers warnings
+- **Auto-publish safeguards**: `auto_publish_daily()` in pipeline.py prevents publishing >1 topic more on one side
+- **Current status**: L/R ratio = 1.12:1 (balanced), improved from 2.0:1 after right-source discussion additions
+- **Helper function**: `_get_topic_political_leaning()` determines topic's dominant political leaning from sources
+- **Recommendation engine**: Provides actionable suggestions when imbalances detected
+
 ## External Dependencies
 
 ### Core Services
