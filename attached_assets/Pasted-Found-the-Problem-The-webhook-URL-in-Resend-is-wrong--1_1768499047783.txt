@@ -1,0 +1,73 @@
+Found the Problem!
+
+  The webhook URL in Resend is wrong!
+  ┌─────────────┬───────────────────────────────┬──────────────────────────────┐
+  │   Setting   │        Current (Wrong)        │          Should Be           │
+  ├─────────────┼───────────────────────────────┼──────────────────────────────┤
+  │ Webhook URL │ https://societyspeaks.com/... │ https://societyspeaks.io/... │
+  └─────────────┴───────────────────────────────┴──────────────────────────────┘
+  Your site is at societyspeaks.io but the Resend webhook is configured for societyspeaks.com (which doesn't exist or points to a different server showing the LiteSpeed 404 page).
+
+  Fix in Resend Dashboard
+
+  1. Go to your Resend dashboard → Webhooks
+  2. Edit the webhook
+  3. Change the URL from:
+  https://societyspeaks.com/brief/webhooks/resend
+  3. To:
+  https://societyspeaks.io/brief/webhooks/resend
+  4. Save and click "Replay" on a few failed events to test
+
+  Once you fix this, all your email tracking (sent, delivered, opened, clicked, bounced) will start working properly.
+
+✻ Crunched for 52s
+
+❯ ok i have done this see screenshot 
+  ⎿  [Image #3]
+
+⏺ The URL is now correct (societyspeaks.io), but I see the event on the right is still from 2d ago - that's the old failed attempt.
+
+  Click the "Replay" button on that event to test the new URL. Or wait for the next email to be sent.
+
+  But if it's still failing with 404, it means the route doesn't exist on your production server. Let me verify the route is correctly defined:
+
+⏺ Bash(grep -B2 -A5 "def resend_webhook" /Users/williamroberts/Code/personal/Societyspeaks/app/brief/routes.py)
+  ⎿  @brief_bp.route('/brief/webhooks/resend', methods=['POST'])
+     def resend_webhook():
+         """
+     … +4 lines (ctrl+o to expand)
+
+⏺ Read(app/brief/__init__.py)
+  ⎿  Read 12 lines
+
+⏺ The route definition looks correct. Here's what to check:
+
+  1. Test the New URL
+
+  Click "Replay" on any failed event to test if the new .io URL works.
+
+  2. If Still Getting 404
+
+  The route might not be deployed. Check if you need to redeploy your application after recent changes.
+
+  You can also test the endpoint directly:
+
+  curl -X POST https://societyspeaks.io/brief/webhooks/resend \
+    -H "Content-Type: application/json" \
+    -d '{"type": "test"}'
+
+  You should get a JSON response (even if it says "ignored"), NOT an HTML 404 page.
+
+  3. Verify Route Exists on Production
+
+  If you have SSH access to your server, you can check Flask routes:
+
+  flask routes | grep webhook
+
+  Quick Questions:
+
+  1. Did you redeploy after the webhook route was added?
+  2. What hosting platform are you using? (The LiteSpeed server suggests shared hosting like cPanel/WHM)
+  3. Is there a .htaccess file that might be blocking the /brief/webhooks/ path?
+
+  Can you click "Replay" on one of those events and share what happens?
