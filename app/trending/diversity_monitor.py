@@ -82,20 +82,32 @@ def get_discussion_diversity_stats(days: int = 30) -> Dict:
     left_discussions = discussion_by_leaning.get('Left', 0) + discussion_by_leaning.get('Centre-Left', 0)
     right_discussions = discussion_by_leaning.get('Right', 0) + discussion_by_leaning.get('Centre-Right', 0)
     
-    source_balance = (left_sources / max(right_sources, 1)) if right_sources else float('inf')
-    discussion_balance = (left_discussions / max(right_discussions, 1)) if right_discussions else float('inf')
+    if right_sources == 0:
+        source_balance = float('inf') if left_sources > 0 else 1.0
+    else:
+        source_balance = left_sources / right_sources
+    
+    if right_discussions == 0:
+        discussion_balance = float('inf') if left_discussions > 0 else 1.0
+    else:
+        discussion_balance = left_discussions / right_discussions
+    
+    def safe_round(val: float) -> float:
+        if val == float('inf') or val != val:
+            return 99.99
+        return round(val, 2)
     
     return {
         'period_days': days,
         'sources': {
             'by_leaning': source_by_leaning,
             'total': total_sources,
-            'left_right_ratio': round(source_balance, 2)
+            'left_right_ratio': safe_round(source_balance)
         },
         'discussions': {
             'by_leaning': discussion_by_leaning,
             'total': total_discussions,
-            'left_right_ratio': round(discussion_balance, 2)
+            'left_right_ratio': safe_round(discussion_balance)
         },
         'balance_assessment': assess_balance(source_balance, discussion_balance)
     }
