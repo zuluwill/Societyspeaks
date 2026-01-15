@@ -1,6 +1,6 @@
 """Add source profile fields to NewsSource
 
-Revision ID: a1b2c3d4e5f6
+Revision ID: g2h3i4j5k6l7
 Revises: fd7bceb76f95
 Create Date: 2026-01-15 10:00:00.000000
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'a1b2c3d4e5f6'
+revision = 'g2h3i4j5k6l7'
 down_revision = 'fd7bceb76f95'
 branch_labels = None
 depends_on = None

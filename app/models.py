@@ -952,7 +952,6 @@ class NewsSource(db.Model):
 
     def generate_slug(self):
         """Generate URL-friendly slug from name."""
-        from app.utils import generate_slug
         self.slug = generate_slug(self.name)
 
     def __repr__(self):
