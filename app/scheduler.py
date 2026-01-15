@@ -379,23 +379,27 @@ def init_scheduler(app):
             logger.info("Daily auto-publish complete")
     
     
-    @scheduler.scheduled_job('cron', hour=9, id='podcast_to_discussions')
-    def podcast_to_discussions():
+    @scheduler.scheduled_job('cron', hour=9, id='single_source_to_discussions')
+    def single_source_to_discussions():
         """
-        Process podcast episodes into discussions.
+        Process single-source content (podcasts, newsletters) into discussions.
         Runs once daily at 9am UTC (after daily auto-publish).
-        Creates discussions from recent podcast episodes with AI-generated seed statements.
+        Creates discussions with AI-generated seed statements.
         """
         with app.app_context():
-            from app.trending.podcast_publisher import process_recent_podcast_episodes
+            from app.trending.podcast_publisher import process_single_source_articles
             
-            logger.info("Starting podcast-to-discussions pipeline")
+            logger.info("Starting single-source-to-discussions pipeline")
             
             try:
-                stats = process_recent_podcast_episodes(days=14, max_per_source=3)
-                logger.info(f"Podcast pipeline complete: {stats}")
+                stats = process_single_source_articles(
+                    source_categories=['podcast', 'newsletter'],
+                    days=14,
+                    max_per_source=3
+                )
+                logger.info(f"Single-source pipeline complete: {stats}")
             except Exception as e:
-                logger.error(f"Podcast pipeline error: {e}", exc_info=True)
+                logger.error(f"Single-source pipeline error: {e}", exc_info=True)
     
     
     @scheduler.scheduled_job('cron', minute='*/15', id='process_scheduled_bluesky')
