@@ -121,13 +121,37 @@ def get_source_stats(source_id):
     # Count articles
     article_count = NewsArticle.query.filter_by(source_id=source_id).count()
 
+    # Calculate engagement score
+    # Formula: (discussion_count * avg_participants) / max(1, days_since_first_discussion)
+    engagement_score = 0
+    avg_participants = total_participants / max(1, discussion_count)
+    
+    if discussion_count > 0:
+        # Get the oldest discussion date
+        oldest_discussion = Discussion.query.join(
+            DiscussionSourceArticle,
+            Discussion.id == DiscussionSourceArticle.discussion_id
+        ).join(
+            NewsArticle,
+            DiscussionSourceArticle.article_id == NewsArticle.id
+        ).filter(
+            NewsArticle.source_id == source_id
+        ).order_by(Discussion.created_at.asc()).first()
+        
+        if oldest_discussion:
+            from datetime import datetime
+            days_since_first = max(1, (datetime.utcnow() - oldest_discussion.created_at).days)
+            engagement_score = round((discussion_count * avg_participants) / days_since_first, 2)
+
     return {
         'discussion_count': discussion_count,
         'total_participants': total_participants,
         'total_votes': total_votes,
         'avg_opinion_groups': avg_opinion_groups,
         'discussions_with_consensus': discussions_with_consensus,
-        'article_count': article_count
+        'article_count': article_count,
+        'avg_participants': round(avg_participants, 1),
+        'engagement_score': engagement_score
     }
 
 

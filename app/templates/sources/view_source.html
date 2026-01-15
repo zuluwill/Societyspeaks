@@ -230,7 +230,18 @@
         <!-- Engagement Stats -->
         {% if stats.discussion_count > 0 %}
         <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-900 mb-4">Engagement Insights</h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900">Engagement Insights</h2>
+                {% if stats.engagement_score > 0 %}
+                <div class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800" title="Engagement Score: measures discussion activity relative to time on platform">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    <span class="font-semibold">{{ stats.engagement_score }}</span>
+                    <span class="text-xs ml-1">score</span>
+                </div>
+                {% endif %}
+            </div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div class="text-center p-4 bg-gray-50 rounded-lg">
                     <div class="text-3xl font-bold text-blue-600">{{ stats.discussion_count }}</div>
