@@ -126,10 +126,14 @@ def get_historical_performance(topic_category=None, days_lookback=30):
     cutoff = datetime.utcnow() - timedelta(days=days_lookback)
 
     # Get response counts per question with proper grouping
+    # Explicitly specify join condition to avoid ambiguity (DailyQuestionResponse has 2 FKs to DailyQuestion)
     results = db.session.query(
         DailyQuestion.topic_category,
         func.count(DailyQuestionResponse.id).label('response_count')
-    ).outerjoin(DailyQuestionResponse).filter(
+    ).outerjoin(
+        DailyQuestionResponse,
+        DailyQuestionResponse.daily_question_id == DailyQuestion.id
+    ).filter(
         DailyQuestion.question_date >= cutoff.date(),
         DailyQuestion.status == 'published'
     ).group_by(DailyQuestion.id, DailyQuestion.topic_category).all()

@@ -1,0 +1,446 @@
+# AmbiguousForeignKeysError: Can't determine join between 'daily_question' and 'daily_question_response'; tables have more than one foreign key constraint relationship between them. Please specify the 'onclause' of this join explicitly.
+
+**Issue ID:** 88568476
+**Project:** python-flask
+**Date:** 15/01/2026, 07:30:01
+## Issue Summary
+Ambiguous Join Error: SQLAlchemy needs explicit `onclause` for `daily_question` and `daily_question_response`.
+**What's wrong:** AmbiguousForeignKeysError: **SQLAlchemy cannot determine join** between 'daily_question' and 'daily_question_response'. Multiple foreign keys exist, requiring explicit `onclause` specification.
+**In the trace:** Multiple unrelated `psycopg2.OperationalError: SSL connection has been closed unexpectedly` errors occurred concurrently, suggesting potential database connectivity issues.
+**Possible cause:** The `daily_question` table has **multiple foreign key columns** (`source_discussion_id`, `source_statement_id`, `source_trending_topic_id`) that could potentially join with other tables, leading to ambiguity when SQLAlchemy tries to infer joins with `daily_question_response`.
+
+## Tags
+
+- **environment:** production
+- **handled:** yes
+- **level:** error
+- **logger:** app.scheduler
+- **mechanism:** logging
+- **runtime:** CPython 3.11.13
+- **runtime.name:** CPython
+- **server_name:** nixos
+
+## Exception
+
+### Exception 1
+**Type:** AmbiguousForeignKeysError
+**Value:** Can't determine join between 'daily_question' and 'daily_question_response'; tables have more than one foreign key constraint relationship between them. Please specify the 'onclause' of this join explicitly.
+
+#### Stacktrace
+
+```
+ _joincond_trim_constraints in sqlalchemy/sql/selectable.py [Line 1586] (Not in app)
+            if len(dedupe) == 1:
+                key = list(constraints)[0]
+                constraints = {key: constraints[key]}
+
+        if len(constraints) != 1:
+            raise exc.AmbiguousForeignKeysError(  <-- SUSPECT LINE
+                "Can't determine join between '%s' and '%s'; "
+                "tables have more than one foreign key "
+                "constraint relationship between them. "
+                "Please specify the 'onclause' of this "
+                "join explicitly." % (a.description, b.description)
+---
+Variable values:
+{
+  "a": "Table('daily_question', MetaData(), Column('id', Integer(), table=<daily_question>, primary_key=True, nullable=False), Column('question_date', Date(), table=<daily_question>, nullable=False), Column('question_number', Integer(), table=<daily_question>, nullable=False), Column('question_text', String(length=500), table=<daily_question>, nullable=False), Column('context', Text(), table=<daily_question>), Column('why_this_question', String(length=300), table=<daily_question>), Column('source_type', String(length=20), table=<daily_question>, default=ScalarElementColumnDefault('discussion')), Column('source_discussion_id', Integer(), ForeignKey('discussion.id'), table=<daily_question>), Column('source_statement_id', Integer(), ForeignKey('statement.id'), table=<daily_question>), Column('source_trending_topic_id', Integer(), ForeignKey('trending_topic.id'), table=<daily_question>), Column('topic_category', String(length=100), table=<daily_question>), Column('status', String(length=20), table=<daily_question>, de...",
+  "b": "Table('daily_question_response', MetaData(), Column('id', Integer(), table=<daily_question_response>, primary_key=True, nullable=False), Column('daily_question_id', Integer(), ForeignKey('daily_question.id'), table=<daily_question_response>, nullable=False), Column('user_id', Integer(), ForeignKey('user.id'), table=<daily_question_response>), Column('session_fingerprint', String(length=64), table=<daily_question_response>), Column('vote', SmallInteger(), table=<daily_question_response>, nullable=False), Column('reason', String(length=500), table=<daily_question_response>), Column('reason_visibility', String(length=20), table=<daily_question_response>, default=ScalarElementColumnDefault('public_anonymous')), Column('voted_via_email', Boolean(), table=<daily_question_response>, default=ScalarElementColumnDefault(False)), Column('email_question_id', Integer(), ForeignKey('daily_question.id'), table=<daily_question_response>), Column('is_hidden', Boolean(), table=<daily_question_response>, default=ScalarEle..."
+}
+
+=======
+ _join_condition in sqlalchemy/sql/selectable.py [Line 1441] (Not in app)
+        constraints = cls._joincond_scan_left_right(
+            a, a_subset, b, consider_as_foreign_keys
+        )
+
+        if len(constraints) > 1:
+            cls._joincond_trim_constraints(  <-- SUSPECT LINE
+                a, b, constraints, consider_as_foreign_keys
+            )
+
+        if len(constraints) == 0:
+            if isinstance(b, FromGrouping):
+---
+Variable values:
+{
+  "a": "Table('daily_question', MetaData(), Column('id', Integer(), table=<daily_question>, primary_key=True, nullable=False), Column('question_date', Date(), table=<daily_question>, nullable=False), Column('question_number', Integer(), table=<daily_question>, nullable=False), Column('question_text', String(length=500), table=<daily_question>, nullable=False), Column('context', Text(), table=<daily_question>), Column('why_this_question', String(length=300), table=<daily_question>), Column('source_type', String(length=20), table=<daily_question>, default=ScalarElementColumnDefault('discussion')), Column('source_discussion_id', Integer(), ForeignKey('discussion.id'), table=<daily_question>), Column('source_statement_id', Integer(), ForeignKey('statement.id'), table=<daily_question>), Column('source_trending_topic_id', Integer(), ForeignKey('trending_topic.id'), table=<daily_question>), Column('topic_category', String(length=100), table=<daily_question>), Column('status', String(length=20), table=<daily_question>, de...",
+  "a_subset": "None",
+  "b": "Table('daily_question_response', MetaData(), Column('id', Integer(), table=<daily_question_response>, primary_key=True, nullable=False), Column('daily_question_id', Integer(), ForeignKey('daily_question.id'), table=<daily_question_response>, nullable=False), Column('user_id', Integer(), ForeignKey('user.id'), table=<daily_question_response>), Column('session_fingerprint', String(length=64), table=<daily_question_response>), Column('vote', SmallInteger(), table=<daily_question_response>, nullable=False), Column('reason', String(length=500), table=<daily_question_response>), Column('reason_visibility', String(length=20), table=<daily_question_response>, default=ScalarElementColumnDefault('public_anonymous')), Column('voted_via_email', Boolean(), table=<daily_question_response>, default=ScalarElementColumnDefault(False)), Column('email_question_id', Integer(), ForeignKey('daily_question.id'), table=<daily_question_response>), Column('is_hidden', Boolean(), table=<daily_question_response>, default=Sc..."
+}
+
+=======
+ _match_primaries in sqlalchemy/sql/selectable.py [Line 1418] (Not in app)
+    ) -> ColumnElement[bool]:
+        if isinstance(left, Join):
+            left_right = left.right
+        else:
+            left_right = None
+        return self._join_condition(left, right, a_subset=left_right)  <-- SUSPECT LINE
+
+    @classmethod
+    def _join_condition(
+        cls,
+        a: FromClause,
+---
+Variable values:
+{
+  "left": "Table('daily_question', MetaData(), Column('id', Integer(), table=<daily_question>, primary_key=True, nullable=False), Column('question_date', Date(), table=<daily_question>, nullable=False), Column('question_number', Integer(), table=<daily_question>, nullable=False), Column('question_text', String(length=500), table=<daily_question>, nullable=False), Column('context', Text(), table=<daily_question>), Column('why_this_question', String(length=300), table=<daily_question>), Column('source_type', String(length=20), table=<daily_question>, default=ScalarElementColumnDefault('discussion')), Column('source_discussion_id', Integer(), ForeignKey('discussion.id'), table=<daily_question>), Column('source_statement_id', Integer(), ForeignKey('statement.id'), table=<daily_question>), Column('source_trending_topic_id', Integer(), ForeignKey('trending_topic.id'), table=<daily_question>), Column('topic_category', String(length=100), table=<daily_question>), Column('status', String(length=20), table=<daily_question>, de...",
+  "left_right": "None",
+  "right": "Table('daily_question_response', MetaData(), Column('id', Integer(), table=<daily_question_response>, primary_key=True, nullable=False), Column('daily_question_id', Integer(), ForeignKey('daily_question.id'), table=<daily_question_response>, nullable=False), Column('user_id', Integer(), ForeignKey('user.id'), table=<daily_question_response>), Column('session_fingerprint', String(length=64), table=<daily_question_response>), Column('vote', SmallInteger(), table=<daily_question_response>, nullable=False), Column('reason', String(length=500), table=<daily_question_response>), Column('reason_visibility', String(length=20), table=<daily_question_response>, default=ScalarElementColumnDefault('public_anonymous')), Column('voted_via_email', Boolean(), table=<daily_question_response>, default=ScalarElementColumnDefault(False)), Column('email_question_id', Integer(), ForeignKey('daily_question.id'), table=<daily_question_response>), Column('is_hidden', Boolean(), table=<daily_question_response>, default=Sc..."
+}
+
+=======
+ __init__ in sqlalchemy/sql/selectable.py [Line 1307] (Not in app)
+            roles.FromClauseRole,
+            right,
+        ).self_group()
+
+        if onclause is None:
+            self.onclause = self._match_primaries(self.left, self.right)  <-- SUSPECT LINE
+        else:
+            # note: taken from If91f61527236fd4d7ae3cad1f24c38be921c90ba
+            # not merged yet
+            self.onclause = coercions.expect(
+                roles.OnClauseRole, onclause
+---
+Variable values:
+{
+  "full": "False",
+  "isouter": "True",
+  "left": "<Mapper at 0x7f8b0cf81c10; DailyQuestion>",
+  "onclause": "None",
+  "right": "<Mapper at 0x7f8b0cf9d290; DailyQuestionResponse>",
+  "self": "<sqlalchemy.orm.util._ORMJoin at 0x7f8ad8169790; Join object on daily_question(140234743734864) and daily_question_response(140234307382288)>"
+}
+
+=======
+ __init__ in sqlalchemy/orm/util.py [Line 1884] (Not in app)
+            self._annotations = self._annotations.union(
+                {"parententity": parententity}
+            )
+
+        augment_onclause = bool(_extra_criteria) and not prop
+        expression.Join.__init__(self, left, right, onclause, isouter, full)  <-- SUSPECT LINE
+
+        assert self.onclause is not None
+
+        if augment_onclause:
+            self.onclause &= sql.and_(*_extra_criteria)
+---
+Variable values:
+{
+  "_extra_criteria": [],
+  "_left_memo": "None",
+  "_right_memo": "None",
+  "full": "False",
+  "isouter": "True",
+  "left": "<Mapper at 0x7f8b0cf81c10; DailyQuestion>",
+  "left_info": "<Mapper at 0x7f8b0cf81c10; DailyQuestion>",
+  "onclause": "None",
+  "right": "<Mapper at 0x7f8b0cf9d290; DailyQuestionResponse>",
+  "self": "<sqlalchemy.orm.util._ORMJoin at 0x7f8ad8169790; Join object on daily_question(140234743734864) and daily_question_response(140234307382288)>"
+}
+
+=======
+ _join_left_to_right in sqlalchemy/orm/context.py [Line 2021] (Not in app)
+                left_clause = entities_collection[use_entity_index].selectable
+            else:
+                left_clause = left
+
+            self.from_clauses = self.from_clauses + [
+                _ORMJoin(  <-- SUSPECT LINE
+                    left_clause,
+                    r_info,
+                    onclause,
+                    isouter=outerjoin,
+                    full=full,
+---
+Variable values:
+{
+  "entities_collection": [
+    "<sqlalchemy.orm.context._ORMColumnEntity object at 0x7f8ad95e6a40>",
+    "<sqlalchemy.orm.context._ORMColumnEntity object at 0x7f8ad95e65c0>"
+  ],
+  "full": "False",
+  "left": "<Mapper at 0x7f8b0cf81c10; DailyQuestion>",
+  "onclause": "None",
+  "outerjoin": "True",
+  "prop": "None",
+  "replace_from_obj_index": "None",
+  "right": "<Mapper at 0x7f8b0cf9d290; DailyQuestionResponse>",
+  "self": "<sqlalchemy.orm.context.ORMSelectCompileState object at 0x7f8ad94ee510>",
+  "use_entity_index": "None"
+}
+
+=======
+ _join in sqlalchemy/orm/context.py [Line 1922] (Not in app)
+                # what the effective "left" side is
+                prop = left = None
+
+            # figure out the final "left" and "right" sides and create an
+            # ORMJoin to add to our _from_obj tuple
+            self._join_left_to_right(  <-- SUSPECT LINE
+                entities_collection,
+                left,
+                right,
+                onclause,
+                prop,
+---
+Variable values:
+{
+  "args": [
+    [
+      "Table('daily_question_response', MetaData(), Column('id', Integer(), table=<daily_question_response>, primary_key=True, nullable=False), Column('daily_question_id', Integer(), ForeignKey('daily_question.id'), table=<daily_question_response>, nullable=False), Column('user_id', Integer(), ForeignKey('user.id'), table=<daily_question_response>), Column('session_fingerprint', String(length=64), table=<daily_question_response>), Column('vote', SmallInteger(), table=<daily_question_response>, nullable=False), Column('reason', String(length=500), table=<daily_question_response>), Column('reason_visibility', String(length=20), table=<daily_question_response>, default=ScalarElementColumnDefault('public_anonymous')), Column('voted_via_email', Boolean(), table=<daily_question_response>, default=ScalarElementColumnDefault(False)), Column('email_question_id', Integer(), ForeignKey('daily_question.id'), table=<daily_question_response>), Column('is_hidden', Boolean(), table=<daily_question_response>, default=ScalarElemen...",
+      "None",
+      "None",
+      {
+        "full": "False",
+        "isouter": "True"
+      }
+    ]
+  ],
+  "entities_collection": [
+    "<sqlalchemy.orm.context._ORMColumnEntity object at 0x7f8ad95e6a40>",
+    "<sqlalchemy.orm.context._ORMColumnEntity object at 0x7f8ad95e65c0>"
+  ],
+  "flags": {
+    "full": "False",
+    "isouter": "True"
+  },
+  "from_": "None",
+  "full": "False",
+  "isouter": "True",
+  "left": "None",
+  "onclause": "None",
+  "right": "<Mapper at 0x7f8b0cf9d290; DailyQuestionResponse>",
+  "self": "<sqlalchemy.orm.context.ORMSelectCompileState object at 0x7f8ad94ee510>"
+}
+
+=======
+ _setup_for_generate in sqlalchemy/orm/context.py [Line 1281] (Not in app)
+                    memoized_entities._setup_joins,
+                    self._memoized_entities[memoized_entities],
+                )
+
+        if query._setup_joins:
+            self._join(query._setup_joins, self._entities)  <-- SUSPECT LINE
+
+        current_adapter = self._get_current_adapter()
+
+        if query._where_criteria:
+            self._where_criteria = query._where_criteria
+---
+Variable values:
+{
+  "query": "<sqlalchemy.sql.selectable.Select object at 0x7f8abfe71ed0>",
+  "self": "<sqlalchemy.orm.context.ORMSelectCompileState object at 0x7f8ad94ee510>"
+}
+
+=======
+ _create_orm_context in sqlalchemy/orm/context.py [Line 1246] (Not in app)
+        )
+
+        # this is a fairly arbitrary break into a second method,
+        # so it might be nicer to break up create_for_statement()
+        # and _setup_for_generate into three or four logical sections
+        self._setup_for_generate()  <-- SUSPECT LINE
+
+        SelectState.__init__(self, self.statement, compiler, **kw)
+        return self
+
+    def _dump_option_struct(self):
+---
+Variable values:
+{
+  "cls": "<class 'sqlalchemy.orm.context.ORMSelectCompileState'>",
+  "compiler": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f8abfef3650>",
+  "kw": {
+    "within_columns_clause": "False"
+  },
+  "select_statement": "<sqlalchemy.sql.selectable.Select object at 0x7f8abfe71ed0>",
+  "self": "<sqlalchemy.orm.context.ORMSelectCompileState object at 0x7f8ad94ee510>",
+  "statement": "<sqlalchemy.sql.selectable.Select object at 0x7f8abfe71ed0>",
+  "toplevel": "True"
+}
+
+=======
+ create_for_statement in sqlalchemy/orm/context.py [Line 447] (Not in app)
+        cls,
+        statement: Executable,
+        compiler: SQLCompiler,
+        **kw: Any,
+    ) -> ORMCompileState:
+        return cls._create_orm_context(  <-- SUSPECT LINE
+            cast("Union[Select, FromStatement]", statement),
+            toplevel=not compiler.stack,
+            compiler=compiler,
+            **kw,
+        )
+---
+Variable values:
+{
+  "cls": "<class 'sqlalchemy.orm.context.ORMSelectCompileState'>",
+  "compiler": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f8abfef3650>",
+  "kw": {
+    "within_columns_clause": "False"
+  },
+  "statement": "<sqlalchemy.sql.selectable.Select object at 0x7f8abfe71ed0>"
+}
+
+=======
+ create_for_statement in sqlalchemy/sql/base.py [Line 701] (Not in app)
+            ]
+
+        if klass is cls:
+            return cls(statement, compiler, **kw)
+        else:
+            return klass.create_for_statement(statement, compiler, **kw)  <-- SUSPECT LINE
+
+    def __init__(self, statement, compiler, **kw):
+        self.statement = statement
+
+    @classmethod
+---
+Variable values:
+{
+  "cls": "<class 'sqlalchemy.sql.base.CompileState'>",
+  "compiler": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f8abfef3650>",
+  "klass": "<class 'sqlalchemy.orm.context.ORMSelectCompileState'>",
+  "kw": {
+    "within_columns_clause": "False"
+  },
+  "plugin_name": "'orm'",
+  "statement": "<sqlalchemy.sql.selectable.Select object at 0x7f8abfe71ed0>"
+}
+
+=======
+ visit_select in sqlalchemy/sql/compiler.py [Line 4782] (Not in app)
+        # SELECT to a regular "Core" SELECT.  other composed operations
+        # such as computation of joins will be performed.
+
+        kwargs["within_columns_clause"] = False
+
+        compile_state = select_stmt._compile_state_factory(  <-- SUSPECT LINE
+            select_stmt, self, **kwargs
+        )
+        kwargs["ambiguous_table_name_map"] = (
+            compile_state._ambiguous_table_name_map
+        )
+---
+Variable values:
+{
+  "asfrom": "False",
+  "compound_index": "None",
+  "from_linter": "None",
+  "fromhints": "None",
+  "insert_into": "False",
+  "kwargs": {
+    "within_columns_clause": "False"
+  },
+  "lateral": "False",
+  "select_stmt": "<sqlalchemy.sql.selectable.Select object at 0x7f8abfe71ed0>",
+  "select_wraps_for": "None",
+  "self": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f8abfef3650>"
+}
+
+=======
+ _compiler_dispatch in sqlalchemy/sql/visitors.py [Line 138] (Not in app)
+            try:
+                meth = getter(visitor)
+            except AttributeError as err:
+                return visitor.visit_unsupported_compilation(self, err, **kw)  # type: ignore  # noqa: E501
+            else:
+                return meth(self, **kw)  # type: ignore  # noqa: E501  <-- SUSPECT LINE
+
+        cls._compiler_dispatch = (  # type: ignore
+            cls._original_compiler_dispatch
+        ) = _compiler_dispatch
+
+---
+Variable values:
+{
+  "getter": "operator.attrgetter('visit_select')",
+  "kw": {},
+  "meth": "<bound method SQLCompiler.visit_select of <sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f8abfef3650>>",
+  "self": "<sqlalchemy.sql.selectable.Select object at 0x7f8abfe71ed0>",
+  "visitor": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f8abfef3650>"
+}
+
+=======
+ process in sqlalchemy/sql/compiler.py [Line 933] (Not in app)
+        """
+
+        raise NotImplementedError()
+
+    def process(self, obj: Visitable, **kwargs: Any) -> str:
+        return obj._compiler_dispatch(self, **kwargs)  <-- SUSPECT LINE
+
+    def __str__(self) -> str:
+        """Return the string text of the generated SQL or DDL."""
+
+        if self.state is CompilerState.STRING_APPLIED:
+---
+Variable values:
+{
+  "kwargs": {},
+  "obj": "<sqlalchemy.sql.selectable.Select object at 0x7f8abfe71ed0>",
+  "self": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f8abfef3650>"
+}
+
+=======
+ __init__ in sqlalchemy/sql/compiler.py [Line 887] (Not in app)
+            self._annotations = statement._annotations
+            if self.can_execute:
+                if TYPE_CHECKING:
+                    assert isinstance(statement, Executable)
+                self.execution_options = statement._execution_options
+            self.string = self.process(self.statement, **compile_kwargs)  <-- SUSPECT LINE
+
+            if render_schema_translate:
+                assert schema_translate_map is not None
+                self.string = self.preparer._render_schema_translates(
+                    self.string, schema_translate_map
+---
+Variable values:
+{
+  "compile_kwargs": {},
+  "dialect": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7f8b0dc09cd0>",
+  "render_schema_translate": "False",
+  "schema_translate_map": "None",
+  "self": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7f8abfef3650>",
+  "statement": "<sqlalchemy.sql.selectable.Select object at 0x7f8abfe71ed0>"
+}
+
+=======
+ __init__ in sqlalchemy/sql/compiler.py [Line 1447] (Not in app)
+        # a map which tracks "truncated" names based on
+        # dialect.label_length or dialect.max_identifier_length
+        self.truncated_names: Dict[Tuple[str, str], str] = {}
+        self._truncated_counters: Dict[str, int] = {}
+
+        Compiled.__init__(self, dialect, statement, **kwargs)  <-- SUSPECT LINE
+
+        if self.isinsert or self.isupdate or self.isdelete:
+            if TYPE_CHECKING:
+                assert isinstance(statement, UpdateBase)
+
+---
+Variable values:
+{
+  "_supporting_against": "None",
+  "cache_key": [
+    [
+      "'0'",
+      "<class 'sqlalchemy.sql.selectable.Select'>",
+      "'_raw_columns'",
+      [
+        "[\"'1'\",\"<class 'sqlalchemy.sql.annotation.AnnotatedColumn'>\",\"'name'\",\"'topic_category'\",\"'type'\",\"(<class 'sqlalchemy.sql.sqltypes.String'>, ('length', 100))\",\"'table'\",\"(Table('daily_question', MetaData(), Column('id', Integer(), table=<daily_question>, primary_key=True, nullable=False), Column('question_date', Date(), table=<daily_question>, nullable=False), Column('question_number', Integer(), table=<daily_question>, nullable=False), Column('question_text', String(length=500), table=<daily_question>, nullable=False), Column('context', Text(), table=<daily_question>), Column('why_this_question', String(length=300), table=<daily_question>), Column('source_type', String(length=20), table=<daily_question>, default=ScalarElementColumnDefault('discussion')), Column('source_discussion_id', Integer(), ForeignKey('discussion.id'), table=<daily_question>), Column('source_statement_id', Integer(), ForeignKey('statement.id'), table=<daily_question>), Column('source_trending_topic_id', Integer(), ForeignKey('trending_topic.id'), table=<daily_question>), Column('topic_category', String(length=100), table=<daily_question>), Column('status', String(length=20), table=<daily_question>, d...\",\"'_annotations'\",\"(('entity_namespace', (<Mapper at 0x7f8b0cf81c10; DailyQuestion>,)), ('parententity', (<Mapper at 0x7f8b0cf81c10; DailyQuestion>,)), ('parentmapper', (<Mapper at 0x7f8b0cf81c10; DailyQuestion>,)), ('proxy_key', 'topic_category'), ('proxy_owner', (<Mapper at 0x7f8b0cf81c10; DailyQuestion>,)))\"]",
+        "[\"'2'\",\"<class 'sqlalchemy.sql.elements.Label'>\",\"'name'\",\"'response_count'\",\"'_element'\",\"('3', <class 'sqlalchemy.sql.functions.count'>, 'clause_expr', ('4', <class 'sqlalchemy.sql.elements.Grouping'>, 'element', ('5', <class 'sqlalchemy.sql.elements.ClauseList'>, 'clauses', (('6', <class 'sqlalchemy.sql.annotation.AnnotatedColumn'>, 'name', 'id', 'type', (<class 'sqlalchemy.sql.sqltypes.Integer'>,), 'table', (Table('daily_question_response', MetaData(..."
+      ]
+    ]
+  ]
+}
+
+=======
+```
