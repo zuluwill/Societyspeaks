@@ -64,6 +64,12 @@ Automatic pipeline to create discussions from single-source content (podcasts, n
 - **Source coverage**: 56 active sources (11 podcasts, 8 newsletters, 37 news/magazines), 6 sources disabled due to Cloudflare blocking
 - **Key function**: `process_single_source_articles(source_categories=['podcast', 'newsletter', 'magazine', 'think_tank'], ...)` - generalized for multiple source types
 - **Coverage achieved**: 55/56 active sources now have discussions (only Triggernometry has 0 due to no recent episodes)
+- **AI Detection Functions**: All use provider-specific branches with proper fallbacks:
+  - `detect_article_category()` - detects topic from 11 categories (e.g., Economy, Politics, Technology)
+  - `detect_article_geographic()` - returns scope='country' or 'global' with country name
+  - `generate_article_description()` - creates contextual description for discussions
+- **Shared Constants**: app/trending/constants.py contains VALID_TOPICS, TARGET_AUDIENCE_DESCRIPTION, strip_html_tags()
+- **Geographic Scope**: Uses 'country' (not 'national') to match template expectations in discussion_card.html
 
 ### Political Leaning System (January 2026)
 Political leanings follow AllSides.com ratings (chart v10.1/v11) with 5 categories:
