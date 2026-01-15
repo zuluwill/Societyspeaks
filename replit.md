@@ -62,7 +62,8 @@ Automatic pipeline to create discussions from single-source content (podcasts, n
 - **Process**: Fetches recent articles (14 days), generates AI seed statements using OpenAI/Anthropic, creates Discussion records with linked source articles
 - **Controls**: max_per_source=3 to prevent flooding, skips articles already linked to discussions
 - **Source coverage**: 56 active sources (11 podcasts, 8 newsletters, 37 news/magazines), 6 sources disabled due to Cloudflare blocking
-- **Key function**: `process_single_source_articles(source_categories=['podcast', 'newsletter'], ...)` - generalized for multiple source types
+- **Key function**: `process_single_source_articles(source_categories=['podcast', 'newsletter', 'magazine', 'think_tank'], ...)` - generalized for multiple source types
+- **Coverage achieved**: 55/56 active sources now have discussions (only Triggernometry has 0 due to no recent episodes)
 
 ### Political Leaning System (January 2026)
 Political leanings follow AllSides.com ratings (chart v10.1/v11) with 5 categories:

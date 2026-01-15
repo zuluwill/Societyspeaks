@@ -393,7 +393,7 @@ def init_scheduler(app):
             
             try:
                 stats = process_single_source_articles(
-                    source_categories=['podcast', 'newsletter'],
+                    source_categories=['podcast', 'newsletter', 'magazine', 'think_tank'],
                     days=14,
                     max_per_source=3
                 )
