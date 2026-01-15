@@ -147,7 +147,7 @@
                 <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
-                <span>Cancel anytime</span>
+                <span>Unsubscribe anytime</span>
             </div>
         </div>
     </div>
@@ -206,9 +206,9 @@
     <div class="max-w-6xl mx-auto px-4">
         <div class="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-                <h2 class="text-3xl font-bold text-gray-900 mb-6">Everything in One Subscription</h2>
+                <h2 class="text-3xl font-bold text-gray-900 mb-6">Everything Included Free</h2>
                 <p class="text-lg text-gray-600 mb-8">
-                    Your £5/month subscription includes both the News Transparency Dashboard and the Daily Brief newsletter.
+                    Your free account includes both the News Transparency Dashboard and the Daily Brief newsletter.
                 </p>
                 
                 <!-- Subscription Benefits (shared component) -->
@@ -260,7 +260,7 @@
                     Our entire codebase is open source under the AGPL-3.0 license. Anyone can inspect, fork, or contribute to our consensus-building tools. No hidden algorithms, no black boxes.
                 </p>
                 <p class="text-gray-600">
-                    Your £5/month subscription directly funds the infrastructure, development, and news analysis that keeps these tools running and improving.
+                    Your participation directly supports the infrastructure, development, and news analysis that keeps these tools running and improving.
                 </p>
             </div>
         </div>
@@ -320,16 +320,16 @@
     <div class="max-w-4xl mx-auto px-4 text-center">
         <h2 class="text-3xl font-bold text-white mb-4">Ready to See the Full Picture?</h2>
         <p class="text-xl text-blue-100 mb-8">
-            Start your 14-day free trial and see what balanced news looks like.
+            Sign up free and see what balanced news looks like.
         </p>
         <a href="{{ url_for('brief.subscribe') }}"
            class="inline-flex items-center bg-white text-blue-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition-colors shadow-lg">
-            Start Free Trial
+            Sign Up Free
             <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
         </a>
-        <p class="text-blue-200 text-sm mt-4">£5/month after trial ends</p>
+        <p class="text-blue-200 text-sm mt-4">100% free, no credit card required</p>
     </div>
 </div>
 {% endblock %}
