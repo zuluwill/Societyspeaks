@@ -936,17 +936,17 @@ class NewsSource(db.Model):
 
     @property
     def political_leaning_label(self):
-        """Return human-readable political leaning label."""
+        """Return human-readable political leaning label based on AllSides ratings."""
         if self.political_leaning is None:
             return 'Unknown'
         if self.political_leaning <= -1.5:
             return 'Left'
         elif self.political_leaning <= -0.5:
-            return 'Lean Left'
+            return 'Centre-Left'
         elif self.political_leaning <= 0.5:
             return 'Centre'
         elif self.political_leaning <= 1.5:
-            return 'Lean Right'
+            return 'Centre-Right'
         else:
             return 'Right'
 

@@ -265,19 +265,19 @@ def dashboard():
 
 
 def get_leaning_label(leaning: float) -> str:
-    """Convert numeric leaning to human-readable label."""
+    """Convert numeric leaning to human-readable label based on AllSides ratings."""
     if leaning is None:
         return 'Unknown'
     if leaning <= -1.5:
         return 'Left'
     elif leaning <= -0.5:
-        return 'Lean Left'
+        return 'Centre-Left'
     elif leaning >= 1.5:
         return 'Right'
     elif leaning >= 0.5:
-        return 'Lean Right'
+        return 'Centre-Right'
     else:
-        return 'Center'
+        return 'Centre'
 
 
 @news_bp.route('/api/news/perspectives/<int:topic_id>', methods=['POST'])
