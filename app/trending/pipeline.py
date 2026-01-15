@@ -159,11 +159,35 @@ def process_held_topics(batch_size: int = 10) -> int:
     return ready_count
 
 
+def _get_topic_political_leaning(topic: TrendingTopic) -> str:
+    """Get the dominant political leaning of a topic's sources."""
+    leanings = []
+    for ta in topic.articles:
+        if ta.article and ta.article.source and ta.article.source.political_leaning is not None:
+            pl = ta.article.source.political_leaning
+            if pl <= -1.5:
+                leanings.append('left')
+            elif pl < -0.5:
+                leanings.append('centre-left')
+            elif pl <= 0.5:
+                leanings.append('centre')
+            elif pl < 1.5:
+                leanings.append('centre-right')
+            else:
+                leanings.append('right')
+    
+    if not leanings:
+        return 'centre'
+    
+    from collections import Counter
+    return Counter(leanings).most_common(1)[0][0]
+
+
 def auto_publish_daily(max_topics: int = 5, schedule_bluesky: bool = True, schedule_x: bool = True) -> int:
     """
     Auto-publish up to max_topics diverse topics daily.
     Selects topics from trusted sources with civic relevance.
-    Ensures diversity by checking title similarity.
+    Ensures diversity by checking title similarity AND political leaning balance.
     Enforces once-per-day limit by checking already-published today.
     
     Args:
@@ -174,6 +198,7 @@ def auto_publish_daily(max_topics: int = 5, schedule_bluesky: bool = True, sched
     """
     from app.models import User
     from app.trending.publisher import publish_topic
+    from collections import Counter
     
     today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
     already_published_today = TrendingTopic.query.filter(
@@ -199,8 +224,10 @@ def auto_publish_daily(max_topics: int = 5, schedule_bluesky: bool = True, sched
     
     published = 0
     published_keywords = set()
+    published_leanings = Counter()
     skipped_similar = 0
     skipped_criteria = 0
+    skipped_balance = 0
     
     for topic in topics:
         if published >= remaining_slots:
@@ -218,25 +245,41 @@ def auto_publish_daily(max_topics: int = 5, schedule_bluesky: bool = True, sched
             skipped_similar += 1
             continue
         
+        topic_leaning = _get_topic_political_leaning(topic)
+        
+        if published >= 2:
+            left_count = published_leanings.get('left', 0) + published_leanings.get('centre-left', 0)
+            right_count = published_leanings.get('right', 0) + published_leanings.get('centre-right', 0)
+            
+            if topic_leaning in ('left', 'centre-left') and left_count > right_count + 1:
+                logger.info(f"Skipping topic {topic.id} - would create political imbalance (left-leaning): {topic.title[:40]}...")
+                skipped_balance += 1
+                continue
+            elif topic_leaning in ('right', 'centre-right') and right_count > left_count + 1:
+                logger.info(f"Skipping topic {topic.id} - would create political imbalance (right-leaning): {topic.title[:40]}...")
+                skipped_balance += 1
+                continue
+        
         try:
-            # Each topic gets a different time slot for staggered social posting
             publish_topic(
                 topic, 
                 admin,
                 schedule_bluesky=schedule_bluesky,
                 schedule_x=schedule_x,
-                bluesky_slot_index=published,  # 0, 1, 2, 3, 4 for the 5 time slots
+                bluesky_slot_index=published,
                 x_slot_index=published
             )
             published += 1
             published_keywords.update(title_words)
-            logger.info(f"Auto-published topic {topic.id}: {topic.title[:50]}...")
+            published_leanings[topic_leaning] += 1
+            logger.info(f"Auto-published topic {topic.id} ({topic_leaning}): {topic.title[:50]}...")
         except Exception as e:
             logger.error(f"Failed to auto-publish topic {topic.id}: {e}")
             db.session.rollback()
             continue
     
-    logger.info(f"Auto-publish summary: {published} published, {skipped_similar} skipped (similar), {skipped_criteria} skipped (criteria)")
+    logger.info(f"Auto-publish summary: {published} published, {skipped_similar} similar, {skipped_criteria} criteria, {skipped_balance} balance")
+    logger.info(f"Political balance: {dict(published_leanings)}")
     return published
 
 
