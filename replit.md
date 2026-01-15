@@ -55,6 +55,15 @@ Source pages now include comprehensive metadata for sharing with communities:
 - **Logo handling**: Clearbit API logos with first-letter gradient fallbacks when images fail to load
 - **Metadata script**: scripts/update_source_metadata.py contains SOURCE_METADATA dictionary with all source data including podcast platform links (Apple/Spotify/YouTube)
 
+### Political Leaning System (January 2026)
+Political leanings follow AllSides.com ratings (chart v10.1/v11) with 5 categories:
+- **Label terminology**: Uses "Centre-Left" and "Centre-Right" (not "Lean Left/Lean Right")
+- **Database values**: Left (-2.0), Centre-Left (-1.0), Centre (0), Centre-Right (1.0), Right (2.0)
+- **Threshold mapping**: Left (≤ -1.5), Centre-Left (-1.5 to -0.5), Centre (-0.5 to 0.5), Centre-Right (0.5 to 1.5), Right (≥ 1.5)
+- **Label functions**: Defined in models.py, allsides_seed.py, and news/routes.py (must stay synchronized)
+- **Version tracking**: RATINGS_VERSION in allsides_seed.py tracks updates (currently '2026.01.15')
+- **Notable updates**: The Guardian, The Atlantic moved to "Left" per AllSides Nov 2024 review
+
 ## External Dependencies
 
 ### Core Services
