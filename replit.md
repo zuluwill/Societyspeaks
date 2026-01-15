@@ -55,6 +55,14 @@ Source pages now include comprehensive metadata for sharing with communities:
 - **Logo handling**: Clearbit API logos with first-letter gradient fallbacks when images fail to load
 - **Metadata script**: scripts/update_source_metadata.py contains SOURCE_METADATA dictionary with all source data including podcast platform links (Apple/Spotify/YouTube)
 
+### Podcast-to-Discussion Pipeline (January 2026)
+Automatic pipeline to create discussions from podcast episodes:
+- **File**: app/trending/podcast_publisher.py
+- **Scheduler**: Runs daily at 9am UTC (after daily auto-publish)
+- **Process**: Fetches recent podcast episodes (14 days), generates AI seed statements using OpenAI/Anthropic, creates Discussion records with linked source articles
+- **Controls**: max_per_source=3 to prevent flooding, skips episodes already linked to discussions
+- **Source coverage**: 56 active sources (11 podcasts, 45 news/magazines), 6 sources disabled due to Cloudflare blocking
+
 ### Political Leaning System (January 2026)
 Political leanings follow AllSides.com ratings (chart v10.1/v11) with 5 categories:
 - **Label terminology**: Uses "Centre-Left" and "Centre-Right" (not "Lean Left/Lean Right")
