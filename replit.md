@@ -48,6 +48,13 @@ Public comments on daily questions use representative sampling:
 ### Daily Question Email Voting
 Daily question emails include one-click vote buttons (Agree/Disagree/Unsure) that use a two-step confirmation flow to prevent mail scanner prefetch attacks. Users can optionally share their reasoning with three visibility levels: public with name (authenticated users only), public anonymous, or private. Public reasons are displayed on the results page. The visibility selector appears dynamically when users start typing a reason. Votes and public reasons from authenticated users are synced to linked discussion statements.
 
+### Source Profile Enhancements (January 2026)
+Source pages now include comprehensive metadata for sharing with communities:
+- **62 sources** updated with: website URLs, descriptions, correct categories (podcast/broadcaster/newspaper/magazine/newsletter/think_tank), and logo URLs
+- **Engagement Score**: Calculated as (discussion_count * total_participants) / days_since_first_discussion, displayed as a green badge on source profile pages
+- **Logo handling**: Clearbit API logos with first-letter gradient fallbacks when images fail to load
+- **Metadata script**: scripts/update_source_metadata.py contains SOURCE_METADATA dictionary with all source data including podcast platform links (Apple/Spotify/YouTube)
+
 ## External Dependencies
 
 ### Core Services
