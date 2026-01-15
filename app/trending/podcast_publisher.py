@@ -191,31 +191,41 @@ Return ONLY a JSON array: [{{"content": "statement text", "position": "pro/con/n
         return []
 
 
-def publish_podcast_episode(
-    episode: NewsArticle,
+def publish_single_source_article(
+    article: NewsArticle,
     admin_user: User,
-    seed_statements: Optional[List[Dict]] = None
+    seed_statements: Optional[List[Dict]] = None,
+    require_seeds: bool = True
 ) -> Optional[Discussion]:
     """
-    Convert a podcast episode into a Discussion.
+    Convert a single-source article (podcast/newsletter) into a Discussion.
     
     Creates the discussion, links the source article, and adds seed statements.
     Reuses patterns from publisher.publish_topic() (DRY).
     
     Args:
-        episode: The NewsArticle (podcast episode) to publish
+        article: The NewsArticle to publish
         admin_user: Admin user performing the publish
         seed_statements: Optional pre-generated seed statements
+        require_seeds: If True, abort if no seeds can be generated (default: True)
     """
     existing = Discussion.query.join(DiscussionSourceArticle).filter(
-        DiscussionSourceArticle.article_id == episode.id
+        DiscussionSourceArticle.article_id == article.id
     ).first()
     
     if existing:
-        logger.info(f"Episode {episode.id} already has discussion {existing.id}")
+        logger.info(f"Article {article.id} already has discussion {existing.id}")
         return existing
     
-    slug = generate_slug(episode.title)
+    statements_to_add = seed_statements
+    if not statements_to_add:
+        statements_to_add = generate_single_source_seed_statements(article)
+    
+    if require_seeds and not statements_to_add:
+        logger.warning(f"Skipping article {article.id} - no seed statements generated")
+        return None
+    
+    slug = generate_slug(article.title)
     
     counter = 1
     base_slug = slug
@@ -223,15 +233,16 @@ def publish_podcast_episode(
         slug = f"{base_slug}-{counter}"
         counter += 1
     
-    source_name = episode.source.name if episode.source else "Unknown"
-    country = episode.source.country if episode.source else None
+    source_name = article.source.name if article.source else "Unknown"
+    source_type = article.source.source_category if article.source else "article"
+    country = article.source.country if article.source else None
     
-    clean_summary = strip_html_tags(episode.summary or "")
+    clean_summary = strip_html_tags(article.summary or "")
     if len(clean_summary) > 500:
         clean_summary = clean_summary[:497] + "..."
     
     discussion = Discussion(
-        title=episode.title,
+        title=article.title,
         description=clean_summary,
         slug=slug,
         has_native_statements=True,
@@ -247,13 +258,9 @@ def publish_podcast_episode(
     
     source_link = DiscussionSourceArticle(
         discussion_id=discussion.id,
-        article_id=episode.id
+        article_id=article.id
     )
     db.session.add(source_link)
-    
-    statements_to_add = seed_statements
-    if not statements_to_add:
-        statements_to_add = generate_single_source_seed_statements(episode)
     
     for stmt_data in statements_to_add:
         statement = Statement(
@@ -268,9 +275,15 @@ def publish_podcast_episode(
     
     db.session.commit()
     
-    logger.info(f"Published podcast episode {episode.id} as discussion {discussion.id}")
+    logger.info(f"Published {source_type} article {article.id} as discussion {discussion.id}")
     
     return discussion
+
+
+# Backward-compatible alias
+def publish_podcast_episode(episode: NewsArticle, admin_user: User, seed_statements: Optional[List[Dict]] = None) -> Optional[Discussion]:
+    """Deprecated: Use publish_single_source_article instead."""
+    return publish_single_source_article(episode, admin_user, seed_statements)
 
 
 def process_recent_podcast_episodes(
@@ -346,10 +359,12 @@ def process_recent_podcast_episodes(
                 continue
             
             try:
-                discussion = publish_podcast_episode(episode, admin_user)
+                discussion = publish_single_source_article(episode, admin_user)
                 if discussion:
                     stats['discussions_created'] += 1
                     published_count += 1
+                else:
+                    stats['skipped'] += 1
             except Exception as e:
                 logger.error(f"Error publishing episode {episode.id}: {e}")
                 stats['errors'] += 1
@@ -432,10 +447,12 @@ def process_single_source_articles(
                 continue
             
             try:
-                discussion = publish_podcast_episode(article, admin_user)
+                discussion = publish_single_source_article(article, admin_user)
                 if discussion:
                     stats['discussions_created'] += 1
                     published_count += 1
+                else:
+                    stats['skipped'] += 1
             except Exception as e:
                 logger.error(f"Error publishing article {article.id}: {e}")
                 stats['errors'] += 1
