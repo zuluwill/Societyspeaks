@@ -1,0 +1,376 @@
+"""
+Podcast Publisher
+
+Converts podcast episodes into discussions.
+Reuses patterns from publisher.py and seed_generator.py (DRY principles).
+"""
+
+import logging
+import os
+import json
+import re
+from datetime import datetime, timedelta
+from typing import Optional, List, Dict
+
+from app import db
+from app.models import (
+    NewsArticle, NewsSource, Discussion, Statement, User,
+    DiscussionSourceArticle, generate_slug
+)
+
+logger = logging.getLogger(__name__)
+
+
+def strip_html_tags(text: str) -> str:
+    """Remove HTML tags from text, preserving the text content."""
+    if not text:
+        return ""
+    text = re.sub(r'<br\s*/?>', ' ', text)
+    text = re.sub(r'<p\s*/?>', ' ', text)
+    text = re.sub(r'</p>', ' ', text)
+    text = re.sub(r'<[^>]+>', '', text)
+    text = re.sub(r'&nbsp;', ' ', text)
+    text = re.sub(r'&amp;', '&', text)
+    text = re.sub(r'&lt;', '<', text)
+    text = re.sub(r'&gt;', '>', text)
+    text = re.sub(r'&quot;', '"', text)
+    text = re.sub(r'&#39;', "'", text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
+
+def generate_podcast_seed_statements(episode: NewsArticle, count: int = 5) -> List[Dict]:
+    """
+    Generate seed statements for a podcast episode discussion.
+    
+    Uses the same LLM approach as trending topics but tailored for podcast content.
+    """
+    api_key = os.environ.get('OPENAI_API_KEY')
+    if not api_key:
+        api_key = os.environ.get('ANTHROPIC_API_KEY')
+        if api_key:
+            return _generate_with_anthropic(episode, count, api_key)
+        logger.warning("No LLM API key available for seed generation")
+        return []
+    
+    return _generate_with_openai(episode, count, api_key)
+
+
+def _generate_with_openai(episode: NewsArticle, count: int, api_key: str) -> List[Dict]:
+    """Generate seeds using OpenAI."""
+    try:
+        import openai
+    except ImportError:
+        logger.error("OpenAI library not installed")
+        return []
+    
+    try:
+        client = openai.OpenAI(api_key=api_key, timeout=60.0)
+    except Exception as e:
+        logger.error(f"Failed to create OpenAI client: {e}")
+        return []
+    
+    source_name = episode.source.name if episode.source else "Unknown Podcast"
+    summary = strip_html_tags(episode.summary or "")[:500]
+    
+    prompt = f"""Generate {count} diverse seed statements for a public deliberation based on this podcast episode:
+
+Podcast: {source_name}
+Episode: {episode.title}
+{f"Summary: {summary}" if summary else ""}
+
+Requirements:
+- Generate statements representing DIFFERENT viewpoints (pro, con, neutral)
+- Each statement should be a clear, debatable claim (not a question)
+- Statements should encourage thoughtful discussion
+- Keep each statement under 200 characters
+- Focus on the key topics/themes discussed in this episode
+
+Return JSON array: [{{"content": "statement text", "position": "pro/con/neutral"}}]
+"""
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=500
+        )
+        
+        content = response.choices[0].message.content.strip()
+        
+        json_match = re.search(r'\[[\s\S]*\]', content)
+        if json_match:
+            content = json_match.group()
+        
+        statements = json.loads(content)
+        
+        valid_statements = []
+        for stmt in statements:
+            if isinstance(stmt, dict) and 'content' in stmt:
+                text = stmt['content'].strip()
+                if 20 <= len(text) <= 500:
+                    valid_statements.append({
+                        'content': text,
+                        'position': stmt.get('position', 'neutral')
+                    })
+        
+        return valid_statements[:count]
+        
+    except Exception as e:
+        logger.error(f"OpenAI seed generation failed: {e}")
+        return []
+
+
+def _generate_with_anthropic(episode: NewsArticle, count: int, api_key: str) -> List[Dict]:
+    """Generate seeds using Anthropic."""
+    try:
+        import anthropic
+    except ImportError:
+        logger.error("Anthropic library not installed")
+        return []
+    
+    try:
+        client = anthropic.Anthropic(api_key=api_key, timeout=60.0)
+    except Exception as e:
+        logger.error(f"Failed to create Anthropic client: {e}")
+        return []
+    
+    source_name = episode.source.name if episode.source else "Unknown Podcast"
+    summary = strip_html_tags(episode.summary or "")[:500]
+    
+    prompt = f"""Generate {count} diverse seed statements for a public deliberation based on this podcast episode:
+
+Podcast: {source_name}
+Episode: {episode.title}
+{f"Summary: {summary}" if summary else ""}
+
+Requirements:
+- Generate statements representing DIFFERENT viewpoints (pro, con, neutral)
+- Each statement should be a clear, debatable claim (not a question)
+- Statements should encourage thoughtful discussion
+- Keep each statement under 200 characters
+- Focus on the key topics/themes discussed in this episode
+
+Return ONLY a JSON array: [{{"content": "statement text", "position": "pro/con/neutral"}}]
+"""
+    
+    try:
+        response = client.messages.create(
+            model="claude-3-5-haiku-20241022",
+            max_tokens=500,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        
+        content = response.content[0].text.strip()
+        
+        json_match = re.search(r'\[[\s\S]*\]', content)
+        if json_match:
+            content = json_match.group()
+        
+        statements = json.loads(content)
+        
+        valid_statements = []
+        for stmt in statements:
+            if isinstance(stmt, dict) and 'content' in stmt:
+                text = stmt['content'].strip()
+                if 20 <= len(text) <= 500:
+                    valid_statements.append({
+                        'content': text,
+                        'position': stmt.get('position', 'neutral')
+                    })
+        
+        return valid_statements[:count]
+        
+    except Exception as e:
+        logger.error(f"Anthropic seed generation failed: {e}")
+        return []
+
+
+def publish_podcast_episode(
+    episode: NewsArticle,
+    admin_user: User,
+    seed_statements: Optional[List[Dict]] = None
+) -> Optional[Discussion]:
+    """
+    Convert a podcast episode into a Discussion.
+    
+    Creates the discussion, links the source article, and adds seed statements.
+    Reuses patterns from publisher.publish_topic() (DRY).
+    
+    Args:
+        episode: The NewsArticle (podcast episode) to publish
+        admin_user: Admin user performing the publish
+        seed_statements: Optional pre-generated seed statements
+    """
+    existing = Discussion.query.join(DiscussionSourceArticle).filter(
+        DiscussionSourceArticle.article_id == episode.id
+    ).first()
+    
+    if existing:
+        logger.info(f"Episode {episode.id} already has discussion {existing.id}")
+        return existing
+    
+    slug = generate_slug(episode.title)
+    
+    counter = 1
+    base_slug = slug
+    while Discussion.query.filter_by(slug=slug).first():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+    
+    source_name = episode.source.name if episode.source else "Unknown"
+    country = episode.source.country if episode.source else None
+    
+    clean_summary = strip_html_tags(episode.summary or "")
+    if len(clean_summary) > 500:
+        clean_summary = clean_summary[:497] + "..."
+    
+    discussion = Discussion(
+        title=episode.title,
+        description=clean_summary,
+        slug=slug,
+        has_native_statements=True,
+        creator_id=admin_user.id,
+        topic='Society',
+        geographic_scope='global',
+        country=country,
+        is_featured=False
+    )
+    
+    db.session.add(discussion)
+    db.session.flush()
+    
+    source_link = DiscussionSourceArticle(
+        discussion_id=discussion.id,
+        article_id=episode.id
+    )
+    db.session.add(source_link)
+    
+    statements_to_add = seed_statements
+    if not statements_to_add:
+        statements_to_add = generate_podcast_seed_statements(episode)
+    
+    for stmt_data in statements_to_add:
+        statement = Statement(
+            discussion_id=discussion.id,
+            user_id=admin_user.id,
+            content=stmt_data.get('content', '')[:500],
+            statement_type='claim',
+            is_seed=True,
+            mod_status=1
+        )
+        db.session.add(statement)
+    
+    db.session.commit()
+    
+    logger.info(f"Published podcast episode {episode.id} as discussion {discussion.id}")
+    
+    return discussion
+
+
+def process_recent_podcast_episodes(
+    days: int = 7,
+    max_per_source: int = 3,
+    admin_user: Optional[User] = None
+) -> Dict:
+    """
+    Process recent podcast episodes and create discussions for them.
+    
+    Only processes episodes that:
+    - Are from active podcast sources
+    - Were published within the last N days
+    - Don't already have a linked discussion
+    - Have a meaningful title (> 20 chars)
+    
+    Args:
+        days: Look back period for episodes
+        max_per_source: Maximum episodes to process per source (prevents flooding)
+        admin_user: Admin user to attribute discussions to
+        
+    Returns:
+        Dict with processing stats
+    """
+    if not admin_user:
+        admin_user = User.query.filter_by(is_admin=True).first()
+        if not admin_user:
+            logger.error("No admin user found for podcast publishing")
+            return {'error': 'No admin user found'}
+    
+    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    
+    podcast_sources = NewsSource.query.filter_by(
+        is_active=True,
+        source_category='podcast'
+    ).all()
+    
+    stats = {
+        'sources_processed': 0,
+        'episodes_found': 0,
+        'discussions_created': 0,
+        'already_published': 0,
+        'skipped': 0,
+        'errors': 0
+    }
+    
+    for source in podcast_sources:
+        stats['sources_processed'] += 1
+        
+        episodes = NewsArticle.query.filter(
+            NewsArticle.source_id == source.id,
+            NewsArticle.fetched_at >= cutoff_date
+        ).order_by(NewsArticle.published_at.desc()).limit(max_per_source * 2).all()
+        
+        published_count = 0
+        
+        for episode in episodes:
+            if published_count >= max_per_source:
+                break
+                
+            stats['episodes_found'] += 1
+            
+            if len(episode.title or '') < 20:
+                stats['skipped'] += 1
+                continue
+            
+            existing = Discussion.query.join(DiscussionSourceArticle).filter(
+                DiscussionSourceArticle.article_id == episode.id
+            ).first()
+            
+            if existing:
+                stats['already_published'] += 1
+                continue
+            
+            try:
+                discussion = publish_podcast_episode(episode, admin_user)
+                if discussion:
+                    stats['discussions_created'] += 1
+                    published_count += 1
+            except Exception as e:
+                logger.error(f"Error publishing episode {episode.id}: {e}")
+                stats['errors'] += 1
+                db.session.rollback()
+    
+    logger.info(f"Podcast processing complete: {stats}")
+    return stats
+
+
+def run_podcast_to_discussion_pipeline():
+    """
+    Main entry point for the podcast-to-discussion pipeline.
+    Called by scheduler or manually.
+    """
+    logger.info("Starting podcast-to-discussion pipeline")
+    
+    try:
+        from app import create_app
+        app = create_app()
+        with app.app_context():
+            stats = process_recent_podcast_episodes(
+                days=14,
+                max_per_source=5
+            )
+            return stats
+    except Exception as e:
+        logger.error(f"Podcast pipeline error: {e}")
+        return {'error': str(e)}
