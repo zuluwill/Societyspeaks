@@ -303,21 +303,25 @@ def update_recent_engagements(hours: int = 48, limit: int = 50) -> int:
         # Get recent posts that haven't been updated in the last hour
         one_hour_ago = datetime.utcnow() - timedelta(hours=1)
 
-        posts = SocialPostEngagement.query.filter(
-            SocialPostEngagement.posted_at >= cutoff,
-            (SocialPostEngagement.last_updated < one_hour_ago) |
-            (SocialPostEngagement.last_updated.is_(None))
-        ).order_by(SocialPostEngagement.posted_at.desc()).limit(limit).all()
+        # Extract IDs first to avoid session detachment issues
+        # (update_engagement calls cleanup_db_session which detaches objects)
+        post_ids = [
+            post.id for post in SocialPostEngagement.query.filter(
+                SocialPostEngagement.posted_at >= cutoff,
+                (SocialPostEngagement.last_updated < one_hour_ago) |
+                (SocialPostEngagement.last_updated.is_(None))
+            ).order_by(SocialPostEngagement.posted_at.desc()).limit(limit).all()
+        ]
 
-        if not posts:
+        if not post_ids:
             logger.debug("No posts to update")
             return 0
 
-        logger.info(f"Updating engagement for {len(posts)} recent posts")
+        logger.info(f"Updating engagement for {len(post_ids)} recent posts")
 
         updated_count = 0
-        for post in posts:
-            if update_engagement(post.id):
+        for post_id in post_ids:
+            if update_engagement(post_id):
                 updated_count += 1
 
         return updated_count
