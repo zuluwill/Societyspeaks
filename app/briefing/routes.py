@@ -1084,7 +1084,7 @@ def add_domain():
 
             if result.get('success'):
                 sending_domain.resend_domain_id = result.get('domain_id')
-                sending_domain.dns_records_required = result.get('dns_records', [])
+                sending_domain.dns_records_required = result.get('records', [])
                 db.session.add(sending_domain)
                 db.session.commit()
                 flash(f'Domain "{domain}" added. Please configure DNS records.', 'success')
