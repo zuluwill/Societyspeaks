@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900">{{ briefing.name }}</h1>
+            {% if briefing.description %}
+            <p class="mt-4 text-xl text-gray-600">{{ briefing.description }}</p>
+            {% endif %}
+            <div class="mt-4 text-sm text-gray-500">
+                <span class="capitalize">{{ briefing.cadence }}</span> briefing
+                &bull;
+                {{ runs|length }} edition{% if runs|length != 1 %}s{% endif %}
+            </div>
+        </div>
+
+        <!-- Archive List -->
+        {% if runs %}
+        <div class="space-y-4">
+            {% for run in runs %}
+            <a href="{{ url_for('briefing.public_brief_run', briefing_id=briefing.id, run_id=run.id) }}"
+               class="block bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900">
+                            {{ run.scheduled_at.strftime('%B %d, %Y') if run.scheduled_at else 'Edition' }}
+                        </h2>
+                        <p class="mt-1 text-sm text-gray-500">
+                            {{ run.items|length }} topic{% if run.items|length != 1 %}s{% endif %} covered
+                        </p>
+                    </div>
+                    <div class="text-sm text-gray-400">
+                        {% if run.sent_at %}
+                        Published {{ run.sent_at.strftime('%b %d, %Y at %H:%M') }}
+                        {% endif %}
+                    </div>
+                </div>
+                {% if run.items %}
+                <div class="mt-4 text-sm text-gray-600">
+                    <ul class="list-disc list-inside space-y-1">
+                        {% for item in run.items[:3] %}
+                        <li class="truncate">{{ item.headline }}</li>
+                        {% endfor %}
+                        {% if run.items|length > 3 %}
+                        <li class="text-gray-400">...and {{ run.items|length - 3 }} more</li>
+                        {% endif %}
+                    </ul>
+                </div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 bg-white rounded-lg shadow-sm">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No editions yet</h3>
+            <p class="mt-1 text-sm text-gray-500">Check back soon for the first edition of this briefing.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

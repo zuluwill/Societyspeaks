@@ -2526,3 +2526,508 @@ class SocialPostEngagement(db.Model):
             'last_updated': self.last_updated.isoformat() if self.last_updated else None,
         }
 
+
+# =============================================================================
+# BRIEFING SYSTEM MODELS (v2) - Multi-tenant briefing system
+# =============================================================================
+
+class BriefTemplate(db.Model):
+    """
+    Predefined brief templates (off-the-shelf themes).
+    Users can select a template and optionally customize it.
+    """
+    __tablename__ = 'brief_template'
+    __table_args__ = (
+        db.Index('idx_brief_template_name', 'name'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)  # 'Politics', 'Technology', 'Climate', etc.
+    description = db.Column(db.Text)
+    slug = db.Column(db.String(100), unique=True)  # URL-friendly identifier
+
+    # Default config (JSON)
+    default_sources = db.Column(db.JSON)  # List of NewsSource IDs or RSS URLs
+    default_filters = db.Column(db.JSON)  # Keywords, topics, etc.
+    default_cadence = db.Column(db.String(20), default='daily')  # 'daily' | 'weekly'
+    default_tone = db.Column(db.String(50), default='calm_neutral')
+
+    # Customization
+    allow_customization = db.Column(db.Boolean, default=True)  # Can user modify?
+
+    # Metadata
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'description': self.description,
+            'slug': self.slug,
+            'default_sources': self.default_sources,
+            'default_filters': self.default_filters,
+            'default_cadence': self.default_cadence,
+            'default_tone': self.default_tone,
+            'allow_customization': self.allow_customization,
+        }
+
+    def __repr__(self):
+        return f'<BriefTemplate {self.name}>'
+
+
+class InputSource(db.Model):
+    """
+    Generalized source model for user-defined sources.
+    Extends NewsSource concept to support RSS, URLs, uploads, etc.
+    
+    Phase 1-2: Coexists with NewsSource (NewsSource for system, InputSource for users)
+    Phase 3+: NewsSource will migrate to InputSource (owner_type='system')
+    """
+    __tablename__ = 'input_source'
+    __table_args__ = (
+        db.Index('idx_input_source_owner', 'owner_type', 'owner_id'),
+        db.Index('idx_input_source_type', 'type'),
+        db.Index('idx_input_source_status', 'status'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Ownership
+    owner_type = db.Column(db.String(20), nullable=False)  # 'user' | 'org' | 'system'
+    owner_id = db.Column(db.Integer, nullable=True)  # User.id or CompanyProfile.id (nullable for system)
+
+    # Source config
+    name = db.Column(db.String(200), nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # 'rss' | 'url_list' | 'webpage' | 'upload' | 'substack' | 'x'
+    config_json = db.Column(db.JSON)  # Type-specific config (e.g., {'urls': [...]} for url_list)
+
+    # For uploads
+    storage_key = db.Column(db.String(500), nullable=True)  # Replit Object Storage key
+    storage_url = db.Column(db.String(500), nullable=True)
+    extracted_text = db.Column(db.Text, nullable=True)  # Extracted text from PDF/DOCX
+
+    # Status (for async extraction)
+    status = db.Column(db.String(30), default='ready')  # 'ready' | 'extracting' | 'failed'
+    extraction_error = db.Column(db.Text, nullable=True)  # Error message if extraction failed
+
+    # Source metadata
+    enabled = db.Column(db.Boolean, default=True)
+    last_fetched_at = db.Column(db.DateTime, nullable=True)
+    fetch_error_count = db.Column(db.Integer, default=0)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    ingested_items = db.relationship('IngestedItem', backref='source', lazy='dynamic', cascade='all, delete-orphan')
+    briefing_sources = db.relationship('BriefingSource', backref='input_source', lazy='dynamic')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'owner_type': self.owner_type,
+            'owner_id': self.owner_id,
+            'name': self.name,
+            'type': self.type,
+            'config_json': self.config_json,
+            'status': self.status,
+            'enabled': self.enabled,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+
+    def __repr__(self):
+        return f'<InputSource {self.name} ({self.type})>'
+
+
+class IngestedItem(db.Model):
+    """
+    Individual items ingested from sources.
+    Similar to NewsArticle but more generic (supports uploads, URLs, etc.).
+    """
+    __tablename__ = 'ingested_item'
+    __table_args__ = (
+        db.UniqueConstraint('source_id', 'content_hash', name='uq_source_content_hash'),
+        db.Index('idx_ingested_source_fetched', 'source_id', 'fetched_at'),
+        db.Index('idx_ingested_published', 'published_at'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    source_id = db.Column(db.Integer, db.ForeignKey('input_source.id', ondelete='CASCADE'), nullable=False)
+
+    # Content
+    title = db.Column(db.String(500), nullable=False)
+    url = db.Column(db.String(1000), nullable=True)  # Nullable for uploads
+    source_name = db.Column(db.String(200))  # Denormalized for performance
+
+    # Timing
+    published_at = db.Column(db.DateTime, nullable=True)  # From source
+    fetched_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Content
+    content_text = db.Column(db.Text)  # Extracted text
+    content_hash = db.Column(db.String(64), nullable=False)  # SHA-256 for deduplication
+    metadata_json = db.Column(db.JSON)  # Author, tags, etc.
+
+    # For uploads
+    storage_key = db.Column(db.String(500), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'source_id': self.source_id,
+            'title': self.title,
+            'url': self.url,
+            'source_name': self.source_name,
+            'published_at': self.published_at.isoformat() if self.published_at else None,
+            'fetched_at': self.fetched_at.isoformat() if self.fetched_at else None,
+            'content_text': self.content_text[:500] if self.content_text else None,  # Truncate for API
+            'metadata_json': self.metadata_json,
+        }
+
+    def __repr__(self):
+        return f'<IngestedItem {self.title[:50]}>'
+
+
+class Briefing(db.Model):
+    """
+    Multi-tenant brief configuration.
+    Each user/org can have multiple briefings with custom sources and schedules.
+    """
+    __tablename__ = 'briefing'
+    __table_args__ = (
+        db.Index('idx_briefing_owner', 'owner_type', 'owner_id'),
+        db.Index('idx_briefing_status', 'status'),
+        db.Index('idx_briefing_visibility', 'visibility'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # Ownership
+    owner_type = db.Column(db.String(20), nullable=False)  # 'user' | 'org'
+    owner_id = db.Column(db.Integer, nullable=False)  # User.id or CompanyProfile.id
+
+    # Configuration
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    theme_template_id = db.Column(db.Integer, db.ForeignKey('brief_template.id'), nullable=True)
+
+    # Schedule
+    cadence = db.Column(db.String(20), default='daily')  # 'daily' | 'weekly'
+    timezone = db.Column(db.String(50), default='UTC')  # e.g., 'Europe/London', 'America/New_York'
+    preferred_send_hour = db.Column(db.Integer, default=18)  # 6, 8, or 18 (6am, 8am, 6pm)
+
+    # Workflow
+    mode = db.Column(db.String(20), default='auto_send')  # 'auto_send' | 'approval_required'
+
+    # Visibility
+    visibility = db.Column(db.String(20), default='private')  # 'private' | 'org_only' | 'public'
+
+    # Status
+    status = db.Column(db.String(20), default='active')  # 'active' | 'paused'
+
+    # Email config (for orgs)
+    from_name = db.Column(db.String(200), nullable=True)
+    from_email = db.Column(db.String(255), nullable=True)  # Must be from verified domain
+    sending_domain_id = db.Column(db.Integer, db.ForeignKey('sending_domain.id', ondelete='SET NULL'), nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    template = db.relationship('BriefTemplate', backref='briefings')
+    sources = db.relationship('BriefingSource', backref='briefing', cascade='all, delete-orphan')
+    runs = db.relationship('BriefRun', backref='briefing', lazy='dynamic', order_by='BriefRun.scheduled_at.desc()')
+    recipients = db.relationship('BriefRecipient', backref='briefing', lazy='dynamic', cascade='all, delete-orphan')
+    sending_domain = db.relationship('SendingDomain', backref='briefings')
+
+    @property
+    def source_count(self):
+        """Number of sources attached to this briefing."""
+        return len(self.sources)
+
+    @property
+    def recipient_count(self):
+        """Number of active recipients."""
+        return self.recipients.filter_by(status='active').count()
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'owner_type': self.owner_type,
+            'owner_id': self.owner_id,
+            'name': self.name,
+            'description': self.description,
+            'theme_template_id': self.theme_template_id,
+            'cadence': self.cadence,
+            'timezone': self.timezone,
+            'preferred_send_hour': self.preferred_send_hour,
+            'mode': self.mode,
+            'visibility': self.visibility,
+            'status': self.status,
+            'source_count': self.source_count,
+            'recipient_count': self.recipient_count,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+        }
+
+    def __repr__(self):
+        return f'<Briefing {self.name} ({self.owner_type}:{self.owner_id})>'
+
+
+class BriefingSource(db.Model):
+    """
+    Many-to-many relationship between Briefings and InputSources.
+    """
+    __tablename__ = 'briefing_source'
+    __table_args__ = (
+        db.UniqueConstraint('briefing_id', 'source_id', name='uq_briefing_source'),
+    )
+
+    briefing_id = db.Column(db.Integer, db.ForeignKey('briefing.id', ondelete='CASCADE'), primary_key=True)
+    source_id = db.Column(db.Integer, db.ForeignKey('input_source.id', ondelete='CASCADE'), primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<BriefingSource briefing:{self.briefing_id} source:{self.source_id}>'
+
+
+class BriefRun(db.Model):
+    """
+    Execution instance of a briefing.
+    Each scheduled run creates a BriefRun (similar to DailyBrief but per-briefing).
+    """
+    __tablename__ = 'brief_run'
+    __table_args__ = (
+        db.Index('idx_brief_run_briefing', 'briefing_id'),
+        db.Index('idx_brief_run_status', 'status'),
+        db.Index('idx_brief_run_scheduled', 'scheduled_at'),
+        # Prevent duplicate runs for same briefing at same time (race condition protection)
+        db.UniqueConstraint('briefing_id', 'scheduled_at', name='uq_brief_run_briefing_scheduled'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    briefing_id = db.Column(db.Integer, db.ForeignKey('briefing.id', ondelete='CASCADE'), nullable=False)
+
+    # Status workflow
+    status = db.Column(db.String(30), default='generated_draft')  # 'generated_draft' | 'awaiting_approval' | 'approved' | 'sent' | 'failed'
+
+    # Content (markdown + HTML)
+    draft_markdown = db.Column(db.Text)
+    draft_html = db.Column(db.Text)
+    approved_markdown = db.Column(db.Text, nullable=True)
+    approved_html = db.Column(db.Text, nullable=True)
+
+    # Approval tracking
+    approved_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)
+
+    # Timing
+    scheduled_at = db.Column(db.DateTime, nullable=False)  # When it should run
+    generated_at = db.Column(db.DateTime, nullable=True)
+    sent_at = db.Column(db.DateTime, nullable=True)
+
+    # Relationships
+    items = db.relationship('BriefRunItem', backref='run', cascade='all, delete-orphan', order_by='BriefRunItem.position')
+    approved_by = db.relationship('User', backref='approved_brief_runs', foreign_keys=[approved_by_user_id])
+    edits = db.relationship('BriefEdit', backref='brief_run', lazy='dynamic', order_by='BriefEdit.created_at.desc()')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'briefing_id': self.briefing_id,
+            'status': self.status,
+            'scheduled_at': self.scheduled_at.isoformat() if self.scheduled_at else None,
+            'generated_at': self.generated_at.isoformat() if self.generated_at else None,
+            'sent_at': self.sent_at.isoformat() if self.sent_at else None,
+            'approved_by_user_id': self.approved_by_user_id,
+            'approved_at': self.approved_at.isoformat() if self.approved_at else None,
+            'item_count': len(self.items),
+        }
+
+    def __repr__(self):
+        return f'<BriefRun {self.id} ({self.status})>'
+
+
+class BriefRunItem(db.Model):
+    """
+    Individual items within a BriefRun.
+    Similar to BriefItem but for BriefRun.
+    """
+    __tablename__ = 'brief_run_item'
+    __table_args__ = (
+        db.Index('idx_brief_run_item_run', 'brief_run_id'),
+        db.UniqueConstraint('brief_run_id', 'position', name='uq_brief_run_position'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    brief_run_id = db.Column(db.Integer, db.ForeignKey('brief_run.id', ondelete='CASCADE'), nullable=False)
+    position = db.Column(db.Integer, nullable=False)  # Display order
+
+    # Source reference (optional - can reference IngestedItem or TrendingTopic)
+    # SET NULL on delete to prevent orphaned references when source items are cleaned up
+    ingested_item_id = db.Column(db.Integer, db.ForeignKey('ingested_item.id', ondelete='SET NULL'), nullable=True)
+    trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id', ondelete='SET NULL'), nullable=True)
+
+    # Generated content (LLM-created)
+    headline = db.Column(db.String(200))
+    summary_bullets = db.Column(db.JSON)  # ['bullet1', 'bullet2', 'bullet3']
+    content_markdown = db.Column(db.Text)
+    content_html = db.Column(db.Text)
+
+    # Metadata
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    ingested_item = db.relationship('IngestedItem', backref='brief_run_items')
+    trending_topic = db.relationship('TrendingTopic', backref='brief_run_items')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'position': self.position,
+            'headline': self.headline,
+            'summary_bullets': self.summary_bullets,
+            'content_markdown': self.content_markdown,
+        }
+
+    def __repr__(self):
+        return f'<BriefRunItem {self.position}. {self.headline}>'
+
+
+class BriefRecipient(db.Model):
+    """
+    Per-briefing recipient list.
+    Similar to DailyBriefSubscriber but per-briefing (not global).
+    """
+    __tablename__ = 'brief_recipient'
+    __table_args__ = (
+        db.UniqueConstraint('briefing_id', 'email', name='uq_briefing_recipient'),
+        db.Index('idx_brief_recipient_status', 'briefing_id', 'status'),
+        db.Index('idx_brief_recipient_token', 'magic_token'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    briefing_id = db.Column(db.Integer, db.ForeignKey('briefing.id', ondelete='CASCADE'), nullable=False)
+
+    email = db.Column(db.String(255), nullable=False)
+    name = db.Column(db.String(200), nullable=True)
+
+    status = db.Column(db.String(20), default='active')  # 'active' | 'unsubscribed'
+    unsubscribed_at = db.Column(db.DateTime, nullable=True)
+
+    # Magic link auth (reuse pattern from DailyBriefSubscriber)
+    magic_token = db.Column(db.String(64), unique=True, nullable=True)
+    magic_token_expires_at = db.Column(db.DateTime, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def generate_magic_token(self, expires_hours=48):
+        """Generate a new magic link token with expiry"""
+        import secrets
+        from datetime import timedelta
+        self.magic_token = secrets.token_urlsafe(32)
+        self.magic_token_expires_at = datetime.utcnow() + timedelta(hours=expires_hours)
+        return self.magic_token
+
+    def is_magic_token_valid(self) -> bool:
+        """Check if magic token is still valid (not expired)"""
+        if not self.magic_token:
+            return False
+        if not self.magic_token_expires_at:
+            # Legacy tokens without expiry - consider valid but should be regenerated
+            return True
+        return datetime.utcnow() < self.magic_token_expires_at
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'briefing_id': self.briefing_id,
+            'email': self.email,
+            'name': self.name,
+            'status': self.status,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+
+    def __repr__(self):
+        return f'<BriefRecipient {self.email} ({self.status})>'
+
+
+class SendingDomain(db.Model):
+    """
+    Custom email domain verification for organizations.
+    Uses Resend Domain API for verification.
+    """
+    __tablename__ = 'sending_domain'
+    __table_args__ = (
+        db.Index('idx_sending_domain_org', 'org_id'),
+        db.Index('idx_sending_domain_status', 'status'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('company_profile.id', ondelete='CASCADE'), nullable=False)
+
+    domain = db.Column(db.String(255), nullable=False, unique=True)  # e.g., 'client.org'
+    status = db.Column(db.String(30), default='pending_verification')  # 'pending_verification' | 'verified' | 'failed'
+
+    # Resend API data
+    resend_domain_id = db.Column(db.String(255), nullable=True)
+    dns_records_required = db.Column(db.JSON)  # SPF, DKIM, etc.
+
+    verified_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    org = db.relationship('CompanyProfile', backref='sending_domains')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'org_id': self.org_id,
+            'domain': self.domain,
+            'status': self.status,
+            'dns_records_required': self.dns_records_required,
+            'verified_at': self.verified_at.isoformat() if self.verified_at else None,
+        }
+
+    def __repr__(self):
+        return f'<SendingDomain {self.domain} ({self.status})>'
+
+
+class BriefEdit(db.Model):
+    """
+    Edit history for approval workflow (optional versioning).
+    Tracks edits made to BriefRun drafts.
+    """
+    __tablename__ = 'brief_edit'
+    __table_args__ = (
+        db.Index('idx_brief_edit_run', 'brief_run_id'),
+        db.Index('idx_brief_edit_user', 'edited_by_user_id'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    brief_run_id = db.Column(db.Integer, db.ForeignKey('brief_run.id', ondelete='CASCADE'), nullable=False)
+
+    edited_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    content_markdown = db.Column(db.Text)
+    content_html = db.Column(db.Text)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    edited_by = db.relationship('User', backref='brief_edits', foreign_keys=[edited_by_user_id])
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'brief_run_id': self.brief_run_id,
+            'edited_by_user_id': self.edited_by_user_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+
+    def __repr__(self):
+        return f'<BriefEdit {self.id} by user:{self.edited_by_user_id}>'
+

@@ -1,0 +1,123 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Edit Brief</h1>
+                    <p class="mt-2 text-gray-600">{{ briefing.name }} - {{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Draft' }}</p>
+                </div>
+                <a href="{{ url_for('briefing.view_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
+                   class="text-sm text-gray-600 hover:text-gray-900">
+                    ← Back to View
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Editor -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Edit Content</h2>
+                <form method="POST" id="edit-form">
+                    <input type="hidden" name="action" value="edit">
+                    <textarea name="content_markdown" id="content_markdown" rows="20"
+                              class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
+                              placeholder="Edit markdown content...">{{ brief_run.draft_markdown or '' }}</textarea>
+                    <div class="mt-4 flex space-x-3">
+                        <button type="submit"
+                                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            Save Draft
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Preview -->
+            <div class="bg-white shadow rounded-lg p-6">
+                <h2 class="text-lg font-semibold text-gray-900 mb-4">Preview</h2>
+                <div id="preview" class="prose max-w-none">
+                    {% if brief_run.draft_html %}
+                    {{ brief_run.draft_html|safe }}
+                    {% else %}
+                    <p class="text-gray-500">Preview will appear here...</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="mt-6 bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Actions</h2>
+            <div class="flex space-x-3">
+                {% if brief_run.status in ['generated_draft', 'awaiting_approval'] %}
+                <form method="POST" action="{{ url_for('briefing.edit_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
+                      onsubmit="return confirm('Approve and send this brief?');">
+                    <input type="hidden" name="action" value="approve">
+                    <input type="hidden" name="send_now" value="true">
+                    <button type="submit"
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                        Approve & Send Now
+                    </button>
+                </form>
+                <form method="POST" action="{{ url_for('briefing.edit_run', briefing_id=briefing.id, run_id=brief_run.id) }}">
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit"
+                            class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Approve (Don't Send)
+                    </button>
+                </form>
+                {% elif brief_run.status == 'approved' %}
+                <form method="POST" action="{{ url_for('briefing.send_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
+                      onsubmit="return confirm('Send this brief to all recipients?');">
+                    <button type="submit"
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                        Send Now
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Items -->
+        {% if items %}
+        <div class="mt-6 bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Items ({{ items|length }})</h2>
+            <div class="space-y-4">
+                {% for item in items %}
+                <div class="border border-gray-200 rounded-md p-4">
+                    <h3 class="font-medium text-gray-900">{{ item.headline or f'Item {item.position}' }}</h3>
+                    {% if item.summary_bullets %}
+                    <ul class="mt-2 list-disc list-inside text-sm text-gray-600">
+                        {% for bullet in item.summary_bullets %}
+                        <li>{{ bullet }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Simple markdown preview (can be enhanced with a library)
+document.getElementById('content_markdown').addEventListener('input', function(e) {
+    // Basic markdown to HTML conversion for preview
+    let markdown = e.target.value;
+    let html = markdown
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+        .replace(/^- (.*$)/gim, '<li>$1</li>')
+        .replace(/\n/g, '<br>');
+    
+    document.getElementById('preview').innerHTML = html || '<p class="text-gray-500">Preview will appear here...</p>';
+});
+</script>
+{% endblock %}

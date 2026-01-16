@@ -1,0 +1,121 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ briefing.name }}</h1>
+                    <p class="mt-2 text-gray-600">
+                        {{ brief_run.scheduled_at.strftime('%B %d, %Y at %I:%M %p') if brief_run.scheduled_at else 'Draft' }}
+                    </p>
+                </div>
+                <div class="flex space-x-3">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                        {% if brief_run.status == 'sent' %}bg-green-100 text-green-800
+                        {% elif brief_run.status == 'approved' %}bg-blue-100 text-blue-800
+                        {% elif brief_run.status == 'awaiting_approval' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ brief_run.status|replace('_', ' ')|title }}
+                    </span>
+                    {% if brief_run.status in ['generated_draft', 'awaiting_approval'] %}
+                    <a href="{{ url_for('briefing.edit_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
+                       class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Edit & Approve
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="bg-white shadow rounded-lg p-8 mb-6">
+            {% if brief_run.approved_html %}
+            <div class="prose max-w-none">
+                {{ brief_run.approved_html|safe }}
+            </div>
+            {% elif brief_run.draft_html %}
+            <div class="prose max-w-none">
+                {{ brief_run.draft_html|safe }}
+            </div>
+            {% else %}
+            <p class="text-gray-500">No content available.</p>
+            {% endif %}
+        </div>
+
+        <!-- Items Detail -->
+        {% if items %}
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Items ({{ items|length }})</h2>
+            <div class="space-y-4">
+                {% for item in items %}
+                <div class="border-l-4 border-blue-500 pl-4 py-2">
+                    <h3 class="font-semibold text-gray-900">{{ item.headline or f'Item {item.position}' }}</h3>
+                    {% if item.summary_bullets %}
+                    <ul class="mt-2 list-disc list-inside text-sm text-gray-600 space-y-1">
+                        {% for bullet in item.summary_bullets %}
+                        <li>{{ bullet }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                    {% if item.content_markdown %}
+                    <p class="mt-2 text-sm text-gray-600">{{ item.content_markdown[:200] }}...</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        {% if brief_run.status == 'approved' %}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Send Brief</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                This brief is approved and ready to send to {{ briefing.recipient_count }} active recipients.
+            </p>
+            <form method="POST" action="{{ url_for('briefing.send_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
+                  onsubmit="return confirm('Send this brief to all recipients?');">
+                <button type="submit"
+                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    Send Now
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Metadata -->
+        <div class="mt-6 bg-white shadow rounded-lg p-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">Details</h2>
+            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Generated</dt>
+                    <dd class="mt-1 text-sm text-gray-900">
+                        {{ brief_run.generated_at.strftime('%B %d, %Y at %I:%M %p') if brief_run.generated_at else 'Not generated' }}
+                    </dd>
+                </div>
+                {% if brief_run.approved_at %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Approved</dt>
+                    <dd class="mt-1 text-sm text-gray-900">
+                        {{ brief_run.approved_at.strftime('%B %d, %Y at %I:%M %p') }}
+                        {% if brief_run.approved_by %}
+                        by {{ brief_run.approved_by.username }}
+                        {% endif %}
+                    </dd>
+                </div>
+                {% endif %}
+                {% if brief_run.sent_at %}
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Sent</dt>
+                    <dd class="mt-1 text-sm text-gray-900">
+                        {{ brief_run.sent_at.strftime('%B %d, %Y at %I:%M %p') }}
+                    </dd>
+                </div>
+                {% endif %}
+            </dl>
+        </div>
+    </div>
+</div>
+{% endblock %}

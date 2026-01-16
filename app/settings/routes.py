@@ -68,7 +68,10 @@ def delete_account():
         StatementFlag, ApiKey, DailyQuestionSubscriber, DailyQuestionResponse,
         ProfileView, DiscussionView, StatementEvidence, ConsensusAnalysis,
         DiscussionSourceArticle, TrendingTopic, BriefItem, DailyQuestion,
-        DailyQuestionSelection
+        DailyQuestionSelection,
+        # Briefing system models
+        Briefing, BriefRun, BriefRunItem, BriefRecipient, BriefingSource,
+        InputSource, IngestedItem, SendingDomain
     )
     
     user = User.query.get(current_user.id)
@@ -114,7 +117,40 @@ def delete_account():
         DailyQuestionSubscriber.query.filter_by(user_id=user_id).update(
             {'user_id': None}, synchronize_session=False
         )
-        
+
+        # 1b. Clean up Briefing system data owned by user
+        # Delete briefings owned by user (cascades to BriefRun, BriefRunItem, BriefRecipient, BriefingSource)
+        user_briefing_ids = [b.id for b in Briefing.query.filter_by(owner_type='user', owner_id=user_id).all()]
+        for briefing_id in user_briefing_ids:
+            # Delete BriefRunItems first (child of BriefRun)
+            brief_run_ids = [r.id for r in BriefRun.query.filter_by(briefing_id=briefing_id).all()]
+            if brief_run_ids:
+                BriefRunItem.query.filter(BriefRunItem.brief_run_id.in_(brief_run_ids)).delete(synchronize_session=False)
+            # Delete BriefRuns
+            BriefRun.query.filter_by(briefing_id=briefing_id).delete(synchronize_session=False)
+            # Delete BriefRecipients
+            BriefRecipient.query.filter_by(briefing_id=briefing_id).delete(synchronize_session=False)
+            # Delete BriefingSources
+            BriefingSource.query.filter_by(briefing_id=briefing_id).delete(synchronize_session=False)
+        # Delete the briefings themselves
+        Briefing.query.filter_by(owner_type='user', owner_id=user_id).delete(synchronize_session=False)
+
+        # Delete InputSources owned by user (cascades to IngestedItem)
+        user_source_ids = [s.id for s in InputSource.query.filter_by(owner_type='user', owner_id=user_id).all()]
+        if user_source_ids:
+            # Clear references from BriefRunItem to IngestedItem before deleting
+            ingested_ids = [i.id for i in IngestedItem.query.filter(IngestedItem.source_id.in_(user_source_ids)).all()]
+            if ingested_ids:
+                BriefRunItem.query.filter(BriefRunItem.ingested_item_id.in_(ingested_ids)).update(
+                    {'ingested_item_id': None}, synchronize_session=False
+                )
+            # Delete IngestedItems
+            IngestedItem.query.filter(IngestedItem.source_id.in_(user_source_ids)).delete(synchronize_session=False)
+            # Clear BriefingSource references before deleting InputSources
+            BriefingSource.query.filter(BriefingSource.source_id.in_(user_source_ids)).delete(synchronize_session=False)
+        # Delete the InputSources
+        InputSource.query.filter_by(owner_type='user', owner_id=user_id).delete(synchronize_session=False)
+
         # 2. Delete user's created content that can't exist without them
         # Delete responses (requires user_id)
         Response.query.filter_by(user_id=user_id).delete(synchronize_session=False)
@@ -171,7 +207,36 @@ def delete_account():
             ProfileView.query.filter_by(individual_profile_id=user.individual_profile.id).delete(synchronize_session=False)
             db.session.delete(user.individual_profile)
         if user.company_profile:
-            ProfileView.query.filter_by(company_profile_id=user.company_profile.id).delete(synchronize_session=False)
+            org_id = user.company_profile.id
+            ProfileView.query.filter_by(company_profile_id=org_id).delete(synchronize_session=False)
+
+            # Clean up org-owned briefing data before deleting company_profile
+            # Delete briefings owned by org (cascades to BriefRun, BriefRunItem, BriefRecipient, BriefingSource)
+            org_briefing_ids = [b.id for b in Briefing.query.filter_by(owner_type='org', owner_id=org_id).all()]
+            for briefing_id in org_briefing_ids:
+                brief_run_ids = [r.id for r in BriefRun.query.filter_by(briefing_id=briefing_id).all()]
+                if brief_run_ids:
+                    BriefRunItem.query.filter(BriefRunItem.brief_run_id.in_(brief_run_ids)).delete(synchronize_session=False)
+                BriefRun.query.filter_by(briefing_id=briefing_id).delete(synchronize_session=False)
+                BriefRecipient.query.filter_by(briefing_id=briefing_id).delete(synchronize_session=False)
+                BriefingSource.query.filter_by(briefing_id=briefing_id).delete(synchronize_session=False)
+            Briefing.query.filter_by(owner_type='org', owner_id=org_id).delete(synchronize_session=False)
+
+            # Delete org-owned InputSources
+            org_source_ids = [s.id for s in InputSource.query.filter_by(owner_type='org', owner_id=org_id).all()]
+            if org_source_ids:
+                ingested_ids = [i.id for i in IngestedItem.query.filter(IngestedItem.source_id.in_(org_source_ids)).all()]
+                if ingested_ids:
+                    BriefRunItem.query.filter(BriefRunItem.ingested_item_id.in_(ingested_ids)).update(
+                        {'ingested_item_id': None}, synchronize_session=False
+                    )
+                IngestedItem.query.filter(IngestedItem.source_id.in_(org_source_ids)).delete(synchronize_session=False)
+                BriefingSource.query.filter(BriefingSource.source_id.in_(org_source_ids)).delete(synchronize_session=False)
+            InputSource.query.filter_by(owner_type='org', owner_id=org_id).delete(synchronize_session=False)
+
+            # Delete SendingDomains (CASCADE will handle this, but explicit is safer)
+            SendingDomain.query.filter_by(org_id=org_id).delete(synchronize_session=False)
+
             db.session.delete(user.company_profile)
         
         # 5. Finally delete the user
