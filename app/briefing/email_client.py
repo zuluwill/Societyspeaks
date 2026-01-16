@@ -93,14 +93,18 @@ class BriefingEmailClient:
         """
         # Check if briefing has custom sending domain
         # Re-check domain status right before sending to handle race conditions
-        if briefing.sending_domain_id and briefing.sending_domain:
-            domain = briefing.sending_domain
-            # Verify domain is still verified and briefing has from_email configured
-            if domain.status == 'verified' and briefing.from_email:
-                # Use custom domain email
-                return briefing.from_email
-            # If domain exists but not verified, fall through to default
-            # This handles cases where domain verification failed after briefing was configured
+        # Use try/except to handle case where domain is deleted mid-send
+        try:
+            if briefing.sending_domain_id:
+                # Reload domain to ensure it still exists (handles deletion race condition)
+                domain = SendingDomain.query.get(briefing.sending_domain_id)
+                if domain and domain.status == 'verified' and briefing.from_email:
+                    # Use custom domain email
+                    return briefing.from_email
+                # If domain doesn't exist, not verified, or from_email not set, fall through to default
+        except Exception as e:
+            logger.warning(f"Error checking domain for briefing {briefing.id}: {e}")
+            # Fall through to default on any error
         
         # Fallback to default (just the email address, name is set separately via from_name)
         return os.environ.get('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
@@ -138,6 +142,15 @@ class BriefingEmailClient:
         view_url = f"{base_url}/briefings/{briefing.id}/runs/{brief_run.id}"
         unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.magic_token or ''}"
         
+        # Get company logo if org briefing
+        company_logo_url = None
+        if briefing.owner_type == 'org' and briefing.owner_id:
+            from app.models import CompanyProfile
+            company = CompanyProfile.query.get(briefing.owner_id)
+            if company and company.logo:
+                # Build full URL for logo
+                company_logo_url = f"{base_url}/profiles/image/{company.logo}"
+        
         # Try to render template, fallback to simple HTML
         try:
             html = render_template(
@@ -148,7 +161,8 @@ class BriefingEmailClient:
                 content_html=content_html,
                 view_url=view_url,
                 unsubscribe_url=unsubscribe_url,
-                base_url=base_url
+                base_url=base_url,
+                company_logo_url=company_logo_url
             )
             return html
         except Exception as e:

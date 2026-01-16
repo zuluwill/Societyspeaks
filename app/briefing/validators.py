@@ -1,14 +1,11 @@
 """
 Briefing Validators
 
-Validation utilities for briefing system.
+Validation functions for briefing system inputs.
 """
 
+from typing import Tuple, Optional
 import re
-import logging
-from typing import Optional, Tuple
-
-logger = logging.getLogger(__name__)
 
 
 def validate_email(email: str) -> Tuple[bool, Optional[str]]:
@@ -16,7 +13,7 @@ def validate_email(email: str) -> Tuple[bool, Optional[str]]:
     Validate email address format.
     
     Args:
-        email: Email address to validate
+        email: Email address string
     
     Returns:
         Tuple of (is_valid, error_message)
@@ -24,17 +21,10 @@ def validate_email(email: str) -> Tuple[bool, Optional[str]]:
     if not email:
         return False, "Email is required"
     
-    email = email.strip().lower()
-    
     # Basic email regex
-    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    
-    if not re.match(email_pattern, email):
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(pattern, email):
         return False, "Invalid email format"
-    
-    # Check length
-    if len(email) > 255:
-        return False, "Email address is too long (max 255 characters)"
     
     return True, None
 
@@ -44,7 +34,7 @@ def validate_briefing_name(name: str) -> Tuple[bool, Optional[str]]:
     Validate briefing name.
     
     Args:
-        name: Briefing name to validate
+        name: Briefing name string
     
     Returns:
         Tuple of (is_valid, error_message)
@@ -52,13 +42,11 @@ def validate_briefing_name(name: str) -> Tuple[bool, Optional[str]]:
     if not name:
         return False, "Briefing name is required"
     
-    name = name.strip()
-    
-    if len(name) < 3:
-        return False, "Briefing name must be at least 3 characters"
+    if len(name.strip()) < 1:
+        return False, "Briefing name cannot be empty"
     
     if len(name) > 200:
-        return False, "Briefing name is too long (max 200 characters)"
+        return False, "Briefing name must be 200 characters or less"
     
     return True, None
 
@@ -68,58 +56,40 @@ def validate_rss_url(url: str) -> Tuple[bool, Optional[str]]:
     Validate RSS feed URL.
     
     Args:
-        url: URL to validate
+        url: RSS feed URL string
     
     Returns:
         Tuple of (is_valid, error_message)
     """
     if not url:
-        return False, "RSS feed URL is required"
-    
-    url = url.strip()
+        return False, "RSS URL is required"
     
     # Basic URL validation
-    url_pattern = r'^https?://[^\s/$.?#].[^\s]*$'
-    
+    url_pattern = r'^https?://.+'
     if not re.match(url_pattern, url):
-        return False, "Invalid URL format"
-    
-    # Check length
-    if len(url) > 500:
-        return False, "URL is too long (max 500 characters)"
+        return False, "Invalid URL format. Must start with http:// or https://"
     
     return True, None
 
 
-def validate_file_upload(filename: str, file_size: int, max_size_mb: int = 10) -> Tuple[bool, Optional[str]]:
+def validate_file_upload(filename: str, max_size_mb: int = 10) -> Tuple[bool, Optional[str]]:
     """
     Validate file upload.
     
     Args:
-        filename: Original filename
-        file_size: File size in bytes
+        filename: Uploaded file name
         max_size_mb: Maximum file size in MB
     
     Returns:
         Tuple of (is_valid, error_message)
     """
     if not filename:
-        return False, "No file provided"
+        return False, "File is required"
     
     # Check extension
-    allowed_extensions = {'.pdf', '.docx', '.doc'}
-    file_ext = '.' + filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
-    
-    if file_ext not in allowed_extensions:
-        return False, f"Only PDF and DOCX files are allowed. Found: {file_ext or 'no extension'}"
-    
-    # Check size
-    max_size_bytes = max_size_mb * 1024 * 1024
-    if file_size > max_size_bytes:
-        return False, f"File size must be under {max_size_mb}MB"
-    
-    if file_size == 0:
-        return False, "File is empty"
+    allowed_extensions = ['.pdf', '.docx', '.doc']
+    if not any(filename.lower().endswith(ext) for ext in allowed_extensions):
+        return False, f"File must be one of: {', '.join(allowed_extensions)}"
     
     return True, None
 
@@ -137,25 +107,15 @@ def validate_timezone(timezone: str) -> Tuple[bool, Optional[str]]:
     if not timezone:
         return False, "Timezone is required"
     
-    # Common timezones (can be expanded)
-    valid_timezones = [
-        'UTC',
-        'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
-        'Europe/London', 'Europe/Paris', 'Europe/Berlin',
-        'Asia/Tokyo', 'Asia/Shanghai', 'Asia/Dubai',
-        'Australia/Sydney', 'Australia/Melbourne'
-    ]
-    
-    if timezone not in valid_timezones:
-        # Try to import pytz and validate
-        try:
-            import pytz
-            pytz.timezone(timezone)
-            return True, None
-        except:
-            return False, f"Invalid timezone: {timezone}"
-    
-    return True, None
+    # Validate using pytz - accepts any valid timezone
+    try:
+        import pytz
+        pytz.timezone(timezone)
+        return True, None
+    except pytz.UnknownTimeZoneError:
+        return False, f"Invalid timezone: {timezone}"
+    except Exception as e:
+        return False, f"Error validating timezone: {str(e)}"
 
 
 def validate_cadence(cadence: str) -> Tuple[bool, Optional[str]]:
@@ -202,5 +162,43 @@ def validate_mode(mode: str) -> Tuple[bool, Optional[str]]:
     """
     if mode not in ['auto_send', 'approval_required']:
         return False, "Mode must be 'auto_send' or 'approval_required'"
+    
+    return True, None
+
+
+def validate_send_hour(hour: int) -> Tuple[bool, Optional[str]]:
+    """
+    Validate send hour.
+    
+    Args:
+        hour: Hour value (0-23)
+    
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not isinstance(hour, int):
+        return False, "Send hour must be an integer"
+    
+    if hour < 0 or hour > 23:
+        return False, "Send hour must be between 0 and 23"
+    
+    return True, None
+
+
+def validate_send_minute(minute: int) -> Tuple[bool, Optional[str]]:
+    """
+    Validate send minute.
+    
+    Args:
+        minute: Minute value (0-59)
+    
+    Returns:
+        Tuple of (is_valid, error_message)
+    """
+    if not isinstance(minute, int):
+        return False, "Send minute must be an integer"
+    
+    if minute < 0 or minute > 59:
+        return False, "Send minute must be between 0 and 59"
     
     return True, None

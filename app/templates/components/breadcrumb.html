@@ -1,0 +1,22 @@
+{% macro breadcrumb(items) %}
+<nav class="mb-6" aria-label="Breadcrumb">
+    <ol class="flex items-center space-x-2 text-sm">
+        {% for item in items %}
+            {% if not loop.last %}
+                <li>
+                    <a href="{{ item.url }}" class="text-blue-600 hover:text-blue-800 hover:underline">
+                        {{ item.label }}
+                    </a>
+                </li>
+                <li>
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </li>
+            {% else %}
+                <li class="text-gray-600" aria-current="page">{{ item.label }}</li>
+            {% endif %}
+        {% endfor %}
+    </ol>
+</nav>
+{% endmacro %}

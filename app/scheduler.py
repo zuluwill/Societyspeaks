@@ -966,7 +966,7 @@ def init_scheduler(app):
                             scheduled_utc = get_next_scheduled_time(
                                 timezone_str=briefing.timezone,
                                 preferred_hour=briefing.preferred_send_hour,
-                                preferred_minute=0
+                                preferred_minute=getattr(briefing, 'preferred_send_minute', 0)
                             )
 
                         elif briefing.cadence == 'weekly':
@@ -999,7 +999,7 @@ def init_scheduler(app):
                                 timezone_str=briefing.timezone,
                                 preferred_hour=briefing.preferred_send_hour,
                                 preferred_weekday=0,  # Monday
-                                preferred_minute=0
+                                preferred_minute=getattr(briefing, 'preferred_send_minute', 0)
                             )
                         else:
                             continue

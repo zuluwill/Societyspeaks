@@ -2717,7 +2717,8 @@ class Briefing(db.Model):
     # Schedule
     cadence = db.Column(db.String(20), default='daily')  # 'daily' | 'weekly'
     timezone = db.Column(db.String(50), default='UTC')  # e.g., 'Europe/London', 'America/New_York'
-    preferred_send_hour = db.Column(db.Integer, default=18)  # 6, 8, or 18 (6am, 8am, 6pm)
+    preferred_send_hour = db.Column(db.Integer, default=18)  # 0-23 (hour of day)
+    preferred_send_minute = db.Column(db.Integer, default=0)  # 0-59 (minute of hour)
 
     # Workflow
     mode = db.Column(db.String(20), default='auto_send')  # 'auto_send' | 'approval_required'
