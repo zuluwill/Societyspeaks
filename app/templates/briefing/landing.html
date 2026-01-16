@@ -6,11 +6,11 @@
 
 {% block content %}
 <!-- Hero Section - Premium deep gradient -->
-<div class="bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+<div style="background: linear-gradient(to bottom, #0f172a, #1e293b, #0f172a);">
     <section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8 lg:py-28">
         <div class="text-center mb-8">
             <!-- Premium badge -->
-            <span class="inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-400/20 px-4 py-1.5 text-sm font-medium text-blue-300 mb-6">
+            <span class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium mb-6" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(96, 165, 250, 0.2); color: #93c5fd;">
                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clip-rule="evenodd"/>
                 </svg>
@@ -19,19 +19,20 @@
         </div>
         
         <div class="max-w-4xl mx-auto text-center">
-            <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl mb-6 leading-tight">
+            <h1 class="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl mb-6 leading-tight" style="color: white;">
                 One calm daily brief from<br>
-                <span class="text-blue-400">sources you trust</span>
+                <span style="color: #60a5fa;">sources you trust</span>
             </h1>
             
-            <p class="text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p class="text-xl mb-10 max-w-2xl mx-auto leading-relaxed" style="color: #cbd5e1;">
                 Combine news, research, documents, and subscriptions into a single, reliable daily update — fully automated or editor-approved.
             </p>
             
             <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
                 {% if current_user.is_authenticated %}
                 <a href="{{ url_for('briefing.create_briefing') }}" 
-                   class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-3.5 text-base font-semibold text-white hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40">
+                   class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-3.5 text-base font-semibold text-white hover:bg-blue-500 transition-all"
+                   style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.25);">
                     Start a personal brief
                     <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -39,7 +40,8 @@
                 </a>
                 {% else %}
                 <a href="{{ url_for('auth.register') }}" 
-                   class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-3.5 text-base font-semibold text-white hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40">
+                   class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-3.5 text-base font-semibold text-white hover:bg-blue-500 transition-all"
+                   style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.25);">
                     Start a personal brief
                     <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -47,13 +49,14 @@
                 </a>
                 {% endif %}
                 <a href="{{ url_for('briefing.landing') }}#pricing" 
-                   class="inline-flex items-center justify-center rounded-lg border border-slate-500 bg-slate-800/50 px-8 py-3.5 text-base font-semibold text-white hover:bg-slate-700/50 hover:border-slate-400 transition-all">
+                   class="inline-flex items-center justify-center rounded-lg px-8 py-3.5 text-base font-semibold text-white hover:opacity-90 transition-all"
+                   style="background: rgba(30, 41, 59, 0.5); border: 1px solid #64748b;">
                     See plans for organisations
                 </a>
             </div>
             
             <a href="{{ url_for('briefing.landing') }}#example" 
-               class="text-sm text-slate-400 hover:text-white transition-colors underline underline-offset-4">
+               class="text-sm hover:text-white transition-colors underline underline-offset-4" style="color: #94a3b8;">
                 View an example brief
             </a>
         </div>
@@ -62,13 +65,13 @@
         <div class="mt-16 max-w-2xl mx-auto">
             <div class="relative">
                 <!-- Email mockup frame with premium shadow -->
-                <div class="bg-gradient-to-br from-slate-700 to-slate-800 rounded-2xl p-5 shadow-2xl ring-1 ring-white/10">
+                <div class="rounded-2xl p-5 shadow-2xl" style="background: linear-gradient(to bottom right, #334155, #1e293b); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1);">
                     <div class="bg-white rounded-xl overflow-hidden shadow-lg">
                         <!-- Email header -->
-                        <div class="bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-4">
-                            <p class="text-blue-300 text-xs font-semibold tracking-wide uppercase">Your Personal Brief</p>
+                        <div class="px-5 py-4" style="background: linear-gradient(to right, #0f172a, #1e293b);">
+                            <p class="text-xs font-semibold tracking-wide uppercase" style="color: #93c5fd;">Your Personal Brief</p>
                             <h3 class="text-white text-lg font-bold mt-0.5">Tech Weekly Digest</h3>
-                            <p class="text-slate-400 text-xs mt-0.5">Monday, 13 January 2025</p>
+                            <p class="text-xs mt-0.5" style="color: #94a3b8;">Monday, 13 January 2025</p>
                         </div>
 
                         <!-- Brief content preview -->
@@ -270,51 +273,51 @@
 </div>
 
 <!-- Source Types Visualization -->
-<div class="bg-gradient-to-b from-slate-900 to-slate-800">
+<div style="background: linear-gradient(to bottom, #0f172a, #1e293b);">
     <section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
         <div class="max-w-4xl mx-auto">
-            <h2 class="text-3xl font-bold text-white mb-4 text-center">
+            <h2 class="text-3xl font-bold mb-4 text-center" style="color: white;">
                 Any source, any format
             </h2>
-            <p class="text-center text-slate-300 mb-12 max-w-2xl mx-auto">
+            <p class="text-center mb-12 max-w-2xl mx-auto" style="color: #cbd5e1;">
                 We extract and summarize from multiple source types — all in one place.
             </p>
             
             <div class="grid md:grid-cols-3 gap-6">
                 <!-- RSS Feeds -->
-                <div class="text-center bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-                    <div class="w-14 h-14 rounded-xl bg-blue-500/20 flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="text-center rounded-xl p-6" style="background: rgba(30, 41, 59, 0.5); border: 1px solid #334155;">
+                    <div class="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4" style="background: rgba(59, 130, 246, 0.2);">
+                        <svg class="w-7 h-7" style="color: #60a5fa;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-white mb-2">RSS Feeds</h3>
-                    <p class="text-sm text-slate-300 mb-2">News sites, blogs, newsletters</p>
-                    <p class="text-xs text-slate-500">TechCrunch, The Verge, Hacker News</p>
+                    <h3 class="text-lg font-semibold mb-2" style="color: white;">RSS Feeds</h3>
+                    <p class="text-sm mb-2" style="color: #cbd5e1;">News sites, blogs, newsletters</p>
+                    <p class="text-xs" style="color: #64748b;">TechCrunch, The Verge, Hacker News</p>
                 </div>
                 
                 <!-- Documents -->
-                <div class="text-center bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-                    <div class="w-14 h-14 rounded-xl bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-7 h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="text-center rounded-xl p-6" style="background: rgba(30, 41, 59, 0.5); border: 1px solid #334155;">
+                    <div class="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4" style="background: rgba(16, 185, 129, 0.2);">
+                        <svg class="w-7 h-7" style="color: #34d399;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-white mb-2">Documents</h3>
-                    <p class="text-sm text-slate-300 mb-2">PDFs, Word files, research papers</p>
-                    <p class="text-xs text-slate-500">Upload and extract automatically</p>
+                    <h3 class="text-lg font-semibold mb-2" style="color: white;">Documents</h3>
+                    <p class="text-sm mb-2" style="color: #cbd5e1;">PDFs, Word files, research papers</p>
+                    <p class="text-xs" style="color: #64748b;">Upload and extract automatically</p>
                 </div>
                 
                 <!-- Web Pages -->
-                <div class="text-center bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-                    <div class="w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="text-center rounded-xl p-6" style="background: rgba(30, 41, 59, 0.5); border: 1px solid #334155;">
+                    <div class="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4" style="background: rgba(168, 85, 247, 0.2);">
+                        <svg class="w-7 h-7" style="color: #a78bfa;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
                         </svg>
                     </div>
-                    <h3 class="text-lg font-semibold text-white mb-2">Web Pages</h3>
-                    <p class="text-sm text-slate-300 mb-2">Articles, reports, any URL</p>
-                    <p class="text-xs text-slate-500">We extract the main content</p>
+                    <h3 class="text-lg font-semibold mb-2" style="color: white;">Web Pages</h3>
+                    <p class="text-sm mb-2" style="color: #cbd5e1;">Articles, reports, any URL</p>
+                    <p class="text-xs" style="color: #64748b;">We extract the main content</p>
                 </div>
             </div>
         </div>
@@ -931,9 +934,9 @@ function showPricingTab(tab) {
 </script>
 
 <!-- FAQ Section -->
-<div class="bg-slate-50">
+<div class="bg-gray-50">
     <section class="mx-auto max-w-3xl px-4 py-20 sm:px-6 lg:px-8">
-        <h2 class="text-3xl font-bold text-slate-900 mb-12 text-center">
+        <h2 class="text-3xl font-bold mb-12 text-center text-gray-900">
             Frequently Asked Questions
         </h2>
         
@@ -982,16 +985,17 @@ function showPricingTab(tab) {
 </div>
 
 <!-- Final CTA -->
-<div class="bg-gradient-to-b from-slate-900 to-slate-800">
+<div style="background: linear-gradient(to bottom, #0f172a, #1e293b);">
     <section class="mx-auto max-w-4xl px-4 py-20 sm:px-6 lg:px-8">
         <div class="text-center">
-            <h2 class="text-3xl font-bold text-white mb-4">
+            <h2 class="text-3xl font-bold mb-4" style="color: white;">
                 Ready to replace information overload with intelligence?
             </h2>
-            <p class="text-lg text-slate-300 mb-8">Start your 30-day trial. No credit card required.</p>
+            <p class="text-lg mb-8" style="color: #cbd5e1;">Start your 30-day trial. No credit card required.</p>
             {% if current_user.is_authenticated %}
             <a href="{{ url_for('briefing.create_briefing') }}" 
-               class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-4 text-base font-semibold text-white hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/25">
+               class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-4 text-base font-semibold text-white hover:bg-blue-500 transition-all"
+               style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.25);">
                 Start a personal brief
                 <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
@@ -999,7 +1003,8 @@ function showPricingTab(tab) {
             </a>
             {% else %}
             <a href="{{ url_for('auth.register') }}" 
-               class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-4 text-base font-semibold text-white hover:bg-blue-500 transition-all shadow-lg shadow-blue-500/25">
+               class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-8 py-4 text-base font-semibold text-white hover:bg-blue-500 transition-all"
+               style="box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.25);">
                 Start a personal brief
                 <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
