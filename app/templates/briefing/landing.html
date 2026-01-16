@@ -151,7 +151,7 @@ noise.{% endblock %} {% block content %}
                   <span
                     class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-600 text-white text-xs font-semibold"
                   >
-                    TechCrunch RSS
+                    The Economist
                   </span>
                 </div>
                 <h4 class="font-bold text-gray-900 text-sm mb-1">
@@ -592,7 +592,7 @@ noise.{% endblock %} {% block content %}
             News sites, blogs, newsletters
           </p>
           <p class="text-xs" style="color: #64748b">
-            TechCrunch, The Verge, Hacker News
+            The Economist, Financial Times, Foreign Affairs
           </p>
         </div>
 
@@ -694,8 +694,8 @@ noise.{% endblock %} {% block content %}
             A tech founder following industry news
           </h3>
           <p class="text-slate-600 text-sm">
-            Pulls from TechCrunch, Hacker News, and specific Substack
-            newsletters. Gets one daily email instead of ten.
+            Pulls from Stratechery, MIT Technology Review, and the All-In Podcast.
+            Gets one daily email instead of ten.
           </p>
         </div>
 
@@ -2045,77 +2045,47 @@ noise.{% endblock %} {% block content %}
     <!-- Common Sources Examples -->
     <div class="bg-gray-50 rounded-lg p-8 mb-8">
       <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">
-        Common sources people add
+        Popular sources people add
       </h3>
-      <div class="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-        <div class="flex items-center gap-3">
-          <svg
-            class="w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"
-            />
-          </svg>
-          <span class="text-sm text-gray-700">TechCrunch RSS</span>
+      <div class="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto mb-6">
+        <!-- News & Analysis -->
+        <div>
+          <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">News & Analysis</h4>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li>The Economist</li>
+            <li>Financial Times</li>
+            <li>Foreign Affairs</li>
+            <li>The Atlantic</li>
+            <li>Bloomberg</li>
+          </ul>
         </div>
-        <div class="flex items-center gap-3">
-          <svg
-            class="w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <span class="text-sm text-gray-700">Research PDFs</span>
+        <!-- Podcasts -->
+        <div>
+          <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Podcasts</h4>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li>Lex Fridman Podcast</li>
+            <li>All-In Podcast</li>
+            <li>The Ezra Klein Show</li>
+            <li>Huberman Lab</li>
+            <li>Acquired</li>
+          </ul>
         </div>
-        <div class="flex items-center gap-3">
-          <svg
-            class="w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z"
-            />
-          </svg>
-          <span class="text-sm text-gray-700">Industry newsletters</span>
+        <!-- Substacks & Blogs -->
+        <div>
+          <h4 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Writers & Thinkers</h4>
+          <ul class="space-y-2 text-sm text-gray-700">
+            <li>Stratechery</li>
+            <li>Marginal Revolution</li>
+            <li>Slow Boring</li>
+            <li>Noahpinion</li>
+            <li>The Free Press</li>
+          </ul>
         </div>
-        <div class="flex items-center gap-3">
-          <svg
-            class="w-5 h-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          </svg>
-          <span class="text-sm text-gray-700">Internal documents</span>
-        </div>
+      </div>
+      <div class="text-center">
+        <a href="{{ url_for('sources.index') }}" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+          Explore all 50+ sources we track →
+        </a>
       </div>
     </div>
 
