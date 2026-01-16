@@ -146,6 +146,7 @@
                     <a href="/" class="text-base font-medium text-white hover:text-blue-50 transition">Home</a>
                     <a href="{{ url_for('daily.today') }}" class="text-base font-medium text-white hover:text-blue-50 transition">Today's Question</a>
                     <a href="{{ url_for('brief.today') }}" class="text-base font-medium text-white hover:text-blue-50 transition">Daily Brief</a>
+                    <a href="{{ url_for('briefing.landing') }}" class="text-base font-medium text-white hover:text-blue-50 transition">Personal Briefs</a>
                     {% if current_user.is_authenticated %}
                     <a href="{{ url_for('briefing.list_briefings') }}" class="text-base font-medium text-white hover:text-blue-50 transition">My Briefings</a>
                     {% endif %}
@@ -263,6 +264,7 @@
                     <a href="/" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Home</a>
                     <a href="{{ url_for('daily.today') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Today's Question</a>
                     <a href="{{ url_for('brief.today') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Daily Brief</a>
+                    <a href="{{ url_for('briefing.landing') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Personal Briefs</a>
                     {% if current_user.is_authenticated %}
                     <a href="{{ url_for('briefing.list_briefings') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">My Briefings</a>
                     {% endif %}

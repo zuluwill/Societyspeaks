@@ -110,6 +110,13 @@ def source_owner_required(f):
     return decorated_function
 
 
+@briefing_bp.route('/landing')
+@limiter.limit("60/minute")
+def landing():
+    """Public landing page for Briefing System - marketing/sales page"""
+    return render_template('briefing/landing.html')
+
+
 @briefing_bp.route('/')
 @login_required
 @limiter.limit("60/minute")
