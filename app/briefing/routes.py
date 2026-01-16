@@ -640,10 +640,10 @@ def edit(briefing_id):
     if request.method == 'POST':
         try:
             # Get form values
-            name = request.form.get('name', briefing.name).strip()
+            name = (request.form.get('name') or briefing.name or '').strip()
             description = request.form.get('description', '').strip()
-            cadence = request.form.get('cadence', briefing.cadence)
-            timezone = request.form.get('timezone', briefing.timezone)
+            cadence = request.form.get('cadence') or briefing.cadence or 'daily'
+            timezone = request.form.get('timezone') or briefing.timezone or 'UTC'
             preferred_send_hour = request.form.get('preferred_send_hour', type=int)
             if preferred_send_hour is None:
                 preferred_send_hour = briefing.preferred_send_hour
@@ -948,12 +948,12 @@ def upload_source():
                 return redirect(url_for('briefing.upload_source'))
             
             # Validate file
-            filename = secure_filename(file.filename)
+            filename = secure_filename(file.filename or '')
             file.seek(0, 2)  # Seek to end
             file_size = file.tell()
             file.seek(0)  # Reset
             
-            is_valid, error = validate_file_upload(filename, file_size, max_size_mb=10)
+            is_valid, error = validate_file_upload(filename, max_size_mb=10)
             if not is_valid:
                 flash(error, 'error')
                 return redirect(url_for('briefing.upload_source'))
@@ -1435,7 +1435,8 @@ def edit_run(briefing_id, run_id):
                 # Update draft content
                 brief_run.draft_markdown = request.form.get('content_markdown', brief_run.draft_markdown)
                 # Regenerate HTML from markdown (simple)
-                brief_run.draft_html = brief_run.draft_markdown.replace('\n', '<br>')
+                draft_md = brief_run.draft_markdown or ''
+                brief_run.draft_html = draft_md.replace('\n', '<br>')
                 
                 # Save edit history
                 from app.models import BriefEdit
@@ -1910,7 +1911,8 @@ def test_send(briefing_id):
     if not is_allowed:
         return redirect_response
     
-    test_email = request.form.get('email', current_user.email).strip().lower()
+    email_value = request.form.get('email') or current_user.email or ''
+    test_email = email_value.strip().lower()
     
     # Validate email
     if not test_email:
