@@ -450,3 +450,138 @@ def init_commands(app):
 
         except Exception as e:
             click.echo(f"Error: {str(e)}", err=True)
+
+    @app.cli.command('seed-brief-templates')
+    def seed_brief_templates_cmd():
+        """Seed BriefTemplate table with predefined templates"""
+        try:
+            from app.models import BriefTemplate
+            from app.models import generate_slug
+
+            templates_data = [
+                {
+                    'name': 'Politics',
+                    'description': 'Daily political news and analysis from trusted sources across the spectrum.',
+                    'default_sources': [],  # Will be populated with NewsSource IDs
+                    'default_filters': {'topics': ['politics', 'government', 'policy', 'elections']},
+                    'default_cadence': 'daily',
+                    'default_tone': 'calm_neutral',
+                    'allow_customization': True
+                },
+                {
+                    'name': 'Technology',
+                    'description': 'Tech industry news, product launches, and innovation updates.',
+                    'default_sources': [],
+                    'default_filters': {'topics': ['technology', 'tech', 'innovation', 'startups', 'AI']},
+                    'default_cadence': 'daily',
+                    'default_tone': 'calm_neutral',
+                    'allow_customization': True
+                },
+                {
+                    'name': 'Climate',
+                    'description': 'Climate science, environmental policy, and sustainability news.',
+                    'default_sources': [],
+                    'default_filters': {'topics': ['climate', 'environment', 'sustainability', 'energy']},
+                    'default_cadence': 'daily',
+                    'default_tone': 'calm_neutral',
+                    'allow_customization': True
+                },
+                {
+                    'name': 'Health',
+                    'description': 'Healthcare policy, medical research, and public health updates.',
+                    'default_sources': [],
+                    'default_filters': {'topics': ['health', 'healthcare', 'medicine', 'public health']},
+                    'default_cadence': 'daily',
+                    'default_tone': 'calm_neutral',
+                    'allow_customization': True
+                },
+                {
+                    'name': 'Business',
+                    'description': 'Business news, economic analysis, and market updates.',
+                    'default_sources': [],
+                    'default_filters': {'topics': ['business', 'economy', 'finance', 'markets']},
+                    'default_cadence': 'daily',
+                    'default_tone': 'calm_neutral',
+                    'allow_customization': True
+                },
+                {
+                    'name': 'Culture',
+                    'description': 'Arts, culture, media, and social trends.',
+                    'default_sources': [],
+                    'default_filters': {'topics': ['culture', 'arts', 'media', 'entertainment']},
+                    'default_cadence': 'weekly',
+                    'default_tone': 'calm_neutral',
+                    'allow_customization': True
+                },
+                {
+                    'name': 'AI & Machine Learning',
+                    'description': 'Artificial intelligence, machine learning, and automation news.',
+                    'default_sources': [],
+                    'default_filters': {'topics': ['AI', 'artificial intelligence', 'machine learning', 'automation']},
+                    'default_cadence': 'daily',
+                    'default_tone': 'calm_neutral',
+                    'allow_customization': True
+                },
+                {
+                    'name': 'Science',
+                    'description': 'Scientific research, discoveries, and academic news.',
+                    'default_sources': [],
+                    'default_filters': {'topics': ['science', 'research', 'academic', 'discovery']},
+                    'default_cadence': 'weekly',
+                    'default_tone': 'calm_neutral',
+                    'allow_customization': True
+                },
+                {
+                    'name': 'International',
+                    'description': 'Global news, international relations, and world affairs.',
+                    'default_sources': [],
+                    'default_filters': {'topics': ['international', 'global', 'world', 'foreign policy']},
+                    'default_cadence': 'daily',
+                    'default_tone': 'calm_neutral',
+                    'allow_customization': True
+                },
+                {
+                    'name': 'Sports',
+                    'description': 'Sports news, analysis, and updates.',
+                    'default_sources': [],
+                    'default_filters': {'topics': ['sports', 'athletics', 'competition']},
+                    'default_cadence': 'daily',
+                    'default_tone': 'calm_neutral',
+                    'allow_customization': True
+                }
+            ]
+
+            added = 0
+            updated = 0
+
+            for template_data in templates_data:
+                slug = generate_slug(template_data['name'])
+                existing = BriefTemplate.query.filter_by(name=template_data['name']).first()
+
+                if existing:
+                    # Update existing template
+                    for key, value in template_data.items():
+                        if key != 'name':  # Don't update name
+                            setattr(existing, key, value)
+                    existing.slug = slug
+                    updated += 1
+                    click.echo(f"✓ Updated template: {template_data['name']}")
+                else:
+                    # Create new template
+                    template = BriefTemplate(
+                        name=template_data['name'],
+                        slug=slug,
+                        **{k: v for k, v in template_data.items() if k != 'name'}
+                    )
+                    db.session.add(template)
+                    added += 1
+                    click.echo(f"✓ Added template: {template_data['name']}")
+
+            db.session.commit()
+            click.echo(f"\n✓ Seeding complete: {added} added, {updated} updated")
+
+        except Exception as e:
+            db.session.rollback()
+            click.echo(f"Error seeding brief templates: {str(e)}", err=True)
+            import traceback
+            traceback.print_exc()

@@ -1,0 +1,36 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900">Brief Templates</h1>
+            <p class="mt-2 text-gray-600">Choose a template to get started quickly, or create a custom briefing</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {% for template in templates %}
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ template.name }}</h3>
+                {% if template.description %}
+                <p class="text-sm text-gray-600 mb-4">{{ template.description }}</p>
+                {% endif %}
+                <div class="flex items-center text-sm text-gray-500 mb-4">
+                    <span>{{ template.default_cadence|title }} brief</span>
+                </div>
+                <a href="{{ url_for('briefing.create_briefing', template_id=template.id) }}"
+                   class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                    Use Template
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if not templates %}
+        <div class="text-center py-12">
+            <p class="text-gray-500">No templates available. Run <code class="bg-gray-100 px-2 py-1 rounded">flask seed-brief-templates</code> to create templates.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

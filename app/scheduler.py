@@ -904,6 +904,184 @@ def init_scheduler(app):
                 logger.error(f"Daily brief generation failed: {e}", exc_info=True)
 
 
+    @scheduler.scheduled_job('interval', seconds=10, id='process_extraction_queue')
+    def process_extraction_queue_job():
+        """
+        Process pending PDF/DOCX extraction jobs.
+        Runs every 10 seconds to process uploads quickly.
+        """
+        with app.app_context():
+            from app.briefing.ingestion.extraction_queue import process_extraction_queue
+            try:
+                process_extraction_queue()
+            except Exception as e:
+                logger.error(f"Extraction queue processing failed: {e}", exc_info=True)
+
+    @scheduler.scheduled_job('interval', minutes=15, id='process_briefing_runs')
+    def process_briefing_runs_job():
+        """
+        Process scheduled briefings and generate runs.
+        Runs every 15 minutes to check for briefings that need generation.
+        """
+        with app.app_context():
+            from app.briefing.generator import generate_brief_run_for_briefing
+            from app.briefing.ingestion.source_ingester import SourceIngester
+            from app.models import Briefing, BriefRun, InputSource
+            from datetime import datetime, timedelta
+            import pytz
+            
+            logger.info("Processing briefing runs")
+            
+            try:
+                # Get all active briefings
+                active_briefings = Briefing.query.filter_by(status='active').all()
+                
+                for briefing in active_briefings:
+                    try:
+                        # Import DST-safe timezone utilities
+                        from app.briefing.timezone_utils import get_next_scheduled_time, get_weekly_scheduled_time
+
+                        # Check if briefing needs a new run
+                        if briefing.cadence == 'daily':
+                            # Check if run exists for today (in briefing's timezone)
+                            try:
+                                tz = pytz.timezone(briefing.timezone)
+                            except pytz.UnknownTimeZoneError:
+                                tz = pytz.UTC
+
+                            local_now = datetime.now(tz)
+                            today_start_local = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+                            today_start_utc = today_start_local.astimezone(pytz.UTC).replace(tzinfo=None)
+
+                            existing_run = BriefRun.query.filter_by(
+                                briefing_id=briefing.id
+                            ).filter(
+                                BriefRun.scheduled_at >= today_start_utc
+                            ).first()
+
+                            if existing_run:
+                                continue
+
+                            # Calculate scheduled time with proper DST handling
+                            scheduled_utc = get_next_scheduled_time(
+                                timezone_str=briefing.timezone,
+                                preferred_hour=briefing.preferred_send_hour,
+                                preferred_minute=0
+                            )
+
+                        elif briefing.cadence == 'weekly':
+                            # Check if run exists this week (in briefing's timezone)
+                            try:
+                                tz = pytz.timezone(briefing.timezone)
+                            except pytz.UnknownTimeZoneError:
+                                tz = pytz.UTC
+
+                            local_now = datetime.now(tz)
+                            # Get start of week in local timezone (Monday)
+                            days_since_monday = local_now.weekday()
+                            week_start_local = (local_now - timedelta(days=days_since_monday)).replace(
+                                hour=0, minute=0, second=0, microsecond=0
+                            )
+                            week_start_utc = week_start_local.astimezone(pytz.UTC).replace(tzinfo=None)
+
+                            existing_run = BriefRun.query.filter_by(
+                                briefing_id=briefing.id
+                            ).filter(
+                                BriefRun.scheduled_at >= week_start_utc
+                            ).first()
+
+                            if existing_run:
+                                continue
+
+                            # Calculate scheduled time with proper DST handling
+                            # Default to Monday (weekday=0)
+                            scheduled_utc = get_weekly_scheduled_time(
+                                timezone_str=briefing.timezone,
+                                preferred_hour=briefing.preferred_send_hour,
+                                preferred_weekday=0,  # Monday
+                                preferred_minute=0
+                            )
+                        else:
+                            continue
+                        
+                        # Ingest from sources first
+                        ingester = SourceIngester()
+                        for source_link in briefing.sources:
+                            source = source_link.input_source
+                            if source and source.enabled:
+                                try:
+                                    ingester.ingest_source(source)
+                                except Exception as e:
+                                    logger.error(f"Error ingesting source {source.id}: {e}")
+                        
+                        # Generate brief run
+                        brief_run = generate_brief_run_for_briefing(
+                            briefing.id,
+                            scheduled_at=scheduled_utc
+                        )
+                        
+                        if brief_run:
+                            logger.info(f"Generated BriefRun {brief_run.id} for briefing {briefing.id}")
+                        
+                    except Exception as e:
+                        logger.error(f"Error processing briefing {briefing.id}: {e}", exc_info=True)
+                        continue
+                        
+            except Exception as e:
+                logger.error(f"Error in briefing runs processor: {e}", exc_info=True)
+
+    @scheduler.scheduled_job('interval', minutes=5, id='send_approved_brief_runs')
+    def send_approved_brief_runs_job():
+        """
+        Send approved BriefRuns that are ready to send.
+        Runs every 5 minutes to send briefs promptly after approval.
+        """
+        with app.app_context():
+            from app.briefing.email_client import send_brief_run_emails
+            from app.models import BriefRun
+            from datetime import datetime, timedelta
+            
+            logger.info("Checking for approved BriefRuns to send")
+            
+            try:
+                # Find approved BriefRuns that haven't been sent yet
+                # Only check runs scheduled for today or earlier
+                cutoff = datetime.utcnow() - timedelta(hours=1)  # Allow 1 hour buffer
+                
+                approved_runs = BriefRun.query.filter(
+                    BriefRun.status == 'approved',
+                    BriefRun.sent_at.is_(None),
+                    BriefRun.scheduled_at <= datetime.utcnow()
+                ).limit(10).all()  # Process 10 at a time
+                
+                if not approved_runs:
+                    return
+                
+                logger.info(f"Found {len(approved_runs)} approved BriefRuns to send")
+                
+                for brief_run in approved_runs:
+                    try:
+                        # Check if briefing is still active
+                        if brief_run.briefing.status != 'active':
+                            logger.info(f"Briefing {brief_run.briefing_id} is not active, skipping send")
+                            continue
+                        
+                        # Check if briefing has recipients
+                        if brief_run.briefing.recipient_count == 0:
+                            logger.info(f"Briefing {brief_run.briefing_id} has no recipients, skipping send")
+                            continue
+                        
+                        # Send emails
+                        result = send_brief_run_emails(brief_run.id)
+                        logger.info(f"Sent BriefRun {brief_run.id}: {result['sent']} sent, {result['failed']} failed")
+                        
+                    except Exception as e:
+                        logger.error(f"Error sending BriefRun {brief_run.id}: {e}", exc_info=True)
+                        continue
+                        
+            except Exception as e:
+                logger.error(f"Error in approved BriefRuns sender: {e}", exc_info=True)
+
     @scheduler.scheduled_job('cron', hour=18, minute=0, id='auto_publish_brief')
     def auto_publish_daily_brief():
         """

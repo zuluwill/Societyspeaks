@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8 text-center">
+        <div>
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Unsubscribed</h2>
+            <p class="mt-2 text-sm text-gray-600">
+                You have been unsubscribed from <strong>{{ briefing.name }}</strong>.
+            </p>
+            <p class="mt-4 text-sm text-gray-500">
+                You will no longer receive emails from this briefing.
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('index') }}"
+               class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                Return to Home
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

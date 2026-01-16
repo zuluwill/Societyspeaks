@@ -404,6 +404,11 @@ def create_app():
     app.register_blueprint(sources_bp, url_prefix='/sources')
     app.logger.debug("Sources blueprint registered")
 
+    # Register briefing blueprint (Multi-tenant Briefing System v2)
+    from app.briefing import briefing_bp
+    app.register_blueprint(briefing_bp)
+    app.logger.debug("Briefing blueprint registered")
+
     app.logger.debug("All registered routes:")
     app.logger.debug(app.url_map)
 
