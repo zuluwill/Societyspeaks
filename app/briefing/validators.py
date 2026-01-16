@@ -104,12 +104,13 @@ def validate_timezone(timezone: str) -> Tuple[bool, Optional[str]]:
     Returns:
         Tuple of (is_valid, error_message)
     """
+    import pytz
+    
     if not timezone:
         return False, "Timezone is required"
     
     # Validate using pytz - accepts any valid timezone
     try:
-        import pytz
         pytz.timezone(timezone)
         return True, None
     except pytz.UnknownTimeZoneError:
