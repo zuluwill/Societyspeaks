@@ -1,0 +1,38 @@
+{#
+  Reusable Choices.js component for searchable dropdowns.
+  
+  Usage:
+    {% from "components/choices_js.html" import choices_js_assets, init_choices_dropdown %}
+    
+    <!-- In head or content block -->
+    {{ choices_js_assets() }}
+    
+    <!-- In script block -->
+    {{ init_choices_dropdown('timezone', 'Search timezones...', 'Select a timezone...') }}
+#}
+
+{% macro choices_js_assets() %}
+<!-- Choices.js for searchable dropdowns -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+{% endmacro %}
+
+{% macro init_choices_dropdown(select_id, search_placeholder='Search...', select_placeholder='Select...') %}
+// Initialize Choices.js for searchable dropdown: {{ select_id }}
+const {{ select_id }}Select = document.getElementById('{{ select_id }}');
+if ({{ select_id }}Select) {
+    new Choices({{ select_id }}Select, {
+        searchEnabled: true,
+        searchChoices: true,
+        searchPlaceholderValue: '{{ search_placeholder }}',
+        itemSelectText: '',
+        placeholder: true,
+        placeholderValue: '{{ select_placeholder }}',
+        shouldSort: true,
+        fuseOptions: {
+            threshold: 0.3,
+            distance: 100
+        }
+    });
+}
+{% endmacro %}

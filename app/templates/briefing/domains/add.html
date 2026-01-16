@@ -1,8 +1,15 @@
 {% extends "layout.html" %}
+{% from "components/breadcrumb.html" import breadcrumb %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {{ breadcrumb([
+            {'label': 'My Briefings', 'url': url_for('briefing.list_briefings')},
+            {'label': 'Sending Domains', 'url': url_for('briefing.list_domains')},
+            {'label': 'Add Domain', 'url': '#'}
+        ]) }}
+        
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Add Sending Domain</h1>
@@ -60,13 +67,13 @@
                     </div>
                 </div>
 
-                <div class="mt-6 flex justify-end space-x-3">
+                <div class="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
                     <a href="{{ url_for('briefing.list_domains') }}"
-                       class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                       class="w-full sm:w-auto text-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         Cancel
                     </a>
                     <button type="submit"
-                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Add Domain
                     </button>
                 </div>

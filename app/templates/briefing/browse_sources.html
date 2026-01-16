@@ -1,0 +1,175 @@
+{% extends "layout.html" %}
+{% from "components/breadcrumb.html" import breadcrumb %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {{ breadcrumb([
+            {'label': 'My Briefings', 'url': url_for('briefing.list_briefings')},
+            {'label': 'Browse Sources', 'url': '#'}
+        ]) }}
+        
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Browse Sources</h1>
+                    <p class="mt-2 text-gray-600">
+                        {% if briefing %}
+                        Add sources to "{{ briefing.name }}"
+                        {% else %}
+                        Discover and add content sources to your briefings
+                        {% endif %}
+                    </p>
+                    {% if briefing %}
+                    <a href="{{ url_for('briefing.detail', briefing_id=briefing.id) }}" 
+                       class="mt-1 text-sm text-blue-600 hover:text-blue-800">← Back to Briefing</a>
+                    {% endif %}
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{{ url_for('briefing.add_rss_source') }}"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Add RSS Feed
+                    </a>
+                    <a href="{{ url_for('briefing.upload_source') }}"
+                       class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
+                        Upload File
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <form method="GET" action="{{ url_for('briefing.browse_sources') }}" class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search sources..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="w-full md:w-48">
+                    <select name="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">All Types</option>
+                        {% for stype in source_types %}
+                        <option value="{{ stype }}" {% if source_type == stype %}selected{% endif %}>{{ stype|upper }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
+                    Search
+                </button>
+                {% if search_query or source_type %}
+                <a href="{{ url_for('briefing.browse_sources') }}" class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50">
+                    Clear
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- System Sources -->
+        {% if system_sources %}
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                System Sources 
+                <span class="text-sm font-normal text-gray-500">({{ system_sources|length }} curated sources)</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for source_info in system_sources %}
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex-1">
+                            <h3 class="text-sm font-semibold text-gray-900">{{ source_info.name }}</h3>
+                            <p class="text-xs text-gray-500 mt-1">{{ source_info.type|upper }}</p>
+                        </div>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            System
+                        </span>
+                    </div>
+                    <p class="text-xs text-gray-600 mb-3">
+                        {% if source_info.is_news_source %}
+                        Curated news source
+                        {% else %}
+                        System source
+                        {% endif %}
+                    </p>
+                    {% if briefing_id and briefing %}
+                    <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}" 
+                          class="inline" onsubmit="return confirm('Add {{ source_info.name }} to briefing?');">
+                        <input type="hidden" name="source_id" value="{{ source_info.id }}">
+                        <button type="submit" 
+                                class="w-full text-xs px-3 py-1.5 bg-blue-600 text-white font-medium rounded hover:bg-blue-700">
+                            Add to Briefing
+                        </button>
+                    </form>
+                    {% elif not briefing_id %}
+                    <p class="text-xs text-gray-500 italic">Open a briefing to add sources</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- User Sources -->
+        {% if user_sources %}
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4">
+                Your Sources 
+                <span class="text-sm font-normal text-gray-500">({{ user_sources|length }})</span>
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for source_info in user_sources %}
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div class="flex-1">
+                            <h3 class="text-sm font-semibold text-gray-900">{{ source_info.name }}</h3>
+                            <p class="text-xs text-gray-500 mt-1">{{ source_info.type|upper }}</p>
+                        </div>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                            Your Source
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-2 mb-3">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                            {% if source_info.source_obj.status == 'ready' %}bg-green-100 text-green-800
+                            {% elif source_info.source_obj.status == 'extracting' %}bg-yellow-100 text-yellow-800
+                            {% elif source_info.source_obj.status == 'failed' %}bg-red-100 text-red-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ source_info.source_obj.status|title }}
+                        </span>
+                    </div>
+                    {% if briefing_id and briefing %}
+                    <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}" 
+                          class="inline" onsubmit="return confirm('Add {{ source_info.name }} to briefing?');">
+                        <input type="hidden" name="source_id" value="{{ source_info.id }}">
+                        <button type="submit" 
+                                class="w-full text-xs px-3 py-1.5 bg-blue-600 text-white font-medium rounded hover:bg-blue-700">
+                            Add to Briefing
+                        </button>
+                    </form>
+                    {% elif not briefing_id %}
+                    <p class="text-xs text-gray-500 italic">Open a briefing to add sources</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Empty State -->
+        {% if not system_sources and not user_sources %}
+        <div class="text-center py-12 bg-white rounded-lg shadow">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No sources found</h3>
+            <p class="mt-1 text-sm text-gray-500">Try adjusting your search or filters.</p>
+            <div class="mt-6">
+                <a href="{{ url_for('briefing.browse_sources') }}"
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Clear Filters
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

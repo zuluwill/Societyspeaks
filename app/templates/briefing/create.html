@@ -1,8 +1,16 @@
 {% extends "layout.html" %}
+{% from "components/breadcrumb.html" import breadcrumb %}
+{% from "components/choices_js.html" import choices_js_assets, init_choices_dropdown %}
 
 {% block content %}
+{{ choices_js_assets() }}
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {{ breadcrumb([
+            {'label': 'My Briefings', 'url': url_for('briefing.list_briefings')},
+            {'label': 'Create Briefing', 'url': '#'}
+        ]) }}
+        
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Create Briefing</h1>
             <p class="mt-2 text-gray-600">Set up a personalised brief with your preferred sources and schedule</p>
@@ -68,26 +76,37 @@
                     <label for="timezone" class="block text-sm font-medium text-gray-700">Timezone</label>
                     <select name="timezone" id="timezone"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <option value="UTC">UTC</option>
-                        <option value="America/New_York">Eastern Time (US)</option>
-                        <option value="America/Chicago">Central Time (US)</option>
-                        <option value="America/Denver">Mountain Time (US)</option>
-                        <option value="America/Los_Angeles">Pacific Time (US)</option>
-                        <option value="Europe/London">London</option>
-                        <option value="Europe/Paris">Paris</option>
+                        {% for tz in all_timezones %}
+                        <option value="{{ tz }}" {% if tz == 'UTC' %}selected{% endif %}>{{ tz }}</option>
+                        {% endfor %}
                     </select>
+                    <p class="mt-1 text-sm text-gray-500">Select your timezone for accurate scheduling</p>
                 </div>
 
-                <!-- Send Hour -->
-                <div>
-                    <label for="preferred_send_hour" class="block text-sm font-medium text-gray-700">Preferred Send Time</label>
-                    <select name="preferred_send_hour" id="preferred_send_hour"
-                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <option value="6">6:00 AM</option>
-                        <option value="8">8:00 AM</option>
-                        <option value="18" selected>6:00 PM</option>
-                    </select>
+                <!-- Send Time -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="preferred_send_hour" class="block text-sm font-medium text-gray-700">Send Hour</label>
+                        <select name="preferred_send_hour" id="preferred_send_hour"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            {% for hour in range(0, 24) %}
+                            <option value="{{ hour }}" {% if hour == 18 %}selected{% endif %}>
+                                {{ "%02d:00"|format(hour) }} {% if hour < 12 %}AM{% else %}PM{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="preferred_send_minute" class="block text-sm font-medium text-gray-700">Send Minute</label>
+                        <select name="preferred_send_minute" id="preferred_send_minute"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            {% for minute in range(0, 60, 5) %}
+                            <option value="{{ minute }}" {% if minute == 0 %}selected{% endif %}>{{ "%02d"|format(minute) }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
+                <p class="text-sm text-gray-500">Choose the time (hour and minute) when briefs should be sent in your selected timezone</p>
 
                 <!-- Mode -->
                 <div>
@@ -112,14 +131,64 @@
                     </select>
                 </div>
 
+                <!-- Branding (for org briefings) -->
+                {% if current_user.company_profile %}
+                <div id="org-branding-section" style="display: none;" class="pt-4 border-t border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Email Branding</h3>
+                    <p class="text-sm text-gray-500 mb-4">Configure custom email sender for organization briefings.</p>
+                    
+                    <!-- Sending Domain -->
+                    <div class="mb-4">
+                        <label for="sending_domain_id" class="block text-sm font-medium text-gray-700">Sending Domain</label>
+                        <select name="sending_domain_id" id="sending_domain_id"
+                                class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="">Use default (societyspeaks.io)</option>
+                            {% for domain in available_domains %}
+                            <option value="{{ domain.id }}">
+                                {{ domain.domain }} 
+                                {% if domain.status == 'verified' %}(Verified){% elif domain.status == 'pending_verification' %}(Pending){% else %}(Failed){% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <p class="mt-1 text-sm text-gray-500">
+                            <a href="{{ url_for('briefing.list_domains') }}" class="text-blue-600 hover:text-blue-800">Manage domains</a>
+                        </p>
+                    </div>
+                    
+                    <!-- From Name -->
+                    <div class="mb-4">
+                        <label for="from_name" class="block text-sm font-medium text-gray-700">Sender Name</label>
+                        <input type="text" name="from_name" id="from_name" 
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="e.g., Acme Corp Briefings">
+                        <p class="mt-1 text-sm text-gray-500">Name shown as email sender (defaults to briefing name)</p>
+                    </div>
+                    
+                    <!-- From Email -->
+                    <div class="mb-4">
+                        <label for="from_email" class="block text-sm font-medium text-gray-700">
+                            Sender Email
+                            <span id="email-required-indicator" class="text-red-500" style="display: none;">*</span>
+                        </label>
+                        <input type="email" name="from_email" id="from_email" 
+                               class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="briefings@yourdomain.com">
+                        <p class="mt-1 text-sm text-gray-500" id="email-help-text">
+                            Must match selected domain. Leave empty to use default.
+                        </p>
+                        <p class="mt-1 text-sm text-red-600 hidden" id="email-error-text"></p>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- Actions -->
-                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-gray-200">
                     <a href="{{ url_for('briefing.list_briefings') }}"
-                       class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                       class="w-full sm:w-auto text-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         Cancel
                     </a>
                     <button type="submit"
-                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            class="w-full sm:w-auto px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Create Briefing
                     </button>
                 </div>
@@ -127,4 +196,153 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Choices.js for timezone dropdown (DRY - using reusable macro)
+    {{ init_choices_dropdown('timezone', 'Search timezones...', 'Select a timezone...') }}
+    
+    // Show/hide org branding section based on owner_type
+    const ownerTypeSelect = document.getElementById('owner_type');
+    const brandingSection = document.getElementById('org-branding-section');
+    const domainSelect = document.getElementById('sending_domain_id');
+    const emailInput = document.getElementById('from_email');
+    const emailRequiredIndicator = document.getElementById('email-required-indicator');
+    const emailHelpText = document.getElementById('email-help-text');
+    const emailErrorText = document.getElementById('email-error-text');
+    
+    // Toggle branding section
+    if (ownerTypeSelect && brandingSection) {
+        function toggleBranding() {
+            if (ownerTypeSelect.value === 'org') {
+                brandingSection.style.display = 'block';
+            } else {
+                brandingSection.style.display = 'none';
+            }
+        }
+        
+        ownerTypeSelect.addEventListener('change', toggleBranding);
+        toggleBranding(); // Initial state
+    }
+    
+    // Auto-suggest email when domain selected
+    if (domainSelect && emailInput) {
+        domainSelect.addEventListener('change', function() {
+            const selectedOption = domainSelect.options[domainSelect.selectedIndex];
+            
+            if (selectedOption.value) {
+                // Extract domain from option text (e.g., "example.com (Verified)" or "example.com (Pending)")
+                const domainMatch = selectedOption.text.match(/^([^\s]+)/);
+                if (domainMatch && !emailInput.value) {
+                    const domain = domainMatch[1];
+                    emailInput.value = `briefings@${domain}`;
+                    emailInput.focus();
+                    // Move cursor to before @ for easy editing
+                    emailInput.setSelectionRange(0, emailInput.value.indexOf('@'));
+                }
+                
+                // Show required indicator
+                if (emailRequiredIndicator) {
+                    emailRequiredIndicator.style.display = 'inline';
+                }
+                if (emailHelpText) {
+                    emailHelpText.textContent = `Required. Must match selected domain: ${domainMatch[1]}`;
+                    emailHelpText.classList.remove('text-gray-500');
+                    emailHelpText.classList.add('text-blue-600');
+                }
+                
+                // Validate email matches domain
+                validateEmailDomain();
+            } else {
+                // No domain selected
+                if (emailRequiredIndicator) {
+                    emailRequiredIndicator.style.display = 'none';
+                }
+                if (emailHelpText) {
+                    emailHelpText.textContent = 'Must match selected domain. Leave empty to use default.';
+                    emailHelpText.classList.remove('text-blue-600');
+                    emailHelpText.classList.add('text-gray-500');
+                }
+                if (emailErrorText) {
+                    emailErrorText.classList.add('hidden');
+                }
+            }
+        });
+    }
+    
+    // Validate email matches domain on input
+    if (emailInput && domainSelect) {
+        emailInput.addEventListener('input', validateEmailDomain);
+        emailInput.addEventListener('blur', validateEmailDomain);
+    }
+    
+    function validateEmailDomain() {
+        if (!domainSelect || !emailInput || !emailErrorText) return;
+        
+        const selectedOption = domainSelect.options[domainSelect.selectedIndex];
+        if (!selectedOption || !selectedOption.value) {
+            emailErrorText.classList.add('hidden');
+            return;
+        }
+        
+        const domainMatch = selectedOption.text.match(/^([^\s]+)/);
+        if (!domainMatch) return;
+        
+        const expectedDomain = domainMatch[1];
+        const emailValue = emailInput.value.trim();
+        
+        if (!emailValue) {
+            emailErrorText.textContent = 'Email is required when a domain is selected.';
+            emailErrorText.classList.remove('hidden');
+            emailInput.classList.add('border-red-300');
+            emailInput.classList.remove('border-gray-300');
+            return;
+        }
+        
+        const emailDomain = emailValue.split('@')[1];
+        if (emailDomain !== expectedDomain) {
+            emailErrorText.textContent = `Email must be from domain: ${expectedDomain}`;
+            emailErrorText.classList.remove('hidden');
+            emailInput.classList.add('border-red-300');
+            emailInput.classList.remove('border-gray-300');
+        } else {
+            emailErrorText.classList.add('hidden');
+            emailInput.classList.remove('border-red-300');
+            emailInput.classList.add('border-gray-300');
+        }
+    }
+    
+    // Form validation before submit
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (domainSelect && domainSelect.value && emailInput && !emailInput.value.trim()) {
+                e.preventDefault();
+                emailErrorText.textContent = 'Email is required when a domain is selected.';
+                emailErrorText.classList.remove('hidden');
+                emailInput.focus();
+                emailInput.classList.add('border-red-300');
+                return false;
+            }
+            
+            if (domainSelect && domainSelect.value && emailInput && emailInput.value.trim()) {
+                const selectedOption = domainSelect.options[domainSelect.selectedIndex];
+                const domainMatch = selectedOption.text.match(/^([^\s]+)/);
+                if (domainMatch) {
+                    const expectedDomain = domainMatch[1];
+                    const emailDomain = emailInput.value.trim().split('@')[1];
+                    if (emailDomain !== expectedDomain) {
+                        e.preventDefault();
+                        emailErrorText.textContent = `Email must be from domain: ${expectedDomain}`;
+                        emailErrorText.classList.remove('hidden');
+                        emailInput.focus();
+                        emailInput.classList.add('border-red-300');
+                        return false;
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

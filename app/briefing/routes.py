@@ -12,12 +12,12 @@ from app.briefing import briefing_bp
 from app.briefing.validators import (
     validate_email, validate_briefing_name, validate_rss_url,
     validate_file_upload, validate_timezone, validate_cadence,
-    validate_visibility, validate_mode
+    validate_visibility, validate_mode, validate_send_hour, validate_send_minute
 )
 from app import db, limiter
 from app.models import (
     Briefing, BriefRun, BriefRunItem, BriefTemplate, InputSource, IngestedItem,
-    BriefingSource, BriefRecipient, SendingDomain, User, CompanyProfile
+    BriefingSource, BriefRecipient, SendingDomain, User, CompanyProfile, NewsSource
 )
 import logging
 
@@ -30,6 +30,201 @@ logger = logging.getLogger(__name__)
 
 MAX_RECIPIENTS_PER_BRIEFING = 100  # Limit recipients to prevent spam abuse
 MAX_SOURCES_PER_BRIEFING = 20      # Limit sources per briefing
+
+
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+def get_all_timezones():
+    """
+    Get all available timezones for dropdown (DRY helper).
+    
+    Returns:
+        List of timezone strings, sorted alphabetically
+    """
+    try:
+        import pytz
+        return sorted(pytz.all_timezones)
+    except (ImportError, AttributeError) as e:
+        logger.error(f"Error loading timezones: {e}")
+        # Fallback to common timezones if pytz fails
+        return [
+            'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 
+            'America/Los_Angeles', 'Europe/London', 'Europe/Paris', 'Asia/Tokyo'
+        ]
+
+
+def calculate_next_scheduled_time(briefing):
+    """
+    Calculate next scheduled time for a briefing (DRY helper).
+    
+    Args:
+        briefing: Briefing instance
+    
+    Returns:
+        datetime or None if calculation fails
+    """
+    if briefing.status != 'active':
+        return None
+    
+    try:
+        from app.briefing.timezone_utils import get_next_scheduled_time, get_weekly_scheduled_time
+        preferred_minute = getattr(briefing, 'preferred_send_minute', 0)
+        
+        if briefing.cadence == 'daily':
+            return get_next_scheduled_time(
+                briefing.timezone,
+                briefing.preferred_send_hour,
+                preferred_minute=preferred_minute
+            )
+        elif briefing.cadence == 'weekly':
+            return get_weekly_scheduled_time(
+                briefing.timezone,
+                briefing.preferred_send_hour,
+                preferred_weekday=0,  # Monday
+                preferred_minute=preferred_minute
+            )
+    except Exception as e:
+        logger.warning(f"Error calculating next scheduled time for briefing {briefing.id}: {e}")
+        return None
+
+
+def get_available_sources_for_user(user, exclude_source_ids=None):
+    """
+    Get all available sources for a user (InputSource + NewsSource).
+    Returns a list that can be used in templates for source selection.
+    
+    Args:
+        user: Current user
+        exclude_source_ids: Set of source IDs to exclude (already added)
+    
+    Returns:
+        List of dicts with source info: {'id', 'name', 'type', 'is_system', 'source_obj'}
+    """
+    available = []
+    exclude_source_ids = exclude_source_ids or set()
+    
+    # Get user's InputSources
+    user_sources = InputSource.query.filter_by(
+        owner_type='user',
+        owner_id=user.id,
+        enabled=True
+    ).all()
+    
+    for source in user_sources:
+        if source.id not in exclude_source_ids:
+            available.append({
+                'id': source.id,
+                'name': source.name,
+                'type': source.type,
+                'is_system': False,
+                'is_input_source': True,
+                'source_obj': source
+            })
+    
+    # Get org's InputSources if user has company profile
+    if user.company_profile:
+        org_sources = InputSource.query.filter_by(
+            owner_type='org',
+            owner_id=user.company_profile.id,
+            enabled=True
+        ).all()
+        for source in org_sources:
+            if source.id not in exclude_source_ids:
+                available.append({
+                    'id': source.id,
+                    'name': source.name,
+                    'type': source.type,
+                    'is_system': False,
+                    'is_input_source': True,
+                    'source_obj': source
+                })
+    
+    # Get system InputSources (owner_type='system')
+    system_input_sources = InputSource.query.filter_by(
+        owner_type='system',
+        enabled=True
+    ).all()
+    for source in system_input_sources:
+        if source.id not in exclude_source_ids:
+            available.append({
+                'id': source.id,
+                'name': source.name,
+                'type': source.type,
+                'is_system': True,
+                'is_input_source': True,
+                'source_obj': source
+            })
+    
+    # Get NewsSource (system curated sources) - convert to InputSource-like format
+    # Check which NewsSources already have corresponding InputSource entries
+    existing_news_source_names = {s.name for s in system_input_sources}
+    
+    news_sources = NewsSource.query.filter_by(is_active=True).all()
+    for news_source in news_sources:
+        # Skip if already converted to InputSource
+        if news_source.name in existing_news_source_names:
+            continue
+            
+        # Create a virtual source entry for NewsSource
+        # We'll create the InputSource on-the-fly when selected
+        available.append({
+            'id': f'news_{news_source.id}',  # Use negative or prefixed ID to distinguish
+            'name': news_source.name,
+            'type': news_source.source_type or 'rss',
+            'is_system': True,
+            'is_input_source': False,
+            'is_news_source': True,
+            'news_source_id': news_source.id,
+            'feed_url': news_source.feed_url,
+            'source_obj': news_source
+        })
+    
+    # Sort by name
+    available.sort(key=lambda x: x['name'].lower())
+    return available
+
+
+def create_input_source_from_news_source(news_source_id, user):
+    """
+    Create an InputSource entry from a NewsSource (on-the-fly conversion).
+    This bridges NewsSource to InputSource for the briefing system.
+    
+    Args:
+        news_source_id: NewsSource.id
+        user: Current user (for ownership if needed)
+    
+    Returns:
+        InputSource instance (existing or newly created)
+    """
+    news_source = NewsSource.query.get_or_404(news_source_id)
+    
+    # Check if InputSource already exists for this NewsSource
+    existing = InputSource.query.filter_by(
+        owner_type='system',
+        name=news_source.name
+    ).first()
+    
+    if existing:
+        return existing
+    
+    # Create new InputSource from NewsSource
+    input_source = InputSource(
+        owner_type='system',
+        owner_id=None,  # System sources have no owner
+        name=news_source.name,
+        type=news_source.source_type or 'rss',
+        config_json={'feed_url': news_source.feed_url},
+        enabled=news_source.is_active,
+        status='ready',
+        last_fetched_at=news_source.last_fetched_at
+    )
+    
+    db.session.add(input_source)
+    db.session.commit()
+    
+    return input_source
 
 
 # =============================================================================
@@ -89,6 +284,32 @@ def briefing_owner_required(f):
         g.briefing = briefing
         return f(briefing_id, *args, **kwargs)
     return decorated_function
+
+
+def check_briefing_permission(briefing, error_message=None, redirect_to='detail'):
+    """
+    Helper function to check briefing permission and return appropriate response.
+    
+    Args:
+        briefing: Briefing instance
+        error_message: Custom error message (optional)
+        redirect_to: Where to redirect on failure ('detail', 'list', or custom route name)
+    
+    Returns:
+        tuple: (is_allowed: bool, redirect_response or None)
+    """
+    if not can_access_briefing(current_user, briefing):
+        msg = error_message or 'You do not have permission to access this briefing'
+        flash(msg, 'error')
+        
+        if redirect_to == 'detail':
+            return False, redirect(url_for('briefing.detail', briefing_id=briefing.id))
+        elif redirect_to == 'list':
+            return False, redirect(url_for('briefing.list_briefings'))
+        else:
+            return False, redirect(url_for(redirect_to, briefing_id=briefing.id))
+    
+    return True, None
 
 
 def source_owner_required(f):
@@ -157,7 +378,12 @@ def create_briefing():
             template_id = request.form.get('template_id', type=int) or None
             cadence = request.form.get('cadence', 'daily')
             timezone = request.form.get('timezone', 'UTC')
-            preferred_send_hour = request.form.get('preferred_send_hour', type=int) or 18
+            preferred_send_hour = request.form.get('preferred_send_hour', type=int)
+            if preferred_send_hour is None:
+                preferred_send_hour = 18
+            preferred_send_minute = request.form.get('preferred_send_minute', type=int)
+            if preferred_send_minute is None:
+                preferred_send_minute = 0
             mode = request.form.get('mode', 'auto_send')
             visibility = request.form.get('visibility', 'private')
 
@@ -177,6 +403,16 @@ def create_briefing():
                 flash(error, 'error')
                 return redirect(url_for('briefing.create_briefing'))
             
+            is_valid, error = validate_send_hour(preferred_send_hour)
+            if not is_valid:
+                flash(error, 'error')
+                return redirect(url_for('briefing.create_briefing'))
+            
+            is_valid, error = validate_send_minute(preferred_send_minute)
+            if not is_valid:
+                flash(error, 'error')
+                return redirect(url_for('briefing.create_briefing'))
+            
             is_valid, error = validate_mode(mode)
             if not is_valid:
                 flash(error, 'error')
@@ -185,11 +421,6 @@ def create_briefing():
             is_valid, error = validate_visibility(visibility)
             if not is_valid:
                 flash(error, 'error')
-                return redirect(url_for('briefing.create_briefing'))
-            
-            # Validate preferred_send_hour
-            if preferred_send_hour not in [6, 8, 18]:
-                flash('Preferred send hour must be 6, 8, or 18', 'error')
                 return redirect(url_for('briefing.create_briefing'))
 
             # Determine owner_id
@@ -200,6 +431,44 @@ def create_briefing():
                     return redirect(url_for('briefing.create_briefing'))
                 owner_id = current_user.company_profile.id
 
+            # Get branding fields (for org briefings)
+            from_name = request.form.get('from_name', '').strip() or None
+            from_email = request.form.get('from_email', '').strip().lower() or None
+            sending_domain_id = request.form.get('sending_domain_id', type=int) or None
+            
+            # Validate from_email if domain is selected (email is required)
+            if sending_domain_id:
+                if not from_email:
+                    flash('Email address is required when a sending domain is selected', 'error')
+                    return redirect(url_for('briefing.create_briefing'))
+                
+                domain = SendingDomain.query.get(sending_domain_id)
+                if not domain:
+                    flash('Selected domain not found', 'error')
+                    return redirect(url_for('briefing.create_briefing'))
+                
+                if domain.status != 'verified':
+                    flash('Selected domain is not verified. Please verify it first.', 'error')
+                    return redirect(url_for('briefing.create_briefing'))
+                
+                # Validate email format
+                is_valid, error = validate_email(from_email)
+                if not is_valid:
+                    flash(error, 'error')
+                    return redirect(url_for('briefing.create_briefing'))
+                
+                # Validate email matches domain
+                domain_name = domain.domain
+                if not from_email.endswith(f'@{domain_name}'):
+                    flash(f'Email must be from verified domain: {domain_name}', 'error')
+                    return redirect(url_for('briefing.create_briefing'))
+            elif from_email:
+                # Email provided but no domain - validate format only
+                is_valid, error = validate_email(from_email)
+                if not is_valid:
+                    flash(error, 'error')
+                    return redirect(url_for('briefing.create_briefing'))
+            
             # Create briefing
             briefing = Briefing(
                 owner_type=owner_type,
@@ -210,15 +479,78 @@ def create_briefing():
                 cadence=cadence,
                 timezone=timezone,
                 preferred_send_hour=preferred_send_hour,
+                preferred_send_minute=preferred_send_minute,
                 mode=mode,
                 visibility=visibility,
-                status='active'
+                status='active',
+                from_name=from_name if owner_type == 'org' else None,
+                from_email=from_email if (owner_type == 'org' and sending_domain_id) else None,
+                sending_domain_id=sending_domain_id if owner_type == 'org' else None
             )
 
             db.session.add(briefing)
-            db.session.commit()
+            db.session.flush()  # Get briefing.id
+            
+            # Auto-populate sources from template if selected
+            sources_added = 0
+            sources_failed = 0
+            if template_id:
+                template = BriefTemplate.query.get(template_id)
+                if template and template.default_sources:
+                    # default_sources can be NewsSource IDs or InputSource IDs
+                    # Handle empty list gracefully
+                    if isinstance(template.default_sources, list) and len(template.default_sources) > 0:
+                        for source_ref in template.default_sources:
+                            try:
+                                source = None
+                                
+                                # Try as InputSource ID first
+                                if isinstance(source_ref, int):
+                                    source = InputSource.query.get(source_ref)
+                                
+                                # Try as NewsSource ID (convert to InputSource)
+                                if not source and isinstance(source_ref, int):
+                                    news_source = NewsSource.query.get(source_ref)
+                                    if news_source:
+                                        source = create_input_source_from_news_source(news_source.id, current_user)
+                                
+                                # Try as string (NewsSource name)
+                                if not source and isinstance(source_ref, str):
+                                    news_source = NewsSource.query.filter_by(name=source_ref).first()
+                                    if news_source:
+                                        source = create_input_source_from_news_source(news_source.id, current_user)
+                                
+                                if source and can_access_source(current_user, source):
+                                    # Check if already added (shouldn't be, but safety check)
+                                    existing = BriefingSource.query.filter_by(
+                                        briefing_id=briefing.id,
+                                        source_id=source.id
+                                    ).first()
+                                    
+                                    if not existing:
+                                        briefing_source = BriefingSource(
+                                            briefing_id=briefing.id,
+                                            source_id=source.id
+                                        )
+                                        db.session.add(briefing_source)
+                                        sources_added += 1
+                            except Exception as e:
+                                logger.warning(f"Failed to add source from template: {source_ref}: {e}")
+                                sources_failed += 1
+                                continue  # Continue with other sources
 
-            flash(f'Briefing "{name}" created successfully!', 'success')
+            db.session.commit()
+            
+            if sources_added > 0:
+                msg = f'Briefing "{name}" created successfully with {sources_added} sources from template!'
+                if sources_failed > 0:
+                    msg += f' ({sources_failed} sources could not be added)'
+                flash(msg, 'success')
+            else:
+                if sources_failed > 0:
+                    flash(f'Briefing "{name}" created successfully, but {sources_failed} sources from template could not be added.', 'warning')
+                else:
+                    flash(f'Briefing "{name}" created successfully!', 'success')
             return redirect(url_for('briefing.detail', briefing_id=briefing.id))
 
         except Exception as e:
@@ -229,7 +561,25 @@ def create_briefing():
 
     # GET: Show create form
     templates = BriefTemplate.query.filter_by(allow_customization=True).all()
-    return render_template('briefing/create.html', templates=templates)
+    has_company_profile = current_user.company_profile is not None
+    
+    # Get available sending domains for org briefings
+    available_domains = []
+    if has_company_profile:
+        available_domains = SendingDomain.query.filter_by(
+            org_id=current_user.company_profile.id
+        ).order_by(SendingDomain.created_at.desc()).all()
+    
+    # Get all timezones for dropdown (DRY - using helper function)
+    all_timezones = get_all_timezones()
+    
+    return render_template(
+        'briefing/create.html',
+        templates=templates,
+        has_company_profile=has_company_profile,
+        available_domains=available_domains,
+        all_timezones=all_timezones
+    )
 
 
 @briefing_bp.route('/<int:briefing_id>')
@@ -239,39 +589,26 @@ def detail(briefing_id):
     """View briefing details"""
     briefing = Briefing.query.get_or_404(briefing_id)
 
-    # Check permissions
-    if briefing.owner_type == 'user' and briefing.owner_id != current_user.id:
-        flash('You do not have permission to view this briefing', 'error')
-        return redirect(url_for('briefing.list_briefings'))
-
-    if briefing.owner_type == 'org':
-        if not current_user.company_profile or briefing.owner_id != current_user.company_profile.id:
-            flash('You do not have permission to view this briefing', 'error')
-            return redirect(url_for('briefing.list_briefings'))
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to view this briefing',
+        redirect_to='list'
+    )
+    if not is_allowed:
+        return redirect_response
 
     # Get related data
     sources = [bs.input_source for bs in briefing.sources]
     recipients = briefing.recipients.filter_by(status='active').all()
     recent_runs = briefing.runs.limit(10).all()
     
-    # Get available sources user can add
-    available_sources = InputSource.query.filter_by(
-        owner_type='user',
-        owner_id=current_user.id,
-        enabled=True
-    ).all()
-    
-    if current_user.company_profile:
-        org_sources = InputSource.query.filter_by(
-            owner_type='org',
-            owner_id=current_user.company_profile.id,
-            enabled=True
-        ).all()
-        available_sources.extend(org_sources)
-    
-    # Filter out sources already added
+    # Get available sources (InputSource + NewsSource)
     added_source_ids = {s.id for s in sources}
-    available_sources = [s for s in available_sources if s.id not in added_source_ids]
+    available_sources_list = get_available_sources_for_user(current_user, exclude_source_ids=added_source_ids)
+    
+    # Calculate next scheduled time for display (DRY - using helper function)
+    next_scheduled_time = calculate_next_scheduled_time(briefing)
 
     return render_template(
         'briefing/detail.html',
@@ -279,7 +616,8 @@ def detail(briefing_id):
         sources=sources,
         recipients=recipients,
         recent_runs=recent_runs,
-        available_sources=available_sources
+        available_sources=available_sources_list,
+        next_scheduled_time=next_scheduled_time
     )
 
 
@@ -290,15 +628,14 @@ def edit(briefing_id):
     """Edit briefing configuration"""
     briefing = Briefing.query.get_or_404(briefing_id)
 
-    # Check permissions
-    if briefing.owner_type == 'user' and briefing.owner_id != current_user.id:
-        flash('You do not have permission to edit this briefing', 'error')
-        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
-
-    if briefing.owner_type == 'org':
-        if not current_user.company_profile or briefing.owner_id != current_user.company_profile.id:
-            flash('You do not have permission to edit this briefing', 'error')
-            return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to edit this briefing',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        return redirect_response
 
     if request.method == 'POST':
         try:
@@ -307,7 +644,12 @@ def edit(briefing_id):
             description = request.form.get('description', '').strip()
             cadence = request.form.get('cadence', briefing.cadence)
             timezone = request.form.get('timezone', briefing.timezone)
-            preferred_send_hour = request.form.get('preferred_send_hour', type=int) or briefing.preferred_send_hour
+            preferred_send_hour = request.form.get('preferred_send_hour', type=int)
+            if preferred_send_hour is None:
+                preferred_send_hour = briefing.preferred_send_hour
+            preferred_send_minute = request.form.get('preferred_send_minute', type=int)
+            if preferred_send_minute is None:
+                preferred_send_minute = getattr(briefing, 'preferred_send_minute', 0)
             mode = request.form.get('mode', briefing.mode)
             visibility = request.form.get('visibility', briefing.visibility)
             status = request.form.get('status', briefing.status)
@@ -328,6 +670,16 @@ def edit(briefing_id):
                 flash(error, 'error')
                 return redirect(url_for('briefing.edit', briefing_id=briefing_id))
 
+            is_valid, error = validate_send_hour(preferred_send_hour)
+            if not is_valid:
+                flash(error, 'error')
+                return redirect(url_for('briefing.edit', briefing_id=briefing_id))
+
+            is_valid, error = validate_send_minute(preferred_send_minute)
+            if not is_valid:
+                flash(error, 'error')
+                return redirect(url_for('briefing.edit', briefing_id=briefing_id))
+
             is_valid, error = validate_mode(mode)
             if not is_valid:
                 flash(error, 'error')
@@ -343,20 +695,68 @@ def edit(briefing_id):
                 flash("Status must be 'active' or 'paused'", 'error')
                 return redirect(url_for('briefing.edit', briefing_id=briefing_id))
 
-            # Validate preferred_send_hour
-            if preferred_send_hour not in [6, 8, 18]:
-                flash('Preferred send hour must be 6, 8, or 18', 'error')
-                return redirect(url_for('briefing.edit', briefing_id=briefing_id))
-
+            # Get branding fields (for org briefings)
+            from_name = request.form.get('from_name', '').strip() or None
+            from_email = request.form.get('from_email', '').strip().lower() or None
+            sending_domain_id = request.form.get('sending_domain_id', type=int) or None
+            
+            # Validate from_email if domain is selected (email is required)
+            if sending_domain_id:
+                if not from_email:
+                    flash('Email address is required when a sending domain is selected', 'error')
+                    return redirect(url_for('briefing.edit', briefing_id=briefing_id))
+                
+                domain = SendingDomain.query.get(sending_domain_id)
+                if not domain:
+                    flash('Selected domain not found', 'error')
+                    return redirect(url_for('briefing.edit', briefing_id=briefing_id))
+                
+                if domain.status != 'verified':
+                    flash('Selected domain is not verified. Please verify it first.', 'error')
+                    return redirect(url_for('briefing.edit', briefing_id=briefing_id))
+                
+                # Validate email format
+                is_valid, error = validate_email(from_email)
+                if not is_valid:
+                    flash(error, 'error')
+                    return redirect(url_for('briefing.edit', briefing_id=briefing_id))
+                
+                # Validate email matches domain
+                domain_name = domain.domain
+                if not from_email.endswith(f'@{domain_name}'):
+                    flash(f'Email must be from verified domain: {domain_name}', 'error')
+                    return redirect(url_for('briefing.edit', briefing_id=briefing_id))
+            elif from_email:
+                # Email provided but no domain - validate format only
+                is_valid, error = validate_email(from_email)
+                if not is_valid:
+                    flash(error, 'error')
+                    return redirect(url_for('briefing.edit', briefing_id=briefing_id))
+            
             # Update briefing
             briefing.name = name
             briefing.description = description
             briefing.cadence = cadence
             briefing.timezone = timezone
             briefing.preferred_send_hour = preferred_send_hour
+            briefing.preferred_send_minute = preferred_send_minute
             briefing.mode = mode
             briefing.visibility = visibility
             briefing.status = status
+            
+            # Update branding (only for org briefings)
+            if briefing.owner_type == 'org':
+                briefing.from_name = from_name
+                briefing.sending_domain_id = sending_domain_id
+                
+                # If domain removed, clear from_email
+                # If domain added/changed, use provided email
+                if not sending_domain_id:
+                    # Domain removed - clear from_email if it was from a custom domain
+                    briefing.from_email = None
+                else:
+                    # Domain set - use provided email
+                    briefing.from_email = from_email
 
             db.session.commit()
             flash('Briefing updated successfully', 'success')
@@ -366,9 +766,28 @@ def edit(briefing_id):
             logger.error(f"Error updating briefing: {e}", exc_info=True)
             db.session.rollback()
             flash('An error occurred while updating the briefing', 'error')
-
+            return redirect(url_for('briefing.edit', briefing_id=briefing_id))
+    
+    # GET: Show edit form
+    # Get available sending domains for org briefings
+    available_domains = []
+    if briefing.owner_type == 'org' and current_user.company_profile:
+        available_domains = SendingDomain.query.filter_by(
+            org_id=current_user.company_profile.id
+        ).order_by(SendingDomain.created_at.desc()).all()
+    
     templates = BriefTemplate.query.all()
-    return render_template('briefing/edit.html', briefing=briefing, templates=templates)
+    
+    # Get all timezones for dropdown (DRY - using helper function)
+    all_timezones = get_all_timezones()
+    
+    return render_template(
+        'briefing/edit.html', 
+        briefing=briefing, 
+        templates=templates,
+        available_domains=available_domains,
+        all_timezones=all_timezones
+    )
 
 
 @briefing_bp.route('/<int:briefing_id>/delete', methods=['POST'])
@@ -378,15 +797,14 @@ def delete(briefing_id):
     """Delete a briefing"""
     briefing = Briefing.query.get_or_404(briefing_id)
 
-    # Check permissions
-    if briefing.owner_type == 'user' and briefing.owner_id != current_user.id:
-        flash('You do not have permission to delete this briefing', 'error')
-        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
-
-    if briefing.owner_type == 'org':
-        if not current_user.company_profile or briefing.owner_id != current_user.company_profile.id:
-            flash('You do not have permission to delete this briefing', 'error')
-            return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to delete this briefing',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        return redirect_response
 
     try:
         name = briefing.name
@@ -417,13 +835,9 @@ def api_detail(briefing_id):
     """API endpoint for briefing details (JSON)"""
     briefing = Briefing.query.get_or_404(briefing_id)
 
-    # Check permissions
-    if briefing.owner_type == 'user' and briefing.owner_id != current_user.id:
+    # Check permissions (DRY) - API endpoint returns JSON
+    if not can_access_briefing(current_user, briefing):
         return jsonify({'error': 'Permission denied'}), 403
-
-    if briefing.owner_type == 'org':
-        if not current_user.company_profile or briefing.owner_id != current_user.company_profile.id:
-            return jsonify({'error': 'Permission denied'}), 403
 
     return jsonify(briefing.to_dict())
 
@@ -590,34 +1004,41 @@ def add_source_to_briefing(briefing_id):
     """Add a source to a briefing"""
     briefing = Briefing.query.get_or_404(briefing_id)
     
-    # Check permissions
-    if briefing.owner_type == 'user' and briefing.owner_id != current_user.id:
-        flash('You do not have permission to modify this briefing', 'error')
-        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
-    
-    if briefing.owner_type == 'org':
-        if not current_user.company_profile or briefing.owner_id != current_user.company_profile.id:
-            flash('You do not have permission to modify this briefing', 'error')
-            return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to modify this briefing',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        return redirect_response
     
     try:
-        source_id = request.form.get('source_id', type=int)
-        if not source_id:
+        source_id_str = request.form.get('source_id', '').strip()
+        if not source_id_str:
             flash('Source ID is required', 'error')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         
-        # Check if source exists and user has access
-        source = InputSource.query.get(source_id)
-        if not source:
-            flash('Source not found', 'error')
-            return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+        # Handle NewsSource (prefixed with 'news_')
+        source = None
+        if source_id_str.startswith('news_'):
+            news_source_id = int(source_id_str.replace('news_', ''))
+            # Create InputSource from NewsSource
+            source = create_input_source_from_news_source(news_source_id, current_user)
+        else:
+            source_id = int(source_id_str)
+            source = InputSource.query.get(source_id)
+            if not source:
+                flash('Source not found', 'error')
+                return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         
-        # Check ownership
-        if source.owner_type == 'user' and source.owner_id != current_user.id:
+        # Check ownership (system sources are accessible to all)
+        if source.owner_type == 'system':
+            pass  # System sources are accessible to all
+        elif source.owner_type == 'user' and source.owner_id != current_user.id:
             flash('You do not have access to this source', 'error')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
-        
-        if source.owner_type == 'org':
+        elif source.owner_type == 'org':
             if not current_user.company_profile or source.owner_id != current_user.company_profile.id:
                 flash('You do not have access to this source', 'error')
                 return redirect(url_for('briefing.detail', briefing_id=briefing_id))
@@ -640,7 +1061,7 @@ def add_source_to_briefing(briefing_id):
         # Check if already added
         existing = BriefingSource.query.filter_by(
             briefing_id=briefing_id,
-            source_id=source_id
+            source_id=source.id
         ).first()
         
         if existing:
@@ -650,7 +1071,7 @@ def add_source_to_briefing(briefing_id):
         # Add source
         briefing_source = BriefingSource(
             briefing_id=briefing_id,
-            source_id=source_id
+            source_id=source.id
         )
         db.session.add(briefing_source)
         db.session.commit()
@@ -672,15 +1093,14 @@ def remove_source_from_briefing(briefing_id, source_id):
     """Remove a source from a briefing"""
     briefing = Briefing.query.get_or_404(briefing_id)
     
-    # Check permissions
-    if briefing.owner_type == 'user' and briefing.owner_id != current_user.id:
-        flash('You do not have permission to modify this briefing', 'error')
-        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
-    
-    if briefing.owner_type == 'org':
-        if not current_user.company_profile or briefing.owner_id != current_user.company_profile.id:
-            flash('You do not have permission to modify this briefing', 'error')
-            return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to modify this briefing',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        return redirect_response
     
     try:
         briefing_source = BriefingSource.query.filter_by(
@@ -712,15 +1132,14 @@ def manage_recipients(briefing_id):
     """Manage recipients for a briefing"""
     briefing = Briefing.query.get_or_404(briefing_id)
     
-    # Check permissions
-    if briefing.owner_type == 'user' and briefing.owner_id != current_user.id:
-        flash('You do not have permission to manage recipients', 'error')
-        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
-    
-    if briefing.owner_type == 'org':
-        if not current_user.company_profile or briefing.owner_id != current_user.company_profile.id:
-            flash('You do not have permission to manage recipients', 'error')
-            return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to manage recipients',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        return redirect_response
     
     if request.method == 'POST':
         try:
@@ -779,6 +1198,101 @@ def manage_recipients(briefing_id):
                     db.session.commit()
                     flash(f'Recipient {email} added successfully', 'success')
 
+            elif action == 'bulk_add':
+                emails_text = request.form.get('emails', '')
+                import re
+                
+                # Parse emails (handle comma, newline, space, semicolon separators)
+                emails = re.split(r'[,\n\s;]+', emails_text)
+                emails = [e.strip().lower() for e in emails if e.strip() and '@' in e]
+                
+                if not emails:
+                    flash('No valid email addresses found.', 'error')
+                    return redirect(url_for('briefing.manage_recipients', briefing_id=briefing_id))
+                
+                added = 0
+                skipped = 0
+                current_count = BriefRecipient.query.filter_by(
+                    briefing_id=briefing_id,
+                    status='active'
+                ).count()
+                
+                for email in emails:
+                    # Check limit
+                    if current_count >= MAX_RECIPIENTS_PER_BRIEFING:
+                        flash(f'Maximum recipients ({MAX_RECIPIENTS_PER_BRIEFING}) reached. {len(emails) - added - skipped} emails not added.', 'warning')
+                        break
+                    
+                    # Validate email
+                    is_valid, error = validate_email(email)
+                    if not is_valid:
+                        skipped += 1
+                        continue
+                    
+                    # Check if already exists
+                    existing = BriefRecipient.query.filter_by(
+                        briefing_id=briefing_id,
+                        email=email
+                    ).first()
+                    
+                    if existing:
+                        if existing.status == 'unsubscribed':
+                            # Reactivate
+                            existing.status = 'active'
+                            existing.unsubscribed_at = None
+                            existing.generate_magic_token()
+                            added += 1
+                            current_count += 1
+                        else:
+                            skipped += 1
+                    else:
+                        # Create new recipient
+                        recipient = BriefRecipient(
+                            briefing_id=briefing_id,
+                            email=email,
+                            name=None,
+                            status='active'
+                        )
+                        recipient.generate_magic_token()
+                        db.session.add(recipient)
+                        added += 1
+                        current_count += 1
+                
+                db.session.commit()
+                flash(f'Imported {added} recipients. {skipped} skipped (already exists or invalid).', 'success')
+                
+            elif action == 'bulk_remove':
+                recipient_ids = request.form.getlist('recipient_ids')
+                if recipient_ids:
+                    count = BriefRecipient.query.filter(
+                        BriefRecipient.id.in_([int(rid) for rid in recipient_ids]),
+                        BriefRecipient.briefing_id == briefing_id
+                    ).delete(synchronize_session=False)
+                    db.session.commit()
+                    flash(f'{count} recipient(s) removed', 'success')
+                else:
+                    flash('No recipients selected', 'info')
+                    
+            elif action == 'toggle':
+                recipient_id = request.form.get('recipient_id', type=int)
+                if recipient_id:
+                    recipient = BriefRecipient.query.filter_by(
+                        id=recipient_id,
+                        briefing_id=briefing_id
+                    ).first()
+                    
+                    if recipient:
+                        if recipient.status == 'active':
+                            recipient.status = 'paused'
+                            flash(f'{recipient.email} has been paused.', 'success')
+                        elif recipient.status in ('paused', 'unsubscribed'):
+                            recipient.status = 'active'
+                            if recipient.status == 'unsubscribed':
+                                recipient.unsubscribed_at = None
+                                recipient.generate_magic_token()
+                            flash(f'{recipient.email} has been activated.', 'success')
+                        db.session.commit()
+                        
             elif action == 'remove':
                 recipient_id = request.form.get('recipient_id', type=int)
                 if recipient_id:
@@ -853,15 +1367,14 @@ def view_run(briefing_id, run_id):
         briefing_id=briefing_id
     ).first_or_404()
     
-    # Check permissions
-    if briefing.owner_type == 'user' and briefing.owner_id != current_user.id:
-        flash('You do not have permission to view this run', 'error')
-        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
-    
-    if briefing.owner_type == 'org':
-        if not current_user.company_profile or briefing.owner_id != current_user.company_profile.id:
-            flash('You do not have permission to view this run', 'error')
-            return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to view this run',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        return redirect_response
     
     items = brief_run.items.order_by(BriefRunItem.position).all()
     
@@ -884,15 +1397,15 @@ def edit_run(briefing_id, run_id):
         briefing_id=briefing_id
     ).first_or_404()
     
-    # Check permissions
-    if briefing.owner_type == 'user' and briefing.owner_id != current_user.id:
-        flash('You do not have permission to edit this run', 'error')
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to edit this run',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        # Redirect to view_run instead of detail
         return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=run_id))
-    
-    if briefing.owner_type == 'org':
-        if not current_user.company_profile or briefing.owner_id != current_user.company_profile.id:
-            flash('You do not have permission to edit this run', 'error')
-            return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=run_id))
     
     if request.method == 'POST':
         try:
@@ -963,15 +1476,15 @@ def send_run(briefing_id, run_id):
         briefing_id=briefing_id
     ).first_or_404()
     
-    # Check permissions
-    if briefing.owner_type == 'user' and briefing.owner_id != current_user.id:
-        flash('You do not have permission to send this run', 'error')
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to send this run',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        # Redirect to view_run instead of detail
         return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=run_id))
-    
-    if briefing.owner_type == 'org':
-        if not current_user.company_profile or briefing.owner_id != current_user.company_profile.id:
-            flash('You do not have permission to send this run', 'error')
-            return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=run_id))
     
     if brief_run.status != 'approved':
         flash('Brief must be approved before sending', 'error')
@@ -1160,6 +1673,63 @@ def check_domain_verification(domain_id):
     return redirect(url_for('briefing.verify_domain', domain_id=domain_id))
 
 
+@briefing_bp.route('/domains/<int:domain_id>/status', methods=['GET'])
+@login_required
+@limiter.limit("30/minute")
+def get_domain_status(domain_id):
+    """Get domain status as JSON (for AJAX requests)"""
+    if not current_user.company_profile:
+        return jsonify({'error': 'Company profile required'}), 403
+
+    domain = SendingDomain.query.filter_by(
+        id=domain_id,
+        org_id=current_user.company_profile.id
+    ).first_or_404()
+
+    try:
+        if not domain.resend_domain_id:
+            return jsonify({
+                'success': False,
+                'error': 'Domain not yet registered with Resend',
+                'status': domain.status
+            })
+
+        from app.briefing.domains import check_domain_verification_status
+        result = check_domain_verification_status(domain.resend_domain_id)
+
+        if not result.get('success'):
+            return jsonify({
+                'success': False,
+                'error': result.get('error', 'Unknown error'),
+                'status': domain.status
+            })
+
+        # Update domain status in database
+        new_status = result.get('status')
+        if new_status == 'verified' and domain.status != 'verified':
+            domain.status = 'verified'
+            domain.verified_at = datetime.utcnow()
+            db.session.commit()
+        elif new_status != 'verified' and domain.status != new_status:
+            domain.status = new_status
+            db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'status': new_status,
+            'raw_status': result.get('raw_status'),
+            'records': result.get('records', [])
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting domain status: {e}", exc_info=True)
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'status': domain.status
+        }), 500
+
+
 @briefing_bp.route('/domains/<int:domain_id>/delete', methods=['POST'])
 @login_required
 @limiter.limit("5/minute")
@@ -1262,4 +1832,283 @@ def public_brief_run(briefing_id, run_id):
         briefing=briefing,
         brief_run=brief_run,
         items=items
+    )
+
+
+# =============================================================================
+# Test Generation & Preview Routes
+# =============================================================================
+
+@briefing_bp.route('/<int:briefing_id>/test-generate', methods=['POST'])
+@login_required
+@limiter.limit("10/minute")
+def test_generate(briefing_id):
+    """Generate a test brief immediately for preview"""
+    briefing = Briefing.query.get_or_404(briefing_id)
+    
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing, 
+        error_message='You do not have permission to generate test briefs',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        return redirect_response
+    
+    # Check if briefing has sources
+    if not briefing.sources:
+        flash('Please add sources to your briefing before generating a test brief', 'error')
+        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    
+    try:
+        from app.briefing.generator import BriefingGenerator
+        
+        # Generate test brief with current timestamp (add microseconds to avoid collisions)
+        from datetime import timedelta
+        import random
+        generator = BriefingGenerator()
+        # Add small random offset to avoid duplicate scheduled_at collisions
+        test_scheduled_at = datetime.utcnow() + timedelta(microseconds=random.randint(1, 999999))
+        
+        brief_run = generator.generate_brief_run(
+            briefing=briefing,
+            scheduled_at=test_scheduled_at,
+            ingested_items=None  # Let it select from sources
+        )
+        
+        if brief_run is None:
+            flash('No content available from your sources. Try adding more sources or wait for content to be ingested.', 'warning')
+            return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+        
+        # Mark as test/draft (override generator's status)
+        brief_run.status = 'generated_draft'
+        db.session.commit()
+        
+        flash('Test brief generated successfully!', 'success')
+        return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=brief_run.id))
+        
+    except Exception as e:
+        logger.error(f"Error generating test brief: {e}", exc_info=True)
+        db.session.rollback()
+        flash(f'Error generating test brief: {str(e)}', 'error')
+        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+
+
+@briefing_bp.route('/<int:briefing_id>/test-send', methods=['POST'])
+@login_required
+@limiter.limit("5/minute")
+def test_send(briefing_id):
+    """Send test email to user's email"""
+    briefing = Briefing.query.get_or_404(briefing_id)
+    
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to send test emails',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        return redirect_response
+    
+    test_email = request.form.get('email', current_user.email).strip().lower()
+    
+    # Validate email
+    if not test_email:
+        flash('Email is required', 'error')
+        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    
+    is_valid, error = validate_email(test_email)
+    if not is_valid:
+        flash(error, 'error')
+        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    
+    # Get most recent run
+    recent_run = briefing.runs.order_by(BriefRun.generated_at.desc()).first()
+    
+    if not recent_run:
+        flash('No brief runs available. Generate a test brief first.', 'error')
+        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    
+    # Check if run has content
+    if not recent_run.items.count():
+        flash('The brief run has no content. Generate a new test brief.', 'error')
+        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    
+    # Check if run is ready to send (has draft or approved content)
+    if not recent_run.draft_html and not recent_run.approved_html:
+        flash('The brief run has no content. Generate a new test brief.', 'error')
+        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    
+    try:
+        from app.briefing.email_client import BriefingEmailClient
+        
+        # Create temporary recipient for test
+        test_recipient = BriefRecipient.query.filter_by(
+            briefing_id=briefing_id,
+            email=test_email
+        ).first()
+        
+        if not test_recipient:
+            test_recipient = BriefRecipient(
+                briefing_id=briefing_id,
+                email=test_email,
+                name='Test Recipient',
+                status='active'
+            )
+            test_recipient.generate_magic_token()
+            db.session.add(test_recipient)
+            db.session.commit()
+        
+        # Send test email (NOTE: parameters are brief_run, recipient - not reversed!)
+        email_client = BriefingEmailClient()
+        success = email_client.send_brief_run(recent_run, test_recipient)
+        
+        if success:
+            flash(f'Test email sent to {test_email}', 'success')
+        else:
+            flash('Failed to send test email. Check logs.', 'error')
+            
+    except Exception as e:
+        logger.error(f"Error sending test email: {e}", exc_info=True)
+        db.session.rollback()
+        flash(f'Error sending test email: {str(e)}', 'error')
+    
+    return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+
+
+@briefing_bp.route('/<int:briefing_id>/duplicate', methods=['POST'])
+@login_required
+@limiter.limit("10/minute")
+def duplicate_briefing(briefing_id):
+    """Duplicate a briefing with all its sources and recipients"""
+    briefing = Briefing.query.get_or_404(briefing_id)
+    
+    # Check permissions (DRY)
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to duplicate this briefing',
+        redirect_to='list'
+    )
+    if not is_allowed:
+        return redirect_response
+    
+    try:
+        # Create new briefing
+        new_briefing = Briefing(
+            owner_type=briefing.owner_type,
+            owner_id=briefing.owner_id,
+            name=f"{briefing.name} (Copy)",
+            description=briefing.description,
+            theme_template_id=briefing.theme_template_id,
+            cadence=briefing.cadence,
+            timezone=briefing.timezone,
+            preferred_send_hour=briefing.preferred_send_hour,
+            preferred_send_minute=getattr(briefing, 'preferred_send_minute', 0),
+            mode=briefing.mode,
+            visibility='private',  # Default to private for copies
+            status='active'
+        )
+        db.session.add(new_briefing)
+        db.session.flush()  # Get new_briefing.id
+        
+        # Copy sources (handle case where briefing has no sources)
+        sources_copied = 0
+        for briefing_source in briefing.sources:
+            # Verify source still exists
+            source = InputSource.query.get(briefing_source.source_id)
+            if source and can_access_source(current_user, source):
+                new_source = BriefingSource(
+                    briefing_id=new_briefing.id,
+                    source_id=briefing_source.source_id
+                )
+                db.session.add(new_source)
+                sources_copied += 1
+        
+        # Copy recipients (optional - user might not want this)
+        # Uncomment if you want to copy recipients:
+        # for recipient in briefing.recipients.filter_by(status='active').all():
+        #     new_recipient = BriefRecipient(
+        #         briefing_id=new_briefing.id,
+        #         email=recipient.email,
+        #         name=recipient.name,
+        #         status='active'
+        #     )
+        #     new_recipient.generate_magic_token()
+        #     db.session.add(new_recipient)
+        
+        db.session.commit()
+        
+        msg = f'Briefing duplicated successfully!'
+        if sources_copied > 0:
+            msg += f' {sources_copied} source(s) copied.'
+        flash(msg, 'success')
+        return redirect(url_for('briefing.detail', briefing_id=new_briefing.id))
+        
+    except Exception as e:
+        logger.error(f"Error duplicating briefing: {e}", exc_info=True)
+        db.session.rollback()
+        flash('An error occurred while duplicating the briefing', 'error')
+        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+
+
+# =============================================================================
+# Source Browser Route
+# =============================================================================
+
+@briefing_bp.route('/sources/browse')
+@login_required
+@limiter.limit("60/minute")
+def browse_sources():
+    """Browse and search available sources"""
+    search_query = request.args.get('q', '').strip()
+    source_type = request.args.get('type', '').strip()
+    briefing_id = request.args.get('briefing_id', type=int)
+    
+    # Get briefing if provided
+    briefing = None
+    added_source_ids = set()
+    if briefing_id:
+        briefing = Briefing.query.get(briefing_id)
+        if briefing:
+            if can_access_briefing(current_user, briefing):
+                added_source_ids = {bs.source_id for bs in briefing.sources}
+            else:
+                # User doesn't have access - ignore briefing_id
+                briefing = None
+                briefing_id = None
+    
+    # Get all available sources
+    all_sources = get_available_sources_for_user(current_user, exclude_source_ids=added_source_ids)
+    
+    # Filter by search query
+    if search_query:
+        all_sources = [
+            s for s in all_sources
+            if search_query.lower() in s['name'].lower()
+        ]
+    
+    # Filter by type
+    if source_type:
+        all_sources = [
+            s for s in all_sources
+            if s['type'] == source_type
+        ]
+    
+    # Group sources
+    system_sources = [s for s in all_sources if s.get('is_system')]
+    user_sources = [s for s in all_sources if not s.get('is_system')]
+    
+    # Get source types for filter
+    source_types = list(set(s['type'] for s in all_sources))
+    source_types.sort()
+    
+    return render_template(
+        'briefing/browse_sources.html',
+        system_sources=system_sources,
+        user_sources=user_sources,
+        search_query=search_query,
+        source_type=source_type,
+        source_types=source_types,
+        briefing=briefing,
+        briefing_id=briefing_id
     )

@@ -1,393 +1,332 @@
 # Edge Cases & Downstream Dependencies Analysis
 
-## ✅ Issues Identified and Fixed
+## ✅ Already Handled Edge Cases
 
-### 1. **Thread-Safety Issue (CRITICAL - FIXED)**
+### 1. **Domain Deletion with Active Briefings** ✅
+**Location**: `app/briefing/routes.py:1645-1653`
 
-**Problem:** Multiple threads incrementing `self.total_tokens` and `self.total_api_calls` simultaneously caused race conditions.
+**Handled**:
+- Checks for active briefings before deletion
+- Prevents deletion if briefings are using domain
+- User-friendly error message
 
-**Impact:** Incorrect token counts, potential data corruption.
-
-**Fix Applied:**
+**Code**:
 ```python
-# Added threading.Lock in __init__
-self._token_lock = threading.Lock()
+active_briefings = Briefing.query.filter_by(
+    sending_domain_id=domain_id,
+    status='active'
+).count()
 
-# Protected all token updates with lock
-with self._token_lock:
-    self.total_tokens += tokens
-    self.total_api_calls += 1
+if active_briefings > 0:
+    flash(f'Cannot delete domain: {active_briefings} active briefing(s) are using it...', 'error')
 ```
-
-**Status:** ✅ RESOLVED
 
 ---
 
-### 2. **Test Command Missing Metadata Display (FIXED)**
+### 2. **Domain Status Check at Send Time** ✅
+**Location**: `app/briefing/email_client.py:96-103`
 
-**Problem:** New `metadata` field wasn't displayed in `flask test-lens-check` command.
+**Handled**:
+- Re-checks domain status right before sending
+- Falls back to default if domain not verified
+- Handles race conditions (domain becomes unverified after briefing created)
 
-**Impact:** Users couldn't see token usage and performance metrics during testing.
-
-**Fix Applied:**
+**Code**:
 ```python
-# Added metadata display in commands.py
-metadata = result.get('metadata', {})
-if metadata:
-    click.echo(f"⚡ Performance Metrics:")
-    click.echo(f"   Generation time: {metadata.get('generation_time_seconds', 'N/A')}s")
-    click.echo(f"   API calls: {metadata.get('api_calls_made', 'N/A')}")
-    click.echo(f"   Total tokens: {metadata.get('total_tokens_used', 'N/A')}")
+if briefing.sending_domain_id and briefing.sending_domain:
+    domain = briefing.sending_domain
+    if domain.status == 'verified' and briefing.from_email:
+        return briefing.from_email
+# Falls back to default
 ```
-
-**Status:** ✅ RESOLVED
 
 ---
 
-## ✅ Edge Cases Handled
+### 3. **Foreign Key Cleanup** ✅
+**Location**: `app/models.py:2734`
 
-### 3. **All Parallel Analyses Fail**
+**Handled**:
+- `ondelete='SET NULL'` on `sending_domain_id`
+- When domain deleted, `briefing.sending_domain_id` automatically set to NULL
+- Briefings gracefully fall back to default email
 
-**Scenario:** All 3 perspective analyses fail in parallel execution.
+---
 
-**Handling:**
+### 4. **Resend API Failure Handling** ✅
+**Location**: `app/briefing/routes.py:1653-1660`
+
+**Handled**:
+- If Resend API deletion fails, domain kept in database
+- Prevents orphaned domains in Resend
+- Maintains data consistency
+
+---
+
+## ⚠️ Edge Cases That Need Fixing
+
+### 1. **Domain Deleted While Email Sending** ⚠️
+**Issue**: If domain is deleted while `BriefingEmailClient._get_from_email()` is executing, `briefing.sending_domain` could be None.
+
+**Current Code**:
 ```python
-# Each future has exception handling
-for future in as_completed(futures):
+if briefing.sending_domain_id and briefing.sending_domain:
+    domain = briefing.sending_domain  # Could be None if deleted
+```
+
+**Fix Needed**: Add try/except or check if relationship exists.
+
+---
+
+### 2. **from_email Set But Domain Removed** ⚠️
+**Issue**: If user removes `sending_domain_id` but `from_email` still contains custom domain email, validation should clear it.
+
+**Current Behavior**: `from_email` can remain set even if domain removed.
+
+**Fix Needed**: Clear `from_email` when `sending_domain_id` is removed.
+
+---
+
+### 3. **Company Logo Missing/Broken** ⚠️
+**Issue**: If company logo file is deleted or URL is broken, email template will show broken image.
+
+**Current Code**:
+```python
+company_logo_url = f"{base_url}/profiles/image/{company.logo}"
+# No error handling if logo doesn't exist
+```
+
+**Fix Needed**: Add error handling in template or check if logo exists.
+
+---
+
+### 4. **Domain Status Changes After Briefing Created** ⚠️
+**Issue**: If domain becomes unverified/failed after briefing is created, user should be notified.
+
+**Current Behavior**: System silently falls back to default (good), but user might not know.
+
+**Fix Needed**: Add notification or warning in briefing detail page if domain status changed.
+
+---
+
+### 5. **Email Validation When Domain Changed** ⚠️
+**Issue**: If user changes domain in edit form, email validation should update immediately.
+
+**Current Behavior**: JavaScript validates, but server-side might not catch all cases.
+
+**Fix Needed**: Ensure server-side validation handles domain changes correctly.
+
+---
+
+### 6. **Company Profile Deleted** ⚠️
+**Issue**: If company profile is deleted, briefings with `owner_type='org'` and `owner_id` pointing to deleted profile will break.
+
+**Current Behavior**: Foreign key might prevent deletion, or briefings become orphaned.
+
+**Fix Needed**: Check if this is handled in account deletion flow.
+
+---
+
+## 🔧 Recommended Fixes
+
+### Fix #1: Handle Domain Deletion Race Condition
+
+**File**: `app/briefing/email_client.py`
+
+```python
+def _get_from_email(self, briefing: Briefing) -> str:
     try:
-        perspective, result = future.result()
-        if result:
-            analyses[perspective] = result
+        if briefing.sending_domain_id:
+            # Reload domain to ensure it still exists
+            domain = SendingDomain.query.get(briefing.sending_domain_id)
+            if domain and domain.status == 'verified' and briefing.from_email:
+                return briefing.from_email
     except Exception as e:
-        logger.error(f"Critical error analyzing {perspective}: {e}")
-        analyses[perspective] = {'emphasis': None, 'language_patterns': None}
-```
-
-**Fallback:** Returns dict with `None` values. Templates check for `None` and handle gracefully.
-
-**Status:** ✅ HANDLED
-
----
-
-### 4. **Invalid JSON from LLM**
-
-**Scenario:** LLM returns malformed JSON or wrong types.
-
-**Handling:**
-```python
-# Validate JSON structure
-if not isinstance(data, dict):
-    raise ValueError("Response is not a valid dictionary")
-
-# Validate field types
-if not isinstance(emphasis, str):
-    emphasis = str(emphasis) if emphasis else ''
-if not isinstance(language_patterns, list):
-    language_patterns = []
-```
-
-**Fallback:** Converts invalid types gracefully or returns `None`.
-
-**Status:** ✅ HANDLED
-
----
-
-### 5. **API Rate Limits / Transient Errors**
-
-**Scenario:** OpenAI/Anthropic API returns 429, 500, 502, 503, 504 errors.
-
-**Handling:**
-```python
-@retry_on_api_error(max_retries=3, backoff_factor=2)
-def _call_openai(self, prompt: str) -> str:
-    # Retries with exponential backoff: 1s, 2s, 4s
-```
-
-**Fallback:** After 3 retries, exception propagates to `generator.py` which logs and continues without lens check.
-
-**Status:** ✅ HANDLED
-
----
-
-### 6. **No LLM API Key Available**
-
-**Scenario:** `get_system_api_key()` returns `None`.
-
-**Handling:**
-```python
-self.llm_available = bool(self.api_key)
-
-if not self.llm_available:
-    logger.warning("No LLM API key found. Lens check analysis will be limited.")
-    return {}  # Early return from analysis methods
-```
-
-**Fallback:** Returns empty analyses, uses topic.title as summary.
-
-**Status:** ✅ HANDLED
-
----
-
-### 7. **Timezone-Aware vs Naive Datetime Comparison**
-
-**Scenario:** Comparing `h.published_at` (timezone-aware) with `datetime.min` (naive) causes TypeError.
-
-**Handling:**
-```python
-# Use timezone-aware datetime.min
-key=lambda h: h.published_at or datetime.min.replace(tzinfo=timezone.utc)
-```
-
-**Status:** ✅ FIXED
-
----
-
-### 8. **No Stories Meet Lens Check Criteria**
-
-**Scenario:** No trending topics have sufficient cross-spectrum coverage (≥2 sources per perspective).
-
-**Handling:**
-```python
-if not candidates:
-    logger.info("No stories meet lens check criteria - skipping section")
-    return None
-```
-
-**Fallback:** `generator.py` handles `None` return value gracefully - section is omitted from brief.
-
-**Status:** ✅ HANDLED
-
----
-
-### 9. **Empty Perspectives After Collection**
-
-**Scenario:** Headlines collected but validation fails (insufficient coverage).
-
-**Handling:**
-```python
-if not self._validate_coverage(headlines_by_perspective):
-    logger.warning("Insufficient coverage after headline collection - skipping")
-    return None
-```
-
-**Fallback:** Returns `None`, brief continues without lens check.
-
-**Status:** ✅ HANDLED
-
----
-
-### 10. **ThreadPoolExecutor Failure**
-
-**Scenario:** ThreadPoolExecutor fails to initialize or execute (extremely rare).
-
-**Handling:**
-```python
-try:
-    with ThreadPoolExecutor(max_workers=3) as executor:
-        # ... parallel execution
-except Exception as e:
-    logger.error(f"Critical error analyzing {perspective}: {e}")
-    analyses[perspective] = {'emphasis': None, 'language_patterns': None}
-```
-
-**Fallback:** Outer try/except in `generate()` catches and logs error, continues without lens check.
-
-**Status:** ✅ HANDLED
-
----
-
-## ✅ Downstream Dependencies Verified
-
-### Templates (email & web)
-
-**Files Checked:**
-- `app/templates/emails/daily_brief.html`
-- `app/templates/brief/view.html`
-- `app/templates/admin/brief_preview.html`
-
-**Compatibility:**
-- Templates use `{% if brief.lens_check %}` checks - `None` handled gracefully
-- Templates don't reference `metadata` field - purely for logging
-- New field is transparent to templates
-
-**Status:** ✅ COMPATIBLE
-
----
-
-### Brief Generator (`app/brief/generator.py`)
-
-**Integration Point:**
-```python
-lens_check_data = generate_lens_check(brief_date)
-if lens_check_data:
-    brief.lens_check = lens_check_data  # Entire dict assigned
-```
-
-**Compatibility:**
-- Handles `None` return value ✅
-- Stores entire dict (including new `metadata` field) ✅
-- Wrapped in try/except for non-critical failures ✅
-
-**Status:** ✅ COMPATIBLE
-
----
-
-### Database Schema (`app/models.py`)
-
-**Field Definition:**
-```python
-lens_check = db.Column(db.JSON)
-```
-
-**Compatibility:**
-- JSON field stores arbitrary structure ✅
-- New `metadata` field (~50 bytes) well within size limits ✅
-- No migration needed - backward compatible ✅
-
-**Status:** ✅ COMPATIBLE
-
----
-
-### Test Command (`app/commands.py`)
-
-**Updates Made:**
-- Added `metadata` display section ✅
-- Shows performance metrics to users ✅
-- Handles missing metadata gracefully with `.get()` ✅
-
-**Status:** ✅ UPDATED & TESTED
-
----
-
-## 🧪 Testing Checklist
-
-### Unit Testing Scenarios
-
-- [ ] **Test 1:** Run with valid API key, verify token tracking
-- [ ] **Test 2:** Run with invalid API key, verify graceful degradation
-- [ ] **Test 3:** Mock API rate limit (429), verify retry logic
-- [ ] **Test 4:** Mock API timeout, verify retry logic
-- [ ] **Test 5:** Mock invalid JSON response, verify validation
-- [ ] **Test 6:** Run with no qualifying stories, verify `None` return
-- [ ] **Test 7:** Verify parallel execution completes in ~2-3s
-- [ ] **Test 8:** Check logs for thread-safe token tracking
-- [ ] **Test 9:** Verify metadata in database JSON
-- [ ] **Test 10:** Test command shows all metrics
-
-### Integration Testing
-
-```bash
-# Test 1: Normal generation
-flask test-lens-check
-# Expected: Shows metadata with token counts
-
-# Test 2: Full brief generation
-flask generate-brief
-# Expected: Lens check included with metadata
-
-# Test 3: View in templates
-# Open generated brief in browser
-# Expected: Lens check displays correctly, metadata hidden
-
-# Test 4: Check database
-# Query DailyBrief.lens_check
-# Expected: Contains 'metadata' field with counts
+        logger.warning(f"Error checking domain for briefing {briefing.id}: {e}")
+    
+    # Fallback to default
+    return os.environ.get('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
 ```
 
 ---
 
-## 🚀 Performance Expectations
+### Fix #2: Clear from_email When Domain Removed
 
-### Before vs After
-
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Perspective Analysis | 6-8s (sequential) | 2-3s (parallel) | ~3x faster |
-| Total Generation Time | 8-10s | 4-6s | ~40-50% faster |
-| Retry Resilience | 0 retries | 3 retries | Much more robust |
-| Token Visibility | None | Full tracking | Complete transparency |
-
-### Expected Token Usage
-
-**Per Brief:**
-- Story summary: ~200 tokens
-- Perspective analysis (3x): ~750 tokens
-- Contrast analysis: ~300 tokens
-- Omission detection: ~200 tokens
-- **Total: ~1,450 tokens**
-
-**Cost (gpt-4o-mini):**
-- ~$0.0004 per brief
-- ~$12/month at 1,000 briefs/day
-
----
-
-## 🔒 Thread-Safety Guarantees
-
-### Protected Resources
-
-1. **self.total_tokens** - Protected by `self._token_lock`
-2. **self.total_api_calls** - Protected by `self._token_lock`
-
-### Unprotected but Safe
-
-1. **self.generation_start_time** - Set once, read-only afterward
-2. **self.api_key** - Read-only, set in `__init__`
-3. **self.llm_available** - Read-only, set in `__init__`
-
-### Lock Acquisition Pattern
+**File**: `app/briefing/routes.py` (edit route)
 
 ```python
-with self._token_lock:
-    self.total_tokens += tokens
-    self.total_api_calls += 1
-# Lock automatically released after block
+# Update branding (only for org briefings)
+if briefing.owner_type == 'org':
+    briefing.from_name = from_name
+    briefing.from_email = from_email
+    briefing.sending_domain_id = sending_domain_id
+    
+    # Clear from_email if domain removed
+    if not sending_domain_id and briefing.from_email:
+        # Check if from_email was from a custom domain
+        if briefing.sending_domain_id != sending_domain_id:  # Domain was removed
+            briefing.from_email = None
 ```
 
-**Guarantees:**
-- No deadlocks (with statement ensures release)
-- No race conditions on counters
-- Minimal lock contention (~1ms per acquisition)
+Actually, better approach:
 
----
-
-## 📊 Monitoring Recommendations
-
-### Logs to Monitor
-
-```bash
-# Success indicators
-INFO: Lens check generated successfully for topic 123
-INFO: Token usage: 1250 tokens across 5 API calls
-INFO: generate completed in 4.23s
-
-# Warning indicators
-WARNING: API call failed (attempt 2/3): Rate limit exceeded. Retrying in 2s...
-WARNING: Perspective analysis failed for left: Invalid JSON
-
-# Error indicators
-ERROR: Critical error analyzing centre: Connection timeout
+```python
+# Update branding (only for org briefings)
+if briefing.owner_type == 'org':
+    briefing.from_name = from_name
+    briefing.sending_domain_id = sending_domain_id
+    
+    # If domain removed, clear from_email
+    if not sending_domain_id:
+        briefing.from_email = None
+    else:
+        briefing.from_email = from_email
 ```
 
-### Metrics to Track
+---
 
-1. **Generation success rate** - % of briefs with lens check
-2. **Average token usage** - Trend over time
-3. **API retry frequency** - Indicator of API health
-4. **Generation time** - Performance regression detection
+### Fix #3: Handle Missing Company Logo
+
+**File**: `app/briefing/email_client.py`
+
+```python
+# Get company logo if org briefing
+company_logo_url = None
+if briefing.owner_type == 'org' and briefing.owner_id:
+    from app.models import CompanyProfile
+    company = CompanyProfile.query.get(briefing.owner_id)
+    if company and company.logo:
+        # Build full URL for logo
+        company_logo_url = f"{base_url}/profiles/image/{company.logo}"
+        # Note: Template should handle broken images with onerror handler
+```
+
+**File**: `app/templates/emails/brief_run.html`
+
+Already has `onerror` handler, but we should verify it works:
+
+```html
+<img src="{{ company_logo_url }}" 
+     alt="{{ briefing.name }}"
+     style="max-width: 120px; max-height: 60px; height: auto; display: block;"
+     onerror="this.style.display='none';">
+```
+
+This is already handled! ✅
 
 ---
 
-## ✅ Sign-Off
+### Fix #4: Warn User About Domain Status Changes
 
-**All edge cases identified:** ✅
-**All critical issues fixed:** ✅
-**All downstream dependencies verified:** ✅
-**Thread-safety guaranteed:** ✅
-**Backward compatible:** ✅
-**Production ready:** ✅
+**File**: `app/templates/briefing/detail.html`
+
+Add warning if domain status is not verified:
+
+```html
+{% if briefing.owner_type == 'org' and briefing.sending_domain %}
+    {% if briefing.sending_domain.status != 'verified' %}
+    <div class="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div class="flex">
+            <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-yellow-800">Domain Not Verified</h3>
+                <p class="mt-1 text-sm text-yellow-700">
+                    Your sending domain "{{ briefing.sending_domain.domain }}" is not verified. 
+                    Emails will be sent from the default address until verification is complete.
+                    <a href="{{ url_for('briefing.verify_domain', domain_id=briefing.sending_domain.id) }}" class="underline">Verify domain</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endif %}
+```
 
 ---
 
-*Last Updated: 2026-01-12*
-*Reviewed by: Claude Code*
+### Fix #5: Validate Email When Domain Changes
+
+**File**: `app/briefing/routes.py` (edit route)
+
+Already handled! ✅ When `sending_domain_id` changes, validation runs:
+
+```python
+if sending_domain_id:
+    if not from_email:
+        flash('Email address is required when a sending domain is selected', 'error')
+        return redirect(...)
+    
+    # Validate email matches domain
+    if not from_email.endswith(f'@{domain_name}'):
+        flash(f'Email must be from verified domain: {domain_name}', 'error')
+        return redirect(...)
+```
+
+But we should also clear `from_email` if domain is removed:
+
+```python
+# If domain removed, clear from_email
+if not sending_domain_id and briefing.sending_domain_id:
+    briefing.from_email = None
+```
+
+---
+
+### Fix #6: Company Profile Deletion
+
+**File**: `app/settings/routes.py:237-238`
+
+Already handled! ✅ When company profile is deleted, SendingDomains are deleted:
+
+```python
+# Delete SendingDomains (CASCADE will handle this, but explicit is safer)
+SendingDomain.query.filter_by(org_id=org_id).delete(synchronize_session=False)
+```
+
+But we should check what happens to briefings with `owner_type='org'` and `owner_id=org_id`. They might become orphaned.
+
+**Check needed**: Does account deletion handle org briefings?
+
+---
+
+## 📋 Summary of Required Fixes
+
+1. ✅ **Domain deletion race condition** - Add try/except in `_get_from_email()`
+2. ✅ **Clear from_email when domain removed** - Add logic in edit route
+3. ✅ **Company logo missing** - Already handled with `onerror` in template
+4. ✅ **Warn about domain status** - Add warning in detail page
+5. ✅ **Email validation on domain change** - Already handled, but add clearing logic
+6. ⚠️ **Company profile deletion** - Need to verify org briefings are handled
+
+---
+
+## 🧪 Test Cases to Verify
+
+1. **Domain deleted while email sending**:
+   - Create briefing with domain
+   - Start sending email
+   - Delete domain mid-send
+   - Verify email still sends (with fallback)
+
+2. **Domain removed from briefing**:
+   - Create briefing with domain and email
+   - Edit briefing, remove domain
+   - Verify `from_email` is cleared
+
+3. **Domain becomes unverified**:
+   - Create briefing with verified domain
+   - Domain verification fails (DNS removed)
+   - Verify briefing shows warning
+   - Verify emails still send (with fallback)
+
+4. **Company logo missing**:
+   - Create org briefing
+   - Delete company logo file
+   - Generate and send email
+   - Verify email renders without broken image
+
+5. **Company profile deleted**:
+   - Create org briefing
+   - Delete company profile
+   - Verify briefings are handled (deleted or orphaned appropriately)

@@ -1,8 +1,14 @@
 {% extends "layout.html" %}
+{% from "components/breadcrumb.html" import breadcrumb %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {{ breadcrumb([
+            {'label': 'My Briefings', 'url': url_for('briefing.list_briefings')},
+            {'label': 'Approval Queue', 'url': '#'}
+        ]) }}
+        
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900">Approval Queue</h1>
             <p class="mt-2 text-gray-600">Review and approve pending briefs</p>
