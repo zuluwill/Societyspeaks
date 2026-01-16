@@ -1,0 +1,1023 @@
+{% extends "layout.html" %}
+
+{% block title %}Personal Briefs - Signal, Not Noise | Society Speaks{% endblock %}
+
+{% block meta_description %}One calm daily brief from sources you trust. For individuals and organisations who want signal, not noise.{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-white">
+    <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+        <div class="text-center mb-12">
+            <!-- Society Speaks distinction -->
+            <p class="text-sm text-gray-600 mb-6 max-w-2xl mx-auto">
+                Society Speaks is our public, open civic platform.<br>
+                This product is our premium briefing infrastructure — built for personal and professional use.
+            </p>
+        </div>
+        
+        <div class="max-w-4xl mx-auto text-center">
+            <h1 class="text-5xl font-serif tracking-tight text-gray-900 sm:text-6xl mb-6" style="font-family: Georgia, 'Times New Roman', serif;">
+                One calm daily brief from sources you trust
+            </h1>
+            
+            <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                Combine news, research, documents, and subscriptions into a single, reliable daily update — fully automated or editor-approved.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('briefing.create_briefing') }}" 
+                   class="inline-flex items-center justify-center rounded-md bg-gray-900 px-8 py-3 text-base font-medium text-white hover:bg-gray-800 transition-colors">
+                    Start a personal brief
+                </a>
+                {% else %}
+                <a href="{{ url_for('auth.register') }}" 
+                   class="inline-flex items-center justify-center rounded-md bg-gray-900 px-8 py-3 text-base font-medium text-white hover:bg-gray-800 transition-colors">
+                    Start a personal brief
+                </a>
+                {% endif %}
+                <a href="{{ url_for('briefing.landing') }}#pricing" 
+                   class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-8 py-3 text-base font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                    See plans for organisations
+                </a>
+            </div>
+            
+            <a href="{{ url_for('briefing.landing') }}#example" 
+               class="text-sm text-gray-600 hover:text-gray-900 underline">
+                View an example brief
+            </a>
+        </div>
+        
+        <!-- Visual Email Mockup -->
+        <div class="mt-16 max-w-2xl mx-auto">
+            <div class="relative">
+                <!-- Email mockup frame -->
+                <div class="bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl p-5 shadow-2xl">
+                    <div class="bg-white rounded-xl overflow-hidden shadow-lg">
+                        <!-- Email header -->
+                        <div class="bg-gray-900 px-5 py-3">
+                            <p class="text-gray-300 text-xs font-semibold tracking-wide uppercase">Your Personal Brief</p>
+                            <h3 class="text-white text-lg font-bold mt-0.5" style="font-family: Georgia, 'Times New Roman', serif;">Tech Weekly Digest</h3>
+                            <p class="text-gray-400 text-xs mt-0.5">Monday, 13 January 2025</p>
+                        </div>
+
+                        <!-- Brief content preview -->
+                        <div class="p-5 space-y-3">
+                            <!-- Story 1 from RSS -->
+                            <div class="border-l-4 border-blue-500 pl-3 bg-blue-50 py-2.5 pr-3 rounded-r-lg">
+                                <div class="flex items-center gap-2 mb-1.5 flex-wrap">
+                                    <span class="text-xs font-bold tracking-wide uppercase text-blue-600">TECH</span>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-800 text-white text-xs font-semibold">
+                                        TechCrunch RSS
+                                    </span>
+                                </div>
+                                <h4 class="font-bold text-gray-900 text-sm mb-1" style="font-family: Georgia, 'Times New Roman', serif;">AI Regulation Advances in EU</h4>
+                                <p class="text-xs text-gray-600">New framework requires transparency in AI decision-making processes. Affects all companies deploying AI systems...</p>
+                            </div>
+
+                            <!-- Story 2 from PDF -->
+                            <div class="border-l-4 border-emerald-500 pl-3 bg-emerald-50 py-2 pr-3 rounded-r-lg">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs font-bold tracking-wide uppercase text-emerald-600">RESEARCH</span>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-800 text-white text-xs font-semibold">Uploaded PDF</span>
+                                </div>
+                                <h4 class="font-bold text-gray-900 text-sm" style="font-family: Georgia, 'Times New Roman', serif;">MIT Study: Remote Work Productivity</h4>
+                                <p class="text-xs text-emerald-800 mt-0.5">From your uploaded research document</p>
+                            </div>
+
+                            <!-- Story 3 from web page -->
+                            <div class="border-l-4 border-purple-500 pl-3 bg-purple-50 py-2 pr-3 rounded-r-lg">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs font-bold tracking-wide uppercase text-purple-600">INDUSTRY</span>
+                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-purple-800 text-white text-xs font-semibold">Web Page</span>
+                                </div>
+                                <h4 class="font-bold text-gray-900 text-sm" style="font-family: Georgia, 'Times New Roman', serif;">VC Funding Trends Q4 2024</h4>
+                                <p class="text-xs text-gray-600 mt-0.5">Early-stage funding down 30% year-over-year...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- The Problem Section -->
+<div class="bg-gray-50 border-y border-gray-200">
+    <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div class="max-w-3xl mx-auto text-center mb-12">
+            <h2 class="text-3xl font-serif text-gray-900 mb-6" style="font-family: Georgia, 'Times New Roman', serif;">
+                Most people don't need more content.<br>
+                They need fewer, better summaries.
+            </h2>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
+            <!-- Individuals -->
+            <div class="bg-white rounded-lg p-8 border border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">For Individuals</h3>
+                <ul class="space-y-3 text-gray-700">
+                    <li class="flex items-start">
+                        <span class="text-gray-400 mr-3">•</span>
+                        <span>Too many newsletters</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-gray-400 mr-3">•</span>
+                        <span>Too many feeds</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-gray-400 mr-3">•</span>
+                        <span>No synthesis</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-gray-400 mr-3">•</span>
+                        <span>Everything shouting</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Organisations -->
+            <div class="bg-white rounded-lg p-8 border border-gray-200">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">For Organisations</h3>
+                <ul class="space-y-3 text-gray-700">
+                    <li class="flex items-start">
+                        <span class="text-gray-400 mr-3">•</span>
+                        <span>Briefs written manually</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-gray-400 mr-3">•</span>
+                        <span>Inconsistent tone</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-gray-400 mr-3">•</span>
+                        <span>Analyst bottlenecks</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-gray-400 mr-3">•</span>
+                        <span>Missed signal when teams are busy</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- What Makes This Different -->
+<div class="bg-white">
+    <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-3xl font-serif text-gray-900 mb-12 text-center" style="font-family: Georgia, 'Times New Roman', serif;">
+                What makes this different
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- What this is -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">What this is</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-gray-700">Reader-first</span>
+                        </div>
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-gray-700">Source-controlled</span>
+                        </div>
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-gray-700">Calm by default</span>
+                        </div>
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-gray-700">Repeatable structure</span>
+                        </div>
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span class="text-gray-700">Trust over engagement</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- What it's not -->
+                <div class="space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">What it's not</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-400 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            <span class="text-gray-500">Not a creator platform</span>
+                        </div>
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-400 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            <span class="text-gray-500">Not a growth tool</span>
+                        </div>
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-400 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            <span class="text-gray-500">Not algorithmically optimised</span>
+                        </div>
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-400 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            <span class="text-gray-500">Not opinion-driven</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Source Types Visualization -->
+<div class="bg-white">
+    <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-3xl font-serif text-gray-900 mb-4 text-center" style="font-family: Georgia, 'Times New Roman', serif;">
+                Any source, any format
+            </h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                We extract and summarize from multiple source types — all in one place.
+            </p>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- RSS Feeds -->
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">RSS Feeds</h3>
+                    <p class="text-sm text-gray-600 mb-3">News sites, blogs, newsletters</p>
+                    <p class="text-xs text-gray-500 italic">TechCrunch, The Verge, Hacker News</p>
+                </div>
+                
+                <!-- Documents -->
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Documents</h3>
+                    <p class="text-sm text-gray-600 mb-3">PDFs, Word files, research papers</p>
+                    <p class="text-xs text-gray-500 italic">Upload and extract automatically</p>
+                </div>
+                
+                <!-- Web Pages -->
+                <div class="text-center">
+                    <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Web Pages</h3>
+                    <p class="text-sm text-gray-600 mb-3">Articles, reports, any URL</p>
+                    <p class="text-xs text-gray-500 italic">We extract the main content</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Use Case Examples -->
+<div class="bg-gray-50 border-y border-gray-200">
+    <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-3xl font-serif text-gray-900 mb-12 text-center" style="font-family: Georgia, 'Times New Roman', serif;">
+                How people use it
+            </h2>
+            
+            <div class="space-y-8">
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">A policy researcher tracking 5 think tanks</h3>
+                    <p class="text-gray-600 text-sm">Combines RSS feeds from Brookings, Cato, Heritage Foundation, and uploaded research PDFs into one weekly digest.</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">A tech founder following industry news</h3>
+                    <p class="text-gray-600 text-sm">Pulls from TechCrunch, Hacker News, and specific Substack newsletters. Gets one daily email instead of ten.</p>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">A think tank sending weekly updates to members</h3>
+                    <p class="text-gray-600 text-sm">Automates member briefings with internal research documents, external news, and policy updates. Review before sending.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+            <div class="space-y-12">
+                <div class="flex gap-6">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center font-semibold text-lg">
+                        1
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Choose a brief</h3>
+                        <p class="text-gray-600">Pick a ready-made theme (Politics, Tech, Climate, etc.) or create your own.</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-6">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center font-semibold text-lg">
+                        2
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Add your sources</h3>
+                        <p class="text-gray-600">RSS, websites, PDFs, documents. Substack posts, links, internal material.</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-6">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center font-semibold text-lg">
+                        3
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Choose how hands-on you want to be</h3>
+                        <p class="text-gray-600">Fully automated, or review and edit before sending.</p>
+                    </div>
+                </div>
+                
+                <div class="flex gap-6">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center font-semibold text-lg">
+                        4
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Receive one clear brief</h3>
+                        <p class="text-gray-600">Daily or weekly. Email + archive. No noise.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- The Calm Factor -->
+<div class="bg-gray-50 border-y border-gray-200">
+    <section class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h2 class="text-3xl font-serif text-gray-900 mb-6" style="font-family: Georgia, 'Times New Roman', serif;">
+                Calm by default
+            </h2>
+            <p class="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
+                No notifications. No urgency. No feeds. Just one clear brief, delivered on your schedule.
+            </p>
+            <div class="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+                <div class="text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                    </div>
+                    <p class="text-sm text-gray-600">No notifications</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <p class="text-sm text-gray-600">Your schedule</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mx-auto mb-3">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <p class="text-sm text-gray-600">No urgency</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Two Audiences -->
+<div class="bg-white">
+    <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl font-serif text-gray-900 mb-12 text-center" style="font-family: Georgia, 'Times New Roman', serif;">
+                Two audiences, one system
+            </h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Individuals -->
+                <div class="bg-gray-50 rounded-lg p-8 border border-gray-200">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">For individuals</h3>
+                    <p class="text-gray-700 mb-6 font-medium">A personal daily brief — across all your interests</p>
+                    <ul class="space-y-3 text-gray-700 mb-6">
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>One email instead of ten</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Your sources, not ours</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>No ads, no tracking, no feeds</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Paid, private, calm</span>
+                        </li>
+                    </ul>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('briefing.create_briefing') }}" 
+                       class="inline-flex items-center justify-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors">
+                        Create a personal brief
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('auth.register') }}" 
+                       class="inline-flex items-center justify-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors">
+                        Create a personal brief
+                    </a>
+                    {% endif %}
+                </div>
+                
+                <!-- Organisations -->
+                <div class="bg-gray-50 rounded-lg p-8 border border-gray-200">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">For organisations</h3>
+                    <p class="text-gray-700 mb-6 font-medium">Automated briefings for teams, members, and stakeholders</p>
+                    <ul class="space-y-3 text-gray-700 mb-6">
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Human-in-the-loop approval</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Branded sending domains</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Internal or public distribution</span>
+                        </li>
+                        <li class="flex items-start">
+                            <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span>Auditability and consistency</span>
+                        </li>
+                    </ul>
+                    <a href="mailto:hello@societyspeaks.org?subject=Organisational Briefing Inquiry" 
+                       class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        Talk to us about organisational use
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Trust & Legitimacy -->
+<div class="bg-gray-50 border-y border-gray-200">
+    <section class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-serif text-gray-900 mb-6" style="font-family: Georgia, 'Times New Roman', serif;">
+                Built by Society Speaks
+            </h2>
+            <p class="text-lg text-gray-700 mb-4 max-w-2xl mx-auto">
+                Our public civic platform is open source and free to use.
+            </p>
+            <p class="text-lg text-gray-700 max-w-2xl mx-auto mb-8">
+                This product uses the same underlying sense-making engine — applied privately and professionally.
+            </p>
+            <p class="text-sm text-gray-600 mb-8 italic">
+                Public discourse should be free.<br>
+                Private understanding is a professional tool.
+            </p>
+        </div>
+        
+        <!-- Trust Signals -->
+        <div class="grid md:grid-cols-3 gap-6 max-w-3xl mx-auto">
+            <div class="text-center">
+                <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h3 class="text-sm font-semibold text-gray-900 mb-1">No tracking</h3>
+                <p class="text-xs text-gray-600">No ads, no data selling</p>
+            </div>
+            <div class="text-center">
+                <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <h3 class="text-sm font-semibold text-gray-900 mb-1">Your data</h3>
+                <p class="text-xs text-gray-600">You own everything</p>
+            </div>
+            <div class="text-center">
+                <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mx-auto mb-3">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+                <h3 class="text-sm font-semibold text-gray-900 mb-1">GDPR compliant</h3>
+                <p class="text-xs text-gray-600">Privacy by design</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Pricing Section -->
+<div class="bg-white" id="pricing">
+    <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-serif text-gray-900 mb-4 text-center" style="font-family: Georgia, 'Times New Roman', serif;">
+                Pricing
+            </h2>
+            <p class="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+                Public Society Speaks tools remain free.<br>
+                These plans fund our infrastructure and independence.
+            </p>
+            
+            <!-- Tab Navigation -->
+            <div class="flex justify-center mb-8 border-b border-gray-200">
+                <button onclick="showPricingTab('individuals')" id="tab-individuals" class="px-6 py-3 text-sm font-medium text-gray-900 border-b-2 border-gray-900 -mb-px">
+                    For individuals
+                </button>
+                <button onclick="showPricingTab('organisations')" id="tab-organisations" class="px-6 py-3 text-sm font-medium text-gray-600 border-b-2 border-transparent -mb-px hover:text-gray-900">
+                    For organisations
+                </button>
+            </div>
+            
+            <!-- Individuals Pricing -->
+            <div id="pricing-individuals" class="pricing-tab">
+                <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <!-- Starter -->
+                    <div class="bg-white rounded-lg border-2 border-gray-200 p-8">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Starter</h3>
+                        <div class="mb-6">
+                            <span class="text-4xl font-serif text-gray-900">£8</span>
+                            <span class="text-gray-600">/ month</span>
+                            <p class="text-sm text-gray-500 mt-1">or £80 / year</p>
+                            <p class="text-xs text-emerald-600 font-medium mt-1">Save 17% with annual billing</p>
+                        </div>
+                        <ul class="space-y-3 text-gray-700 mb-8">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>1 active brief</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Choose from themes or custom</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Up to ~10 sources</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Daily or weekly cadence</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Fully automated send</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Email + archive</span>
+                            </li>
+                        </ul>
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('briefing.create_briefing') }}" 
+                           class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors">
+                            Start a 30-day trial
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('auth.register') }}" 
+                           class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors">
+                            Start a 30-day trial
+                        </a>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Pro -->
+                    <div class="bg-white rounded-lg border-2 border-gray-900 p-8">
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Pro</h3>
+                        <div class="mb-6">
+                            <span class="text-4xl font-serif text-gray-900">£15</span>
+                            <span class="text-gray-600">/ month</span>
+                            <p class="text-sm text-gray-500 mt-1">or £150 / year</p>
+                            <p class="text-xs text-emerald-600 font-medium mt-1">Save 17% with annual billing</p>
+                        </div>
+                        <ul class="space-y-3 text-gray-700 mb-8">
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Up to 3 briefs</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Unlimited sources (within fair use)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Approval-before-send workflow</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Upload your own documents (PDF, DOCX)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Longer briefs / deeper synthesis</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-5 h-5 text-gray-900 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Priority processing</span>
+                            </li>
+                        </ul>
+                        {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('briefing.create_briefing') }}" 
+                           class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors">
+                            Start a 30-day trial
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('auth.register') }}" 
+                           class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors">
+                            Start a 30-day trial
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Organisations Pricing -->
+            <div id="pricing-organisations" class="pricing-tab hidden">
+                <div class="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    <!-- Starter -->
+                    <div class="bg-white rounded-lg border-2 border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Starter</h3>
+                        <div class="mb-4">
+                            <span class="text-3xl font-serif text-gray-900">£250</span>
+                            <span class="text-gray-600 text-sm">/ month</span>
+                        </div>
+                        <ul class="space-y-2 text-sm text-gray-700 mb-6">
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>1 briefing</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Weekly or daily</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Up to 3 editors</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Up to 500 recipients</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Human-in-the-loop approval</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Sent from Society Speaks domain</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Private or public visibility</span>
+                            </li>
+                        </ul>
+                        <a href="mailto:hello@societyspeaks.org?subject=Organisational Briefing Inquiry - Starter" 
+                           class="block w-full text-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                            Request access
+                        </a>
+                    </div>
+                    
+                    <!-- Pro -->
+                    <div class="bg-white rounded-lg border-2 border-gray-900 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Pro</h3>
+                        <div class="mb-4">
+                            <span class="text-3xl font-serif text-gray-900">£750</span>
+                            <span class="text-gray-600 text-sm">/ month</span>
+                        </div>
+                        <ul class="space-y-2 text-sm text-gray-700 mb-6">
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Up to 3 briefings</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Daily cadence</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Up to 10 editors</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Custom sending domain (Resend)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Upload internal docs</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Branded templates</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Public archive option</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>SLA-backed delivery</span>
+                            </li>
+                        </ul>
+                        <a href="mailto:hello@societyspeaks.org?subject=Organisational Briefing Inquiry - Pro" 
+                           class="block w-full text-center rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 transition-colors">
+                            Request access
+                        </a>
+                    </div>
+                    
+                    <!-- Institutional -->
+                    <div class="bg-white rounded-lg border-2 border-gray-200 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Institutional</h3>
+                        <div class="mb-4">
+                            <span class="text-3xl font-serif text-gray-900">£1,500</span>
+                            <span class="text-gray-600 text-sm">/ month</span>
+                            <p class="text-xs text-gray-500 mt-1">or custom pricing</p>
+                        </div>
+                        <ul class="space-y-2 text-sm text-gray-700 mb-6">
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Unlimited briefs</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Dedicated support</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Custom ingestion (APIs, large doc sets)</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Governance / audit trail</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Onboarding + training</span>
+                            </li>
+                            <li class="flex items-start">
+                                <svg class="w-4 h-4 text-gray-900 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Optional methodology appendix</span>
+                            </li>
+                        </ul>
+                        <a href="mailto:hello@societyspeaks.org?subject=Institutional Briefing Inquiry" 
+                           class="block w-full text-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                            Contact us
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script>
+function showPricingTab(tab) {
+    // Hide all tabs
+    document.querySelectorAll('.pricing-tab').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="tab-"]').forEach(el => {
+        el.classList.remove('text-gray-900', 'border-gray-900');
+        el.classList.add('text-gray-600', 'border-transparent');
+    });
+    
+    // Show selected tab
+    document.getElementById('pricing-' + tab).classList.remove('hidden');
+    const tabButton = document.getElementById('tab-' + tab);
+    tabButton.classList.remove('text-gray-600', 'border-transparent');
+    tabButton.classList.add('text-gray-900', 'border-gray-900');
+}
+</script>
+
+<!-- FAQ Section -->
+<div class="bg-gray-50 border-t border-gray-200">
+    <section class="mx-auto max-w-3xl px-4 py-16 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-serif text-gray-900 mb-12 text-center" style="font-family: Georgia, 'Times New Roman', serif;">
+            Frequently Asked Questions
+        </h2>
+        
+        <div class="space-y-8">
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Is this generated?</h3>
+                <p class="text-gray-700">Yes, but structured and auditable. Summaries are generated from your sources, and you can review and edit before sending.</p>
+            </div>
+            
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Can I edit before sending?</h3>
+                <p class="text-gray-700">Yes. You can choose fully automated delivery or require approval before each brief is sent.</p>
+            </div>
+            
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Is Society Speaks still free?</h3>
+                <p class="text-gray-700">Yes. Our public civic platform remains completely free and open source. This product is separate — premium briefing infrastructure for personal and professional use.</p>
+            </div>
+            
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Do you sell data?</h3>
+                <p class="text-gray-700">No. Your sources, your content, your data. We process and deliver — you own everything.</p>
+            </div>
+            
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Can I keep things private?</h3>
+                <p class="text-gray-700">Yes. Briefs are private by default. You can choose to share within your organisation or make them public, but privacy is the default.</p>
+            </div>
+            
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">How long does setup take?</h3>
+                <p class="text-gray-700">About 5 minutes. Add your sources, choose a schedule, and you're done.</p>
+            </div>
+            
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Can I change sources later?</h3>
+                <p class="text-gray-700">Yes, anytime. Add or remove sources, change schedules, or pause your brief — all from your dashboard.</p>
+            </div>
+            
+            <div class="pb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">What if I don't like it?</h3>
+                <p class="text-gray-700">Cancel anytime, no questions asked. Your data is yours — export it before you go, or we'll delete it on request.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- Final CTA -->
+<div class="bg-white border-t border-gray-200">
+    <section class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+        <div class="text-center">
+            <h2 class="text-3xl font-serif text-gray-900 mb-4" style="font-family: Georgia, 'Times New Roman', serif;">
+                Ready to replace information overload with intelligence?
+            </h2>
+            <p class="text-lg text-gray-600 mb-8">Start your 30-day trial. No credit card required.</p>
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('briefing.create_briefing') }}" 
+               class="inline-flex items-center justify-center rounded-md bg-gray-900 px-8 py-4 text-base font-medium text-white hover:bg-gray-800 transition-colors">
+                Start a personal brief
+            </a>
+            {% else %}
+            <a href="{{ url_for('auth.register') }}" 
+               class="inline-flex items-center justify-center rounded-md bg-gray-900 px-8 py-4 text-base font-medium text-white hover:bg-gray-800 transition-colors">
+                Start a personal brief
+            </a>
+            {% endif %}
+        </div>
+    </section>
+</div>
+
+<!-- Example Brief Section -->
+<div class="bg-white border-t border-gray-200" id="example">
+    <section class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-serif text-gray-900 mb-4" style="font-family: Georgia, 'Times New Roman', serif;">
+                View an example brief
+            </h2>
+            <p class="text-gray-600 mb-6">See what a personalized brief looks like in practice.</p>
+        </div>
+        
+        <!-- Common Sources Examples -->
+        <div class="bg-gray-50 rounded-lg p-8 mb-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">Common sources people add</h3>
+            <div class="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                    </svg>
+                    <span class="text-sm text-gray-700">TechCrunch RSS</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span class="text-sm text-gray-700">Research PDFs</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5c7.18 0 13 5.82 13 13M6 11a7 7 0 017 7m-6 0a1 1 0 11-2 0 1 1 0 012 0z" />
+                    </svg>
+                    <span class="text-sm text-gray-700">Industry newsletters</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span class="text-sm text-gray-700">Internal documents</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center">
+            <a href="{{ url_for('brief.today') }}" 
+               class="inline-flex items-center text-gray-700 hover:text-gray-900 underline">
+                View example brief →
+            </a>
+        </div>
+    </section>
+</div>
+{% endblock %}
