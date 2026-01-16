@@ -8,7 +8,7 @@ Uses REST API (requests) to match existing email client patterns.
 import os
 import time
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import requests
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ def _get_headers() -> Dict[str, str]:
 def _request_with_retry(
     method: str,
     url: str,
-    json_data: Dict = None,
+    json_data: Optional[Dict] = None,
     timeout: int = 30
 ) -> Dict[str, Any]:
     """
