@@ -1,0 +1,1266 @@
+# PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.UniqueViolation) duplicate key value violate...
+
+**Issue ID:** 88838685
+**Project:** python-flask
+**Date:** 16/01/2026, 09:00:11
+## Issue Summary
+Database **UniqueViolation** on Discussion Slug Insertion
+**What's wrong:** A **UniqueViolation** error occurred because a **discussion slug** already exists, causing the transaction to roll back.
+**In the trace:** The session is in a **PendingRollbackError** state due to a prior exception, requiring a `Session.rollback()` to proceed.
+**Possible cause:** The pipeline may be attempting to **re-insert** a discussion with a pre-existing slug, possibly due to a race condition or a logic error in handling existing entries.
+
+## Tags
+
+- **environment:** production
+- **handled:** yes
+- **level:** error
+- **logger:** app.scheduler
+- **mechanism:** logging
+- **release:** a077b556b2960c9b8aa9f0449a5c3e5152b8ea00
+- **runtime:** CPython 3.11.14
+- **runtime.name:** CPython
+- **server_name:** e4050db2d2d0
+
+## Exceptions
+
+### Exception 1
+**Type:** UniqueViolation
+**Value:** duplicate key value violates unique constraint "discussion_slug_key"
+DETAIL:  Key (slug)=(james-clear-how-to-build-good-habits-break-bad-ones) already exists.
+
+
+#### Stacktrace
+
+```
+ do_execute in sqlalchemy/engine/default.py [Line 952] (Not in app)
+
+    def do_executemany(self, cursor, statement, parameters, context=None):
+        cursor.executemany(statement, parameters)
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+        cursor.execute(statement, parameters)  <-- SUSPECT LINE
+
+    def do_execute_no_params(self, cursor, statement, context=None):
+        cursor.execute(statement)
+
+    def is_disconnect(
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7fecd7f0c6d0>",
+  "cursor": "<cursor object at 0x7fecfa6a8b80; closed: -1>",
+  "parameters": {
+    "city": "None",
+    "country": "'United States'",
+    "creator_id": "14",
+    "description": "[Filtered]",
+    "embed_code": "None",
+    "geographic_scope": "'global'",
+    "has_native_statements": "True",
+    "keywords": "None",
+    "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+    "title": "'James Clear: How to Build Good Habits & Break Bad Ones'"
+  },
+  "self": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>",
+  "statement": "'INSERT INTO discussion (embed_code, has_native_statements, title, description, keywords, slug, geographic_scope, country, city, creator_id, topic, is_featured, participant_count, created_at, updated_at, individual_profile_id, company_profile_id, bluesky_scheduled_at, bluesky_posted_at, bluesky_post_uri, x_scheduled_at, x_posted_at, x_post_id) VALUES (%(embed_code)s, %(has_native_statements)s, %(title)s, %(description)s, %(keywords)s, %(slug)s, %(geographic_scope)s, %(country)s, %(city)s, %(creator_id)s, %(topic)s, %(is_featured)s, %(participant_count)s, %(created_at)s, %(updated_at)s, %(individual_profile_id)s, %(company_profile_id)s, %(bluesky_scheduled_at)s, %(bluesky_posted_at)s, %(bluesky_post_uri)s, %(x_scheduled_at)s, %(x_posted_at)s, %(x_post_id)s) RETURNING discussion.id'"
+}
+
+=======
+ _exec_single_context in sqlalchemy/engine/base.py [Line 1967] (Not in app)
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute(  <-- SUSPECT LINE
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+            if self._has_events or self.engine._has_events:
+                self.dispatch.after_cursor_execute(
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7fecd7f0c6d0>",
+  "cursor": "<cursor object at 0x7fecfa6a8b80; closed: -1>",
+  "dialect": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>",
+  "effective_parameters": {
+    "city": "None",
+    "country": "'United States'",
+    "creator_id": "14",
+    "description": "[Filtered]",
+    "embed_code": "None",
+    "geographic_scope": "'global'",
+    "has_native_statements": "True",
+    "keywords": "None",
+    "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+    "title": "'James Clear: How to Build Good Habits & Break Bad Ones'"
+  },
+  "evt_handled": "False",
+  "fn": "<function ConnectionEvents._listen.<locals>.wrap_before_cursor_execute at 0x7fed2dacc540>",
+  "parameters": [
+    {
+      "city": "None",
+      "country": "'United States'",
+      "creator_id": "14",
+      "description": "[Filtered]",
+      "embed_code": "None",
+      "geographic_scope": "'global'",
+      "has_native_statements": "True",
+      "keywords": "None",
+      "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+      "title": "'James Clear: How to Build Good Habits & Break Bad Ones'"
+    }
+  ],
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7fecfa65e150>",
+  "statement": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7fecd7f0c690>",
+  "str_statement": "'INSERT INTO discussion (embed_code, has_native_statements, title, description, keywords, slug, geographic_scope, country, city, creator_id, topic, is_featured, participant_count, created_at, updated_at, individual_profile_id, company_profile_id, bluesky_scheduled_at, bluesky_posted_at, blue..."
+}
+
+=======
+```
+------
+### Exception 2
+**Type:** IntegrityError
+**Value:** (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "discussion_slug_key"
+DETAIL:  Key (slug)=(james-clear-how-to-build-good-habits-break-bad-ones) already exists.
+
+[SQL: INSERT INTO discussion (embed_code, has_native_statements, title, description, keywords, slug, geographic_scope, country, city, creator_id, topic, is_featured, participant_count, created_at, updated_at, individual_profile_id, company_profile_id, bluesky_scheduled_at, bluesky_posted_at, bluesky_post_uri, x_scheduled_at, x_posted_at, x_post_id) VALUES (%(embed_code)s, %(has_native_statements)s, %(title)s, %(description)s, %(keywords)s, %(slug)s, %(geographic_scope)s, %(country)s, %(city)s, %(creator_id)s, %(topic)s, %(is_featured)s, %(participant_count)s, %(created_at)s, %(updated_at)s, %(individual_profile_id)s, %(company_profile_id)s, %(bluesky_scheduled_at)s, %(bluesky_posted_at)s, %(bluesky_post_uri)s, %(x_scheduled_at)s, %(x_posted_at)s, %(x_post_id)s) RETURNING discussion.id]
+[parameters: {'embed_code': No...
+
+#### Stacktrace
+
+```
+ do_execute in sqlalchemy/engine/default.py [Line 952] (Not in app)
+
+    def do_executemany(self, cursor, statement, parameters, context=None):
+        cursor.executemany(statement, parameters)
+
+    def do_execute(self, cursor, statement, parameters, context=None):
+        cursor.execute(statement, parameters)  <-- SUSPECT LINE
+
+    def do_execute_no_params(self, cursor, statement, context=None):
+        cursor.execute(statement)
+
+    def is_disconnect(
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7fecd7f0c6d0>",
+  "cursor": "<cursor object at 0x7fecfa6a8b80; closed: -1>",
+  "parameters": {
+    "city": "None",
+    "country": "'United States'",
+    "creator_id": "14",
+    "description": "[Filtered]",
+    "embed_code": "None",
+    "geographic_scope": "'global'",
+    "has_native_statements": "True",
+    "keywords": "None",
+    "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+    "title": "'James Clear: How to Build Good Habits & Break Bad Ones'"
+  },
+  "self": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>",
+  "statement": "'INSERT INTO discussion (embed_code, has_native_statements, title, description, keywords, slug, geographic_scope, country, city, creator_id, topic, is_featured, participant_count, created_at, updated_at, individual_profile_id, company_profile_id, bluesky_scheduled_at, bluesky_posted_at, bluesky_post_uri, x_scheduled_at, x_posted_at, x_post_id) VALUES (%(embed_code)s, %(has_native_statements)s, %(title)s, %(description)s, %(keywords)s, %(slug)s, %(geographic_scope)s, %(country)s, %(city)s, %(creator_id)s, %(topic)s, %(is_featured)s, %(participant_count)s, %(created_at)s, %(updated_at)s, %(individual_profile_id)s, %(company_profile_id)s, %(bluesky_scheduled_at)s, %(bluesky_posted_at)s, %(bluesky_post_uri)s, %(x_scheduled_at)s, %(x_posted_at)s, %(x_post_id)s) RETURNING discussion.id'"
+}
+
+=======
+ _exec_single_context in sqlalchemy/engine/base.py [Line 1967] (Not in app)
+                            context,
+                        ):
+                            evt_handled = True
+                            break
+                if not evt_handled:
+                    self.dialect.do_execute(  <-- SUSPECT LINE
+                        cursor, str_statement, effective_parameters, context
+                    )
+
+            if self._has_events or self.engine._has_events:
+                self.dispatch.after_cursor_execute(
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7fecd7f0c6d0>",
+  "cursor": "<cursor object at 0x7fecfa6a8b80; closed: -1>",
+  "dialect": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>",
+  "effective_parameters": {
+    "city": "None",
+    "country": "'United States'",
+    "creator_id": "14",
+    "description": "[Filtered]",
+    "embed_code": "None",
+    "geographic_scope": "'global'",
+    "has_native_statements": "True",
+    "keywords": "None",
+    "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+    "title": "'James Clear: How to Build Good Habits & Break Bad Ones'"
+  },
+  "evt_handled": "False",
+  "fn": "<function ConnectionEvents._listen.<locals>.wrap_before_cursor_execute at 0x7fed2dacc540>",
+  "parameters": [
+    {
+      "city": "None",
+      "country": "'United States'",
+      "creator_id": "14",
+      "description": "[Filtered]",
+      "embed_code": "None",
+      "geographic_scope": "'global'",
+      "has_native_statements": "True",
+      "keywords": "None",
+      "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+      "title": "'James Clear: How to Build Good Habits & Break Bad Ones'"
+    }
+  ],
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7fecfa65e150>",
+  "statement": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7fecd7f0c690>",
+  "str_statement": "'INSERT INTO discussion (embed_code, has_native_statements, title, description, keywords, slug, geographic_scope, country, city, creator_id, topic, is_featured, participant_count, created_at, updated_at, individual_profile_id, company_profile_id, bluesky_scheduled_at, bluesky_posted_at, blue..."
+}
+
+=======
+ _handle_dbapi_exception in sqlalchemy/engine/base.py [Line 2363] (Not in app)
+
+            if newraise:
+                raise newraise.with_traceback(exc_info[2]) from e
+            elif should_wrap:
+                assert sqlalchemy_exception is not None
+                raise sqlalchemy_exception.with_traceback(exc_info[2]) from e  <-- SUSPECT LINE
+            else:
+                assert exc_info[1] is not None
+                raise exc_info[1].with_traceback(exc_info[2])
+        finally:
+            del self._reentrant_error
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7fecd7f0c6d0>",
+  "cursor": "<cursor object at 0x7fecfa6a8b80; closed: -1>",
+  "e": "UniqueViolation('duplicate key value violates unique constraint \"discussion_slug_key\"\\nDETAIL:  Key (slug)=(james-clear-how-to-build-good-habits-break-bad-ones) already exists.\\n')",
+  "exc_info": [
+    "<class 'psycopg2.errors.UniqueViolation'>",
+    "UniqueViolation('duplicate key value violates unique constraint \"discussion_slug_key\"\\nDETAIL:  Key (slug)=(james-clear-how-to-build-good-habits-break-bad-ones) already exists.\\n')",
+    "<traceback object at 0x7fecfa65e680>"
+  ],
+  "invalidate_pool_on_disconnect": "True",
+  "is_exit_exception": "False",
+  "is_sub_exec": "False",
+  "parameters": {
+    "city": "None",
+    "country": "'United States'",
+    "creator_id": "14",
+    "description": "[Filtered]",
+    "embed_code": "None",
+    "geographic_scope": "'global'",
+    "has_native_statements": "True",
+    "keywords": "None",
+    "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+    "title": "'James Clear: How to Build Good Habits & Break Bad Ones'"
+  },
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7fecfa65e150>",
+  "statement": "'INSERT INTO discussion (embed_code, has_native_statements, title, description, keywords, slug, geographic_scope, country, city, creator_id, topic, is_featured, participant_count, created_at, updated_at, individual_profile_id, company_profile_id, bluesky_scheduled_at, bluesky_posted_at, bluesky_post_uri, x_scheduled_at, x_posted_at, x_post_id) VALUES (%(embed_code)s, %(has_native_statements)s, %(title)s, %(description)s, %(keywords)s, %(slug)s, %(geographic_scope)s, %(country)s, %(city)s, %(creator_id)s, %(topic)s, %(is_featured)s, %(participant_count)s, %(created_at)s, %(updated_at)s, %(individual_profile_id)s, %(company_profile_id)s, %(bluesky_scheduled_at)s, %(bluesky_posted_at)s, %(bluesky_post_uri)s, %(x_sche..."
+}
+
+=======
+ _exec_single_context in sqlalchemy/engine/base.py [Line 1986] (Not in app)
+            context.post_exec()
+
+            result = context._setup_result_proxy()
+
+        except BaseException as e:
+            self._handle_dbapi_exception(  <-- SUSPECT LINE
+                e, str_statement, effective_parameters, cursor, context
+            )
+
+        return result
+
+---
+Variable values:
+{
+  "context": "<sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2 object at 0x7fecd7f0c6d0>",
+  "cursor": "<cursor object at 0x7fecfa6a8b80; closed: -1>",
+  "dialect": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>",
+  "effective_parameters": {
+    "city": "None",
+    "country": "'United States'",
+    "creator_id": "14",
+    "description": "[Filtered]",
+    "embed_code": "None",
+    "geographic_scope": "'global'",
+    "has_native_statements": "True",
+    "keywords": "None",
+    "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+    "title": "'James Clear: How to Build Good Habits & Break Bad Ones'"
+  },
+  "evt_handled": "False",
+  "fn": "<function ConnectionEvents._listen.<locals>.wrap_before_cursor_execute at 0x7fed2dacc540>",
+  "parameters": [
+    {
+      "city": "None",
+      "country": "'United States'",
+      "creator_id": "14",
+      "description": "[Filtered]",
+      "embed_code": "None",
+      "geographic_scope": "'global'",
+      "has_native_statements": "True",
+      "keywords": "None",
+      "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+      "title": "'James Clear: How to Build Good Habits & Break Bad Ones'"
+    }
+  ],
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7fecfa65e150>",
+  "statement": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7fecd7f0c690>",
+  "str_statement": "'INSERT INTO discussion (embed_code, has_native_statements, title, description, keywords, slug, geographic_scope, country, city, creator_id, topic, is_featured, participant_count, created_at, updated_at, individual_profile_id, company_profile_id, bluesky_scheduled_at, bluesky_posted_at, blue..."
+}
+
+=======
+ _execute_context in sqlalchemy/engine/base.py [Line 1846] (Not in app)
+        context.pre_exec()
+
+        if context.execute_style is ExecuteStyle.INSERTMANYVALUES:
+            return self._exec_insertmany_context(dialect, context)
+        else:
+            return self._exec_single_context(  <-- SUSPECT LINE
+                dialect, context, statement, parameters
+            )
+
+    def _exec_single_context(
+        self,
+---
+Variable values:
+{
+  "args": [
+    "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7fecd7f0c690>",
+    [
+      {
+        "country": "'United States'",
+        "creator_id": "14",
+        "description": "[Filtered]",
+        "geographic_scope": "'global'",
+        "has_native_statements": "True",
+        "is_featured": "False",
+        "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+        "title": "'James Clear: How to Build Good Habits & Break Bad Ones'",
+        "topic": "'Education'",
+        "x_posted_at": "None"
+      }
+    ],
+    "<sqlalchemy.sql.dml.Insert object at 0x7fecd7f0c5d0>",
+    []
+  ],
+  "conn": "<sqlalchemy.pool.base._ConnectionFairy object at 0x7fecfa653b30>",
+  "constructor": "<bound method DefaultExecutionContext._init_compiled of <class 'sqlalchemy.dialects.postgresql.psycopg2.PGExecutionContext_psycopg2'>>",
+  "dialect": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>",
+  "execution_options": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion', MetaData(), Column('id', Integer(), table=<discussion>, primary_key=True, nullable=False), Column('embed_code', String(length=800), table=<discussion>), Column('has_native_statements', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('title', String(length=200), table=<discussion>, nullable=False), Column('description', Text(), table=<discussion>), Column('keywords', String(length=200), table=<discussion>), Column('slug', String(length=150), table=<discussion>, nullable=False), Column('geographic_scope', String(length=20), table=<discussion>, nullable=False, default=ScalarElementColumnDefault('country')), Column('country', String(length=100), table=<discussion>), Column('city', String(length=100), table=<discussion>), Column('creator_id', Integer(), ForeignKey('user.id'), table=<discussion>), Column('topic', String(length=100), table=<discussion>), Column('is_featured', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('participant_count', Integer(), table=<discussion>, default=ScalarElementColumnDefault(0)), Column('created_at', DateTime(), table=<discussion>, default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3d80>)), Column('updated_at', DateTime(), table=<discussion>, onupdate=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3ec0>), default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3e20>)), Column('individual_profile_id', Integer(), ForeignKey('individual_profile.id'), table=<discussion>), Column('company_profile_id', Integer(), ForeignKey('company_profile.id'), table=<discussion>), Column('bluesky_scheduled_at', DateTime(), table=<discussion>), Column('bluesky_posted_at', DateTime(), table=<discussion>), Column('bluesky_post_uri', String(length=500), table=<discussion>), Column('x_scheduled_at', DateTime(), table=<discussion>), Column('x_posted_at', DateTime(), table=<discussion>), Column('x_post_id', String(length=100), table=<discussion>), schema=None),)), ('bluesky_post_uri', 'bluesky_posted_at', 'bluesky_scheduled_at', 'city', 'company_profile_id', 'country', 'creator_id', 'description', 'embed_code', 'geographic_scope', 'has_native_statements', 'individual_profile_id', 'is_featured', 'keywords', 'slug', 'title', 'topic', 'x_post_id', 'x_posted_at', 'x_scheduled_at'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7fecd7f0c690>"
+    }
+  },
+  "kw": {
+    "cache_hit": "<CacheStats.CACHE_MISS: 1>"
+  },
+  "parameters": [
+    {
+      "country": "'United States'",
+      "creator_id": "14",
+      "description": "[Filtered]",
+      "geographic_scope": "'global'",
+      "has_native_statements": "True",
+      "is_featured": "False",
+      "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+      "title": "'James Clear: How to Build Good Habits & Break Bad Ones'",
+      "topic": "'Education'",
+      "x_posted_at": "None"
+    }
+  ],
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7fecfa65e150>",
+  "statement": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7fecd7f0c690>",
+  "yp": "None"
+}
+
+=======
+ _execute_clauseelement in sqlalchemy/engine/base.py [Line 1641] (Not in app)
+            column_keys=keys,
+            for_executemany=for_executemany,
+            schema_translate_map=schema_translate_map,
+            linting=self.dialect.compiler_linting | compiler.WARN_LINTING,
+        )
+        ret = self._execute_context(  <-- SUSPECT LINE
+            dialect,
+            dialect.execution_ctx_cls._init_compiled,
+            compiled_sql,
+            distilled_parameters,
+            execution_options,
+---
+Variable values:
+{
+  "dialect": "<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>",
+  "distilled_parameters": [
+    {
+      "country": "'United States'",
+      "creator_id": "14",
+      "description": "[Filtered]",
+      "geographic_scope": "'global'",
+      "has_native_statements": "True",
+      "is_featured": "False",
+      "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+      "title": "'James Clear: How to Build Good Habits & Break Bad Ones'",
+      "topic": "'Education'",
+      "x_posted_at": "None"
+    }
+  ],
+  "elem": "<sqlalchemy.sql.dml.Insert object at 0x7fecd7f0c5d0>",
+  "event_multiparams": [],
+  "event_params": {
+    "country": "'United States'",
+    "creator_id": "14",
+    "description": "[Filtered]",
+    "geographic_scope": "'global'",
+    "has_native_statements": "True",
+    "is_featured": "False",
+    "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+    "title": "'James Clear: How to Build Good Habits & Break Bad Ones'",
+    "topic": "'Education'",
+    "x_posted_at": "None"
+  },
+  "execution_options": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion', MetaData(), Column('id', Integer(), table=<discussion>, primary_key=True, nullable=False), Column('embed_code', String(length=800), table=<discussion>), Column('has_native_statements', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('title', String(length=200), table=<discussion>, nullable=False), Column('description', Text(), table=<discussion>), Column('keywords', String(length=200), table=<discussion>), Column('slug', String(length=150), table=<discussion>, nullable=False), Column('geographic_scope', String(length=20), table=<discussion>, nullable=False, default=ScalarElementColumnDefault('country')), Column('country', String(length=100), table=<discussion>), Column('city', String(length=100), table=<discussion>), Column('creator_id', Integer(), ForeignKey('user.id'), table=<discussion>), Column('topic', String(length=100), table=<discussion>), Column('is_featured', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('participant_count', Integer(), table=<discussion>, default=ScalarElementColumnDefault(0)), Column('created_at', DateTime(), table=<discussion>, default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3d80>)), Column('updated_at', DateTime(), table=<discussion>, onupdate=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3ec0>), default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3e20>)), Column('individual_profile_id', Integer(), ForeignKey('individual_profile.id'), table=<discussion>), Column('company_profile_id', Integer(), ForeignKey('company_profile.id'), table=<discussion>), Column('bluesky_scheduled_at', DateTime(), table=<discussion>), Column('bluesky_posted_at', DateTime(), table=<discussion>), Column('bluesky_post_uri', String(length=500), table=<discussion>), Column('x_scheduled_at', DateTime(), table=<discussion>), Column('x_posted_at', DateTime(), table=<discussion>), Column('x_post_id', String(length=100), table=<discussion>), schema=None),)), ('bluesky_post_uri', 'bluesky_posted_at', 'bluesky_scheduled_at', 'city', 'company_profile_id', 'country', 'creator_id', 'description', 'embed_code', 'geographic_scope', 'has_native_statements', 'individual_profile_id', 'is_featured', 'keywords', 'slug', 'title', 'topic', 'x_post_id', 'x_posted_at', 'x_scheduled_at'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7fecd7f0c690>"
+    }
+  },
+  "for_executemany": "False",
+  "has_events": "True",
+  "keys": [
+    "'bluesky_post_uri'",
+    "'bluesky_posted_at'",
+    "'bluesky_scheduled_at'",
+    "'city'",
+    "'company_profile_id'",
+    "'country'",
+    "'creator_id'",
+    "'description'",
+    "'embed_code'",
+    "'geographic_scope'"
+  ],
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7fecfa65e150>"
+}
+
+=======
+ _execute_on_connection in sqlalchemy/sql/elements.py [Line 527] (Not in app)
+        execution_options: CoreExecuteOptionsParameter,
+    ) -> Result[Any]:
+        if self.supports_execution:
+            if TYPE_CHECKING:
+                assert isinstance(self, Executable)
+            return connection._execute_clauseelement(  <-- SUSPECT LINE
+                self, distilled_params, execution_options
+            )
+        else:
+            raise exc.ObjectNotExecutableError(self)
+
+---
+Variable values:
+{
+  "connection": "<sqlalchemy.engine.base.Connection object at 0x7fecfa65e150>",
+  "distilled_params": [
+    {
+      "country": "'United States'",
+      "creator_id": "14",
+      "description": "[Filtered]",
+      "geographic_scope": "'global'",
+      "has_native_statements": "True",
+      "is_featured": "False",
+      "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+      "title": "'James Clear: How to Build Good Habits & Break Bad Ones'",
+      "topic": "'Education'",
+      "x_posted_at": "None"
+    }
+  ],
+  "execution_options": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion', MetaData(), Column('id', Integer(), table=<discussion>, primary_key=True, nullable=False), Column('embed_code', String(length=800), table=<discussion>), Column('has_native_statements', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('title', String(length=200), table=<discussion>, nullable=False), Column('description', Text(), table=<discussion>), Column('keywords', String(length=200), table=<discussion>), Column('slug', String(length=150), table=<discussion>, nullable=False), Column('geographic_scope', String(length=20), table=<discussion>, nullable=False, default=ScalarElementColumnDefault('country')), Column('country', String(length=100), table=<discussion>), Column('city', String(length=100), table=<discussion>), Column('creator_id', Integer(), ForeignKey('user.id'), table=<discussion>), Column('topic', String(length=100), table=<discussion>), Column('is_featured', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('participant_count', Integer(), table=<discussion>, default=ScalarElementColumnDefault(0)), Column('created_at', DateTime(), table=<discussion>, default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3d80>)), Column('updated_at', DateTime(), table=<discussion>, onupdate=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3ec0>), default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3e20>)), Column('individual_profile_id', Integer(), ForeignKey('individual_profile.id'), table=<discussion>), Column('company_profile_id', Integer(), ForeignKey('company_profile.id'), table=<discussion>), Column('bluesky_scheduled_at', DateTime(), table=<discussion>), Column('bluesky_posted_at', DateTime(), table=<discussion>), Column('bluesky_post_uri', String(length=500), table=<discussion>), Column('x_scheduled_at', DateTime(), table=<discussion>), Column('x_posted_at', DateTime(), table=<discussion>), Column('x_post_id', String(length=100), table=<discussion>), schema=None),)), ('bluesky_post_uri', 'bluesky_posted_at', 'bluesky_scheduled_at', 'city', 'company_profile_id', 'country', 'creator_id', 'description', 'embed_code', 'geographic_scope', 'has_native_statements', 'individual_profile_id', 'is_featured', 'keywords', 'slug', 'title', 'topic', 'x_post_id', 'x_posted_at', 'x_scheduled_at'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7fecd7f0c690>"
+    }
+  },
+  "self": "<sqlalchemy.sql.dml.Insert object at 0x7fecd7f0c5d0>"
+}
+
+=======
+ execute in sqlalchemy/engine/base.py [Line 1419] (Not in app)
+        try:
+            meth = statement._execute_on_connection
+        except AttributeError as err:
+            raise exc.ObjectNotExecutableError(statement) from err
+        else:
+            return meth(  <-- SUSPECT LINE
+                self,
+                distilled_parameters,
+                execution_options or NO_OPTIONS,
+            )
+
+---
+Variable values:
+{
+  "distilled_parameters": [
+    {
+      "country": "'United States'",
+      "creator_id": "14",
+      "description": "[Filtered]",
+      "geographic_scope": "'global'",
+      "has_native_statements": "True",
+      "is_featured": "False",
+      "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+      "title": "'James Clear: How to Build Good Habits & Break Bad Ones'",
+      "topic": "'Education'",
+      "x_posted_at": "None"
+    }
+  ],
+  "execution_options": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion', MetaData(), Column('id', Integer(), table=<discussion>, primary_key=True, nullable=False), Column('embed_code', String(length=800), table=<discussion>), Column('has_native_statements', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('title', String(length=200), table=<discussion>, nullable=False), Column('description', Text(), table=<discussion>), Column('keywords', String(length=200), table=<discussion>), Column('slug', String(length=150), table=<discussion>, nullable=False), Column('geographic_scope', String(length=20), table=<discussion>, nullable=False, default=ScalarElementColumnDefault('country')), Column('country', String(length=100), table=<discussion>), Column('city', String(length=100), table=<discussion>), Column('creator_id', Integer(), ForeignKey('user.id'), table=<discussion>), Column('topic', String(length=100), table=<discussion>), Column('is_featured', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('participant_count', Integer(), table=<discussion>, default=ScalarElementColumnDefault(0)), Column('created_at', DateTime(), table=<discussion>, default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3d80>)), Column('updated_at', DateTime(), table=<discussion>, onupdate=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3ec0>), default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3e20>)), Column('individual_profile_id', Integer(), ForeignKey('individual_profile.id'), table=<discussion>), Column('company_profile_id', Integer(), ForeignKey('company_profile.id'), table=<discussion>), Column('bluesky_scheduled_at', DateTime(), table=<discussion>), Column('bluesky_posted_at', DateTime(), table=<discussion>), Column('bluesky_post_uri', String(length=500), table=<discussion>), Column('x_scheduled_at', DateTime(), table=<discussion>), Column('x_posted_at', DateTime(), table=<discussion>), Column('x_post_id', String(length=100), table=<discussion>), schema=None),)), ('bluesky_post_uri', 'bluesky_posted_at', 'bluesky_scheduled_at', 'city', 'company_profile_id', 'country', 'creator_id', 'description', 'embed_code', 'geographic_scope', 'has_native_statements', 'individual_profile_id', 'is_featured', 'keywords', 'slug', 'title', 'topic', 'x_post_id', 'x_posted_at', 'x_scheduled_at'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7fecd7f0c690>"
+    }
+  },
+  "meth": "<bound method ClauseElement._execute_on_connection of <sqlalchemy.sql.dml.Insert object at 0x7fecd7f0c5d0>>",
+  "parameters": {
+    "country": "'United States'",
+    "creator_id": "14",
+    "description": "[Filtered]",
+    "geographic_scope": "'global'",
+    "has_native_statements": "True",
+    "is_featured": "False",
+    "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+    "title": "'James Clear: How to Build Good Habits & Break Bad Ones'",
+    "topic": "'Education'",
+    "x_posted_at": "None"
+  },
+  "self": "<sqlalchemy.engine.base.Connection object at 0x7fecfa65e150>",
+  "statement": "<sqlalchemy.sql.dml.Insert object at 0x7fecd7f0c5d0>"
+}
+
+=======
+ _emit_insert_statements in sqlalchemy/orm/persistence.py [Line 1233] (Not in app)
+                            statement.values(value_params),
+                            params,
+                            execution_options=execution_options,
+                        )
+                    else:
+                        result = connection.execute(  <-- SUSPECT LINE
+                            statement,
+                            params,
+                            execution_options=execution_options,
+                        )
+
+---
+Variable values:
+{
+  "base_mapper": "<Mapper at 0x7fed2cdf0810; Discussion>",
+  "bookkeeping": "True",
+  "cached_stmt": "<sqlalchemy.sql.dml.Insert object at 0x7fecd7f0c5d0>",
+  "exec_opt": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion', MetaData(), Column('id', Integer(), table=<discussion>, primary_key=True, nullable=False), Column('embed_code', String(length=800), table=<discussion>), Column('has_native_statements', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('title', String(length=200), table=<discussion>, nullable=False), Column('description', Text(), table=<discussion>), Column('keywords', String(length=200), table=<discussion>), Column('slug', String(length=150), table=<discussion>, nullable=False), Column('geographic_scope', String(length=20), table=<discussion>, nullable=False, default=ScalarElementColumnDefault('country')), Column('country', String(length=100), table=<discussion>), Column('city', String(length=100), table=<discussion>), Column('creator_id', Integer(), ForeignKey('user.id'), table=<discussion>), Column('topic', String(length=100), table=<discussion>), Column('is_featured', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('participant_count', Integer(), table=<discussion>, default=ScalarElementColumnDefault(0)), Column('created_at', DateTime(), table=<discussion>, default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3d80>)), Column('updated_at', DateTime(), table=<discussion>, onupdate=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3ec0>), default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3e20>)), Column('individual_profile_id', Integer(), ForeignKey('individual_profile.id'), table=<discussion>), Column('company_profile_id', Integer(), ForeignKey('company_profile.id'), table=<discussion>), Column('bluesky_scheduled_at', DateTime(), table=<discussion>), Column('bluesky_posted_at', DateTime(), table=<discussion>), Column('bluesky_post_uri', String(length=500), table=<discussion>), Column('x_scheduled_at', DateTime(), table=<discussion>), Column('x_posted_at', DateTime(), table=<discussion>), Column('x_post_id', String(length=100), table=<discussion>), schema=None),)), ('bluesky_post_uri', 'bluesky_posted_at', 'bluesky_scheduled_at', 'city', 'company_profile_id', 'country', 'creator_id', 'description', 'embed_code', 'geographic_scope', 'has_native_statements', 'individual_profile_id', 'is_featured', 'keywords', 'slug', 'title', 'topic', 'x_post_id', 'x_posted_at', 'x_scheduled_at'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7fecd7f0c690>"
+    }
+  },
+  "execution_options": {
+    "compiled_cache": {
+      "(<sqlalchemy.dialects.postgresql.psycopg2.PGDialect_psycopg2 object at 0x7fed2d2c2690>, ('0', <class 'sqlalchemy.sql.dml.Insert'>, 'table', (Table('discussion', MetaData(), Column('id', Integer(), table=<discussion>, primary_key=True, nullable=False), Column('embed_code', String(length=800), table=<discussion>), Column('has_native_statements', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('title', String(length=200), table=<discussion>, nullable=False), Column('description', Text(), table=<discussion>), Column('keywords', String(length=200), table=<discussion>), Column('slug', String(length=150), table=<discussion>, nullable=False), Column('geographic_scope', String(length=20), table=<discussion>, nullable=False, default=ScalarElementColumnDefault('country')), Column('country', String(length=100), table=<discussion>), Column('city', String(length=100), table=<discussion>), Column('creator_id', Integer(), ForeignKey('user.id'), table=<discussion>), Column('topic', String(length=100), table=<discussion>), Column('is_featured', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('participant_count', Integer(), table=<discussion>, default=ScalarElementColumnDefault(0)), Column('created_at', DateTime(), table=<discussion>, default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3d80>)), Column('updated_at', DateTime(), table=<discussion>, onupdate=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3ec0>), default=CallableColumnDefault(<function datetime.utcnow at 0x7fed2cdc3e20>)), Column('individual_profile_id', Integer(), ForeignKey('individual_profile.id'), table=<discussion>), Column('company_profile_id', Integer(), ForeignKey('company_profile.id'), table=<discussion>), Column('bluesky_scheduled_at', DateTime(), table=<discussion>), Column('bluesky_posted_at', DateTime(), table=<discussion>), Column('bluesky_post_uri', String(length=500), table=<discussion>), Column('x_scheduled_at', DateTime(), table=<discussion>), Column('x_posted_at', DateTime(), table=<discussion>), Column('x_post_id', String(length=100), table=<discussion>), schema=None),)), ('bluesky_post_uri', 'bluesky_posted_at', 'bluesky_scheduled_at', 'city', 'company_profile_id', 'country', 'creator_id', 'description', 'embed_code', 'geographic_scope', 'has_native_statements', 'individual_profile_id', 'is_featured', 'keywords', 'slug', 'title', 'topic', 'x_post_id', 'x_posted_at', 'x_scheduled_at'), False, False)": "<sqlalchemy.dialects.postgresql.base.PGCompiler object at 0x7fecd7f0c690>"
+    }
+  },
+  "insert": "<generator object _collect_insert_commands at 0x7fecf851c9a0>",
+  "mapper": "<Mapper at 0x7fed2cdf0810; Discussion>",
+  "table": "Table('discussion', MetaData(), Column('id', Integer(), table=<discussion>, primary_key=True, nullable=False), Column('embed_code', String(length=800), table=<discussion>), Column('has_native_statements', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('title', String(length=200), table=<discussion>, nullable=False), Column('description', Text(), table=<discussion>), Column('keywords', String(length=200), table=<discussion>), Column('slug', String(length=150), table=<discussion>, nullable=False), Column('geographic_scope', String(length=20), table=<discussion>, nullable=False, default=ScalarElementColumnDefault('country')), Column('country', String(length=100), table=<discussion>), Column('city', String(length=100), table=<discussion>), Column('creator_id', Integer(), ForeignKey('user.id'), table=<discussion>), Column('topic', String(length=100), table=<discussion>), Column('is_featured', Boolean(), table=<discussion>, default=ScalarElementColumnDefault(False)), Column('pa...",
+  "uowtransaction": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7fecfa65c990>",
+  "use_orm_insert_stmt": "None"
+}
+
+=======
+ save_obj in sqlalchemy/orm/persistence.py [Line 93] (Not in app)
+            mapper,
+            table,
+            update,
+        )
+
+        _emit_insert_statements(  <-- SUSPECT LINE
+            base_mapper,
+            uowtransaction,
+            mapper,
+            table,
+            insert,
+---
+Variable values:
+{
+  "base_mapper": "<Mapper at 0x7fed2cdf0810; Discussion>",
+  "connection": "<sqlalchemy.engine.base.Connection object at 0x7fecfa65e150>",
+  "dict_": {
+    "_sa_instance_state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cf530>",
+    "country": "'United States'",
+    "creator_id": "14",
+    "description": "[Filtered]",
+    "geographic_scope": "'global'",
+    "has_native_statements": "True",
+    "is_featured": "False",
+    "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+    "title": "'James Clear: How to Build Good Habits & Break Bad Ones'",
+    "topic": "'Education'"
+  },
+  "mapper": "<Mapper at 0x7fed2cdf0810; Discussion>",
+  "single": "False",
+  "state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cf530>",
+  "states": "<generator object UOWTransaction.states_for_mapper_hierarchy at 0x7fecd7f29040>",
+  "states_to_insert": [
+    [
+      "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cf530>",
+      {
+        "_sa_instance_state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cf530>",
+        "country": "'United States'",
+        "creator_id": "14",
+        "description": "[Filtered]",
+        "geographic_scope": "'global'",
+        "has_native_statements": "True",
+        "is_featured": "False",
+        "slug": "'james-clear-how-to-build-good-habits-break-bad-ones'",
+        "title": "'James Clear: How to Build Good Habits & Break Bad Ones'",
+        "topic": "'Education'"
+      },
+      "<Mapper at 0x7fed2cdf0810; Discussion>",
+      "<sqlalchemy.engine.base.Connection object at 0x7fecfa65e150>"
+    ]
+  ],
+  "states_to_update": [],
+  "uowtransaction": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7fecfa65c990>"
+}
+
+=======
+ execute in sqlalchemy/orm/unitofwork.py [Line 642] (Not in app)
+        self.sort_key = ("SaveUpdateAll", mapper._sort_key)
+        assert mapper is mapper.base_mapper
+
+    @util.preload_module("sqlalchemy.orm.persistence")
+    def execute(self, uow):
+        util.preloaded.orm_persistence.save_obj(  <-- SUSPECT LINE
+            self.mapper,
+            uow.states_for_mapper_hierarchy(self.mapper, False, False),
+            uow,
+        )
+
+---
+Variable values:
+{
+  "self": "SaveUpdateAll(Mapper[Discussion(discussion)])",
+  "uow": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7fecfa65c990>"
+}
+
+=======
+ execute in sqlalchemy/orm/unitofwork.py [Line 466] (Not in app)
+                while set_:
+                    n = set_.pop()
+                    n.execute_aggregate(self, set_)
+        else:
+            for rec in topological.sort(self.dependencies, postsort_actions):
+                rec.execute(self)  <-- SUSPECT LINE
+
+    def finalize_flush_changes(self) -> None:
+        """Mark processed objects as clean / deleted after a successful
+        flush().
+
+---
+Variable values:
+{
+  "postsort_actions": [
+    "DeleteAll(Mapper[Discussion(discussion)])",
+    "SaveUpdateAll(Mapper[Discussion(discussion)])"
+  ],
+  "rec": "SaveUpdateAll(Mapper[Discussion(discussion)])",
+  "self": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7fecfa65c990>"
+}
+
+=======
+ _flush in sqlalchemy/orm/session.py [Line 4427] (Not in app)
+
+        flush_context.transaction = transaction = self._autobegin_t()._begin()
+        try:
+            self._warn_on_events = True
+            try:
+                flush_context.execute()  <-- SUSPECT LINE
+            finally:
+                self._warn_on_events = False
+
+            self.dispatch.after_flush(self, flush_context)
+
+---
+Variable values:
+{
+  "deleted": [],
+  "dirty": [],
+  "flush_context": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7fecfa65c990>",
+  "new": [
+    "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cf530>"
+  ],
+  "objects": "None",
+  "objset": "None",
+  "proc": [],
+  "processed": [
+    "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cf530>"
+  ],
+  "self": "<sqlalchemy.orm.session.Session object at 0x7fecfa65e390>",
+  "state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cf530>"
+}
+
+=======
+ __exit__ in sqlalchemy/util/langhelpers.py [Line 224] (Not in app)
+        # see #2703 for notes
+        if type_ is None:
+            exc_type, exc_value, exc_tb = self._exc_info
+            assert exc_value is not None
+            self._exc_info = None  # remove potential circular references
+            raise exc_value.with_traceback(exc_tb)  <-- SUSPECT LINE
+        else:
+            self._exc_info = None  # remove potential circular references
+            assert value is not None
+            raise value.with_traceback(traceback)
+
+---
+Variable values:
+{
+  "exc_tb": "<traceback object at 0x7fecd7f0df40>",
+  "exc_type": "<class 'sqlalchemy.exc.IntegrityError'>",
+  "exc_value": "IntegrityError('(psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint \"discussion_slug_key\"\\nDETAIL:  Key (slug)=(james-clear-how-to-build-good-habits-break-bad-ones) already exists.\\n')",
+  "self": "<sqlalchemy.util.langhelpers.safe_reraise object at 0x7fed00128e20>",
+  "traceback": "None",
+  "type_": "None",
+  "value": "None"
+}
+
+=======
+ _flush in sqlalchemy/orm/session.py [Line 4466] (Not in app)
+            self.dispatch.after_flush_postexec(self, flush_context)
+
+            transaction.commit()
+
+        except:
+            with util.safe_reraise():  <-- SUSPECT LINE
+                transaction.rollback(_capture_exception=True)
+
+    def bulk_save_objects(
+        self,
+        objects: Iterable[object],
+---
+Variable values:
+{
+  "deleted": [],
+  "dirty": [],
+  "flush_context": "<sqlalchemy.orm.unitofwork.UOWTransaction object at 0x7fecfa65c990>",
+  "new": [
+    "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cf530>"
+  ],
+  "objects": "None",
+  "objset": "None",
+  "proc": [],
+  "processed": [
+    "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cf530>"
+  ],
+  "self": "<sqlalchemy.orm.session.Session object at 0x7fecfa65e390>",
+  "state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cf530>"
+}
+
+=======
+ flush in sqlalchemy/orm/session.py [Line 4331] (Not in app)
+
+        if self._is_clean():
+            return
+        try:
+            self._flushing = True
+            self._flush(objects)  <-- SUSPECT LINE
+        finally:
+            self._flushing = False
+
+    def _flush_warning(self, method: Any) -> None:
+        util.warn(
+---
+Variable values:
+{
+  "objects": "None",
+  "self": "<sqlalchemy.orm.session.Session object at 0x7fecfa65e390>"
+}
+
+=======
+```
+------
+### Exception 3
+**Type:** PendingRollbackError
+**Value:** This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint "discussion_slug_key"
+DETAIL:  Key (slug)=(james-clear-how-to-build-good-habits-break-bad-ones) already exists.
+
+[SQL: INSERT INTO discussion (embed_code, has_native_statements, title, description, keywords, slug, geographic_scope, country, city, creator_id, topic, is_featured, participant_count, created_at, updated_at, individual_profile_id, company_profile_id, bluesky_scheduled_at, bluesky_posted_at, bluesky_post_uri, x_scheduled_at, x_posted_at, x_post_id) VALUES (%(embed_code)s, %(has_native_statements)s, %(title)s, %(description)s, %(keywords)s, %(slug)s, %(geographic_scope)s, %(country)s, %(city)s, %(creator_id)s, %(topic)s, %(is_featured)s, %(participant_count)s, %(created_at)s, %(updated_at)s, %(individual_profile_id)s, %(company_...
+
+#### Stacktrace
+
+```
+ _raise_for_prerequisite_state in sqlalchemy/orm/session.py [Line 971] (Not in app)
+    def _raise_for_prerequisite_state(
+        self, operation_name: str, state: _StateChangeState
+    ) -> NoReturn:
+        if state is SessionTransactionState.DEACTIVE:
+            if self._rollback_exception:
+                raise sa_exc.PendingRollbackError(  <-- SUSPECT LINE
+                    "This Session's transaction has been rolled back "
+                    "due to a previous exception during flush."
+                    " To begin a new transaction with this Session, "
+                    "first issue Session.rollback()."
+                    f" Original exception was: {self._rollback_exception}",
+---
+Variable values:
+{
+  "operation_name": "'_connection_for_bind'",
+  "self": "<sqlalchemy.orm.session.SessionTransaction object at 0x7fed0162da40>",
+  "state": "<SessionTransactionState.DEACTIVE: 4>"
+}
+
+=======
+ _go in sqlalchemy/orm/state_changes.py [Line 101] (Not in app)
+
+            if (
+                has_prerequisite_states
+                and current_state not in prerequisite_state_collection
+            ):
+                self._raise_for_prerequisite_state(fn.__name__, current_state)  <-- SUSPECT LINE
+
+            next_state = self._next_state
+            existing_fn = self._current_fn
+            expect_state = moves_to if expect_state_change else current_state
+
+---
+Variable values:
+{
+  "arg": [
+    "Engine(postgresql://neondb_owner:***@ep-still-fire-a5q2wfmb.us-east-2.aws.neon.tech/neondb?sslmode=require)",
+    "None"
+  ],
+  "current_state": "<SessionTransactionState.DEACTIVE: 4>",
+  "expect_state_change": "False",
+  "fn": "<function SessionTransaction._connection_for_bind at 0x7fed30c004a0>",
+  "has_prerequisite_states": "True",
+  "kw": {},
+  "moves_to": "<_StateChangeStates.NO_CHANGE: 2>",
+  "prerequisite_state_collection": [
+    "<SessionTransactionState.ACTIVE: 1>"
+  ],
+  "self": "<sqlalchemy.orm.session.SessionTransaction object at 0x7fed0162da40>"
+}
+
+=======
+ _connection_for_bind in <string> [Line 2] (In app)
+---
+Variable values:
+{
+  "bind": "Engine(postgresql://neondb_owner:***@ep-still-fire-a5q2wfmb.us-east-2.aws.neon.tech/neondb?sslmode=require)",
+  "execution_options": "None",
+  "self": "<sqlalchemy.orm.session.SessionTransaction object at 0x7fed0162da40>"
+}
+
+=======
+ _connection_for_bind in sqlalchemy/orm/session.py [Line 2108] (Not in app)
+        TransactionalContext._trans_ctx_check(self)
+
+        trans = self._transaction
+        if trans is None:
+            trans = self._autobegin_t()
+        return trans._connection_for_bind(engine, execution_options)  <-- SUSPECT LINE
+
+    @overload
+    def _execute_internal(
+        self,
+        statement: Executable,
+---
+Variable values:
+{
+  "engine": "Engine(postgresql://neondb_owner:***@ep-still-fire-a5q2wfmb.us-east-2.aws.neon.tech/neondb?sslmode=require)",
+  "execution_options": "None",
+  "kw": {},
+  "self": "<sqlalchemy.orm.session.Session object at 0x7fecfa65e390>",
+  "trans": "<sqlalchemy.orm.session.SessionTransaction object at 0x7fed0162da40>"
+}
+
+=======
+ _execute_internal in sqlalchemy/orm/session.py [Line 2239] (Not in app)
+                False,
+            )
+
+        bind = self.get_bind(**bind_arguments)
+
+        conn = self._connection_for_bind(bind)  <-- SUSPECT LINE
+
+        if _scalar_result and not compile_state_cls:
+            if TYPE_CHECKING:
+                params = cast(_CoreSingleExecuteParams, params)
+            return conn.scalar(
+---
+Variable values:
+{
+  "_add_event": "None",
+  "_parent_execute_state": "None",
+  "_scalar_result": "False",
+  "bind_arguments": {
+    "clause": "<sqlalchemy.sql.selectable.Select object at 0x7fecfa6c9690>",
+    "mapper": "<Mapper at 0x7fed2c97be50; NewsArticle>"
+  },
+  "compile_state_cls": "<class 'sqlalchemy.orm.context.ORMSelectCompileState'>",
+  "events_todo": "<sqlalchemy.event.attr._EmptyListener object at 0x7fed0018fe40>",
+  "execution_options": {
+    "_result_disable_adapt_to_context": "True",
+    "_sa_orm_load_options": "default_load_options(_refresh_state=<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>)"
+  },
+  "params": {
+    "pk_1": "4110"
+  },
+  "self": "<sqlalchemy.orm.session.Session object at 0x7fecfa65e390>",
+  "statement": "<sqlalchemy.sql.selectable.Select object at 0x7fecfa6c9690>"
+}
+
+=======
+ execute in sqlalchemy/orm/session.py [Line 2351] (Not in app)
+
+        :return: a :class:`_engine.Result` object.
+
+
+        """
+        return self._execute_internal(  <-- SUSPECT LINE
+            statement,
+            params,
+            execution_options=execution_options,
+            bind_arguments=bind_arguments,
+            _parent_execute_state=_parent_execute_state,
+---
+Variable values:
+{
+  "_add_event": "None",
+  "_parent_execute_state": "None",
+  "bind_arguments": {},
+  "execution_options": {
+    "_sa_orm_load_options": "default_load_options(_refresh_state=<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>)"
+  },
+  "params": {
+    "pk_1": "4110"
+  },
+  "self": "<sqlalchemy.orm.session.Session object at 0x7fecfa65e390>",
+  "statement": "<sqlalchemy.sql.selectable.Select object at 0x7fecfa6c9690>"
+}
+
+=======
+ load_on_pk_identity in sqlalchemy/orm/loading.py [Line 695] (Not in app)
+
+    execution_options = util.EMPTY_DICT.merge_with(
+        execution_options, {"_sa_orm_load_options": load_options}
+    )
+    result = (
+        session.execute(  <-- SUSPECT LINE
+            q,
+            params=params,
+            execution_options=execution_options,
+            bind_arguments=bind_arguments,
+        )
+---
+Variable values:
+{
+  "bind_arguments": {},
+  "identity_token": "[Filtered]",
+  "load_options": "default_load_options(_refresh_state=<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>)",
+  "no_autoflush": "False",
+  "only_load_props": [
+    "'title'",
+    "'published_at'",
+    "'source_id'",
+    "'source'",
+    "'discussion_links'",
+    "'external_id'",
+    "'summary'",
+    "'title_embedding'",
+    "'geographic_scope'",
+    "'topic_associations'"
+  ],
+  "primary_key_identity": [
+    "4110"
+  ],
+  "refresh_state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>",
+  "session": "[Filtered]",
+  "statement": "<sqlalchemy.sql.selectable.Select object at 0x7fed000dd390>",
+  "with_for_update": "None"
+}
+
+=======
+ load_on_ident in sqlalchemy/orm/loading.py [Line 510] (Not in app)
+        ident = key[1]
+        identity_token = key[2]
+    else:
+        ident = identity_token = None
+
+    return load_on_pk_identity(  <-- SUSPECT LINE
+        session,
+        statement,
+        ident,
+        load_options=load_options,
+        refresh_state=refresh_state,
+---
+Variable values:
+{
+  "bind_arguments": {},
+  "execution_options": {},
+  "key": [
+    "<class 'app.models.NewsArticle'>",
+    [
+      "4110"
+    ],
+    "None"
+  ],
+  "load_options": "None",
+  "no_autoflush": "False",
+  "only_load_props": [
+    "'title'",
+    "'published_at'",
+    "'source_id'",
+    "'source'",
+    "'discussion_links'",
+    "'external_id'",
+    "'summary'",
+    "'title_embedding'",
+    "'geographic_scope'",
+    "'topic_associations'"
+  ],
+  "refresh_state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>",
+  "session": "[Filtered]",
+  "statement": "<sqlalchemy.sql.selectable.Select object at 0x7fed000dd390>",
+  "with_for_update": "None"
+}
+
+=======
+ load_scalar_attributes in sqlalchemy/orm/loading.py [Line 1674] (Not in app)
+            "(and shouldn't be expired, either).",
+            state_str(state),
+        )
+        return
+
+    result = load_on_ident(  <-- SUSPECT LINE
+        session,
+        select(mapper).set_label_style(LABEL_STYLE_TABLENAME_PLUS_COL),
+        identity_key,
+        refresh_state=state,
+        only_load_props=attribute_names,
+---
+Variable values:
+{
+  "attribute_names": [
+    "'title'",
+    "'published_at'",
+    "'source_id'",
+    "'source'",
+    "'discussion_links'",
+    "'external_id'",
+    "'summary'",
+    "'title_embedding'",
+    "'geographic_scope'",
+    "'topic_associations'"
+  ],
+  "has_key": "True",
+  "identity_key": [
+    "<class 'app.models.NewsArticle'>",
+    [
+      "4110"
+    ],
+    "None"
+  ],
+  "mapper": "<Mapper at 0x7fed2c97be50; NewsArticle>",
+  "no_autoflush": "False",
+  "passive": "symbol('PASSIVE_OFF')",
+  "session": "[Filtered]",
+  "state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>"
+}
+
+=======
+ _load_expired in sqlalchemy/orm/state.py [Line 828] (Not in app)
+            attr
+            for attr in toload
+            if not self.manager[attr].impl.load_on_unexpire
+        )
+
+        self.manager.expired_attribute_loader(self, toload, passive)  <-- SUSPECT LINE
+
+        # if the loader failed, or this
+        # instance state didn't have an identity,
+        # the attributes still might be in the callables
+        # dict.  ensure they are removed.
+---
+Variable values:
+{
+  "passive": "symbol('PASSIVE_OFF')",
+  "self": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>",
+  "state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>",
+  "toload": [
+    "'discussion_links'",
+    "'source_id'",
+    "'source'",
+    "'summary'",
+    "'topic_associations'",
+    "'fetched_at'",
+    "'sensationalism_score'",
+    "'id'",
+    "'title'",
+    "'published_at'"
+  ]
+}
+
+=======
+ _fire_loader_callables in sqlalchemy/orm/attributes.py [Line 1126] (Not in app)
+        if (
+            self.accepts_scalar_loader
+            and self.load_on_unexpire
+            and key in state.expired_attributes
+        ):
+            return state._load_expired(state, passive)  <-- SUSPECT LINE
+        elif key in state.callables:
+            callable_ = state.callables[key]
+            return callable_(state, passive)
+        elif self.callable_:
+            return self.callable_(state, passive)
+---
+Variable values:
+{
+  "key": "'id'",
+  "passive": "symbol('PASSIVE_OFF')",
+  "self": "<sqlalchemy.orm.attributes.ScalarAttributeImpl object at 0x7fed00274720>",
+  "state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>"
+}
+
+=======
+ get in sqlalchemy/orm/attributes.py [Line 1096] (Not in app)
+                or state.committed_state[key] is NO_VALUE
+            ):
+                if not passive & CALLABLES_OK:
+                    return PASSIVE_NO_RESULT
+
+                value = self._fire_loader_callables(state, key, passive)  <-- SUSPECT LINE
+
+                if value is PASSIVE_NO_RESULT or value is NO_VALUE:
+                    return value
+                elif value is ATTR_WAS_SET:
+                    try:
+---
+Variable values:
+{
+  "dict_": {
+    "_sa_instance_state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>"
+  },
+  "key": "'id'",
+  "passive": "symbol('PASSIVE_OFF')",
+  "self": "<sqlalchemy.orm.attributes.ScalarAttributeImpl object at 0x7fed00274720>",
+  "state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>"
+}
+
+=======
+ __get__ in sqlalchemy/orm/attributes.py [Line 569] (Not in app)
+        else:
+            try:
+                state = instance_state(instance)
+            except AttributeError as err:
+                raise orm_exc.UnmappedInstanceError(instance) from err
+            return self.impl.get(state, dict_)  # type: ignore[no-any-return]  <-- SUSPECT LINE
+
+
+@dataclasses.dataclass(frozen=True)
+class AdHocHasEntityNamespace(HasCacheKey):
+    _traverse_internals: ClassVar[_TraverseInternalsType] = [
+---
+Variable values:
+{
+  "dict_": {
+    "_sa_instance_state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>"
+  },
+  "instance": "<broken repr>",
+  "owner": "<class 'app.models.NewsArticle'>",
+  "self": "<sqlalchemy.orm.attributes.InstrumentedAttribute object at 0x7fed2c97cea0>",
+  "state": "<sqlalchemy.orm.state.InstanceState object at 0x7fecfa6cd130>"
+}
+
+=======
+ process_single_source_articles in app/trending/podcast_publisher.py [Line 749] (In app)
+                    stats['discussions_created'] += 1
+                    published_count += 1
+                else:
+                    stats['skipped'] += 1
+            except Exception as e:
+                logger.error(f"Error publishing article {article.id}: {e}")  <-- SUSPECT LINE
+                stats['errors'] += 1
+                db.session.rollback()
+    
+    logger.info(f"Single-source processing complete: {stats}")
+    return stats
+---
+Variable values:
+{
+  "admin_user": "<User 14>",
+  "articles": [
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>"
+  ],
+  "cutoff_date": "datetime.datetime(2026, 1, 2, 9, 0, 0, 308813)",
+  "days": "14",
+  "max_per_source": "3",
+  "published_count": "0",
+  "source": "<broken repr>",
+  "source_categories": [
+    "'podcast'",
+    "'newsletter'",
+    "'magazine'",
+    "'think_tank'"
+  ],
+  "sources": [
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>",
+    "<broken repr>"
+  ],
+  "stats": {
+    "already_published": "2",
+    "articles_found": "3",
+    "discussions_created": "0",
+    "errors": "0",
+    "skipped": "0",
+    "source_categories": [
+      "'podcast'",
+      "'newsletter'",
+      "'magazine'",
+      "'think_tank'"
+    ],
+    "sources_processed": "1"
+  }
+}
+
+=======
+ single_source_to_discussions in app/scheduler.py [Line 395] (In app)
+            from app.trending.podcast_publisher import process_single_source_articles
+            
+            logger.info("Starting single-source-to-discussions pipeline")
+            
+            try:
+                stats = process_single_source_articles(  <-- SUSPECT LINE
+                    source_categories=['podcast', 'newsletter', 'magazine', 'think_tank'],
+                    days=14,
+                    max_per_source=3
+                )
+                logger.info(f"Single-source pipeline complete: {stats}")
+---
+Variable values:
+{
+  "app": "<Flask 'app'>",
+  "e": "PendingRollbackError('This Session\\'s transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.UniqueViolation) duplicate key value violates unique constraint \"discussion_slug_key\"\\nDETAIL:  Key (slug)=(james-clear-how-to-build-good-habits-break-bad-ones) already exists.\\n\\n[SQL: INSERT INTO discussion (embed_code, has_native_statements, title, description, keywords, slug, geographic_scope, country, city, creator_id, topic, is_featured, participant_count, created_at, updated_at, individual_profile_id, company_profile_id, bluesky_scheduled_at, bluesky_posted_at, bluesky_post_uri, x_scheduled_at, x_posted_at, x_post_id) VALUES (%(embed_code)s, %(has_native_statements)s, %(title)s, %(description)s, %(keywords)s, %(slug)s, %(geographic_scope)s, %(country)s, %(city)s, %(creator_id)s, %(topic)s, %(is_featured)s, %(participant_count)s, %(created_at)s, %(updated_at)s, %(individua...",
+  "process_single_source_articles": "<function process_single_source_articles at 0x7fecfa623880>"
+}
+
+=======
+```
