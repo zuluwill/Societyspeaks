@@ -1,0 +1,131 @@
+# UnboundLocalError: cannot access local variable 'request' where it is not associated with a value
+
+**Issue ID:** 88831618
+**Project:** python-flask
+**Date:** 16/01/2026, 08:34:36
+## Issue Summary
+UnboundLocalError: Flask request context missing in vote_statement
+**What's wrong:** UnboundLocalError in `vote_statement`: `request` accessed before assignment. **Flask request context missing**.
+**In the trace:** Redis GET for session key `session:0nwaApCnr5SY5XezMsxz6iTOFuEfetijajU9HFFtliY` successful.
+**Possible cause:** The `request` object is not available, possibly due to **improper decorator stacking** or a **missing Flask application context** when `vote_statement` is called.
+
+## Tags
+
+- **browser:** Chrome 143
+- **browser.name:** Chrome
+- **client_os:** macOS
+- **client_os.name:** macOS
+- **device:** Mac
+- **device.family:** Mac
+- **environment:** production
+- **handled:** yes
+- **level:** error
+- **logger:** app
+- **mechanism:** logging
+- **runtime:** CPython 3.11.14
+- **runtime.name:** CPython
+- **server_name:** nixos
+- **transaction:** statements.vote_statement
+- **url:** https://societyspeaks.io/statements/762/vote
+
+## Exception
+
+### Exception 1
+**Type:** UnboundLocalError
+**Value:** cannot access local variable 'request' where it is not associated with a value
+
+#### Stacktrace
+
+```
+ vote_statement in app/discussions/statements.py [Line 308] (In app)
+
+    Supports both authenticated and anonymous voting (like pol.is):
+    - Authenticated users: votes stored in DB with user_id
+    - Anonymous users: votes stored in DB with session_fingerprint (can be merged to account later)
+    """
+    user_agent = request.headers.get('User-Agent', '').lower()  <-- SUSPECT LINE
+    bot_indicators = ['bot', 'crawler', 'spider', 'preview', 'fetch', 'slurp', 'mediapartners']
+    if any(indicator in user_agent for indicator in bot_indicators):
+        return jsonify({'error': 'Automated requests not allowed'}), 403
+    
+    statement = Statement.query.get_or_404(statement_id)
+---
+Variable values:
+{
+  "statement_id": "762"
+}
+
+=======
+ __inner in flask_limiter/limits.py [Line 326] (Not in app)
+                        if view_func and not get_qualified_name(view_func) == name:
+                            self.limiter.limit_manager.add_endpoint_hint(identity, name)
+
+                    self.limiter._check_request_limit(in_middleware=False, callable_name=name)
+
+                return cast(R, flask.current_app.ensure_sync(obj)(*a, **k))  <-- SUSPECT LINE
+
+            # mark this wrapper as wrapped by a decorator from the limiter
+            # from which the decorator was created. This ensures that stacked
+            # decorations only trigger rate limiting from the inner most
+            # decorator from each limiter instance (the weird need for
+---
+Variable values:
+{
+  "a": [],
+  "identity": "'statements.vote_statement'",
+  "k": {
+    "statement_id": "762"
+  },
+  "name": "'app.discussions.statements.vote_statement.vote_statement'",
+  "obj": "<function vote_statement at 0x7f95ba6db240>",
+  "self": "RouteLimit(limit_provider='30 per minute', key_function=<function get_remote_address at 0x7f95bfef79c0>, scope=None, cost=1, shared=False, methods=None, per_method=False, error_message=None, meta_limits=None, exempt_when=None, deduct_when=None, on_breach=None, override_defaults=True, finalized=True)",
+  "view_func": "<function vote_statement at 0x7f95ba6db380>"
+}
+
+=======
+ dispatch_request in flask/app.py [Line 852] (Not in app)
+            and req.method == "OPTIONS"
+        ):
+            return self.make_default_options_response()
+        # otherwise dispatch to the handler for that endpoint
+        view_args: dict[str, t.Any] = req.view_args  # type: ignore[assignment]
+        return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  <-- SUSPECT LINE
+
+    def full_dispatch_request(self) -> Response:
+        """Dispatches the request and on top of that performs request
+        pre and postprocessing as well as HTTP exception catching and
+        error handling.
+---
+Variable values:
+{
+  "req": "<Request 'https://societyspeaks.io/statements/762/vote' [POST]>",
+  "rule": "<Rule '/statements/<statement_id>/vote' (POST, OPTIONS) -> statements.vote_statement>",
+  "self": "<Flask 'app'>",
+  "view_args": {
+    "statement_id": "762"
+  }
+}
+
+=======
+ full_dispatch_request in flask/app.py [Line 867] (Not in app)
+
+        try:
+            request_started.send(self, _async_wrapper=self.ensure_sync)
+            rv = self.preprocess_request()
+            if rv is None:
+                rv = self.dispatch_request()  <-- SUSPECT LINE
+        except Exception as e:
+            rv = self.handle_user_exception(e)
+        return self.finalize_request(rv)
+
+    def finalize_request(
+---
+Variable values:
+{
+  "e": "UnboundLocalError(\"cannot access local variable 'request' where it is not associated with a value\")",
+  "rv": "None",
+  "self": "<Flask 'app'>"
+}
+
+=======
+```
