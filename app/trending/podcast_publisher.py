@@ -13,6 +13,8 @@ import re
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict
 
+from sqlalchemy.exc import IntegrityError
+
 from app import db
 from app.models import (
     NewsArticle, NewsSource, Discussion, Statement, User,
@@ -518,6 +520,25 @@ def publish_single_source_article(
         return None
 
     base_slug = generate_slug(article.title)
+    
+    # First check if a discussion with this slug already exists (prevent duplicates)
+    existing_by_slug = Discussion.query.filter_by(slug=base_slug).first()
+    if existing_by_slug:
+        logger.info(f"Discussion with slug '{base_slug}' already exists (id={existing_by_slug.id}), linking article {article.id}")
+        # Link article to existing discussion if not already linked
+        existing_link = DiscussionSourceArticle.query.filter_by(
+            discussion_id=existing_by_slug.id, 
+            article_id=article.id
+        ).first()
+        if not existing_link:
+            link = DiscussionSourceArticle(
+                discussion_id=existing_by_slug.id,
+                article_id=article.id
+            )
+            db.session.add(link)
+            db.session.commit()
+        return existing_by_slug
+    
     slug = get_unique_slug(Discussion, base_slug)
 
     source_name = article.source.name if article.source else "Unknown"
@@ -533,20 +554,30 @@ def publish_single_source_article(
     
     description = generate_article_description(article)
     
-    discussion = Discussion(
-        title=strip_html_tags(article.title),
-        description=description,
-        slug=slug,
-        has_native_statements=True,
-        creator_id=admin_user.id,
-        topic=topic_category,
-        geographic_scope=geographic_scope,
-        country=country,
-        is_featured=False
-    )
-    
-    db.session.add(discussion)
-    db.session.flush()
+    try:
+        discussion = Discussion(
+            title=strip_html_tags(article.title),
+            description=description,
+            slug=slug,
+            has_native_statements=True,
+            creator_id=admin_user.id,
+            topic=topic_category,
+            geographic_scope=geographic_scope,
+            country=country,
+            is_featured=False
+        )
+        
+        db.session.add(discussion)
+        db.session.flush()
+    except IntegrityError as e:
+        db.session.rollback()
+        # Slug collision - try to find and return existing discussion
+        if 'discussion_slug_key' in str(e):
+            existing = Discussion.query.filter_by(slug=slug).first()
+            if existing:
+                logger.warning(f"Slug collision handled for '{slug}', returning existing discussion {existing.id}")
+                return existing
+        raise
     
     source_link = DiscussionSourceArticle(
         discussion_id=discussion.id,
