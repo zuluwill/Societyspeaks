@@ -465,7 +465,6 @@ def vote_statement(statement_id):
     if posthog:
         try:
             # Check if this is from social media (conversion tracking)
-            from flask import request
             referer = request.headers.get('Referer', '') if hasattr(request, 'headers') else ''
             request_url = request.url if hasattr(request, 'url') else ''
             is_social = any(domain in referer for domain in ['twitter.com', 'x.com', 'bsky.social', 'bluesky.social']) or 'utm_source' in request_url
