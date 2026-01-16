@@ -158,8 +158,9 @@
                             </svg>
                         </button>
                         <div id="products-dropdown-menu" 
-                             class="hidden absolute left-0 z-20 mt-2 w-56 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                             role="menu">
+                             class="absolute left-0 z-20 mt-2 w-56 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                             role="menu"
+                             style="display: none;">
                             <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Free</div>
                             <a href="{{ url_for('daily.today') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Today's Question</a>
                             <a href="{{ url_for('brief.today') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Daily Brief</a>
@@ -185,8 +186,9 @@
                             </svg>
                         </button>
                         <div id="explore-dropdown-menu" 
-                             class="hidden absolute left-0 z-20 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                             role="menu">
+                             class="absolute left-0 z-20 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                             role="menu"
+                             style="display: none;">
                             <a href="{{ url_for('news.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">News</a>
                             <a href="/discussions/search" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Discussions</a>
                             <a href="{{ url_for('sources.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Sources</a>
@@ -206,8 +208,9 @@
                             </svg>
                         </button>
                         <div id="about-dropdown-menu" 
-                             class="hidden absolute left-0 z-20 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                             role="menu">
+                             class="absolute left-0 z-20 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                             role="menu"
+                             style="display: none;">
                             <a href="/about" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">About Us</a>
                             <a href="{{ url_for('help.help') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Help</a>
                         </div>
@@ -599,7 +602,7 @@
                     if (d.menu !== exceptMenu) {
                         const m = document.getElementById(d.menu);
                         const b = document.getElementById(d.btn);
-                        if (m) m.classList.add('hidden');
+                        if (m) m.style.display = 'none';
                         if (b) b.setAttribute('aria-expanded', 'false');
                     }
                 });
@@ -611,15 +614,18 @@
                 const container = document.getElementById(dropdown.container);
                 
                 if (btn && menu) {
+                    // Ensure menu is hidden on load
+                    menu.style.display = 'none';
+                    
                     // Click toggle
                     btn.addEventListener('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         closeAllDropdowns(dropdown.menu);
-                        menu.classList.toggle('hidden');
-                        const isExpanded = !menu.classList.contains('hidden');
-                        btn.setAttribute('aria-expanded', isExpanded);
-                        if (isExpanded) {
+                        const isHidden = menu.style.display === 'none';
+                        menu.style.display = isHidden ? 'block' : 'none';
+                        btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+                        if (isHidden) {
                             const firstLink = menu.querySelector('a');
                             if (firstLink) firstLink.focus();
                         }
@@ -631,7 +637,7 @@
                             e.preventDefault();
                             btn.click();
                         } else if (e.key === 'Escape') {
-                            menu.classList.add('hidden');
+                            menu.style.display = 'none';
                             btn.setAttribute('aria-expanded', 'false');
                         }
                     });
@@ -639,7 +645,7 @@
                     // Escape key within menu closes it
                     menu.addEventListener('keydown', function(e) {
                         if (e.key === 'Escape') {
-                            menu.classList.add('hidden');
+                            menu.style.display = 'none';
                             btn.setAttribute('aria-expanded', 'false');
                             btn.focus();
                         }
@@ -650,7 +656,7 @@
                         container.addEventListener('focusout', function(e) {
                             setTimeout(function() {
                                 if (!container.contains(document.activeElement)) {
-                                    menu.classList.add('hidden');
+                                    menu.style.display = 'none';
                                     btn.setAttribute('aria-expanded', 'false');
                                 }
                             }, 0);
@@ -665,7 +671,7 @@
                     const btn = document.getElementById(dropdown.btn);
                     const menu = document.getElementById(dropdown.menu);
                     if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
-                        menu.classList.add('hidden');
+                        menu.style.display = 'none';
                         btn.setAttribute('aria-expanded', 'false');
                     }
                 });
