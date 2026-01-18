@@ -49,7 +49,7 @@
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Send Time</dt>
                             <dd class="mt-1 text-sm text-gray-900">
-                                {{ "%02d:%02d"|format(briefing.preferred_send_hour, getattr(briefing, 'preferred_send_minute', 0)) }}
+                                {{ "%02d:%02d"|format(briefing.preferred_send_hour, briefing.preferred_send_minute|default(0)) }}
                                 {% if briefing.preferred_send_hour < 12 %}AM{% else %}PM{% endif %}
                             </dd>
                         </div>
