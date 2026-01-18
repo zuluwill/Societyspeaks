@@ -10,6 +10,154 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app import create_app, db
 from app.models import BriefTemplate
 
+# Sample email outputs for each template - realistic examples showing email quality
+SAMPLE_OUTPUTS = {
+    'politics-public-policy': """<h2 style="margin: 0 0 16px 0; font-size: 20px; color: #1e3a5f;">What Changed This Week</h2>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">EU AI Act Implementation Timeline Announced</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">The European Commission published detailed implementation guidelines for the AI Act, setting compliance deadlines for high-risk AI systems. Companies operating in the EU will need to complete risk assessments by August 2025, with full compliance required by 2026.</p>
+<p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>What it means:</strong> Organizations using AI for hiring, credit scoring, or public services should begin compliance audits now.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: European Commission, Reuters</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">US Infrastructure Funding Allocations Released</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">The Department of Transportation announced $12B in new allocations for broadband expansion in rural areas. Grants will be distributed through state agencies, with applications opening in Q2 2026.</p>
+<p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>Next steps:</strong> State agencies have 60 days to submit implementation plans.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: Department of Transportation, AP</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">UK Data Protection Bill Advances</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">The Data Protection and Digital Information Bill passed its third reading in the House of Lords. Key changes include simplified consent mechanisms for research purposes and new rules for international data transfers post-Brexit.</p>
+<p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>Timeline:</strong> Royal Assent expected within 6 weeks.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: UK Parliament, Financial Times</p>
+</div>""",
+
+    'technology-ai-regulation': """<h2 style="margin: 0 0 16px 0; font-size: 20px; color: #1e3a5f;">Tech & AI Update</h2>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">OpenAI Releases GPT-5 API with Enhanced Safety Controls</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">OpenAI launched GPT-5 with new capabilities for code generation and reasoning tasks. The release includes mandatory content filtering for enterprise customers and improved rate limiting. Pricing starts at $0.03 per 1K tokens for input.</p>
+<p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>Key detail:</strong> Context window expanded to 256K tokens. API documentation updated with new function calling patterns.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: OpenAI Blog, The Verge</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">NIST Publishes AI Risk Management Framework Update</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">The National Institute of Standards and Technology released version 2.0 of its AI Risk Management Framework, adding specific guidance for generative AI systems. New sections cover prompt injection prevention and output validation.</p>
+<p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>Action item:</strong> Review updated governance profiles if operating AI systems in regulated industries.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: NIST, Ars Technica</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">GitHub Copilot Adds Enterprise Compliance Features</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">GitHub announced new enterprise features for Copilot including code provenance tracking, license compliance checks, and audit logs. The update also includes organization-wide policy controls for code suggestions.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: GitHub Blog, TechCrunch</p>
+</div>""",
+
+    'economy-markets': """<h2 style="margin: 0 0 16px 0; font-size: 20px; color: #1e3a5f;">Economic Trends This Week</h2>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">US Inflation Continues Gradual Decline</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">CPI data showed headline inflation at 2.4% year-over-year, down from 2.6% last month. Core inflation (excluding food and energy) remains elevated at 3.1%. Shelter costs continue to be the primary driver of stickiness.</p>
+<p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>Trend direction:</strong> Gradual easing, but pace slower than Fed projections. Markets pricing in one more rate cut this year.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: Bureau of Labor Statistics, Bloomberg</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">Eurozone Manufacturing Shows Signs of Stabilization</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">PMI data for the Eurozone rose to 48.2, still in contraction territory but the highest reading in 8 months. Germany and France showed modest improvement, while Southern Europe remained stronger.</p>
+<p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>Context:</strong> Readings below 50 indicate contraction. Current trajectory suggests potential return to expansion by Q2.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: S&P Global, Financial Times</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">Labour Market Update</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">US jobless claims remained steady at 215K. UK unemployment ticked up to 4.3%, while wage growth moderated to 5.2% annually. Labour market conditions remain tight by historical standards but are gradually normalizing.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: BLS, ONS, Reuters</p>
+</div>""",
+
+    'climate-energy-planet': """<h2 style="margin: 0 0 16px 0; font-size: 20px; color: #1e3a5f;">Climate & Energy Update</h2>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">EU Carbon Border Adjustment Mechanism Enters Full Implementation</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">CBAM requirements for importers of steel, cement, aluminum, and fertilizers now require full carbon content declarations. Companies must purchase certificates matching embedded emissions by April 2026.</p>
+<p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>Implications:</strong> Impacts supply chains with significant non-EU manufacturing. Many companies restructuring procurement.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: European Commission, Carbon Brief</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">Global Renewable Capacity Additions Set New Record</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">IEA data shows 2025 on track for 560GW of new renewable capacity, up 25% from 2024. Solar accounts for 75% of additions. China, US, and India lead deployment, with grid integration becoming the primary constraint.</p>
+<p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>Challenge:</strong> Grid infrastructure investment lagging generation growth by 40%.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: International Energy Agency, Bloomberg NEF</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">Battery Storage Costs Continue Decline</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">Lithium-ion battery pack prices fell to $115/kWh, down 12% year-over-year. Sodium-ion alternatives gaining traction for stationary storage, with several utility-scale projects announced in Australia and Germany.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: BloombergNEF, Clean Energy Wire</p>
+</div>""",
+
+    'sport-state-of-play': """<h2 style="margin: 0 0 16px 0; font-size: 20px; color: #1e3a5f;">Sport - What Matters</h2>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">Premier League Title Race Tightens</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">Arsenal moved within two points of Liverpool after a 3-1 win against Manchester United. City's draw at Newcastle keeps them in contention, four points behind with a game in hand. Key fixture: Arsenal vs Liverpool at Emirates Stadium next Saturday.</p>
+<p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>Standings:</strong> Liverpool 58pts | Arsenal 56pts | Man City 54pts (1 game in hand)</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: BBC Sport, The Athletic</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">Australian Open Finals Preview</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">Jannik Sinner faces Carlos Alcaraz in the men's final after both navigated tough semi-final matches. Women's final features Iga Swiatek against Aryna Sabalenka in a rematch of last year's final.</p>
+<p style="margin: 0; font-size: 14px; color: #6b7280;"><strong>Head-to-head:</strong> Alcaraz leads 5-4 overall, but Sinner won their last hard court meeting.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: ATP Tour, WTA</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+<h3 style="margin: 0 0 8px 0; font-size: 17px; color: #1f2937;">Six Nations Round 2 Results</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563;">Ireland maintained their title defense with a 28-17 win over England in Dublin. France defeated Scotland in Paris, while Wales secured their first win against Italy. Ireland and France remain unbeaten after two rounds.</p>
+<p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: World Rugby, The Guardian</p>
+</div>""",
+}
+
+# Recommended sources for each template category
+RECOMMENDED_SOURCES = {
+    'politics-public-policy': [
+        {'name': 'Reuters Politics', 'url': 'https://www.reuters.com/world/', 'type': 'rss'},
+        {'name': 'AP News Government', 'url': 'https://apnews.com/hub/government-and-politics', 'type': 'rss'},
+        {'name': 'The Guardian Politics', 'url': 'https://www.theguardian.com/politics', 'type': 'rss'},
+        {'name': 'Politico', 'url': 'https://www.politico.com', 'type': 'rss'},
+    ],
+    'technology-ai-regulation': [
+        {'name': 'Ars Technica', 'url': 'https://arstechnica.com', 'type': 'rss'},
+        {'name': 'TechCrunch', 'url': 'https://techcrunch.com', 'type': 'rss'},
+        {'name': 'The Verge', 'url': 'https://www.theverge.com', 'type': 'rss'},
+        {'name': 'Wired', 'url': 'https://www.wired.com', 'type': 'rss'},
+    ],
+    'economy-markets': [
+        {'name': 'Financial Times', 'url': 'https://www.ft.com', 'type': 'rss'},
+        {'name': 'Bloomberg', 'url': 'https://www.bloomberg.com', 'type': 'rss'},
+        {'name': 'The Economist', 'url': 'https://www.economist.com', 'type': 'rss'},
+        {'name': 'Reuters Business', 'url': 'https://www.reuters.com/business/', 'type': 'rss'},
+    ],
+    'climate-energy-planet': [
+        {'name': 'Carbon Brief', 'url': 'https://www.carbonbrief.org', 'type': 'rss'},
+        {'name': 'Clean Energy Wire', 'url': 'https://www.cleanenergywire.org', 'type': 'rss'},
+        {'name': 'Bloomberg Green', 'url': 'https://www.bloomberg.com/green', 'type': 'rss'},
+        {'name': 'The Guardian Environment', 'url': 'https://www.theguardian.com/environment', 'type': 'rss'},
+    ],
+    'sport-state-of-play': [
+        {'name': 'BBC Sport', 'url': 'https://www.bbc.com/sport', 'type': 'rss'},
+        {'name': 'The Athletic', 'url': 'https://theathletic.com', 'type': 'rss'},
+        {'name': 'ESPN', 'url': 'https://www.espn.com', 'type': 'rss'},
+        {'name': 'Sky Sports', 'url': 'https://www.skysports.com', 'type': 'rss'},
+    ],
+}
+
 TEMPLATES = [
     # CATEGORY A - Core Insight Templates
     {
@@ -24,6 +172,8 @@ TEMPLATES = [
         'sort_order': 1,
         'default_cadence': 'daily',
         'default_tone': 'calm_neutral',
+        'sample_output': SAMPLE_OUTPUTS.get('politics-public-policy', ''),
+        'default_sources': RECOMMENDED_SOURCES.get('politics-public-policy', []),
         'default_filters': {
             'topics': ['Politics', 'Policy', 'Government', 'Legislation'],
             'geography': 'configurable',
@@ -61,6 +211,8 @@ TEMPLATES = [
         'sort_order': 2,
         'default_cadence': 'daily',
         'default_tone': 'calm_neutral',
+        'sample_output': SAMPLE_OUTPUTS.get('technology-ai-regulation', ''),
+        'default_sources': RECOMMENDED_SOURCES.get('technology-ai-regulation', []),
         'default_filters': {
             'topics': ['Technology', 'AI', 'Cybersecurity', 'Regulation'],
             'sub_domains': ['AI', 'cyber', 'SaaS', 'hardware'],
@@ -97,6 +249,8 @@ TEMPLATES = [
         'sort_order': 3,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
+        'sample_output': SAMPLE_OUTPUTS.get('economy-markets', ''),
+        'default_sources': RECOMMENDED_SOURCES.get('economy-markets', []),
         'default_filters': {
             'topics': ['Economy', 'Markets', 'Finance'],
             'focus': ['inflation', 'growth', 'labour', 'rates'],
@@ -133,6 +287,8 @@ TEMPLATES = [
         'sort_order': 4,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
+        'sample_output': SAMPLE_OUTPUTS.get('climate-energy-planet', ''),
+        'default_sources': RECOMMENDED_SOURCES.get('climate-energy-planet', []),
         'default_filters': {
             'topics': ['Climate', 'Environment', 'Energy'],
             'focus': ['policy', 'energy transition', 'science'],
@@ -318,6 +474,8 @@ TEMPLATES = [
         'sort_order': 1,
         'default_cadence': 'daily',
         'default_tone': 'conversational',
+        'sample_output': SAMPLE_OUTPUTS.get('sport-state-of-play', ''),
+        'default_sources': RECOMMENDED_SOURCES.get('sport-state-of-play', []),
         'default_filters': {
             'topics': ['Sport'],
             'sports': 'configurable',
