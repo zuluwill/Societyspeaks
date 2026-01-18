@@ -73,7 +73,7 @@
                         <select name="preferred_send_minute" id="preferred_send_minute"
                                 class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                             {% for minute in range(0, 60, 5) %}
-                            <option value="{{ minute }}" {% if getattr(briefing, 'preferred_send_minute', 0) == minute %}selected{% endif %}>{{ "%02d"|format(minute) }}</option>
+                            <option value="{{ minute }}" {% if (briefing.preferred_send_minute|default(0)) == minute %}selected{% endif %}>{{ "%02d"|format(minute) }}</option>
                             {% endfor %}
                         </select>
                     </div>
