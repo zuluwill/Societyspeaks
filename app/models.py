@@ -2888,6 +2888,7 @@ class BriefRunItem(db.Model):
     summary_bullets = db.Column(db.JSON)  # ['bullet1', 'bullet2', 'bullet3']
     content_markdown = db.Column(db.Text)
     content_html = db.Column(db.Text)
+    source_name = db.Column(db.String(200), nullable=True)  # Denormalized for display
 
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

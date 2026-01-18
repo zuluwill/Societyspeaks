@@ -88,9 +88,10 @@ class BriefingGenerator:
             title = self._generate_brief_title(briefing, ingested_items)
             intro_text = self._generate_intro_text(briefing, ingested_items)
             
-            # Generate items (limit to 5 for readability)
+            # Use briefing's max_items setting (default 10, capped at 20)
+            max_items = min(briefing.max_items or 10, 20)
             items_created = 0
-            for position, item in enumerate(ingested_items[:5], start=1):
+            for position, item in enumerate(ingested_items[:max_items], start=1):
                 try:
                     run_item = self._generate_brief_item(brief_run, item, position, briefing)
                     db.session.add(run_item)
@@ -104,9 +105,12 @@ class BriefingGenerator:
                 db.session.rollback()
                 return None
             
-            # Generate markdown and HTML
-            brief_run.draft_markdown = self._generate_markdown(brief_run, title, intro_text)
-            brief_run.draft_html = self._markdown_to_html(brief_run.draft_markdown)
+            # Generate key takeaways synthesis (cross-item insights)
+            key_takeaways = self._generate_key_takeaways(briefing, ingested_items[:max_items])
+            
+            # Generate markdown and HTML with improved structure
+            brief_run.draft_markdown = self._generate_markdown(brief_run, title, intro_text, key_takeaways)
+            brief_run.draft_html = self._generate_structured_html(brief_run, title, intro_text, key_takeaways, briefing)
             
             # If auto_send, also set approved content
             if briefing.mode == 'auto_send':
@@ -217,6 +221,11 @@ class BriefingGenerator:
         # Generate content via LLM
         llm_content = self._generate_item_content(ingested_item, briefing)
         
+        # Get source name for denormalized storage
+        source_name = llm_content.get('source_name', '')
+        if not source_name and ingested_item.source:
+            source_name = ingested_item.source.name
+        
         # Create item
         run_item = BriefRunItem(
             brief_run_id=brief_run.id,
@@ -225,10 +234,20 @@ class BriefingGenerator:
             headline=llm_content.get('headline', ingested_item.title[:200]),
             summary_bullets=llm_content.get('bullets', [ingested_item.content_text[:200] if ingested_item.content_text else '']),
             content_markdown=llm_content.get('markdown', ingested_item.content_text or ''),
-            content_html=llm_content.get('html', '')
+            content_html=llm_content.get('html', ''),
+            source_name=source_name
         )
         
         return run_item
+    
+    def _get_tone_instructions(self, tone: str) -> str:
+        """Get writing style instructions based on tone setting."""
+        tone_map = {
+            'calm_neutral': 'Write in a calm, balanced, and objective tone. Avoid sensationalism. Present facts clearly without emotional language.',
+            'formal': 'Write in a formal, professional tone suitable for business executives. Use precise language and maintain gravitas.',
+            'conversational': 'Write in a friendly, approachable tone as if explaining to a colleague. Keep it engaging but informative.'
+        }
+        return tone_map.get(tone, tone_map['calm_neutral'])
     
     def _generate_item_content(
         self,
@@ -236,11 +255,14 @@ class BriefingGenerator:
         briefing: Briefing
     ) -> Dict[str, Any]:
         """
-        Generate LLM content for an item.
+        Generate LLM content for an item with insights and actionable takeaways.
         
         Returns:
-            Dict with: headline, bullets, markdown, html
+            Dict with: headline, bullets, markdown, html, source_name
         """
+        # Get source name for attribution
+        source_name = ingested_item.source.name if ingested_item.source else 'Unknown Source'
+        
         if not self.llm_available:
             # Fallback content
             return {
@@ -249,25 +271,38 @@ class BriefingGenerator:
                     ingested_item.content_text[:200] if ingested_item.content_text else ingested_item.title
                 ],
                 'markdown': ingested_item.content_text or ingested_item.title,
-                'html': f"<p>{ingested_item.content_text or ingested_item.title}</p>"
+                'html': f"<p>{ingested_item.content_text or ingested_item.title}</p>",
+                'source_name': source_name
             }
         
-        # Build prompt
-        tone = briefing.template.default_tone if briefing.template else 'calm_neutral'
+        # Build enhanced prompt using briefing settings
+        tone = briefing.tone or 'calm_neutral'
+        tone_instructions = self._get_tone_instructions(tone)
+        custom_prompt = briefing.custom_prompt or ''
         
-        prompt = f"""Generate a brief summary for this content:
+        prompt = f"""Analyze this content and create an insightful brief summary:
 
-Title: {ingested_item.title}
-Content: {ingested_item.content_text[:2000] if ingested_item.content_text else 'No content available'}
+SOURCE: {source_name}
+TITLE: {ingested_item.title}
+CONTENT: {ingested_item.content_text[:3000] if ingested_item.content_text else 'No content available'}
 
-Generate:
-1. A concise headline (max 100 chars)
-2. 2-3 bullet points summarizing key points
-3. A brief markdown paragraph (2-3 sentences)
+Create a summary that goes beyond just restating facts. Include:
+1. A compelling headline (max 100 chars) that captures the key insight
+2. 2-3 bullet points with:
+   - The key facts
+   - Why this matters (implications/significance)
+   - What to watch for next (if applicable)
+3. A brief analysis paragraph (2-3 sentences) explaining the broader context
 
-Tone: {tone}
-Format: JSON with keys: headline, bullets (array), markdown
-"""
+WRITING STYLE: {tone_instructions}
+{f'ADDITIONAL INSTRUCTIONS: {custom_prompt}' if custom_prompt else ''}
+
+Respond in JSON format:
+{{
+  "headline": "string",
+  "bullets": ["string", "string", "string"],
+  "markdown": "string"
+}}"""
         
         try:
             if self.provider == 'openai':
@@ -303,6 +338,7 @@ Format: JSON with keys: headline, bullets (array), markdown
                     # Convert markdown to HTML (simple)
                     html = self._markdown_to_html_simple(result.get('markdown', ''))
                     result['html'] = html
+                    result['source_name'] = source_name
                     return result
         except Exception as e:
             logger.error(f"LLM generation failed: {e}")
@@ -312,15 +348,107 @@ Format: JSON with keys: headline, bullets (array), markdown
             'headline': ingested_item.title[:200],
             'bullets': [ingested_item.content_text[:200] if ingested_item.content_text else ingested_item.title],
             'markdown': ingested_item.content_text or ingested_item.title,
-            'html': f"<p>{ingested_item.content_text or ingested_item.title}</p>"
+            'html': f"<p>{ingested_item.content_text or ingested_item.title}</p>",
+            'source_name': source_name
         }
     
-    def _generate_markdown(self, brief_run: BriefRun, title: str, intro: str) -> str:
-        """Generate markdown content for the brief run"""
+    def _generate_key_takeaways(
+        self,
+        briefing: Briefing,
+        ingested_items: List[IngestedItem]
+    ) -> List[str]:
+        """
+        Generate cross-item synthesis - key takeaways from all stories.
+        
+        Returns:
+            List of 3-5 key takeaway strings
+        """
+        if not self.llm_available or len(ingested_items) < 2:
+            return []
+        
+        # Build summary of all items
+        items_summary = []
+        for item in ingested_items[:10]:
+            source = item.source.name if item.source else 'Unknown'
+            items_summary.append(f"- [{source}] {item.title}")
+        
+        tone = briefing.tone or 'calm_neutral'
+        tone_instructions = self._get_tone_instructions(tone)
+        custom_prompt = briefing.custom_prompt or ''
+        
+        prompt = f"""Based on these news stories, identify 3-5 KEY TAKEAWAYS - the overarching themes, patterns, or insights that emerge when looking at these stories together.
+
+STORIES:
+{chr(10).join(items_summary)}
+
+Create takeaways that:
+- Synthesize across multiple stories (not just summarize one)
+- Highlight emerging trends or patterns
+- Provide actionable insights for readers
+- Connect dots that might not be obvious
+
+WRITING STYLE: {tone_instructions}
+{f'ADDITIONAL INSTRUCTIONS: {custom_prompt}' if custom_prompt else ''}
+
+Respond in JSON format:
+{{
+  "takeaways": ["insight 1", "insight 2", "insight 3"]
+}}"""
+        
+        try:
+            if self.provider == 'openai':
+                import openai
+                client = openai.OpenAI(api_key=self.api_key)
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are an expert analyst who identifies patterns and synthesizes insights across multiple news stories."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=400
+                )
+                content = response.choices[0].message.content
+            elif self.provider == 'anthropic':
+                import anthropic
+                client = anthropic.Anthropic(api_key=self.api_key)
+                response = client.messages.create(
+                    model="claude-3-haiku-20240307",
+                    max_tokens=400,
+                    system="You are an expert analyst who identifies patterns and synthesizes insights across multiple news stories.",
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                content_block = response.content[0]
+                content = getattr(content_block, 'text', None) or str(content_block)
+            else:
+                return []
+            
+            if content:
+                result = extract_json(content)
+                if result and 'takeaways' in result:
+                    return result['takeaways'][:5]
+        except Exception as e:
+            logger.error(f"Key takeaways generation failed: {e}")
+        
+        return []
+    
+    def _generate_markdown(self, brief_run: BriefRun, title: str, intro: str, key_takeaways: List[str] = None) -> str:
+        """Generate markdown content for the brief run with key takeaways"""
         lines = [f"# {title}", "", intro, ""]
         
+        # Add key takeaways section if available
+        if key_takeaways:
+            lines.append("## Key Takeaways")
+            lines.append("")
+            for takeaway in key_takeaways:
+                lines.append(f"- {takeaway}")
+            lines.append("")
+        
+        lines.append("## Today's Stories")
+        lines.append("")
+        
         for item in brief_run.items.order_by(BriefRunItem.position):
-            lines.append(f"## {item.headline}")
+            lines.append(f"### {item.headline}")
             if item.summary_bullets:
                 for bullet in item.summary_bullets:
                     lines.append(f"- {bullet}")
@@ -330,6 +458,75 @@ Format: JSON with keys: headline, bullets (array), markdown
             lines.append("")
         
         return "\n".join(lines)
+    
+    def _generate_structured_html(
+        self,
+        brief_run: BriefRun,
+        title: str,
+        intro: str,
+        key_takeaways: List[str],
+        briefing: Briefing
+    ) -> str:
+        """Generate well-structured HTML with branding and sections"""
+        accent_color = briefing.accent_color or '#1e40af'
+        
+        # Build key takeaways HTML
+        takeaways_html = ''
+        if key_takeaways:
+            takeaways_items = ''.join([f'<li style="margin-bottom: 8px; padding-left: 8px;">{t}</li>' for t in key_takeaways])
+            takeaways_html = f'''
+            <div style="background-color: #f0f9ff; border-left: 4px solid {accent_color}; padding: 16px 20px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
+                <h2 style="color: {accent_color}; font-size: 18px; font-weight: 600; margin: 0 0 12px 0;">Key Takeaways</h2>
+                <ul style="margin: 0; padding-left: 20px; color: #1f2937; line-height: 1.6;">
+                    {takeaways_items}
+                </ul>
+            </div>
+            '''
+        
+        # Build stories HTML
+        stories_html = ''
+        for item in brief_run.items.order_by(BriefRunItem.position):
+            # Get source name (denormalized on item, or fallback to relationship)
+            source_name = item.source_name or ''
+            if not source_name and item.ingested_item and item.ingested_item.source:
+                source_name = item.ingested_item.source.name
+            
+            bullets_html = ''
+            if item.summary_bullets:
+                bullets_items = ''.join([f'<li style="margin-bottom: 6px;">{b}</li>' for b in item.summary_bullets])
+                bullets_html = f'<ul style="margin: 12px 0; padding-left: 20px; color: #374151; line-height: 1.6;">{bullets_items}</ul>'
+            
+            analysis_html = ''
+            if item.content_html:
+                # Use pre-rendered HTML from item generation
+                analysis_html = f'<div style="color: #4b5563; font-style: italic; margin: 12px 0 0 0; line-height: 1.6;">{item.content_html}</div>'
+            elif item.content_markdown:
+                # Fallback: simple markdown to text
+                analysis_html = f'<p style="color: #4b5563; font-style: italic; margin: 12px 0 0 0; line-height: 1.6;">{item.content_markdown}</p>'
+            
+            source_badge = f'<span style="display: inline-block; background-color: #e5e7eb; color: #374151; font-size: 12px; padding: 2px 8px; border-radius: 4px; margin-left: 8px;">{source_name}</span>' if source_name else ''
+            
+            stories_html += f'''
+            <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 20px;">
+                <h3 style="color: #111827; font-size: 16px; font-weight: 600; margin: 0 0 8px 0; line-height: 1.4;">
+                    {item.headline}{source_badge}
+                </h3>
+                {bullets_html}
+                {analysis_html}
+            </div>
+            '''
+        
+        # Full HTML structure
+        html = f'''
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">{intro}</p>
+            {takeaways_html}
+            <h2 style="color: #111827; font-size: 20px; font-weight: 600; margin: 24px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid {accent_color};">Today's Stories</h2>
+            {stories_html}
+        </div>
+        '''
+        
+        return html
     
     def _markdown_to_html(self, markdown: str) -> str:
         """Convert markdown to HTML (simple implementation)"""
