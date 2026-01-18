@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}{{ template.name }} - Template Preview{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{{ url_for('briefing.marketplace') }}" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Marketplace
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-8 text-white">
+            <div class="flex items-start gap-6">
+                <div class="w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                    {% if template.icon == 'landmark' %}
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+                    </svg>
+                    {% elif template.icon == 'cpu' %}
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M3 9h2m-2 6h2m14-6h2m-2 6h2M13 13h.01M9 9h.01M9 13h.01M13 9h.01M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z"/>
+                    </svg>
+                    {% elif template.icon == 'trending-up' %}
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                    {% elif template.icon == 'globe' %}
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {% elif template.icon == 'heart' %}
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                    {% else %}
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                    </svg>
+                    {% endif %}
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-3 mb-2">
+                        <h1 class="text-3xl font-bold">{{ template.name }}</h1>
+                        {% if template.is_featured %}
+                        <span class="px-2 py-1 bg-yellow-400 text-yellow-900 text-xs font-medium rounded">Featured</span>
+                        {% endif %}
+                    </div>
+                    {% if template.tagline %}
+                    <p class="text-xl text-blue-100 mb-3">{{ template.tagline }}</p>
+                    {% endif %}
+                    <div class="flex flex-wrap gap-3">
+                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-white/20 rounded-full text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ template.default_cadence|title }}
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-white/20 rounded-full text-sm">
+                            {% if template.audience_type == 'individual' %}For Individuals{% elif template.audience_type == 'organization' %}For Organizations{% else %}For Everyone{% endif %}
+                        </span>
+                        {% if template.times_used > 0 %}
+                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-white/20 rounded-full text-sm">
+                            {{ template.times_used }} uses
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8">
+            <div class="prose max-w-none mb-8">
+                <h2 class="text-xl font-semibold text-gray-900 mb-3">About This Template</h2>
+                <p class="text-gray-600 leading-relaxed">{{ template.description }}</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        Quality Guardrails
+                    </h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>Tone: <strong>{{ template.default_tone|replace('_', ' ')|title }}</strong></span>
+                        </li>
+                        <li class="flex items-start gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>Maximum <strong>{{ guardrails.get('max_items', 10) }} stories</strong> per brief</span>
+                        </li>
+                        {% if guardrails.get('no_outrage_framing') %}
+                        <li class="flex items-start gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>Calm, analytical framing (no outrage)</span>
+                        </li>
+                        {% endif %}
+                        {% if guardrails.get('no_predictions') %}
+                        <li class="flex items-start gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>No speculative predictions</span>
+                        </li>
+                        {% endif %}
+                        {% if guardrails.get('require_attribution') %}
+                        <li class="flex items-start gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>Source attribution on every story</span>
+                        </li>
+                        {% endif %}
+                        {% if guardrails.get('perspective_balance') %}
+                        <li class="flex items-start gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            <span>Balanced perspectives included</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-6">
+                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                        </svg>
+                        Customizable Options
+                    </h3>
+                    <ul class="space-y-3">
+                        {% if config_options.get('cadence', True) %}
+                        <li class="flex items-start gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            <span>Delivery frequency ({{ config_options.get('cadence_options', ['daily', 'weekly'])|join(', ') }})</span>
+                        </li>
+                        {% endif %}
+                        {% if config_options.get('sources', True) %}
+                        <li class="flex items-start gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            <span>Add or remove sources</span>
+                        </li>
+                        {% endif %}
+                        {% if config_options.get('geography', True) %}
+                        <li class="flex items-start gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            <span>Geographic focus</span>
+                        </li>
+                        {% endif %}
+                        <li class="flex items-start gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            <span>Send time and timezone</span>
+                        </li>
+                        {% if config_options.get('visibility', True) %}
+                        <li class="flex items-start gap-2 text-sm text-gray-600">
+                            <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            <span>Visibility settings</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+
+            {% if template.custom_prompt_prefix %}
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+                <h3 class="font-semibold text-blue-900 mb-2">AI Guidance</h3>
+                <p class="text-sm text-blue-800 italic">"{{ template.custom_prompt_prefix[:200] }}{% if template.custom_prompt_prefix|length > 200 %}..."{% endif %}</p>
+            </div>
+            {% endif %}
+
+            <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t">
+                <a href="{{ url_for('briefing.use_template', template_id=template.id) }}" 
+                   class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-center">
+                    Use This Template
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="{{ url_for('briefing.marketplace') }}" 
+                   class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-center">
+                    Browse More Templates
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

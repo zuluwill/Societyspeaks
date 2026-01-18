@@ -2533,31 +2533,100 @@ class SocialPostEngagement(db.Model):
 
 class BriefTemplate(db.Model):
     """
-    Predefined brief templates (off-the-shelf themes).
-    Users can select a template and optionally customize it.
+    Predefined brief templates (off-the-shelf themes) for the template marketplace.
+    Templates are configurable archetypes with intent, cadence, structure, tone, and source types.
+    Users can clone a template to create their own briefing with bounded customization.
     """
     __tablename__ = 'brief_template'
     __table_args__ = (
         db.Index('idx_brief_template_name', 'name'),
+        db.Index('idx_brief_template_category', 'category'),
+        db.Index('idx_brief_template_audience', 'audience_type'),
+        db.Index('idx_brief_template_featured', 'is_featured'),
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False, unique=True)  # 'Politics', 'Technology', 'Climate', etc.
-    description = db.Column(db.Text)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text)  # Short description for marketplace listing
     slug = db.Column(db.String(100), unique=True)  # URL-friendly identifier
 
+    # Marketplace categorization
+    category = db.Column(db.String(50), nullable=False, default='core_insight')
+    # Categories: 'core_insight', 'organizational', 'personal_interest', 'lifestyle'
+    audience_type = db.Column(db.String(30), nullable=False, default='all')
+    # Audience: 'individual', 'organization', 'all'
+
+    # Display metadata
+    icon = db.Column(db.String(50), default='newspaper')  # Icon name for UI
+    tagline = db.Column(db.String(200))  # Short tagline (e.g., "What Changed" for Politics)
+    sample_output = db.Column(db.Text)  # Example brief output for preview
+
+    # Marketplace visibility
+    is_featured = db.Column(db.Boolean, default=False)  # Show in featured section
+    is_active = db.Column(db.Boolean, default=True)  # Available in marketplace
+    sort_order = db.Column(db.Integer, default=0)  # Display order within category
+
     # Default config (JSON)
-    default_sources = db.Column(db.JSON)  # List of NewsSource IDs or RSS URLs
-    default_filters = db.Column(db.JSON)  # Keywords, topics, etc.
+    default_sources = db.Column(db.JSON)  # List of NewsSource IDs or category filters
+    default_filters = db.Column(db.JSON)  # Keywords, topics, geographic scope
     default_cadence = db.Column(db.String(20), default='daily')  # 'daily' | 'weekly'
     default_tone = db.Column(db.String(50), default='calm_neutral')
 
+    # Configurable bounds (JSON) - what users CAN change
+    configurable_options = db.Column(db.JSON, default=lambda: {
+        'geography': True,  # Can user change geographic scope?
+        'sources': True,  # Can user add/remove sources?
+        'cadence': True,  # Can user change cadence?
+        'visibility': True,  # Can user change visibility?
+        'auto_send': True,  # Can user toggle auto-send vs approval?
+        'tone': False,  # Tone is fixed by default for brand consistency
+        'cadence_options': ['daily', 'weekly'],  # Allowed cadence values
+    })
+
+    # Fixed guardrails (JSON) - what is ALWAYS enforced
+    guardrails = db.Column(db.JSON, default=lambda: {
+        'max_items': 10,  # Maximum stories per brief
+        'require_attribution': True,  # Always show sources
+        'no_predictions': False,  # Disable speculative content (for crypto/markets)
+        'no_outrage_framing': True,  # Filter sensational headlines
+        'structure_template': 'standard',  # Fixed section structure
+    })
+
+    # AI generation hints
+    custom_prompt_prefix = db.Column(db.Text)  # Added to AI prompt for this template
+    focus_keywords = db.Column(db.JSON)  # Keywords to prioritize
+    exclude_keywords = db.Column(db.JSON)  # Keywords to filter out
+
     # Customization
-    allow_customization = db.Column(db.Boolean, default=True)  # Can user modify?
+    allow_customization = db.Column(db.Boolean, default=True)  # Can user modify at all?
+
+    # Usage tracking
+    times_used = db.Column(db.Integer, default=0)  # How many briefings created from this
 
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @staticmethod
+    def get_category_label(category):
+        """Get human-readable category label."""
+        labels = {
+            'core_insight': 'Core Insight',
+            'organizational': 'Organizational',
+            'personal_interest': 'Personal Interest',
+            'lifestyle': 'Lifestyle & Wellbeing',
+        }
+        return labels.get(category, category.replace('_', ' ').title())
+
+    @staticmethod
+    def get_audience_label(audience_type):
+        """Get human-readable audience label."""
+        labels = {
+            'individual': 'Individuals',
+            'organization': 'Organizations',
+            'all': 'Everyone',
+        }
+        return labels.get(audience_type, audience_type.title())
 
     def to_dict(self):
         return {
@@ -2565,11 +2634,21 @@ class BriefTemplate(db.Model):
             'name': self.name,
             'description': self.description,
             'slug': self.slug,
+            'category': self.category,
+            'category_label': self.get_category_label(self.category),
+            'audience_type': self.audience_type,
+            'audience_label': self.get_audience_label(self.audience_type),
+            'icon': self.icon,
+            'tagline': self.tagline,
             'default_sources': self.default_sources,
             'default_filters': self.default_filters,
             'default_cadence': self.default_cadence,
             'default_tone': self.default_tone,
+            'configurable_options': self.configurable_options,
+            'guardrails': self.guardrails,
             'allow_customization': self.allow_customization,
+            'is_featured': self.is_featured,
+            'times_used': self.times_used,
         }
 
     def __repr__(self):
@@ -2734,6 +2813,11 @@ class Briefing(db.Model):
     tone = db.Column(db.String(50), default='calm_neutral')  # 'calm_neutral' | 'formal' | 'conversational'
     include_summaries = db.Column(db.Boolean, default=True)  # Include bullet summaries
     max_items = db.Column(db.Integer, default=10)  # Max stories per brief
+    
+    # Guardrails (inherited from template, if any)
+    # JSON with keys: no_outrage_framing, no_predictions, require_attribution, 
+    # perspective_balance, structure_template, visibility_locked
+    guardrails = db.Column(db.JSON, nullable=True)
 
     # Visual Branding
     logo_url = db.Column(db.String(500), nullable=True)  # Logo image URL
@@ -2783,6 +2867,7 @@ class Briefing(db.Model):
             'mode': self.mode,
             'visibility': self.visibility,
             'status': self.status,
+            'guardrails': self.guardrails,
             'source_count': self.source_count,
             'recipient_count': self.recipient_count,
             'created_at': self.created_at.isoformat() if self.created_at else None,

@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Use Template: {{ template.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{{ url_for('briefing.marketplace') }}" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Marketplace
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
+                    {% if template.icon == 'landmark' %}
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+                    </svg>
+                    {% elif template.icon == 'cpu' %}
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M3 9h2m-2 6h2m14-6h2m-2 6h2M13 13h.01M9 9h.01M9 13h.01M13 9h.01M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z"/>
+                    </svg>
+                    {% else %}
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+                    </svg>
+                    {% endif %}
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold">{{ template.name }}</h1>
+                    {% if template.tagline %}
+                    <p class="text-blue-100">{{ template.tagline }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <form method="POST" class="p-6 space-y-6">
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p class="text-sm text-blue-800">{{ template.description }}</p>
+            </div>
+
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Briefing Name</label>
+                <input type="text" id="name" name="name" 
+                       value="My {{ template.name }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="Give your briefing a name">
+            </div>
+
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+                <textarea id="description" name="description" rows="2"
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Add a description for your briefing">{{ template.description }}</textarea>
+            </div>
+
+            {% if has_company_profile and template.audience_type != 'individual' %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Owner</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="owner_type" value="user" checked class="text-blue-600">
+                        <span class="text-sm text-gray-700">Personal</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="owner_type" value="org" class="text-blue-600">
+                        <span class="text-sm text-gray-700">Organization</span>
+                    </label>
+                </div>
+            </div>
+            {% else %}
+            <input type="hidden" name="owner_type" value="{% if template.audience_type == 'organization' and has_company_profile %}org{% else %}user{% endif %}">
+            {% endif %}
+
+            {% if config_options.get('cadence', True) %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Frequency</label>
+                <div class="flex gap-4">
+                    {% for option in config_options.get('cadence_options', ['daily', 'weekly']) %}
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="cadence" value="{{ option }}" 
+                               {% if option == template.default_cadence %}checked{% endif %}
+                               class="text-blue-600">
+                        <span class="text-sm text-gray-700">{{ option|title }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <div class="flex items-center gap-2 text-sm text-gray-600">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Frequency: {{ template.default_cadence|title }} (fixed for this template)</span>
+            </div>
+            <input type="hidden" name="cadence" value="{{ template.default_cadence }}">
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="timezone" class="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+                    <select id="timezone" name="timezone" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        {% for tz in timezones %}
+                        <option value="{{ tz }}" {% if tz == 'UTC' %}selected{% endif %}>{{ tz }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="preferred_send_hour" class="block text-sm font-medium text-gray-700 mb-1">Send Time</label>
+                    <div class="flex gap-2">
+                        <select id="preferred_send_hour" name="preferred_send_hour" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            {% for hour in range(24) %}
+                            <option value="{{ hour }}" {% if hour == 18 %}selected{% endif %}>{{ '%02d'|format(hour) }}:00</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {% if config_options.get('visibility', True) and not guardrails.get('visibility_locked') %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Visibility</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="visibility" value="private" checked class="text-blue-600">
+                        <span class="text-sm text-gray-700">Private</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="visibility" value="org_only" class="text-blue-600">
+                        <span class="text-sm text-gray-700">Organization Only</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="visibility" value="public" class="text-blue-600">
+                        <span class="text-sm text-gray-700">Public</span>
+                    </label>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if config_options.get('auto_send', True) %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Mode</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="mode" value="auto_send" checked class="text-blue-600">
+                        <span class="text-sm text-gray-700">Auto-send</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="mode" value="approval_required" class="text-blue-600">
+                        <span class="text-sm text-gray-700">Require Approval</span>
+                    </label>
+                </div>
+                <p class="mt-1 text-xs text-gray-500">Auto-send will deliver briefs automatically. Approval required means you'll review each brief before it's sent.</p>
+            </div>
+            {% endif %}
+
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <h3 class="text-sm font-medium text-gray-700 mb-2">Template Settings (Applied Automatically)</h3>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Tone: {{ template.default_tone|replace('_', ' ')|title }}
+                    </li>
+                    <li class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Max Stories: {{ guardrails.get('max_items', 10) }}
+                    </li>
+                    {% if guardrails.get('no_outrage_framing') %}
+                    <li class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Calm, analytical framing (no outrage)
+                    </li>
+                    {% endif %}
+                    {% if guardrails.get('no_predictions') %}
+                    <li class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        No speculative predictions
+                    </li>
+                    {% endif %}
+                    {% if guardrails.get('require_attribution') %}
+                    <li class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Source attribution on every story
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <div class="flex gap-4 pt-4 border-t">
+                <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    Create My Briefing
+                </button>
+                <a href="{{ url_for('briefing.marketplace') }}" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

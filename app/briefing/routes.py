@@ -365,6 +365,213 @@ def list_briefings():
     )
 
 
+@briefing_bp.route('/marketplace')
+@login_required
+@limiter.limit("60/minute")
+def marketplace():
+    """
+    Template marketplace - browse pre-built briefing templates.
+    Users can filter by category and audience type.
+    """
+    category_filter = request.args.get('category')
+    audience_filter = request.args.get('audience')
+    
+    # Define categories for UI
+    categories = {
+        'core_insight': 'Core Insight',
+        'organizational': 'Organizational',
+        'personal_interest': 'Personal Interest',
+        'lifestyle': 'Lifestyle & Wellbeing',
+    }
+    
+    # Build query for active templates
+    query = BriefTemplate.query.filter_by(is_active=True)
+    
+    if category_filter:
+        query = query.filter_by(category=category_filter)
+    
+    if audience_filter:
+        # Filter by audience type (or 'all' which works for everyone)
+        query = query.filter(
+            db.or_(
+                BriefTemplate.audience_type == audience_filter,
+                BriefTemplate.audience_type == 'all'
+            )
+        )
+    
+    templates = query.order_by(BriefTemplate.sort_order, BriefTemplate.name).all()
+    
+    # Separate featured templates
+    featured_templates = [t for t in templates if t.is_featured] if not category_filter else []
+    
+    # Group templates by category
+    templates_by_category = {}
+    for cat_key in categories.keys():
+        if category_filter and category_filter != cat_key:
+            continue
+        cat_templates = [t for t in templates if t.category == cat_key and (not t.is_featured or category_filter)]
+        if cat_templates:
+            templates_by_category[cat_key] = cat_templates
+    
+    # Check if all categories are empty
+    all_empty = not any(templates_by_category.values()) and not featured_templates
+    
+    return render_template(
+        'briefing/marketplace.html',
+        templates=templates,
+        featured_templates=featured_templates,
+        templates_by_category=templates_by_category,
+        categories=categories,
+        category_filter=category_filter,
+        audience_filter=audience_filter,
+        all_empty=all_empty
+    )
+
+
+@briefing_bp.route('/template/<int:template_id>/preview')
+@limiter.limit("60/minute")
+def preview_template(template_id):
+    """
+    Preview a template - show details, configurable options, and sample output.
+    This route is public (no login required) so users can browse before signing up.
+    """
+    template = BriefTemplate.query.get_or_404(template_id)
+    
+    if not template.is_active:
+        flash('This template is no longer available', 'error')
+        return redirect(url_for('briefing.marketplace'))
+    
+    config_options = template.configurable_options or {}
+    guardrails = template.guardrails or {}
+    
+    return render_template(
+        'briefing/preview_template.html',
+        template=template,
+        config_options=config_options,
+        guardrails=guardrails
+    )
+
+
+@briefing_bp.route('/template/<int:template_id>/use', methods=['GET', 'POST'])
+@login_required
+@limiter.limit("20/minute")
+def use_template(template_id):
+    """
+    Use a template to create a new briefing.
+    Shows configuration wizard with template defaults and allowed customizations.
+    """
+    template = BriefTemplate.query.get_or_404(template_id)
+    
+    if not template.is_active:
+        flash('This template is no longer available', 'error')
+        return redirect(url_for('briefing.marketplace'))
+    
+    # Check audience restrictions
+    if template.audience_type == 'organization' and not current_user.company_profile:
+        flash('This template is only available for organizations. Please create a company profile first.', 'error')
+        return redirect(url_for('briefing.marketplace'))
+    
+    if request.method == 'POST':
+        try:
+            # Get form data with template defaults as fallback
+            name = request.form.get('name', '').strip()
+            if not name:
+                name = f"My {template.name}"
+            
+            description = request.form.get('description', '').strip()
+            if not description:
+                description = template.description
+            
+            owner_type = request.form.get('owner_type', 'user')
+            
+            # Validate owner_type for organization templates
+            if owner_type == 'org':
+                if not current_user.company_profile:
+                    flash('You need a company profile to create organization briefings', 'error')
+                    return redirect(url_for('briefing.use_template', template_id=template_id))
+                owner_id = current_user.company_profile.id
+            else:
+                owner_id = current_user.id
+            
+            # Get configurable options from template
+            config_options = template.configurable_options or {}
+            
+            # Get cadence (if configurable)
+            cadence = template.default_cadence
+            if config_options.get('cadence', True):
+                cadence = request.form.get('cadence', template.default_cadence)
+                allowed_cadences = config_options.get('cadence_options', ['daily', 'weekly'])
+                if cadence not in allowed_cadences:
+                    cadence = template.default_cadence
+            
+            # Get timezone
+            timezone = request.form.get('timezone', 'UTC')
+            preferred_send_hour = request.form.get('preferred_send_hour', type=int) or 18
+            preferred_send_minute = request.form.get('preferred_send_minute', type=int) or 0
+            
+            # Get visibility (if configurable)
+            visibility = 'private'
+            guardrails = template.guardrails or {}
+            if guardrails.get('visibility_locked'):
+                visibility = guardrails['visibility_locked']
+            elif config_options.get('visibility', True):
+                visibility = request.form.get('visibility', 'private')
+            
+            # Get mode (if configurable)
+            mode = 'auto_send'
+            if config_options.get('auto_send', True):
+                mode = request.form.get('mode', 'auto_send')
+            
+            # Create briefing from template with guardrails
+            briefing = Briefing(
+                owner_type=owner_type,
+                owner_id=owner_id,
+                name=name,
+                description=description,
+                theme_template_id=template.id,
+                cadence=cadence,
+                timezone=timezone,
+                preferred_send_hour=preferred_send_hour,
+                preferred_send_minute=preferred_send_minute,
+                mode=mode,
+                visibility=visibility,
+                tone=template.default_tone,
+                max_items=guardrails.get('max_items', 10),
+                custom_prompt=template.custom_prompt_prefix,
+                guardrails=guardrails if guardrails else None,
+                status='active'
+            )
+            
+            db.session.add(briefing)
+            
+            # Increment template usage count
+            template.times_used = (template.times_used or 0) + 1
+            
+            db.session.commit()
+            
+            flash(f'Briefing "{name}" created from template!', 'success')
+            return redirect(url_for('briefing.detail', briefing_id=briefing.id))
+            
+        except Exception as e:
+            logger.error(f"Error creating briefing from template: {e}", exc_info=True)
+            db.session.rollback()
+            flash('An error occurred while creating your briefing. Please try again.', 'error')
+            return redirect(url_for('briefing.use_template', template_id=template_id))
+    
+    # GET request - show configuration form
+    config_options = template.configurable_options or {}
+    guardrails = template.guardrails or {}
+    
+    return render_template(
+        'briefing/use_template.html',
+        template=template,
+        config_options=config_options,
+        guardrails=guardrails,
+        timezones=get_all_timezones(),
+        has_company_profile=current_user.company_profile is not None
+    )
+
+
 @briefing_bp.route('/create', methods=['GET', 'POST'])
 @login_required
 @limiter.limit("10/minute")
