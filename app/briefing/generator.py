@@ -226,14 +226,24 @@ class BriefingGenerator:
         if not source_name and ingested_item.source:
             source_name = ingested_item.source.name
         
-        # Create item
+        # Store category and context with the content for premium styling
+        category = llm_content.get('category', 'UPDATE')
+        context_label = llm_content.get('context_label', 'What This Means')
+        context_insight = llm_content.get('context_insight', '')
+        
+        # Store metadata in markdown for later use in HTML generation
+        enhanced_markdown = llm_content.get('markdown', ingested_item.content_text or '')
+        if context_insight:
+            enhanced_markdown = f"[{context_label}] {context_insight}\n\n{enhanced_markdown}"
+        
+        # Create item with category info embedded
         run_item = BriefRunItem(
             brief_run_id=brief_run.id,
             position=position,
             ingested_item_id=ingested_item.id,
-            headline=llm_content.get('headline', ingested_item.title[:200]),
+            headline=f"[{category}] " + llm_content.get('headline', ingested_item.title[:200]),
             summary_bullets=llm_content.get('bullets', [ingested_item.content_text[:200] if ingested_item.content_text else '']),
-            content_markdown=llm_content.get('markdown', ingested_item.content_text or ''),
+            content_markdown=enhanced_markdown,
             content_html=llm_content.get('html', ''),
             source_name=source_name
         )
@@ -288,11 +298,13 @@ CONTENT: {ingested_item.content_text[:3000] if ingested_item.content_text else '
 
 Create a summary that goes beyond just restating facts. Include:
 1. A compelling headline (max 100 chars) that captures the key insight
-2. 2-3 bullet points with:
+2. A category label (1-2 words, uppercase) like: POLICY, REGULATION, TECHNOLOGY, MARKETS, INFRASTRUCTURE, RESEARCH, ANALYSIS, SECURITY, SUSTAINABILITY, INNOVATION
+3. 2-3 bullet points with:
    - The key facts
    - Why this matters (implications/significance)
    - What to watch for next (if applicable)
-3. A brief analysis paragraph (2-3 sentences) explaining the broader context
+4. A brief "context" insight (1-2 sentences) explaining broader implications - label it as one of: "What This Means", "Key Challenge", "Market Impact", "Policy Context", or "Why It Matters"
+5. A brief analysis paragraph (2-3 sentences) explaining the broader context
 
 WRITING STYLE: {tone_instructions}
 {f'ADDITIONAL INSTRUCTIONS: {custom_prompt}' if custom_prompt else ''}
@@ -300,7 +312,10 @@ WRITING STYLE: {tone_instructions}
 Respond in JSON format:
 {{
   "headline": "string",
+  "category": "string",
   "bullets": ["string", "string", "string"],
+  "context_label": "string",
+  "context_insight": "string",
   "markdown": "string"
 }}"""
         
@@ -339,14 +354,21 @@ Respond in JSON format:
                     html = self._markdown_to_html_simple(result.get('markdown', ''))
                     result['html'] = html
                     result['source_name'] = source_name
+                    # Ensure category and context fields have defaults
+                    result['category'] = result.get('category', 'UPDATE').upper()
+                    result['context_label'] = result.get('context_label', 'What This Means')
+                    result['context_insight'] = result.get('context_insight', '')
                     return result
         except Exception as e:
             logger.error(f"LLM generation failed: {e}")
         
-        # Fallback
+        # Fallback with premium structure
         return {
             'headline': ingested_item.title[:200],
+            'category': 'UPDATE',
             'bullets': [ingested_item.content_text[:200] if ingested_item.content_text else ingested_item.title],
+            'context_label': 'What This Means',
+            'context_insight': '',
             'markdown': ingested_item.content_text or ingested_item.title,
             'html': f"<p>{ingested_item.content_text or ingested_item.title}</p>",
             'source_name': source_name
@@ -467,61 +489,144 @@ Respond in JSON format:
         key_takeaways: List[str],
         briefing: Briefing
     ) -> str:
-        """Generate well-structured HTML with branding and sections"""
+        """Generate premium-styled HTML matching world-class newsletter standards"""
         accent_color = briefing.accent_color or '#1e40af'
         
-        # Build key takeaways HTML
+        # Category color palette for visual variety
+        category_colors = {
+            'POLICY': '#1e40af', 'REGULATION': '#dc2626', 'TECHNOLOGY': '#7c3aed',
+            'MARKETS': '#059669', 'INFRASTRUCTURE': '#d97706', 'RESEARCH': '#0891b2',
+            'ANALYSIS': '#6366f1', 'SECURITY': '#be123c', 'SUSTAINABILITY': '#059669',
+            'INNOVATION': '#7c3aed', 'UPDATE': accent_color
+        }
+        
+        # Context box color palette
+        context_box_colors = {
+            'What This Means': ('#f0fdfa', '#115e59'),
+            'Key Challenge': ('#fffbeb', '#92400e'),
+            'Market Impact': ('#f0fdf4', '#166534'),
+            'Policy Context': ('#eff6ff', '#1e40af'),
+            'Why It Matters': ('#faf5ff', '#6b21a8'),
+        }
+        
+        # Build key takeaways HTML with premium styling
         takeaways_html = ''
         if key_takeaways:
-            takeaways_items = ''.join([f'<li style="margin-bottom: 8px; padding-left: 8px;">{t}</li>' for t in key_takeaways])
+            takeaways_items = ''.join([f'<li style="margin-bottom: 10px; padding-left: 8px; color: #1f2937;">{t}</li>' for t in key_takeaways])
             takeaways_html = f'''
-            <div style="background-color: #f0f9ff; border-left: 4px solid {accent_color}; padding: 16px 20px; margin-bottom: 24px; border-radius: 0 8px 8px 0;">
-                <h2 style="color: {accent_color}; font-size: 18px; font-weight: 600; margin: 0 0 12px 0;">Key Takeaways</h2>
-                <ul style="margin: 0; padding-left: 20px; color: #1f2937; line-height: 1.6;">
+            <div style="background-color: #f8fafc; border-left: 4px solid {accent_color}; padding: 20px 24px; margin-bottom: 28px; border-radius: 0 8px 8px 0;">
+                <h2 style="font-family: Georgia, 'Times New Roman', serif; color: {accent_color}; font-size: 18px; font-weight: 700; margin: 0 0 14px 0;">Key Takeaways</h2>
+                <ul style="margin: 0; padding-left: 20px; line-height: 1.7; font-size: 15px;">
                     {takeaways_items}
                 </ul>
             </div>
             '''
         
-        # Build stories HTML
+        # Build stories HTML with premium newsletter styling
         stories_html = ''
-        for item in brief_run.items.order_by(BriefRunItem.position):
-            # Get source name (denormalized on item, or fallback to relationship)
+        for idx, item in enumerate(brief_run.items.order_by(BriefRunItem.position)):
+            # Get source name
             source_name = item.source_name or ''
             if not source_name and item.ingested_item and item.ingested_item.source:
                 source_name = item.ingested_item.source.name
             
+            # Extract category from headline if embedded (format: "[CATEGORY] headline")
+            headline = item.headline or ''
+            category = 'UPDATE'
+            if headline.startswith('[') and ']' in headline:
+                bracket_end = headline.index(']')
+                category = headline[1:bracket_end].upper()
+                headline = headline[bracket_end + 2:].strip()  # Remove "[CATEGORY] " prefix
+            
+            category_color = category_colors.get(category, accent_color)
+            
+            # Category label with premium styling
+            category_html = f'''
+            <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {category_color};">{category}</p>
+            '''
+            
+            # Headline with Georgia serif font
+            headline_html = f'''
+            <h3 style="margin: 0 0 12px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 700; color: #0f172a; line-height: 1.3;">{headline}</h3>
+            '''
+            
+            # Bullets with enhanced styling
             bullets_html = ''
             if item.summary_bullets:
-                bullets_items = ''.join([f'<li style="margin-bottom: 6px;">{b}</li>' for b in item.summary_bullets])
-                bullets_html = f'<ul style="margin: 12px 0; padding-left: 20px; color: #374151; line-height: 1.6;">{bullets_items}</ul>'
+                bullets_items = ''.join([f'<li style="margin-bottom: 8px; color: #374151;">{b}</li>' for b in item.summary_bullets])
+                bullets_html = f'<ul style="margin: 0 0 16px 0; padding-left: 20px; line-height: 1.65; font-size: 15px;">{bullets_items}</ul>'
             
+            # Extract context from content_markdown if embedded (format: "[Label] insight\n\nrest")
+            context_html = ''
+            content_markdown = item.content_markdown or ''
+            context_label = 'What This Means'
+            context_insight = ''
+            
+            if content_markdown.startswith('[') and ']' in content_markdown:
+                bracket_end = content_markdown.index(']')
+                context_label = content_markdown[1:bracket_end]
+                rest = content_markdown[bracket_end + 2:]
+                if '\n\n' in rest:
+                    context_insight, content_markdown = rest.split('\n\n', 1)
+                else:
+                    context_insight = rest
+                    content_markdown = ''
+            
+            bg_color, text_color = context_box_colors.get(context_label, ('#f0fdfa', '#115e59'))
+            
+            if context_insight:
+                # Create premium callout box with extracted context
+                context_html = f'''
+                <div style="background-color: {bg_color}; border-radius: 6px; padding: 14px 16px; margin: 16px 0 0 0;">
+                    <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; color: {text_color}; text-transform: uppercase;">{context_label}</p>
+                    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">{context_insight[:300]}</p>
+                </div>
+                '''
+            
+            # Render remaining analysis/narrative body if available
             analysis_html = ''
-            if item.content_html:
-                # Use pre-rendered HTML from item generation
-                analysis_html = f'<div style="color: #4b5563; font-style: italic; margin: 12px 0 0 0; line-height: 1.6;">{item.content_html}</div>'
-            elif item.content_markdown:
-                # Fallback: simple markdown to text
-                analysis_html = f'<p style="color: #4b5563; font-style: italic; margin: 12px 0 0 0; line-height: 1.6;">{item.content_markdown}</p>'
+            if content_markdown and content_markdown.strip():
+                # Convert markdown to simple HTML paragraphs
+                analysis_text = content_markdown.strip()[:500]
+                analysis_html = f'''
+                <p style="color: #4b5563; font-size: 15px; line-height: 1.65; margin: 16px 0 0 0; font-style: italic;">
+                    {analysis_text}
+                </p>
+                '''
+            elif item.content_html and item.content_html.strip():
+                # Use pre-rendered HTML if available and no extracted markdown
+                analysis_html = f'''
+                <div style="color: #4b5563; font-size: 15px; line-height: 1.65; margin: 16px 0 0 0; font-style: italic;">
+                    {item.content_html}
+                </div>
+                '''
             
-            source_badge = f'<span style="display: inline-block; background-color: #e5e7eb; color: #374151; font-size: 12px; padding: 2px 8px; border-radius: 4px; margin-left: 8px;">{source_name}</span>' if source_name else ''
+            # Source attribution
+            source_html = ''
+            if source_name:
+                source_html = f'''
+                <p style="margin: 12px 0 0 0; font-size: 12px; color: #6b7280;">
+                    Source: <span style="color: #374151;">{source_name}</span>
+                </p>
+                '''
             
             stories_html += f'''
-            <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 20px;">
-                <h3 style="color: #111827; font-size: 16px; font-weight: 600; margin: 0 0 8px 0; line-height: 1.4;">
-                    {item.headline}{source_badge}
-                </h3>
+            <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 24px; margin-bottom: 24px;">
+                {category_html}
+                {headline_html}
                 {bullets_html}
+                {context_html}
                 {analysis_html}
+                {source_html}
             </div>
             '''
         
-        # Full HTML structure
+        # Full HTML structure with premium styling
         html = f'''
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-            <p style="color: #4b5563; font-size: 16px; line-height: 1.7; margin-bottom: 24px;">{intro}</p>
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.75; margin-bottom: 28px;">{intro}</p>
             {takeaways_html}
-            <h2 style="color: #111827; font-size: 20px; font-weight: 600; margin: 24px 0 16px 0; padding-bottom: 8px; border-bottom: 2px solid {accent_color};">Today's Stories</h2>
+            <h2 style="font-family: Georgia, 'Times New Roman', serif; color: #0f172a; font-size: 22px; font-weight: 700; margin: 28px 0 20px 0; padding-bottom: 12px; border-bottom: 2px solid {accent_color};">Today's Stories</h2>
             {stories_html}
         </div>
         '''
