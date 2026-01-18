@@ -722,18 +722,25 @@ def create_briefing():
                             try:
                                 source = None
                                 
-                                # Try as InputSource ID first
-                                if isinstance(source_ref, int):
-                                    source = InputSource.query.get(source_ref)
+                                # Handle dict format {'name': 'Source Name', 'type': 'rss'}
+                                if isinstance(source_ref, dict):
+                                    source_name = source_ref.get('name')
+                                    if source_name:
+                                        news_source = NewsSource.query.filter_by(name=source_name).first()
+                                        if news_source:
+                                            source = create_input_source_from_news_source(news_source.id, current_user)
                                 
-                                # Try as NewsSource ID (convert to InputSource)
-                                if not source and isinstance(source_ref, int):
-                                    news_source = NewsSource.query.get(source_ref)
-                                    if news_source:
-                                        source = create_input_source_from_news_source(news_source.id, current_user)
+                                # Try as InputSource ID first
+                                elif isinstance(source_ref, int):
+                                    source = InputSource.query.get(source_ref)
+                                    # Also try as NewsSource ID (convert to InputSource)
+                                    if not source:
+                                        news_source = NewsSource.query.get(source_ref)
+                                        if news_source:
+                                            source = create_input_source_from_news_source(news_source.id, current_user)
                                 
                                 # Try as string (NewsSource name)
-                                if not source and isinstance(source_ref, str):
+                                elif isinstance(source_ref, str):
                                     news_source = NewsSource.query.filter_by(name=source_ref).first()
                                     if news_source:
                                         source = create_input_source_from_news_source(news_source.id, current_user)
