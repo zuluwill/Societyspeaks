@@ -122,6 +122,228 @@ SAMPLE_OUTPUTS = {
 <p style="margin: 0 0 12px 0; color: #4b5563;">Ireland maintained their title defense with a 28-17 win over England in Dublin. France defeated Scotland in Paris, while Wales secured their first win against Italy. Ireland and France remain unbeaten after two rounds.</p>
 <p style="margin: 8px 0 0 0; font-size: 13px; color: #9ca3af;">Source: World Rugby, The Guardian</p>
 </div>""",
+
+    'policy-monitoring': """<p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #1e3a8a;">WHAT CHANGED</p>
+<h2 style="margin: 0 0 20px 0; font-family: Georgia, serif; font-size: 22px; color: #0f172a; border-bottom: 2px solid #1e3a8a; padding-bottom: 12px;">This Week in Policy</h2>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #dc2626;">REGULATION</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">FCA Publishes Final Consumer Duty Guidance</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">The Financial Conduct Authority released final guidance on Consumer Duty implementation for financial services firms. Key requirements include enhanced product governance, clear fair value assessments, and improved customer support standards.</p>
+<div style="background-color: #eff6ff; border-left: 4px solid #1e40af; padding: 14px 16px; margin-bottom: 12px; border-radius: 0 6px 6px 0;">
+<p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #1e3a8a; text-transform: uppercase;">Why It Matters</p>
+<p style="margin: 0; font-size: 14px; color: #1e40af; line-height: 1.6;">Firms must evidence compliance by April 2026. Non-compliance risks enforcement action and reputational damage.</p>
+</div>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: FCA, Financial Times</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #7c3aed;">LEGISLATION</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">Digital Markets Act Enforcement Begins</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">European Commission commenced enforcement proceedings against designated gatekeepers. Initial focus areas include interoperability requirements and self-preferencing in search results.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: European Commission</p>
+</div>
+
+<div style="background-color: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+<p style="margin: 0 0 10px 0; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #92400e;">What to Watch</p>
+<ul style="margin: 0; padding: 0 0 0 20px; color: #78350f; line-height: 1.7;">
+<li>Treasury Select Committee hearing on crypto regulation (Tuesday)</li>
+<li>ESMA consultation on ESG fund naming closes (Friday)</li>
+</ul>
+</div>""",
+
+    'sector-intelligence': """<h2 style="margin: 0 0 20px 0; font-family: Georgia, serif; font-size: 22px; color: #0f172a; border-bottom: 2px solid #4f46e5; padding-bottom: 12px;">Industry Intelligence</h2>
+
+<div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 20px; margin-bottom: 24px;">
+<p style="margin: 0 0 10px 0; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4f46e5;">Key Takeaways</p>
+<ul style="margin: 0; padding: 0 0 0 20px; color: #1f2937; line-height: 1.8;">
+<li>Sector M&A activity up 23% QoQ, driven by consolidation among mid-market players</li>
+<li>Three new regulatory consultations opened affecting core operations</li>
+<li>Competitor XYZ announced strategic pivot toward AI-enabled services</li>
+</ul>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #4f46e5;">MARKET MOVEMENT</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">Private Equity Continues Sector Consolidation</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Blackstone completed its acquisition of ServiceCorp for $2.4B, marking the third major PE transaction in the sector this quarter. Deal multiples averaging 12x EBITDA suggest continued confidence in recurring revenue models.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: Reuters, Private Equity News</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #059669;">COMPETITOR WATCH</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">IndustryLeader Inc. Expands European Operations</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Announced new offices in Frankfurt and Amsterdam, with plans to hire 200 staff by Q3. European revenue now represents 28% of total, up from 19% in 2024.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: Company Press Release, Bloomberg</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #dc2626;">RESEARCH</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">McKinsey Report: AI Adoption Reshaping Sector Economics</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">New analysis suggests early AI adopters achieving 15-20% cost reductions in core operations. Report highlights data infrastructure as the primary barrier for mid-market firms.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: McKinsey Global Institute</p>
+</div>""",
+
+    'internal-research': """<h2 style="margin: 0 0 20px 0; font-family: Georgia, serif; font-size: 22px; color: #0f172a; border-bottom: 2px solid #475569; padding-bottom: 12px;">Research Synthesis</h2>
+
+<div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+<p style="margin: 0 0 12px 0; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #475569;">Documents Analyzed</p>
+<p style="margin: 0 0 4px 0; font-size: 14px; color: #64748b;">12 internal reports, 3 external studies, 2 strategy documents</p>
+<p style="margin: 0; font-size: 14px; color: #64748b;">Period: Q4 2025</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #475569;">EMERGING THEME</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">Customer Retention Declining in Mid-Market Segment</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Multiple reports identify a consistent pattern: mid-market customer churn increased to 18% (up from 12% in 2024). Primary drivers cited include pricing pressure and feature gaps compared to enterprise tier.</p>
+<div style="background-color: #fef2f2; border-left: 4px solid #dc2626; padding: 12px 16px; margin-top: 12px; border-radius: 0 6px 6px 0;">
+<p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #991b1b; text-transform: uppercase;">Gap Identified</p>
+<p style="margin: 0; font-size: 14px; color: #b91c1c; line-height: 1.6;">No current initiative addresses mid-market retention specifically. This appears to be a strategic blind spot.</p>
+</div>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #475569;">CONSENSUS VIEW</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">AI Integration Timeline More Aggressive Than Planned</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Both strategy documents and recent team retrospectives suggest the original 24-month AI roadmap should be compressed to 12-18 months. Competitive pressure cited as primary driver.</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #475569;">OPEN QUESTIONS</p>
+<ul style="margin: 0; padding: 0 0 0 20px; color: #4b5563; line-height: 1.8;">
+<li>What is the ROI threshold for mid-market retention investment?</li>
+<li>Should AI acceleration be resourced from existing budget or require new allocation?</li>
+<li>Which competitor moves require immediate response vs. monitoring?</li>
+</ul>
+</div>""",
+
+    'thought-leadership': """<h2 style="margin: 0 0 20px 0; font-family: Georgia, serif; font-size: 22px; color: #0f172a; border-bottom: 2px solid #b45309; padding-bottom: 12px;">Weekly Perspective</h2>
+
+<div style="border-left: 4px solid #b45309; padding-left: 20px; margin-bottom: 24px;">
+<p style="margin: 0 0 8px 0; font-family: Georgia, serif; font-size: 20px; font-style: italic; line-height: 1.5; color: #1f2937;">"The most significant regulatory shift in a decade requires measured analysis, not reactive commentary."</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">AI Governance Frameworks: What the Evidence Actually Shows</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Analysis of 47 published AI governance frameworks across jurisdictions reveals three distinct approaches: prescriptive regulation (EU model), principles-based guidance (UK approach), and sector-specific rules (US pattern). Each presents different compliance implications for multinational organizations.</p>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Key finding: Organizations operating across all three jurisdictions face an estimated 340% increase in compliance documentation requirements compared to single-jurisdiction operations.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Based on analysis by our regulatory affairs team, January 2026</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">Supply Chain Resilience: Lessons from Recent Disruptions</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">The Red Sea shipping disruptions offer concrete data on supply chain resilience strategies. Companies with diversified routing options experienced 12% cost increases; those without saw 34% increases. This validates pre-pandemic recommendations on multi-source strategies.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: Internal analysis of 200+ supply chain partners</p>
+</div>
+
+<div style="background-color: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+<p style="margin: 0 0 10px 0; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #92400e;">Suitable for External Publication</p>
+<p style="margin: 0; font-size: 14px; color: #78350f; line-height: 1.6;">This content has been reviewed and is appropriate for sharing on company blog, LinkedIn, or industry publications. All claims are cited and fact-checked.</p>
+</div>""",
+
+    'crypto-digital-assets': """<h2 style="margin: 0 0 20px 0; font-family: Georgia, serif; font-size: 22px; color: #0f172a; border-bottom: 2px solid #c2410c; padding-bottom: 12px;">Crypto & Digital Assets</h2>
+
+<div style="background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 20px; margin-bottom: 24px; display: flex; justify-content: space-between;">
+<div style="text-align: center; padding-right: 20px; border-right: 1px solid #e5e7eb;">
+<p style="margin: 0 0 4px 0; font-family: Georgia, serif; font-size: 22px; font-weight: 700; color: #c2410c;">$97,420</p>
+<p style="margin: 0; font-size: 12px; color: #6b7280;">BTC (+2.3%)</p>
+</div>
+<div style="text-align: center; padding: 0 20px; border-right: 1px solid #e5e7eb;">
+<p style="margin: 0 0 4px 0; font-family: Georgia, serif; font-size: 22px; font-weight: 700; color: #c2410c;">$3,245</p>
+<p style="margin: 0; font-size: 12px; color: #6b7280;">ETH (+1.8%)</p>
+</div>
+<div style="text-align: center; padding-left: 20px;">
+<p style="margin: 0 0 4px 0; font-family: Georgia, serif; font-size: 22px; font-weight: 700; color: #c2410c;">$2.1T</p>
+<p style="margin: 0; font-size: 12px; color: #6b7280;">Total Market Cap</p>
+</div>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #7c3aed;">REGULATION</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">SEC Approves First Spot Ethereum ETFs</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Following extended review, the SEC approved applications from BlackRock, Fidelity, and Grayscale for spot Ethereum ETFs. Trading begins next week, with analysts projecting $5-8B inflows in the first quarter.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: SEC Filing, Bloomberg</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #059669;">INFRASTRUCTURE</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">Ethereum Layer 2 Activity Reaches All-Time High</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Combined TVL across Arbitrum, Optimism, and Base exceeded $35B. Transaction costs on mainnet driving continued migration to L2 solutions. Base alone processed 2M daily transactions, surpassing Ethereum mainnet.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: L2Beat, Dune Analytics</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #dc2626;">RISK</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">Major Exchange Reports Security Incident</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Bybit disclosed unauthorized access affecting customer data (not funds). Investigation ongoing with regulatory notification completed. No asset impact confirmed, but trading volumes dropped 15% in 24 hours.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: Bybit Statement, CoinDesk</p>
+</div>""",
+
+    'trending-topics': """<h2 style="margin: 0 0 20px 0; font-family: Georgia, serif; font-size: 22px; color: #0f172a; border-bottom: 2px solid #be123c; padding-bottom: 12px;">What's Trending</h2>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<div style="display: flex; align-items: center; margin-bottom: 12px;">
+<span style="display: inline-block; background-color: #be123c; color: white; font-weight: 700; padding: 4px 12px; border-radius: 4px; font-size: 14px; margin-right: 12px;">#1</span>
+<span style="display: inline-block; background-color: #fef2f2; color: #be123c; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">VIRAL</span>
+</div>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">Documentary "The Great Unraveling" Sparks Global Debate</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">The new Netflix documentary examining social media's impact on democracy has generated 50M+ views in its first week. Political figures across the spectrum have responded, with some calling for platform regulation reform.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Trending on: Twitter/X, Reddit, LinkedIn | Sentiment: Mixed</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<div style="display: flex; align-items: center; margin-bottom: 12px;">
+<span style="display: inline-block; background-color: #be123c; color: white; font-weight: 700; padding: 4px 12px; border-radius: 4px; font-size: 14px; margin-right: 12px;">#2</span>
+<span style="display: inline-block; background-color: #eff6ff; color: #1e40af; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">BREAKING</span>
+</div>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">Major Tech Layoffs Signal Industry Recalibration</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Google, Microsoft, and Meta announced combined workforce reductions of 12,000 roles. Focus on AI efficiency cited as primary driver. Tech worker sentiment on social platforms shows frustration but also resilience.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Trending on: LinkedIn, Hacker News, Blind | Sentiment: Negative</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+<div style="display: flex; align-items: center; margin-bottom: 12px;">
+<span style="display: inline-block; background-color: #be123c; color: white; font-weight: 700; padding: 4px 12px; border-radius: 4px; font-size: 14px; margin-right: 12px;">#3</span>
+<span style="display: inline-block; background-color: #ecfdf5; color: #059669; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600;">FEEL GOOD</span>
+</div>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">Community Response to Storm Damage Inspires Millions</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Volunteer coordination efforts in storm-affected regions have gone viral, with #NeighborsHelping garnering 2M+ posts. Local businesses organizing supply chains and housing solutions. Strong positive engagement across platforms.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Trending on: Instagram, TikTok, Facebook | Sentiment: Positive</p>
+</div>""",
+
+    'health-science-medicine': """<h2 style="margin: 0 0 20px 0; font-family: Georgia, serif; font-size: 22px; color: #0f172a; border-bottom: 2px solid #047857; padding-bottom: 12px;">Health, Science & Medicine</h2>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #047857;">BREAKTHROUGH</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">Phase 3 Trial Success for Alzheimer's Prevention Drug</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Eli Lilly announced positive results from its preventive Alzheimer's drug trial. The treatment showed 35% reduction in cognitive decline among high-risk participants over 24 months. FDA fast-track designation expected.</p>
+<div style="background-color: #ecfdf5; border-left: 4px solid #047857; padding: 14px 16px; margin-bottom: 12px; border-radius: 0 6px 6px 0;">
+<p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #065f46; text-transform: uppercase;">What This Means</p>
+<p style="margin: 0; font-size: 14px; color: #047857; line-height: 1.6;">If approved, this would be the first preventive treatment for Alzheimer's, potentially benefiting millions of at-risk individuals.</p>
+</div>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: NEJM, Eli Lilly Press Release</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #7c3aed;">RESEARCH</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">Long COVID Study Reveals Immune System Patterns</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Yale researchers identified distinct immune signatures in long COVID patients that persist 18+ months post-infection. Findings suggest targeted immunomodulatory treatments may be effective. Clinical trials planned for Q3 2026.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: Nature Medicine, Yale School of Medicine</p>
+</div>
+
+<div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #1e40af;">PUBLIC HEALTH</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">WHO Updates Global Antimicrobial Resistance Strategy</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">New WHO guidelines recommend reduced antibiotic prescriptions for common conditions and increased investment in alternative treatments. Member nations have 18 months to update national action plans.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: WHO, The Lancet</p>
+</div>
+
+<div style="margin-bottom: 24px;">
+<p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #dc2626;">TECHNOLOGY</p>
+<h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 18px; color: #0f172a;">AI Diagnostic Tool Outperforms Radiologists in Early Cancer Detection</h3>
+<p style="margin: 0 0 12px 0; color: #4b5563; line-height: 1.7;">Google DeepMind's latest medical imaging AI achieved 94.5% accuracy in early-stage lung cancer detection, compared to 87% for experienced radiologists. NHS pilot program expanding to 50 additional hospitals.</p>
+<p style="margin: 0; font-size: 13px; color: #9ca3af;">Source: Nature Communications, NHS England</p>
+</div>""",
 }
 
 # Recommended sources for each template category
@@ -332,6 +554,7 @@ TEMPLATES = [
         'default_cadence': 'daily',
         'default_tone': 'formal',
         'default_accent_color': '#1e3a8a',
+        'sample_output': SAMPLE_OUTPUTS.get('policy-monitoring', ''),
         'default_filters': {
             'topics': ['Policy', 'Regulation', 'Legislation'],
             'domains': 'configurable',
@@ -369,6 +592,7 @@ TEMPLATES = [
         'default_cadence': 'weekly',
         'default_tone': 'formal',
         'default_accent_color': '#4f46e5',
+        'sample_output': SAMPLE_OUTPUTS.get('sector-intelligence', ''),
         'default_filters': {
             'sector': 'configurable',
             'topics': ['Industry', 'Business', 'Competition'],
@@ -406,6 +630,7 @@ TEMPLATES = [
         'default_cadence': 'weekly',
         'default_tone': 'formal',
         'default_accent_color': '#475569',
+        'sample_output': SAMPLE_OUTPUTS.get('internal-research', ''),
         'default_filters': {
             'source_type': 'uploaded_documents',
             'topics': [],
@@ -444,6 +669,7 @@ TEMPLATES = [
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
         'default_accent_color': '#b45309',
+        'sample_output': SAMPLE_OUTPUTS.get('thought-leadership', ''),
         'default_filters': {
             'topics': 'configurable',
             'visibility': 'public',
@@ -523,6 +749,7 @@ TEMPLATES = [
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
         'default_accent_color': '#c2410c',
+        'sample_output': SAMPLE_OUTPUTS.get('crypto-digital-assets', ''),
         'default_filters': {
             'topics': ['Cryptocurrency', 'Blockchain', 'Digital Assets'],
             'assets': 'configurable',
@@ -560,6 +787,7 @@ TEMPLATES = [
         'default_cadence': 'daily',
         'default_tone': 'conversational',
         'default_accent_color': '#be123c',
+        'sample_output': SAMPLE_OUTPUTS.get('trending-topics', ''),
         'default_filters': {
             'source_mix': ['news', 'social', 'blogs'],
             'sensitivity': 'moderate',
@@ -599,6 +827,7 @@ TEMPLATES = [
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
         'default_accent_color': '#047857',
+        'sample_output': SAMPLE_OUTPUTS.get('health-science-medicine', ''),
         'default_filters': {
             'topics': ['Health', 'Science', 'Medicine'],
             'domains': 'configurable',

@@ -201,31 +201,54 @@
                         <p class="text-gray-600 text-sm mb-6">This is a sample of what your briefing emails will look like. Actual content will be generated based on your sources and current news.</p>
                     </div>
                     
-                    <div class="bg-gray-100 rounded-lg p-4 mb-6">
-                        <div class="max-w-xl mx-auto">
-                            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                                <div class="px-6 py-8 text-center" style="background-color: {{ template.default_accent_color or '#3B82F6' }}">
-                                    <h3 class="text-xl font-bold text-white mb-1">{{ template.name }}</h3>
-                                    <p class="text-white/75 text-sm">Monday, January 20, 2026</p>
+                    <div class="bg-slate-100 rounded-xl p-6 mb-6">
+                        <div class="max-w-2xl mx-auto">
+                            <div class="bg-white rounded-lg shadow-xl overflow-hidden" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                                
+                                <div class="text-center px-6 py-8" style="background-color: {{ template.default_accent_color or '#1e40af' }};">
+                                    <p style="margin: 0 0 10px 0; font-size: 12px; font-weight: 600; letter-spacing: 2px; color: rgba(255,255,255,0.8); text-transform: uppercase;">
+                                        SOCIETY SPEAKS
+                                    </p>
+                                    <h3 style="margin: 0 0 8px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: 700; color: #ffffff; line-height: 1.2;">
+                                        {{ template.name }}
+                                    </h3>
+                                    <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.75);">
+                                        Monday, January 20, 2026
+                                    </p>
                                 </div>
-                                <div class="px-6 py-6">
+                                
+                                {% if template.tagline %}
+                                <div style="background-color: #eff6ff; padding: 20px 24px; border-bottom: 1px solid #dbeafe;">
+                                    <p style="margin: 0; font-size: 15px; line-height: 1.6; color: {{ template.default_accent_color or '#1e40af' }}; font-weight: 500;">
+                                        {{ template.tagline }}{% if template.description %} &mdash; {{ template.description }}{% endif %}
+                                    </p>
+                                </div>
+                                {% endif %}
+                                
+                                <div style="padding: 28px 24px;">
                                     {{ template.sample_output|safe }}
                                 </div>
-                                <div class="bg-gray-50 px-6 py-4 text-center border-t text-xs text-gray-500">
-                                    <a href="#" class="text-blue-600 underline">View in browser</a> | 
-                                    <a href="#" class="text-gray-500 underline">Unsubscribe</a>
-                                    <p class="mt-2">Generated using Society Speaks' sense-making engine.</p>
+                                
+                                <div style="background-color: #f9fafb; padding: 20px 24px; border-top: 1px solid #e5e7eb; text-align: center;">
+                                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">
+                                        <a href="#" style="color: {{ template.default_accent_color or '#1e40af' }}; text-decoration: underline;">View in browser</a>
+                                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                                        <a href="#" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a>
+                                    </p>
+                                    <p style="margin: 0; font-size: 11px; color: #9ca3af;">
+                                        Generated using Society Speaks' open, auditable sense-making engine.
+                                    </p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-                        <p class="text-green-800 text-sm">
-                            <svg class="w-5 h-5 inline-block mr-1 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 text-center">
+                        <p class="text-emerald-800 text-sm flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
-                            This is a sample. Your actual briefings will contain fresh, AI-curated content from your selected sources.
+                            <span>This is a sample. Your actual briefings will contain fresh, AI-curated content from your selected sources.</span>
                         </p>
                     </div>
                     {% else %}

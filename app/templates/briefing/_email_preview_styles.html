@@ -1,0 +1,154 @@
+{#
+  Reusable email preview styles and macros
+  Inspired by Morning Brew, Tortoise Sensemaker, Ground News
+  
+  Usage:
+    {% import 'briefing/_email_preview_styles.html' as email_styles %}
+    {{ email_styles.story_item(headline, summary, source, topic_color, topic_label) }}
+#}
+
+{# Typography: Georgia for headlines, system fonts for body #}
+{% set font_heading = "Georgia, 'Times New Roman', Times, serif" %}
+{% set font_body = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" %}
+
+{# Common colors #}
+{% set color_text_primary = "#1f2937" %}
+{% set color_text_secondary = "#4b5563" %}
+{% set color_text_muted = "#6b7280" %}
+{% set color_text_light = "#9ca3af" %}
+{% set color_border = "#e5e7eb" %}
+{% set color_bg_light = "#f9fafb" %}
+
+{# Topic colors mapping #}
+{% set topic_colors = {
+    'POLICY': '#1e40af',
+    'TECHNOLOGY': '#7c3aed',
+    'CAPITAL': '#047857',
+    'CLIMATE': '#0f766e',
+    'WORLD': '#2563eb',
+    'HEALTH': '#047857',
+    'CULTURE': '#c026d3',
+    'SPORT': '#c2410c',
+    'CRYPTO': '#c2410c',
+    'RESEARCH': '#475569',
+    'INDUSTRY': '#4f46e5',
+    'AUTHORITY': '#b45309',
+    'TRENDING': '#be123c'
+} %}
+
+{# Story item macro - Morning Brew style chunked content #}
+{% macro story_item(headline, summary, source, topic_label=None, topic_color=None, position=None, source_count=None, why_matters=None) %}
+<div style="margin-bottom: 28px; padding-bottom: 24px; border-bottom: 1px solid {{ color_border }};">
+    {% if topic_label %}
+    <p style="margin: 0 0 10px 0; font-family: {{ font_body }}; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: {{ topic_color or '#64748b' }};">
+        {{ topic_label }}
+    </p>
+    {% endif %}
+    
+    {% if position %}
+    <div style="display: inline-block; width: 26px; height: 26px; background-color: {{ topic_color or '#1e40af' }}; border-radius: 50%; text-align: center; line-height: 26px; font-family: {{ font_body }}; font-size: 13px; font-weight: 700; color: #ffffff; margin-bottom: 10px;">
+        {{ position }}
+    </div>
+    {% endif %}
+    
+    <h3 style="margin: 0 0 12px 0; font-family: {{ font_heading }}; font-size: 20px; font-weight: 700; color: #0f172a; line-height: 1.3; letter-spacing: -0.02em;">
+        {{ headline }}
+    </h3>
+    
+    {% if source_count %}
+    <p style="margin: 0 0 12px 0;">
+        <span style="display: inline-block; background-color: {{ topic_color or '#1e40af' }}; border-radius: 4px; padding: 3px 10px; font-family: {{ font_body }}; font-size: 12px; font-weight: 600; color: #ffffff;">
+            {{ source_count }} sources
+        </span>
+    </p>
+    {% endif %}
+    
+    <p style="margin: 0 0 14px 0; font-family: {{ font_body }}; font-size: 15px; line-height: 1.7; color: {{ color_text_primary }};">
+        {{ summary }}
+    </p>
+    
+    {% if why_matters %}
+    <div style="background-color: #eff6ff; border-left: 4px solid {{ topic_color or '#3b82f6' }}; border-radius: 0 6px 6px 0; padding: 14px 16px; margin-bottom: 14px;">
+        <p style="margin: 0 0 4px 0; font-family: {{ font_body }}; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #1e3a8a; text-transform: uppercase;">
+            Why This Matters
+        </p>
+        <p style="margin: 0; font-family: {{ font_body }}; font-size: 14px; line-height: 1.6; color: #1e40af;">
+            {{ why_matters }}
+        </p>
+    </div>
+    {% endif %}
+    
+    <p style="margin: 0; font-family: {{ font_body }}; font-size: 13px; color: {{ color_text_light }};">
+        Source: {{ source }}
+    </p>
+</div>
+{% endmacro %}
+
+{# Bullet list macro for key points #}
+{% macro bullet_list(items, accent_color) %}
+<ul style="margin: 0 0 16px 0; padding: 0; list-style: none;">
+    {% for item in items %}
+    <li style="margin-bottom: 10px; padding-left: 20px; position: relative; font-family: {{ font_body }}; font-size: 15px; line-height: 1.65; color: {{ color_text_primary }};">
+        <span style="position: absolute; left: 0; color: {{ accent_color or '#1e40af' }}; font-size: 18px;">&bull;</span>
+        {{ item }}
+    </li>
+    {% endfor %}
+</ul>
+{% endmacro %}
+
+{# Section header macro #}
+{% macro section_header(title, accent_color) %}
+<h2 style="margin: 0 0 20px 0; font-family: {{ font_heading }}; font-size: 22px; font-weight: 700; color: #0f172a; padding-bottom: 12px; border-bottom: 2px solid {{ accent_color or '#1e40af' }};">
+    {{ title }}
+</h2>
+{% endmacro %}
+
+{# Key takeaways box #}
+{% macro key_takeaways(items, accent_color) %}
+<div style="background-color: {{ color_bg_light }}; border: 1px solid {{ color_border }}; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+    <p style="margin: 0 0 12px 0; font-family: {{ font_body }}; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {{ accent_color or '#1e40af' }};">
+        Key Takeaways
+    </p>
+    {{ bullet_list(items, accent_color) }}
+</div>
+{% endmacro %}
+
+{# Quick stats row #}
+{% macro stat_row(stats, accent_color) %}
+<div style="display: flex; justify-content: space-between; background-color: {{ color_bg_light }}; border-radius: 8px; padding: 16px 20px; margin-bottom: 24px;">
+    {% for stat in stats %}
+    <div style="text-align: center; {% if not loop.last %}border-right: 1px solid {{ color_border }}; padding-right: 20px;{% endif %}">
+        <p style="margin: 0 0 4px 0; font-family: {{ font_heading }}; font-size: 24px; font-weight: 700; color: {{ accent_color or '#1e40af' }};">
+            {{ stat.value }}
+        </p>
+        <p style="margin: 0; font-family: {{ font_body }}; font-size: 12px; color: {{ color_text_muted }};">
+            {{ stat.label }}
+        </p>
+    </div>
+    {% endfor %}
+</div>
+{% endmacro %}
+
+{# Quote/callout box #}
+{% macro callout(text, author, accent_color) %}
+<div style="border-left: 4px solid {{ accent_color or '#1e40af' }}; padding-left: 20px; margin: 20px 0;">
+    <p style="margin: 0 0 8px 0; font-family: {{ font_heading }}; font-size: 18px; font-style: italic; line-height: 1.5; color: {{ color_text_primary }};">
+        "{{ text }}"
+    </p>
+    {% if author %}
+    <p style="margin: 0; font-family: {{ font_body }}; font-size: 14px; color: {{ color_text_muted }};">
+        — {{ author }}
+    </p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{# What to watch section #}
+{% macro what_to_watch(items, accent_color) %}
+<div style="background-color: #fef3c7; border: 1px solid #fcd34d; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+    <p style="margin: 0 0 12px 0; font-family: {{ font_body }}; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: #92400e;">
+        What to Watch
+    </p>
+    {{ bullet_list(items, '#b45309') }}
+</div>
+{% endmacro %}
