@@ -90,6 +90,17 @@ The platform includes a customizable briefing system for users and organizations
 - **Model Fields**: Briefing model includes custom_prompt, tone, max_items, logo_url, accent_color, header_text
 - **Templates**: Jinja2 uses `default` filter for safe NULL handling instead of Python's `getattr`
 
+### Briefing Output Enhancements (January 2026)
+Premium-quality brief generation with insights and analytics:
+- **AI-Generated Insights**: Prompts request "why this matters" analysis, not just summaries
+- **Key Takeaways Synthesis**: Cross-item analysis identifying patterns and trends across all stories
+- **Source Attribution**: Denormalized source_name on BriefRunItem for reliable display
+- **Structured HTML**: Professional formatting with branding (accent_color, logo_url, header_text)
+- **Email Analytics**: Open tracking (1x1 pixel), click tracking with secure redirect validation
+- **Slack Integration**: send_brief_to_slack() delivers briefs via webhook using Block Kit formatting
+- **Analytics Dashboard**: /briefing/<id>/analytics shows open rates, click rates, trends over time
+- **Security**: Click tracking validates URLs against ingested items or whitelisted domains (exact match + subdomain)
+
 ### Political Diversity System (January 2026)
 Ensures balanced representation across the political spectrum to avoid echo chambers:
 - **File**: app/trending/diversity_monitor.py
