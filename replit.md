@@ -80,6 +80,16 @@ Political leanings follow AllSides.com ratings (chart v10.1/v11) with 5 categori
 - **Version tracking**: RATINGS_VERSION in allsides_seed.py tracks updates (currently '2026.01.15')
 - **Notable updates**: The Guardian, The Atlantic moved to "Left" per AllSides Nov 2024 review
 
+### Multi-Tenant Briefing System (January 2026)
+The platform includes a customizable briefing system for users and organizations:
+- **AI Settings**: Customizable tone (Calm & Neutral, Formal, Conversational), max items (5-20), and custom prompts
+- **Visual Branding**: Logo URL, accent color picker with hex input, custom header text
+- **Sources Management**: Browse curated sources, add custom RSS feeds, upload documents (PDF, TXT, etc.)
+- **Organization Support**: Company profiles can create branded briefings with custom sending domains
+- **Brief Runs**: View generated content with clickable history, approve/reject workflow for scheduled sends
+- **Model Fields**: Briefing model includes custom_prompt, tone, max_items, logo_url, accent_color, header_text
+- **Templates**: Jinja2 uses `default` filter for safe NULL handling instead of Python's `getattr`
+
 ### Political Diversity System (January 2026)
 Ensures balanced representation across the political spectrum to avoid echo chambers:
 - **File**: app/trending/diversity_monitor.py
