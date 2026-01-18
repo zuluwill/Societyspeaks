@@ -2729,6 +2729,17 @@ class Briefing(db.Model):
     # Status
     status = db.Column(db.String(20), default='active')  # 'active' | 'paused'
 
+    # AI Generation Settings
+    custom_prompt = db.Column(db.Text, nullable=True)  # Custom instructions for AI generation
+    tone = db.Column(db.String(50), default='calm_neutral')  # 'calm_neutral' | 'formal' | 'conversational'
+    include_summaries = db.Column(db.Boolean, default=True)  # Include bullet summaries
+    max_items = db.Column(db.Integer, default=10)  # Max stories per brief
+
+    # Visual Branding
+    logo_url = db.Column(db.String(500), nullable=True)  # Logo image URL
+    accent_color = db.Column(db.String(20), default='#3B82F6')  # Hex color for accents
+    header_text = db.Column(db.String(200), nullable=True)  # Custom header text
+
     # Email config (for orgs)
     from_name = db.Column(db.String(200), nullable=True)
     from_email = db.Column(db.String(255), nullable=True)  # Must be from verified domain

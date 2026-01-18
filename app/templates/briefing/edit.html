@@ -111,7 +111,96 @@
                     </select>
                 </div>
 
-                <!-- Branding (for org briefings) -->
+                <!-- AI Settings Section -->
+                <div id="ai-settings" class="pt-6 border-t border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">AI Settings</h3>
+                    <p class="text-sm text-gray-500 mb-4">Customize how your brief content is generated.</p>
+                    
+                    <div class="space-y-4">
+                        <!-- Tone -->
+                        <div>
+                            <label for="tone" class="block text-sm font-medium text-gray-700">Writing Tone</label>
+                            <select name="tone" id="tone"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                <option value="calm_neutral" {% if (briefing.tone or 'calm_neutral') == 'calm_neutral' %}selected{% endif %}>Calm & Neutral</option>
+                                <option value="formal" {% if briefing.tone == 'formal' %}selected{% endif %}>Formal & Professional</option>
+                                <option value="conversational" {% if briefing.tone == 'conversational' %}selected{% endif %}>Conversational & Friendly</option>
+                            </select>
+                            <p class="mt-1 text-sm text-gray-500">The writing style for your generated briefs</p>
+                        </div>
+                        
+                        <!-- Max Items -->
+                        <div>
+                            <label for="max_items" class="block text-sm font-medium text-gray-700">Maximum Stories</label>
+                            <select name="max_items" id="max_items"
+                                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                {% for num in [5, 7, 10, 15, 20] %}
+                                <option value="{{ num }}" {% if (briefing.max_items|default(10)) == num %}selected{% endif %}>{{ num }} stories</option>
+                                {% endfor %}
+                            </select>
+                            <p class="mt-1 text-sm text-gray-500">Maximum number of stories to include per brief</p>
+                        </div>
+                        
+                        <!-- Custom Prompt -->
+                        <div>
+                            <label for="custom_prompt" class="block text-sm font-medium text-gray-700">Custom Instructions (Optional)</label>
+                            <textarea name="custom_prompt" id="custom_prompt" rows="4"
+                                      class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                      placeholder="Add custom instructions for the AI, e.g., 'Focus on industry-specific terminology' or 'Include actionable takeaways'">{{ briefing.custom_prompt or '' }}</textarea>
+                            <p class="mt-1 text-sm text-gray-500">Additional guidance for how the AI should write your briefs. Leave empty for default behavior.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Branding Section -->
+                <div id="branding" class="pt-6 border-t border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Visual Branding</h3>
+                    <p class="text-sm text-gray-500 mb-4">Customize the look and feel of your briefs.</p>
+                    
+                    <div class="space-y-4">
+                        <!-- Logo URL -->
+                        <div>
+                            <label for="logo_url" class="block text-sm font-medium text-gray-700">Logo URL</label>
+                            <input type="url" name="logo_url" id="logo_url"
+                                   value="{{ briefing.logo_url or '' }}"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                   placeholder="https://example.com/logo.png">
+                            <p class="mt-1 text-sm text-gray-500">URL to your logo image (PNG, JPG, SVG)</p>
+                            {% if briefing.logo_url %}
+                            <div class="mt-2">
+                                <img src="{{ briefing.logo_url }}" alt="Current logo" class="h-12 w-auto object-contain border rounded p-1">
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Accent Color -->
+                        <div>
+                            <label for="accent_color" class="block text-sm font-medium text-gray-700">Accent Color</label>
+                            <div class="mt-1 flex items-center space-x-3">
+                                <input type="color" name="accent_color" id="accent_color"
+                                       value="{{ briefing.accent_color or '#3B82F6' }}"
+                                       class="h-10 w-14 border-gray-300 rounded cursor-pointer">
+                                <input type="text" id="accent_color_hex" 
+                                       value="{{ briefing.accent_color or '#3B82F6' }}"
+                                       class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                       placeholder="#3B82F6" pattern="^#[0-9A-Fa-f]{6}$">
+                            </div>
+                            <p class="mt-1 text-sm text-gray-500">Color used for headers, links, and accents</p>
+                        </div>
+                        
+                        <!-- Header Text -->
+                        <div>
+                            <label for="header_text" class="block text-sm font-medium text-gray-700">Custom Header Text</label>
+                            <input type="text" name="header_text" id="header_text"
+                                   value="{{ briefing.header_text or '' }}"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                   placeholder="e.g., Your Daily Industry Update">
+                            <p class="mt-1 text-sm text-gray-500">Custom text shown at the top of each brief (optional)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Branding (for org briefings) -->
                 {% if briefing.owner_type == 'org' %}
                 <div class="pt-4 border-t border-gray-200">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Email Branding</h3>
@@ -319,6 +408,39 @@ document.addEventListener('DOMContentLoaded', function() {
                         return false;
                     }
                 }
+            }
+        });
+    }
+    
+    // Color picker sync with hex input
+    const colorPicker = document.getElementById('accent_color');
+    const colorHexInput = document.getElementById('accent_color_hex');
+    
+    if (colorPicker && colorHexInput) {
+        colorPicker.addEventListener('input', function() {
+            colorHexInput.value = this.value.toUpperCase();
+        });
+        
+        colorHexInput.addEventListener('input', function() {
+            let value = this.value.trim();
+            if (!value.startsWith('#')) {
+                value = '#' + value;
+            }
+            if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+                colorPicker.value = value;
+            }
+        });
+        
+        colorHexInput.addEventListener('blur', function() {
+            let value = this.value.trim();
+            if (!value.startsWith('#')) {
+                value = '#' + value;
+            }
+            if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+                this.value = value.toUpperCase();
+                colorPicker.value = value;
+            } else {
+                this.value = colorPicker.value.toUpperCase();
             }
         });
     }

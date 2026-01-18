@@ -733,6 +733,16 @@ def edit(briefing_id):
                     flash(error, 'error')
                     return redirect(url_for('briefing.edit', briefing_id=briefing_id))
             
+            # Get AI settings fields
+            custom_prompt = request.form.get('custom_prompt', '').strip() or None
+            tone = request.form.get('tone', 'calm_neutral')
+            max_items = request.form.get('max_items', type=int) or 10
+            
+            # Get visual branding fields
+            logo_url = request.form.get('logo_url', '').strip() or None
+            accent_color = request.form.get('accent_color', '#3B82F6').strip()
+            header_text = request.form.get('header_text', '').strip() or None
+            
             # Update briefing
             briefing.name = name
             briefing.description = description
@@ -744,7 +754,17 @@ def edit(briefing_id):
             briefing.visibility = visibility
             briefing.status = status
             
-            # Update branding (only for org briefings)
+            # Update AI settings
+            briefing.custom_prompt = custom_prompt
+            briefing.tone = tone
+            briefing.max_items = max_items
+            
+            # Update visual branding
+            briefing.logo_url = logo_url
+            briefing.accent_color = accent_color
+            briefing.header_text = header_text
+            
+            # Update email branding (only for org briefings)
             if briefing.owner_type == 'org':
                 briefing.from_name = from_name
                 briefing.sending_domain_id = sending_domain_id
