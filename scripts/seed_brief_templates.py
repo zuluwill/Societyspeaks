@@ -251,7 +251,7 @@ TEMPLATES = [
         'sort_order': 3,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
-        'default_accent_color': '#059669',
+        'default_accent_color': '#047857',
         'sample_output': SAMPLE_OUTPUTS.get('economy-markets', ''),
         'default_sources': RECOMMENDED_SOURCES.get('economy-markets', []),
         'default_filters': {
@@ -290,7 +290,7 @@ TEMPLATES = [
         'sort_order': 4,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
-        'default_accent_color': '#0d9488',
+        'default_accent_color': '#0f766e',
         'sample_output': SAMPLE_OUTPUTS.get('climate-energy-planet', ''),
         'default_sources': RECOMMENDED_SOURCES.get('climate-energy-planet', []),
         'default_filters': {
@@ -443,7 +443,7 @@ TEMPLATES = [
         'sort_order': 4,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
-        'default_accent_color': '#d97706',
+        'default_accent_color': '#b45309',
         'default_filters': {
             'topics': 'configurable',
             'visibility': 'public',
@@ -482,7 +482,7 @@ TEMPLATES = [
         'sort_order': 1,
         'default_cadence': 'daily',
         'default_tone': 'conversational',
-        'default_accent_color': '#ea580c',
+        'default_accent_color': '#c2410c',
         'sample_output': SAMPLE_OUTPUTS.get('sport-state-of-play', ''),
         'default_sources': RECOMMENDED_SOURCES.get('sport-state-of-play', []),
         'default_filters': {
@@ -522,7 +522,7 @@ TEMPLATES = [
         'sort_order': 2,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
-        'default_accent_color': '#f97316',
+        'default_accent_color': '#c2410c',
         'default_filters': {
             'topics': ['Cryptocurrency', 'Blockchain', 'Digital Assets'],
             'assets': 'configurable',
@@ -559,7 +559,7 @@ TEMPLATES = [
         'sort_order': 3,
         'default_cadence': 'daily',
         'default_tone': 'conversational',
-        'default_accent_color': '#e11d48',
+        'default_accent_color': '#be123c',
         'default_filters': {
             'source_mix': ['news', 'social', 'blogs'],
             'sensitivity': 'moderate',
@@ -598,7 +598,7 @@ TEMPLATES = [
         'sort_order': 1,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
-        'default_accent_color': '#10b981',
+        'default_accent_color': '#047857',
         'default_filters': {
             'topics': ['Health', 'Science', 'Medicine'],
             'domains': 'configurable',
