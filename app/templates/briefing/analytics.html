@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - {{ briefing.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{{ url_for('briefing.detail', briefing_id=briefing.id) }}" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Back to Briefing
+        </a>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
+        <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ briefing.name }} - Analytics</h1>
+        <p class="text-gray-600">Email performance metrics for the last 30 briefs</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow-sm border p-6">
+            <div class="text-sm font-medium text-gray-500 mb-1">Total Emails Sent</div>
+            <div class="text-3xl font-bold text-gray-900">{{ total_sent }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border p-6">
+            <div class="text-sm font-medium text-gray-500 mb-1">Unique Opens</div>
+            <div class="text-3xl font-bold text-green-600">{{ total_opens }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border p-6">
+            <div class="text-sm font-medium text-gray-500 mb-1">Open Rate</div>
+            <div class="text-3xl font-bold text-blue-600">{{ open_rate }}%</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border p-6">
+            <div class="text-sm font-medium text-gray-500 mb-1">Click Rate</div>
+            <div class="text-3xl font-bold text-purple-600">{{ click_rate }}%</div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-sm border p-6 mb-8">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Performance Over Time</h2>
+        {% if chart_data %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b">
+                        <th class="text-left py-3 px-2 font-medium text-gray-600">Date</th>
+                        <th class="text-right py-3 px-2 font-medium text-gray-600">Sent</th>
+                        <th class="text-right py-3 px-2 font-medium text-gray-600">Opens</th>
+                        <th class="text-right py-3 px-2 font-medium text-gray-600">Clicks</th>
+                        <th class="text-right py-3 px-2 font-medium text-gray-600">Open Rate</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in chart_data|reverse %}
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-3 px-2 text-gray-900">{{ data.date }}</td>
+                        <td class="py-3 px-2 text-right text-gray-600">{{ data.sent }}</td>
+                        <td class="py-3 px-2 text-right text-green-600">{{ data.opens }}</td>
+                        <td class="py-3 px-2 text-right text-purple-600">{{ data.clicks }}</td>
+                        <td class="py-3 px-2 text-right text-blue-600">
+                            {% if data.sent > 0 %}
+                                {{ ((data.opens / data.sent) * 100)|round(1) }}%
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-gray-500 text-center py-8">No analytics data available yet. Send your first brief to start tracking!</p>
+        {% endif %}
+    </div>
+
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
+        <h3 class="text-lg font-semibold text-blue-900 mb-2">About Analytics</h3>
+        <ul class="text-sm text-blue-800 space-y-2">
+            <li><strong>Open tracking:</strong> Opens are tracked via a transparent pixel in emails. Some email clients block images by default.</li>
+            <li><strong>Click tracking:</strong> Link clicks are tracked via redirect. Users are seamlessly sent to the original destination.</li>
+            <li><strong>Privacy:</strong> We hash recipient identifiers to protect privacy while enabling accurate deduplication.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

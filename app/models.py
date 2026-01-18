@@ -2745,6 +2745,10 @@ class Briefing(db.Model):
     from_email = db.Column(db.String(255), nullable=True)  # Must be from verified domain
     sending_domain_id = db.Column(db.Integer, db.ForeignKey('sending_domain.id', ondelete='SET NULL'), nullable=True)
 
+    # Slack integration
+    slack_webhook_url = db.Column(db.String(500), nullable=True)  # Slack incoming webhook URL
+    slack_channel_name = db.Column(db.String(100), nullable=True)  # For display purposes
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -2841,10 +2845,17 @@ class BriefRun(db.Model):
     generated_at = db.Column(db.DateTime, nullable=True)
     sent_at = db.Column(db.DateTime, nullable=True)
 
+    # Analytics tracking
+    emails_sent = db.Column(db.Integer, default=0)  # Count of emails sent
+    unique_opens = db.Column(db.Integer, default=0)  # Count of unique email opens
+    total_clicks = db.Column(db.Integer, default=0)  # Count of link clicks
+    slack_sent = db.Column(db.Boolean, default=False)  # Whether Slack notification was sent
+
     # Relationships
     items = db.relationship('BriefRunItem', backref='run', cascade='all, delete-orphan', order_by='BriefRunItem.position')
     approved_by = db.relationship('User', backref='approved_brief_runs', foreign_keys=[approved_by_user_id])
     edits = db.relationship('BriefEdit', backref='brief_run', lazy='dynamic', order_by='BriefEdit.created_at.desc()')
+    opens = db.relationship('BriefEmailOpen', backref='brief_run', cascade='all, delete-orphan')
 
     def to_dict(self):
         return {
@@ -2908,6 +2919,49 @@ class BriefRunItem(db.Model):
 
     def __repr__(self):
         return f'<BriefRunItem {self.position}. {self.headline}>'
+
+
+class BriefEmailOpen(db.Model):
+    """
+    Tracks individual email opens for analytics.
+    """
+    __tablename__ = 'brief_email_open'
+    __table_args__ = (
+        db.Index('idx_brief_email_open_run', 'brief_run_id'),
+        db.Index('idx_brief_email_open_recipient', 'recipient_email'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    brief_run_id = db.Column(db.Integer, db.ForeignKey('brief_run.id', ondelete='CASCADE'), nullable=False)
+    recipient_email = db.Column(db.String(255), nullable=True)  # Hashed or anonymized
+    opened_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_agent = db.Column(db.String(500), nullable=True)
+    ip_address = db.Column(db.String(45), nullable=True)
+
+    def __repr__(self):
+        return f'<BriefEmailOpen {self.id} for run {self.brief_run_id}>'
+
+
+class BriefLinkClick(db.Model):
+    """
+    Tracks individual link clicks for analytics.
+    """
+    __tablename__ = 'brief_link_click'
+    __table_args__ = (
+        db.Index('idx_brief_link_click_run', 'brief_run_id'),
+        db.Index('idx_brief_link_click_item', 'brief_run_item_id'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    brief_run_id = db.Column(db.Integer, db.ForeignKey('brief_run.id', ondelete='CASCADE'), nullable=False)
+    brief_run_item_id = db.Column(db.Integer, db.ForeignKey('brief_run_item.id', ondelete='SET NULL'), nullable=True)
+    recipient_email = db.Column(db.String(255), nullable=True)  # Hashed or anonymized
+    target_url = db.Column(db.String(2000), nullable=False)
+    clicked_at = db.Column(db.DateTime, default=datetime.utcnow)
+    user_agent = db.Column(db.String(500), nullable=True)
+
+    def __repr__(self):
+        return f'<BriefLinkClick {self.id} for run {self.brief_run_id}>'
 
 
 class BriefRecipient(db.Model):
