@@ -152,3 +152,44 @@
     {{ bullet_list(items, '#b45309') }}
 </div>
 {% endmacro %}
+
+{# Full email preview wrapper - for template previews #}
+{% macro email_preview_wrapper(template_name, date, accent_color, tagline=None, description=None, content_html='') %}
+<div class="bg-white rounded-lg shadow-xl overflow-hidden" style="font-family: {{ font_body }};">
+    
+    <div class="text-center px-6 py-8" style="background-color: {{ accent_color or '#1e40af' }};">
+        <p style="margin: 0 0 10px 0; font-size: 12px; font-weight: 600; letter-spacing: 2px; color: rgba(255,255,255,0.8); text-transform: uppercase;">
+            SOCIETY SPEAKS
+        </p>
+        <h3 style="margin: 0 0 8px 0; font-family: {{ font_heading }}; font-size: 26px; font-weight: 700; color: #ffffff; line-height: 1.2;">
+            {{ template_name }}
+        </h3>
+        <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.75);">
+            {{ date }}
+        </p>
+    </div>
+    
+    {% if tagline %}
+    <div style="background-color: #eff6ff; padding: 20px 24px; border-bottom: 1px solid #dbeafe;">
+        <p style="margin: 0; font-size: 15px; line-height: 1.6; color: {{ accent_color or '#1e40af' }}; font-weight: 500;">
+            {{ tagline }}{% if description %} &mdash; {{ description }}{% endif %}
+        </p>
+    </div>
+    {% endif %}
+    
+    <div style="padding: 28px 24px;">
+        {{ content_html|safe }}
+    </div>
+    
+    <div style="background-color: {{ color_bg_light }}; padding: 20px 24px; border-top: 1px solid {{ color_border }}; text-align: center;">
+        <p style="margin: 0 0 8px 0; font-size: 12px; color: {{ color_text_muted }};">
+            <a href="#" style="color: {{ accent_color or '#1e40af' }}; text-decoration: underline;">View in browser</a>
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            <a href="#" style="color: {{ color_text_muted }}; text-decoration: underline;">Unsubscribe</a>
+        </p>
+        <p style="margin: 0; font-size: 11px; color: {{ color_text_light }};">
+            Generated using Society Speaks' open, auditable sense-making engine.
+        </p>
+    </div>
+</div>
+{% endmacro %}

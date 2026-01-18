@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% import 'briefing/_email_preview_styles.html' as email_styles %}
 
 {% block title %}{{ template.name }} - Template Preview{% endblock %}
 
@@ -203,43 +204,14 @@
                     
                     <div class="bg-slate-100 rounded-xl p-6 mb-6">
                         <div class="max-w-2xl mx-auto">
-                            <div class="bg-white rounded-lg shadow-xl overflow-hidden" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                                
-                                <div class="text-center px-6 py-8" style="background-color: {{ template.default_accent_color or '#1e40af' }};">
-                                    <p style="margin: 0 0 10px 0; font-size: 12px; font-weight: 600; letter-spacing: 2px; color: rgba(255,255,255,0.8); text-transform: uppercase;">
-                                        SOCIETY SPEAKS
-                                    </p>
-                                    <h3 style="margin: 0 0 8px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 26px; font-weight: 700; color: #ffffff; line-height: 1.2;">
-                                        {{ template.name }}
-                                    </h3>
-                                    <p style="margin: 0; font-size: 14px; color: rgba(255,255,255,0.75);">
-                                        Monday, January 20, 2026
-                                    </p>
-                                </div>
-                                
-                                {% if template.tagline %}
-                                <div style="background-color: #eff6ff; padding: 20px 24px; border-bottom: 1px solid #dbeafe;">
-                                    <p style="margin: 0; font-size: 15px; line-height: 1.6; color: {{ template.default_accent_color or '#1e40af' }}; font-weight: 500;">
-                                        {{ template.tagline }}{% if template.description %} &mdash; {{ template.description }}{% endif %}
-                                    </p>
-                                </div>
-                                {% endif %}
-                                
-                                <div style="padding: 28px 24px;">
-                                    {{ template.sample_output|safe }}
-                                </div>
-                                
-                                <div style="background-color: #f9fafb; padding: 20px 24px; border-top: 1px solid #e5e7eb; text-align: center;">
-                                    <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">
-                                        <a href="#" style="color: {{ template.default_accent_color or '#1e40af' }}; text-decoration: underline;">View in browser</a>
-                                        &nbsp;&nbsp;|&nbsp;&nbsp;
-                                        <a href="#" style="color: #6b7280; text-decoration: underline;">Unsubscribe</a>
-                                    </p>
-                                    <p style="margin: 0; font-size: 11px; color: #9ca3af;">
-                                        Generated using Society Speaks' open, auditable sense-making engine.
-                                    </p>
-                                </div>
-                            </div>
+                            {{ email_styles.email_preview_wrapper(
+                                template_name=template.name,
+                                date="Monday, January 20, 2026",
+                                accent_color=template.default_accent_color or '#1e40af',
+                                tagline=template.tagline,
+                                description=template.description,
+                                content_html=template.sample_output
+                            ) }}
                         </div>
                     </div>
 
