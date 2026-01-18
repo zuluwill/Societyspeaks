@@ -989,6 +989,166 @@ def seed_default_sources():
             'country': 'United States',
             'political_leaning': 0  # Centre - business deep dives, apolitical
         },
+        
+        # ==========================================================================
+        # SPORTS SOURCES
+        # ==========================================================================
+        {
+            'name': 'BBC Sport',
+            'feed_url': 'https://feeds.bbci.co.uk/sport/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United Kingdom',
+            'political_leaning': 0
+        },
+        {
+            'name': 'ESPN',
+            'feed_url': 'https://www.espn.com/espn/rss/news',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0
+        },
+        {
+            'name': 'The Athletic',
+            'feed_url': 'https://theathletic.com/rss-feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0
+        },
+        {
+            'name': 'Sky Sports',
+            'feed_url': 'https://www.skysports.com/rss/12040',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': 0
+        },
+        
+        # ==========================================================================
+        # HEALTH & SCIENCE SOURCES
+        # ==========================================================================
+        {
+            'name': 'STAT News',
+            'feed_url': 'https://www.statnews.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0
+        },
+        {
+            'name': 'Nature News',
+            'feed_url': 'https://www.nature.com/nature.rss',
+            'source_type': 'rss',
+            'reputation_score': 0.95,
+            'country': 'United Kingdom',
+            'political_leaning': 0
+        },
+        {
+            'name': 'Science Magazine',
+            'feed_url': 'https://www.science.org/rss/news_current.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.95,
+            'country': 'United States',
+            'political_leaning': 0
+        },
+        {
+            'name': 'The Lancet',
+            'feed_url': 'https://www.thelancet.com/rssfeed/lancet_current.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.95,
+            'country': 'United Kingdom',
+            'political_leaning': 0
+        },
+        
+        # ==========================================================================
+        # CRYPTO & DIGITAL ASSETS SOURCES
+        # ==========================================================================
+        {
+            'name': 'CoinDesk',
+            'feed_url': 'https://www.coindesk.com/arc/outboundfeeds/rss/',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': 0
+        },
+        {
+            'name': 'The Block',
+            'feed_url': 'https://www.theblock.co/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0
+        },
+        {
+            'name': 'Decrypt',
+            'feed_url': 'https://decrypt.co/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'United States',
+            'political_leaning': 0
+        },
+        
+        # ==========================================================================
+        # WIRE SERVICES
+        # ==========================================================================
+        {
+            'name': 'Reuters',
+            'feed_url': 'https://www.reutersagency.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.95,
+            'country': 'United Kingdom',
+            'political_leaning': 0
+        },
+        {
+            'name': 'AP News',
+            'feed_url': 'https://rsshub.app/apnews/topics/apf-topnews',
+            'source_type': 'rss',
+            'reputation_score': 0.95,
+            'country': 'United States',
+            'political_leaning': 0
+        },
+        
+        # ==========================================================================
+        # ADDITIONAL TECH SOURCES
+        # ==========================================================================
+        {
+            'name': 'Wired',
+            'feed_url': 'https://www.wired.com/feed/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': -0.5
+        },
+        {
+            'name': 'The Verge',
+            'feed_url': 'https://www.theverge.com/rss/index.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': -0.5
+        },
+        
+        # ==========================================================================
+        # CLIMATE & ENERGY SOURCES
+        # ==========================================================================
+        {
+            'name': 'Clean Energy Wire',
+            'feed_url': 'https://www.cleanenergywire.org/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'Germany',
+            'political_leaning': 0
+        },
+        {
+            'name': 'E&E News',
+            'feed_url': 'https://www.eenews.net/rss/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0
+        },
     ]
     
     try:
