@@ -358,10 +358,19 @@ def list_briefings():
             owner_id=current_user.company_profile.id
         ).order_by(Briefing.created_at.desc()).all()
 
+    # Get featured templates for empty state display
+    featured_templates = []
+    if not user_briefings and not org_briefings:
+        featured_templates = BriefTemplate.query.filter_by(
+            is_active=True, 
+            is_featured=True
+        ).order_by(BriefTemplate.sort_order).limit(6).all()
+
     return render_template(
         'briefing/list.html',
         user_briefings=user_briefings,
-        org_briefings=org_briefings
+        org_briefings=org_briefings,
+        featured_templates=featured_templates
     )
 
 

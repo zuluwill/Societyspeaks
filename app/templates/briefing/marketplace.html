@@ -1,30 +1,28 @@
-{% extends "base.html" %}
+{% extends "layout.html" %}
+{% from "components/breadcrumb.html" import breadcrumb %}
 
 {% block title %}Template Marketplace - Briefings{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 py-8">
-    <div class="mb-8">
-        <a href="{{ url_for('briefing.list_briefings') }}" class="text-blue-600 hover:text-blue-800 flex items-center gap-1 mb-4">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            Back to My Briefings
-        </a>
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {{ breadcrumb([
+            {'label': 'My Briefings', 'url': url_for('briefing.list_briefings')},
+            {'label': 'Template Marketplace', 'url': '#'}
+        ]) }}
         
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
                 <h1 class="text-3xl font-bold text-gray-900">Template Marketplace</h1>
-                <p class="text-gray-600 mt-1">Choose a template to get started quickly, or create your own from scratch</p>
+                <p class="text-gray-600 mt-2">Choose a template to get started quickly, or create your own from scratch</p>
             </div>
-            <a href="{{ url_for('briefing.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+            <a href="{{ url_for('briefing.create_briefing') }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors shadow-sm">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                 </svg>
                 Create from Scratch
             </a>
         </div>
-    </div>
 
     <div class="flex flex-wrap gap-2 mb-8">
         <a href="{{ url_for('briefing.marketplace') }}" 
@@ -78,17 +76,18 @@
     {% endif %}
     {% endfor %}
 
-    {% if not templates_by_category or all_empty %}
-    <div class="text-center py-12 bg-gray-50 rounded-lg">
-        <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-        </svg>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
-        <p class="text-gray-600 mb-4">Try adjusting your filters or create a briefing from scratch.</p>
-        <a href="{{ url_for('briefing.create') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Create from Scratch
-        </a>
+        {% if not templates_by_category or all_empty %}
+        <div class="text-center py-12 bg-white rounded-lg border border-gray-200">
+            <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
+            <p class="text-gray-600 mb-4">Try adjusting your filters or create a briefing from scratch.</p>
+            <a href="{{ url_for('briefing.create_briefing') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Create from Scratch
+            </a>
+        </div>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 {% endblock %}
