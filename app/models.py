@@ -2571,6 +2571,7 @@ class BriefTemplate(db.Model):
     default_filters = db.Column(db.JSON)  # Keywords, topics, geographic scope
     default_cadence = db.Column(db.String(20), default='daily')  # 'daily' | 'weekly'
     default_tone = db.Column(db.String(50), default='calm_neutral')
+    default_accent_color = db.Column(db.String(20), default='#3B82F6')  # Topic-specific accent color
 
     # Configurable bounds (JSON) - what users CAN change
     configurable_options = db.Column(db.JSON, default=lambda: {

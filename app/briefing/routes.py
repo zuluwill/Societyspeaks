@@ -548,6 +548,7 @@ def use_template(template_id):
                 max_items=guardrails.get('max_items', 10),
                 custom_prompt=template.custom_prompt_prefix,
                 guardrails=guardrails if guardrails else None,
+                accent_color=template.default_accent_color or '#3B82F6',
                 status='active'
             )
             

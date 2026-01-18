@@ -14,7 +14,7 @@
     </div>
 
     <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-8 text-white">
+        <div class="p-8 text-white" style="background-color: {{ template.default_accent_color or '#3B82F6' }}">
             <div class="flex items-start gap-6">
                 <div class="w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
                     {% if template.icon == 'landmark' %}
@@ -204,9 +204,9 @@
                     <div class="bg-gray-100 rounded-lg p-4 mb-6">
                         <div class="max-w-xl mx-auto">
                             <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-                                <div class="bg-blue-600 px-6 py-8 text-center">
+                                <div class="px-6 py-8 text-center" style="background-color: {{ template.default_accent_color or '#3B82F6' }}">
                                     <h3 class="text-xl font-bold text-white mb-1">{{ template.name }}</h3>
-                                    <p class="text-blue-100 text-sm">Monday, January 20, 2026</p>
+                                    <p class="text-white/75 text-sm">Monday, January 20, 2026</p>
                                 </div>
                                 <div class="px-6 py-6">
                                     {{ template.sample_output|safe }}

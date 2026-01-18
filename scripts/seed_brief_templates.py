@@ -172,6 +172,7 @@ TEMPLATES = [
         'sort_order': 1,
         'default_cadence': 'daily',
         'default_tone': 'calm_neutral',
+        'default_accent_color': '#1e40af',
         'sample_output': SAMPLE_OUTPUTS.get('politics-public-policy', ''),
         'default_sources': RECOMMENDED_SOURCES.get('politics-public-policy', []),
         'default_filters': {
@@ -211,6 +212,7 @@ TEMPLATES = [
         'sort_order': 2,
         'default_cadence': 'daily',
         'default_tone': 'calm_neutral',
+        'default_accent_color': '#7c3aed',
         'sample_output': SAMPLE_OUTPUTS.get('technology-ai-regulation', ''),
         'default_sources': RECOMMENDED_SOURCES.get('technology-ai-regulation', []),
         'default_filters': {
@@ -249,6 +251,7 @@ TEMPLATES = [
         'sort_order': 3,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
+        'default_accent_color': '#059669',
         'sample_output': SAMPLE_OUTPUTS.get('economy-markets', ''),
         'default_sources': RECOMMENDED_SOURCES.get('economy-markets', []),
         'default_filters': {
@@ -287,6 +290,7 @@ TEMPLATES = [
         'sort_order': 4,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
+        'default_accent_color': '#0d9488',
         'sample_output': SAMPLE_OUTPUTS.get('climate-energy-planet', ''),
         'default_sources': RECOMMENDED_SOURCES.get('climate-energy-planet', []),
         'default_filters': {
@@ -327,6 +331,7 @@ TEMPLATES = [
         'sort_order': 1,
         'default_cadence': 'daily',
         'default_tone': 'formal',
+        'default_accent_color': '#1e3a8a',
         'default_filters': {
             'topics': ['Policy', 'Regulation', 'Legislation'],
             'domains': 'configurable',
@@ -363,6 +368,7 @@ TEMPLATES = [
         'sort_order': 2,
         'default_cadence': 'weekly',
         'default_tone': 'formal',
+        'default_accent_color': '#4f46e5',
         'default_filters': {
             'sector': 'configurable',
             'topics': ['Industry', 'Business', 'Competition'],
@@ -399,6 +405,7 @@ TEMPLATES = [
         'sort_order': 3,
         'default_cadence': 'weekly',
         'default_tone': 'formal',
+        'default_accent_color': '#475569',
         'default_filters': {
             'source_type': 'uploaded_documents',
             'topics': [],
@@ -436,6 +443,7 @@ TEMPLATES = [
         'sort_order': 4,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
+        'default_accent_color': '#d97706',
         'default_filters': {
             'topics': 'configurable',
             'visibility': 'public',
@@ -474,6 +482,7 @@ TEMPLATES = [
         'sort_order': 1,
         'default_cadence': 'daily',
         'default_tone': 'conversational',
+        'default_accent_color': '#ea580c',
         'sample_output': SAMPLE_OUTPUTS.get('sport-state-of-play', ''),
         'default_sources': RECOMMENDED_SOURCES.get('sport-state-of-play', []),
         'default_filters': {
@@ -513,6 +522,7 @@ TEMPLATES = [
         'sort_order': 2,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
+        'default_accent_color': '#f97316',
         'default_filters': {
             'topics': ['Cryptocurrency', 'Blockchain', 'Digital Assets'],
             'assets': 'configurable',
@@ -549,6 +559,7 @@ TEMPLATES = [
         'sort_order': 3,
         'default_cadence': 'daily',
         'default_tone': 'conversational',
+        'default_accent_color': '#e11d48',
         'default_filters': {
             'source_mix': ['news', 'social', 'blogs'],
             'sensitivity': 'moderate',
@@ -587,6 +598,7 @@ TEMPLATES = [
         'sort_order': 1,
         'default_cadence': 'weekly',
         'default_tone': 'calm_neutral',
+        'default_accent_color': '#10b981',
         'default_filters': {
             'topics': ['Health', 'Science', 'Medicine'],
             'domains': 'configurable',
