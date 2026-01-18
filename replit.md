@@ -1,115 +1,24 @@
 # Society Speaks Platform
 
 ## Overview
-
-Society Speaks is an AGPL-3.0 licensed public discussion platform leveraging Pol.is technology to foster structured dialogue on social, political, and community topics. Built with Flask and PostgreSQL, its core purpose is to facilitate nuanced debate, build consensus, and inform policy. Key features include user profiles, discussion management, geographic filtering, and a "News-to-Deliberation Compiler" which automatically surfaces trending news for public deliberation. The platform also features a "Daily Civic Question" to encourage regular engagement and a sophisticated consensus clustering system to identify diverse opinion groups.
+Society Speaks is an AGPL-3.0 licensed public discussion platform built with Flask and PostgreSQL, leveraging Pol.is technology. Its core purpose is to facilitate structured dialogue, build consensus on social, political, and community topics, and inform policy. Key capabilities include user profiles, discussion management, geographic filtering, and a "News-to-Deliberation Compiler" that surfaces trending news for public deliberation. The platform also features a "Daily Civic Question" for regular engagement, sophisticated consensus clustering to identify diverse opinion groups, and a customizable briefing system with a template marketplace. The long-term vision is to foster nuanced debate and enhance civic engagement.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 
 ### UI/UX Decisions
-The platform features a consistent UI with reusable components, prioritizing mobile accessibility and enhanced accessibility features (e.g., ARIA labels). Tailwind CSS provides a utility-first styling approach with custom typography. Key elements include `discussion_card` components, toast notifications, empty states, and loading spinners. The homepage has been redesigned to highlight "Today's Question" and "From the News" sections, emphasizing a "sense-making system" narrative.
+The platform features a consistent, mobile-first UI with reusable components and enhanced accessibility (ARIA labels). Tailwind CSS is used for utility-first styling with custom typography. Key elements include `discussion_card` components, toast notifications, empty states, and loading spinners. The homepage highlights "Today's Question" and "From the News" to emphasize a "sense-making system."
 
 ### Technical Implementations
-The backend uses Flask with a modular, blueprint-based architecture. SQLAlchemy and Flask-SQLAlchemy manage PostgreSQL interactions, while Flask-Login handles user authentication. Redis is employed for session management, caching (Flask-Caching), and performance. The "News-to-Deliberation Compiler" automatically identifies trending news, scores articles for relevance and clickbait risk using LLMs, clusters them into discussions, and generates balanced seed statements. This system operates via hourly background jobs and includes an admin interface for oversight. A "Daily Civic Question" feature provides a Wordle-like daily participation ritual, complete with voting, streaks, email subscriptions, and one-click voting from emails with privacy-controlled comment sharing.
+The backend uses Flask with a modular, blueprint-based architecture, SQLAlchemy for PostgreSQL interactions, Flask-Login for authentication, and Redis for session management, caching, and performance. The "News-to-Deliberation Compiler" identifies trending news, scores articles using LLMs, clusters them into discussions, and generates balanced seed statements via hourly background jobs. The "Daily Civic Question" promotes daily participation with voting, streaks, email subscriptions, and one-click voting from emails. AI is used for automatic detection of geographic scope and categories in articles and daily questions. A community moderation system allows users to flag inappropriate daily question responses, which are auto-hidden after multiple flags and subject to admin review. The platform also includes a "Lens Check Optimization" for parallel LLM calls in perspective analysis and enhanced comment UX with representative sampling and quality scoring. A single-source-to-discussion pipeline automatically creates discussions from various content types (podcasts, newsletters) by generating AI seed statements. A political leaning system categorizes sources based on AllSides.com ratings to track and manage political diversity. A multi-tenant briefing system allows users and organizations to create customizable, branded briefings with AI settings, source management, and output enhancements including AI-generated insights, key takeaways, and source attribution.
 
 ### Feature Specifications
-The platform integrates Pol.is for discussion dynamics, supports topic categorization, and geographic filtering. A dedicated News feed page (`/discussions/news`) displays discussions derived from trending topics, ensuring source transparency and responsive design. Discussions preserve source article attribution. Analytics track profile views and discussion engagement. Security measures include Flask-Talisman (CSP), Flask-Limiter (rate limiting), Flask-SeaSurf (CSRF protection), and Werkzeug for password hashing. Replit Object Storage handles user-uploaded images with cropping and compression. The platform supports a dual-profile system for individual and company accounts. Geographic scope (global, national, local) and countries mentioned in news articles are automatically detected using AI and propagate to discussions and daily questions.
+The platform integrates Pol.is for discussion dynamics, supports topic categorization, and geographic filtering. A dedicated News feed page displays discussions from trending topics with source transparency. Security measures include Flask-Talisman (CSP), Flask-Limiter (rate limiting), Flask-SeaSurf (CSRF protection), and Werkzeug for password hashing. Replit Object Storage handles user-uploaded images. The platform supports dual individual and company profiles. Daily question emails include one-click voting with privacy-controlled comment sharing and syncing to linked discussion statements for authenticated users. Source pages provide comprehensive metadata and an "Engagement Score." A political diversity system monitors and ensures balanced representation of political leanings across content.
 
 ### System Design Choices
-PostgreSQL serves as the primary database, configured for connection pooling and health checks. Performance is optimized through pagination, eager loading, database indexing, and Redis caching. Logging is centralized, and configuration uses `config.py` with environment variables for API keys. A `SparsityAwareScaler` adapted from Pol.is innovations is used in consensus clustering to better identify diverse opinion groups. A "Participation Gate" requires users to vote on 5+ statements before viewing consensus analysis to prevent anchoring bias.
-
-### Community Moderation System (January 2026)
-The platform includes a community-driven moderation system for daily question responses:
-- Users can flag inappropriate responses (spam, harassment, misinformation)
-- Responses are auto-hidden after receiving 3 community flags
-- Anonymous flagging is supported via session fingerprints
-- Rate limiting (5 flags/hour) prevents abuse
-- Row-level locking prevents race conditions in flag counting
-- Admin review workflow allows unhiding responses if flags are dismissed
-
-### Lens Check Optimization (January 2026)
-The "Same Story, Different Lens" feature for Daily Briefs includes:
-- Parallel LLM calls (3x speedup) for perspective analysis
-- Retry logic with exponential backoff for API resilience
-- Thread-safe token usage tracking for cost monitoring
-- Enhanced JSON validation with type checking
-
-### Comment UX Enhancements (January 2026)
-Public comments on daily questions use representative sampling:
-- Diversity guarantees: at least 1 comment from each perspective (Agree/Disagree/Unsure)
-- Quality scoring: 70% length weighting, 30% recency
-- Hidden responses excluded from counts and display
-- Stats API for perspective badges
-
-### Daily Question Email Voting
-Daily question emails include one-click vote buttons (Agree/Disagree/Unsure) that use a two-step confirmation flow to prevent mail scanner prefetch attacks. Users can optionally share their reasoning with three visibility levels: public with name (authenticated users only), public anonymous, or private. Public reasons are displayed on the results page. The visibility selector appears dynamically when users start typing a reason. Votes and public reasons from authenticated users are synced to linked discussion statements.
-
-### Source Profile Enhancements (January 2026)
-Source pages now include comprehensive metadata for sharing with communities:
-- **62 sources** updated with: website URLs, descriptions, correct categories (podcast/broadcaster/newspaper/magazine/newsletter/think_tank), and logo URLs
-- **Engagement Score**: Calculated as (discussion_count * total_participants) / days_since_first_discussion, displayed as a green badge on source profile pages
-- **Logo handling**: Clearbit API logos with first-letter gradient fallbacks when images fail to load
-- **Metadata script**: scripts/update_source_metadata.py contains SOURCE_METADATA dictionary with all source data including podcast platform links (Apple/Spotify/YouTube)
-
-### Single-Source-to-Discussion Pipeline (January 2026)
-Automatic pipeline to create discussions from single-source content (podcasts, newsletters):
-- **File**: app/trending/podcast_publisher.py (handles podcasts AND newsletters via DRY design)
-- **Scheduler**: Runs daily at 9am UTC (after daily auto-publish)
-- **Process**: Fetches recent articles (14 days), generates AI seed statements using OpenAI/Anthropic, creates Discussion records with linked source articles
-- **Controls**: max_per_source=3 to prevent flooding, skips articles already linked to discussions
-- **Source coverage**: 56 active sources (11 podcasts, 8 newsletters, 37 news/magazines), 6 sources disabled due to Cloudflare blocking
-- **Key function**: `process_single_source_articles(source_categories=['podcast', 'newsletter', 'magazine', 'think_tank'], ...)` - generalized for multiple source types
-- **Coverage achieved**: 55/56 active sources now have discussions (only Triggernometry has 0 due to no recent episodes)
-- **AI Detection Functions**: All use provider-specific branches with proper fallbacks:
-  - `detect_article_category()` - detects topic from 11 categories (e.g., Economy, Politics, Technology)
-  - `detect_article_geographic()` - returns scope='country' or 'global' with country name
-  - `generate_article_description()` - creates contextual description for discussions
-- **Shared Constants**: app/trending/constants.py contains VALID_TOPICS, TARGET_AUDIENCE_DESCRIPTION, strip_html_tags()
-- **Geographic Scope**: Uses 'country' (not 'national') to match template expectations in discussion_card.html
-
-### Political Leaning System (January 2026)
-Political leanings follow AllSides.com ratings (chart v10.1/v11) with 5 categories:
-- **Label terminology**: Uses "Centre-Left" and "Centre-Right" (not "Lean Left/Lean Right")
-- **Database values**: Left (-2.0), Centre-Left (-1.0), Centre (0), Centre-Right (1.0), Right (2.0)
-- **Threshold mapping**: Left (≤ -1.5), Centre-Left (-1.5 to -0.5), Centre (-0.5 to 0.5), Centre-Right (0.5 to 1.5), Right (≥ 1.5)
-- **Label functions**: Defined in models.py, allsides_seed.py, and news/routes.py (must stay synchronized)
-- **Version tracking**: RATINGS_VERSION in allsides_seed.py tracks updates (currently '2026.01.15')
-- **Notable updates**: The Guardian, The Atlantic moved to "Left" per AllSides Nov 2024 review
-
-### Multi-Tenant Briefing System (January 2026)
-The platform includes a customizable briefing system for users and organizations:
-- **AI Settings**: Customizable tone (Calm & Neutral, Formal, Conversational), max items (5-20), and custom prompts
-- **Visual Branding**: Logo URL, accent color picker with hex input, custom header text
-- **Sources Management**: Browse curated sources, add custom RSS feeds, upload documents (PDF, TXT, etc.)
-- **Organization Support**: Company profiles can create branded briefings with custom sending domains
-- **Brief Runs**: View generated content with clickable history, approve/reject workflow for scheduled sends
-- **Model Fields**: Briefing model includes custom_prompt, tone, max_items, logo_url, accent_color, header_text
-- **Templates**: Jinja2 uses `default` filter for safe NULL handling instead of Python's `getattr`
-
-### Briefing Output Enhancements (January 2026)
-Premium-quality brief generation with insights and analytics:
-- **AI-Generated Insights**: Prompts request "why this matters" analysis, not just summaries
-- **Key Takeaways Synthesis**: Cross-item analysis identifying patterns and trends across all stories
-- **Source Attribution**: Denormalized source_name on BriefRunItem for reliable display
-- **Structured HTML**: Professional formatting with branding (accent_color, logo_url, header_text)
-- **Email Analytics**: Open tracking (1x1 pixel), click tracking with secure redirect validation
-- **Slack Integration**: send_brief_to_slack() delivers briefs via webhook using Block Kit formatting
-- **Analytics Dashboard**: /briefing/<id>/analytics shows open rates, click rates, trends over time
-- **Security**: Click tracking validates URLs against ingested items or whitelisted domains (exact match + subdomain)
-
-### Political Diversity System (January 2026)
-Ensures balanced representation across the political spectrum to avoid echo chambers:
-- **File**: app/trending/diversity_monitor.py
-- **Daily monitoring**: Scheduler runs at 6am UTC, logs balance status (balanced/warning/imbalanced)
-- **Balance targets**: L/R ratio between 0.7-1.4 is acceptable; >2.0 or <0.5 triggers warnings
-- **Auto-publish safeguards**: `auto_publish_daily()` in pipeline.py prevents publishing >1 topic more on one side
-- **Current status**: L/R ratio = 1.12:1 (balanced), improved from 2.0:1 after right-source discussion additions
-- **Helper function**: `_get_topic_political_leaning()` determines topic's dominant political leaning from sources
-- **Recommendation engine**: Provides actionable suggestions when imbalances detected
+PostgreSQL is the primary database, optimized with connection pooling, health checks, pagination, eager loading, and indexing. Redis caching further enhances performance. Logging is centralized, and configuration uses `config.py` with environment variables. A `SparsityAwareScaler` is used in consensus clustering to identify diverse opinion groups. A "Participation Gate" requires users to vote on statements before viewing consensus analysis to prevent anchoring bias. Briefing templates are available via a marketplace, enforcing guardrails upon cloning. Briefing output includes structured HTML with branding, email analytics (open/click tracking), and Slack integration.
 
 ## External Dependencies
 
@@ -126,26 +35,12 @@ Ensures balanced representation across the political spectrum to avoid echo cham
 
 ### APIs
 - **Guardian API**: For news article fetching.
-- **OpenAI/Anthropic APIs**: For LLM-based scoring, embeddings, and content generation within the "News-to-Deliberation Compiler."
+- **OpenAI/Anthropic APIs**: For LLM-based scoring, embeddings, and content generation.
+- **Clearbit API**: For fetching source logos.
 
 ### Social Media Integration
-- **Bluesky (AT Protocol)**: Automatic posting of news discussions with staggered scheduling (2pm, 4pm, 6pm, 8pm, 10pm UTC = 9am, 11am, 1pm, 3pm, 5pm EST) to maximize US audience engagement across different timezones. Uses external embed link cards with OpenGraph metadata for rich previews, with fallback to URL facets if embed creation fails.
-- **X/Twitter**: Automatic posting with 280 character limit compliance (URLs count as 23 chars via t.co shortening).
-
-### Social Media Best Practices (January 2026)
-- **Character limits**: Bluesky 300 chars, X 280 chars (URLs = 23 chars)
-- **Hashtag strategy**: 1-2 hashtags max, placed mid-text (never start with hashtag)
-- **Link cards**: Bluesky uses external embeds for rich previews; X auto-generates preview for trailing URLs
-- **Fallback handling**: Guaranteed clickable links on Bluesky via embed or URL facets
-- **Edge cases**: Very long URLs handled with graduated fallback text to ensure compliance
-
-### Development vs Production Environment (January 2026)
-The scheduler now checks for production environment before running certain jobs:
-- **Email sending**: Daily question emails and brief emails only sent in production
-- **Social media posting**: All scheduled social posts only run in production
-- **Detection method**: Checks REPLIT_DEPLOYMENT, FLASK_ENV, and domain patterns
-- **Purpose**: Prevents duplicate emails/posts when both dev and production are running
-- **Manual testing**: Dev environment scheduler jobs log "Skipping... development environment" instead of executing
+- **Bluesky (AT Protocol)**: For automatic posting of news discussions.
+- **X/Twitter**: For automatic posting of news discussions.
 
 ### Development & Security Tools
 - **Flask Extensions**: For security, forms, and database management.
@@ -153,4 +48,4 @@ The scheduler now checks for production environment before running certain jobs:
 - **Node.js**: For frontend asset management.
 
 ### Geographic Data
-- **Static JSON files**: For country/city data used in filtering.
+- **Static JSON files**: For country/city data.
