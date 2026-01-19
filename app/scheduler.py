@@ -21,32 +21,24 @@ scheduler = None
 
 def _is_production_environment() -> bool:
     """
-    Check if we're running in the production environment.
+    Check if we're running in the DEPLOYED production environment.
     
     Used to prevent development environments from sending real emails,
     social media posts, etc. to avoid duplicates when both dev and prod run.
     
-    Returns True if:
-    - REPLIT_DEPLOYMENT is set (Replit deployments)
-    - FLASK_ENV is 'production'
-    - Running on the production domain
+    IMPORTANT: Only trusts REPLIT_DEPLOYMENT variable, NOT FLASK_ENV.
+    FLASK_ENV can be set to 'production' in dev for testing, which would
+    cause duplicate emails if we checked it.
+    
+    Returns True ONLY if:
+    - REPLIT_DEPLOYMENT is set to '1' (Replit deployments only)
     """
     import os
     
-    # Replit deployment environment variable
-    if os.environ.get('REPLIT_DEPLOYMENT') == '1':
-        return True
-    
-    # Flask environment check
-    if os.environ.get('FLASK_ENV') == 'production':
-        return True
-    
-    # Check for production domain in REPLIT_DEV_DOMAIN (dev has .replit.dev, prod has actual domain)
-    dev_domain = os.environ.get('REPLIT_DEV_DOMAIN', '')
-    if dev_domain and 'replit.dev' not in dev_domain and 'replit.app' not in dev_domain:
-        return True
-    
-    return False
+    # ONLY check Replit deployment environment variable
+    # This is the authoritative indicator that we're in a deployed environment
+    # Do NOT check FLASK_ENV - it can be 'production' in dev causing duplicates!
+    return os.environ.get('REPLIT_DEPLOYMENT') == '1'
 
 
 def init_scheduler(app):
