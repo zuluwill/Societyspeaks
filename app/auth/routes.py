@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, cache
-from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView, StatementVote
+from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView, StatementVote, OrganizationMember
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
 from datetime import datetime, timedelta
@@ -11,6 +11,8 @@ from itsdangerous import URLSafeTimedSerializer
 from app.resend_client import send_password_reset_email, send_welcome_email
 # Profile utilities (not email-related)
 from app.email_utils import get_missing_individual_profile_fields, get_missing_company_profile_fields
+# Billing service for invitation handling
+from app.billing.service import accept_invitation
 try:
     import posthog
 except ImportError:
@@ -33,17 +35,65 @@ def verify_email(token):
         flash('That is an invalid or expired token', 'warning')
     return redirect(url_for('auth.login'))
 
+
+@auth_bp.route('/invite/<token>', methods=['GET'])
+def handle_invitation(token):
+    """Handle organization invitation links.
+
+    If user is logged in, accept the invitation immediately.
+    If not logged in, store token in session and redirect to login/register.
+    """
+    # Verify the invitation token is valid first
+    membership = OrganizationMember.query.filter_by(
+        invite_token=token,
+        status='pending'
+    ).first()
+
+    if not membership:
+        flash('This invitation link is invalid or has expired.', 'error')
+        return redirect(url_for('auth.login'))
+
+    org_name = membership.org.company_name if membership.org else 'an organization'
+
+    if current_user.is_authenticated:
+        # User is logged in - try to accept immediately
+        try:
+            accept_invitation(token, current_user)
+            flash(f'Welcome to {org_name}! You now have access to the team\'s briefings.', 'success')
+            return redirect(url_for('briefing.list_briefings'))
+        except ValueError as e:
+            flash(str(e), 'error')
+            return redirect(url_for('briefing.list_briefings'))
+    else:
+        # Store invitation token in session for after login/register
+        session['pending_invitation_token'] = token
+        session['pending_invitation_org'] = org_name
+        session['pending_invitation_email'] = membership.invite_email
+
+        flash(f'You\'ve been invited to join {org_name}. Please log in or create an account to accept.', 'info')
+
+        # If the invited email exists, send to login; otherwise register
+        existing_user = User.query.filter_by(email=membership.invite_email).first() if membership.invite_email else None
+        if existing_user:
+            return redirect(url_for('auth.login'))
+        else:
+            return redirect(url_for('auth.register'))
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
 @limiter.limit("5/hour")
 def register():
     # Capture checkout intent from query params (for briefing signups)
     checkout_plan = request.args.get('checkout_plan')
     checkout_interval = request.args.get('checkout_interval', 'month')
-    
+
     if checkout_plan:
         session['pending_checkout_plan'] = checkout_plan
         session['pending_checkout_interval'] = checkout_interval
-    
+
+    # Get invitation context from session (set by /invite/<token> route)
+    pending_invitation_email = session.get('pending_invitation_email')
+    pending_invitation_org = session.get('pending_invitation_org')
+
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
@@ -122,7 +172,9 @@ def register():
         flash("Please check your email to verify your account before logging in.", "info")
         return redirect(url_for('auth.login'))
 
-    return render_template('auth/register.html')
+    return render_template('auth/register.html',
+                         invitation_email=pending_invitation_email,
+                         invitation_org=pending_invitation_org)
 
 
 
@@ -166,19 +218,34 @@ def login():
                 current_app.logger.info(f"Merged {merged} anonymous votes for user {user.id}")
         
         flash("Logged in successfully!", "success")
-        
+
+        # Check for pending organization invitation
+        pending_invite_token = session.pop('pending_invitation_token', None)
+        session.pop('pending_invitation_org', None)  # Clean up
+        session.pop('pending_invitation_email', None)  # Clean up
+
+        if pending_invite_token:
+            try:
+                membership = accept_invitation(pending_invite_token, user)
+                org_name = membership.org.company_name if membership.org else 'the organization'
+                flash(f'Welcome to {org_name}! You now have access to the team\'s briefings.', 'success')
+                return redirect(url_for('briefing.list_briefings'))
+            except ValueError as e:
+                flash(str(e), 'warning')
+                # Continue with normal login flow
+
         # Check for pending briefing checkout (only for new registrations)
         # The 'from_registration' flag ensures we only redirect to checkout
-        # for users who just completed registration, not existing users who 
+        # for users who just completed registration, not existing users who
         # happen to have browsed the pricing page before logging in
         from_registration = session.pop('from_registration', False)
         pending_plan = session.pop('pending_checkout_plan', None)
         pending_interval = session.pop('pending_checkout_interval', 'month')
-        
+
         if pending_plan and from_registration:
             # Redirect to complete the checkout for newly registered users
-            return redirect(url_for('billing.pending_checkout', 
-                                   plan=pending_plan, 
+            return redirect(url_for('billing.pending_checkout',
+                                   plan=pending_plan,
                                    interval=pending_interval))
 
         # Check if the user has an individual or company profile

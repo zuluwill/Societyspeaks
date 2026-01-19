@@ -5,8 +5,8 @@ Use these in routes to check if users have access to features and are within lim
 from functools import wraps
 from flask import flash, redirect, url_for, jsonify, request
 from flask_login import current_user
-from app.billing.service import get_active_subscription, get_user_plan
-from app.models import Briefing
+from app.billing.service import get_active_subscription, get_user_plan, get_user_organization
+from app.models import Briefing, OrganizationMember
 
 
 def require_subscription(f):
@@ -62,9 +62,9 @@ def get_subscription_context(user):
     """Get subscription context for templates."""
     sub = get_active_subscription(user) if user.is_authenticated else None
     plan = sub.plan if sub else None
-    
-    brief_count = Briefing.query.filter_by(user_id=user.id).count() if user.is_authenticated else 0
-    
+
+    brief_count = _get_user_brief_count(user) if user.is_authenticated else 0
+
     return {
         'has_subscription': sub is not None,
         'subscription': sub,
@@ -92,24 +92,42 @@ def get_subscription_context(user):
     }
 
 
+def _get_user_brief_count(user):
+    """Get the total brief count for a user, including organization briefs."""
+    if not user.is_authenticated:
+        return 0
+
+    # Count user's own briefs
+    user_briefs = Briefing.query.filter_by(owner_type='user', owner_id=user.id).count()
+
+    # Check if user belongs to an organization
+    org = get_user_organization(user)
+    if org:
+        # Also count organization briefs
+        org_briefs = Briefing.query.filter_by(owner_type='org', owner_id=org.id).count()
+        return user_briefs + org_briefs
+
+    return user_briefs
+
+
 def check_can_create_brief(user):
     """Check if user can create a new briefing based on their plan limits."""
     if not user.is_authenticated:
         return False
-    
+
     # Admin users can always create briefs
     if user.is_admin:
         return True
-    
+
     sub = get_active_subscription(user)
     if not sub:
         return False
-    
+
     plan = sub.plan
     if plan.max_briefs == -1:  # Unlimited
         return True
-    
-    current_count = Briefing.query.filter_by(user_id=user.id).count()
+
+    current_count = _get_user_brief_count(user)
     return current_count < plan.max_briefs
 
 
@@ -117,21 +135,36 @@ def check_source_limit(user, additional_sources=0):
     """Check if user can add more sources based on their plan limits."""
     if not user.is_authenticated:
         return False
-    
+
     # Admin users bypass source limits
     if user.is_admin:
         return True
-    
+
     sub = get_active_subscription(user)
     if not sub:
         return False
-    
+
     plan = sub.plan
     if plan.max_sources == -1:  # Unlimited
         return True
-    
+
     from app.models import BriefingSource
-    current_count = BriefingSource.query.join(Briefing).filter(Briefing.user_id == user.id).count()
+
+    # Count user's own sources
+    current_count = BriefingSource.query.join(Briefing).filter(
+        Briefing.owner_type == 'user',
+        Briefing.owner_id == user.id
+    ).count()
+
+    # Also count organization sources if user belongs to an org
+    org = get_user_organization(user)
+    if org:
+        org_source_count = BriefingSource.query.join(Briefing).filter(
+            Briefing.owner_type == 'org',
+            Briefing.owner_id == org.id
+        ).count()
+        current_count += org_source_count
+
     return (current_count + additional_sources) <= plan.max_sources
 
 
@@ -161,15 +194,28 @@ def get_usage_stats(user):
     """Get current usage statistics for a user."""
     if not user.is_authenticated:
         return None
-    
-    from app.models import BriefingSource, BriefRecipient
-    
-    brief_count = Briefing.query.filter_by(user_id=user.id).count()
-    source_count = BriefingSource.query.join(Briefing).filter(Briefing.user_id == user.id).count()
-    
+
+    from app.models import BriefingSource
+
+    brief_count = _get_user_brief_count(user)
+
+    # Count sources - include org sources if user belongs to an org
+    source_count = BriefingSource.query.join(Briefing).filter(
+        Briefing.owner_type == 'user',
+        Briefing.owner_id == user.id
+    ).count()
+
+    org = get_user_organization(user)
+    if org:
+        org_source_count = BriefingSource.query.join(Briefing).filter(
+            Briefing.owner_type == 'org',
+            Briefing.owner_id == org.id
+        ).count()
+        source_count += org_source_count
+
     sub = get_active_subscription(user)
     plan = sub.plan if sub else None
-    
+
     return {
         'briefs': {
             'used': brief_count,

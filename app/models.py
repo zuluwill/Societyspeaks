@@ -303,7 +303,85 @@ class CompanyProfile(db.Model):
         if self.company_name:
             self.slug = generate_slug(self.company_name)
 
-    
+
+class OrganizationMember(db.Model):
+    """
+    Tracks membership of users in organizations (CompanyProfile).
+    Used for Team/Enterprise plans to manage team seats.
+    """
+    __tablename__ = 'organization_member'
+    __table_args__ = (
+        db.Index('idx_org_member_org', 'org_id'),
+        db.Index('idx_org_member_user', 'user_id'),
+        db.UniqueConstraint('org_id', 'user_id', name='uq_org_member'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    org_id = db.Column(db.Integer, db.ForeignKey('company_profile.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+
+    # Role: 'owner', 'admin', 'editor', 'viewer'
+    role = db.Column(db.String(20), default='editor', nullable=False)
+
+    # Invitation tracking
+    invited_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
+    invited_at = db.Column(db.DateTime, default=datetime.utcnow)
+    joined_at = db.Column(db.DateTime, nullable=True)  # NULL if invite pending
+
+    # Invitation token for email invites
+    invite_token = db.Column(db.String(64), unique=True, nullable=True)
+    invite_email = db.Column(db.String(255), nullable=True)  # Email for pending invites
+
+    # Status: 'pending', 'active', 'removed'
+    status = db.Column(db.String(20), default='pending', nullable=False)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    org = db.relationship('CompanyProfile', backref=db.backref('members', lazy='dynamic'))
+    user = db.relationship('User', foreign_keys=[user_id], backref=db.backref('org_memberships', lazy='dynamic'))
+    invited_by = db.relationship('User', foreign_keys=[invited_by_id])
+
+    @property
+    def is_active(self):
+        return self.status == 'active'
+
+    @property
+    def is_pending(self):
+        return self.status == 'pending'
+
+    @property
+    def is_owner(self):
+        return self.role == 'owner'
+
+    @property
+    def is_admin(self):
+        return self.role in ('owner', 'admin')
+
+    @property
+    def can_edit(self):
+        return self.role in ('owner', 'admin', 'editor')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'org_id': self.org_id,
+            'user_id': self.user_id,
+            'role': self.role,
+            'status': self.status,
+            'invited_at': self.invited_at.isoformat() if self.invited_at else None,
+            'joined_at': self.joined_at.isoformat() if self.joined_at else None,
+            'invite_email': self.invite_email,
+            'user': {
+                'id': self.user.id,
+                'username': self.user.username,
+                'email': self.user.email,
+            } if self.user else None,
+        }
+
+    def __repr__(self):
+        return f'<OrganizationMember org:{self.org_id} user:{self.user_id} ({self.role})>'
 
 
 class Discussion(db.Model):

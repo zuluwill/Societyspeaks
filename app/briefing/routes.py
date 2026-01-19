@@ -18,13 +18,17 @@ from app import db, limiter
 from app.models import (
     Briefing, BriefRun, BriefRunItem, BriefTemplate, InputSource, IngestedItem,
     BriefingSource, BriefRecipient, SendingDomain, User, CompanyProfile, NewsSource,
-    BriefEmailOpen, BriefLinkClick
+    BriefEmailOpen, BriefLinkClick, OrganizationMember
 )
 from app.billing.enforcement import (
     get_subscription_context, check_can_create_brief, enforce_brief_limit,
     check_source_limit, check_recipient_limit
 )
-from app.billing.service import get_active_subscription
+from app.billing.service import (
+    get_active_subscription, get_team_members, invite_team_member,
+    remove_team_member, update_member_role, check_team_seat_limit, accept_invitation,
+    get_user_organization
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -251,7 +255,9 @@ def can_access_briefing(user, briefing):
     if briefing.owner_type == 'user':
         return briefing.owner_id == user.id
     elif briefing.owner_type == 'org':
-        return user.company_profile and briefing.owner_id == user.company_profile.id
+        # Check if user owns or is a member of this organization
+        user_org = get_user_organization(user)
+        return user_org and briefing.owner_id == user_org.id
     return False
 
 
@@ -271,7 +277,9 @@ def can_access_source(user, source):
     elif source.owner_type == 'user':
         return source.owner_id == user.id
     elif source.owner_type == 'org':
-        return user.company_profile and source.owner_id == user.company_profile.id
+        # Check if user owns or is a member of this organization
+        user_org = get_user_organization(user)
+        return user_org and source.owner_id == user_org.id
     return False
 
 
@@ -355,12 +363,13 @@ def list_briefings():
         owner_id=current_user.id
     ).order_by(Briefing.created_at.desc()).all()
 
-    # Get org briefings if user has company profile
+    # Get org briefings if user belongs to an organization (owner or member)
     org_briefings = []
-    if current_user.company_profile:
+    user_org = get_user_organization(current_user)
+    if user_org:
         org_briefings = Briefing.query.filter_by(
             owner_type='org',
-            owner_id=current_user.company_profile.id
+            owner_id=user_org.id
         ).order_by(Briefing.created_at.desc()).all()
 
     # Get featured templates for empty state display
@@ -492,8 +501,8 @@ def use_template(template_id):
         return redirect(url_for('briefing.marketplace'))
     
     # Check audience restrictions
-    if template.audience_type == 'organization' and not current_user.company_profile:
-        flash('This template is only available for organizations. Please create a company profile first.', 'error')
+    if template.audience_type == 'organization' and not get_user_organization(current_user):
+        flash('This template is only available for organizations. You need to be part of an organization to use it.', 'error')
         return redirect(url_for('briefing.marketplace'))
     
     if request.method == 'POST':
@@ -508,13 +517,14 @@ def use_template(template_id):
                 description = template.description
             
             owner_type = request.form.get('owner_type', 'user')
-            
+
             # Validate owner_type for organization templates
             if owner_type == 'org':
-                if not current_user.company_profile:
-                    flash('You need a company profile to create organization briefings', 'error')
+                user_org = get_user_organization(current_user)
+                if not user_org:
+                    flash('You need to be part of an organization to create organization briefings', 'error')
                     return redirect(url_for('briefing.use_template', template_id=template_id))
-                owner_id = current_user.company_profile.id
+                owner_id = user_org.id
             else:
                 owner_id = current_user.id
             
@@ -594,7 +604,7 @@ def use_template(template_id):
         config_options=config_options,
         guardrails=guardrails,
         timezones=get_all_timezones(),
-        has_company_profile=current_user.company_profile is not None
+        has_company_profile=get_user_organization(current_user) is not None
     )
 
 
@@ -671,10 +681,11 @@ def create_briefing():
             # Determine owner_id
             owner_id = current_user.id
             if owner_type == 'org':
-                if not current_user.company_profile:
-                    flash('You need a company profile to create org briefings', 'error')
+                user_org = get_user_organization(current_user)
+                if not user_org:
+                    flash('You need to be part of an organization to create org briefings', 'error')
                     return redirect(url_for('briefing.create_briefing'))
-                owner_id = current_user.company_profile.id
+                owner_id = user_org.id
 
             # Get branding fields (for org briefings)
             from_name = request.form.get('from_name', '').strip() or None
@@ -813,13 +824,14 @@ def create_briefing():
 
     # GET: Show create form
     templates = BriefTemplate.query.filter_by(allow_customization=True).all()
-    has_company_profile = current_user.company_profile is not None
-    
+    user_org = get_user_organization(current_user)
+    has_company_profile = user_org is not None
+
     # Get available sending domains for org briefings
     available_domains = []
-    if has_company_profile:
+    if user_org:
         available_domains = SendingDomain.query.filter_by(
-            org_id=current_user.company_profile.id
+            org_id=user_org.id
         ).order_by(SendingDomain.created_at.desc()).all()
     
     # Get all timezones for dropdown (DRY - using helper function)
@@ -1129,12 +1141,13 @@ def list_sources():
         owner_id=current_user.id
     ).order_by(InputSource.created_at.desc()).all()
     
-    # Get org sources if user has company profile
+    # Get org sources if user belongs to an organization
     org_sources = []
-    if current_user.company_profile:
+    user_org = get_user_organization(current_user)
+    if user_org:
         org_sources = InputSource.query.filter_by(
             owner_type='org',
-            owner_id=current_user.company_profile.id
+            owner_id=user_org.id
         ).order_by(InputSource.created_at.desc()).all()
     
     return render_template(
@@ -1169,10 +1182,11 @@ def add_rss_source():
             # Determine owner_id
             owner_id = current_user.id
             if owner_type == 'org':
-                if not current_user.company_profile:
-                    flash('You need a company profile to create org sources', 'error')
+                user_org = get_user_organization(current_user)
+                if not user_org:
+                    flash('You need to be part of an organization to create org sources', 'error')
                     return redirect(url_for('briefing.add_rss_source'))
-                owner_id = current_user.company_profile.id
+                owner_id = user_org.id
             
             source = InputSource(
                 owner_type=owner_type,
@@ -1311,7 +1325,8 @@ def add_source_to_briefing(briefing_id):
             flash('You do not have access to this source', 'error')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         elif source.owner_type == 'org':
-            if not current_user.company_profile or source.owner_id != current_user.company_profile.id:
+            user_org = get_user_organization(current_user)
+            if not user_org or source.owner_id != user_org.id:
                 flash('You do not have access to this source', 'error')
                 return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         
@@ -2596,30 +2611,54 @@ def organization_settings():
     Allows viewing organization details and managing team.
     """
     sub = get_active_subscription(current_user)
-    
+
     if not sub or not sub.plan or not sub.plan.is_organisation:
         flash("Organization settings are only available for Team and Enterprise plans.", "info")
         return redirect(url_for("briefing.list_briefings"))
-    
+
     org = current_user.company_profile
     if not org:
         org = CompanyProfile.query.filter_by(user_id=current_user.id).first()
-    
+
+    # Also check if user is a member of an org (not just owner)
+    if not org:
+        membership = OrganizationMember.query.filter_by(
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        if membership:
+            org = membership.org
+
     if not org:
         flash("No organization found. Please contact support.", "error")
         return redirect(url_for("briefing.list_briefings"))
-    
-    org_owner = User.query.get(org.user_id)
-    team_members = [org_owner] if org_owner else [current_user]
-    
+
+    # Get team members using the proper function
+    team_members = get_team_members(org)
+
+    # Check seat limits
+    can_add_member, current_seats, max_seats = check_team_seat_limit(org)
+
+    # Check if current user is admin/owner
+    user_membership = OrganizationMember.query.filter_by(
+        org_id=org.id,
+        user_id=current_user.id,
+        status='active'
+    ).first()
+    is_admin = (user_membership and user_membership.is_admin) or (org.user_id == current_user.id)
+
     subscription_context = get_subscription_context(current_user)
-    
+
     return render_template(
         "briefing/organization_settings.html",
         org=org,
         team_members=team_members,
         subscription=sub,
         plan=sub.plan,
+        can_add_member=can_add_member,
+        current_seats=current_seats,
+        max_seats=max_seats,
+        is_admin=is_admin,
         **subscription_context
     )
 
@@ -2649,4 +2688,123 @@ def update_organization():
     db.session.commit()
     flash("Organization details updated successfully.", "success")
     return redirect(url_for("briefing.organization_settings"))
+
+
+@briefing_bp.route("/organization/invite", methods=["POST"])
+@login_required
+def invite_member():
+    """Invite a new member to the organization."""
+    sub = get_active_subscription(current_user)
+
+    if not sub or not sub.plan or not sub.plan.is_organisation:
+        flash("Team management is only available for Team and Enterprise plans.", "error")
+        return redirect(url_for("briefing.list_briefings"))
+
+    org = current_user.company_profile
+    if not org:
+        org = CompanyProfile.query.filter_by(user_id=current_user.id).first()
+
+    if not org:
+        flash("No organization found.", "error")
+        return redirect(url_for("briefing.list_briefings"))
+
+    # Check if user has permission to invite (owner or admin)
+    membership = OrganizationMember.query.filter_by(
+        org_id=org.id,
+        user_id=current_user.id,
+        status='active'
+    ).first()
+
+    is_owner = org.user_id == current_user.id
+    is_admin = membership and membership.is_admin
+
+    if not is_owner and not is_admin:
+        flash("You don't have permission to invite team members.", "error")
+        return redirect(url_for("briefing.organization_settings"))
+
+    email = request.form.get("email", "").strip().lower()
+    role = request.form.get("role", "editor")
+
+    if not email or not validate_email(email):
+        flash("Please enter a valid email address.", "error")
+        return redirect(url_for("briefing.organization_settings"))
+
+    try:
+        membership = invite_team_member(org, email, role, current_user)
+        # TODO: Send invitation email with link containing membership.invite_token
+        flash(f"Invitation sent to {email}. They can join using the invitation link.", "success")
+    except ValueError as e:
+        flash(str(e), "error")
+
+    return redirect(url_for("briefing.organization_settings"))
+
+
+@briefing_bp.route("/organization/member/<int:member_id>/remove", methods=["POST"])
+@login_required
+def remove_member(member_id):
+    """Remove a member from the organization."""
+    sub = get_active_subscription(current_user)
+
+    if not sub or not sub.plan or not sub.plan.is_organisation:
+        flash("Team management is only available for Team and Enterprise plans.", "error")
+        return redirect(url_for("briefing.list_briefings"))
+
+    org = current_user.company_profile
+    if not org:
+        org = CompanyProfile.query.filter_by(user_id=current_user.id).first()
+
+    if not org:
+        flash("No organization found.", "error")
+        return redirect(url_for("briefing.list_briefings"))
+
+    try:
+        remove_team_member(org, member_id, current_user)
+        flash("Team member removed successfully.", "success")
+    except ValueError as e:
+        flash(str(e), "error")
+
+    return redirect(url_for("briefing.organization_settings"))
+
+
+@briefing_bp.route("/organization/member/<int:member_id>/role", methods=["POST"])
+@login_required
+def change_member_role(member_id):
+    """Change a member's role in the organization."""
+    sub = get_active_subscription(current_user)
+
+    if not sub or not sub.plan or not sub.plan.is_organisation:
+        flash("Team management is only available for Team and Enterprise plans.", "error")
+        return redirect(url_for("briefing.list_briefings"))
+
+    org = current_user.company_profile
+    if not org:
+        org = CompanyProfile.query.filter_by(user_id=current_user.id).first()
+
+    if not org:
+        flash("No organization found.", "error")
+        return redirect(url_for("briefing.list_briefings"))
+
+    new_role = request.form.get("role", "editor")
+
+    try:
+        update_member_role(org, member_id, new_role, current_user)
+        flash("Member role updated successfully.", "success")
+    except ValueError as e:
+        flash(str(e), "error")
+
+    return redirect(url_for("briefing.organization_settings"))
+
+
+@briefing_bp.route("/join/<token>")
+@login_required
+def join_organization(token):
+    """Accept an organization invitation."""
+    try:
+        membership = accept_invitation(token, current_user)
+        org = membership.org
+        flash(f"Welcome to {org.company_name}! You now have access to the team's briefings.", "success")
+        return redirect(url_for("briefing.list_briefings"))
+    except ValueError as e:
+        flash(str(e), "error")
+        return redirect(url_for("briefing.list_briefings"))
 

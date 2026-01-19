@@ -86,57 +86,109 @@
       <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h2 class="text-lg font-semibold text-gray-900">Team Members</h2>
         <span class="text-sm text-gray-500">
-          {% if plan.max_editors == -1 %}Unlimited editors{% else %}{{ team_members|length }} / {{ plan.max_editors }} editors{% endif %}
+          {% if max_seats == -1 %}{{ current_seats }} members (unlimited){% else %}{{ current_seats }} / {{ max_seats }} seats{% endif %}
         </span>
       </div>
       <div class="px-6 py-4">
         <div class="space-y-3">
           {% for member in team_members %}
-          <div class="flex items-center justify-between py-2 {% if not loop.last %}border-b border-gray-100{% endif %}">
+          <div class="flex items-center justify-between py-3 {% if not loop.last %}border-b border-gray-100{% endif %}">
             <div class="flex items-center">
-              <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
-                {{ member.username[0]|upper }}
+              <div class="w-10 h-10 rounded-full {% if member.status == 'pending' %}bg-gray-100 text-gray-400{% else %}bg-blue-100 text-blue-600{% endif %} flex items-center justify-center font-semibold text-sm">
+                {% if member.user %}
+                  {{ member.user.username[0]|upper }}
+                {% else %}
+                  ?
+                {% endif %}
               </div>
               <div class="ml-3">
-                <p class="text-sm font-medium text-gray-900">{{ member.username }}</p>
-                <p class="text-xs text-gray-500">{{ member.email }}</p>
+                {% if member.user %}
+                  <p class="text-sm font-medium text-gray-900">{{ member.user.username }}</p>
+                  <p class="text-xs text-gray-500">{{ member.user.email }}</p>
+                {% else %}
+                  <p class="text-sm font-medium text-gray-500">{{ member.invite_email }}</p>
+                  <p class="text-xs text-yellow-600">Invitation pending</p>
+                {% endif %}
               </div>
             </div>
-            <div>
-              {% if member.id == org.user_id %}
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                Admin
-              </span>
+            <div class="flex items-center space-x-2">
+              {% if member.role == 'owner' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                  Owner
+                </span>
+              {% elif member.role == 'admin' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                  Admin
+                </span>
+              {% elif member.role == 'editor' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                  Editor
+                </span>
               {% else %}
-              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                Editor
-              </span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                  Viewer
+                </span>
+              {% endif %}
+
+              {% if member.status == 'pending' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                  Pending
+                </span>
+              {% endif %}
+
+              {% if is_admin and member.role != 'owner' %}
+                <div class="flex items-center space-x-1">
+                  <form action="{{ url_for('briefing.change_member_role', member_id=member.id) }}" method="POST" class="inline">
+                    <select name="role" onchange="this.form.submit()" class="text-xs border-gray-300 rounded py-1 px-2">
+                      <option value="admin" {% if member.role == 'admin' %}selected{% endif %}>Admin</option>
+                      <option value="editor" {% if member.role == 'editor' %}selected{% endif %}>Editor</option>
+                      <option value="viewer" {% if member.role == 'viewer' %}selected{% endif %}>Viewer</option>
+                    </select>
+                  </form>
+                  <form action="{{ url_for('briefing.remove_member', member_id=member.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to remove this team member?')">
+                    <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Remove member">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
+                  </form>
+                </div>
               {% endif %}
             </div>
           </div>
           {% endfor %}
         </div>
 
+        {% if is_admin %}
         <div class="mt-6 pt-4 border-t border-gray-200">
-          <div class="bg-blue-50 rounded-md p-4 border border-blue-100">
-            <div class="flex">
-              <svg class="w-5 h-5 text-blue-400 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+          <h3 class="text-sm font-medium text-gray-900 mb-3">Invite Team Member</h3>
+          {% if can_add_member %}
+          <form action="{{ url_for('briefing.invite_member') }}" method="POST" class="flex flex-col sm:flex-row gap-3">
+            <input type="email" name="email" required placeholder="colleague@example.com"
+                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+            <select name="role" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+              <option value="editor">Editor</option>
+              <option value="admin">Admin</option>
+              <option value="viewer">Viewer</option>
+            </select>
+            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
               </svg>
-              <div>
-                <h4 class="text-sm font-medium text-blue-800">Add team members</h4>
-                <p class="text-sm text-blue-700 mt-1">
-                  To add editors to your team, email <a href="mailto:hello@societyspeaks.org?subject=Add team member to {{ org.company_name }}&body=Please add the following team member to our organization ({{ org.company_name }}):%0A%0ATeam member email: [their email]%0ATeam member name: [their name]%0A%0AOrganization admin: {{ current_user.email }}" class="font-medium underline hover:text-blue-900">hello@societyspeaks.org</a> with:
-                </p>
-                <ul class="text-sm text-blue-700 mt-2 list-disc list-inside">
-                  <li>The email address of the person to add</li>
-                  <li>Your organization name: <strong>{{ org.company_name }}</strong></li>
-                </ul>
-                <p class="text-xs text-blue-600 mt-2">We'll set them up within 24 hours.</p>
-              </div>
-            </div>
+              Send Invite
+            </button>
+          </form>
+          <p class="text-xs text-gray-500 mt-2">They'll receive an email with a link to join your organization.</p>
+          {% else %}
+          <div class="bg-yellow-50 rounded-md p-3 border border-yellow-100">
+            <p class="text-sm text-yellow-800">
+              You've reached the maximum of {{ max_seats }} team members on your {{ plan.name }} plan.
+              <a href="{{ url_for('billing.customer_portal') }}" class="font-medium underline">Upgrade your plan</a> to add more.
+            </p>
           </div>
+          {% endif %}
         </div>
+        {% endif %}
       </div>
     </div>
 

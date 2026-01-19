@@ -2,7 +2,7 @@ import stripe
 from datetime import datetime, timedelta
 from flask import current_app
 from app import db
-from app.models import User, CompanyProfile, PricingPlan, Subscription, generate_slug
+from app.models import User, CompanyProfile, PricingPlan, Subscription, OrganizationMember, generate_slug
 
 
 def get_stripe():
@@ -112,11 +112,16 @@ def resolve_plan_from_stripe_subscription(stripe_subscription):
                 f"CRITICAL: Unknown Stripe price ID {price_id} for subscription {stripe_subscription.id}. "
                 f"This may indicate a missing plan configuration. Check that all Stripe price IDs are in the database."
             )
-    
+            raise ValueError(
+                f"Unknown Stripe price ID: {price_id}. "
+                f"Please ensure all Stripe price IDs are configured in the database."
+            )
+
     if not plan:
-        plan = PricingPlan.query.filter_by(code='starter').first()
-        current_app.logger.warning(f"Could not find plan for subscription {stripe_subscription.id}, defaulting to starter")
-    
+        # No metadata and no price items - this shouldn't happen with valid Stripe subscriptions
+        current_app.logger.error(f"Could not resolve plan for subscription {stripe_subscription.id} - no metadata or price data")
+        raise ValueError(f"Could not resolve plan for subscription {stripe_subscription.id}")
+
     return plan
 
 
@@ -165,22 +170,64 @@ def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None
 
 
 def get_active_subscription(user):
-    """Get the user's active subscription, if any."""
+    """Get the user's active subscription, if any.
+
+    Checks in order:
+    1. User's direct subscription
+    2. Subscription for organization user owns
+    3. Subscription for any organization user is a member of
+    """
+    # Check user's direct subscription
     sub = Subscription.query.filter(
         Subscription.user_id == user.id,
         Subscription.status.in_(['trialing', 'active'])
     ).first()
-    
+
     if sub:
         return sub
-    
+
+    # Check organization user owns (via company_profile)
     if user.company_profile:
         sub = Subscription.query.filter(
             Subscription.org_id == user.company_profile.id,
             Subscription.status.in_(['trialing', 'active'])
         ).first()
-    
-    return sub
+        if sub:
+            return sub
+
+    # Check organizations user is a member of
+    memberships = OrganizationMember.query.filter(
+        OrganizationMember.user_id == user.id,
+        OrganizationMember.status == 'active'
+    ).all()
+
+    for membership in memberships:
+        sub = Subscription.query.filter(
+            Subscription.org_id == membership.org_id,
+            Subscription.status.in_(['trialing', 'active'])
+        ).first()
+        if sub:
+            return sub
+
+    return None
+
+
+def get_user_organization(user):
+    """Get the organization the user belongs to (either as owner or member)."""
+    # Check if user owns an org
+    if user.company_profile:
+        return user.company_profile
+
+    # Check if user is a member of any org
+    membership = OrganizationMember.query.filter(
+        OrganizationMember.user_id == user.id,
+        OrganizationMember.status == 'active'
+    ).first()
+
+    if membership:
+        return membership.org
+
+    return None
 
 
 def check_feature_access(user, feature):
@@ -206,24 +253,30 @@ def get_user_plan(user):
 
 
 def get_or_create_organization(user, plan):
-    """Create an organization for Team/Enterprise plans if user doesn't have one."""
+    """Create an organization for Team/Enterprise plans if user doesn't have one.
+
+    Also creates an OrganizationMember record for the owner.
+    """
     if not plan.is_organisation:
         return None
-    
+
     if user.company_profile:
+        # Ensure owner membership exists
+        _ensure_owner_membership(user.company_profile, user)
         return user.company_profile
-    
+
     existing_org = CompanyProfile.query.filter_by(user_id=user.id).first()
     if existing_org:
+        _ensure_owner_membership(existing_org, user)
         return existing_org
-    
+
     org_name = f"{user.username}'s Organization"
     slug = generate_slug(org_name)
-    
+
     existing_slug = CompanyProfile.query.filter_by(slug=slug).first()
     if existing_slug:
         slug = f"{slug}-{user.id}"
-    
+
     org = CompanyProfile(
         user_id=user.id,
         company_name=org_name,
@@ -231,12 +284,43 @@ def get_or_create_organization(user, plan):
         email=user.email,
     )
     db.session.add(org)
+    db.session.flush()  # Get the org.id before creating membership
+
+    # Create owner membership
+    owner_membership = OrganizationMember(
+        org_id=org.id,
+        user_id=user.id,
+        role='owner',
+        status='active',
+        joined_at=datetime.utcnow(),
+    )
+    db.session.add(owner_membership)
     db.session.commit()
-    
+
     db.session.expire(user)
-    
+
     current_app.logger.info(f"Created organization '{org_name}' (id={org.id}) for user {user.id}")
     return org
+
+
+def _ensure_owner_membership(org, user):
+    """Ensure the owner has an OrganizationMember record."""
+    existing = OrganizationMember.query.filter_by(
+        org_id=org.id,
+        user_id=user.id
+    ).first()
+
+    if not existing:
+        owner_membership = OrganizationMember(
+            org_id=org.id,
+            user_id=user.id,
+            role='owner',
+            status='active',
+            joined_at=datetime.utcnow(),
+        )
+        db.session.add(owner_membership)
+        db.session.commit()
+        current_app.logger.info(f"Created owner membership for org {org.id}")
 
 
 def sync_subscription_with_org(stripe_subscription, user):
@@ -253,3 +337,257 @@ def sync_subscription_with_org(stripe_subscription, user):
             user_id = None
     
     return sync_subscription_from_stripe(stripe_subscription, user_id=user_id, org_id=org_id)
+
+
+# Team member management functions
+
+def invite_team_member(org, email, role, invited_by):
+    """Invite a user to join an organization.
+
+    Args:
+        org: CompanyProfile organization
+        email: Email address to invite
+        role: Role to assign ('admin', 'editor', 'viewer')
+        invited_by: User sending the invitation
+
+    Returns:
+        OrganizationMember instance or raises ValueError
+    """
+    import secrets
+
+    # Validate role
+    if role not in ('admin', 'editor', 'viewer'):
+        raise ValueError(f"Invalid role: {role}")
+
+    # Check seat limits
+    sub = Subscription.query.filter(
+        Subscription.org_id == org.id,
+        Subscription.status.in_(['trialing', 'active'])
+    ).first()
+
+    if not sub:
+        raise ValueError("Organization does not have an active subscription")
+
+    max_editors = sub.plan.max_editors
+    if max_editors != -1:  # -1 means unlimited
+        current_members = OrganizationMember.query.filter(
+            OrganizationMember.org_id == org.id,
+            OrganizationMember.status.in_(['pending', 'active'])
+        ).count()
+        if current_members >= max_editors:
+            raise ValueError(f"Team has reached the maximum of {max_editors} members for the {sub.plan.name} plan")
+
+    # Check if user already exists
+    existing_user = User.query.filter_by(email=email).first()
+
+    # Check for existing membership
+    if existing_user:
+        existing_membership = OrganizationMember.query.filter_by(
+            org_id=org.id,
+            user_id=existing_user.id
+        ).first()
+        if existing_membership:
+            if existing_membership.status == 'removed':
+                # Re-invite removed member
+                existing_membership.status = 'pending'
+                existing_membership.role = role
+                existing_membership.invite_token = secrets.token_urlsafe(32)
+                existing_membership.invite_email = email
+                existing_membership.invited_by_id = invited_by.id
+                existing_membership.invited_at = datetime.utcnow()
+                existing_membership.joined_at = None
+                db.session.commit()
+                return existing_membership
+            else:
+                raise ValueError(f"User {email} is already a member of this organization")
+
+    # Check for pending invite with same email
+    existing_invite = OrganizationMember.query.filter_by(
+        org_id=org.id,
+        invite_email=email,
+        status='pending'
+    ).first()
+    if existing_invite:
+        raise ValueError(f"An invitation has already been sent to {email}")
+
+    # Create the invitation
+    membership = OrganizationMember(
+        org_id=org.id,
+        user_id=existing_user.id if existing_user else None,
+        role=role,
+        status='pending',
+        invite_token=secrets.token_urlsafe(32),
+        invite_email=email,
+        invited_by_id=invited_by.id,
+        invited_at=datetime.utcnow(),
+    )
+    db.session.add(membership)
+    db.session.commit()
+
+    current_app.logger.info(f"Created invitation for {email} to org {org.id} with role {role}")
+    return membership
+
+
+def accept_invitation(token, user):
+    """Accept an organization invitation.
+
+    Args:
+        token: Invitation token
+        user: User accepting the invitation
+
+    Returns:
+        OrganizationMember instance or raises ValueError
+    """
+    membership = OrganizationMember.query.filter_by(
+        invite_token=token,
+        status='pending'
+    ).first()
+
+    if not membership:
+        raise ValueError("Invalid or expired invitation")
+
+    # Verify email matches if specified
+    if membership.invite_email and membership.invite_email.lower() != user.email.lower():
+        raise ValueError("This invitation was sent to a different email address")
+
+    # Check if user is already a member of this org
+    existing = OrganizationMember.query.filter(
+        OrganizationMember.org_id == membership.org_id,
+        OrganizationMember.user_id == user.id,
+        OrganizationMember.status == 'active'
+    ).first()
+    if existing:
+        raise ValueError("You are already a member of this organization")
+
+    membership.user_id = user.id
+    membership.status = 'active'
+    membership.joined_at = datetime.utcnow()
+    membership.invite_token = None  # Clear token after use
+    db.session.commit()
+
+    current_app.logger.info(f"User {user.id} accepted invitation to org {membership.org_id}")
+    return membership
+
+
+def remove_team_member(org, member_id, removed_by):
+    """Remove a member from an organization.
+
+    Args:
+        org: CompanyProfile organization
+        member_id: OrganizationMember ID to remove
+        removed_by: User performing the removal
+
+    Returns:
+        True on success or raises ValueError
+    """
+    membership = OrganizationMember.query.filter_by(
+        id=member_id,
+        org_id=org.id
+    ).first()
+
+    if not membership:
+        raise ValueError("Member not found")
+
+    if membership.role == 'owner':
+        raise ValueError("Cannot remove the organization owner")
+
+    # Check permissions - only owner and admin can remove
+    remover_membership = OrganizationMember.query.filter_by(
+        org_id=org.id,
+        user_id=removed_by.id,
+        status='active'
+    ).first()
+
+    if not remover_membership or not remover_membership.is_admin:
+        # Also allow org owner (via user_id on CompanyProfile)
+        if org.user_id != removed_by.id:
+            raise ValueError("You don't have permission to remove team members")
+
+    membership.status = 'removed'
+    db.session.commit()
+
+    current_app.logger.info(f"Member {member_id} removed from org {org.id} by user {removed_by.id}")
+    return True
+
+
+def update_member_role(org, member_id, new_role, updated_by):
+    """Update a member's role in an organization.
+
+    Args:
+        org: CompanyProfile organization
+        member_id: OrganizationMember ID to update
+        new_role: New role ('admin', 'editor', 'viewer')
+        updated_by: User performing the update
+
+    Returns:
+        OrganizationMember instance or raises ValueError
+    """
+    if new_role not in ('admin', 'editor', 'viewer'):
+        raise ValueError(f"Invalid role: {new_role}")
+
+    membership = OrganizationMember.query.filter_by(
+        id=member_id,
+        org_id=org.id
+    ).first()
+
+    if not membership:
+        raise ValueError("Member not found")
+
+    if membership.role == 'owner':
+        raise ValueError("Cannot change the role of the organization owner")
+
+    # Check permissions - only owner and admin can update roles
+    updater_membership = OrganizationMember.query.filter_by(
+        org_id=org.id,
+        user_id=updated_by.id,
+        status='active'
+    ).first()
+
+    is_admin = updater_membership and updater_membership.is_admin
+    is_owner = org.user_id == updated_by.id
+
+    if not is_admin and not is_owner:
+        raise ValueError("You don't have permission to update member roles")
+
+    membership.role = new_role
+    db.session.commit()
+
+    current_app.logger.info(f"Member {member_id} role updated to {new_role} in org {org.id}")
+    return membership
+
+
+def get_team_members(org):
+    """Get all active and pending members of an organization."""
+    return OrganizationMember.query.filter(
+        OrganizationMember.org_id == org.id,
+        OrganizationMember.status.in_(['active', 'pending'])
+    ).order_by(
+        OrganizationMember.role.desc(),  # owner first, then admin, etc.
+        OrganizationMember.joined_at
+    ).all()
+
+
+def check_team_seat_limit(org):
+    """Check if organization can add more team members.
+
+    Returns:
+        (can_add: bool, current: int, max: int)
+    """
+    sub = Subscription.query.filter(
+        Subscription.org_id == org.id,
+        Subscription.status.in_(['trialing', 'active'])
+    ).first()
+
+    if not sub:
+        return False, 0, 0
+
+    current = OrganizationMember.query.filter(
+        OrganizationMember.org_id == org.id,
+        OrganizationMember.status.in_(['pending', 'active'])
+    ).count()
+
+    max_editors = sub.plan.max_editors
+    if max_editors == -1:
+        return True, current, -1
+
+    return current < max_editors, current, max_editors

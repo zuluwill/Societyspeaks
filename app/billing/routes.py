@@ -9,6 +9,7 @@ from app.billing.service import (
     sync_subscription_with_org,
     get_active_subscription,
     get_stripe,
+    resolve_plan_from_stripe_subscription,
 )
 from app.models import User, PricingPlan, Subscription
 from app import db
@@ -20,18 +21,40 @@ def checkout():
     """Start a Stripe Checkout session for subscription."""
     plan_code = request.form.get('plan', 'starter')
     billing_interval = request.form.get('interval', 'month')
-    
+
     target_plan = PricingPlan.query.filter_by(code=plan_code).first()
+    if not target_plan:
+        flash('Invalid plan selected.', 'error')
+        return redirect(url_for('briefing.landing'))
+
     existing_sub = get_active_subscription(current_user)
-    
+
     if existing_sub:
-        is_upgrading_to_org = target_plan and target_plan.is_organisation and not existing_sub.plan.is_organisation
+        is_upgrading_to_org = target_plan.is_organisation and not existing_sub.plan.is_organisation
         if is_upgrading_to_org:
-            pass
+            # Upgrading from individual to team/enterprise plan
+            # Cancel existing subscription at period end and create new one
+            try:
+                s = get_stripe()
+                # Cancel existing subscription at period end (user keeps access until then)
+                s.Subscription.modify(
+                    existing_sub.stripe_subscription_id,
+                    cancel_at_period_end=True
+                )
+                existing_sub.cancel_at_period_end = True
+                db.session.commit()
+                current_app.logger.info(
+                    f"Marked subscription {existing_sub.id} for cancellation due to org plan upgrade"
+                )
+            except stripe.error.StripeError as e:
+                current_app.logger.error(f"Failed to cancel existing subscription for upgrade: {e}")
+                flash('Unable to process upgrade. Please contact support.', 'error')
+                return redirect(url_for('briefing.list_briefings'))
         else:
+            # Same tier or downgrade - use customer portal
             flash('You already have an active subscription. Use "Manage Billing" to change your plan.', 'info')
             return redirect(url_for('billing.customer_portal'))
-    
+
     try:
         session = create_checkout_session(
             user=current_user,
@@ -144,28 +167,37 @@ def handle_subscription_created(subscription_data):
     s = get_stripe()
     stripe_sub = s.Subscription.retrieve(subscription_data['id'])
     customer_id = subscription_data['customer']
-    
+
     existing_sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
     if existing_sub:
-        sync_subscription_from_stripe(stripe_sub, user_id=existing_sub.user_id, org_id=existing_sub.org_id)
-        current_app.logger.info(f"Synced existing subscription {existing_sub.id}")
+        try:
+            sync_subscription_from_stripe(stripe_sub, user_id=existing_sub.user_id, org_id=existing_sub.org_id)
+            current_app.logger.info(f"Synced existing subscription {existing_sub.id}")
+        except ValueError as e:
+            current_app.logger.error(f"Failed to sync subscription {subscription_data['id']}: {e}")
         return
-    
+
     user = User.query.filter_by(stripe_customer_id=customer_id).first()
     if user:
-        sync_subscription_with_org(stripe_sub, user)
-        current_app.logger.info(f"Created subscription for user {user.id}")
+        try:
+            sync_subscription_with_org(stripe_sub, user)
+            current_app.logger.info(f"Created subscription for user {user.id}")
+        except ValueError as e:
+            current_app.logger.error(f"Failed to create subscription for user {user.id}: {e}")
 
 
 def handle_subscription_updated(subscription_data):
     """Handle subscription updates (plan changes, status changes)."""
     s = get_stripe()
     stripe_sub = s.Subscription.retrieve(subscription_data['id'])
-    
+
     sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
     if sub:
-        sync_subscription_from_stripe(stripe_sub, user_id=sub.user_id, org_id=sub.org_id)
-        current_app.logger.info(f"Updated subscription {sub.id}")
+        try:
+            sync_subscription_from_stripe(stripe_sub, user_id=sub.user_id, org_id=sub.org_id)
+            current_app.logger.info(f"Updated subscription {sub.id}")
+        except ValueError as e:
+            current_app.logger.error(f"Failed to update subscription {sub.id}: {e}")
 
 
 def handle_subscription_deleted(subscription_data):
