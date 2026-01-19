@@ -474,15 +474,16 @@ def use_template(template_id):
     Use a template to create a new briefing.
     Shows configuration wizard with template defaults and allowed customizations.
     """
-    sub = get_active_subscription(current_user)
-    if not sub:
-        flash('You need an active subscription to create briefings. Start your free trial today!', 'info')
-        return redirect(url_for('briefing.landing'))
-    
-    limit_error = enforce_brief_limit(current_user)
-    if limit_error:
-        flash(limit_error, 'info')
-        return redirect(url_for('briefing.my_briefings'))
+    if not current_user.is_admin:
+        sub = get_active_subscription(current_user)
+        if not sub:
+            flash('You need an active subscription to create briefings. Start your free trial today!', 'info')
+            return redirect(url_for('briefing.landing'))
+        
+        limit_error = enforce_brief_limit(current_user)
+        if limit_error:
+            flash(limit_error, 'info')
+            return redirect(url_for('briefing.list_briefings'))
     
     template = BriefTemplate.query.get_or_404(template_id)
     
@@ -602,15 +603,16 @@ def use_template(template_id):
 @limiter.limit("10/minute")
 def create_briefing():
     """Create a new briefing"""
-    sub = get_active_subscription(current_user)
-    if not sub:
-        flash('You need an active subscription to create briefings. Start your free trial today!', 'info')
-        return redirect(url_for('briefing.landing'))
-    
-    limit_error = enforce_brief_limit(current_user)
-    if limit_error:
-        flash(limit_error, 'info')
-        return redirect(url_for('briefing.my_briefings'))
+    if not current_user.is_admin:
+        sub = get_active_subscription(current_user)
+        if not sub:
+            flash('You need an active subscription to create briefings. Start your free trial today!', 'info')
+            return redirect(url_for('briefing.landing'))
+        
+        limit_error = enforce_brief_limit(current_user)
+        if limit_error:
+            flash(limit_error, 'info')
+            return redirect(url_for('briefing.list_briefings'))
     
     if request.method == 'POST':
         try:

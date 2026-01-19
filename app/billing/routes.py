@@ -42,6 +42,7 @@ def checkout_success():
     """Handle successful checkout redirect."""
     s = get_stripe()
     session_id = request.args.get('session_id')
+    sync_success = False
     
     if session_id:
         try:
@@ -50,11 +51,20 @@ def checkout_success():
                 stripe_sub = s.Subscription.retrieve(session.subscription)
                 user_id = int(session.metadata.get('user_id', current_user.id))
                 sync_subscription_from_stripe(stripe_sub, user_id=user_id)
-        except s.error.StripeError as e:
+                sync_success = True
+        except stripe.error.StripeError as e:
             current_app.logger.error(f"Error retrieving checkout session: {e}")
     
-    flash('Welcome! Your subscription is now active.', 'success')
-    return redirect(url_for('briefing.my_briefings'))
+    # Verify subscription is actually active
+    sub = get_active_subscription(current_user)
+    if sub or sync_success:
+        flash('Welcome! Your subscription is now active.', 'success')
+        return redirect(url_for('briefing.list_briefings'))
+    else:
+        # Subscription sync may be delayed - show a friendly message
+        flash('Your payment was received! Your subscription is being activated - this usually takes a few seconds. '
+              'If you don\'t see your subscription active, please click "Manage Billing" to verify.', 'info')
+        return redirect(url_for('briefing.landing'))
 
 
 @billing_bp.route('/portal')
@@ -66,11 +76,11 @@ def customer_portal():
         return redirect(session.url, code=303)
     except ValueError as e:
         flash(str(e), 'error')
-        return redirect(url_for('briefing.my_briefings'))
+        return redirect(url_for('briefing.list_briefings'))
     except stripe.error.StripeError as e:
         current_app.logger.error(f"Stripe portal error: {e}")
         flash('Unable to access billing portal. Please try again.', 'error')
-        return redirect(url_for('briefing.my_briefings'))
+        return redirect(url_for('briefing.list_briefings'))
 
 
 @billing_bp.route('/webhook', methods=['POST'])
