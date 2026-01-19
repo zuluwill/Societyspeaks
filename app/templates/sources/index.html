@@ -104,6 +104,7 @@
         {% for item in sources %}
         {% set source = item.source %}
         {% set disc_count = item.discussion_count %}
+        {% if source.slug %}
         <a href="{{ url_for('sources.view_source', slug=source.slug) }}"
            class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden group">
             <!-- Source Card -->
@@ -195,6 +196,7 @@
                 </div>
             </div>
         </a>
+        {% endif %}
         {% endfor %}
     </div>
 
