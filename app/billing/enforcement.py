@@ -17,6 +17,10 @@ def require_subscription(f):
             flash('Please log in to access this feature.', 'error')
             return redirect(url_for('auth.login'))
         
+        # Admin users bypass subscription requirements
+        if current_user.is_admin:
+            return f(*args, **kwargs)
+        
         sub = get_active_subscription(current_user)
         if not sub:
             flash('You need an active subscription to access this feature. Start your free trial today!', 'info')
@@ -34,6 +38,10 @@ def require_feature(feature_name):
             if not current_user.is_authenticated:
                 flash('Please log in to access this feature.', 'error')
                 return redirect(url_for('auth.login'))
+            
+            # Admin users bypass feature requirements
+            if current_user.is_admin:
+                return f(*args, **kwargs)
             
             sub = get_active_subscription(current_user)
             if not sub:
@@ -89,6 +97,10 @@ def check_can_create_brief(user):
     if not user.is_authenticated:
         return False
     
+    # Admin users can always create briefs
+    if user.is_admin:
+        return True
+    
     sub = get_active_subscription(user)
     if not sub:
         return False
@@ -105,6 +117,10 @@ def check_source_limit(user, additional_sources=0):
     """Check if user can add more sources based on their plan limits."""
     if not user.is_authenticated:
         return False
+    
+    # Admin users bypass source limits
+    if user.is_admin:
+        return True
     
     sub = get_active_subscription(user)
     if not sub:
@@ -123,6 +139,10 @@ def check_recipient_limit(user, briefing_id, additional_recipients=0):
     """Check if user can add more recipients based on their plan limits."""
     if not user.is_authenticated:
         return False
+    
+    # Admin users bypass recipient limits
+    if user.is_admin:
+        return True
     
     sub = get_active_subscription(user)
     if not sub:
