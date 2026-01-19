@@ -220,6 +220,7 @@ class ProductionConfig(Config):
     FLASK_ENV = 'production'
     DEBUG = False
     SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
     PREFERRED_URL_SCHEME = 'https'
     REMEMBER_COOKIE_SECURE = True
     REMEMBER_COOKIE_HTTPONLY = True

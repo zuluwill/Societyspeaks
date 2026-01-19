@@ -270,6 +270,9 @@ def logout():
     user_id = str(current_user.id)
     logout_user()
     
+    # Clear all session data to prevent stale data persisting
+    session.clear()
+    
     # Track logout with PostHog
     if posthog:
         try:
