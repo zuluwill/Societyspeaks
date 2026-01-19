@@ -1042,7 +1042,14 @@ def init_scheduler(app):
         """
         Send approved BriefRuns that are ready to send.
         Runs every 5 minutes to send briefs promptly after approval.
+        
+        IMPORTANT: Only sends in production to prevent duplicate emails from dev environment.
         """
+        # Skip email sending in development environment to prevent duplicates
+        if not _is_production_environment():
+            logger.info("Skipping briefing sends - development environment")
+            return
+            
         with app.app_context():
             from app.briefing.email_client import send_brief_run_emails
             from app.models import BriefRun
