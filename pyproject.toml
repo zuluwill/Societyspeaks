@@ -6,8 +6,8 @@ authors = ["Your Name <you@example.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.11.0,<3.12"
-flask = "^3.0.0"
-gunicorn = "^21.2.0"
+flask = ">=3.0.0"
+gunicorn = ">=22.0.0"
 python-dotenv = "^1.0.1"
 redis = "^5.2.0"
 flask-limiter = "^3.13"
@@ -21,6 +21,9 @@ sqlalchemy = "^2.0.45"
 tweepy = "^4.16.0"
 beautifulsoup4 = "^4.14.3"
 stripe = "^14.2.0"
+werkzeug = ">=3.0.3"
+jinja2 = ">=3.1.4"
+cryptography = ">=43.0.1"
 
 [tool.pyright]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md

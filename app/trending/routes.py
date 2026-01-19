@@ -349,7 +349,10 @@ def add_source():
     name = request.form.get('name')
     feed_url = request.form.get('feed_url')
     source_type = request.form.get('source_type', 'rss')
-    reputation = float(request.form.get('reputation_score', 0.7))
+    try:
+        reputation = float(request.form.get('reputation_score', 0.7))
+    except (ValueError, TypeError):
+        reputation = 0.7
     
     if not name or not feed_url:
         flash("Name and URL are required", "error")

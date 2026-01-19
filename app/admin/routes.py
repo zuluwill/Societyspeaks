@@ -594,7 +594,7 @@ def create_daily_question():
                 source_discussion_id=int(source_discussion_id) if source_discussion_id else None,
                 source_statement_id=int(source_statement_id) if source_statement_id else None,
                 source_trending_topic_id=int(source_trending_topic_id) if source_trending_topic_id else None,
-                cold_start_threshold=int(request.form.get('cold_start_threshold', 50)),
+                cold_start_threshold=int(request.form.get('cold_start_threshold') or 50),
                 status=request.form.get('status', 'scheduled'),
                 created_by_id=current_user.id
             )
@@ -652,7 +652,7 @@ def edit_daily_question(question_id):
             question.context = request.form.get('context') or None
             question.why_this_question = request.form.get('why_this_question') or None
             question.topic_category = request.form.get('topic_category') or None
-            question.cold_start_threshold = int(request.form.get('cold_start_threshold', 50))
+            question.cold_start_threshold = int(request.form.get('cold_start_threshold') or 50)
             
             new_status = request.form.get('status')
             if new_status != question.status:
@@ -1382,10 +1382,10 @@ def news_settings():
     if request.method == 'POST':
         try:
             settings = {
-                'min_civic_score': float(request.form.get('min_civic_score', 0.5)),
-                'min_quality_score': float(request.form.get('min_quality_score', 0.4)),
-                'max_sensationalism': float(request.form.get('max_sensationalism', 0.8)),
-                'lookback_hours': int(request.form.get('lookback_hours', 24))
+                'min_civic_score': float(request.form.get('min_civic_score') or 0.5),
+                'min_quality_score': float(request.form.get('min_quality_score') or 0.4),
+                'max_sensationalism': float(request.form.get('max_sensationalism') or 0.8),
+                'lookback_hours': int(request.form.get('lookback_hours') or 24)
             }
 
             # Validate ranges
