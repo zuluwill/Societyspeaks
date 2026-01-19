@@ -967,8 +967,16 @@ def auto_generate_source_slug(mapper, connection, target):
     """Auto-generate slug for new NewsSource records if not already set."""
     if not target.slug and target.name:
         base_slug = generate_slug(target.name)
-        if base_slug:
-            target.slug = base_slug
+        if not base_slug:
+            import uuid
+            base_slug = f"source-{uuid.uuid4().hex[:8]}"
+        
+        slug = base_slug
+        suffix = 1
+        while db.session.query(NewsSource).filter(NewsSource.slug == slug).first():
+            slug = f"{base_slug}-{suffix}"
+            suffix += 1
+        target.slug = slug
 
 
 class NewsArticle(db.Model):
