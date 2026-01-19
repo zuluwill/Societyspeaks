@@ -140,7 +140,13 @@ LOW_VALUE_KEYWORDS = [
     'pet hair', 'beard trimmer', 'styling versatility', 'kitchen gadget',
     'world darts', 'darts championship', 'snooker', 'golf tournament', 'wimbledon',
     'formula 1', 'f1 grand prix', 'race winner', 'nfl', 'nba', 'mlb', 'nhl',
-    'match report', 'post-match', 'player rating', 'team news', 'starting lineup'
+    'match report', 'post-match', 'player rating', 'team news', 'starting lineup',
+    # Literary/cultural content (not civic discussion material)
+    'book review', 'book club', 'author interview', 'literary fiction', 'poetry collection',
+    'novel explores', 'memoir recounts', 'new novel', 'bestseller', 'page-turner',
+    'storytelling and poetry', 'narrative explores', 'fiction debut', 'literary award',
+    'booker prize', 'pulitzer prize', 'man booker', 'costa book', 'book of the year',
+    'reading list', 'must-read', 'book recommendation', 'literary criticism'
 ]
 
 PRODUCT_REVIEW_PATTERNS = [
