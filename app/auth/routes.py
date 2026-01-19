@@ -116,6 +116,9 @@ def register():
         verification_url = url_for('auth.verify_email', token=token, _external=True)
         send_welcome_email(new_user, verification_url=verification_url)
 
+        # Mark that this user just came from registration (for checkout flow)
+        session['from_registration'] = True
+
         flash("Please check your email to verify your account before logging in.", "info")
         return redirect(url_for('auth.login'))
 
@@ -164,12 +167,16 @@ def login():
         
         flash("Logged in successfully!", "success")
         
-        # Check for pending briefing checkout (from registration flow)
+        # Check for pending briefing checkout (only for new registrations)
+        # The 'from_registration' flag ensures we only redirect to checkout
+        # for users who just completed registration, not existing users who 
+        # happen to have browsed the pricing page before logging in
+        from_registration = session.pop('from_registration', False)
         pending_plan = session.pop('pending_checkout_plan', None)
         pending_interval = session.pop('pending_checkout_interval', 'month')
         
-        if pending_plan:
-            # Redirect to complete the checkout
+        if pending_plan and from_registration:
+            # Redirect to complete the checkout for newly registered users
             return redirect(url_for('billing.pending_checkout', 
                                    plan=pending_plan, 
                                    interval=pending_interval))
