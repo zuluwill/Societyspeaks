@@ -7,6 +7,7 @@ from unidecode import unidecode
 from itsdangerous import URLSafeTimedSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import validates
+from sqlalchemy import event
 from typing import Optional
 
 import re
@@ -959,6 +960,15 @@ class NewsSource(db.Model):
 
     def __repr__(self):
         return f'<NewsSource {self.name}>'
+
+
+@event.listens_for(NewsSource, 'before_insert')
+def auto_generate_source_slug(mapper, connection, target):
+    """Auto-generate slug for new NewsSource records if not already set."""
+    if not target.slug and target.name:
+        base_slug = generate_slug(target.name)
+        if base_slug:
+            target.slug = base_slug
 
 
 class NewsArticle(db.Model):
