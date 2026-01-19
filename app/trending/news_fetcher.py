@@ -316,7 +316,7 @@ class NewsFetcher:
                 db.session.rollback()
                 logger.warning(f"Guardian: Duplicate article detected, retrying one by one: {e}")
                 # Retry adding articles one by one to save what we can
-                saved_count = 0
+                saved_articles = []
                 for article in articles:
                     try:
                         existing = NewsArticle.query.filter_by(
@@ -326,12 +326,12 @@ class NewsFetcher:
                         if not existing:
                             db.session.add(article)
                             db.session.commit()
-                            saved_count += 1
+                            saved_articles.append(article)
                     except IntegrityError:
                         db.session.rollback()
                         continue
-                logger.info(f"Guardian: Saved {saved_count} articles after retry")
-                articles = articles[:saved_count]
+                logger.info(f"Guardian: Saved {len(saved_articles)} articles after retry")
+                articles = saved_articles
             
         except Exception as e:
             logger.error(f"Guardian API error: {e}")

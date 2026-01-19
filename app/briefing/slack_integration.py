@@ -7,25 +7,55 @@ Sends brief runs to Slack channels via incoming webhooks.
 import requests
 import logging
 from datetime import datetime
+import pytz
 
 logger = logging.getLogger(__name__)
+
+# Valid Slack webhook URL prefixes (SSRF protection)
+VALID_SLACK_WEBHOOK_PREFIXES = (
+    "https://hooks.slack.com/",
+    "https://hooks.slack-gov.com/",  # Slack GovCloud
+)
+
+# Maximum items to include in Slack message
+SLACK_MAX_ITEMS = 10
+
+
+def _validate_slack_webhook_url(webhook_url):
+    """
+    Validate that a Slack webhook URL is legitimate.
+
+    Args:
+        webhook_url: The URL to validate
+
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    if not webhook_url:
+        return False
+    return webhook_url.startswith(VALID_SLACK_WEBHOOK_PREFIXES)
 
 
 def send_brief_to_slack(brief_run, briefing):
     """
     Send a brief run to Slack via webhook.
-    
+
     Args:
         brief_run: BriefRun instance with items
         briefing: Briefing instance with slack_webhook_url configured
-        
+
     Returns:
         bool: True if sent successfully, False otherwise
     """
     if not briefing.slack_webhook_url:
         logger.debug(f"No Slack webhook configured for briefing {briefing.id}")
         return False
-    
+
+    # Validate webhook URL to prevent SSRF
+    if not _validate_slack_webhook_url(briefing.slack_webhook_url):
+        logger.warning(f"Invalid Slack webhook URL for briefing {briefing.id}: URL does not match Slack webhook format")
+        return False
+
     try:
         # Build Slack message blocks
         blocks = []
@@ -41,19 +71,25 @@ def send_brief_to_slack(brief_run, briefing):
             }
         })
         
-        # Date context
+        # Date context - use briefing's configured timezone
+        try:
+            tz = pytz.timezone(briefing.timezone) if briefing.timezone else pytz.UTC
+            local_date = datetime.now(tz).strftime('%B %d, %Y')
+        except Exception:
+            local_date = datetime.utcnow().strftime('%B %d, %Y')
+
         blocks.append({
             "type": "context",
             "elements": [{
                 "type": "mrkdwn",
-                "text": f":newspaper: *{datetime.utcnow().strftime('%B %d, %Y')}*"
+                "text": f":newspaper: *{local_date}*"
             }]
         })
         
         blocks.append({"type": "divider"})
         
-        # Items
-        items = brief_run.items[:10]  # Limit to 10 items for Slack
+        # Items - limit for Slack message size
+        items = brief_run.items[:SLACK_MAX_ITEMS]
         for i, item in enumerate(items, 1):
             # Source badge
             source_text = f" _via {item.source_name}_" if item.source_name else ""
@@ -138,9 +174,9 @@ def test_slack_webhook(webhook_url, test_message=None):
     """
     if not webhook_url:
         return False, "No webhook URL provided"
-    
-    if not webhook_url.startswith("https://hooks.slack.com/"):
-        return False, "Invalid Slack webhook URL format"
+
+    if not _validate_slack_webhook_url(webhook_url):
+        return False, "Invalid Slack webhook URL format. Must start with https://hooks.slack.com/"
     
     try:
         payload = {

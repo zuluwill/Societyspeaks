@@ -28,6 +28,7 @@
             <div class="bg-white shadow rounded-lg p-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Edit Content</h2>
                 <form method="POST" id="edit-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="action" value="edit">
                     <textarea name="content_markdown" id="content_markdown" rows="20"
                               class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
@@ -61,6 +62,7 @@
                 {% if brief_run.status in ['generated_draft', 'awaiting_approval'] %}
                 <form method="POST" action="{{ url_for('briefing.edit_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
                       onsubmit="return confirm('Approve and send this brief?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="action" value="approve">
                     <input type="hidden" name="send_now" value="true">
                     <button type="submit"
@@ -69,6 +71,7 @@
                     </button>
                 </form>
                 <form method="POST" action="{{ url_for('briefing.edit_run', briefing_id=briefing.id, run_id=brief_run.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="action" value="approve">
                     <button type="submit"
                             class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
@@ -78,6 +81,7 @@
                 {% elif brief_run.status == 'approved' %}
                 <form method="POST" action="{{ url_for('briefing.send_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
                       onsubmit="return confirm('Send this brief to all recipients?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
                             class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                         Send Now

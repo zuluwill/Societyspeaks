@@ -26,6 +26,7 @@
                 <h3 class="text-lg font-semibold text-gray-900">Add Recipient</h3>
             </div>
             <form method="POST" action="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}" class="p-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" value="add">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="md:col-span-2">
@@ -56,6 +57,7 @@
                 <p class="text-sm text-gray-500 mt-1">Paste a list of email addresses (comma, newline, or space separated)</p>
             </div>
             <form method="POST" action="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}" class="p-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" value="bulk_add">
                 <textarea name="emails" rows="4" 
                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -77,9 +79,10 @@
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h3 class="text-lg font-semibold text-gray-900">All Recipients</h3>
                 {% if recipients %}
-                <form method="POST" action="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}" 
+                <form method="POST" action="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}"
                       id="bulk-remove-form"
                       onsubmit="return confirm('Remove selected recipients? This cannot be undone.');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="action" value="bulk_remove">
                     <button type="submit" id="bulk-remove-btn" disabled
                             class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
@@ -93,9 +96,10 @@
             </div>
             
             {% if recipients %}
-            <form method="POST" action="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}" 
+            <form method="POST" action="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}"
                   id="bulk-remove-form"
                   onsubmit="return confirm('Remove selected recipients? This cannot be undone.');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" value="bulk_remove">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
@@ -139,6 +143,7 @@
                                     <div class="flex items-center space-x-1">
                                         <!-- Toggle Active/Paused -->
                                         <form method="POST" action="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}" class="inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" name="action" value="toggle">
                                             <input type="hidden" name="recipient_id" value="{{ recipient.id }}">
                                             {% if recipient.status == 'active' %}
@@ -159,6 +164,7 @@
                                         <!-- Remove -->
                                         <form method="POST" action="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}"
                                               onsubmit="return confirm('Remove this recipient?');" class="inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" name="action" value="remove">
                                             <input type="hidden" name="recipient_id" value="{{ recipient.id }}">
                                             <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Remove">

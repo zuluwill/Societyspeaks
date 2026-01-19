@@ -17,6 +17,7 @@
 
         <div class="bg-white shadow rounded-lg">
             <form method="POST" class="p-6 space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700">Source Name *</label>
                     <input type="text" name="name" id="name" required

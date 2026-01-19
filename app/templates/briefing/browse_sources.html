@@ -91,10 +91,11 @@
                         {% endif %}
                     </p>
                     {% if briefing_id and briefing %}
-                    <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}" 
+                    <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}"
                           class="inline" onsubmit="return confirm('Add {{ source_info.name }} to briefing?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="source_id" value="{{ source_info.id }}">
-                        <button type="submit" 
+                        <button type="submit"
                                 class="w-full text-xs px-3 py-1.5 bg-blue-600 text-white font-medium rounded hover:bg-blue-700">
                             Add to Briefing
                         </button>
@@ -137,10 +138,11 @@
                         </span>
                     </div>
                     {% if briefing_id and briefing %}
-                    <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}" 
+                    <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}"
                           class="inline" onsubmit="return confirm('Add {{ source_info.name }} to briefing?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="source_id" value="{{ source_info.id }}">
-                        <button type="submit" 
+                        <button type="submit"
                                 class="w-full text-xs px-3 py-1.5 bg-blue-600 text-white font-medium rounded hover:bg-blue-700">
                             Add to Briefing
                         </button>

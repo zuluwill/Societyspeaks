@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, current_user
 from flask_talisman import Talisman
+from flask_wtf.csrf import CSRFProtect
 from config import Config, config_dict
 from datetime import timedelta
 import os
@@ -57,6 +58,7 @@ migrate = Migrate()
 login_manager = LoginManager()
 sess = Session()
 cache = Cache()
+csrf = CSRFProtect()
 limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["1000 per hour"]
@@ -197,6 +199,7 @@ def create_app():
 
     db.init_app(app)
     migrate.init_app(app, db)
+    csrf.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = "info"

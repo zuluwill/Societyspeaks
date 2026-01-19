@@ -17,6 +17,7 @@
 
         <div class="bg-white shadow rounded-lg">
             <form method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div>
                     <label for="file" class="block text-sm font-medium text-gray-700">File *</label>
                     <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">

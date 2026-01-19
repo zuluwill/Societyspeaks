@@ -32,6 +32,7 @@
         <!-- Form -->
         <div class="bg-white shadow-sm rounded-lg p-6">
             <form method="POST" action="{{ url_for('briefing.add_domain') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="space-y-6">
                     <div>
                         <label for="domain" class="block text-sm font-medium text-gray-700">Domain Name</label>

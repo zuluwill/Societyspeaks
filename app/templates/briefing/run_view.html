@@ -84,6 +84,7 @@
             </p>
             <form method="POST" action="{{ url_for('briefing.send_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
                   onsubmit="return confirm('Send this brief to all recipients?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit"
                         class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                     Send Now
