@@ -1466,7 +1466,7 @@ class DailyBriefSubscriber(db.Model):
     # Subscription tier
     tier = db.Column(db.String(20), default='trial')  # trial|free|individual|team
     trial_started_at = db.Column(db.DateTime)
-    trial_ends_at = db.Column(db.DateTime)  # 14-day trial
+    trial_ends_at = db.Column(db.DateTime)  # 30-day trial
 
     # Team management
     team_id = db.Column(db.Integer, db.ForeignKey('brief_team.id'), nullable=True)
@@ -1530,14 +1530,14 @@ class DailyBriefSubscriber(db.Model):
 
         return subscriber
 
-    def start_trial(self, days=14):
-        """Start free trial with specified duration"""
+    def start_trial(self, days=30):
+        """Start free trial with specified duration (default 30 days)"""
         self.tier = 'trial'
         self.trial_started_at = datetime.utcnow()
         self.trial_ends_at = datetime.utcnow() + timedelta(days=days)
         self.status = 'active'
 
-    def extend_trial(self, additional_days=14):
+    def extend_trial(self, additional_days=30):
         """Extend trial by specified number of days"""
         if not self.trial_ends_at:
             self.trial_ends_at = datetime.utcnow()
@@ -1595,7 +1595,7 @@ class DailyBriefSubscriber(db.Model):
         """Check if subscriber should receive emails
         
         Tier values:
-        - 'trial': 14-day free trial, expires at trial_ends_at
+        - 'trial': 30-day free trial, expires at trial_ends_at
         - 'free': Admin-granted permanent free access (never expires)
         - 'individual': Paid individual subscription via Stripe
         - 'team': Team subscription via Stripe
