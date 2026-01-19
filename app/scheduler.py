@@ -26,9 +26,12 @@ def _is_production_environment() -> bool:
     Used to prevent development environments from sending real emails,
     social media posts, etc. to avoid duplicates when both dev and prod run.
     
-    IMPORTANT: Only trusts REPLIT_DEPLOYMENT variable, NOT FLASK_ENV.
-    FLASK_ENV can be set to 'production' in dev for testing, which would
-    cause duplicate emails if we checked it.
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !! CRITICAL: DO NOT ADD FLASK_ENV CHECK HERE!                       !!
+    !! FLASK_ENV=production is set in dev, causing DUPLICATE EMAILS!    !!
+    !! This bug has caused duplicate emails to users MULTIPLE TIMES.    !!
+    !! Only REPLIT_DEPLOYMENT=1 reliably indicates deployed production. !!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
     Returns True ONLY if:
     - REPLIT_DEPLOYMENT is set to '1' (Replit deployments only)
@@ -36,8 +39,14 @@ def _is_production_environment() -> bool:
     import os
     
     # ONLY check Replit deployment environment variable
-    # This is the authoritative indicator that we're in a deployed environment
-    # Do NOT check FLASK_ENV - it can be 'production' in dev causing duplicates!
+    # This is the ONLY reliable indicator that we're in a deployed environment
+    #
+    # WARNING: Do NOT add checks for:
+    # - FLASK_ENV (is 'production' in dev too!)
+    # - REPLIT_DEV_DOMAIN (unreliable)
+    # - Any other heuristics
+    #
+    # REPLIT_DEPLOYMENT=1 is set ONLY by Replit when app is deployed
     return os.environ.get('REPLIT_DEPLOYMENT') == '1'
 
 
