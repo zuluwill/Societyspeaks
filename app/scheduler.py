@@ -1191,21 +1191,25 @@ def init_scheduler(app):
                 logger.error(f"AllSides update failed: {e}", exc_info=True)
 
 
-    @scheduler.scheduled_job('cron', hour='*/4', minute=30, id='update_social_engagement')
+    @scheduler.scheduled_job('cron', day='*/2', hour=10, minute=30, id='update_social_engagement')
     def update_social_engagement():
         """
         Update engagement metrics for recent social media posts.
-        Runs every 4 hours at :30 to fetch likes, reposts, replies.
+        Runs EVERY OTHER DAY at 10:30 UTC to conserve X API quota.
+        
+        X Free tier only allows 100 reads/month! 
+        At 3 reads every 2 days = ~45/month, safely under limit.
 
         Used for A/B testing and performance measurement.
         """
         with app.app_context():
             from app.trending.engagement_tracker import update_recent_engagements
 
-            logger.info("Updating social media engagement metrics")
+            logger.info("Updating social media engagement metrics (every 2 days, conserving X free tier quota)")
 
             try:
-                updated_count = update_recent_engagements(hours=48, limit=30)
+                # Only fetch 3 posts to conserve X free tier quota (100 reads/month)
+                updated_count = update_recent_engagements(hours=72, limit=3)
                 logger.info(f"Updated engagement for {updated_count} posts")
             except Exception as e:
                 logger.error(f"Social engagement update failed: {e}", exc_info=True)

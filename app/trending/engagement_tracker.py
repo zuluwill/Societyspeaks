@@ -309,16 +309,19 @@ def update_engagement(engagement_id: int) -> bool:
         cleanup_db_session()
 
 
-def update_recent_engagements(hours: int = 48, limit: int = 50) -> int:
+def update_recent_engagements(hours: int = 48, limit: int = 10) -> int:
     """
     Update engagement metrics for recently posted content.
 
     Fetches engagement for posts made in the last N hours.
     Call this from a scheduler job.
+    
+    IMPORTANT: X Free tier only allows 100 reads/month!
+    Default limit reduced to 10 to conserve quota.
 
     Args:
         hours: How far back to look for posts (default 48)
-        limit: Maximum number of posts to update (default 50)
+        limit: Maximum number of posts to update (default 10, reduced for free tier)
 
     Returns:
         Number of posts updated
