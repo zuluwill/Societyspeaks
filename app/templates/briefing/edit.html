@@ -97,7 +97,7 @@
                     <select name="visibility" id="visibility"
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <option value="private" {% if briefing.visibility == 'private' %}selected{% endif %}>Private</option>
-                        <option value="org_only" {% if briefing.visibility == 'org_only' %}selected{% endif %}>Organization only</option>
+                        <option value="org_only" {% if briefing.visibility == 'org_only' %}selected{% endif %}>Organisation only</option>
                         <option value="public" {% if briefing.visibility == 'public' %}selected{% endif %}>Public</option>
                     </select>
                 </div>
@@ -115,7 +115,7 @@
                 <!-- AI Settings Section -->
                 <div id="ai-settings" class="pt-6 border-t border-gray-200">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">AI Settings</h3>
-                    <p class="text-sm text-gray-500 mb-4">Customize how your brief content is generated.</p>
+                    <p class="text-sm text-gray-500 mb-4">Customise how your brief content is generated.</p>
                     
                     <div class="space-y-4">
                         <!-- Tone -->
@@ -148,7 +148,7 @@
                             <textarea name="custom_prompt" id="custom_prompt" rows="4"
                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                       placeholder="Add custom instructions for the AI, e.g., 'Focus on industry-specific terminology' or 'Include actionable takeaways'">{{ briefing.custom_prompt or '' }}</textarea>
-                            <p class="mt-1 text-sm text-gray-500">Additional guidance for how the AI should write your briefs. Leave empty for default behavior.</p>
+                            <p class="mt-1 text-sm text-gray-500">Additional guidance for how the AI should write your briefs. Leave empty for default behaviour.</p>
                         </div>
                     </div>
                 </div>
@@ -156,7 +156,7 @@
                 <!-- Visual Branding Section -->
                 <div id="branding" class="pt-6 border-t border-gray-200">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">Visual Branding</h3>
-                    <p class="text-sm text-gray-500 mb-4">Customize the look and feel of your briefs.</p>
+                    <p class="text-sm text-gray-500 mb-4">Customise the look and feel of your briefs.</p>
                     
                     <div class="space-y-4">
                         <!-- Logo URL -->
@@ -174,9 +174,9 @@
                             {% endif %}
                         </div>
                         
-                        <!-- Accent Color -->
+                        <!-- Accent Colour -->
                         <div>
-                            <label for="accent_color" class="block text-sm font-medium text-gray-700">Accent Color</label>
+                            <label for="accent_color" class="block text-sm font-medium text-gray-700">Accent Colour</label>
                             <div class="mt-1 flex items-center space-x-3">
                                 <input type="color" name="accent_color" id="accent_color"
                                        value="{{ briefing.accent_color or '#3B82F6' }}"

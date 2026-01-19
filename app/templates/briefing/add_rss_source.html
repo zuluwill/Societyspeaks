@@ -39,7 +39,7 @@
                             class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
                         <option value="user" {% if not current_user.company_profile %}selected{% endif %}>Personal</option>
                         {% if current_user.company_profile %}
-                        <option value="org">Organization ({{ current_user.company_profile.company_name }})</option>
+                        <option value="org">Organisation ({{ current_user.company_profile.company_name }})</option>
                         {% endif %}
                     </select>
                 </div>

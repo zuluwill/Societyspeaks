@@ -66,7 +66,7 @@
                             {{ template.default_cadence|title }}
                         </span>
                         <span class="inline-flex items-center gap-1 px-3 py-1 bg-white/20 rounded-full text-sm">
-                            {% if template.audience_type == 'individual' %}For Individuals{% elif template.audience_type == 'organization' %}For Organizations{% else %}For Everyone{% endif %}
+                            {% if template.audience_type == 'individual' %}For Individuals{% elif template.audience_type == 'organization' %}For Organisations{% else %}For Everyone{% endif %}
                         </span>
                         {% if template.times_used > 0 %}
                         <span class="inline-flex items-center gap-1 px-3 py-1 bg-white/20 rounded-full text-sm">
@@ -236,8 +236,8 @@
 
                 <div x-show="activeTab === 'customize'" x-cloak>
                     <div class="mb-6">
-                        <h2 class="text-xl font-semibold text-gray-900 mb-2">What You Can Customize</h2>
-                        <p class="text-gray-600 text-sm">After creating your briefing from this template, you can personalize these settings without affecting anyone else:</p>
+                        <h2 class="text-xl font-semibold text-gray-900 mb-2">What You Can Customise</h2>
+                        <p class="text-gray-600 text-sm">After creating your briefing from this template, you can personalise these settings without affecting anyone else:</p>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -250,7 +250,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-medium text-gray-900">News Sources</h4>
-                                    <p class="text-xs text-gray-500">Add your favorite publications</p>
+                                    <p class="text-xs text-gray-500">Add your favourite publications</p>
                                 </div>
                             </div>
                             <p class="text-sm text-gray-600">Add RSS feeds, news sites, or publications. Remove sources you don't trust or don't need.</p>
@@ -265,7 +265,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-medium text-gray-900">AI Prompts</h4>
-                                    <p class="text-xs text-gray-500">Fine-tune the AI behavior</p>
+                                    <p class="text-xs text-gray-500">Fine-tune the AI behaviour</p>
                                 </div>
                             </div>
                             <p class="text-sm text-gray-600">Adjust the AI guidance to match your preferences. Add specific instructions or focus areas.</p>

@@ -121,12 +121,12 @@
                     {% endif %}
                 </div>
 
-                <!-- AI Settings / Customize Output -->
+                <!-- AI Settings / Customise Output -->
                 <div class="bg-white shadow rounded-lg p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-lg font-semibold text-gray-900">AI Settings</h2>
                         <a href="{{ url_for('briefing.edit', briefing_id=briefing.id) }}#ai-settings" 
-                           class="text-sm text-blue-600 hover:text-blue-800">Customize</a>
+                           class="text-sm text-blue-600 hover:text-blue-800">Customise</a>
                     </div>
                     <p class="text-sm text-gray-500 mb-4">Control how your brief content is generated.</p>
                     <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -156,7 +156,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <h2 class="text-lg font-semibold text-gray-900">Branding</h2>
                         <a href="{{ url_for('briefing.edit', briefing_id=briefing.id) }}#branding" 
-                           class="text-sm text-blue-600 hover:text-blue-800">Customize</a>
+                           class="text-sm text-blue-600 hover:text-blue-800">Customise</a>
                     </div>
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
@@ -168,7 +168,7 @@
                             {% endif %}
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-gray-500">Accent Color</p>
+                            <p class="text-sm font-medium text-gray-500">Accent Colour</p>
                             <div class="mt-2 flex items-center space-x-2">
                                 <div class="h-6 w-6 rounded border border-gray-200" style="background-color: {{ briefing.accent_color|default('#3B82F6') }}"></div>
                                 <span class="text-sm text-gray-600">{{ briefing.accent_color|default('#3B82F6') }}</span>
