@@ -84,6 +84,7 @@
             {% endif %}
 
             <form id="voteForm" action="{{ url_for('daily.vote') }}" method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <button type="button" value="agree" 
                             class="vote-btn flex flex-col items-center justify-center p-6 rounded-xl border-2 border-blue-200 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 group">
