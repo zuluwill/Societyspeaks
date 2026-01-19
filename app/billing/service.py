@@ -95,13 +95,8 @@ def create_portal_session(user, return_url=None):
     return session
 
 
-def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None):
-    """Create or update local subscription record from Stripe subscription data.
-    
-    Preserves existing org_id linkage if already set (important for webhook updates).
-    """
-    sub = Subscription.query.filter_by(stripe_subscription_id=stripe_subscription.id).first()
-    
+def resolve_plan_from_stripe_subscription(stripe_subscription):
+    """Resolve pricing plan from Stripe subscription metadata or price ID."""
     plan_code = stripe_subscription.metadata.get('plan_code')
     plan = PricingPlan.query.filter_by(code=plan_code).first() if plan_code else None
     
@@ -111,10 +106,28 @@ def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None
             (PricingPlan.stripe_price_monthly_id == price_id) | 
             (PricingPlan.stripe_price_yearly_id == price_id)
         ).first()
+        
+        if not plan:
+            current_app.logger.error(
+                f"CRITICAL: Unknown Stripe price ID {price_id} for subscription {stripe_subscription.id}. "
+                f"This may indicate a missing plan configuration. Check that all Stripe price IDs are in the database."
+            )
     
     if not plan:
         plan = PricingPlan.query.filter_by(code='starter').first()
         current_app.logger.warning(f"Could not find plan for subscription {stripe_subscription.id}, defaulting to starter")
+    
+    return plan
+
+
+def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None):
+    """Create or update local subscription record from Stripe subscription data.
+    
+    Preserves existing org_id linkage if already set (important for webhook updates).
+    """
+    sub = Subscription.query.filter_by(stripe_subscription_id=stripe_subscription.id).first()
+    
+    plan = resolve_plan_from_stripe_subscription(stripe_subscription)
     
     if not sub:
         sub = Subscription(
@@ -228,15 +241,7 @@ def get_or_create_organization(user, plan):
 
 def sync_subscription_with_org(stripe_subscription, user):
     """Sync subscription and handle organization creation for team plans."""
-    plan_code = stripe_subscription.metadata.get('plan_code')
-    plan = PricingPlan.query.filter_by(code=plan_code).first() if plan_code else None
-    
-    if not plan and stripe_subscription.items.data:
-        price_id = stripe_subscription.items.data[0].price.id
-        plan = PricingPlan.query.filter(
-            (PricingPlan.stripe_price_monthly_id == price_id) | 
-            (PricingPlan.stripe_price_yearly_id == price_id)
-        ).first()
+    plan = resolve_plan_from_stripe_subscription(stripe_subscription)
     
     org_id = None
     user_id = user.id

@@ -1568,7 +1568,8 @@ noise.{% endblock %} {% block content %}
               </li>
             </ul>
             {% if current_user.is_authenticated %}
-            <form action="{{ url_for('billing.checkout') }}" method="POST">
+            <form action="{{ url_for('billing.checkout') }}" method="POST" class="mb-2">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="plan" value="starter">
               <input type="hidden" name="interval" value="month">
               <button
@@ -1578,12 +1579,29 @@ noise.{% endblock %} {% block content %}
                 Start a 30-day trial
               </button>
             </form>
+            <form action="{{ url_for('billing.checkout') }}" method="POST">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="plan" value="starter">
+              <input type="hidden" name="interval" value="year">
+              <button
+                type="submit"
+                class="block w-full text-center rounded-md border border-gray-300 px-6 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Or pay £120/year (save 17%)
+              </button>
+            </form>
             {% else %}
             <a
               href="{{ url_for('auth.register', checkout_plan='starter', checkout_interval='month') }}"
-              class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+              class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors mb-2"
             >
               Start a 30-day trial
+            </a>
+            <a
+              href="{{ url_for('auth.register', checkout_plan='starter', checkout_interval='year') }}"
+              class="block w-full text-center rounded-md border border-gray-300 px-6 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              Or pay £120/year (save 17%)
             </a>
             {% endif %}
             <p class="text-xs text-gray-500 text-center mt-3">30-day free trial, then £12/month</p>
@@ -1710,6 +1728,7 @@ noise.{% endblock %} {% block content %}
             </ul>
             {% if current_user.is_authenticated %}
             <form action="{{ url_for('billing.checkout') }}" method="POST" class="mb-2">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="plan" value="professional">
               <input type="hidden" name="interval" value="month">
               <button
@@ -1720,6 +1739,7 @@ noise.{% endblock %} {% block content %}
               </button>
             </form>
             <form action="{{ url_for('billing.checkout') }}" method="POST">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="plan" value="professional">
               <input type="hidden" name="interval" value="year">
               <button
@@ -1876,6 +1896,7 @@ noise.{% endblock %} {% block content %}
             </ul>
             {% if current_user.is_authenticated %}
             <form action="{{ url_for('billing.checkout') }}" method="POST">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="plan" value="team">
               <input type="hidden" name="interval" value="month">
               <button
@@ -2044,6 +2065,7 @@ noise.{% endblock %} {% block content %}
             </ul>
             {% if current_user.is_authenticated %}
             <form action="{{ url_for('billing.checkout') }}" method="POST">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <input type="hidden" name="plan" value="enterprise">
               <input type="hidden" name="interval" value="month">
               <button

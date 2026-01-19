@@ -21,6 +21,17 @@ def checkout():
     plan_code = request.form.get('plan', 'starter')
     billing_interval = request.form.get('interval', 'month')
     
+    target_plan = PricingPlan.query.filter_by(code=plan_code).first()
+    existing_sub = get_active_subscription(current_user)
+    
+    if existing_sub:
+        is_upgrading_to_org = target_plan and target_plan.is_organisation and not existing_sub.plan.is_organisation
+        if is_upgrading_to_org:
+            pass
+        else:
+            flash('You already have an active subscription. Use "Manage Billing" to change your plan.', 'info')
+            return redirect(url_for('billing.customer_portal'))
+    
     try:
         session = create_checkout_session(
             user=current_user,
