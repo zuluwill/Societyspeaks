@@ -1381,10 +1381,17 @@ def news_settings():
 
     if request.method == 'POST':
         try:
+            def safe_float(value, default):
+                if value is None:
+                    return default
+                if str(value).strip().lower() == 'nan':
+                    raise ValueError("NaN is not a valid value")
+                return float(value)
+
             settings = {
-                'min_civic_score': float(request.form.get('min_civic_score') or 0.5),
-                'min_quality_score': float(request.form.get('min_quality_score') or 0.4),
-                'max_sensationalism': float(request.form.get('max_sensationalism') or 0.8),
+                'min_civic_score': safe_float(request.form.get('min_civic_score'), 0.5),
+                'min_quality_score': safe_float(request.form.get('min_quality_score'), 0.4),
+                'max_sensationalism': safe_float(request.form.get('max_sensationalism'), 0.8),
                 'lookback_hours': int(request.form.get('lookback_hours') or 24)
             }
 
