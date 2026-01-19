@@ -1580,7 +1580,7 @@ noise.{% endblock %} {% block content %}
             </form>
             {% else %}
             <a
-              href="{{ url_for('auth.register', next=url_for('briefing.landing') + '#pricing') }}"
+              href="{{ url_for('auth.register', checkout_plan='starter', checkout_interval='month') }}"
               class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
             >
               Start a 30-day trial
@@ -1731,7 +1731,7 @@ noise.{% endblock %} {% block content %}
             </form>
             {% else %}
             <a
-              href="{{ url_for('auth.register', next=url_for('briefing.landing') + '#pricing') }}"
+              href="{{ url_for('auth.register', checkout_plan='professional', checkout_interval='month') }}"
               class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
             >
               Start a 30-day trial

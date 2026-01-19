@@ -164,6 +164,29 @@ def handle_trial_ending(subscription_data):
         current_app.logger.info(f"Trial ending soon for user {sub.user_id}")
 
 
+@billing_bp.route('/pending-checkout')
+@login_required
+def pending_checkout():
+    """Handle pending checkout after registration/login."""
+    plan_code = request.args.get('plan', 'starter')
+    billing_interval = request.args.get('interval', 'month')
+    
+    try:
+        session = create_checkout_session(
+            user=current_user,
+            plan_code=plan_code,
+            billing_interval=billing_interval
+        )
+        return redirect(session.url, code=303)
+    except ValueError as e:
+        flash(str(e), 'error')
+        return redirect(url_for('briefing.landing'))
+    except stripe.error.StripeError as e:
+        current_app.logger.error(f"Stripe error in pending checkout: {e}")
+        flash('Payment system error. Please try again.', 'error')
+        return redirect(url_for('briefing.landing'))
+
+
 @billing_bp.route('/status')
 @login_required
 def subscription_status():

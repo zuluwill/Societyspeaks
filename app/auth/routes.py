@@ -36,6 +36,14 @@ def verify_email(token):
 @auth_bp.route('/register', methods=['GET', 'POST'])
 @limiter.limit("5/hour")
 def register():
+    # Capture checkout intent from query params (for briefing signups)
+    checkout_plan = request.args.get('checkout_plan')
+    checkout_interval = request.args.get('checkout_interval', 'month')
+    
+    if checkout_plan:
+        session['pending_checkout_plan'] = checkout_plan
+        session['pending_checkout_interval'] = checkout_interval
+    
     if request.method == 'POST':
         username = request.form.get('username')
         email = request.form.get('email')
@@ -155,6 +163,16 @@ def login():
                 current_app.logger.info(f"Merged {merged} anonymous votes for user {user.id}")
         
         flash("Logged in successfully!", "success")
+        
+        # Check for pending briefing checkout (from registration flow)
+        pending_plan = session.pop('pending_checkout_plan', None)
+        pending_interval = session.pop('pending_checkout_interval', 'month')
+        
+        if pending_plan:
+            # Redirect to complete the checkout
+            return redirect(url_for('billing.pending_checkout', 
+                                   plan=pending_plan, 
+                                   interval=pending_interval))
 
         # Check if the user has an individual or company profile
         profile = user.individual_profile or user.company_profile
