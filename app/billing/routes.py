@@ -6,6 +6,7 @@ from app.billing.service import (
     create_checkout_session,
     create_portal_session,
     sync_subscription_from_stripe,
+    sync_subscription_with_org,
     get_active_subscription,
     get_stripe,
 )
@@ -43,25 +44,29 @@ def checkout_success():
     s = get_stripe()
     session_id = request.args.get('session_id')
     sync_success = False
+    is_org_plan = False
     
     if session_id:
         try:
             session = s.checkout.Session.retrieve(session_id)
             if session.subscription:
                 stripe_sub = s.Subscription.retrieve(session.subscription)
-                user_id = int(session.metadata.get('user_id', current_user.id))
-                sync_subscription_from_stripe(stripe_sub, user_id=user_id)
+                sub = sync_subscription_with_org(stripe_sub, current_user)
                 sync_success = True
+                if sub and sub.plan and sub.plan.is_organisation:
+                    is_org_plan = True
         except stripe.error.StripeError as e:
             current_app.logger.error(f"Error retrieving checkout session: {e}")
     
-    # Verify subscription is actually active
     sub = get_active_subscription(current_user)
     if sub or sync_success:
-        flash('Welcome! Your subscription is now active.', 'success')
-        return redirect(url_for('briefing.list_briefings'))
+        if is_org_plan:
+            flash('Welcome! Your team subscription is now active. You can invite team members from your organization settings.', 'success')
+            return redirect(url_for('briefing.organization_settings'))
+        else:
+            flash('Welcome! Your subscription is now active.', 'success')
+            return redirect(url_for('briefing.list_briefings'))
     else:
-        # Subscription sync may be delayed - show a friendly message
         flash('Your payment was received! Your subscription is being activated - this usually takes a few seconds. '
               'If you don\'t see your subscription active, please click "Manage Billing" to verify.', 'info')
         return redirect(url_for('briefing.landing'))
@@ -129,9 +134,15 @@ def handle_subscription_created(subscription_data):
     stripe_sub = s.Subscription.retrieve(subscription_data['id'])
     customer_id = subscription_data['customer']
     
+    existing_sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
+    if existing_sub:
+        sync_subscription_from_stripe(stripe_sub, user_id=existing_sub.user_id, org_id=existing_sub.org_id)
+        current_app.logger.info(f"Synced existing subscription {existing_sub.id}")
+        return
+    
     user = User.query.filter_by(stripe_customer_id=customer_id).first()
     if user:
-        sync_subscription_from_stripe(stripe_sub, user_id=user.id)
+        sync_subscription_with_org(stripe_sub, user)
         current_app.logger.info(f"Created subscription for user {user.id}")
 
 

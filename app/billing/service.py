@@ -2,7 +2,7 @@ import stripe
 from datetime import datetime, timedelta
 from flask import current_app
 from app import db
-from app.models import User, CompanyProfile, PricingPlan, Subscription
+from app.models import User, CompanyProfile, PricingPlan, Subscription, generate_slug
 
 
 def get_stripe():
@@ -96,7 +96,10 @@ def create_portal_session(user, return_url=None):
 
 
 def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None):
-    """Create or update local subscription record from Stripe subscription data."""
+    """Create or update local subscription record from Stripe subscription data.
+    
+    Preserves existing org_id linkage if already set (important for webhook updates).
+    """
     sub = Subscription.query.filter_by(stripe_subscription_id=stripe_subscription.id).first()
     
     plan_code = stripe_subscription.metadata.get('plan_code')
@@ -122,6 +125,12 @@ def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None
             plan_id=plan.id if plan else None,
         )
         db.session.add(sub)
+    else:
+        if sub.org_id:
+            org_id = sub.org_id
+            user_id = None
+        elif sub.user_id and not user_id:
+            user_id = sub.user_id
     
     sub.status = stripe_subscription.status
     sub.current_period_start = datetime.fromtimestamp(stripe_subscription.current_period_start)
@@ -181,3 +190,61 @@ def get_user_plan(user):
     """Get the user's current plan, or None if no active subscription."""
     sub = get_active_subscription(user)
     return sub.plan if sub else None
+
+
+def get_or_create_organization(user, plan):
+    """Create an organization for Team/Enterprise plans if user doesn't have one."""
+    if not plan.is_organisation:
+        return None
+    
+    if user.company_profile:
+        return user.company_profile
+    
+    existing_org = CompanyProfile.query.filter_by(user_id=user.id).first()
+    if existing_org:
+        return existing_org
+    
+    org_name = f"{user.username}'s Organization"
+    slug = generate_slug(org_name)
+    
+    existing_slug = CompanyProfile.query.filter_by(slug=slug).first()
+    if existing_slug:
+        slug = f"{slug}-{user.id}"
+    
+    org = CompanyProfile(
+        user_id=user.id,
+        company_name=org_name,
+        slug=slug,
+        email=user.email,
+    )
+    db.session.add(org)
+    db.session.commit()
+    
+    db.session.expire(user)
+    
+    current_app.logger.info(f"Created organization '{org_name}' (id={org.id}) for user {user.id}")
+    return org
+
+
+def sync_subscription_with_org(stripe_subscription, user):
+    """Sync subscription and handle organization creation for team plans."""
+    plan_code = stripe_subscription.metadata.get('plan_code')
+    plan = PricingPlan.query.filter_by(code=plan_code).first() if plan_code else None
+    
+    if not plan and stripe_subscription.items.data:
+        price_id = stripe_subscription.items.data[0].price.id
+        plan = PricingPlan.query.filter(
+            (PricingPlan.stripe_price_monthly_id == price_id) | 
+            (PricingPlan.stripe_price_yearly_id == price_id)
+        ).first()
+    
+    org_id = None
+    user_id = user.id
+    
+    if plan and plan.is_organisation:
+        org = get_or_create_organization(user, plan)
+        if org:
+            org_id = org.id
+            user_id = None
+    
+    return sync_subscription_from_stripe(stripe_subscription, user_id=user_id, org_id=org_id)

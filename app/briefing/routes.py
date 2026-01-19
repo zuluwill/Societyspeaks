@@ -2587,3 +2587,66 @@ def analytics(briefing_id):
         chart_data=chart_data
     )
 
+
+@briefing_bp.route("/organization")
+@login_required
+def organization_settings():
+    """
+    Organization settings page for Team/Enterprise subscribers.
+    Allows viewing organization details and managing team.
+    """
+    sub = get_active_subscription(current_user)
+    
+    if not sub or not sub.plan or not sub.plan.is_organisation:
+        flash("Organization settings are only available for Team and Enterprise plans.", "info")
+        return redirect(url_for("briefing.list_briefings"))
+    
+    org = current_user.company_profile
+    if not org:
+        org = CompanyProfile.query.filter_by(user_id=current_user.id).first()
+    
+    if not org:
+        flash("No organization found. Please contact support.", "error")
+        return redirect(url_for("briefing.list_briefings"))
+    
+    org_owner = User.query.get(org.user_id)
+    team_members = [org_owner] if org_owner else [current_user]
+    
+    subscription_context = get_subscription_context(current_user)
+    
+    return render_template(
+        "briefing/organization_settings.html",
+        org=org,
+        team_members=team_members,
+        subscription=sub,
+        plan=sub.plan,
+        **subscription_context
+    )
+
+
+@briefing_bp.route("/organization/update", methods=["POST"])
+@login_required
+def update_organization():
+    """Update organization details."""
+    sub = get_active_subscription(current_user)
+    
+    if not sub or not sub.plan or not sub.plan.is_organisation:
+        flash("Organization settings are only available for Team and Enterprise plans.", "error")
+        return redirect(url_for("briefing.list_briefings"))
+    
+    org = current_user.company_profile
+    if not org or org.user_id != current_user.id:
+        flash("You don't have permission to edit this organization.", "error")
+        return redirect(url_for("briefing.organization_settings"))
+    
+    org_name = request.form.get("company_name", "").strip()
+    if org_name and len(org_name) >= 2:
+        org.company_name = org_name
+    
+    org.description = request.form.get("description", "").strip()
+    org.website = request.form.get("website", "").strip()
+    
+    db.session.commit()
+    flash("Organization details updated successfully.", "success")
+    return redirect(url_for("briefing.organization_settings"))
+

@@ -1874,12 +1874,26 @@ noise.{% endblock %} {% block content %}
                 <span>Private or public visibility</span>
               </li>
             </ul>
+            {% if current_user.is_authenticated %}
+            <form action="{{ url_for('billing.checkout') }}" method="POST">
+              <input type="hidden" name="plan" value="team">
+              <input type="hidden" name="interval" value="month">
+              <button
+                type="submit"
+                class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+              >
+                Start a 30-day trial
+              </button>
+            </form>
+            {% else %}
             <a
-              href="mailto:hello@societyspeaks.org?subject=Team Briefing Inquiry"
+              href="{{ url_for('auth.register', checkout_plan='team', checkout_interval='month') }}"
               class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
             >
-              Request access
+              Start a 30-day trial
             </a>
+            {% endif %}
+            <p class="text-xs text-gray-500 text-center mt-3">30-day free trial, then £300/month</p>
           </div>
 
           <!-- Enterprise -->
@@ -1889,7 +1903,6 @@ noise.{% endblock %} {% block content %}
             <div class="mb-6">
               <span class="text-4xl font-serif text-gray-900">£2,000</span>
               <span class="text-gray-600">/ month</span>
-              <p class="text-sm text-gray-500 mt-1">or custom pricing</p>
             </div>
             <ul class="space-y-3 text-gray-700 mb-8">
               <li class="flex items-start">
@@ -2029,12 +2042,26 @@ noise.{% endblock %} {% block content %}
                 <span>Quarterly business reviews</span>
               </li>
             </ul>
+            {% if current_user.is_authenticated %}
+            <form action="{{ url_for('billing.checkout') }}" method="POST">
+              <input type="hidden" name="plan" value="enterprise">
+              <input type="hidden" name="interval" value="month">
+              <button
+                type="submit"
+                class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
+              >
+                Start a 30-day trial
+              </button>
+            </form>
+            {% else %}
             <a
-              href="mailto:hello@societyspeaks.org?subject=Enterprise Briefing Inquiry"
-              class="block w-full text-center rounded-md border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              href="{{ url_for('auth.register', checkout_plan='enterprise', checkout_interval='month') }}"
+              class="block w-full text-center rounded-md bg-gray-900 px-6 py-3 text-sm font-medium text-white hover:bg-gray-800 transition-colors"
             >
-              Contact us
+              Start a 30-day trial
             </a>
+            {% endif %}
+            <p class="text-xs text-gray-500 text-center mt-3">30-day free trial, then £2,000/month</p>
           </div>
         </div>
       </div>
