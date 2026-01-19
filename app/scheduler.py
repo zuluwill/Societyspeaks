@@ -568,7 +568,7 @@ def init_scheduler(app):
         with app.app_context():
             from app.models import DailyQuestion
             from app.trending.social_insights import generate_daily_question_post
-            from app.trending.social_poster import post_to_x, post_to_bluesky
+            from app.trending.social_poster import post_to_x, post_to_bluesky, DuplicatePostError
             from datetime import date
             import posthog
             
@@ -616,6 +616,8 @@ def init_scheduler(app):
                                 )
                             except Exception as e:
                                 logger.warning(f"PostHog tracking error: {e}")
+                except DuplicatePostError:
+                    logger.info(f"Daily question #{question.question_number} already posted to X (duplicate)")
                 except Exception as e:
                     logger.error(f"Error posting daily question to X: {e}")
                 
@@ -676,7 +678,7 @@ def init_scheduler(app):
             
         with app.app_context():
             from app.trending.value_content import generate_weekly_insights_post
-            from app.trending.social_poster import post_to_x, post_to_bluesky
+            from app.trending.social_poster import post_to_x, post_to_bluesky, DuplicatePostError
             import posthog
             
             try:
@@ -714,6 +716,8 @@ def init_scheduler(app):
                                 )
                             except Exception as e:
                                 logger.warning(f"PostHog tracking error: {e}")
+                except DuplicatePostError:
+                    logger.info("Weekly insights already posted to X (duplicate)")
                 except Exception as e:
                     logger.error(f"Error posting weekly insights to X: {e}")
                 
@@ -770,7 +774,7 @@ def init_scheduler(app):
         with app.app_context():
             from app.models import DailyBrief
             from app.trending.social_insights import generate_daily_brief_post
-            from app.trending.social_poster import post_to_x, post_to_bluesky
+            from app.trending.social_poster import post_to_x, post_to_bluesky, DuplicatePostError
             from datetime import date
             import posthog
             
@@ -818,6 +822,8 @@ def init_scheduler(app):
                                 )
                             except Exception as e:
                                 logger.warning(f"PostHog tracking error: {e}")
+                except DuplicatePostError:
+                    logger.info(f"Daily brief already posted to X (duplicate)")
                 except Exception as e:
                     logger.error(f"Error posting daily brief to X: {e}")
                 

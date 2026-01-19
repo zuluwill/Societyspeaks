@@ -20,6 +20,20 @@ logger = logging.getLogger(__name__)
 # Flag to track if table exists (checked once per process)
 _table_exists: Optional[bool] = None
 
+# Rate limit tracking - stop fetching when we hit X rate limits
+_x_rate_limited_until: Optional[datetime] = None
+
+
+def reset_x_rate_limit_if_expired() -> None:
+    """
+    Reset the X rate limit cooldown if the window has passed.
+    Call this at the start of each scheduler run.
+    """
+    global _x_rate_limited_until
+    if _x_rate_limited_until and datetime.utcnow() >= _x_rate_limited_until:
+        logger.info("X rate limit cooldown expired, resetting")
+        _x_rate_limited_until = None
+
 
 def _check_table_exists() -> bool:
     """Check if SocialPostEngagement table exists. Caches result."""
@@ -113,6 +127,13 @@ def fetch_x_engagement(tweet_id: str) -> Optional[Dict]:
 
     Returns dict with likes, retweets, replies, quotes, impressions.
     """
+    global _x_rate_limited_until
+    
+    # Check if we're currently rate limited - skip all X fetches until reset
+    if _x_rate_limited_until and datetime.utcnow() < _x_rate_limited_until:
+        logger.debug(f"X rate limited until {_x_rate_limited_until}, skipping fetch for {tweet_id}")
+        return None
+    
     api_key = os.environ.get('X_API_KEY')
     api_secret = os.environ.get('X_API_SECRET')
     access_token = os.environ.get('X_ACCESS_TOKEN')
@@ -130,7 +151,7 @@ def fetch_x_engagement(tweet_id: str) -> Optional[Dict]:
             consumer_secret=api_secret,
             access_token=access_token,
             access_token_secret=access_token_secret,
-            wait_on_rate_limit=True
+            wait_on_rate_limit=False  # Don't block on rate limits - causes DB connection timeouts
         )
 
         # Fetch tweet with public metrics
@@ -150,6 +171,9 @@ def fetch_x_engagement(tweet_id: str) -> Optional[Dict]:
         tweet_data = response.data
         metrics = getattr(tweet_data, 'public_metrics', {}) or {}
 
+        # Note: We don't clear _x_rate_limited_until here - it's cleared at the 
+        # start of new scheduler runs to ensure 15-min cooldown is honored within a batch
+        
         return {
             'likes': metrics.get('like_count', 0),
             'reposts': metrics.get('retweet_count', 0),
@@ -159,6 +183,14 @@ def fetch_x_engagement(tweet_id: str) -> Optional[Dict]:
         }
 
     except Exception as e:
+        error_str = str(e).lower()
+        # Handle rate limiting gracefully - skip this fetch and set cooldown
+        if '429' in str(e) or 'rate limit' in error_str or 'too many requests' in error_str:
+            # Set rate limit cooldown for 15 minutes (X rate limit window)
+            global _x_rate_limited_until
+            _x_rate_limited_until = datetime.utcnow() + timedelta(minutes=15)
+            logger.warning(f"X rate limited while fetching engagement for {tweet_id}, pausing until {_x_rate_limited_until}")
+            return None
         logger.error(f"Failed to fetch X engagement for {tweet_id}: {e}")
         return None
 
@@ -317,12 +349,26 @@ def update_recent_engagements(hours: int = 48, limit: int = 50) -> int:
             logger.debug("No posts to update")
             return 0
 
+        # Reset rate limit if cooldown has expired (start of new batch)
+        reset_x_rate_limit_if_expired()
+
         logger.info(f"Updating engagement for {len(post_ids)} recent posts")
 
+        import time
+        global _x_rate_limited_until
         updated_count = 0
-        for post_id in post_ids:
+        for i, post_id in enumerate(post_ids):
+            # Check if rate limited - abort the entire batch to honor cooldown
+            if _x_rate_limited_until and datetime.utcnow() < _x_rate_limited_until:
+                logger.warning(f"X rate limited, aborting engagement batch ({i}/{len(post_ids)} processed)")
+                break
+            
             if update_engagement(post_id):
                 updated_count += 1
+            # Add delay between API calls to avoid rate limiting
+            # X Free tier has strict rate limits - 2 second delay between fetches
+            if i < len(post_ids) - 1:
+                time.sleep(2)
 
         return updated_count
 

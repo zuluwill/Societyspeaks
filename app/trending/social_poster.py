@@ -19,6 +19,12 @@ from flask import url_for
 
 logger = logging.getLogger(__name__)
 
+
+class DuplicatePostError(Exception):
+    """Raised when X rejects a post as duplicate (content already exists)."""
+    pass
+
+
 # X/Twitter account handle
 X_HANDLE = "societyspeaksio"
 
@@ -797,7 +803,12 @@ def post_to_x(
     - 1-2 hashtags max, never start with hashtag
     - URL at end gets rich link card preview
     
-    Returns the tweet ID if successful, None otherwise.
+    Returns:
+        str (tweet_id) if successful, None if failed.
+        
+    Raises:
+        DuplicatePostError: If X rejects the post as duplicate (content already exists).
+            Callers should treat this as success and NOT retry.
     """
     api_key = os.environ.get('X_API_KEY')
     api_secret = os.environ.get('X_API_SECRET')
@@ -873,8 +884,29 @@ def post_to_x(
         return tweet_id
     
     except Exception as e:
-        error_str = str(e)
+        error_str = str(e).lower()
         logger.error(f"Failed to post to X (attempt {retry_count + 1}): {e}")
+        
+        # Check for duplicate tweet error FIRST - this means the post succeeded previously
+        # Raise exception so callers know to treat this as success and NOT retry
+        if 'duplicate' in error_str or 'already posted' in error_str or 'you have already sent this' in error_str:
+            logger.warning("X rejected as duplicate tweet - content already exists (previous post succeeded)")
+            raise DuplicatePostError("Content already posted to X")
+        
+        # Check for 403 errors - could be duplicate or permission issue
+        if '403' in str(e):
+            # 403 Forbidden often means duplicate content on X
+            if 'duplicate' in error_str or 'status is a duplicate' in error_str:
+                logger.warning("X 403 duplicate - content already posted (previous post succeeded)")
+                raise DuplicatePostError("Content already posted to X (403)")
+            else:
+                logger.error("X 403 error - possible permission or duplicate issue, not retrying")
+            return None
+        
+        # Check for authentication errors (don't retry these)
+        if '401' in str(e) or 'unauthorized' in error_str:
+            logger.error("X authentication error - check API credentials")
+            return None
         
         # Check if this is a rate limit error we should retry
         should_retry, wait_seconds = _handle_x_rate_limit_error(e)
@@ -885,16 +917,6 @@ def post_to_x(
             logger.info(f"X rate limited. Waiting {actual_wait}s before retry {retry_count + 1}/{X_RETRY_ATTEMPTS}")
             time.sleep(actual_wait)
             return post_to_x(title, topic, discussion_url, retry_count + 1, discussion, custom_text)
-        
-        # Check for duplicate tweet error (not a failure, just skip)
-        if 'duplicate' in error_str.lower() or 'already posted' in error_str.lower():
-            logger.warning("X rejected as duplicate tweet - already posted")
-            return None
-        
-        # Check for authentication errors (don't retry these)
-        if '401' in error_str or '403' in error_str or 'unauthorized' in error_str.lower():
-            logger.error("X authentication error - check API credentials")
-            return None
         
         return None
 
@@ -976,6 +998,10 @@ def share_discussion_to_social(
                 discussion=discussion
             )
             results['x'] = x_tweet_id
+        except DuplicatePostError:
+            # Content already exists - treat as success (no tweet_id to store)
+            logger.info(f"Discussion already posted to X (duplicate detected)")
+            results['x'] = 'duplicate'
         except Exception as e:
             logger.error(f"Unexpected error posting to X: {e}")
     
@@ -1227,6 +1253,13 @@ def process_scheduled_x_posts() -> int:
                 discussion.x_posted_at = None
                 db.session.commit()
                 logger.warning(f"Failed to post discussion {discussion.id} to X (no ID returned) - will retry")
+        
+        except DuplicatePostError:
+            # Content already exists on X - treat as success, keep x_posted_at set
+            # We can't get the tweet_id but the content is posted
+            logger.info(f"Discussion {discussion.id} already posted to X (duplicate detected) - marking as complete")
+            posted_count += 1
+            # x_posted_at is already set, just continue
                 
         except Exception as e:
             logger.error(f"Error posting discussion {discussion.id} to X: {e}")
