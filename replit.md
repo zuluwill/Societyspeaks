@@ -42,6 +42,14 @@ PostgreSQL is the primary database, optimized with connection pooling, health ch
 - **Bluesky (AT Protocol)**: For automatic posting of news discussions.
 - **X/Twitter**: For automatic posting of news discussions.
 
+### Billing & Subscriptions
+- **Stripe**: For subscription billing and payment processing.
+  - Pricing tiers: Starter (£12/mo), Professional (£25/mo or £250/yr), Team (£300/mo), Enterprise (£2,000/mo)
+  - 30-day free trial for all plans
+  - Webhook handling for subscription lifecycle events
+  - Customer portal for self-service billing management
+  - Tier enforcement: brief limits, source limits, feature gating
+
 ### Development & Security Tools
 - **Flask Extensions**: For security, forms, and database management.
 - **Tailwind CSS**: Utility-first CSS framework.

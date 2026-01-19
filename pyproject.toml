@@ -20,6 +20,7 @@ anthropic = "^0.75.0"
 sqlalchemy = "^2.0.45"
 tweepy = "^4.16.0"
 beautifulsoup4 = "^4.14.3"
+stripe = "^14.2.0"
 
 [tool.pyright]
 # https://github.com/microsoft/pyright/blob/main/docs/configuration.md

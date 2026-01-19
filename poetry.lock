@@ -1851,6 +1851,24 @@ pymysql = ["pymysql"]
 sqlcipher = ["sqlcipher3_binary"]
 
 [[package]]
+name = "stripe"
+version = "14.2.0"
+description = "Python bindings for the Stripe API"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "stripe-14.2.0-py3-none-any.whl", hash = "sha256:0a1413ca5eff55df40de49f72f4e17ad51e684600b7876a330ba012e9caae689"},
+    {file = "stripe-14.2.0.tar.gz", hash = "sha256:9c707cb0503e179c2d9f18731e94f1333705b5cd9dcaae692db09995ad28d411"},
+]
+
+[package.dependencies]
+requests = {version = ">=2.20", markers = "python_version >= \"3.0\""}
+typing_extensions = {version = ">=4.5.0", markers = "python_version >= \"3.7\""}
+
+[package.extras]
+async = ["httpx"]
+
+[[package]]
 name = "threadpoolctl"
 version = "3.6.0"
 description = "threadpoolctl"
@@ -2133,4 +2151,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11.0,<3.12"
-content-hash = "ca14e4fa2ba3d85b7932e690fd74212a4abd064f80a47101b918c9bfd088bd37"
+content-hash = "1e6d5f1c15cac3373c128eb4bf6931c410e6594adc90b6c39b7dbae37e0359cb"

@@ -412,6 +412,11 @@ def create_app():
     app.register_blueprint(briefing_bp)
     app.logger.debug("Briefing blueprint registered")
 
+    # Register billing blueprint (Stripe subscriptions)
+    from app.billing import billing_bp
+    app.register_blueprint(billing_bp)
+    app.logger.debug("Billing blueprint registered")
+
     app.logger.debug("All registered routes:")
     app.logger.debug(app.url_map)
 

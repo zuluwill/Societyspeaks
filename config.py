@@ -12,6 +12,9 @@ load_dotenv()
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    
+    # Application base URL
+    APP_BASE_URL = os.getenv('APP_BASE_URL', 'https://societyspeaks.io')
 
     # At start of Config class
     if not SQLALCHEMY_DATABASE_URI:
@@ -21,6 +24,11 @@ class Config:
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
 
+
+    # Stripe billing configuration
+    STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+    STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
+    STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
 
     # Enhanced Database Connection Settings
     SQLALCHEMY_TRACK_MODIFICATIONS = False
