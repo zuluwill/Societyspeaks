@@ -139,15 +139,22 @@ class BriefingGenerator:
     
     def _select_items_for_briefing(self, briefing: Briefing, limit: int = None) -> List[IngestedItem]:
         """
-        Select items from briefing's sources.
+        Select items from briefing's sources with source diversity and deduplication.
+        
+        Uses round-robin selection across sources to ensure each source contributes,
+        and deduplicates similar headlines to avoid repetitive content.
         
         Args:
             briefing: Briefing configuration
             limit: Maximum number of items to select
         
         Returns:
-            List of IngestedItem instances
+            List of IngestedItem instances with diverse sources
         """
+        from datetime import timedelta
+        from collections import defaultdict
+        import re
+        
         # Get all sources for this briefing
         source_ids = [bs.source_id for bs in briefing.sources]
         if not source_ids:
@@ -158,36 +165,88 @@ class BriefingGenerator:
             limit = min(briefing.max_items or 10, 20)
         
         # Get recent items from these sources (last 7 days)
-        from datetime import timedelta
         cutoff = datetime.utcnow() - timedelta(days=7)
         
-        items = IngestedItem.query.filter(
+        # Fetch items grouped by source for fair distribution
+        items_by_source = defaultdict(list)
+        all_items = IngestedItem.query.filter(
             IngestedItem.source_id.in_(source_ids),
             IngestedItem.fetched_at >= cutoff
         ).order_by(
             IngestedItem.published_at.desc().nullslast(),
             IngestedItem.fetched_at.desc()
-        ).limit(limit * 3).all()  # Get more than needed, then filter
+        ).limit(limit * 5).all()  # Get plenty for diversity
+        
+        for item in all_items:
+            items_by_source[item.source_id].append(item)
         
         # Apply briefing filters if any
+        keywords = []
         if briefing.template and briefing.template.default_filters:
             filters = briefing.template.default_filters
             keywords = filters.get('topics', [])
-            
-            if keywords:
-                # Filter items by keywords in title or content
-                filtered_items = []
-                for item in items:
+        
+        if keywords:
+            # Filter items by keywords
+            for source_id in items_by_source:
+                filtered = []
+                for item in items_by_source[source_id]:
                     text = f"{item.title} {item.content_text or ''}".lower()
                     if any(keyword.lower() in text for keyword in keywords):
-                        filtered_items.append(item)
-                items = filtered_items[:limit]
-            else:
-                items = items[:limit]
-        else:
-            items = items[:limit]
+                        filtered.append(item)
+                items_by_source[source_id] = filtered
         
-        return items
+        # Round-robin selection across sources for diversity
+        selected_items = []
+        seen_headlines = set()  # For deduplication
+        
+        def normalize_headline(title: str) -> str:
+            """Normalize headline for dedup comparison"""
+            # Remove punctuation, lowercase, and extract key words
+            normalized = re.sub(r'[^\w\s]', '', title.lower())
+            # Extract first 5 significant words for comparison
+            words = [w for w in normalized.split() if len(w) > 3][:5]
+            return ' '.join(sorted(words))
+        
+        # Get list of source IDs that have items
+        active_sources = [sid for sid in source_ids if items_by_source.get(sid)]
+        source_indices = {sid: 0 for sid in active_sources}
+        
+        # Round-robin until we have enough items or exhaust all sources
+        while len(selected_items) < limit and active_sources:
+            sources_exhausted = []
+            
+            for source_id in active_sources:
+                if len(selected_items) >= limit:
+                    break
+                    
+                source_items = items_by_source[source_id]
+                idx = source_indices[source_id]
+                
+                # Find next unique item from this source
+                while idx < len(source_items):
+                    item = source_items[idx]
+                    idx += 1
+                    
+                    # Check for duplicate headlines
+                    normalized = normalize_headline(item.title)
+                    if normalized not in seen_headlines:
+                        seen_headlines.add(normalized)
+                        selected_items.append(item)
+                        source_indices[source_id] = idx
+                        break
+                else:
+                    # Source exhausted
+                    sources_exhausted.append(source_id)
+                    source_indices[source_id] = idx
+            
+            # Remove exhausted sources
+            for sid in sources_exhausted:
+                active_sources.remove(sid)
+        
+        logger.info(f"Selected {len(selected_items)} items from {len(set(i.source_id for i in selected_items))} sources for briefing {briefing.id}")
+        
+        return selected_items
     
     def _generate_brief_title(self, briefing: Briefing, items: List[IngestedItem]) -> str:
         """Generate brief title"""
