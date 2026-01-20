@@ -17,11 +17,26 @@ depends_on = None
 
 
 def upgrade():
+    from sqlalchemy import inspect
+    from sqlalchemy.engine import Engine
+    
     # Add X/Twitter posting fields to Discussion model
     # These mirror the existing Bluesky fields for staggered social posting
     op.add_column('discussion', sa.Column('x_scheduled_at', sa.DateTime(), nullable=True))
     op.add_column('discussion', sa.Column('x_posted_at', sa.DateTime(), nullable=True))
     op.add_column('discussion', sa.Column('x_post_id', sa.String(length=100), nullable=True))
+    
+    # Also add Bluesky columns if they don't exist (may have been added directly)
+    connection = op.get_bind()
+    inspector = inspect(connection)
+    existing_columns = [col['name'] for col in inspector.get_columns('discussion')]
+    
+    if 'bluesky_scheduled_at' not in existing_columns:
+        op.add_column('discussion', sa.Column('bluesky_scheduled_at', sa.DateTime(), nullable=True))
+    if 'bluesky_posted_at' not in existing_columns:
+        op.add_column('discussion', sa.Column('bluesky_posted_at', sa.DateTime(), nullable=True))
+    if 'bluesky_post_uri' not in existing_columns:
+        op.add_column('discussion', sa.Column('bluesky_post_uri', sa.String(length=500), nullable=True))
     
     # Add indexes for efficient rate limit queries
     # These are queried frequently to count daily/monthly posts
