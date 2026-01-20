@@ -254,23 +254,6 @@
             </div>
         </div>
         {% endif %}
-        
-        <!-- Quick Actions for existing users -->
-        <div class="mt-8 p-6 bg-white rounded-xl border border-gray-200">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Want another briefing?</h3>
-                    <p class="text-sm text-gray-600">Browse our template marketplace or create a custom one.</p>
-                </div>
-                <a href="{{ url_for('briefing.marketplace') }}" 
-                   class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                    </svg>
-                    Browse Templates
-                </a>
-            </div>
-        </div>
         {% endif %}
     </div>
 </div>
