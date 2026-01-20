@@ -225,7 +225,7 @@ def create_input_source_from_news_source(news_source_id, user):
         owner_id=None,  # System sources have no owner
         name=news_source.name,
         type=news_source.source_type or 'rss',
-        config_json={'feed_url': news_source.feed_url},
+        config_json={'url': news_source.feed_url},
         enabled=news_source.is_active,
         status='ready',
         last_fetched_at=news_source.last_fetched_at
