@@ -844,7 +844,24 @@ def create_briefing():
                     flash(error, 'error')
                     return redirect(url_for('briefing.create_briefing'))
             
-            # Create briefing
+            # Get template defaults if template selected
+            template = None
+            template_tone = None
+            template_max_items = None
+            template_custom_prompt = None
+            template_guardrails = None
+            template_accent_color = None
+            
+            if template_id:
+                template = BriefTemplate.query.get(template_id)
+                if template:
+                    template_tone = template.default_tone
+                    template_guardrails = template.guardrails or {}
+                    template_max_items = template_guardrails.get('max_items', 10)
+                    template_custom_prompt = template.custom_prompt_prefix
+                    template_accent_color = template.default_accent_color or '#3B82F6'
+            
+            # Create briefing with template defaults applied
             briefing = Briefing(
                 owner_type=owner_type,
                 owner_id=owner_id,
@@ -860,7 +877,12 @@ def create_briefing():
                 status='active',
                 from_name=from_name if owner_type == 'org' else None,
                 from_email=from_email if (owner_type == 'org' and sending_domain_id) else None,
-                sending_domain_id=sending_domain_id if owner_type == 'org' else None
+                sending_domain_id=sending_domain_id if owner_type == 'org' else None,
+                tone=template_tone,
+                max_items=template_max_items,
+                custom_prompt=template_custom_prompt,
+                guardrails=template_guardrails if template_guardrails else None,
+                accent_color=template_accent_color
             )
 
             db.session.add(briefing)
@@ -869,12 +891,10 @@ def create_briefing():
             # Auto-populate sources from template if selected
             sources_added = 0
             sources_failed = 0
-            if template_id:
-                template = BriefTemplate.query.get(template_id)
-                if template and template.default_sources:
-                    sources_added, sources_failed, _ = populate_briefing_sources_from_template(
-                        briefing, template.default_sources, current_user
-                    )
+            if template and template.default_sources:
+                sources_added, sources_failed, _ = populate_briefing_sources_from_template(
+                    briefing, template.default_sources, current_user
+                )
 
             db.session.commit()
             
