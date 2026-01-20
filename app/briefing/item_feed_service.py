@@ -67,34 +67,30 @@ class ItemFeedService:
                 return []
             source_filter = IngestedItem.source_id.in_(allowed_sources)
         else:
-            # Get all sources allowed for this channel
-            source_query = InputSource.query.filter(
-                InputSource.enabled == True,
-                InputSource.allowed_channels.contains([channel])
-            )
+            # Get all enabled sources and filter in Python for JSONB compatibility
+            all_sources = InputSource.query.filter(InputSource.enabled == True).all()
+            
+            # Filter sources by channel permission (Python-side for JSONB array check)
+            filtered_sources = [s for s in all_sources if s.can_be_used_in(channel)]
             
             # Apply domain filters
             if channel == cls.CHANNEL_DAILY_BRIEF:
                 # Exclude sport/entertainment from daily brief
-                source_query = source_query.filter(
-                    or_(
-                        InputSource.content_domain.is_(None),
-                        ~InputSource.content_domain.in_(cls.DAILY_BRIEF_EXCLUDED_DOMAINS)
-                    )
-                )
+                filtered_sources = [
+                    s for s in filtered_sources 
+                    if s.content_domain not in cls.DAILY_BRIEF_EXCLUDED_DOMAINS
+                ]
             
             if content_domains:
-                source_query = source_query.filter(InputSource.content_domain.in_(content_domains))
+                filtered_sources = [s for s in filtered_sources if s.content_domain in content_domains]
             
             if exclude_domains:
-                source_query = source_query.filter(
-                    or_(
-                        InputSource.content_domain.is_(None),
-                        ~InputSource.content_domain.in_(exclude_domains)
-                    )
-                )
+                filtered_sources = [
+                    s for s in filtered_sources 
+                    if s.content_domain is None or s.content_domain not in exclude_domains
+                ]
             
-            allowed_source_ids = [s.id for s in source_query.all()]
+            allowed_source_ids = [s.id for s in filtered_sources]
             if not allowed_source_ids:
                 return []
             source_filter = IngestedItem.source_id.in_(allowed_source_ids)

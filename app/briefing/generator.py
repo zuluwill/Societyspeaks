@@ -192,16 +192,20 @@ class BriefingGenerator:
             limit=limit * 20
         )
         
-        # Build source credibility map (use political_leaning data if available)
+        # Build source credibility map using verified status and political leaning data
         source_credibility = {}
         for source_id in source_ids:
             source = InputSource.query.get(source_id)
             if source:
-                # Base credibility of 1.0, boost for verified/established sources
+                # Base credibility of 1.0
                 credibility = 1.0
-                if hasattr(source, 'political_leaning') and source.political_leaning:
-                    # Sources with political leaning data are verified/researched
+                # Admin-verified sources get a significant boost
+                if getattr(source, 'is_verified', False):
+                    credibility = 1.3
+                elif hasattr(source, 'political_leaning') and source.political_leaning is not None:
+                    # Sources with political leaning data are researched
                     credibility = 1.2
+                # Healthy sources get a small boost
                 if source.status == 'ready' and source.fetch_error_count == 0:
                     credibility += 0.1
                 source_credibility[source_id] = credibility
