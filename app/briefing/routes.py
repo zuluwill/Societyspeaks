@@ -283,6 +283,109 @@ def can_access_source(user, source):
     return False
 
 
+def populate_briefing_sources_from_template(briefing, default_sources, user):
+    """
+    Populate a briefing with sources from a template's default_sources list.
+    
+    This is a reusable utility that handles multiple source formats:
+    - Dict format: {'name': 'Source Name', 'type': 'rss'}
+    - Integer ID: InputSource or NewsSource ID
+    - String: NewsSource name
+    
+    Args:
+        briefing: Briefing instance (must be flushed/have an ID)
+        default_sources: List of source references from template
+        user: Current user for access control
+    
+    Returns:
+        tuple: (sources_added: int, sources_failed: int, missing_sources: list)
+    """
+    sources_added = 0
+    sources_failed = 0
+    missing_sources = []
+    
+    if not default_sources:
+        return sources_added, sources_failed, missing_sources
+    
+    if not isinstance(default_sources, list) or len(default_sources) == 0:
+        return sources_added, sources_failed, missing_sources
+    
+    for source_ref in default_sources:
+        try:
+            source = None
+            source_name_for_log = None
+
+            # Handle dict format {'name': 'Source Name', 'type': 'rss'}
+            if isinstance(source_ref, dict):
+                source_name = source_ref.get('name')
+                source_name_for_log = source_name
+                if source_name:
+                    # Try exact match first, then case-insensitive
+                    news_source = NewsSource.query.filter_by(name=source_name).first()
+                    if not news_source:
+                        news_source = NewsSource.query.filter(
+                            db.func.lower(NewsSource.name) == source_name.lower()
+                        ).first()
+                    if news_source:
+                        source = create_input_source_from_news_source(news_source.id, user)
+                    else:
+                        missing_sources.append(source_name)
+                        logger.warning(f"NewsSource not found for template source: {source_name}")
+
+            # Try as InputSource ID first
+            elif isinstance(source_ref, int):
+                source_name_for_log = f"ID:{source_ref}"
+                source = InputSource.query.get(source_ref)
+                # Also try as NewsSource ID (convert to InputSource)
+                if not source:
+                    news_source = NewsSource.query.get(source_ref)
+                    if news_source:
+                        source = create_input_source_from_news_source(news_source.id, user)
+
+            # Try as string (NewsSource name)
+            elif isinstance(source_ref, str):
+                source_name_for_log = source_ref
+                # Try exact match first, then case-insensitive
+                news_source = NewsSource.query.filter_by(name=source_ref).first()
+                if not news_source:
+                    news_source = NewsSource.query.filter(
+                        db.func.lower(NewsSource.name) == source_ref.lower()
+                    ).first()
+                if news_source:
+                    source = create_input_source_from_news_source(news_source.id, user)
+                else:
+                    missing_sources.append(source_ref)
+                    logger.warning(f"NewsSource not found for template source: {source_ref}")
+
+            if source and can_access_source(user, source):
+                # Check if already added (safety check for duplicates)
+                existing = BriefingSource.query.filter_by(
+                    briefing_id=briefing.id,
+                    source_id=source.id
+                ).first()
+
+                if not existing:
+                    briefing_source = BriefingSource(
+                        briefing_id=briefing.id,
+                        source_id=source.id
+                    )
+                    db.session.add(briefing_source)
+                    sources_added += 1
+        except Exception as e:
+            logger.warning(f"Failed to add source from template: {source_ref}: {e}")
+            sources_failed += 1
+            continue
+    
+    # Log summary for monitoring stale template data
+    if missing_sources:
+        logger.warning(
+            f"Template source population: {len(missing_sources)} sources not found in database. "
+            f"Missing: {missing_sources[:5]}{'...' if len(missing_sources) > 5 else ''}"
+        )
+    
+    return sources_added, sources_failed, missing_sources
+
+
 def briefing_owner_required(f):
     """
     Decorator that checks if current user owns the briefing.
@@ -581,68 +684,10 @@ def use_template(template_id):
             db.session.add(briefing)
             db.session.flush()  # Get briefing.id for source linking
 
-            # Auto-populate sources from template
-            sources_added = 0
-            sources_failed = 0
-            if template.default_sources:
-                if isinstance(template.default_sources, list) and len(template.default_sources) > 0:
-                    for source_ref in template.default_sources:
-                        try:
-                            source = None
-
-                            # Handle dict format {'name': 'Source Name', 'type': 'rss'}
-                            if isinstance(source_ref, dict):
-                                source_name = source_ref.get('name')
-                                if source_name:
-                                    # Try exact match first, then case-insensitive
-                                    news_source = NewsSource.query.filter_by(name=source_name).first()
-                                    if not news_source:
-                                        news_source = NewsSource.query.filter(
-                                            db.func.lower(NewsSource.name) == source_name.lower()
-                                        ).first()
-                                    if news_source:
-                                        source = create_input_source_from_news_source(news_source.id, current_user)
-                                    else:
-                                        logger.debug(f"NewsSource not found for name: {source_name}")
-
-                            # Try as InputSource ID first
-                            elif isinstance(source_ref, int):
-                                source = InputSource.query.get(source_ref)
-                                # Also try as NewsSource ID (convert to InputSource)
-                                if not source:
-                                    news_source = NewsSource.query.get(source_ref)
-                                    if news_source:
-                                        source = create_input_source_from_news_source(news_source.id, current_user)
-
-                            # Try as string (NewsSource name)
-                            elif isinstance(source_ref, str):
-                                # Try exact match first, then case-insensitive
-                                news_source = NewsSource.query.filter_by(name=source_ref).first()
-                                if not news_source:
-                                    news_source = NewsSource.query.filter(
-                                        db.func.lower(NewsSource.name) == source_ref.lower()
-                                    ).first()
-                                if news_source:
-                                    source = create_input_source_from_news_source(news_source.id, current_user)
-
-                            if source and can_access_source(current_user, source):
-                                # Check if already added (safety check)
-                                existing = BriefingSource.query.filter_by(
-                                    briefing_id=briefing.id,
-                                    source_id=source.id
-                                ).first()
-
-                                if not existing:
-                                    briefing_source = BriefingSource(
-                                        briefing_id=briefing.id,
-                                        source_id=source.id
-                                    )
-                                    db.session.add(briefing_source)
-                                    sources_added += 1
-                        except Exception as e:
-                            logger.warning(f"Failed to add source from template: {source_ref}: {e}")
-                            sources_failed += 1
-                            continue
+            # Auto-populate sources from template using utility function
+            sources_added, sources_failed, _ = populate_briefing_sources_from_template(
+                briefing, template.default_sources, current_user
+            )
 
             # Increment template usage count
             template.times_used = (template.times_used or 0) + 1
@@ -827,66 +872,9 @@ def create_briefing():
             if template_id:
                 template = BriefTemplate.query.get(template_id)
                 if template and template.default_sources:
-                    # default_sources can be NewsSource IDs or InputSource IDs
-                    # Handle empty list gracefully
-                    if isinstance(template.default_sources, list) and len(template.default_sources) > 0:
-                        for source_ref in template.default_sources:
-                            try:
-                                source = None
-                                
-                                # Handle dict format {'name': 'Source Name', 'type': 'rss'}
-                                if isinstance(source_ref, dict):
-                                    source_name = source_ref.get('name')
-                                    if source_name:
-                                        # Try exact match first, then case-insensitive
-                                        news_source = NewsSource.query.filter_by(name=source_name).first()
-                                        if not news_source:
-                                            news_source = NewsSource.query.filter(
-                                                db.func.lower(NewsSource.name) == source_name.lower()
-                                            ).first()
-                                        if news_source:
-                                            source = create_input_source_from_news_source(news_source.id, current_user)
-                                        else:
-                                            logger.debug(f"NewsSource not found for name: {source_name}")
-                                
-                                # Try as InputSource ID first
-                                elif isinstance(source_ref, int):
-                                    source = InputSource.query.get(source_ref)
-                                    # Also try as NewsSource ID (convert to InputSource)
-                                    if not source:
-                                        news_source = NewsSource.query.get(source_ref)
-                                        if news_source:
-                                            source = create_input_source_from_news_source(news_source.id, current_user)
-                                
-                                # Try as string (NewsSource name)
-                                elif isinstance(source_ref, str):
-                                    # Try exact match first, then case-insensitive
-                                    news_source = NewsSource.query.filter_by(name=source_ref).first()
-                                    if not news_source:
-                                        news_source = NewsSource.query.filter(
-                                            db.func.lower(NewsSource.name) == source_ref.lower()
-                                        ).first()
-                                    if news_source:
-                                        source = create_input_source_from_news_source(news_source.id, current_user)
-                                
-                                if source and can_access_source(current_user, source):
-                                    # Check if already added (shouldn't be, but safety check)
-                                    existing = BriefingSource.query.filter_by(
-                                        briefing_id=briefing.id,
-                                        source_id=source.id
-                                    ).first()
-                                    
-                                    if not existing:
-                                        briefing_source = BriefingSource(
-                                            briefing_id=briefing.id,
-                                            source_id=source.id
-                                        )
-                                        db.session.add(briefing_source)
-                                        sources_added += 1
-                            except Exception as e:
-                                logger.warning(f"Failed to add source from template: {source_ref}: {e}")
-                                sources_failed += 1
-                                continue  # Continue with other sources
+                    sources_added, sources_failed, _ = populate_briefing_sources_from_template(
+                        briefing, template.default_sources, current_user
+                    )
 
             db.session.commit()
             
