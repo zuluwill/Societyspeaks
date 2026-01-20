@@ -34,6 +34,23 @@ class ItemFeedService:
     DAILY_BRIEF_EXCLUDED_DOMAINS = {'sport', 'entertainment', 'crypto', 'gaming'}
     
     @classmethod
+    def _source_passes_daily_brief_filter(cls, source: InputSource) -> bool:
+        """
+        Check if a source passes Daily Brief editorial requirements.
+        Must be verified AND have an allowed content domain.
+        """
+        # Must be verified
+        if not getattr(source, 'is_verified', False):
+            return False
+        # Must have a defined domain (no NULL domains in Daily Brief)
+        if source.content_domain is None:
+            return False
+        # Domain must not be excluded
+        if source.content_domain in cls.DAILY_BRIEF_EXCLUDED_DOMAINS:
+            return False
+        return True
+    
+    @classmethod
     def get_items_for_channel(
         cls,
         channel: str,
@@ -75,12 +92,7 @@ class ItemFeedService:
             
             # Apply stricter requirements for daily_brief channel
             if channel == cls.CHANNEL_DAILY_BRIEF:
-                # Must be verified and not in excluded domains
-                filtered_sources = [
-                    s for s in filtered_sources 
-                    if getattr(s, 'is_verified', False) and 
-                       s.content_domain not in cls.DAILY_BRIEF_EXCLUDED_DOMAINS
-                ]
+                filtered_sources = [s for s in filtered_sources if cls._source_passes_daily_brief_filter(s)]
             
             if content_domains:
                 filtered_sources = [s for s in filtered_sources if s.content_domain in content_domains]
@@ -190,11 +202,7 @@ class ItemFeedService:
             
             # Enforce stricter requirements for daily_brief channel
             if channel == cls.CHANNEL_DAILY_BRIEF:
-                # Must be verified source
-                if not getattr(s, 'is_verified', False):
-                    continue
-                # Exclude sport/entertainment/crypto/gaming domains
-                if s.content_domain in cls.DAILY_BRIEF_EXCLUDED_DOMAINS:
+                if not cls._source_passes_daily_brief_filter(s):
                     continue
             
             allowed.append(s.id)

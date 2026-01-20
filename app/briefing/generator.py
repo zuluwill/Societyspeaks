@@ -193,9 +193,11 @@ class BriefingGenerator:
         )
         
         # Build source credibility map using verified status and political leaning data
+        # Batch load all sources to avoid N+1 queries
+        sources_map = {s.id: s for s in InputSource.query.filter(InputSource.id.in_(source_ids)).all()}
         source_credibility = {}
         for source_id in source_ids:
-            source = InputSource.query.get(source_id)
+            source = sources_map.get(source_id)
             if source:
                 # Base credibility of 1.0
                 credibility = 1.0
