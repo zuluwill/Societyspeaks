@@ -139,9 +139,10 @@ class BriefingGenerator:
     
     def _select_items_for_briefing(self, briefing: Briefing, limit: int = None) -> List[IngestedItem]:
         """
-        Select items from briefing's sources using a two-phase approach:
-        1. Global ranking: Score all items based on topic preferences, include keywords, and source priority
-        2. Fair selection: Ensure source diversity while respecting global scores
+        Select items from briefing's sources using an advanced multi-factor scoring approach:
+        1. Global ranking with recency decay, topic preferences, keywords, source priority, and credibility
+        2. Fair selection with source diversity and discovery quota
+        3. Empty results fallback with graceful degradation
         
         Args:
             briefing: Briefing configuration
@@ -153,6 +154,7 @@ class BriefingGenerator:
         from datetime import timedelta
         from collections import defaultdict
         import re
+        import math
         
         # Get all sources for this briefing with their priorities
         source_priorities = {bs.source_id: getattr(bs, 'priority', 1) or 1 for bs in briefing.sources}
@@ -172,8 +174,13 @@ class BriefingGenerator:
         # Get topic preferences (topic -> weight 1-3)
         topic_preferences = briefing.topic_preferences or {}
         
+        # Discovery quota: reserve slots for diverse content outside preferences (prevent filter bubbles)
+        discovery_quota = max(1, limit // 5)  # 20% of items for discovery
+        preference_quota = limit - discovery_quota
+        
         # Get recent items from these sources (last 7 days)
         cutoff = datetime.utcnow() - timedelta(days=7)
+        now = datetime.utcnow()
         
         all_items = IngestedItem.query.filter(
             IngestedItem.source_id.in_(source_ids),
@@ -181,7 +188,23 @@ class BriefingGenerator:
         ).order_by(
             IngestedItem.published_at.desc().nullslast(),
             IngestedItem.fetched_at.desc()
-        ).limit(limit * 15).all()
+        ).limit(limit * 20).all()
+        
+        # Build source credibility map (use political_leaning data if available)
+        source_credibility = {}
+        for source_id in source_ids:
+            source = InputSource.query.get(source_id)
+            if source:
+                # Base credibility of 1.0, boost for verified/established sources
+                credibility = 1.0
+                if hasattr(source, 'political_leaning') and source.political_leaning:
+                    # Sources with political leaning data are verified/researched
+                    credibility = 1.2
+                if source.status == 'ready' and source.fetch_error_count == 0:
+                    credibility += 0.1
+                source_credibility[source_id] = credibility
+            else:
+                source_credibility[source_id] = 1.0
         
         def get_text(item: IngestedItem) -> str:
             """Get searchable text from item"""
@@ -196,19 +219,44 @@ class BriefingGenerator:
         def matches_include(text: str) -> bool:
             """Check if item matches include keywords"""
             if not include_keywords:
-                return False  # No match bonus when no include keywords
+                return False
             return any(kw in text for kw in include_keywords)
+        
+        def matches_any_topic(text: str) -> bool:
+            """Check if item matches any topic preference"""
+            if not topic_preferences:
+                return False
+            return any(topic.lower() in text for topic in topic_preferences)
+        
+        def calculate_recency_score(item: IngestedItem) -> float:
+            """
+            Calculate recency decay score (exponential decay with 48-hour half-life).
+            Newer articles get higher scores.
+            - Published today: ~3.0
+            - Published 2 days ago: ~1.5 (half)
+            - Published 4 days ago: ~0.75 (quarter)
+            - Published 7 days ago: ~0.26
+            """
+            pub_time = item.published_at or item.fetched_at or now
+            hours_old = max(0, (now - pub_time).total_seconds() / 3600)
+            # Exponential decay with exact 48-hour half-life: decay = 0.5^(hours/48) = exp(-ln(2) * hours/48)
+            decay = math.exp(-math.log(2) * hours_old / 48)
+            return 3.0 * decay
         
         def calculate_score(item: IngestedItem, text: str) -> float:
             """
             Calculate global relevance score for an item.
             Score components:
-            - Base: 1.0
+            - Recency: 0-3 (exponential decay)
             - Include keyword match: +5.0 (significant boost)
             - Topic preference match: +weight (1-3 per topic)
             - Source priority: +priority (1-3)
+            - Source credibility: multiplier (0.8-1.3)
             """
-            score = 1.0
+            score = 0.0
+            
+            # Recency score (favor fresh content)
+            score += calculate_recency_score(item)
             
             # Boost for matching include keywords
             if matches_include(text):
@@ -223,10 +271,23 @@ class BriefingGenerator:
             source_priority = source_priorities.get(item.source_id, 1)
             score += float(source_priority)
             
+            # Apply source credibility multiplier
+            credibility = source_credibility.get(item.source_id, 1.0)
+            score *= credibility
+            
             return score
         
-        # Phase 1: Score and filter all items
-        scored_items = []
+        def normalize_headline(title: str) -> str:
+            """Normalize headline for dedup comparison"""
+            normalized = re.sub(r'[^\w\s]', '', title.lower())
+            words = [w for w in normalized.split() if len(w) > 3][:5]
+            return ' '.join(sorted(words))
+        
+        # Phase 1: Score and categorize all items
+        preference_items = []  # Items matching user preferences
+        discovery_items = []   # Items for discovery (don't match preferences but not excluded)
+        all_unfiltered = []    # Fallback pool (everything except excluded)
+        
         for item in all_items:
             text = get_text(item)
             
@@ -235,58 +296,85 @@ class BriefingGenerator:
                 continue
             
             score = calculate_score(item, text)
-            scored_items.append((item, score))
+            all_unfiltered.append((item, score))
+            
+            # Categorize: preference match vs discovery
+            if matches_include(text) or matches_any_topic(text):
+                preference_items.append((item, score))
+            else:
+                discovery_items.append((item, score))
         
-        # Sort by score (highest first), then by recency
-        scored_items.sort(key=lambda x: (x[1], x[0].published_at or datetime.min), reverse=True)
+        # Sort each pool by score
+        preference_items.sort(key=lambda x: x[1], reverse=True)
+        discovery_items.sort(key=lambda x: x[1], reverse=True)
+        all_unfiltered.sort(key=lambda x: x[1], reverse=True)
         
-        # Phase 2: Fair selection with source diversity
+        # Phase 2: Fair selection with diversity constraints
         selected_items = []
         seen_headlines = set()
         source_counts = defaultdict(int)
         max_per_source = max(2, (limit // len(source_ids)) + 1) if source_ids else limit
         
-        def normalize_headline(title: str) -> str:
-            """Normalize headline for dedup comparison"""
-            normalized = re.sub(r'[^\w\s]', '', title.lower())
-            words = [w for w in normalized.split() if len(w) > 3][:5]
-            return ' '.join(sorted(words))
-        
-        # First pass: select top-scored items with diversity constraints
-        for item, score in scored_items:
-            if len(selected_items) >= limit:
-                break
-            
-            # Check for duplicate headlines
-            normalized = normalize_headline(item.title)
-            if normalized in seen_headlines:
-                continue
-            
-            # Enforce source diversity (soft limit per source in first pass)
-            if source_counts[item.source_id] >= max_per_source:
-                continue
-            
-            seen_headlines.add(normalized)
-            selected_items.append(item)
-            source_counts[item.source_id] += 1
-        
-        # Second pass: if we need more items, relax source limits
-        if len(selected_items) < limit:
-            for item, score in scored_items:
-                if len(selected_items) >= limit:
+        def select_from_pool(pool: list, max_items: int, relax_source_limit: bool = False) -> int:
+            """Select items from a pool with diversity constraints. Returns count added."""
+            added = 0
+            for item, score in pool:
+                if len(selected_items) >= limit or added >= max_items:
                     break
                 
                 normalized = normalize_headline(item.title)
                 if normalized in seen_headlines:
                     continue
                 
+                # Enforce source diversity unless relaxed
+                if not relax_source_limit and source_counts[item.source_id] >= max_per_source:
+                    continue
+                
                 seen_headlines.add(normalized)
+                # Attach score to item for later storage
+                item._selection_score = score
                 selected_items.append(item)
+                source_counts[item.source_id] += 1
+                added += 1
+            return added
+        
+        # First: select from preference pool
+        preference_selected = select_from_pool(preference_items, preference_quota)
+        
+        # Second: fill discovery quota from non-preference items
+        discovery_selected = select_from_pool(discovery_items, discovery_quota)
+        
+        # Third: if we still need more, relax constraints and fill from all items
+        if len(selected_items) < limit:
+            remaining = limit - len(selected_items)
+            select_from_pool(all_unfiltered, remaining, relax_source_limit=True)
+        
+        # Empty results fallback: if filters are too aggressive, provide feedback
+        filters_applied = bool(include_keywords or exclude_keywords or topic_preferences)
+        if len(selected_items) == 0 and filters_applied and all_items:
+            logger.warning(
+                f"Briefing {briefing.id}: Filters too restrictive, falling back to unfiltered selection"
+            )
+            # Fallback: ignore all filters and just score by recency + source priority
+            fallback_items = []
+            for item in all_items:
+                score = calculate_recency_score(item) + source_priorities.get(item.source_id, 1)
+                fallback_items.append((item, score))
+            fallback_items.sort(key=lambda x: x[1], reverse=True)
+            
+            for item, score in fallback_items[:limit]:
+                normalized = normalize_headline(item.title)
+                if normalized not in seen_headlines:
+                    seen_headlines.add(normalized)
+                    item._selection_score = score
+                    selected_items.append(item)
+            
+            # Mark that fallback was used (can be shown to user)
+            briefing._selection_fallback_used = True
         
         logger.info(
-            f"Selected {len(selected_items)} items from {len(set(i.source_id for i in selected_items))} sources "
-            f"for briefing {briefing.id} (topic_prefs: {len(topic_preferences)}, "
-            f"include_kw: {len(include_keywords)}, exclude_kw: {len(exclude_keywords)})"
+            f"Selected {len(selected_items)} items ({preference_selected} pref, {discovery_selected} discovery) "
+            f"from {len(set(i.source_id for i in selected_items))} sources for briefing {briefing.id}"
         )
         
         return selected_items
@@ -352,7 +440,9 @@ class BriefingGenerator:
             content_markdown=enhanced_markdown,
             content_html=llm_content.get('html', ''),
             source_name=source_name,
-            source_url=ingested_item.url  # Link to original article
+            source_url=ingested_item.url,  # Link to original article
+            topic_category=category,  # Store category for analytics and diversity tracking
+            selection_score=getattr(ingested_item, '_selection_score', None)  # Score at time of selection
         )
         
         return run_item

@@ -3096,6 +3096,16 @@ class BriefRunItem(db.Model):
     content_html = db.Column(db.Text)
     source_name = db.Column(db.String(200), nullable=True)  # Denormalized for display
     source_url = db.Column(db.String(1000), nullable=True)  # Link to original article
+    
+    # Content metadata for scoring and diversity
+    topic_category = db.Column(db.String(100), nullable=True)  # Category/topic of the item
+    sentiment_score = db.Column(db.Float, nullable=True)  # -1.0 to 1.0 (negative to positive)
+    
+    # Engagement tracking (denormalized for faster queries)
+    click_count = db.Column(db.Integer, default=0)  # Number of clicks on this item
+    
+    # Selection metadata (for learning/debugging)
+    selection_score = db.Column(db.Float, nullable=True)  # Score at time of selection
 
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
