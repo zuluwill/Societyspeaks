@@ -469,7 +469,7 @@ Respond in JSON format:
         lines.append("## Today's Stories")
         lines.append("")
         
-        for item in brief_run.items.order_by(BriefRunItem.position):
+        for item in sorted(brief_run.items, key=lambda x: x.position or 0):
             lines.append(f"### {item.headline}")
             if item.summary_bullets:
                 for bullet in item.summary_bullets:
