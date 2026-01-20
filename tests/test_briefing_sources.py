@@ -194,3 +194,258 @@ class TestAccessControl:
         source_code = inspect.getsource(populate_briefing_sources_from_template)
         
         assert "can_access_source" in source_code
+
+
+class TestBehavioralSourcePopulation:
+    """Behavioral tests using mocks to exercise function logic."""
+
+    def test_missing_news_source_tracked_in_results(self, app_context):
+        """When NewsSource not found, it should be added to missing list."""
+        from unittest.mock import Mock, patch
+        from app.briefing.routes import populate_briefing_sources_from_template
+        
+        mock_briefing = Mock()
+        mock_briefing.id = 1
+        mock_user = Mock()
+        
+        with patch('app.briefing.routes.NewsSource') as mock_ns_class:
+            mock_ns_class.query.filter_by.return_value.first.return_value = None
+            mock_ns_class.query.filter.return_value.first.return_value = None
+            
+            sources = [{'name': 'NonExistent Source', 'type': 'rss'}]
+            
+            added, failed, missing = populate_briefing_sources_from_template(
+                mock_briefing, sources, mock_user
+            )
+            
+            assert added == 0
+            assert failed == 0
+            assert 'NonExistent Source' in missing
+
+    def test_access_denied_handled(self, app_context):
+        """Function should check access via can_access_source."""
+        import inspect
+        from app.briefing.routes import populate_briefing_sources_from_template
+        
+        source_code = inspect.getsource(populate_briefing_sources_from_template)
+        
+        assert "can_access_source(user, source)" in source_code
+        assert "sources_failed += 1" in source_code
+
+    def test_duplicate_source_not_readded(self, app_context):
+        """When BriefingSource already exists, it should not be added again."""
+        from unittest.mock import Mock, patch
+        from app.briefing.routes import populate_briefing_sources_from_template
+        
+        mock_briefing = Mock()
+        mock_briefing.id = 1
+        mock_user = Mock()
+        
+        with patch('app.briefing.routes.NewsSource') as mock_ns_class, \
+             patch('app.briefing.routes.BriefingSource') as mock_bs_class, \
+             patch('app.briefing.routes.create_input_source_from_news_source') as mock_create, \
+             patch('app.briefing.routes.can_access_source') as mock_access, \
+             patch('app.briefing.routes.db'):
+            
+            mock_ns = Mock()
+            mock_ns.id = 10
+            mock_ns_class.query.filter_by.return_value.first.return_value = mock_ns
+            
+            mock_input = Mock()
+            mock_input.id = 100
+            mock_create.return_value = mock_input
+            
+            mock_access.return_value = True
+            
+            existing_bs = Mock()
+            mock_bs_class.query.filter_by.return_value.first.return_value = existing_bs
+            
+            sources = [{'name': 'Duplicate Source', 'type': 'rss'}]
+            
+            added, failed, missing = populate_briefing_sources_from_template(
+                mock_briefing, sources, mock_user
+            )
+            
+            assert added == 0
+            mock_bs_class.query.filter_by.assert_called()
+
+    def test_successful_source_addition(self, app_context):
+        """When source is found and accessible, it should be added."""
+        from unittest.mock import Mock, patch
+        from app.briefing.routes import populate_briefing_sources_from_template
+        
+        mock_briefing = Mock()
+        mock_briefing.id = 1
+        mock_user = Mock()
+        
+        with patch('app.briefing.routes.NewsSource') as mock_ns_class, \
+             patch('app.briefing.routes.BriefingSource') as mock_bs_class, \
+             patch('app.briefing.routes.create_input_source_from_news_source') as mock_create, \
+             patch('app.briefing.routes.can_access_source') as mock_access, \
+             patch('app.briefing.routes.db') as mock_db:
+            
+            mock_ns = Mock()
+            mock_ns.id = 10
+            mock_ns_class.query.filter_by.return_value.first.return_value = mock_ns
+            
+            mock_input = Mock()
+            mock_input.id = 100
+            mock_create.return_value = mock_input
+            
+            mock_access.return_value = True
+            mock_bs_class.query.filter_by.return_value.first.return_value = None
+            
+            sources = [{'name': 'Valid Source', 'type': 'rss'}]
+            
+            added, failed, missing = populate_briefing_sources_from_template(
+                mock_briefing, sources, mock_user
+            )
+            
+            assert added == 1
+            assert failed == 0
+            assert missing == []
+            mock_db.session.add.assert_called()
+
+    def test_case_insensitive_fallback_used(self, app_context):
+        """When exact match fails, case-insensitive lookup should be tried."""
+        from unittest.mock import Mock, patch
+        from app.briefing.routes import populate_briefing_sources_from_template
+        
+        mock_briefing = Mock()
+        mock_briefing.id = 1
+        mock_user = Mock()
+        
+        with patch('app.briefing.routes.NewsSource') as mock_ns_class, \
+             patch('app.briefing.routes.BriefingSource') as mock_bs_class, \
+             patch('app.briefing.routes.create_input_source_from_news_source') as mock_create, \
+             patch('app.briefing.routes.can_access_source') as mock_access, \
+             patch('app.briefing.routes.db') as mock_db:
+            
+            mock_ns_class.query.filter_by.return_value.first.return_value = None
+            
+            mock_ns = Mock()
+            mock_ns.id = 10
+            mock_ns_class.query.filter.return_value.first.return_value = mock_ns
+            
+            mock_input = Mock()
+            mock_input.id = 100
+            mock_create.return_value = mock_input
+            
+            mock_access.return_value = True
+            mock_bs_class.query.filter_by.return_value.first.return_value = None
+            
+            sources = [{'name': 'BBC NEWS', 'type': 'rss'}]
+            
+            added, failed, missing = populate_briefing_sources_from_template(
+                mock_briefing, sources, mock_user
+            )
+            
+            assert added == 1
+            mock_ns_class.query.filter.assert_called()
+
+
+class TestLoggingVerification:
+    """Tests that verify logging actually fires."""
+
+    def test_missing_source_logs_warning(self, app_context, caplog):
+        """When source is not found, a warning should be logged."""
+        import logging
+        from unittest.mock import Mock, patch
+        from app.briefing.routes import populate_briefing_sources_from_template
+        
+        mock_briefing = Mock()
+        mock_briefing.id = 1
+        mock_user = Mock()
+        
+        with patch('app.briefing.routes.NewsSource') as mock_ns_class:
+            mock_ns_class.query.filter_by.return_value.first.return_value = None
+            mock_ns_class.query.filter.return_value.first.return_value = None
+            
+            sources = [{'name': 'Missing Source', 'type': 'rss'}]
+            
+            with caplog.at_level(logging.WARNING):
+                added, failed, missing = populate_briefing_sources_from_template(
+                    mock_briefing, sources, mock_user
+                )
+            
+            assert 'Missing Source' in missing
+            assert any('NewsSource not found' in record.message for record in caplog.records)
+
+    def test_missing_sources_summary_logged(self, app_context, caplog):
+        """Summary warning should be logged when sources are missing."""
+        import logging
+        from unittest.mock import Mock, patch
+        from app.briefing.routes import populate_briefing_sources_from_template
+        
+        mock_briefing = Mock()
+        mock_briefing.id = 1
+        mock_user = Mock()
+        
+        with patch('app.briefing.routes.NewsSource') as mock_ns_class:
+            mock_ns_class.query.filter_by.return_value.first.return_value = None
+            mock_ns_class.query.filter.return_value.first.return_value = None
+            
+            sources = [
+                {'name': 'Source 1', 'type': 'rss'},
+                {'name': 'Source 2', 'type': 'rss'}
+            ]
+            
+            with caplog.at_level(logging.WARNING):
+                added, failed, missing = populate_briefing_sources_from_template(
+                    mock_briefing, sources, mock_user
+                )
+            
+            assert len(missing) == 2
+            assert any('sources not found in database' in record.message for record in caplog.records)
+
+
+class TestEdgeCasesBehavioral:
+    """Behavioral tests for edge cases."""
+
+    def test_multiple_sources_mixed_results(self, app_context):
+        """Mix of found and missing sources should be handled correctly."""
+        from unittest.mock import Mock, patch
+        from app.briefing.routes import populate_briefing_sources_from_template
+        
+        mock_briefing = Mock()
+        mock_briefing.id = 1
+        mock_user = Mock()
+        
+        with patch('app.briefing.routes.NewsSource') as mock_ns_class, \
+             patch('app.briefing.routes.BriefingSource') as mock_bs_class, \
+             patch('app.briefing.routes.create_input_source_from_news_source') as mock_create, \
+             patch('app.briefing.routes.can_access_source') as mock_access, \
+             patch('app.briefing.routes.db') as mock_db:
+            
+            mock_ns = Mock()
+            mock_ns.id = 10
+            
+            def filter_by_side_effect(**kwargs):
+                result = Mock()
+                if kwargs.get('name') == 'Found Source':
+                    result.first.return_value = mock_ns
+                else:
+                    result.first.return_value = None
+                return result
+            
+            mock_ns_class.query.filter_by.side_effect = filter_by_side_effect
+            mock_ns_class.query.filter.return_value.first.return_value = None
+            
+            mock_input = Mock()
+            mock_input.id = 100
+            mock_create.return_value = mock_input
+            
+            mock_access.return_value = True
+            mock_bs_class.query.filter_by.return_value.first.return_value = None
+            
+            sources = [
+                {'name': 'Found Source', 'type': 'rss'},
+                {'name': 'Missing Source', 'type': 'rss'}
+            ]
+            
+            added, failed, missing = populate_briefing_sources_from_template(
+                mock_briefing, sources, mock_user
+            )
+            
+            assert added == 1
+            assert 'Missing Source' in missing
