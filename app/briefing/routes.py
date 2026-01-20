@@ -232,7 +232,7 @@ def create_input_source_from_news_source(news_source_id, user):
     )
     
     db.session.add(input_source)
-    db.session.commit()
+    db.session.flush()  # Use flush instead of commit to keep transaction atomic
     
     return input_source
 
@@ -594,9 +594,16 @@ def use_template(template_id):
                             if isinstance(source_ref, dict):
                                 source_name = source_ref.get('name')
                                 if source_name:
+                                    # Try exact match first, then case-insensitive
                                     news_source = NewsSource.query.filter_by(name=source_name).first()
+                                    if not news_source:
+                                        news_source = NewsSource.query.filter(
+                                            db.func.lower(NewsSource.name) == source_name.lower()
+                                        ).first()
                                     if news_source:
                                         source = create_input_source_from_news_source(news_source.id, current_user)
+                                    else:
+                                        logger.debug(f"NewsSource not found for name: {source_name}")
 
                             # Try as InputSource ID first
                             elif isinstance(source_ref, int):
@@ -609,7 +616,12 @@ def use_template(template_id):
 
                             # Try as string (NewsSource name)
                             elif isinstance(source_ref, str):
+                                # Try exact match first, then case-insensitive
                                 news_source = NewsSource.query.filter_by(name=source_ref).first()
+                                if not news_source:
+                                    news_source = NewsSource.query.filter(
+                                        db.func.lower(NewsSource.name) == source_ref.lower()
+                                    ).first()
                                 if news_source:
                                     source = create_input_source_from_news_source(news_source.id, current_user)
 
@@ -826,9 +838,16 @@ def create_briefing():
                                 if isinstance(source_ref, dict):
                                     source_name = source_ref.get('name')
                                     if source_name:
+                                        # Try exact match first, then case-insensitive
                                         news_source = NewsSource.query.filter_by(name=source_name).first()
+                                        if not news_source:
+                                            news_source = NewsSource.query.filter(
+                                                db.func.lower(NewsSource.name) == source_name.lower()
+                                            ).first()
                                         if news_source:
                                             source = create_input_source_from_news_source(news_source.id, current_user)
+                                        else:
+                                            logger.debug(f"NewsSource not found for name: {source_name}")
                                 
                                 # Try as InputSource ID first
                                 elif isinstance(source_ref, int):
@@ -841,7 +860,12 @@ def create_briefing():
                                 
                                 # Try as string (NewsSource name)
                                 elif isinstance(source_ref, str):
+                                    # Try exact match first, then case-insensitive
                                     news_source = NewsSource.query.filter_by(name=source_ref).first()
+                                    if not news_source:
+                                        news_source = NewsSource.query.filter(
+                                            db.func.lower(NewsSource.name) == source_ref.lower()
+                                        ).first()
                                     if news_source:
                                         source = create_input_source_from_news_source(news_source.id, current_user)
                                 
