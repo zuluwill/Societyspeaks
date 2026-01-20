@@ -73,12 +73,13 @@ class ItemFeedService:
             # Filter sources by channel permission (Python-side for JSONB array check)
             filtered_sources = [s for s in all_sources if s.can_be_used_in(channel)]
             
-            # Apply domain filters
+            # Apply stricter requirements for daily_brief channel
             if channel == cls.CHANNEL_DAILY_BRIEF:
-                # Exclude sport/entertainment from daily brief
+                # Must be verified and not in excluded domains
                 filtered_sources = [
                     s for s in filtered_sources 
-                    if s.content_domain not in cls.DAILY_BRIEF_EXCLUDED_DOMAINS
+                    if getattr(s, 'is_verified', False) and 
+                       s.content_domain not in cls.DAILY_BRIEF_EXCLUDED_DOMAINS
                 ]
             
             if content_domains:
@@ -167,6 +168,7 @@ class ItemFeedService:
     ) -> List[int]:
         """
         Filter source IDs to only those allowed in the given channel.
+        Enforces both channel permissions AND domain restrictions.
         
         Args:
             channel: Channel name
@@ -180,7 +182,24 @@ class ItemFeedService:
             InputSource.enabled == True
         ).all()
         
-        return [s.id for s in sources if s.can_be_used_in(channel)]
+        allowed = []
+        for s in sources:
+            # Check channel permission
+            if not s.can_be_used_in(channel):
+                continue
+            
+            # Enforce stricter requirements for daily_brief channel
+            if channel == cls.CHANNEL_DAILY_BRIEF:
+                # Must be verified source
+                if not getattr(s, 'is_verified', False):
+                    continue
+                # Exclude sport/entertainment/crypto/gaming domains
+                if s.content_domain in cls.DAILY_BRIEF_EXCLUDED_DOMAINS:
+                    continue
+            
+            allowed.append(s.id)
+        
+        return allowed
     
     @classmethod
     def get_source_health(cls, source_id: int) -> dict:
