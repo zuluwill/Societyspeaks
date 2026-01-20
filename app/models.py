@@ -2795,6 +2795,13 @@ class InputSource(db.Model):
     last_fetched_at = db.Column(db.DateTime, nullable=True)
     fetch_error_count = db.Column(db.Integer, default=0)
 
+    # Provenance & Editorial Control (unified ingestion architecture)
+    origin_type = db.Column(db.String(20), default='user')  # 'admin' | 'template' | 'user'
+    content_domain = db.Column(db.String(50), nullable=True)  # 'news' | 'sport' | 'tech' | 'finance' | 'culture' | 'science' | 'politics'
+    allowed_channels = db.Column(db.JSON, default=lambda: ['user_briefings'])  # ['daily_brief', 'trending', 'user_briefings']
+    political_leaning = db.Column(db.Float, nullable=True)  # -1.0 (left) to 1.0 (right), null = unknown
+    is_verified = db.Column(db.Boolean, default=False)  # Admin-verified quality source
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -2812,8 +2819,18 @@ class InputSource(db.Model):
             'config_json': self.config_json,
             'status': self.status,
             'enabled': self.enabled,
+            'origin_type': self.origin_type,
+            'content_domain': self.content_domain,
+            'allowed_channels': self.allowed_channels,
+            'is_verified': self.is_verified,
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }
+
+    def can_be_used_in(self, channel: str) -> bool:
+        """Check if this source is allowed in a specific channel."""
+        if not self.allowed_channels:
+            return channel == 'user_briefings'
+        return channel in self.allowed_channels
 
     def __repr__(self):
         return f'<InputSource {self.name} ({self.type})>'
