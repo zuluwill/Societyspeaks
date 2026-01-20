@@ -524,7 +524,7 @@ Respond in JSON format:
         
         # Build stories HTML with premium newsletter styling
         stories_html = ''
-        for idx, item in enumerate(brief_run.items.order_by(BriefRunItem.position)):
+        for idx, item in enumerate(sorted(brief_run.items, key=lambda x: x.position or 0)):
             # Get source name
             source_name = item.source_name or ''
             if not source_name and item.ingested_item and item.ingested_item.source:

@@ -1737,7 +1737,7 @@ def view_run(briefing_id, run_id):
     if not is_allowed:
         return redirect_response
     
-    items = brief_run.items.order_by(BriefRunItem.position).all()
+    items = sorted(brief_run.items, key=lambda x: x.position or 0)
     
     return render_template(
         'briefing/run_view.html',
@@ -1818,7 +1818,7 @@ def edit_run(briefing_id, run_id):
             db.session.rollback()
             flash('An error occurred', 'error')
     
-    items = brief_run.items.order_by(BriefRunItem.position).all()
+    items = sorted(brief_run.items, key=lambda x: x.position or 0)
     return render_template(
         'briefing/run_edit.html',
         briefing=briefing,
@@ -2187,7 +2187,7 @@ def public_brief_run(briefing_id, run_id):
         status='sent'
     ).first_or_404()
 
-    items = brief_run.items.order_by(BriefRunItem.position).all()
+    items = sorted(brief_run.items, key=lambda x: x.position or 0)
 
     return render_template(
         'briefing/public/run_view.html',
