@@ -936,8 +936,14 @@ def detail(briefing_id):
     if not is_allowed:
         return redirect_response
 
-    # Get related data
-    sources = [bs.input_source for bs in briefing.sources]
+    # Get related data with priority info
+    sources_with_priority = []
+    for bs in briefing.sources:
+        source = bs.source if hasattr(bs, 'source') else InputSource.query.get(bs.source_id)
+        if source:
+            source._priority = getattr(bs, 'priority', 1) or 1
+            sources_with_priority.append(source)
+    sources = sources_with_priority
     recipients = briefing.recipients.filter_by(status='active').all()
     recent_runs = briefing.runs.limit(10).all()
     
@@ -1076,6 +1082,28 @@ def edit(briefing_id):
             tone = request.form.get('tone', 'calm_neutral')
             max_items = request.form.get('max_items', type=int) or 10
             
+            # Get content preferences
+            topic_names = request.form.getlist('topic_names[]')
+            topic_weights = request.form.getlist('topic_weights[]')
+            topic_preferences = {}
+            for name, weight in zip(topic_names, topic_weights):
+                name = name.strip()
+                if name:
+                    try:
+                        topic_preferences[name] = int(weight)
+                    except (ValueError, TypeError):
+                        topic_preferences[name] = 2  # Default to medium
+            
+            # Get content filters
+            include_keywords_str = request.form.get('include_keywords', '').strip()
+            exclude_keywords_str = request.form.get('exclude_keywords', '').strip()
+            
+            filters_json = {}
+            if include_keywords_str:
+                filters_json['include_keywords'] = [k.strip() for k in include_keywords_str.split(',') if k.strip()]
+            if exclude_keywords_str:
+                filters_json['exclude_keywords'] = [k.strip() for k in exclude_keywords_str.split(',') if k.strip()]
+            
             # Get visual branding fields
             logo_url = request.form.get('logo_url', '').strip() or None
             accent_color = request.form.get('accent_color', '#3B82F6').strip()
@@ -1096,6 +1124,10 @@ def edit(briefing_id):
             briefing.custom_prompt = custom_prompt
             briefing.tone = tone
             briefing.max_items = max_items
+            
+            # Update content preferences
+            briefing.topic_preferences = topic_preferences if topic_preferences else None
+            briefing.filters_json = filters_json if filters_json else None
             
             # Update visual branding
             briefing.logo_url = logo_url
@@ -1476,6 +1508,44 @@ def remove_source_from_briefing(briefing_id, source_id):
         
     except Exception as e:
         logger.error(f"Error removing source from briefing: {e}", exc_info=True)
+        db.session.rollback()
+        flash('An error occurred', 'error')
+    
+    return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+
+
+@briefing_bp.route('/<int:briefing_id>/sources/<int:source_id>/priority', methods=['POST'])
+@login_required
+@limiter.limit("30/minute")
+def update_source_priority(briefing_id, source_id):
+    """Update source priority for a briefing"""
+    briefing = Briefing.query.get_or_404(briefing_id)
+    
+    # Check permissions
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing,
+        error_message='You do not have permission to modify this briefing',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        return redirect_response
+    
+    try:
+        priority = int(request.form.get('priority', 1))
+        priority = max(1, min(3, priority))  # Clamp to 1-3
+        
+        briefing_source = BriefingSource.query.filter_by(
+            briefing_id=briefing_id,
+            source_id=source_id
+        ).first_or_404()
+        
+        briefing_source.priority = priority
+        db.session.commit()
+        
+        flash('Source priority updated', 'success')
+        
+    except Exception as e:
+        logger.error(f"Error updating source priority: {e}", exc_info=True)
         db.session.rollback()
         flash('An error occurred', 'error')
     

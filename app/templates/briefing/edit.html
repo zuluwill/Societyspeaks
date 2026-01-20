@@ -112,6 +112,64 @@
                     </select>
                 </div>
 
+                <!-- Content Preferences Section -->
+                <div id="content-preferences" class="pt-6 border-t border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Content Preferences</h3>
+                    <p class="text-sm text-gray-500 mb-4">Customise which topics and content you want to see more or less of.</p>
+                    
+                    <div class="space-y-4">
+                        <!-- Topic Priorities -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Topic Priorities</label>
+                            <p class="text-sm text-gray-500 mb-3">Add topics you want to prioritise. Higher priority topics will appear more often.</p>
+                            <div id="topic-priorities-container" class="space-y-2">
+                                {% set topic_prefs = briefing.topic_preferences or {} %}
+                                {% for topic, weight in topic_prefs.items() %}
+                                <div class="flex items-center space-x-2 topic-row">
+                                    <input type="text" name="topic_names[]" value="{{ topic }}" 
+                                           class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                           placeholder="e.g., Football, Technology, Politics">
+                                    <select name="topic_weights[]" class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                        <option value="1" {% if weight == 1 %}selected{% endif %}>Low</option>
+                                        <option value="2" {% if weight == 2 %}selected{% endif %}>Medium</option>
+                                        <option value="3" {% if weight == 3 %}selected{% endif %}>High</option>
+                                    </select>
+                                    <button type="button" onclick="this.closest('.topic-row').remove()" class="text-red-500 hover:text-red-700">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <button type="button" onclick="addTopicRow()" class="mt-2 text-sm text-blue-600 hover:text-blue-800">
+                                + Add topic priority
+                            </button>
+                        </div>
+                        
+                        <!-- Include Keywords -->
+                        <div>
+                            <label for="include_keywords" class="block text-sm font-medium text-gray-700">Include Keywords</label>
+                            {% set filters = briefing.filters_json or {} %}
+                            <input type="text" name="include_keywords" id="include_keywords"
+                                   value="{{ (filters.get('include_keywords', []) or [])|join(', ') }}"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                   placeholder="e.g., Premier League, Champions League, World Cup">
+                            <p class="mt-1 text-sm text-gray-500">Comma-separated keywords. Stories containing these will be prioritised.</p>
+                        </div>
+                        
+                        <!-- Exclude Keywords -->
+                        <div>
+                            <label for="exclude_keywords" class="block text-sm font-medium text-gray-700">Exclude Keywords</label>
+                            <input type="text" name="exclude_keywords" id="exclude_keywords"
+                                   value="{{ (filters.get('exclude_keywords', []) or [])|join(', ') }}"
+                                   class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                   placeholder="e.g., betting, gambling, sponsored">
+                            <p class="mt-1 text-sm text-gray-500">Comma-separated keywords. Stories containing these will be excluded.</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- AI Settings Section -->
                 <div id="ai-settings" class="pt-6 border-t border-gray-200">
                     <h3 class="text-lg font-medium text-gray-900 mb-4">AI Settings</h3>
@@ -144,11 +202,11 @@
                         
                         <!-- Custom Prompt -->
                         <div>
-                            <label for="custom_prompt" class="block text-sm font-medium text-gray-700">Custom Instructions (Optional)</label>
+                            <label for="custom_prompt" class="block text-sm font-medium text-gray-700">Custom AI Instructions</label>
                             <textarea name="custom_prompt" id="custom_prompt" rows="4"
                                       class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                                      placeholder="Add custom instructions for the AI, e.g., 'Focus on industry-specific terminology' or 'Include actionable takeaways'">{{ briefing.custom_prompt or '' }}</textarea>
-                            <p class="mt-1 text-sm text-gray-500">Additional guidance for how the AI should write your briefs. Leave empty for default behaviour.</p>
+                                      placeholder="Add custom instructions for the AI, e.g., 'Focus on transfer news and match analysis' or 'Highlight underdog stories and upsets'">{{ briefing.custom_prompt or '' }}</textarea>
+                            <p class="mt-1 text-sm text-gray-500">Tell the AI how to write and what to focus on. This shapes the tone and content of your briefs.</p>
                         </div>
                     </div>
                 </div>
@@ -446,5 +504,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Add topic row function
+function addTopicRow() {
+    const container = document.getElementById('topic-priorities-container');
+    const row = document.createElement('div');
+    row.className = 'flex items-center space-x-2 topic-row';
+    row.innerHTML = `
+        <input type="text" name="topic_names[]" value="" 
+               class="flex-1 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+               placeholder="e.g., Football, Technology, Politics">
+        <select name="topic_weights[]" class="w-32 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            <option value="1">Low</option>
+            <option value="2">Medium</option>
+            <option value="3" selected>High</option>
+        </select>
+        <button type="button" onclick="this.closest('.topic-row').remove()" class="text-red-500 hover:text-red-700">
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+    `;
+    container.appendChild(row);
+}
 </script>
 {% endblock %}

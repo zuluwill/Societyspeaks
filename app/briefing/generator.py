@@ -139,24 +139,24 @@ class BriefingGenerator:
     
     def _select_items_for_briefing(self, briefing: Briefing, limit: int = None) -> List[IngestedItem]:
         """
-        Select items from briefing's sources with source diversity and deduplication.
-        
-        Uses round-robin selection across sources to ensure each source contributes,
-        and deduplicates similar headlines to avoid repetitive content.
+        Select items from briefing's sources using a two-phase approach:
+        1. Global ranking: Score all items based on topic preferences, include keywords, and source priority
+        2. Fair selection: Ensure source diversity while respecting global scores
         
         Args:
             briefing: Briefing configuration
             limit: Maximum number of items to select
         
         Returns:
-            List of IngestedItem instances with diverse sources
+            List of IngestedItem instances with diverse sources, prioritized by user preferences
         """
         from datetime import timedelta
         from collections import defaultdict
         import re
         
-        # Get all sources for this briefing
-        source_ids = [bs.source_id for bs in briefing.sources]
+        # Get all sources for this briefing with their priorities
+        source_priorities = {bs.source_id: getattr(bs, 'priority', 1) or 1 for bs in briefing.sources}
+        source_ids = list(source_priorities.keys())
         if not source_ids:
             return []
         
@@ -164,87 +164,130 @@ class BriefingGenerator:
         if limit is None:
             limit = min(briefing.max_items or 10, 20)
         
+        # Get user's content filters
+        filters = briefing.filters_json or {}
+        include_keywords = [k.lower().strip() for k in filters.get('include_keywords', []) if k.strip()]
+        exclude_keywords = [k.lower().strip() for k in filters.get('exclude_keywords', []) if k.strip()]
+        
+        # Get topic preferences (topic -> weight 1-3)
+        topic_preferences = briefing.topic_preferences or {}
+        
         # Get recent items from these sources (last 7 days)
         cutoff = datetime.utcnow() - timedelta(days=7)
         
-        # Fetch items grouped by source for fair distribution
-        items_by_source = defaultdict(list)
         all_items = IngestedItem.query.filter(
             IngestedItem.source_id.in_(source_ids),
             IngestedItem.fetched_at >= cutoff
         ).order_by(
             IngestedItem.published_at.desc().nullslast(),
             IngestedItem.fetched_at.desc()
-        ).limit(limit * 5).all()  # Get plenty for diversity
+        ).limit(limit * 15).all()
         
+        def get_text(item: IngestedItem) -> str:
+            """Get searchable text from item"""
+            return f"{item.title} {item.content_text or ''}".lower()
+        
+        def should_exclude(text: str) -> bool:
+            """Check if item should be excluded based on filters"""
+            if not exclude_keywords:
+                return False
+            return any(kw in text for kw in exclude_keywords)
+        
+        def matches_include(text: str) -> bool:
+            """Check if item matches include keywords"""
+            if not include_keywords:
+                return False  # No match bonus when no include keywords
+            return any(kw in text for kw in include_keywords)
+        
+        def calculate_score(item: IngestedItem, text: str) -> float:
+            """
+            Calculate global relevance score for an item.
+            Score components:
+            - Base: 1.0
+            - Include keyword match: +5.0 (significant boost)
+            - Topic preference match: +weight (1-3 per topic)
+            - Source priority: +priority (1-3)
+            """
+            score = 1.0
+            
+            # Boost for matching include keywords
+            if matches_include(text):
+                score += 5.0
+            
+            # Boost for matching topic preferences
+            for topic, weight in topic_preferences.items():
+                if topic.lower() in text:
+                    score += float(weight)
+            
+            # Boost for source priority
+            source_priority = source_priorities.get(item.source_id, 1)
+            score += float(source_priority)
+            
+            return score
+        
+        # Phase 1: Score and filter all items
+        scored_items = []
         for item in all_items:
-            items_by_source[item.source_id].append(item)
+            text = get_text(item)
+            
+            # Apply exclude filter (hard filter)
+            if should_exclude(text):
+                continue
+            
+            score = calculate_score(item, text)
+            scored_items.append((item, score))
         
-        # Apply briefing filters if any
-        keywords = []
-        if briefing.template and briefing.template.default_filters:
-            filters = briefing.template.default_filters
-            keywords = filters.get('topics', [])
+        # Sort by score (highest first), then by recency
+        scored_items.sort(key=lambda x: (x[1], x[0].published_at or datetime.min), reverse=True)
         
-        if keywords:
-            # Filter items by keywords
-            for source_id in items_by_source:
-                filtered = []
-                for item in items_by_source[source_id]:
-                    text = f"{item.title} {item.content_text or ''}".lower()
-                    if any(keyword.lower() in text for keyword in keywords):
-                        filtered.append(item)
-                items_by_source[source_id] = filtered
-        
-        # Round-robin selection across sources for diversity
+        # Phase 2: Fair selection with source diversity
         selected_items = []
-        seen_headlines = set()  # For deduplication
+        seen_headlines = set()
+        source_counts = defaultdict(int)
+        max_per_source = max(2, (limit // len(source_ids)) + 1) if source_ids else limit
         
         def normalize_headline(title: str) -> str:
             """Normalize headline for dedup comparison"""
-            # Remove punctuation, lowercase, and extract key words
             normalized = re.sub(r'[^\w\s]', '', title.lower())
-            # Extract first 5 significant words for comparison
             words = [w for w in normalized.split() if len(w) > 3][:5]
             return ' '.join(sorted(words))
         
-        # Get list of source IDs that have items
-        active_sources = [sid for sid in source_ids if items_by_source.get(sid)]
-        source_indices = {sid: 0 for sid in active_sources}
-        
-        # Round-robin until we have enough items or exhaust all sources
-        while len(selected_items) < limit and active_sources:
-            sources_exhausted = []
+        # First pass: select top-scored items with diversity constraints
+        for item, score in scored_items:
+            if len(selected_items) >= limit:
+                break
             
-            for source_id in active_sources:
+            # Check for duplicate headlines
+            normalized = normalize_headline(item.title)
+            if normalized in seen_headlines:
+                continue
+            
+            # Enforce source diversity (soft limit per source in first pass)
+            if source_counts[item.source_id] >= max_per_source:
+                continue
+            
+            seen_headlines.add(normalized)
+            selected_items.append(item)
+            source_counts[item.source_id] += 1
+        
+        # Second pass: if we need more items, relax source limits
+        if len(selected_items) < limit:
+            for item, score in scored_items:
                 if len(selected_items) >= limit:
                     break
-                    
-                source_items = items_by_source[source_id]
-                idx = source_indices[source_id]
                 
-                # Find next unique item from this source
-                while idx < len(source_items):
-                    item = source_items[idx]
-                    idx += 1
-                    
-                    # Check for duplicate headlines
-                    normalized = normalize_headline(item.title)
-                    if normalized not in seen_headlines:
-                        seen_headlines.add(normalized)
-                        selected_items.append(item)
-                        source_indices[source_id] = idx
-                        break
-                else:
-                    # Source exhausted
-                    sources_exhausted.append(source_id)
-                    source_indices[source_id] = idx
-            
-            # Remove exhausted sources
-            for sid in sources_exhausted:
-                active_sources.remove(sid)
+                normalized = normalize_headline(item.title)
+                if normalized in seen_headlines:
+                    continue
+                
+                seen_headlines.add(normalized)
+                selected_items.append(item)
         
-        logger.info(f"Selected {len(selected_items)} items from {len(set(i.source_id for i in selected_items))} sources for briefing {briefing.id}")
+        logger.info(
+            f"Selected {len(selected_items)} items from {len(set(i.source_id for i in selected_items))} sources "
+            f"for briefing {briefing.id} (topic_prefs: {len(topic_preferences)}, "
+            f"include_kw: {len(include_keywords)}, exclude_kw: {len(exclude_keywords)})"
+        )
         
         return selected_items
     

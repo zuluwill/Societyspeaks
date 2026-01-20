@@ -212,7 +212,16 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-3">
+                                <form method="POST" action="{{ url_for('briefing.update_source_priority', briefing_id=briefing.id, source_id=source.id) }}" class="flex items-center space-x-1">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <label class="text-xs text-gray-500">Priority:</label>
+                                    <select name="priority" onchange="this.form.submit()" class="text-xs border-gray-300 rounded py-1 px-2 focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="1" {% if source._priority == 1 %}selected{% endif %}>Low</option>
+                                        <option value="2" {% if source._priority == 2 %}selected{% endif %}>Medium</option>
+                                        <option value="3" {% if source._priority == 3 %}selected{% endif %}>High</option>
+                                    </select>
+                                </form>
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                     {% if source.status == 'ready' %}bg-green-100 text-green-800
                                     {% elif source.status == 'extracting' %}bg-yellow-100 text-yellow-800

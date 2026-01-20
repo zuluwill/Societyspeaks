@@ -2918,6 +2918,12 @@ class Briefing(db.Model):
     # JSON with keys: no_outrage_framing, no_predictions, require_attribution, 
     # perspective_balance, structure_template, visibility_locked
     guardrails = db.Column(db.JSON, nullable=True)
+    
+    # User customization settings
+    # Topic preferences: {"football": 3, "cricket": 1, "tennis": 2} - higher = more priority
+    topic_preferences = db.Column(db.JSON, nullable=True)
+    # Content filters: {"include_keywords": ["premier league"], "exclude_keywords": ["betting"]}
+    filters_json = db.Column(db.JSON, nullable=True)
 
     # Visual Branding
     logo_url = db.Column(db.String(500), nullable=True)  # Logo image URL
@@ -2989,10 +2995,14 @@ class BriefingSource(db.Model):
 
     briefing_id = db.Column(db.Integer, db.ForeignKey('briefing.id', ondelete='CASCADE'), primary_key=True)
     source_id = db.Column(db.Integer, db.ForeignKey('input_source.id', ondelete='CASCADE'), primary_key=True)
+    priority = db.Column(db.Integer, default=1)  # 1-5, higher = more important
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship to access source details
+    source = db.relationship('InputSource', backref='briefing_associations')
 
     def __repr__(self):
-        return f'<BriefingSource briefing:{self.briefing_id} source:{self.source_id}>'
+        return f'<BriefingSource briefing:{self.briefing_id} source:{self.source_id} priority:{self.priority}>'
 
 
 class BriefRun(db.Model):
