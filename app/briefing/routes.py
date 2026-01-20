@@ -579,13 +579,75 @@ def use_template(template_id):
             )
             
             db.session.add(briefing)
-            
+            db.session.flush()  # Get briefing.id for source linking
+
+            # Auto-populate sources from template
+            sources_added = 0
+            sources_failed = 0
+            if template.default_sources:
+                if isinstance(template.default_sources, list) and len(template.default_sources) > 0:
+                    for source_ref in template.default_sources:
+                        try:
+                            source = None
+
+                            # Handle dict format {'name': 'Source Name', 'type': 'rss'}
+                            if isinstance(source_ref, dict):
+                                source_name = source_ref.get('name')
+                                if source_name:
+                                    news_source = NewsSource.query.filter_by(name=source_name).first()
+                                    if news_source:
+                                        source = create_input_source_from_news_source(news_source.id, current_user)
+
+                            # Try as InputSource ID first
+                            elif isinstance(source_ref, int):
+                                source = InputSource.query.get(source_ref)
+                                # Also try as NewsSource ID (convert to InputSource)
+                                if not source:
+                                    news_source = NewsSource.query.get(source_ref)
+                                    if news_source:
+                                        source = create_input_source_from_news_source(news_source.id, current_user)
+
+                            # Try as string (NewsSource name)
+                            elif isinstance(source_ref, str):
+                                news_source = NewsSource.query.filter_by(name=source_ref).first()
+                                if news_source:
+                                    source = create_input_source_from_news_source(news_source.id, current_user)
+
+                            if source and can_access_source(current_user, source):
+                                # Check if already added (safety check)
+                                existing = BriefingSource.query.filter_by(
+                                    briefing_id=briefing.id,
+                                    source_id=source.id
+                                ).first()
+
+                                if not existing:
+                                    briefing_source = BriefingSource(
+                                        briefing_id=briefing.id,
+                                        source_id=source.id
+                                    )
+                                    db.session.add(briefing_source)
+                                    sources_added += 1
+                        except Exception as e:
+                            logger.warning(f"Failed to add source from template: {source_ref}: {e}")
+                            sources_failed += 1
+                            continue
+
             # Increment template usage count
             template.times_used = (template.times_used or 0) + 1
-            
+
             db.session.commit()
-            
-            flash(f'Briefing "{name}" created from template!', 'success')
+
+            # Show appropriate success message
+            if sources_added > 0:
+                msg = f'Briefing "{name}" created from template with {sources_added} sources!'
+                if sources_failed > 0:
+                    msg += f' ({sources_failed} sources could not be added)'
+                flash(msg, 'success')
+            else:
+                if sources_failed > 0:
+                    flash(f'Briefing "{name}" created from template, but {sources_failed} sources could not be added.', 'warning')
+                else:
+                    flash(f'Briefing "{name}" created from template!', 'success')
             return redirect(url_for('briefing.detail', briefing_id=briefing.id))
             
         except Exception as e:
