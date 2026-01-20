@@ -137,7 +137,7 @@ class BriefingGenerator:
             db.session.rollback()
             return None
     
-    def _select_items_for_briefing(self, briefing: Briefing, limit: int = 5) -> List[IngestedItem]:
+    def _select_items_for_briefing(self, briefing: Briefing, limit: int = None) -> List[IngestedItem]:
         """
         Select items from briefing's sources.
         
@@ -152,6 +152,10 @@ class BriefingGenerator:
         source_ids = [bs.source_id for bs in briefing.sources]
         if not source_ids:
             return []
+        
+        # Use briefing's max_items setting, or default to 10
+        if limit is None:
+            limit = min(briefing.max_items or 10, 20)
         
         # Get recent items from these sources (last 7 days)
         from datetime import timedelta
@@ -245,7 +249,8 @@ class BriefingGenerator:
             summary_bullets=llm_content.get('bullets', [ingested_item.content_text[:200] if ingested_item.content_text else '']),
             content_markdown=enhanced_markdown,
             content_html=llm_content.get('html', ''),
-            source_name=source_name
+            source_name=source_name,
+            source_url=ingested_item.url  # Link to original article
         )
         
         return run_item
@@ -601,10 +606,21 @@ Respond in JSON format:
                 </div>
                 '''
             
-            # Source attribution
+            # Source attribution with clickable link
             source_html = ''
+            source_url = item.source_url or ''
+            if not source_url and item.ingested_item:
+                source_url = item.ingested_item.url or ''
+            
             if source_name:
-                source_html = f'''
+                if source_url:
+                    source_html = f'''
+                <p style="margin: 12px 0 0 0; font-size: 12px; color: #6b7280;">
+                    Source: <a href="{source_url}" style="color: {accent_color}; text-decoration: underline;" target="_blank">{source_name}</a>
+                </p>
+                '''
+                else:
+                    source_html = f'''
                 <p style="margin: 12px 0 0 0; font-size: 12px; color: #6b7280;">
                     Source: <span style="color: #374151;">{source_name}</span>
                 </p>

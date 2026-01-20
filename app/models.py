@@ -3085,6 +3085,7 @@ class BriefRunItem(db.Model):
     content_markdown = db.Column(db.Text)
     content_html = db.Column(db.Text)
     source_name = db.Column(db.String(200), nullable=True)  # Denormalized for display
+    source_url = db.Column(db.String(1000), nullable=True)  # Link to original article
 
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

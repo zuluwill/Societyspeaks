@@ -98,7 +98,7 @@
             <div class="space-y-4">
                 {% for item in items %}
                 <div class="border border-gray-200 rounded-md p-4">
-                    <h3 class="font-medium text-gray-900">{{ item.headline or f'Item {item.position}' }}</h3>
+                    <h3 class="font-medium text-gray-900">{{ item.headline or 'Item ' ~ item.position }}</h3>
                     {% if item.summary_bullets %}
                     <ul class="mt-2 list-disc list-inside text-sm text-gray-600">
                         {% for bullet in item.summary_bullets %}
