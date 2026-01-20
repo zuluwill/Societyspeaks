@@ -179,16 +179,18 @@ class BriefingGenerator:
         preference_quota = limit - discovery_quota
         
         # Get recent items from these sources (last 7 days)
-        cutoff = datetime.utcnow() - timedelta(days=7)
+        # Use ItemFeedService for proper channel filtering
+        from app.briefing.item_feed_service import ItemFeedService
+        
         now = datetime.utcnow()
         
-        all_items = IngestedItem.query.filter(
-            IngestedItem.source_id.in_(source_ids),
-            IngestedItem.fetched_at >= cutoff
-        ).order_by(
-            IngestedItem.published_at.desc().nullslast(),
-            IngestedItem.fetched_at.desc()
-        ).limit(limit * 20).all()
+        # ItemFeedService handles channel filtering and returns allowed items
+        all_items = ItemFeedService.get_items_for_channel(
+            channel=ItemFeedService.CHANNEL_USER_BRIEFINGS,
+            source_ids=source_ids,
+            days_back=7,
+            limit=limit * 20
+        )
         
         # Build source credibility map (use political_leaning data if available)
         source_credibility = {}
