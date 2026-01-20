@@ -106,7 +106,13 @@
                     <div class="flex gap-2">
                         <select id="preferred_send_hour" name="preferred_send_hour" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             {% for hour in range(24) %}
-                            <option value="{{ hour }}" {% if hour == 18 %}selected{% endif %}>{{ '%02d'|format(hour) }}:00</option>
+                            <option value="{{ hour }}" {% if hour == 18 %}selected{% endif %}>{{ '%02d'|format(hour) }}</option>
+                            {% endfor %}
+                        </select>
+                        <span class="flex items-center text-gray-500">:</span>
+                        <select id="preferred_send_minute" name="preferred_send_minute" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            {% for minute in range(0, 60, 5) %}
+                            <option value="{{ minute }}" {% if minute == 0 %}selected{% endif %}>{{ '%02d'|format(minute) }}</option>
                             {% endfor %}
                         </select>
                     </div>
