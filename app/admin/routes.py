@@ -459,17 +459,40 @@ def list_discussions():
 def list_users():
     page = request.args.get('page', 1, type=int)
     per_page = 20
+    search_query = request.args.get('q', '').strip()
+    profile_filter = request.args.get('profile_type', '')
     
-    # Note: User.subscriptions uses lazy='dynamic' which doesn't support eager loading
-    # We fetch subscriptions separately using get_active_subscription() below
-    users = User.query.order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    # Build query with filters
+    query = User.query
+    
+    # Search by username or email
+    if search_query:
+        search_term = f'%{search_query}%'
+        query = query.filter(
+            db.or_(
+                User.username.ilike(search_term),
+                User.email.ilike(search_term)
+            )
+        )
+    
+    # Filter by profile type
+    if profile_filter:
+        query = query.filter(User.profile_type == profile_filter)
+    
+    # Order and paginate
+    users = query.order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
     
     # Get active subscription for each user
     from app.billing.service import get_active_subscription
     for user in users.items:
         user._cached_active_sub = get_active_subscription(user)
     
-    return render_template('admin/users/list.html', users=users)
+    return render_template(
+        'admin/users/list.html', 
+        users=users,
+        search_query=search_query,
+        profile_filter=profile_filter
+    )
 
 @admin_bp.route('/users/<int:user_id>/delete', methods=['POST'])
 @login_required
@@ -496,6 +519,33 @@ def delete_user(user_id):
         current_app.logger.error(f"Error deleting user: {str(e)}")
         flash('Error deleting user. Please try again.', 'error')
     return redirect(url_for('admin.list_users'))
+
+@admin_bp.route('/users/<int:user_id>/change-profile-type', methods=['POST'])
+@login_required
+@admin_required
+def change_profile_type(user_id):
+    """Change a user's profile type."""
+    user = User.query.get_or_404(user_id)
+    new_profile_type = request.form.get('profile_type', '').strip() or None
+    
+    valid_types = ['individual', 'company', None]
+    if new_profile_type not in valid_types:
+        flash('Invalid profile type.', 'error')
+        return redirect(url_for('admin.list_users'))
+    
+    try:
+        old_type = user.profile_type
+        user.profile_type = new_profile_type
+        db.session.commit()
+        current_app.logger.info(f"Admin {current_user.username} changed user {user.username} profile type from {old_type} to {new_profile_type}")
+        flash(f"Profile type for {user.username} changed to {new_profile_type or 'None'}.", 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error changing profile type: {str(e)}")
+        flash('Error changing profile type. Please try again.', 'error')
+    
+    return redirect(url_for('admin.list_users'))
+
 
 @admin_bp.route('/users/<int:user_id>/toggle-admin', methods=['POST'])
 @login_required

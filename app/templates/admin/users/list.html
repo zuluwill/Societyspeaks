@@ -1,10 +1,49 @@
-
 {% extends "layout.html" %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-100 py-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 class="text-2xl font-semibold text-gray-900">Manage Users</h1>
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-semibold text-gray-900">Manage Users</h1>
+            <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-800">Back to Dashboard</a>
+        </div>
+        
+        <!-- Search and Filters -->
+        <div class="mt-4 bg-white shadow rounded-lg p-4">
+            <form method="GET" action="{{ url_for('admin.list_users') }}" class="flex flex-wrap gap-4 items-end">
+                <div class="flex-1 min-w-64">
+                    <label for="q" class="block text-sm font-medium text-gray-700">Search</label>
+                    <input type="text" name="q" id="q" value="{{ search_query or '' }}" 
+                           placeholder="Search by username or email..."
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="profile_type" class="block text-sm font-medium text-gray-700">Profile Type</label>
+                    <select name="profile_type" id="profile_type" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        <option value="">All Types</option>
+                        <option value="individual" {% if profile_filter == 'individual' %}selected{% endif %}>Individual</option>
+                        <option value="company" {% if profile_filter == 'company' %}selected{% endif %}>Company</option>
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Search
+                    </button>
+                    {% if search_query or profile_filter %}
+                    <a href="{{ url_for('admin.list_users') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Clear
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        
+        <!-- Results count -->
+        <div class="mt-4 text-sm text-gray-600">
+            Showing {{ users.items|length }} of {{ users.total }} users
+            {% if search_query %} matching "{{ search_query }}"{% endif %}
+        </div>
         
         <div class="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
             <table class="min-w-full divide-y divide-gray-200">
@@ -23,6 +62,7 @@
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900">{{ user.username }}</div>
+                            <div class="text-xs text-gray-500">ID: {{ user.id }}</div>
                             {% if user.is_admin %}
                             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
                                 ADMIN
@@ -63,7 +103,14 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ user.profile_type or 'None' }}</div>
+                            <form action="{{ url_for('admin.change_profile_type', user_id=user.id) }}" method="POST" class="inline">
+                                <select name="profile_type" onchange="this.form.submit()" 
+                                        class="text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                    <option value="" {% if not user.profile_type %}selected{% endif %}>None</option>
+                                    <option value="individual" {% if user.profile_type == 'individual' %}selected{% endif %}>Individual</option>
+                                    <option value="company" {% if user.profile_type == 'company' %}selected{% endif %}>Company</option>
+                                </select>
+                            </form>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ 'Yes' if user.is_admin else 'No' }}</div>
@@ -87,6 +134,12 @@
                             </div>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                            No users found{% if search_query %} matching "{{ search_query }}"{% endif %}.
+                        </td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -96,17 +149,17 @@
         <nav class="flex justify-center mt-6">
             <ul class="flex space-x-2">
                 {% if users.has_prev %}
-                <li><a href="?page={{ users.prev_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Previous</a></li>
+                <li><a href="?page={{ users.prev_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if profile_filter %}&profile_type={{ profile_filter }}{% endif %}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Previous</a></li>
                 {% endif %}
                 {% for page_num in users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if page_num %}
-                        <li><a href="?page={{ page_num }}" class="px-3 py-2 border rounded-md {% if page_num == users.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
+                        <li><a href="?page={{ page_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if profile_filter %}&profile_type={{ profile_filter }}{% endif %}" class="px-3 py-2 border rounded-md {% if page_num == users.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
                     {% else %}
                         <li class="px-3 py-2">...</li>
                     {% endif %}
                 {% endfor %}
                 {% if users.has_next %}
-                <li><a href="?page={{ users.next_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Next</a></li>
+                <li><a href="?page={{ users.next_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if profile_filter %}&profile_type={{ profile_filter }}{% endif %}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Next</a></li>
                 {% endif %}
             </ul>
         </nav>
