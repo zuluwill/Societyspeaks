@@ -46,8 +46,8 @@
             {% if search_query %} matching "{{ search_query }}"{% endif %}
         </div>
 
-        <!-- Mobile Card View (visible on small screens) -->
-        <div class="mt-4 space-y-3 sm:hidden">
+        <!-- Mobile/Tablet Card View (visible on screens below md breakpoint) -->
+        <div class="mt-4 space-y-3 md:hidden">
             {% for user in users.items %}
             <div class="bg-white shadow rounded-lg p-4">
                 <div class="flex justify-between items-start">
@@ -124,8 +124,8 @@
             {% endfor %}
         </div>
 
-        <!-- Desktop Table View (hidden on small screens) -->
-        <div class="mt-4 bg-white shadow overflow-hidden sm:rounded-lg hidden sm:block">
+        <!-- Desktop Table View (hidden on screens below md breakpoint) -->
+        <div class="mt-4 bg-white shadow overflow-hidden sm:rounded-lg hidden md:block">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -133,7 +133,7 @@
                             <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
                             <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Email</th>
                             <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription</th>
-                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Profile Type</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Profile Type</th>
                             <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
@@ -174,7 +174,7 @@
                                     <span class="text-sm text-gray-500">No subscription</span>
                                 {% endif %}
                             </td>
-                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap hidden md:table-cell">
                                 <form action="{{ url_for('admin.change_profile_type', user_id=user.id) }}" method="POST" class="inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <select name="profile_type" onchange="this.form.submit()"
