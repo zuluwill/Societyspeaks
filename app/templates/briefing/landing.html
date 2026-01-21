@@ -2352,4 +2352,21 @@ noise.{% endblock %} {% block content %}
     </div>
   </section>
 </div>
+
+<!-- Checkout form feedback -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add loading feedback to all checkout forms
+    document.querySelectorAll('form[action*="checkout"]').forEach(function(form) {
+      form.addEventListener('submit', function(e) {
+        var btn = form.querySelector('button[type="submit"]');
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Redirecting to checkout...';
+          btn.classList.add('opacity-75', 'cursor-wait');
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}

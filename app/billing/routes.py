@@ -12,15 +12,19 @@ from app.billing.service import (
     resolve_plan_from_stripe_subscription,
 )
 from app.models import User, PricingPlan, Subscription
-from app import db
+from app import db, csrf
 
 
 @billing_bp.route('/checkout', methods=['POST'])
 @login_required
 def checkout():
     """Start a Stripe Checkout session for subscription."""
+    current_app.logger.info(f"Checkout initiated by user {current_user.id} ({current_user.email})")
+    
     plan_code = request.form.get('plan', 'starter')
     billing_interval = request.form.get('interval', 'month')
+    
+    current_app.logger.info(f"Plan: {plan_code}, Interval: {billing_interval}")
 
     target_plan = PricingPlan.query.filter_by(code=plan_code).first()
     if not target_plan:
@@ -123,6 +127,7 @@ def customer_portal():
 
 
 @billing_bp.route('/webhook', methods=['POST'])
+@csrf.exempt
 def webhook():
     """Handle Stripe webhook events."""
     s = get_stripe()
