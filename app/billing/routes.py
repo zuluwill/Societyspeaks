@@ -148,16 +148,30 @@ def webhook():
     
     current_app.logger.info(f"Received Stripe webhook: {event_type}")
     
-    if event_type == 'customer.subscription.created':
-        handle_subscription_created(data)
-    elif event_type == 'customer.subscription.updated':
-        handle_subscription_updated(data)
-    elif event_type == 'customer.subscription.deleted':
-        handle_subscription_deleted(data)
-    elif event_type == 'invoice.payment_failed':
-        handle_payment_failed(data)
-    elif event_type == 'customer.subscription.trial_will_end':
-        handle_trial_ending(data)
+    try:
+        if event_type == 'customer.subscription.created':
+            handle_subscription_created(data)
+        elif event_type == 'customer.subscription.updated':
+            handle_subscription_updated(data)
+        elif event_type == 'customer.subscription.deleted':
+            handle_subscription_deleted(data)
+        elif event_type == 'invoice.payment_failed':
+            handle_payment_failed(data)
+        elif event_type == 'customer.subscription.trial_will_end':
+            handle_trial_ending(data)
+        elif event_type == 'checkout.session.completed':
+            current_app.logger.info(f"Checkout session completed: {data.get('id')}")
+        elif event_type == 'checkout.session.expired':
+            current_app.logger.info(f"Checkout session expired: {data.get('id')}")
+        elif event_type == 'customer.created':
+            current_app.logger.info(f"Customer created: {data.get('id')} - {data.get('email')}")
+        elif event_type == 'customer.updated':
+            current_app.logger.info(f"Customer updated: {data.get('id')}")
+        else:
+            current_app.logger.info(f"Unhandled webhook event type: {event_type}")
+    except Exception as e:
+        current_app.logger.error(f"Error processing webhook {event_type}: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
     
     return jsonify({'status': 'success'}), 200
 
