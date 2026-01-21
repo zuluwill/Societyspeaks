@@ -82,6 +82,8 @@ def handle_invitation(token):
 @auth_bp.route('/register', methods=['GET', 'POST'])
 @limiter.limit("5/hour")
 def register():
+    import random
+
     # Capture checkout intent from query params (for briefing signups)
     checkout_plan = request.args.get('checkout_plan')
     checkout_interval = request.args.get('checkout_interval', 'month')
@@ -93,6 +95,13 @@ def register():
     # Get invitation context from session (set by /invite/<token> route)
     pending_invitation_email = session.get('pending_invitation_email')
     pending_invitation_org = session.get('pending_invitation_org')
+
+    # Generate CAPTCHA numbers for GET requests or failed POST attempts
+    def generate_captcha():
+        num1 = random.randint(1, 9)
+        num2 = random.randint(1, 9)
+        session['captcha_expected'] = num1 + num2
+        return num1, num2
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -121,23 +130,27 @@ def register():
             flash("Email already registered. Please log in.", "error")
             return redirect(url_for('auth.register'))
 
-        # Verify CAPTCHA
+        # Verify CAPTCHA (server-side session validation)
         verification = request.form.get('verification')
-        expected = request.form.get('expected')
-        
-        # Check if values exist and are numeric before converting
-        if not verification or not expected:
-            flash("Incorrect verification answer. Please try again.", "error")
+        expected = session.pop('captcha_expected', None)  # Pop to prevent reuse
+
+        # Check if session has expected value (prevents replay attacks)
+        if expected is None:
+            flash("Session expired. Please try again.", "error")
             return redirect(url_for('auth.register'))
-        
+
+        # Check if verification answer was provided
+        if not verification:
+            flash("Please answer the verification question.", "error")
+            return redirect(url_for('auth.register'))
+
         try:
             verification_int = int(verification)
-            expected_int = int(expected)
         except (ValueError, TypeError):
             flash("Incorrect verification answer. Please try again.", "error")
             return redirect(url_for('auth.register'))
-        
-        if verification_int != expected_int:
+
+        if verification_int != expected:
             flash("Incorrect verification answer. Please try again.", "error")
             return redirect(url_for('auth.register'))
 
@@ -166,15 +179,32 @@ def register():
         verification_url = url_for('auth.verify_email', token=token, _external=True)
         send_welcome_email(new_user, verification_url=verification_url)
 
-        # Mark that this user just came from registration (for checkout flow)
-        session['from_registration'] = True
+        # Auto-login the new user for frictionless checkout flow
+        login_user(new_user)
 
-        flash("Please check your email to verify your account before logging in.", "info")
-        return redirect(url_for('auth.login'))
+        # Check for pending checkout (user came from pricing page)
+        pending_plan = session.pop('pending_checkout_plan', None)
+        pending_interval = session.pop('pending_checkout_interval', 'month')
+
+        if pending_plan:
+            # Direct to checkout - don't make them log in separately
+            flash("Welcome! Complete your subscription setup below. We've sent a verification email to confirm your address.", "success")
+            return redirect(url_for('billing.pending_checkout',
+                                    plan=pending_plan,
+                                    interval=pending_interval))
+
+        # No pending checkout - normal registration flow
+        flash("Welcome! We've sent a verification email. You can continue setting up your account.", "success")
+        return redirect(url_for('profiles.select_profile_type'))
+
+    # GET request - generate fresh CAPTCHA
+    captcha_num1, captcha_num2 = generate_captcha()
 
     return render_template('auth/register.html',
                          invitation_email=pending_invitation_email,
-                         invitation_org=pending_invitation_org)
+                         invitation_org=pending_invitation_org,
+                         captcha_num1=captcha_num1,
+                         captcha_num2=captcha_num2)
 
 
 
@@ -234,19 +264,10 @@ def login():
                 flash(str(e), 'warning')
                 # Continue with normal login flow
 
-        # Check for pending briefing checkout (only for new registrations)
-        # The 'from_registration' flag ensures we only redirect to checkout
-        # for users who just completed registration, not existing users who
-        # happen to have browsed the pricing page before logging in
-        from_registration = session.pop('from_registration', False)
-        pending_plan = session.pop('pending_checkout_plan', None)
-        pending_interval = session.pop('pending_checkout_interval', 'month')
-
-        if pending_plan and from_registration:
-            # Redirect to complete the checkout for newly registered users
-            return redirect(url_for('billing.pending_checkout',
-                                   plan=pending_plan,
-                                   interval=pending_interval))
+        # Clean up any stale checkout session data
+        # (New registrations now auto-login and redirect to checkout directly)
+        session.pop('pending_checkout_plan', None)
+        session.pop('pending_checkout_interval', None)
 
         # Check if the user has an individual or company profile
         profile = user.individual_profile or user.company_profile

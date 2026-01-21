@@ -110,10 +110,21 @@ def checkout_success():
     session_id = request.args.get('session_id')
     sync_success = False
     is_org_plan = False
-    
+
     if session_id:
         try:
             session = s.checkout.Session.retrieve(session_id)
+
+            # Security: Verify the checkout session belongs to this user
+            if session.customer and current_user.stripe_customer_id:
+                if session.customer != current_user.stripe_customer_id:
+                    current_app.logger.warning(
+                        f"Checkout session customer mismatch: session={session.customer}, "
+                        f"user={current_user.id} has customer_id={current_user.stripe_customer_id}"
+                    )
+                    flash('Invalid checkout session.', 'error')
+                    return redirect(url_for('briefing.landing'))
+
             if session.subscription:
                 stripe_sub = s.Subscription.retrieve(session.subscription)
                 sub = sync_subscription_with_org(stripe_sub, current_user)
