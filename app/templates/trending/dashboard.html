@@ -111,11 +111,13 @@
 
     <div class="flex flex-wrap gap-4 mb-8">
         <form action="{{ url_for('trending.trigger_pipeline') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
                 Run Pipeline Now
             </button>
         </form>
         <form action="{{ url_for('trending.process_pending') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
                 Process Pending Topics
             </button>
@@ -128,6 +130,7 @@
         </a>
         <form action="{{ url_for('trending.clean_summaries') }}" method="post" 
               onsubmit="return confirm('This will clean promotional content from all article summaries and topic descriptions. Continue?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700">
                 Clean Summaries
             </button>

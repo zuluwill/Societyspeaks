@@ -15,6 +15,7 @@
             <h2 class="text-xl font-semibold">Add New Source</h2>
         </div>
         <form action="{{ url_for('trending.add_source') }}" method="post" class="p-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Source Name</label>
@@ -72,6 +73,7 @@
                 </div>
                 <div class="flex gap-2">
                     <form action="{{ url_for('trending.toggle_source', source_id=source.id) }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="px-3 py-1 rounded text-sm
                             {% if source.is_active %}bg-yellow-100 text-yellow-800 hover:bg-yellow-200
                             {% else %}bg-green-100 text-green-800 hover:bg-green-200{% endif %}">
@@ -79,6 +81,7 @@
                         </button>
                     </form>
                     <form action="{{ url_for('trending.delete_source', source_id=source.id) }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="px-3 py-1 rounded text-sm bg-red-100 text-red-800 hover:bg-red-200"
                             onclick="return confirm('Delete this source?')">
                             Delete
