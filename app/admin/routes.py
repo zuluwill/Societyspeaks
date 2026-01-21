@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource
+from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from app.admin.forms import UserAssignmentForm
 from functools import wraps
@@ -460,7 +460,14 @@ def list_users():
     page = request.args.get('page', 1, type=int)
     per_page = 20
     
-    users = User.query.order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    users = User.query.options(
+        db.joinedload(User.subscriptions).joinedload(Subscription.plan)
+    ).order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Get active subscription for each user (avoiding N+1 queries)
+    from app.billing.service import get_active_subscription
+    for user in users.items:
+        user._cached_active_sub = get_active_subscription(user)
     
     return render_template('admin/users/list.html', users=users)
 
@@ -507,6 +514,134 @@ def toggle_admin(user_id):
         current_app.logger.error(f"Error toggling admin status: {str(e)}")
         flash('Error updating admin status. Please try again.', 'error')
     return redirect(url_for('admin.list_users'))
+
+
+@admin_bp.route('/users/<int:user_id>/subscription', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def manage_user_subscription(user_id):
+    """
+    Admin-only: Manually manage user subscriptions.
+    Allows granting free access, changing plans, or revoking subscriptions.
+    """
+    user = User.query.get_or_404(user_id)
+    
+    # Get all pricing plans
+    plans = PricingPlan.query.order_by(PricingPlan.price_monthly).all()
+    
+    # Get user's active subscription
+    from app.billing.service import get_active_subscription
+    active_sub = get_active_subscription(user)
+    
+    # Get all user's subscriptions (including inactive)
+    all_subs = Subscription.query.filter_by(user_id=user.id).order_by(Subscription.created_at.desc()).all()
+    
+    if request.method == 'POST':
+        action = request.form.get('action')
+        
+        try:
+            if action == 'grant':
+                # Grant new subscription
+                plan_id = request.form.get('plan_id')
+                subscription_type = request.form.get('subscription_type', 'free')  # 'free' or 'trial'
+                
+                if not plan_id:
+                    flash('Please select a plan.', 'error')
+                    return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
+                
+                plan = PricingPlan.query.get(plan_id)
+                if not plan:
+                    flash('Invalid plan selected.', 'error')
+                    return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
+                
+                # Cancel existing active subscription if any
+                if active_sub:
+                    active_sub.status = 'canceled'
+                    active_sub.canceled_at = datetime.utcnow()
+                
+                # Create new manual subscription
+                new_sub = Subscription(
+                    user_id=user.id,
+                    plan_id=plan.id,
+                    status='active',  # Manually granted subscriptions are immediately active
+                    stripe_subscription_id=None,  # No Stripe involvement for manual grants
+                    stripe_customer_id=None,
+                    billing_interval='lifetime' if subscription_type == 'free' else 'month',
+                    created_at=datetime.utcnow(),
+                    current_period_start=datetime.utcnow(),
+                    current_period_end=None if subscription_type == 'free' else datetime.utcnow() + timedelta(days=30 if subscription_type == 'trial' else 365),
+                    cancel_at_period_end=False
+                )
+                
+                db.session.add(new_sub)
+                db.session.commit()
+                
+                subscription_label = 'FREE ACCESS' if subscription_type == 'free' else '30-DAY TRIAL'
+                current_app.logger.info(
+                    f"Admin {current_user.username} granted {subscription_label} - {plan.name} plan to user {user.username} (ID: {user.id})"
+                )
+                flash(f'Successfully granted {subscription_label} to {plan.name} plan for {user.username}!', 'success')
+            
+            elif action == 'revoke':
+                # Revoke active subscription
+                if not active_sub:
+                    flash('User has no active subscription to revoke.', 'warning')
+                    return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
+                
+                active_sub.status = 'canceled'
+                active_sub.canceled_at = datetime.utcnow()
+                db.session.commit()
+                
+                current_app.logger.info(
+                    f"Admin {current_user.username} revoked subscription for user {user.username} (ID: {user.id})"
+                )
+                flash(f'Subscription revoked for {user.username}.', 'success')
+            
+            elif action == 'change':
+                # Change plan of existing subscription
+                plan_id = request.form.get('plan_id')
+                
+                if not active_sub:
+                    flash('User has no active subscription to change.', 'error')
+                    return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
+                
+                if not plan_id:
+                    flash('Please select a plan.', 'error')
+                    return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
+                
+                plan = PricingPlan.query.get(plan_id)
+                if not plan:
+                    flash('Invalid plan selected.', 'error')
+                    return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
+                
+                old_plan = active_sub.plan
+                active_sub.plan_id = plan.id
+                db.session.commit()
+                
+                current_app.logger.info(
+                    f"Admin {current_user.username} changed subscription for user {user.username} "
+                    f"from {old_plan.name} to {plan.name}"
+                )
+                flash(f'Changed subscription from {old_plan.name} to {plan.name} for {user.username}.', 'success')
+            
+            else:
+                flash('Invalid action.', 'error')
+        
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error managing subscription for user {user_id}: {str(e)}")
+            flash('Error managing subscription. Please try again.', 'error')
+        
+        return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
+    
+    # GET request - show management page
+    return render_template(
+        'admin/users/manage_subscription.html',
+        user=user,
+        active_sub=active_sub,
+        all_subs=all_subs,
+        plans=plans
+    )
 
 @admin_bp.before_request
 def log_admin_access():
