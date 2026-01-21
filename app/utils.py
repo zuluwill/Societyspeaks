@@ -21,12 +21,27 @@ def get_base_url() -> str:
     Checks in order:
     1. APP_BASE_URL environment variable
     2. SITE_URL environment variable
-    3. Falls back to default (societyspeaks.io)
+    3. Flask app config SITE_URL (when in app context)
+    4. Falls back to default (societyspeaks.io)
 
     Returns:
         str: Base URL without trailing slash
     """
-    base_url = os.environ.get('APP_BASE_URL') or os.environ.get('SITE_URL', DEFAULT_BASE_URL)
+    # Check environment variables first
+    base_url = os.environ.get('APP_BASE_URL') or os.environ.get('SITE_URL')
+    
+    # Fall back to Flask config if available
+    if not base_url:
+        try:
+            base_url = current_app.config.get('SITE_URL')
+        except RuntimeError:
+            # Outside of app context
+            pass
+    
+    # Final fallback to default
+    if not base_url:
+        base_url = DEFAULT_BASE_URL
+    
     return base_url.rstrip('/')
 
 def get_recent_activity(user_id):
