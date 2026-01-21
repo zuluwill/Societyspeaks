@@ -378,16 +378,20 @@ class BriefingEmailClient:
         return {'sent': total_sent, 'failed': total_failed, 'method': 'batch'}
 
 
-def send_brief_run_emails(brief_run_id: int) -> dict:
+def send_brief_run_emails(brief_run_id: int, skip_subscription_check: bool = False) -> dict:
     """
     Convenience function to send BriefRun emails.
     
     Args:
         brief_run_id: BriefRun ID
+        skip_subscription_check: Skip subscription validation (for admin/testing only)
     
     Returns:
         dict: {'sent': count, 'failed': count}
     """
+    from app.billing.service import get_active_subscription
+    from app.models import User, CompanyProfile
+    
     brief_run = BriefRun.query.get(brief_run_id)
     if not brief_run:
         logger.error(f"BriefRun {brief_run_id} not found")
@@ -396,6 +400,36 @@ def send_brief_run_emails(brief_run_id: int) -> dict:
     if brief_run.status != 'approved':
         logger.warning(f"BriefRun {brief_run_id} is not approved (status: {brief_run.status}), skipping send")
         return {'sent': 0, 'failed': 0}
+    
+    # Check subscription status before sending (unless explicitly skipped for admin)
+    if not skip_subscription_check:
+        briefing = brief_run.briefing
+        has_active_subscription = False
+        
+        if briefing.owner_type == 'user':
+            user = User.query.get(briefing.owner_id)
+            if user:
+                # Admin users always have access
+                if user.is_admin:
+                    has_active_subscription = True
+                else:
+                    sub = get_active_subscription(user)
+                    has_active_subscription = sub is not None
+        elif briefing.owner_type == 'org':
+            # Check if organization has active subscription
+            from app.models import Subscription
+            sub = Subscription.query.filter(
+                Subscription.org_id == briefing.owner_id,
+                Subscription.status.in_(['trialing', 'active'])
+            ).first()
+            has_active_subscription = sub is not None
+        
+        if not has_active_subscription:
+            logger.warning(
+                f"Skipping send for BriefRun {brief_run_id} - owner has no active subscription "
+                f"(owner_type={briefing.owner_type}, owner_id={briefing.owner_id})"
+            )
+            return {'sent': 0, 'failed': 0, 'skipped_reason': 'no_active_subscription'}
     
     client = BriefingEmailClient()
     return client.send_brief_run_to_all_recipients(brief_run)

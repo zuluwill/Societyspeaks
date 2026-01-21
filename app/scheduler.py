@@ -958,6 +958,35 @@ def init_scheduler(app):
                 
                 for briefing in active_briefings:
                     try:
+                        # Check owner's subscription before generating (prevent generating for expired subscriptions)
+                        from app.billing.service import get_active_subscription
+                        from app.models import User, Subscription
+                        
+                        has_active_subscription = False
+                        
+                        if briefing.owner_type == 'user':
+                            user = User.query.get(briefing.owner_id)
+                            if user:
+                                # Admin users always have access
+                                if user.is_admin:
+                                    has_active_subscription = True
+                                else:
+                                    sub = get_active_subscription(user)
+                                    has_active_subscription = sub is not None
+                        elif briefing.owner_type == 'org':
+                            # Check if organization has active subscription
+                            sub = Subscription.query.filter(
+                                Subscription.org_id == briefing.owner_id,
+                                Subscription.status.in_(['trialing', 'active'])
+                            ).first()
+                            has_active_subscription = sub is not None
+                        
+                        if not has_active_subscription:
+                            logger.info(
+                                f"Skipping briefing {briefing.id} - owner has no active subscription "
+                                f"(owner_type={briefing.owner_type}, owner_id={briefing.owner_id})"
+                            )
+                            continue
                         # Import DST-safe timezone utilities
                         from app.briefing.timezone_utils import get_next_scheduled_time, get_weekly_scheduled_time
 
