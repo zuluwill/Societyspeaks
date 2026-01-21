@@ -13,6 +13,7 @@ from flask import render_template, current_app
 from app import db
 from app.models import BriefRun, BriefRecipient, Briefing, SendingDomain
 from app.brief.email_client import ResendClient as BaseResendClient
+from app.utils import get_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,7 @@ class BriefingEmailClient:
             html_content = self._render_brief_run_email(brief_run, recipient, briefing)
             
             # Build unsubscribe URL
-            base_url = os.environ.get('APP_BASE_URL') or os.environ.get('SITE_URL', 'https://societyspeaks.io')
+            base_url = get_base_url()
             unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.magic_token or ''}"
             
             # Prepare email data
@@ -139,8 +140,7 @@ class BriefingEmailClient:
         Returns:
             str: HTML email content
         """
-        base_url = os.environ.get('APP_BASE_URL') or os.environ.get('SITE_URL', 'https://societyspeaks.io')
-        base_url = base_url.rstrip('/')
+        base_url = get_base_url()
         
         # Use approved content if available, otherwise draft
         content_html = brief_run.approved_html or brief_run.draft_html or ''

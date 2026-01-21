@@ -1,4 +1,5 @@
 # app/utils.py
+import os
 from flask import current_app
 from replit.object_storage import Client
 import io
@@ -8,6 +9,25 @@ from app.models import Discussion
 
 
 client = Client()
+
+# Default base URL for the application
+DEFAULT_BASE_URL = 'https://societyspeaks.io'
+
+
+def get_base_url() -> str:
+    """
+    Get the application base URL (DRY utility).
+
+    Checks in order:
+    1. APP_BASE_URL environment variable
+    2. SITE_URL environment variable
+    3. Falls back to default (societyspeaks.io)
+
+    Returns:
+        str: Base URL without trailing slash
+    """
+    base_url = os.environ.get('APP_BASE_URL') or os.environ.get('SITE_URL', DEFAULT_BASE_URL)
+    return base_url.rstrip('/')
 
 def get_recent_activity(user_id):
     """

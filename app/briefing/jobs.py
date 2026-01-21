@@ -118,7 +118,7 @@ class GenerationJob:
         self.status = status
         if message:
             self.progress_message = message
-        if brief_run_id:
+        if brief_run_id is not None:  # Use explicit None check (ID could theoretically be 0)
             self.brief_run_id = brief_run_id
         if error:
             self.error = error
@@ -173,77 +173,96 @@ def is_redis_available() -> bool:
 def process_generation_job(job_id: str) -> bool:
     """
     Process a brief generation job.
-    
+
     This is called by the background worker.
-    Uses atomic status transition to prevent double-processing.
+    Uses atomic lock acquisition to prevent double-processing.
     """
     from app import db
     from app.models import Briefing, BriefRun
     from app.briefing.generator import BriefingGenerator
     import random
-    
-    job = GenerationJob.get(job_id)
-    if not job:
-        logger.error(f"Job {job_id} not found")
-        return False
-    
-    # Atomic claim: only process if still queued
-    if job.status != 'queued':
-        logger.info(f"Job {job_id} already being processed (status: {job.status})")
-        return False
-    
-    # Try to atomically claim the job
+
     client = get_redis_client()
-    if client:
-        lock_key = f"{JOB_PREFIX}{job_id}:lock"
-        # Use SETNX for atomic claim - only one worker can get the lock
-        if not client.setnx(lock_key, "1"):
-            logger.info(f"Job {job_id} already claimed by another worker")
-            return False
-        # Set lock expiry to prevent deadlocks
-        client.expire(lock_key, 300)  # 5 minute lock timeout
-    
+    lock_key = f"{JOB_PREFIX}{job_id}:lock"
+    lock_acquired = False
+
     try:
+        # Try to atomically claim the job FIRST (before reading job state)
+        # This prevents race conditions where status is checked before lock
+        if client:
+            # Use SETNX for atomic claim - only one worker can get the lock
+            lock_acquired = client.setnx(lock_key, "1")
+            if not lock_acquired:
+                logger.info(f"Job {job_id} already claimed by another worker")
+                return False
+            # Set lock expiry to prevent deadlocks
+            client.expire(lock_key, 300)  # 5 minute lock timeout
+
+        # Now safely read job state (we hold the lock)
+        job = GenerationJob.get(job_id)
+        if not job:
+            logger.error(f"Job {job_id} not found")
+            return False
+
+        # Check status AFTER acquiring lock to prevent race condition
+        if job.status != 'queued':
+            logger.info(f"Job {job_id} already being processed (status: {job.status})")
+            return False
+
         job.update_status('processing', 'Loading briefing configuration...')
-        
+
         briefing = Briefing.query.get(job.briefing_id)
         if not briefing:
             job.update_status('failed', error='Briefing not found')
             return False
-        
+
         if not briefing.sources:
             job.update_status('failed', error='No sources configured for this briefing')
             return False
-        
+
         job.update_status('processing', 'Selecting content from sources...')
-        
+
         generator = BriefingGenerator()
         test_scheduled_at = datetime.utcnow() + timedelta(microseconds=random.randint(1, 999999))
-        
+
         job.update_status('processing', 'Generating brief content with AI...')
-        
+
         brief_run = generator.generate_brief_run(
             briefing=briefing,
             scheduled_at=test_scheduled_at,
             ingested_items=None
         )
-        
+
         if brief_run is None:
             job.update_status('failed', error='No content available from your sources. Try adding more sources or wait for content to be ingested.')
             return False
-        
+
         brief_run.status = 'generated_draft'
         db.session.commit()
-        
+
         job.update_status('completed', 'Brief generated successfully!', brief_run_id=brief_run.id)
         logger.info(f"Completed generation job {job_id} with brief_run {brief_run.id}")
         return True
-        
+
     except Exception as e:
         logger.error(f"Error processing job {job_id}: {e}", exc_info=True)
         db.session.rollback()
-        job.update_status('failed', error=str(e))
+        # Try to update job status if we have a valid job object
+        try:
+            job = GenerationJob.get(job_id)
+            if job:
+                job.update_status('failed', error=str(e))
+        except Exception:
+            pass  # Don't let status update failure mask the original error
         return False
+
+    finally:
+        # Always release the lock when done (explicit cleanup)
+        if lock_acquired and client:
+            try:
+                client.delete(lock_key)
+            except Exception as e:
+                logger.warning(f"Failed to release lock for job {job_id}: {e}")
 
 
 def get_next_job() -> Optional[str]:

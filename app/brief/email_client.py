@@ -15,6 +15,7 @@ from typing import List, Optional
 from flask import render_template, current_app
 from app.models import DailyBrief, DailyBriefSubscriber, BriefItem, db
 from app.email_utils import RateLimiter
+from app.utils import get_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -69,7 +70,7 @@ class ResendClient:
             html_content = self._render_email(subscriber, brief)
 
             # Build unsubscribe URL using environment config
-            base_url = os.environ.get('APP_BASE_URL') or os.environ.get('SITE_URL', 'https://societyspeaks.io')
+            base_url = get_base_url()
             unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
 
             # Prepare email data with List-Unsubscribe headers for compliance
@@ -171,9 +172,8 @@ class ResendClient:
         Returns:
             str: HTML email content
         """
-        # Get base URL from config or env (APP_BASE_URL is the primary, fallback to SITE_URL)
-        base_url = os.environ.get('APP_BASE_URL') or os.environ.get('SITE_URL', 'https://societyspeaks.io')
-        base_url = base_url.rstrip('/')
+        # Get base URL from config or env
+        base_url = get_base_url()
         
         # Build URLs
         magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
@@ -277,8 +277,7 @@ class ResendClient:
                 logger.warning(f"Welcome email already sent to {subscriber.email} at {subscriber.welcome_email_sent_at}, skipping (use force=True to override)")
                 return True  # Return True since email was already sent successfully
 
-            base_url = os.environ.get('APP_BASE_URL') or os.environ.get('SITE_URL', 'https://societyspeaks.io')
-            base_url = base_url.rstrip('/')
+            base_url = get_base_url()
 
             magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"

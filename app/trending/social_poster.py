@@ -16,6 +16,7 @@ from typing import Optional, List, Tuple, Dict
 from urllib.parse import quote
 
 from flask import url_for
+from app.utils import get_base_url
 
 logger = logging.getLogger(__name__)
 
@@ -962,9 +963,8 @@ def share_discussion_to_social(
         Dict with results for each platform
     """
     if not base_url:
-        from flask import current_app
-        base_url = current_app.config.get('SITE_URL', os.environ.get('SITE_URL', 'https://societyspeaks.io'))
-    
+        base_url = get_base_url()
+
     discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
     
     results = {
@@ -1092,8 +1092,8 @@ def process_scheduled_bluesky_posts() -> int:
         return 0
     
     logger.info(f"Processing {len(due_posts)} scheduled Bluesky posts")
-    
-    base_url = os.environ.get('SITE_URL', 'https://societyspeaks.io')
+
+    base_url = get_base_url()
     posted_count = 0
     
     for discussion in due_posts:
@@ -1221,8 +1221,8 @@ def process_scheduled_x_posts() -> int:
         return 0
     
     logger.info(f"Processing {len(due_posts)} scheduled X posts")
-    
-    base_url = os.environ.get('SITE_URL', 'https://societyspeaks.io')
+
+    base_url = get_base_url()
     posted_count = 0
     
     for discussion in due_posts:
