@@ -1,5 +1,5 @@
 import stripe
-from flask import request, redirect, url_for, jsonify, flash, current_app
+from flask import request, redirect, url_for, jsonify, flash, current_app, session
 from flask_login import login_required, current_user
 from app.billing import billing_bp
 from app.billing.service import (
@@ -113,20 +113,20 @@ def checkout_success():
 
     if session_id:
         try:
-            session = s.checkout.Session.retrieve(session_id)
+            checkout_session = s.checkout.Session.retrieve(session_id)
 
             # Security: Verify the checkout session belongs to this user
-            if session.customer and current_user.stripe_customer_id:
-                if session.customer != current_user.stripe_customer_id:
+            if checkout_session.customer and current_user.stripe_customer_id:
+                if checkout_session.customer != current_user.stripe_customer_id:
                     current_app.logger.warning(
-                        f"Checkout session customer mismatch: session={session.customer}, "
+                        f"Checkout session customer mismatch: session={checkout_session.customer}, "
                         f"user={current_user.id} has customer_id={current_user.stripe_customer_id}"
                     )
                     flash('Invalid checkout session.', 'error')
                     return redirect(url_for('briefing.landing'))
 
-            if session.subscription:
-                stripe_sub = s.Subscription.retrieve(session.subscription)
+            if checkout_session.subscription:
+                stripe_sub = s.Subscription.retrieve(checkout_session.subscription)
                 sub = sync_subscription_with_org(stripe_sub, current_user)
                 sync_success = True
                 if sub and sub.plan and sub.plan.is_organisation:
