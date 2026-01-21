@@ -76,7 +76,7 @@ def checkout():
                 return redirect(url_for('billing.customer_portal'))
 
     try:
-        session = create_checkout_session(
+        checkout_session = create_checkout_session(
             user=current_user,
             plan_code=plan_code,
             billing_interval=billing_interval
@@ -92,7 +92,7 @@ def checkout():
                 f"Manual subscription {manual_sub_to_supersede.id} marked superseded after checkout session created"
             )
         
-        return redirect(session.url, code=303)
+        return redirect(checkout_session.url, code=303)
     except ValueError as e:
         flash(str(e), 'error')
         return redirect(url_for('briefing.landing'))
@@ -155,8 +155,8 @@ def checkout_success():
 def customer_portal():
     """Redirect to Stripe Customer Portal for billing management."""
     try:
-        session = create_portal_session(current_user)
-        return redirect(session.url, code=303)
+        portal_session = create_portal_session(current_user)
+        return redirect(portal_session.url, code=303)
     except ValueError as e:
         flash(str(e), 'error')
         return redirect(url_for('briefing.list_briefings'))
