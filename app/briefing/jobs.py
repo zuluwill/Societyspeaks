@@ -109,8 +109,15 @@ class GenerationJob:
         return job
 
     def calculate_retry_delay(self) -> int:
-        """Calculate delay before next retry using exponential backoff."""
-        return RETRY_BACKOFF_BASE * (RETRY_BACKOFF_MULTIPLIER ** self.retry_count)
+        """
+        Calculate delay before next retry using exponential backoff.
+        
+        Returns:
+            int: Delay in seconds, capped at 1 hour maximum
+        """
+        delay = RETRY_BACKOFF_BASE * (RETRY_BACKOFF_MULTIPLIER ** self.retry_count)
+        # Cap at 1 hour to prevent unreasonably long delays
+        return min(delay, 3600)
 
     def can_retry(self) -> bool:
         """Check if job can be retried."""

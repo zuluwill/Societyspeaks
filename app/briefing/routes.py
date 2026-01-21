@@ -2336,6 +2336,10 @@ def test_generate(briefing_id):
                 # For regular form submission, redirect to a waiting page
                 flash('Brief generation started. This may take up to a minute.', 'info')
                 return redirect(url_for('briefing.generation_progress', briefing_id=briefing_id, job_id=job_id))
+            else:
+                # Queue failed (likely full) - inform user
+                logger.warning(f"Job queue full or unavailable for briefing {briefing_id}, falling back to synchronous generation")
+                flash('System is busy. Brief generation may take longer than usual.', 'warning')
         
         # Fallback to synchronous generation (Redis not available or queue failed)
         logger.info(f"Falling back to synchronous generation for briefing {briefing_id}")

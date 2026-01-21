@@ -236,11 +236,23 @@ class BriefingEmailClient:
         else:
             result = self._send_individual_to_recipients(brief_run, recipients)
 
-        # Update brief_run sent_at if any were sent
+        # Update brief_run sent_at if any were sent (with race condition protection)
         if result['sent'] > 0:
-            brief_run.sent_at = datetime.utcnow()
-            brief_run.status = 'sent'
-            db.session.commit()
+            # Refresh from database to check if another process already sent it
+            db.session.refresh(brief_run)
+            if not brief_run.sent_at:
+                brief_run.sent_at = datetime.utcnow()
+                brief_run.status = 'sent'
+                try:
+                    db.session.commit()
+                except Exception as e:
+                    logger.error(f"Failed to update sent_at for BriefRun {brief_run.id}: {e}")
+                    db.session.rollback()
+            else:
+                logger.warning(
+                    f"BriefRun {brief_run.id} already sent at {brief_run.sent_at} by another process. "
+                    f"Skipping duplicate status update (recipients may have received duplicate emails)."
+                )
 
         logger.info(
             f"Sent BriefRun {brief_run.id} to {result['sent']}/{total_recipients} recipients "
