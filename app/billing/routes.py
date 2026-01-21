@@ -32,23 +32,22 @@ def checkout():
         return redirect(url_for('briefing.landing'))
 
     existing_sub = get_active_subscription(current_user)
+    manual_sub_to_supersede = None  # Track manual sub to supersede AFTER successful checkout creation
 
     if existing_sub:
         # Check if existing subscription is manual (admin-granted)
         if existing_sub.stripe_subscription_id is None:
-            # Manual subscription - mark as superseded and allow Stripe checkout
+            # Manual subscription - DON'T supersede yet, wait until checkout session is created
             current_app.logger.info(
                 f"User {current_user.id} upgrading from manual subscription (plan: {existing_sub.plan.name}) "
                 f"to Stripe subscription (plan: {target_plan.name})"
             )
-            existing_sub.status = 'superseded'
-            existing_sub.canceled_at = db.func.now()
-            db.session.commit()
+            manual_sub_to_supersede = existing_sub  # Mark for later superseding
             flash(
-                f'Your free {existing_sub.plan.name} access will be replaced by your new paid subscription.',
+                f'Your free {existing_sub.plan.name} access will be replaced once you complete payment.',
                 'info'
             )
-            # Continue to checkout - manual subscription is now superseded
+            # Continue to checkout - will supersede manual sub only after checkout session created
         else:
             # Stripe subscription exists
             is_upgrading_to_org = target_plan.is_organisation and not existing_sub.plan.is_organisation
@@ -82,6 +81,17 @@ def checkout():
             plan_code=plan_code,
             billing_interval=billing_interval
         )
+        
+        # Only supersede manual subscription AFTER checkout session is successfully created
+        # This ensures user keeps their free access if Stripe checkout creation fails
+        if manual_sub_to_supersede:
+            manual_sub_to_supersede.status = 'superseded'
+            manual_sub_to_supersede.canceled_at = db.func.now()
+            db.session.commit()
+            current_app.logger.info(
+                f"Manual subscription {manual_sub_to_supersede.id} marked superseded after checkout session created"
+            )
+        
         return redirect(session.url, code=303)
     except ValueError as e:
         flash(str(e), 'error')
