@@ -896,6 +896,14 @@ def create_briefing():
                     briefing, template.default_sources, current_user
                 )
 
+            # Verify subscription is still active before committing (race condition protection)
+            if not current_user.is_admin:
+                sub = get_active_subscription(current_user)
+                if not sub:
+                    db.session.rollback()
+                    flash('Your subscription expired during this operation. Please renew to continue.', 'error')
+                    return redirect(url_for('briefing.landing'))
+
             db.session.commit()
             
             if sources_added > 0:
@@ -1341,6 +1349,7 @@ def add_rss_source():
 @briefing_bp.route('/sources/upload', methods=['GET', 'POST'])
 @login_required
 @limiter.limit("5/minute")
+@require_feature('document_uploads')
 def upload_source():
     """Upload PDF/DOCX file as source"""
     if request.method == 'POST':
@@ -1465,10 +1474,15 @@ def add_source_to_briefing(briefing_id):
             flash('Source processing failed. Please check the source and try again.', 'error')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
 
-        # Check source limit before adding
-        current_source_count = len(briefing.sources)
-        if current_source_count >= MAX_SOURCES_PER_BRIEFING:
-            flash(f'Maximum sources ({MAX_SOURCES_PER_BRIEFING}) reached for this briefing', 'error')
+        # Check source limit before adding (plan-based enforcement)
+        if not current_user.is_admin and not check_source_limit(current_user, additional_sources=1):
+            sub = get_active_subscription(current_user)
+            plan = sub.plan if sub else None
+            if plan:
+                limit_msg = "unlimited" if plan.max_sources == -1 else str(plan.max_sources)
+                flash(f'You\'ve reached your source limit ({limit_msg}) for the {plan.name} plan. Please upgrade to add more sources.', 'error')
+            else:
+                flash('You need an active subscription to add sources.', 'error')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
 
         # Check if already added
@@ -1627,14 +1641,15 @@ def manage_recipients(briefing_id):
                     else:
                         flash('Recipient already exists', 'info')
                 else:
-                    # Check recipient limit before adding
-                    current_count = BriefRecipient.query.filter_by(
-                        briefing_id=briefing_id,
-                        status='active'
-                    ).count()
-
-                    if current_count >= MAX_RECIPIENTS_PER_BRIEFING:
-                        flash(f'Maximum recipients ({MAX_RECIPIENTS_PER_BRIEFING}) reached for this briefing', 'error')
+                    # Check recipient limit before adding (plan-based enforcement)
+                    if not current_user.is_admin and not check_recipient_limit(current_user, briefing_id, additional_recipients=1):
+                        sub = get_active_subscription(current_user)
+                        plan = sub.plan if sub else None
+                        if plan:
+                            limit_msg = "unlimited" if plan.max_recipients == -1 else str(plan.max_recipients)
+                            flash(f'You\'ve reached your recipient limit ({limit_msg}) for the {plan.name} plan. Please upgrade to add more recipients.', 'error')
+                        else:
+                            flash('You need an active subscription to add recipients.', 'error')
                         return redirect(url_for('briefing.manage_recipients', briefing_id=briefing_id))
 
                     # Create new recipient
@@ -1663,15 +1678,17 @@ def manage_recipients(briefing_id):
                 
                 added = 0
                 skipped = 0
-                current_count = BriefRecipient.query.filter_by(
-                    briefing_id=briefing_id,
-                    status='active'
-                ).count()
                 
                 for email in emails:
-                    # Check limit
-                    if current_count >= MAX_RECIPIENTS_PER_BRIEFING:
-                        flash(f'Maximum recipients ({MAX_RECIPIENTS_PER_BRIEFING}) reached. {len(emails) - added - skipped} emails not added.', 'warning')
+                    # Check limit (plan-based enforcement)
+                    if not current_user.is_admin and not check_recipient_limit(current_user, briefing_id, additional_recipients=1):
+                        sub = get_active_subscription(current_user)
+                        plan = sub.plan if sub else None
+                        if plan:
+                            limit_msg = "unlimited" if plan.max_recipients == -1 else str(plan.max_recipients)
+                            flash(f'Recipient limit ({limit_msg}) reached for the {plan.name} plan. {len(emails) - added - skipped} emails not added. Please upgrade to add more.', 'warning')
+                        else:
+                            flash(f'{len(emails) - added - skipped} emails not added due to limit.', 'warning')
                         break
                     
                     # Validate email
@@ -1693,7 +1710,6 @@ def manage_recipients(briefing_id):
                             existing.unsubscribed_at = None
                             existing.generate_magic_token()
                             added += 1
-                            current_count += 1
                         else:
                             skipped += 1
                     else:
@@ -1707,7 +1723,6 @@ def manage_recipients(briefing_id):
                         recipient.generate_magic_token()
                         db.session.add(recipient)
                         added += 1
-                        current_count += 1
                 
                 db.session.commit()
                 flash(f'Imported {added} recipients. {skipped} skipped (already exists or invalid).', 'success')
@@ -1807,11 +1822,11 @@ def unsubscribe(briefing_id, token):
 # BriefRun Management Routes
 # =============================================================================
 
-@briefing_bp.route('/<int:briefing_id>/runs/<int:run_id>')
+@briefing_bp.route('/<int:briefing_id>/runs/<int:run_id>', methods=['GET', 'POST'])
 @login_required
 @limiter.limit("60/minute")
 def view_run(briefing_id, run_id):
-    """View a BriefRun"""
+    """View a BriefRun (approval workflow requires approval_workflow feature for editing/approving)"""
     briefing = Briefing.query.get_or_404(briefing_id)
     brief_run = BriefRun.query.filter_by(
         id=run_id,
@@ -1942,6 +1957,13 @@ def send_run(briefing_id, run_id):
         flash('Brief must be approved before sending', 'error')
         return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=run_id))
     
+    # Verify subscription is still active before sending (race condition protection)
+    if not current_user.is_admin:
+        sub = get_active_subscription(current_user)
+        if not sub:
+            flash('Your subscription expired. Please renew to send briefings.', 'error')
+            return redirect(url_for('briefing.landing'))
+    
     try:
         from app.briefing.email_client import send_brief_run_emails
         result = send_brief_run_emails(brief_run.id)
@@ -1992,6 +2014,7 @@ def approval_queue():
 @briefing_bp.route('/domains')
 @login_required
 @limiter.limit("60/minute")
+@require_feature('custom_branding')
 def list_domains():
     """List sending domains for user's organization"""
     if not current_user.company_profile:
@@ -2008,6 +2031,7 @@ def list_domains():
 @briefing_bp.route('/domains/add', methods=['GET', 'POST'])
 @login_required
 @limiter.limit("5/minute")
+@require_feature('custom_branding')
 def add_domain():
     """Add a new sending domain"""
     if not current_user.company_profile:
