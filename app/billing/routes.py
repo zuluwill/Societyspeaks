@@ -149,24 +149,54 @@ def webhook():
     current_app.logger.info(f"Received Stripe webhook: {event_type}")
     
     try:
+        # Subscription events (require action)
         if event_type == 'customer.subscription.created':
             handle_subscription_created(data)
         elif event_type == 'customer.subscription.updated':
             handle_subscription_updated(data)
         elif event_type == 'customer.subscription.deleted':
             handle_subscription_deleted(data)
-        elif event_type == 'invoice.payment_failed':
-            handle_payment_failed(data)
         elif event_type == 'customer.subscription.trial_will_end':
             handle_trial_ending(data)
+        elif event_type == 'customer.subscription.paused':
+            handle_subscription_paused(data)
+        elif event_type == 'customer.subscription.resumed':
+            handle_subscription_resumed(data)
+        elif event_type == 'customer.subscription.pending_update_applied':
+            current_app.logger.info(f"Subscription pending update applied: {data.get('id')}")
+        elif event_type == 'customer.subscription.pending_update_expired':
+            current_app.logger.info(f"Subscription pending update expired: {data.get('id')}")
+        
+        # Payment events
+        elif event_type == 'invoice.payment_failed':
+            handle_payment_failed(data)
+        
+        # Checkout session events
         elif event_type == 'checkout.session.completed':
             current_app.logger.info(f"Checkout session completed: {data.get('id')}")
         elif event_type == 'checkout.session.expired':
             current_app.logger.info(f"Checkout session expired: {data.get('id')}")
+        elif event_type == 'checkout.session.async_payment_succeeded':
+            current_app.logger.info(f"Checkout async payment succeeded: {data.get('id')}")
+        elif event_type == 'checkout.session.async_payment_failed':
+            current_app.logger.info(f"Checkout async payment failed: {data.get('id')}")
+        
+        # Customer events
         elif event_type == 'customer.created':
             current_app.logger.info(f"Customer created: {data.get('id')} - {data.get('email')}")
         elif event_type == 'customer.updated':
             current_app.logger.info(f"Customer updated: {data.get('id')}")
+        elif event_type == 'customer.deleted':
+            current_app.logger.info(f"Customer deleted: {data.get('id')}")
+        
+        # Discount events
+        elif event_type == 'customer.discount.created':
+            current_app.logger.info(f"Customer discount created: {data.get('id')}")
+        elif event_type == 'customer.discount.updated':
+            current_app.logger.info(f"Customer discount updated: {data.get('id')}")
+        elif event_type == 'customer.discount.deleted':
+            current_app.logger.info(f"Customer discount deleted: {data.get('id')}")
+        
         else:
             current_app.logger.info(f"Unhandled webhook event type: {event_type}")
     except Exception as e:
@@ -240,6 +270,24 @@ def handle_trial_ending(subscription_data):
     sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
     if sub and sub.user:
         current_app.logger.info(f"Trial ending soon for user {sub.user_id}")
+
+
+def handle_subscription_paused(subscription_data):
+    """Handle subscription paused."""
+    sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
+    if sub:
+        sub.status = 'paused'
+        db.session.commit()
+        current_app.logger.info(f"Subscription {sub.id} paused")
+
+
+def handle_subscription_resumed(subscription_data):
+    """Handle subscription resumed."""
+    sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
+    if sub:
+        sub.status = 'active'
+        db.session.commit()
+        current_app.logger.info(f"Subscription {sub.id} resumed")
 
 
 @billing_bp.route('/pending-checkout')
