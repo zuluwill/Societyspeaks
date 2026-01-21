@@ -496,6 +496,7 @@ async function voteOnStatement(statementId, voteValue, confidence = 3) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
             },
             credentials: 'same-origin',
             body: JSON.stringify({
