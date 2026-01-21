@@ -1340,7 +1340,8 @@ class DailyBrief(db.Model):
         """
         if hasattr(self, '_cached_item_count'):
             return self._cached_item_count
-        return self.items.count()
+        # len() works for both InstrumentedList (lazy relationships) and regular lists (eager-loaded)
+        return len(self.items)
 
     @classmethod
     def get_today(cls):

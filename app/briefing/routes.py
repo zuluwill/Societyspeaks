@@ -2382,8 +2382,8 @@ def test_send(briefing_id):
         flash('No brief runs available. Generate a test brief first.', 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
     
-    # Check if run has content
-    if not recent_run.items.count():
+    # Check if run has content (len() works for both InstrumentedList and eager-loaded lists)
+    if not len(recent_run.items):
         flash('The brief run has no content. Generate a new test brief.', 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
     
