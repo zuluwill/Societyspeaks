@@ -52,7 +52,7 @@
             action="{{ url_for('api_keys.revalidate_api_key', key_id=key.id) }}"
             class="inline"
           >
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="text-blue-600 hover:underline text-sm">
               Revalidate
             </button>
@@ -63,7 +63,7 @@
             action="{{ url_for('api_keys.toggle_api_key', key_id=key.id) }}"
             class="inline"
           >
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="text-gray-600 hover:underline text-sm">
               {{ 'Disable' if key.is_active else 'Enable' }}
             </button>
@@ -75,7 +75,7 @@
             class="inline"
             onsubmit="return confirm('Delete this API key?')"
           >
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="text-red-600 hover:underline text-sm">
               Delete
             </button>

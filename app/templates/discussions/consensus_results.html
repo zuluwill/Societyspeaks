@@ -77,7 +77,7 @@ discussion.title }}{% endblock %} {% block content %}
       method="POST"
       action="{{ url_for('consensus.generate_summary', discussion_id=discussion.id) }}"
     >
-      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button
         type="submit"
         class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -254,7 +254,7 @@ discussion.title }}{% endblock %} {% block content %}
         action="{{ url_for('consensus.trigger_analysis', discussion_id=discussion.id) }}"
         class="inline"
       >
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button
           type="submit"
           class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"

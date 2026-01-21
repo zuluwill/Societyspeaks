@@ -95,7 +95,7 @@
             <p class="text-gray-600 mb-6">Choose which email notifications you'd like to receive.</p>
             
             <form action="{{ url_for('settings.view_settings') }}" method="POST">
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="update_notifications" value="1">
                 
                 <div class="space-y-4">

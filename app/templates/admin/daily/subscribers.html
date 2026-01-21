@@ -21,7 +21,7 @@
             <p class="text-sm text-gray-500 mt-1">Paste a list of email addresses (comma, newline, or space separated)</p>
         </div>
         <form action="{{ url_for('admin.bulk_import_subscribers') }}" method="POST" class="p-6">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <textarea name="emails" rows="5" 
                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="email1@example.com, email2@example.com&#10;email3@example.com"></textarea>
@@ -44,7 +44,7 @@
             <p class="text-sm text-gray-500 mt-1">Select registered users to subscribe to daily question emails</p>
         </div>
         <form action="{{ url_for('admin.add_subscriber') }}" method="POST" class="p-6">
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg mb-4">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50 sticky top-0">
@@ -88,7 +88,7 @@
             {% if available_users %}
             <form action="{{ url_for('admin.bulk_subscribe_users') }}" method="POST" class="inline"
                   onsubmit="return confirm('This will subscribe ALL remaining {{ available_users|length }} users. Continue?');">
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">
                     Add all {{ available_users|length }} remaining users
                 </button>
@@ -99,7 +99,7 @@
         {% if subscribers %}
         <form action="{{ url_for('admin.bulk_remove_subscribers') }}" method="POST" id="bulk-remove-form"
               onsubmit="return confirm('Remove selected subscribers? This cannot be undone.');">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -150,7 +150,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                             <div class="flex items-center space-x-2">
                                 <form action="{{ url_for('admin.toggle_subscriber', subscriber_id=sub.id) }}" method="POST" class="inline">
-                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     {% if sub.is_active %}
                                     <button type="submit" class="text-yellow-600 hover:text-yellow-800" title="Deactivate">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,7 +168,7 @@
                                 {% if sub.is_active %}
                                 <form action="{{ url_for('admin.resend_daily_question', subscriber_id=sub.id) }}" method="POST" class="inline"
                                       onsubmit="return confirm('Resend today\\'s daily question to {{ sub.email }}?');">
-                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="text-blue-600 hover:text-blue-800" title="Resend Today's Question">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -178,7 +178,7 @@
                                 {% endif %}
                                 <form action="{{ url_for('admin.delete_subscriber', subscriber_id=sub.id) }}" method="POST" class="inline"
                                       onsubmit="return confirm('Remove {{ sub.email }} from subscribers? This cannot be undone.');">
-                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="text-red-600 hover:text-red-800" title="Remove">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

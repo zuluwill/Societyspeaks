@@ -22,7 +22,7 @@
             </p>
 
             <form method="POST" action="{{ url_for('daily.unsubscribe', token=token) }}" aria-labelledby="unsubscribe-heading">
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <fieldset>
                     <legend class="sr-only">Reason for unsubscribing</legend>
                     <div class="space-y-3 mb-6" role="radiogroup" aria-label="Select your reason for unsubscribing">

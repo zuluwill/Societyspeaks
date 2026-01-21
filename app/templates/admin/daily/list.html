@@ -129,7 +129,7 @@
                             <a href="{{ url_for('admin.edit_daily_question', question_id=q.id) }}" class="text-gray-600 hover:text-gray-900">Edit</a>
                             {% if q.status == 'scheduled' %}
                             <form action="{{ url_for('admin.publish_daily_question', question_id=q.id) }}" method="POST" class="inline">
-                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="text-green-600 hover:text-green-900">Publish</button>
                             </form>
                             {% endif %}

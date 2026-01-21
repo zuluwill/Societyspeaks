@@ -17,7 +17,7 @@
     {% endwith %}
 
     <form method="POST" action="{{ url_for('auth.login') }}" class="mt-6">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label class="block text-sm font-medium text-gray-700">Email</label>
         <input type="email" name="email" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
 
