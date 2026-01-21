@@ -92,6 +92,9 @@ def checkout():
                 f"Manual subscription {manual_sub_to_supersede.id} marked superseded after checkout session created"
             )
         
+        if not checkout_session.url:
+            flash('Payment session error. Please try again.', 'error')
+            return redirect(url_for('briefing.landing'))
         return redirect(checkout_session.url, code=303)
     except ValueError as e:
         flash(str(e), 'error')
@@ -126,7 +129,8 @@ def checkout_success():
                     return redirect(url_for('briefing.landing'))
 
             if checkout_session.subscription:
-                stripe_sub = s.Subscription.retrieve(checkout_session.subscription)
+                sub_id = checkout_session.subscription if isinstance(checkout_session.subscription, str) else checkout_session.subscription.id
+                stripe_sub = s.Subscription.retrieve(sub_id)
                 sub = sync_subscription_with_org(stripe_sub, current_user)
                 sync_success = True
                 if sub and sub.plan and sub.plan.is_organisation:
@@ -348,6 +352,9 @@ def pending_checkout():
             plan_code=plan_code,
             billing_interval=billing_interval
         )
+        if not checkout_session.url:
+            flash('Payment session error. Please try again.', 'error')
+            return redirect(url_for('briefing.landing'))
         return redirect(checkout_session.url, code=303)
     except ValueError as e:
         flash(str(e), 'error')
