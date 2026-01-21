@@ -64,7 +64,10 @@
                             {% if active_sub.billing_interval == 'lifetime' %}
                                 Lifetime Access (Manually Granted)
                             {% elif active_sub.stripe_subscription_id %}
-                                Via Stripe ({{ active_sub.billing_interval }})
+                                💳 Via Stripe ({{ active_sub.billing_interval }})
+                                <span class="block text-xs text-gray-500 mt-1">
+                                    Stripe ID: {{ active_sub.stripe_subscription_id }}
+                                </span>
                             {% else %}
                                 Manual Subscription (No Stripe)
                             {% endif %}
@@ -112,6 +115,34 @@
             <!-- Admin Actions -->
             <div class="bg-white shadow rounded-lg p-6">
                 <h2 class="text-xl font-semibold text-gray-900 mb-4">Admin Actions</h2>
+                
+                <!-- Stripe Subscription Warning -->
+                {% if active_sub and active_sub.stripe_subscription_id %}
+                <div class="mb-6 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                    <div class="flex items-start">
+                        <svg class="h-6 w-6 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">⚠️ STRIPE SUBSCRIPTION ACTIVE</h3>
+                            <p class="text-sm text-red-700 mt-2">
+                                This user has an active Stripe subscription (ID: <code class="bg-red-100 px-1 rounded">{{ active_sub.stripe_subscription_id }}</code>).
+                            </p>
+                            <p class="text-sm text-red-700 mt-2 font-semibold">
+                                IMPORTANT: Granting manual access or revoking here will NOT cancel Stripe billing!
+                            </p>
+                            <p class="text-sm text-red-700 mt-1">
+                                You must cancel the subscription in the Stripe Dashboard to stop charges. Otherwise the user will be double-billed.
+                            </p>
+                            <a href="https://dashboard.stripe.com/subscriptions/{{ active_sub.stripe_subscription_id }}" 
+                               target="_blank"
+                               class="inline-flex items-center mt-3 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">
+                                Open in Stripe Dashboard →
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                 
                 <!-- Grant Free Access -->
                 <div class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">

@@ -554,7 +554,23 @@ def manage_user_subscription(user_id):
                     flash('Invalid plan selected.', 'error')
                     return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
                 
-                # Cancel existing active subscription if any
+                # CRITICAL: Check if user has active Stripe subscription
+                if active_sub and active_sub.stripe_subscription_id:
+                    flash(
+                        f'⚠️ WARNING: User has ACTIVE STRIPE SUBSCRIPTION '
+                        f'({active_sub.plan.name}, Stripe ID: {active_sub.stripe_subscription_id}). '
+                        f'Granting manual access will NOT cancel their Stripe billing - they will continue to be charged! '
+                        f'You must cancel their Stripe subscription manually via the Stripe Dashboard first, '
+                        f'or the user will be double-billed.',
+                        'error'
+                    )
+                    current_app.logger.warning(
+                        f"Admin {current_user.username} attempted to grant manual subscription to user {user.username} "
+                        f"who has active Stripe subscription {active_sub.stripe_subscription_id}"
+                    )
+                    return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
+                
+                # Cancel existing active subscription if any (only manual ones at this point)
                 if active_sub:
                     active_sub.status = 'canceled'
                     active_sub.canceled_at = datetime.utcnow()
@@ -586,6 +602,22 @@ def manage_user_subscription(user_id):
                 # Revoke active subscription
                 if not active_sub:
                     flash('User has no active subscription to revoke.', 'warning')
+                    return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
+                
+                # CRITICAL: Warn if revoking Stripe subscription
+                if active_sub.stripe_subscription_id:
+                    flash(
+                        f'⚠️ WARNING: This is a STRIPE SUBSCRIPTION (ID: {active_sub.stripe_subscription_id}). '
+                        f'Revoking it here will NOT cancel billing in Stripe - the user will continue to be charged! '
+                        f'You must cancel their subscription in the Stripe Dashboard to stop billing. '
+                        f'Only proceed if you understand this will cause billing issues.',
+                        'error'
+                    )
+                    current_app.logger.warning(
+                        f"Admin {current_user.username} attempted to revoke Stripe subscription {active_sub.stripe_subscription_id} "
+                        f"for user {user.username} - this will NOT stop Stripe billing!"
+                    )
+                    # Optionally: Block this action entirely
                     return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
                 
                 active_sub.status = 'canceled'

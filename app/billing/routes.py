@@ -34,30 +34,47 @@ def checkout():
     existing_sub = get_active_subscription(current_user)
 
     if existing_sub:
-        is_upgrading_to_org = target_plan.is_organisation and not existing_sub.plan.is_organisation
-        if is_upgrading_to_org:
-            # Upgrading from individual to team/enterprise plan
-            # Cancel existing subscription at period end and create new one
-            try:
-                s = get_stripe()
-                # Cancel existing subscription at period end (user keeps access until then)
-                s.Subscription.modify(
-                    existing_sub.stripe_subscription_id,
-                    cancel_at_period_end=True
-                )
-                existing_sub.cancel_at_period_end = True
-                db.session.commit()
-                current_app.logger.info(
-                    f"Marked subscription {existing_sub.id} for cancellation due to org plan upgrade"
-                )
-            except stripe.error.StripeError as e:
-                current_app.logger.error(f"Failed to cancel existing subscription for upgrade: {e}")
-                flash('Unable to process upgrade. Please contact support.', 'error')
-                return redirect(url_for('briefing.list_briefings'))
+        # Check if existing subscription is manual (admin-granted)
+        if existing_sub.stripe_subscription_id is None:
+            # Manual subscription - mark as superseded and allow Stripe checkout
+            current_app.logger.info(
+                f"User {current_user.id} upgrading from manual subscription (plan: {existing_sub.plan.name}) "
+                f"to Stripe subscription (plan: {target_plan.name})"
+            )
+            existing_sub.status = 'superseded'
+            existing_sub.canceled_at = db.func.now()
+            db.session.commit()
+            flash(
+                f'Your free {existing_sub.plan.name} access will be replaced by your new paid subscription.',
+                'info'
+            )
+            # Continue to checkout - manual subscription is now superseded
         else:
-            # Same tier or downgrade - use customer portal
-            flash('You already have an active subscription. Use "Manage Billing" to change your plan.', 'info')
-            return redirect(url_for('billing.customer_portal'))
+            # Stripe subscription exists
+            is_upgrading_to_org = target_plan.is_organisation and not existing_sub.plan.is_organisation
+            if is_upgrading_to_org:
+                # Upgrading from individual to team/enterprise plan
+                # Cancel existing subscription at period end and create new one
+                try:
+                    s = get_stripe()
+                    # Cancel existing subscription at period end (user keeps access until then)
+                    s.Subscription.modify(
+                        existing_sub.stripe_subscription_id,
+                        cancel_at_period_end=True
+                    )
+                    existing_sub.cancel_at_period_end = True
+                    db.session.commit()
+                    current_app.logger.info(
+                        f"Marked subscription {existing_sub.id} for cancellation due to org plan upgrade"
+                    )
+                except stripe.error.StripeError as e:
+                    current_app.logger.error(f"Failed to cancel existing subscription for upgrade: {e}")
+                    flash('Unable to process upgrade. Please contact support.', 'error')
+                    return redirect(url_for('briefing.list_briefings'))
+            else:
+                # Same tier or downgrade - use customer portal
+                flash('You already have an active subscription. Use "Manage Billing" to change your plan.', 'info')
+                return redirect(url_for('billing.customer_portal'))
 
     try:
         session = create_checkout_session(

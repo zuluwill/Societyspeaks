@@ -171,43 +171,78 @@ def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None
 
 def get_active_subscription(user):
     """Get the user's active subscription, if any.
-
+    
+    Priority order when multiple active subscriptions exist:
+    1. Stripe subscriptions (user is paying) - always take precedence
+    2. Manual subscriptions (admin-granted free access) - fallback
+    
+    This ensures paying customers always get their paid plan limits.
+    
     Checks in order:
-    1. User's direct subscription
-    2. Subscription for organization user owns
-    3. Subscription for any organization user is a member of
+    1. User's direct subscription (Stripe first, then manual)
+    2. Subscription for organization user owns (Stripe first, then manual)
+    3. Subscription for any organization user is a member of (Stripe first, then manual)
     """
-    # Check user's direct subscription
-    sub = Subscription.query.filter(
+    # Check user's direct subscription - Stripe takes priority
+    stripe_sub = Subscription.query.filter(
         Subscription.user_id == user.id,
-        Subscription.status.in_(['trialing', 'active'])
-    ).first()
+        Subscription.status.in_(['trialing', 'active']),
+        Subscription.stripe_subscription_id.isnot(None)  # Stripe only
+    ).order_by(Subscription.created_at.desc()).first()
 
-    if sub:
-        return sub
+    if stripe_sub:
+        return stripe_sub
+    
+    # Fall back to manual subscription if no Stripe
+    manual_sub = Subscription.query.filter(
+        Subscription.user_id == user.id,
+        Subscription.status.in_(['trialing', 'active']),
+        Subscription.stripe_subscription_id.is_(None)  # Manual only
+    ).order_by(Subscription.created_at.desc()).first()
+    
+    if manual_sub:
+        return manual_sub
 
-    # Check organization user owns (via company_profile)
+    # Check organization user owns (via company_profile) - Stripe priority
     if user.company_profile:
-        sub = Subscription.query.filter(
+        stripe_sub = Subscription.query.filter(
             Subscription.org_id == user.company_profile.id,
-            Subscription.status.in_(['trialing', 'active'])
-        ).first()
-        if sub:
-            return sub
+            Subscription.status.in_(['trialing', 'active']),
+            Subscription.stripe_subscription_id.isnot(None)
+        ).order_by(Subscription.created_at.desc()).first()
+        if stripe_sub:
+            return stripe_sub
+        
+        manual_sub = Subscription.query.filter(
+            Subscription.org_id == user.company_profile.id,
+            Subscription.status.in_(['trialing', 'active']),
+            Subscription.stripe_subscription_id.is_(None)
+        ).order_by(Subscription.created_at.desc()).first()
+        if manual_sub:
+            return manual_sub
 
-    # Check organizations user is a member of
+    # Check organizations user is a member of - Stripe priority
     memberships = OrganizationMember.query.filter(
         OrganizationMember.user_id == user.id,
         OrganizationMember.status == 'active'
     ).all()
 
     for membership in memberships:
-        sub = Subscription.query.filter(
+        stripe_sub = Subscription.query.filter(
             Subscription.org_id == membership.org_id,
-            Subscription.status.in_(['trialing', 'active'])
-        ).first()
-        if sub:
-            return sub
+            Subscription.status.in_(['trialing', 'active']),
+            Subscription.stripe_subscription_id.isnot(None)
+        ).order_by(Subscription.created_at.desc()).first()
+        if stripe_sub:
+            return stripe_sub
+        
+        manual_sub = Subscription.query.filter(
+            Subscription.org_id == membership.org_id,
+            Subscription.status.in_(['trialing', 'active']),
+            Subscription.stripe_subscription_id.is_(None)
+        ).order_by(Subscription.created_at.desc()).first()
+        if manual_sub:
+            return manual_sub
 
     return None
 
