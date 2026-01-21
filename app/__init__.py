@@ -47,7 +47,7 @@ csp = {
     ],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],
-    'form-action': ["'self'", "https://checkout.stripe.com"]
+    'form-action': ["'self'", "https://checkout.stripe.com", "https://billing.stripe.com"]
 }
 
 
