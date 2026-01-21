@@ -22,7 +22,7 @@ from app.models import (
 )
 from app.billing.enforcement import (
     get_subscription_context, check_can_create_brief, enforce_brief_limit,
-    check_source_limit, check_recipient_limit
+    check_source_limit, check_recipient_limit, require_feature
 )
 from app.billing.service import (
     get_active_subscription, get_team_members, invite_team_member,
@@ -2502,7 +2502,7 @@ def test_send(briefing_id):
     
     # Prevent duplicate sends within 30 seconds (backend protection against double-clicks)
     try:
-        from app.cache import get_redis_client
+        from app.briefing.jobs import get_redis_client
         redis_client = get_redis_client()
         if redis_client:
             dedup_key = f"test_email_dedup:{briefing_id}:{current_user.id}"
