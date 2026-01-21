@@ -6,6 +6,7 @@ from flask_talisman import Talisman
 from flask_wtf.csrf import CSRFProtect
 from config import Config, config_dict
 from datetime import timedelta
+from werkzeug.exceptions import HTTPException
 import os
 import json
 import time
@@ -447,6 +448,9 @@ def create_app():
     # Catch-all error handler for unhandled exceptions
     @app.errorhandler(Exception)
     def handle_exception(e):
+        # Let HTTP exceptions (like 404, 403, etc.) be handled by their specific handlers
+        if isinstance(e, HTTPException):
+            return e
         app.logger.error(f"Unhandled Exception: {e}", exc_info=True)  # Logs full stack trace
         return render_template('errors/general_error.html', error_code=500, error_message="An unexpected error occurred."), 500
 
