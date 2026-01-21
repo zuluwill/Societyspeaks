@@ -2476,6 +2476,21 @@ def test_send(briefing_id):
         flash(error, 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
     
+    # Prevent duplicate sends within 30 seconds (backend protection against double-clicks)
+    try:
+        from app.cache import get_redis_client
+        redis_client = get_redis_client()
+        if redis_client:
+            dedup_key = f"test_email_dedup:{briefing_id}:{current_user.id}"
+            if redis_client.get(dedup_key):
+                flash('Test email already sent. Please wait a moment before sending again.', 'warning')
+                return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+            # Set lock for 30 seconds
+            redis_client.setex(dedup_key, 30, "1")
+    except Exception as e:
+        logger.warning(f"Redis dedup check failed: {e}")
+        # Continue anyway - better to send than block due to Redis issues
+    
     # Get most recent run
     recent_run = briefing.runs.order_by(BriefRun.generated_at.desc()).first()
     
