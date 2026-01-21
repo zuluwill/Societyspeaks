@@ -14,9 +14,12 @@ from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timedelta
 import logging
 import threading
+import atexit
+import signal
 
 logger = logging.getLogger(__name__)
 scheduler = None
+_shutdown_registered = False
 
 
 def _is_production_environment() -> bool:
@@ -1304,19 +1307,50 @@ def start_scheduler():
         return
     
     if not scheduler.running:
+        _register_shutdown_handlers()
         scheduler.start()
-        logger.info("Scheduler started")
+        logger.info("Scheduler started with shutdown handlers")
     else:
         logger.warning("Scheduler already running")
 
 
-def shutdown_scheduler():
+def shutdown_scheduler(wait: bool = False):
     """
-    Shutdown the scheduler gracefully
+    Shutdown the scheduler gracefully.
+    
+    Args:
+        wait: If True, wait for running jobs to complete. 
+              Default False to avoid blocking during worker shutdown.
     """
     global scheduler
     
-    if scheduler and scheduler.running:
-        scheduler.shutdown()
-        logger.info("Scheduler shut down")
+    if scheduler:
+        try:
+            if scheduler.running:
+                scheduler.shutdown(wait=wait)
+                logger.info("Scheduler shut down gracefully")
+        except Exception as e:
+            logger.warning(f"Error during scheduler shutdown (may already be stopped): {e}")
+
+
+def _register_shutdown_handlers():
+    """Register atexit and signal handlers to ensure clean shutdown."""
+    global _shutdown_registered
+    
+    if _shutdown_registered:
+        return
+    
+    def _shutdown_handler(*args):
+        shutdown_scheduler(wait=False)
+    
+    atexit.register(_shutdown_handler)
+    
+    try:
+        signal.signal(signal.SIGTERM, _shutdown_handler)
+        signal.signal(signal.SIGINT, _shutdown_handler)
+    except (ValueError, OSError):
+        pass
+    
+    _shutdown_registered = True
+    logger.debug("Scheduler shutdown handlers registered")
 
