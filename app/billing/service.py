@@ -96,31 +96,45 @@ def create_portal_session(user, return_url=None):
 
 
 def resolve_plan_from_stripe_subscription(stripe_subscription):
-    """Resolve pricing plan from Stripe subscription metadata or price ID."""
-    plan_code = stripe_subscription.metadata.get('plan_code')
+    """Resolve pricing plan from Stripe subscription metadata or price ID.
+    
+    Compatible with both Stripe API objects and webhook event data (dict format).
+    """
+    metadata = stripe_subscription.get('metadata', {}) if isinstance(stripe_subscription, dict) else (stripe_subscription.metadata or {})
+    plan_code = metadata.get('plan_code')
     plan = PricingPlan.query.filter_by(code=plan_code).first() if plan_code else None
     
-    if not plan and stripe_subscription.items.data:
-        price_id = stripe_subscription.items.data[0].price.id
-        plan = PricingPlan.query.filter(
-            (PricingPlan.stripe_price_monthly_id == price_id) | 
-            (PricingPlan.stripe_price_yearly_id == price_id)
-        ).first()
+    if not plan:
+        items_data = stripe_subscription.get('items', {}).get('data', []) if isinstance(stripe_subscription, dict) else (stripe_subscription.items.data if stripe_subscription.items else [])
         
-        if not plan:
-            current_app.logger.error(
-                f"CRITICAL: Unknown Stripe price ID {price_id} for subscription {stripe_subscription.id}. "
-                f"This may indicate a missing plan configuration. Check that all Stripe price IDs are in the database."
-            )
-            raise ValueError(
-                f"Unknown Stripe price ID: {price_id}. "
-                f"Please ensure all Stripe price IDs are configured in the database."
-            )
+        if items_data:
+            first_item = items_data[0]
+            if isinstance(first_item, dict):
+                price_id = first_item.get('price', {}).get('id')
+            else:
+                price_id = first_item.price.id if first_item.price else None
+            
+            if price_id:
+                plan = PricingPlan.query.filter(
+                    (PricingPlan.stripe_price_monthly_id == price_id) | 
+                    (PricingPlan.stripe_price_yearly_id == price_id)
+                ).first()
+                
+                if not plan:
+                    sub_id = stripe_subscription.get('id') if isinstance(stripe_subscription, dict) else stripe_subscription.id
+                    current_app.logger.error(
+                        f"CRITICAL: Unknown Stripe price ID {price_id} for subscription {sub_id}. "
+                        f"This may indicate a missing plan configuration. Check that all Stripe price IDs are in the database."
+                    )
+                    raise ValueError(
+                        f"Unknown Stripe price ID: {price_id}. "
+                        f"Please ensure all Stripe price IDs are configured in the database."
+                    )
 
     if not plan:
-        # No metadata and no price items - this shouldn't happen with valid Stripe subscriptions
-        current_app.logger.error(f"Could not resolve plan for subscription {stripe_subscription.id} - no metadata or price data")
-        raise ValueError(f"Could not resolve plan for subscription {stripe_subscription.id}")
+        sub_id = stripe_subscription.get('id') if isinstance(stripe_subscription, dict) else stripe_subscription.id
+        current_app.logger.error(f"Could not resolve plan for subscription {sub_id} - no metadata or price data")
+        raise ValueError(f"Could not resolve plan for subscription {sub_id}")
 
     return plan
 
@@ -129,15 +143,24 @@ def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None
     """Create or update local subscription record from Stripe subscription data.
     
     Preserves existing org_id linkage if already set (important for webhook updates).
+    
+    Compatible with Stripe API versions where current_period fields may be:
+    - At the subscription level (older API versions)
+    - Inside items.data[0] (API version 2025-12-15.clover and later)
+    
+    Also compatible with both Stripe API objects and webhook event data (dict format).
     """
-    sub = Subscription.query.filter_by(stripe_subscription_id=stripe_subscription.id).first()
+    sub_id = stripe_subscription.get('id') if isinstance(stripe_subscription, dict) else stripe_subscription.id
+    customer_id = stripe_subscription.get('customer') if isinstance(stripe_subscription, dict) else stripe_subscription.customer
+    
+    sub = Subscription.query.filter_by(stripe_subscription_id=sub_id).first()
     
     plan = resolve_plan_from_stripe_subscription(stripe_subscription)
     
     if not sub:
         sub = Subscription(
-            stripe_subscription_id=stripe_subscription.id,
-            stripe_customer_id=stripe_subscription.customer,
+            stripe_subscription_id=sub_id,
+            stripe_customer_id=customer_id,
             user_id=user_id,
             org_id=org_id,
             plan_id=plan.id if plan else None,
@@ -150,29 +173,57 @@ def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None
         elif sub.user_id and not user_id:
             user_id = sub.user_id
     
-    sub.status = stripe_subscription.get('status') or stripe_subscription.status
+    sub.status = stripe_subscription.get('status') if isinstance(stripe_subscription, dict) else stripe_subscription.status
     
-    period_start = stripe_subscription.get('current_period_start')
-    period_end = stripe_subscription.get('current_period_end')
+    if isinstance(stripe_subscription, dict):
+        items_data = stripe_subscription.get('items', {}).get('data', [])
+    else:
+        items_data = stripe_subscription.items.data if stripe_subscription.items else []
+    
+    first_item = items_data[0] if items_data else {}
+    is_dict = isinstance(stripe_subscription, dict)
+    is_first_item_dict = isinstance(first_item, dict)
+    
+    if is_dict:
+        period_start = stripe_subscription.get('current_period_start')
+        period_end = stripe_subscription.get('current_period_end')
+    else:
+        period_start = getattr(stripe_subscription, 'current_period_start', None)
+        period_end = getattr(stripe_subscription, 'current_period_end', None)
+    
+    if not period_start and first_item:
+        period_start = first_item.get('current_period_start') if is_first_item_dict else getattr(first_item, 'current_period_start', None)
+    if not period_end and first_item:
+        period_end = first_item.get('current_period_end') if is_first_item_dict else getattr(first_item, 'current_period_end', None)
+    
+    if not period_start:
+        period_start = stripe_subscription.get('start_date') if is_dict else getattr(stripe_subscription, 'start_date', None)
+        if not period_start:
+            period_start = stripe_subscription.get('trial_start') if is_dict else getattr(stripe_subscription, 'trial_start', None)
+    if not period_end:
+        period_end = stripe_subscription.get('trial_end') if is_dict else getattr(stripe_subscription, 'trial_end', None)
+    
     if period_start:
         sub.current_period_start = datetime.fromtimestamp(period_start)
     if period_end:
         sub.current_period_end = datetime.fromtimestamp(period_end)
     
-    sub.cancel_at_period_end = stripe_subscription.get('cancel_at_period_end', False)
+    sub.cancel_at_period_end = stripe_subscription.get('cancel_at_period_end', False) if is_dict else getattr(stripe_subscription, 'cancel_at_period_end', False)
     
-    items_data = stripe_subscription.get('items', {}).get('data', [])
-    if items_data:
-        recurring = items_data[0].get('price', {}).get('recurring', {})
-        sub.billing_interval = recurring.get('interval', 'month')
+    if first_item:
+        if is_first_item_dict:
+            recurring = first_item.get('price', {}).get('recurring', {})
+            sub.billing_interval = recurring.get('interval', 'month')
+        else:
+            sub.billing_interval = first_item.price.recurring.interval if first_item.price and first_item.price.recurring else 'month'
     else:
         sub.billing_interval = 'month'
     
-    trial_end = stripe_subscription.get('trial_end')
+    trial_end = stripe_subscription.get('trial_end') if is_dict else getattr(stripe_subscription, 'trial_end', None)
     if trial_end:
         sub.trial_end = datetime.fromtimestamp(trial_end)
     
-    canceled_at = stripe_subscription.get('canceled_at')
+    canceled_at = stripe_subscription.get('canceled_at') if is_dict else getattr(stripe_subscription, 'canceled_at', None)
     if canceled_at:
         sub.canceled_at = datetime.fromtimestamp(canceled_at)
     
