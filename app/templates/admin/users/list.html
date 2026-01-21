@@ -1,165 +1,237 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="min-h-screen bg-gray-100 py-6">
+<div class="min-h-screen bg-gray-100 py-4 sm:py-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-semibold text-gray-900">Manage Users</h1>
-            <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-800">Back to Dashboard</a>
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <h1 class="text-xl sm:text-2xl font-semibold text-gray-900">Manage Users</h1>
+            <a href="{{ url_for('admin.dashboard') }}" class="text-blue-600 hover:text-blue-800 text-sm">← Back to Dashboard</a>
         </div>
-        
+
         <!-- Search and Filters -->
         <div class="mt-4 bg-white shadow rounded-lg p-4">
-            <form method="GET" action="{{ url_for('admin.list_users') }}" class="flex flex-wrap gap-4 items-end">
-                <div class="flex-1 min-w-64">
+            <form method="GET" action="{{ url_for('admin.list_users') }}" class="space-y-3 sm:space-y-0 sm:flex sm:flex-wrap sm:gap-4 sm:items-end">
+                <div class="flex-1 min-w-0 sm:min-w-[200px]">
                     <label for="q" class="block text-sm font-medium text-gray-700">Search</label>
-                    <input type="text" name="q" id="q" value="{{ search_query or '' }}" 
-                           placeholder="Search by username or email..."
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    <input type="text" name="q" id="q" value="{{ search_query or '' }}"
+                           placeholder="Username or email..."
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                 </div>
-                <div>
+                <div class="w-full sm:w-auto">
                     <label for="profile_type" class="block text-sm font-medium text-gray-700">Profile Type</label>
-                    <select name="profile_type" id="profile_type" 
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    <select name="profile_type" id="profile_type"
+                            class="mt-1 block w-full sm:w-auto rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
                         <option value="">All Types</option>
                         <option value="individual" {% if profile_filter == 'individual' %}selected{% endif %}>Individual</option>
                         <option value="company" {% if profile_filter == 'company' %}selected{% endif %}>Company</option>
                     </select>
                 </div>
                 <div class="flex gap-2">
-                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    <button type="submit" class="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         Search
                     </button>
                     {% if search_query or profile_filter %}
-                    <a href="{{ url_for('admin.list_users') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <a href="{{ url_for('admin.list_users') }}" class="flex-1 sm:flex-none inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
                         Clear
                     </a>
                     {% endif %}
                 </div>
             </form>
         </div>
-        
+
         <!-- Results count -->
         <div class="mt-4 text-sm text-gray-600">
             Showing {{ users.items|length }} of {{ users.total }} users
             {% if search_query %} matching "{{ search_query }}"{% endif %}
         </div>
-        
-        <div class="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profile Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admin</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for user in users.items %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ user.username }}</div>
-                            <div class="text-xs text-gray-500">ID: {{ user.id }}</div>
-                            {% if user.is_admin %}
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                ADMIN
-                            </span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ user.email }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            {% if user._cached_active_sub %}
-                                <div class="text-sm font-medium text-gray-900">{{ user._cached_active_sub.plan.name }}</div>
-                                <div class="text-xs text-gray-500">
-                                    {% if user._cached_active_sub.billing_interval == 'lifetime' %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                            FREE ACCESS
-                                        </span>
-                                    {% elif user._cached_active_sub.status == 'trialing' %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                                            TRIAL
-                                        </span>
-                                    {% elif user._cached_active_sub.status == 'active' %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                            ACTIVE
-                                        </span>
-                                    {% elif user._cached_active_sub.status == 'past_due' %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                            PAST DUE
-                                        </span>
-                                    {% else %}
-                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                            {{ user._cached_active_sub.status.upper() }}
-                                        </span>
-                                    {% endif %}
-                                </div>
-                            {% else %}
-                                <span class="text-sm text-gray-500">No subscription</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <form action="{{ url_for('admin.change_profile_type', user_id=user.id) }}" method="POST" class="inline">
-                                <select name="profile_type" onchange="this.form.submit()" 
-                                        class="text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                                    <option value="" {% if not user.profile_type %}selected{% endif %}>None</option>
-                                    <option value="individual" {% if user.profile_type == 'individual' %}selected{% endif %}>Individual</option>
-                                    <option value="company" {% if user.profile_type == 'company' %}selected{% endif %}>Company</option>
-                                </select>
-                            </form>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ 'Yes' if user.is_admin else 'No' }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <div class="flex justify-end space-x-2">
-                                <a href="{{ url_for('admin.manage_user_subscription', user_id=user.id) }}"
-                                   class="text-indigo-600 hover:text-indigo-900">
-                                    Subscription
-                                </a>
-                                <form action="{{ url_for('admin.toggle_admin', user_id=user.id) }}" method="POST" class="inline">
-                                    <button type="submit" onclick="return confirm('Are you sure you want to {% if user.is_admin %}remove{% else %}grant{% endif %} admin privileges?')"
-                                            class="text-blue-600 hover:text-blue-900">
-                                        {% if user.is_admin %}Remove Admin{% else %}Make Admin{% endif %}
-                                    </button>
-                                </form>
-                                <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST" class="inline">
-                                    <button type="submit" onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')"
-                                            class="text-red-600 hover:text-red-900">Delete</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
+
+        <!-- Mobile Card View (visible on small screens) -->
+        <div class="mt-4 space-y-3 sm:hidden">
+            {% for user in users.items %}
+            <div class="bg-white shadow rounded-lg p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="font-medium text-gray-900">{{ user.username }}</div>
+                        <div class="text-xs text-gray-500">ID: {{ user.id }}</div>
+                        <div class="text-sm text-gray-600 mt-1 break-all">{{ user.email }}</div>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                        {% if user.is_admin %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                            ADMIN
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Subscription & Profile -->
+                <div class="mt-3 flex flex-wrap gap-2 items-center text-sm">
+                    {% if user._cached_active_sub %}
+                        <span class="font-medium">{{ user._cached_active_sub.plan.name }}</span>
+                        {% if user._cached_active_sub.billing_interval == 'lifetime' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">FREE</span>
+                        {% elif user._cached_active_sub.status == 'trialing' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">TRIAL</span>
+                        {% elif user._cached_active_sub.status == 'active' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">ACTIVE</span>
+                        {% elif user._cached_active_sub.status == 'past_due' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">PAST DUE</span>
+                        {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">{{ user._cached_active_sub.status.upper() }}</span>
+                        {% endif %}
                     {% else %}
-                    <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                            No users found{% if search_query %} matching "{{ search_query }}"{% endif %}.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                        <span class="text-gray-500">No subscription</span>
+                    {% endif %}
+                </div>
+
+                <!-- Profile Type -->
+                <div class="mt-3">
+                    <form action="{{ url_for('admin.change_profile_type', user_id=user.id) }}" method="POST" class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <label class="text-xs text-gray-500 mr-2">Profile:</label>
+                        <select name="profile_type" onchange="this.form.submit()"
+                                class="text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="" {% if not user.profile_type %}selected{% endif %}>None</option>
+                            <option value="individual" {% if user.profile_type == 'individual' %}selected{% endif %}>Individual</option>
+                            <option value="company" {% if user.profile_type == 'company' %}selected{% endif %}>Company</option>
+                        </select>
+                    </form>
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-3 pt-3 border-t flex flex-wrap gap-3 text-sm">
+                    <a href="{{ url_for('admin.manage_user_subscription', user_id=user.id) }}"
+                       class="text-indigo-600 hover:text-indigo-900">Subscription</a>
+                    <form action="{{ url_for('admin.toggle_admin', user_id=user.id) }}" method="POST" class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" onclick="return confirm('Are you sure you want to {% if user.is_admin %}remove{% else %}grant{% endif %} admin privileges?')"
+                                class="text-blue-600 hover:text-blue-900">
+                            {% if user.is_admin %}Remove Admin{% else %}Make Admin{% endif %}
+                        </button>
+                    </form>
+                    <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST" class="inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')"
+                                class="text-red-600 hover:text-red-900">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-white shadow rounded-lg p-6 text-center text-gray-500">
+                No users found{% if search_query %} matching "{{ search_query }}"{% endif %}.
+            </div>
+            {% endfor %}
         </div>
-        
+
+        <!-- Desktop Table View (hidden on small screens) -->
+        <div class="mt-4 bg-white shadow overflow-hidden sm:rounded-lg hidden sm:block">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Email</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Profile Type</th>
+                            <th class="px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for user in users.items %}
+                        <tr>
+                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ user.username }}</div>
+                                <div class="text-xs text-gray-500">ID: {{ user.id }}</div>
+                                <!-- Show email on tablet when email column is hidden -->
+                                <div class="text-xs text-gray-500 md:hidden truncate max-w-[150px]">{{ user.email }}</div>
+                                {% if user.is_admin %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                    ADMIN
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                                <div class="text-sm text-gray-900 truncate max-w-[200px]">{{ user.email }}</div>
+                            </td>
+                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap">
+                                {% if user._cached_active_sub %}
+                                    <div class="text-sm font-medium text-gray-900">{{ user._cached_active_sub.plan.name }}</div>
+                                    <div class="text-xs text-gray-500">
+                                        {% if user._cached_active_sub.billing_interval == 'lifetime' %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">FREE</span>
+                                        {% elif user._cached_active_sub.status == 'trialing' %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">TRIAL</span>
+                                        {% elif user._cached_active_sub.status == 'active' %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">ACTIVE</span>
+                                        {% elif user._cached_active_sub.status == 'past_due' %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">PAST DUE</span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">{{ user._cached_active_sub.status.upper() }}</span>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <span class="text-sm text-gray-500">No subscription</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
+                                <form action="{{ url_for('admin.change_profile_type', user_id=user.id) }}" method="POST" class="inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <select name="profile_type" onchange="this.form.submit()"
+                                            class="text-sm rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <option value="" {% if not user.profile_type %}selected{% endif %}>None</option>
+                                        <option value="individual" {% if user.profile_type == 'individual' %}selected{% endif %}>Individual</option>
+                                        <option value="company" {% if user.profile_type == 'company' %}selected{% endif %}>Company</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex flex-wrap gap-2">
+                                    <a href="{{ url_for('admin.manage_user_subscription', user_id=user.id) }}"
+                                       class="text-indigo-600 hover:text-indigo-900">Sub</a>
+                                    <form action="{{ url_for('admin.toggle_admin', user_id=user.id) }}" method="POST" class="inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" onclick="return confirm('Are you sure you want to {% if user.is_admin %}remove{% else %}grant{% endif %} admin privileges?')"
+                                                class="text-blue-600 hover:text-blue-900">
+                                            {% if user.is_admin %}−Admin{% else %}+Admin{% endif %}
+                                        </button>
+                                    </form>
+                                    <form action="{{ url_for('admin.delete_user', user_id=user.id) }}" method="POST" class="inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" onclick="return confirm('Are you sure you want to delete this user? This action cannot be undone.')"
+                                                class="text-red-600 hover:text-red-900">Del</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                                No users found{% if search_query %} matching "{{ search_query }}"{% endif %}.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
         {% if users.pages > 1 %}
         <nav class="flex justify-center mt-6">
-            <ul class="flex space-x-2">
+            <ul class="flex flex-wrap justify-center gap-1 sm:gap-2">
                 {% if users.has_prev %}
-                <li><a href="?page={{ users.prev_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if profile_filter %}&profile_type={{ profile_filter }}{% endif %}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Previous</a></li>
+                <li><a href="?page={{ users.prev_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if profile_filter %}&profile_type={{ profile_filter }}{% endif %}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50 text-sm">Prev</a></li>
                 {% endif %}
-                {% for page_num in users.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% for page_num in users.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=1) %}
                     {% if page_num %}
-                        <li><a href="?page={{ page_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if profile_filter %}&profile_type={{ profile_filter }}{% endif %}" class="px-3 py-2 border rounded-md {% if page_num == users.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
+                        <li><a href="?page={{ page_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if profile_filter %}&profile_type={{ profile_filter }}{% endif %}" class="px-3 py-2 border rounded-md text-sm {% if page_num == users.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
                     {% else %}
-                        <li class="px-3 py-2">...</li>
+                        <li class="px-2 py-2 text-sm">...</li>
                     {% endif %}
                 {% endfor %}
                 {% if users.has_next %}
-                <li><a href="?page={{ users.next_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if profile_filter %}&profile_type={{ profile_filter }}{% endif %}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Next</a></li>
+                <li><a href="?page={{ users.next_num }}{% if search_query %}&q={{ search_query }}{% endif %}{% if profile_filter %}&profile_type={{ profile_filter }}{% endif %}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50 text-sm">Next</a></li>
                 {% endif %}
             </ul>
         </nav>
