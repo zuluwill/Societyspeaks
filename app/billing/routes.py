@@ -136,7 +136,11 @@ def checkout_success():
                 if sub and sub.plan and sub.plan.is_organisation:
                     is_org_plan = True
         except stripe.error.StripeError as e:
-            current_app.logger.error(f"Error retrieving checkout session: {e}")
+            current_app.logger.error(f"Stripe error retrieving checkout session: {e}")
+        except ValueError as e:
+            current_app.logger.error(f"Plan sync error during checkout success: {e}")
+        except Exception as e:
+            current_app.logger.error(f"Unexpected error during checkout success for user {current_user.id}: {e}", exc_info=True)
     
     sub = get_active_subscription(current_user)
     if sub or sync_success:

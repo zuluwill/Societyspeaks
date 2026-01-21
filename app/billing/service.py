@@ -150,17 +150,31 @@ def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None
         elif sub.user_id and not user_id:
             user_id = sub.user_id
     
-    sub.status = stripe_subscription.status
-    sub.current_period_start = datetime.fromtimestamp(stripe_subscription.current_period_start)
-    sub.current_period_end = datetime.fromtimestamp(stripe_subscription.current_period_end)
-    sub.cancel_at_period_end = stripe_subscription.cancel_at_period_end
-    sub.billing_interval = stripe_subscription.items.data[0].price.recurring.interval if stripe_subscription.items.data else 'month'
+    sub.status = stripe_subscription.get('status') or stripe_subscription.status
     
-    if stripe_subscription.trial_end:
-        sub.trial_end = datetime.fromtimestamp(stripe_subscription.trial_end)
+    period_start = stripe_subscription.get('current_period_start')
+    period_end = stripe_subscription.get('current_period_end')
+    if period_start:
+        sub.current_period_start = datetime.fromtimestamp(period_start)
+    if period_end:
+        sub.current_period_end = datetime.fromtimestamp(period_end)
     
-    if stripe_subscription.canceled_at:
-        sub.canceled_at = datetime.fromtimestamp(stripe_subscription.canceled_at)
+    sub.cancel_at_period_end = stripe_subscription.get('cancel_at_period_end', False)
+    
+    items_data = stripe_subscription.get('items', {}).get('data', [])
+    if items_data:
+        recurring = items_data[0].get('price', {}).get('recurring', {})
+        sub.billing_interval = recurring.get('interval', 'month')
+    else:
+        sub.billing_interval = 'month'
+    
+    trial_end = stripe_subscription.get('trial_end')
+    if trial_end:
+        sub.trial_end = datetime.fromtimestamp(trial_end)
+    
+    canceled_at = stripe_subscription.get('canceled_at')
+    if canceled_at:
+        sub.canceled_at = datetime.fromtimestamp(canceled_at)
     
     if plan:
         sub.plan_id = plan.id
