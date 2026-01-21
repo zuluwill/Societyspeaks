@@ -54,6 +54,7 @@ discussion.title }}{% endblock %} {% block content %}
       action="{{ url_for('moderation.bulk_moderation_action', discussion_id=discussion.id) }}"
       id="bulkForm"
     >
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
       <div class="mb-4 flex space-x-2">
         <button
           type="button"
@@ -123,6 +124,7 @@ discussion.title }}{% endblock %} {% block content %}
                 action="{{ url_for('moderation.review_flag', discussion_id=discussion.id, flag_id=flag.id) }}"
                 class="inline"
               >
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" value="approve" />
                 <button
                   type="submit"
@@ -136,6 +138,7 @@ discussion.title }}{% endblock %} {% block content %}
                 action="{{ url_for('moderation.review_flag', discussion_id=discussion.id, flag_id=flag.id) }}"
                 class="inline"
               >
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" value="reject" />
                 <button
                   type="submit"

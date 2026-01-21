@@ -2,6 +2,7 @@
 {% block content %}
 <div class="max-w-4xl mx-auto py-10">
     <form action="{{ url_for('profiles.edit_profile', profile_id=profile.id) }}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <!-- Banner Upload -->
         <div class="mb-6">
             <label class="block text-lg font-medium text-gray-700">Banner Image</label>

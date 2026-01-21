@@ -43,6 +43,7 @@ discussion.title }}{% endblock %} {% block content %}
         method="POST"
         action="{{ url_for('consensus.trigger_analysis', discussion_id=discussion.id) }}"
       >
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
         <button
           type="submit"
           class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold"

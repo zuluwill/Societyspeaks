@@ -42,6 +42,7 @@
     {% if flags.items %}
     <div class="bg-white rounded-xl shadow-sm">
         <form action="{{ url_for('admin.bulk_review_statement_flags') }}" method="POST" id="bulk-form">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -114,6 +115,7 @@
                                 <div class="flex items-center space-x-2">
                                     <form action="{{ url_for('admin.review_statement_flag', flag_id=flag.id) }}" method="POST" class="inline"
                                           onsubmit="return confirm('Approve this flag and hide the statement?');">
+                                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                         <input type="hidden" name="action" value="approve">
                                         <button type="submit" class="text-green-600 hover:text-green-800" title="Approve & Hide">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,6 +125,7 @@
                                     </form>
                                     <form action="{{ url_for('admin.review_statement_flag', flag_id=flag.id) }}" method="POST" class="inline"
                                           onsubmit="return confirm('Dismiss this flag?');">
+                                        <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                         <input type="hidden" name="action" value="dismiss">
                                         <button type="submit" class="text-gray-600 hover:text-gray-800" title="Dismiss">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -33,24 +33,28 @@
                     <div class="flex gap-2">
                         {% if brief.status == 'draft' %}
                         <form action="{{ url_for('brief_admin.publish', brief_id=brief.id) }}" method="POST">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
                                 Publish
                             </button>
                         </form>
                         {% elif brief.status == 'ready' %}
                         <form action="{{ url_for('brief_admin.publish', brief_id=brief.id) }}" method="POST">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
                                 Publish Now
                             </button>
                         </form>
                         {% elif brief.status == 'published' %}
                         <form action="{{ url_for('brief_admin.unpublish', brief_id=brief.id) }}" method="POST">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition">
                                 Unpublish
                             </button>
                         </form>
                         {% endif %}
                         <form action="{{ url_for('brief_admin.skip', brief_id=brief.id) }}" method="POST" class="inline">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="px-4 py-2 bg-red-100 text-red-700 font-medium rounded-lg hover:bg-red-200 transition">
                                 Skip
                             </button>
@@ -95,6 +99,7 @@
                                 Edit
                             </a>
                             <form action="{{ url_for('brief_admin.remove_item', item_id=item.id) }}" method="POST" class="inline">
+                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
                                         onclick="return confirm('Remove this item from the brief?')">
                                     Remove
@@ -177,6 +182,7 @@
         <div class="bg-white rounded-xl shadow-md p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4">Send Test Email</h3>
             <form action="{{ url_for('brief_admin.test_send') }}" method="POST" class="flex gap-3">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="brief_id" value="{{ brief.id }}">
                 <input type="email" name="email" placeholder="test@example.com" 
                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">

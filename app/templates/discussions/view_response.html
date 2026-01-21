@@ -66,6 +66,7 @@ endblock %} {% block content %}
           action="{{ url_for('statements.delete_response', response_id=response.id) }}"
           class="inline"
         >
+          <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
           <button
             type="submit"
             class="text-red-600 hover:underline text-sm"
@@ -153,6 +154,7 @@ endblock %} {% block content %}
       method="POST"
       action="{{ url_for('statements.create_response', statement_id=response.statement_id) }}"
     >
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
       <input
         type="hidden"
         name="parent_response_id"

@@ -49,6 +49,7 @@
                 <h3 class="text-lg font-semibold text-gray-900">Add Subscriber</h3>
             </div>
             <form action="{{ url_for('brief_admin.add_subscriber') }}" method="POST" class="p-6">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -93,6 +94,7 @@
                 <p class="text-sm text-gray-500 mt-1">Paste a list of email addresses (comma, newline, or space separated)</p>
             </div>
             <form action="{{ url_for('brief_admin.bulk_import_subscribers') }}" method="POST" class="p-6">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <textarea name="emails" rows="4" 
                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="email1@example.com, email2@example.com&#10;email3@example.com"></textarea>
@@ -141,6 +143,7 @@
             {% if subscribers %}
             <form action="{{ url_for('brief_admin.bulk_remove_subscribers') }}" method="POST" id="bulk-remove-form"
                   onsubmit="return confirm('Remove selected subscribers? This cannot be undone.');">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
             <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -202,6 +205,7 @@
                             <div class="flex items-center space-x-1">
                                 <!-- Toggle Active/Paused -->
                                 <form action="{{ url_for('brief_admin.toggle_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline">
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                     {% if subscriber.status == 'active' %}
                                     <button type="submit" class="text-yellow-600 hover:text-yellow-800 p-1" title="Pause">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,6 +223,7 @@
                                 
                                 <!-- Resend Brief -->
                                 <form action="{{ url_for('brief_admin.resend_to_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline">
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="text-blue-600 hover:text-blue-800 p-1" title="Resend Today's Brief">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -238,6 +243,7 @@
                                         <div class="py-1">
                                             {% if subscriber.tier != 'free' %}
                                             <form action="{{ url_for('brief_admin.set_subscriber_tier', subscriber_id=subscriber.id) }}" method="POST">
+                                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                                 <input type="hidden" name="tier" value="free">
                                                 <button type="submit" class="w-full text-left px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50">
                                                     Grant Free Access
@@ -246,6 +252,7 @@
                                             {% endif %}
                                             {% if subscriber.tier == 'trial' %}
                                             <form action="{{ url_for('brief_admin.extend_subscriber_trial', subscriber_id=subscriber.id) }}" method="POST" class="px-4 py-2">
+                                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                                 <div class="flex items-center gap-2">
                                                     <input type="number" name="days" value="14" min="1" max="365" 
                                                            class="w-16 px-2 py-1 text-sm border border-gray-300 rounded">
@@ -257,6 +264,7 @@
                                             {% endif %}
                                             {% if subscriber.tier != 'trial' %}
                                             <form action="{{ url_for('brief_admin.set_subscriber_tier', subscriber_id=subscriber.id) }}" method="POST">
+                                                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                                 <input type="hidden" name="tier" value="trial">
                                                 <button type="submit" class="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50">
                                                     Reset to Trial
@@ -270,6 +278,7 @@
                                 <!-- Delete -->
                                 <form action="{{ url_for('brief_admin.delete_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline"
                                       onsubmit="return confirm('Remove {{ subscriber.email }}? This cannot be undone.');">
+                                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Remove">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
