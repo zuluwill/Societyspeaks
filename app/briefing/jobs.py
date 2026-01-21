@@ -139,9 +139,10 @@ class GenerationJob:
             logger.error(f"Job {self.job_id} moved to dead letter queue after {MAX_RETRIES} retries")
             return False
 
-        # Schedule retry
-        self.retry_count += 1
+        # Calculate delay BEFORE incrementing retry_count for correct timing:
+        # retry 1: 30s, retry 2: 60s, retry 3: 120s
         delay = self.calculate_retry_delay()
+        self.retry_count += 1
         self.next_retry_at = (datetime.utcnow() + timedelta(seconds=delay)).isoformat()
         self.status = 'queued'  # Reset to queued for retry
         self.progress_message = f'Retry {self.retry_count}/{MAX_RETRIES} scheduled in {delay}s'
@@ -184,7 +185,7 @@ class GenerationJob:
             logger.error(f"Failed to get job {job_id}: {e}")
             return None
     
-    def update_status(self, status: str, message: str = '', brief_run_id: int = None, error: str = None):
+    def update_status(self, status: str, message: str = '', brief_run_id: Optional[int] = None, error: Optional[str] = None):
         """Update job status and save."""
         self.status = status
         if message:
@@ -382,7 +383,7 @@ def get_next_job() -> Optional[str]:
     
     try:
         job_id = client.rpop('briefing:generation_queue')
-        return job_id
+        return str(job_id) if job_id else None
     except Exception as e:
         logger.error(f"Failed to get next job: {e}")
         return None
@@ -473,7 +474,7 @@ def _process_retry_queue() -> int:
             return 0
 
         moved = 0
-        for job_id in due_jobs:
+        for job_id in list(due_jobs):
             try:
                 # Remove from retry queue
                 client.zrem(RETRY_QUEUE, job_id)
@@ -597,7 +598,7 @@ def get_dead_letter_jobs(limit: int = 50) -> List[Dict[str, Any]]:
 
     try:
         dead_jobs = client.lrange(DEAD_LETTER_QUEUE, 0, limit - 1)
-        return [json.loads(job_data) for job_data in dead_jobs]
+        return [json.loads(job_data) for job_data in list(dead_jobs)]
     except Exception as e:
         logger.error(f"Failed to get dead letter jobs: {e}")
         return []
