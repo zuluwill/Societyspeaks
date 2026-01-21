@@ -61,7 +61,7 @@ expertMode = true
 [userenv.shared]
 SITE_URL = "https://societyspeaks.io"
 POSTHOG_HOST = "https://eu.i.posthog.com"
-BRIEF_FROM_EMAIL = "Daily Brief <hello@brief.societyspeaks.io>"
+BRIEF_FROM_EMAIL = "hello@brief.societyspeaks.io"
 APP_BASE_URL = "https://societyspeaks.io"
 RESEND_FROM_EMAIL = "Society Speaks <hello@brief.societyspeaks.io>"
 RESEND_DAILY_FROM_EMAIL = "Daily Questions <daily@brief.societyspeaks.io>"
