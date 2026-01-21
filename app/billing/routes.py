@@ -343,12 +343,12 @@ def pending_checkout():
     billing_interval = request.args.get('interval', 'month')
     
     try:
-        session = create_checkout_session(
+        checkout_session = create_checkout_session(
             user=current_user,
             plan_code=plan_code,
             billing_interval=billing_interval
         )
-        return redirect(session.url, code=303)
+        return redirect(checkout_session.url, code=303)
     except ValueError as e:
         flash(str(e), 'error')
         return redirect(url_for('briefing.landing'))
