@@ -30,18 +30,24 @@ class Config:
     STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
     STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
 
-    # Enhanced Database Connection Settings
+    # Enhanced Database Connection Settings (configurable for scaling)
+    # Pool size can be adjusted via environment variables for different deployment tiers
+    DB_POOL_SIZE = int(os.getenv('DB_POOL_SIZE', '10'))  # Base pool size
+    DB_MAX_OVERFLOW = int(os.getenv('DB_MAX_OVERFLOW', '20'))  # Additional connections when pool exhausted
+    DB_POOL_TIMEOUT = int(os.getenv('DB_POOL_TIMEOUT', '30'))  # Seconds to wait for connection
+    DB_POOL_RECYCLE = int(os.getenv('DB_POOL_RECYCLE', '300'))  # Recycle connections after N seconds
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_pre_ping': True,
-        'pool_recycle': 300,
-        'pool_size': 5,  # Reduced pool size
-        'max_overflow': 10,  # Reduced max overflow
-        'pool_timeout': 30,
+        'pool_pre_ping': True,  # Verify connections before use (prevents stale connection errors)
+        'pool_recycle': DB_POOL_RECYCLE,
+        'pool_size': DB_POOL_SIZE,
+        'max_overflow': DB_MAX_OVERFLOW,
+        'pool_timeout': DB_POOL_TIMEOUT,
         'connect_args': {
             'connect_timeout': 10,
             'keepalives': 1,
-            'keepalives_idle': 60,  # Increased idle time
+            'keepalives_idle': 60,
             'keepalives_interval': 10,
             'keepalives_count': 5
         }

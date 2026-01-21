@@ -8,7 +8,7 @@ Reuses existing email infrastructure with briefing-specific logic.
 import os
 import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import Dict, List, Optional
 from flask import render_template, current_app
 from app import db
 from app.models import BriefRun, BriefRecipient, Briefing, SendingDomain
@@ -215,19 +215,58 @@ class BriefingEmailClient:
     def send_brief_run_to_all_recipients(self, brief_run: BriefRun) -> dict:
         """
         Send BriefRun to all active recipients.
-        
+
+        Uses batch sending for efficiency when recipient count exceeds threshold.
+        Falls back to individual sending for small lists or when batch fails.
+
         Args:
             brief_run: BriefRun instance
-        
+
         Returns:
-            dict: {'sent': count, 'failed': count}
+            dict: {'sent': count, 'failed': count, 'method': 'batch'|'individual'}
         """
         briefing = brief_run.briefing
         recipients = briefing.recipients.filter_by(status='active').all()
-        
+
+        total_recipients = len(recipients)
+
+        # Use batch sending for larger recipient lists (threshold: 10+)
+        if total_recipients >= 10:
+            result = self._send_batch_to_recipients(brief_run, recipients)
+        else:
+            result = self._send_individual_to_recipients(brief_run, recipients)
+
+        # Update brief_run sent_at if any were sent
+        if result['sent'] > 0:
+            brief_run.sent_at = datetime.utcnow()
+            brief_run.status = 'sent'
+            db.session.commit()
+
+        logger.info(
+            f"Sent BriefRun {brief_run.id} to {result['sent']}/{total_recipients} recipients "
+            f"({result['failed']} failed) via {result.get('method', 'unknown')}"
+        )
+
+        return result
+
+    def _send_individual_to_recipients(
+        self,
+        brief_run: BriefRun,
+        recipients: List[BriefRecipient]
+    ) -> dict:
+        """
+        Send emails individually (for small lists or fallback).
+
+        Args:
+            brief_run: BriefRun instance
+            recipients: List of recipients
+
+        Returns:
+            dict: {'sent': count, 'failed': count, 'method': 'individual'}
+        """
         sent = 0
         failed = 0
-        
+
         for recipient in recipients:
             try:
                 if self.send_brief_run(brief_run, recipient):
@@ -237,16 +276,94 @@ class BriefingEmailClient:
             except Exception as e:
                 logger.error(f"Error sending to {recipient.email}: {e}")
                 failed += 1
-        
-        # Update brief_run sent_at if any were sent
-        if sent > 0:
-            brief_run.sent_at = datetime.utcnow()
-            brief_run.status = 'sent'
-            db.session.commit()
-        
-        logger.info(f"Sent BriefRun {brief_run.id} to {sent} recipients ({failed} failed)")
-        
-        return {'sent': sent, 'failed': failed}
+
+        return {'sent': sent, 'failed': failed, 'method': 'individual'}
+
+    def _send_batch_to_recipients(
+        self,
+        brief_run: BriefRun,
+        recipients: List[BriefRecipient]
+    ) -> dict:
+        """
+        Send emails in batches using Resend Batch API.
+
+        Chunks recipients into batches of 100 (Resend limit) and sends efficiently.
+        Falls back to individual sending if batch fails.
+
+        Args:
+            brief_run: BriefRun instance
+            recipients: List of recipients
+
+        Returns:
+            dict: {'sent': count, 'failed': count, 'method': 'batch'}
+        """
+        briefing = brief_run.briefing
+        from_email = self._get_from_email(briefing)
+        from_name = briefing.from_name or briefing.name
+        subject = self._generate_subject(brief_run, briefing)
+        base_url = get_base_url()
+
+        BATCH_SIZE = 100  # Resend limit
+        total_sent = 0
+        total_failed = 0
+
+        # Process in batches
+        for batch_start in range(0, len(recipients), BATCH_SIZE):
+            batch_recipients = recipients[batch_start:batch_start + BATCH_SIZE]
+            batch_emails = []
+
+            for recipient in batch_recipients:
+                try:
+                    html_content = self._render_brief_run_email(brief_run, recipient, briefing)
+                    unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.magic_token or ''}"
+
+                    email_data = {
+                        'from': f"{from_name} <{from_email}>",
+                        'to': [recipient.email],
+                        'subject': subject,
+                        'html': html_content,
+                        'headers': {
+                            'List-Unsubscribe': f'<{unsubscribe_url}>',
+                            'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+                        }
+                    }
+                    batch_emails.append(email_data)
+                except Exception as e:
+                    logger.error(f"Error preparing email for {recipient.email}: {e}")
+                    total_failed += 1
+
+            if batch_emails:
+                try:
+                    # Use base client's batch send method
+                    batch_result = self.base_client._send_batch(batch_emails)
+                    total_sent += batch_result.get('sent', 0)
+                    total_failed += batch_result.get('failed', 0)
+
+                    if batch_result.get('errors'):
+                        for error in batch_result['errors']:
+                            logger.warning(f"Batch error: {error}")
+
+                    batch_num = (batch_start // BATCH_SIZE) + 1
+                    total_batches = (len(recipients) + BATCH_SIZE - 1) // BATCH_SIZE
+                    logger.info(
+                        f"Batch {batch_num}/{total_batches}: "
+                        f"sent {batch_result.get('sent', 0)}, failed {batch_result.get('failed', 0)}"
+                    )
+
+                except Exception as e:
+                    logger.error(f"Batch send failed, falling back to individual: {e}")
+                    # Fallback to individual sending for this batch
+                    for recipient in batch_recipients:
+                        try:
+                            if self.send_brief_run(brief_run, recipient):
+                                total_sent += 1
+                            else:
+                                total_failed += 1
+                        except Exception as inner_e:
+                            logger.error(f"Individual fallback failed for {recipient.email}: {inner_e}")
+                            total_failed += 1
+
+        return {'sent': total_sent, 'failed': total_failed, 'method': 'batch'}
 
 
 def send_brief_run_emails(brief_run_id: int) -> dict:
