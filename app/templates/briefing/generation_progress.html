@@ -1,0 +1,130 @@
+{% extends "layout.html" %}
+{% from "components/breadcrumb.html" import breadcrumb %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        {{ breadcrumb([
+            {'label': 'My Briefings', 'url': url_for('briefing.list_briefings')},
+            {'label': briefing.name, 'url': url_for('briefing.detail', briefing_id=briefing.id)},
+            {'label': 'Generating...', 'url': '#'}
+        ]) }}
+        
+        <div class="bg-white shadow rounded-lg p-8 text-center" id="progress-container">
+            <div class="mb-6">
+                <div class="w-16 h-16 mx-auto mb-4 relative">
+                    <svg class="animate-spin w-16 h-16 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-900 mb-2">Generating Your Brief</h2>
+                <p class="text-gray-600" id="status-message">Preparing to generate brief...</p>
+            </div>
+            
+            <div class="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" id="progress-bar" style="width: 10%"></div>
+            </div>
+            
+            <p class="text-sm text-gray-500">
+                This typically takes 30-60 seconds. We're selecting content from your sources and using AI to craft your brief.
+            </p>
+        </div>
+        
+        <div class="hidden bg-white shadow rounded-lg p-8 text-center" id="error-container">
+            <div class="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Generation Failed</h2>
+            <p class="text-gray-600 mb-4" id="error-message">An error occurred while generating your brief.</p>
+            <a href="{{ url_for('briefing.detail', briefing_id=briefing.id) }}" 
+               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                Back to Briefing
+            </a>
+        </div>
+        
+        <div class="hidden bg-white shadow rounded-lg p-8 text-center" id="success-container">
+            <div class="w-16 h-16 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+            </div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Brief Generated!</h2>
+            <p class="text-gray-600 mb-4">Redirecting you to your brief...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const statusUrl = "{{ status_url }}";
+    const progressBar = document.getElementById('progress-bar');
+    const statusMessage = document.getElementById('status-message');
+    const progressContainer = document.getElementById('progress-container');
+    const errorContainer = document.getElementById('error-container');
+    const successContainer = document.getElementById('success-container');
+    const errorMessage = document.getElementById('error-message');
+    
+    let progress = 10;
+    let pollCount = 0;
+    const maxPolls = 120;
+    
+    function updateProgress() {
+        if (progress < 90) {
+            progress += Math.random() * 5;
+            progressBar.style.width = Math.min(progress, 90) + '%';
+        }
+    }
+    
+    function checkStatus() {
+        pollCount++;
+        
+        if (pollCount > maxPolls) {
+            showError('Generation timed out. Please try again.');
+            return;
+        }
+        
+        fetch(statusUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    statusMessage.textContent = data.message;
+                }
+                
+                if (data.status === 'completed') {
+                    progressBar.style.width = '100%';
+                    progressContainer.classList.add('hidden');
+                    successContainer.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        if (data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        }
+                    }, 1000);
+                } else if (data.status === 'failed') {
+                    showError(data.error || 'An error occurred while generating your brief.');
+                } else if (data.status === 'processing') {
+                    updateProgress();
+                    setTimeout(checkStatus, 2000);
+                } else {
+                    setTimeout(checkStatus, 2000);
+                }
+            })
+            .catch(error => {
+                console.error('Error checking status:', error);
+                setTimeout(checkStatus, 3000);
+            });
+    }
+    
+    function showError(message) {
+        progressContainer.classList.add('hidden');
+        errorContainer.classList.remove('hidden');
+        errorMessage.textContent = message;
+    }
+    
+    setTimeout(checkStatus, 1000);
+})();
+</script>
+{% endblock %}

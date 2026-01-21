@@ -924,6 +924,19 @@ def init_scheduler(app):
             except Exception as e:
                 logger.error(f"Extraction queue processing failed: {e}", exc_info=True)
 
+    @scheduler.scheduled_job('interval', seconds=3, id='process_brief_generation_queue')
+    def process_brief_generation_queue_job():
+        """
+        Process pending brief generation jobs.
+        Runs every 3 seconds for responsive user experience.
+        """
+        with app.app_context():
+            from app.briefing.jobs import process_pending_jobs
+            try:
+                process_pending_jobs()
+            except Exception as e:
+                logger.error(f"Brief generation queue processing failed: {e}", exc_info=True)
+
     @scheduler.scheduled_job('interval', minutes=15, id='process_briefing_runs')
     def process_briefing_runs_job():
         """

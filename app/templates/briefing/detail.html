@@ -364,17 +364,30 @@
                     <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
                     <div class="space-y-3">
                         {% if sources %}
-                        <form method="POST" action="{{ url_for('briefing.test_generate', briefing_id=briefing.id) }}"
-                              onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Generating...';">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit"
-                                    class="w-full text-left px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 flex items-center justify-between">
-                                <span>Generate Test Brief</span>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        <div id="generate-section">
+                            <form method="POST" action="{{ url_for('briefing.test_generate', briefing_id=briefing.id) }}"
+                                  id="generate-form">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" id="generate-btn"
+                                        class="w-full text-left px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 flex items-center justify-between">
+                                    <span id="generate-btn-text">Generate Test Brief</span>
+                                    <svg id="generate-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                    <svg id="generate-spinner" class="hidden animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </button>
+                            </form>
+                            <div id="generate-status" class="hidden mt-2 text-sm text-gray-600 flex items-center">
+                                <svg class="animate-spin mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                            </button>
-                        </form>
+                                <span id="generate-status-text">Generating brief...</span>
+                            </div>
+                        </div>
                         
                         <form method="POST" action="{{ url_for('briefing.test_send', briefing_id=briefing.id) }}"
                               onsubmit="return confirm('Send test email to {{ current_user.email }}?');">
@@ -436,4 +449,103 @@
         </div>
     </div>
 </div>
+
+<script>
+(function() {
+    const generateForm = document.getElementById('generate-form');
+    if (!generateForm) return;
+    
+    const generateBtn = document.getElementById('generate-btn');
+    const generateBtnText = document.getElementById('generate-btn-text');
+    const generateIcon = document.getElementById('generate-icon');
+    const generateSpinner = document.getElementById('generate-spinner');
+    const generateStatus = document.getElementById('generate-status');
+    const generateStatusText = document.getElementById('generate-status-text');
+    
+    generateForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        generateBtn.disabled = true;
+        generateBtnText.textContent = 'Starting...';
+        generateIcon.classList.add('hidden');
+        generateSpinner.classList.remove('hidden');
+        
+        const formData = new FormData(generateForm);
+        
+        fetch(generateForm.action, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.status_url) {
+                // Async mode: poll for status
+                generateBtnText.textContent = 'Generating...';
+                generateStatus.classList.remove('hidden');
+                pollStatus(data.status_url);
+            } else if (data.success && data.redirect_url) {
+                // Sync mode: immediate completion
+                generateStatusText.textContent = 'Brief generated! Redirecting...';
+                generateStatus.classList.remove('hidden');
+                window.location.href = data.redirect_url;
+            } else if (data.error) {
+                showError(data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('Failed to start generation. Please try again.');
+        });
+    });
+    
+    function pollStatus(statusUrl) {
+        let pollCount = 0;
+        const maxPolls = 120;
+        
+        function checkStatus() {
+            pollCount++;
+            
+            if (pollCount > maxPolls) {
+                showError('Generation timed out. Please try again.');
+                return;
+            }
+            
+            fetch(statusUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        generateStatusText.textContent = data.message;
+                    }
+                    
+                    if (data.status === 'completed' && data.redirect_url) {
+                        generateStatusText.textContent = 'Brief generated! Redirecting...';
+                        window.location.href = data.redirect_url;
+                    } else if (data.status === 'failed') {
+                        showError(data.error || 'Generation failed. Please try again.');
+                    } else {
+                        setTimeout(checkStatus, 2000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking status:', error);
+                    setTimeout(checkStatus, 3000);
+                });
+        }
+        
+        setTimeout(checkStatus, 1000);
+    }
+    
+    function showError(message) {
+        generateBtn.disabled = false;
+        generateBtnText.textContent = 'Generate Test Brief';
+        generateIcon.classList.remove('hidden');
+        generateSpinner.classList.add('hidden');
+        generateStatus.classList.add('hidden');
+        alert(message);
+    }
+})();
+</script>
 {% endblock %}

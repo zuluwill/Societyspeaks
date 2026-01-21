@@ -2295,7 +2295,7 @@ def public_brief_run(briefing_id, run_id):
 @login_required
 @limiter.limit("10/minute")
 def test_generate(briefing_id):
-    """Generate a test brief immediately for preview"""
+    """Queue a test brief generation job (async)"""
     briefing = Briefing.query.get_or_404(briefing_id)
     
     # Check permissions (DRY)
@@ -2305,45 +2305,142 @@ def test_generate(briefing_id):
         redirect_to='detail'
     )
     if not is_allowed:
+        # For AJAX requests, return JSON
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'error': 'Permission denied'}), 403
         return redirect_response
     
     # Check if briefing has sources
     if not briefing.sources:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'error': 'Please add sources to your briefing before generating a test brief'}), 400
         flash('Please add sources to your briefing before generating a test brief', 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
     
     try:
-        from app.briefing.generator import BriefingGenerator
+        from app.briefing.jobs import queue_brief_generation, is_redis_available
         
-        # Generate test brief with current timestamp (add microseconds to avoid collisions)
+        # Try async approach if Redis is available
+        if is_redis_available():
+            job_id = queue_brief_generation(briefing_id, current_user.id)
+            
+            if job_id:
+                # For AJAX requests, return job ID for polling
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify({
+                        'success': True,
+                        'job_id': job_id,
+                        'message': 'Brief generation started',
+                        'status_url': url_for('briefing.generation_status', briefing_id=briefing_id, job_id=job_id)
+                    })
+                # For regular form submission, redirect to a waiting page
+                flash('Brief generation started. This may take up to a minute.', 'info')
+                return redirect(url_for('briefing.generation_progress', briefing_id=briefing_id, job_id=job_id))
+        
+        # Fallback to synchronous generation (Redis not available or queue failed)
+        logger.info(f"Falling back to synchronous generation for briefing {briefing_id}")
+        from app.briefing.generator import BriefingGenerator
         from datetime import timedelta
         import random
+        
         generator = BriefingGenerator()
-        # Add small random offset to avoid duplicate scheduled_at collisions
         test_scheduled_at = datetime.utcnow() + timedelta(microseconds=random.randint(1, 999999))
         
         brief_run = generator.generate_brief_run(
             briefing=briefing,
             scheduled_at=test_scheduled_at,
-            ingested_items=None  # Let it select from sources
+            ingested_items=None
         )
         
         if brief_run is None:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'error': 'No content available from your sources.'}), 400
             flash('No content available from your sources. Try adding more sources or wait for content to be ingested.', 'warning')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         
-        # Mark as test/draft (override generator's status)
         brief_run.status = 'generated_draft'
         db.session.commit()
         
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': True,
+                'status': 'completed',
+                'redirect_url': url_for('briefing.view_run', briefing_id=briefing_id, run_id=brief_run.id)
+            })
         flash('Test brief generated successfully!', 'success')
         return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=brief_run.id))
         
     except Exception as e:
         logger.error(f"Error generating test brief: {e}", exc_info=True)
         db.session.rollback()
-        flash(f'Error generating test brief: {str(e)}', 'error')
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'error': str(e)}), 500
+        flash(f'Error generating brief: {str(e)}', 'error')
         return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+
+
+@briefing_bp.route('/<int:briefing_id>/generation-status/<job_id>', methods=['GET'])
+@login_required
+def generation_status(briefing_id, job_id):
+    """Check status of a generation job (for polling)"""
+    from app.briefing.jobs import GenerationJob
+    
+    job = GenerationJob.get(job_id)
+    if not job:
+        return jsonify({'error': 'Job not found', 'status': 'failed'}), 404
+    
+    # Verify this job belongs to the user AND briefing (security check)
+    if job.briefing_id != briefing_id or job.user_id != current_user.id:
+        return jsonify({'error': 'Job not found', 'status': 'failed'}), 404
+    
+    response = {
+        'status': job.status,
+        'message': job.progress_message,
+        'job_id': job.job_id
+    }
+    
+    if job.status == 'completed' and job.brief_run_id:
+        response['redirect_url'] = url_for('briefing.view_run', briefing_id=briefing_id, run_id=job.brief_run_id)
+    elif job.status == 'failed':
+        response['error'] = job.error
+    
+    return jsonify(response)
+
+
+@briefing_bp.route('/<int:briefing_id>/generation-progress/<job_id>')
+@login_required
+def generation_progress(briefing_id, job_id):
+    """Show progress page for generation job (fallback for non-JS)"""
+    briefing = Briefing.query.get_or_404(briefing_id)
+    
+    # Check permissions
+    is_allowed, redirect_response = check_briefing_permission(
+        briefing, 
+        error_message='You do not have permission to view this briefing',
+        redirect_to='detail'
+    )
+    if not is_allowed:
+        return redirect_response
+    
+    from app.briefing.jobs import GenerationJob
+    job = GenerationJob.get(job_id)
+    
+    # If job completed, redirect to result
+    if job and job.status == 'completed' and job.brief_run_id:
+        flash('Brief generated successfully!', 'success')
+        return redirect(url_for('briefing.view_run', briefing_id=briefing_id, run_id=job.brief_run_id))
+    
+    # If job failed, redirect back with error
+    if job and job.status == 'failed':
+        flash(f'Generation failed: {job.error}', 'error')
+        return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+    
+    return render_template(
+        'briefing/generation_progress.html',
+        briefing=briefing,
+        job_id=job_id,
+        status_url=url_for('briefing.generation_status', briefing_id=briefing_id, job_id=job_id)
+    )
 
 
 @briefing_bp.route('/<int:briefing_id>/test-send', methods=['POST'])
