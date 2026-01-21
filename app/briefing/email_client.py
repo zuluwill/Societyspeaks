@@ -12,7 +12,7 @@ from typing import Dict, List, Optional
 from flask import render_template, current_app
 from app import db
 from app.models import BriefRun, BriefRecipient, Briefing, SendingDomain
-from app.brief.email_client import ResendClient as BaseResendClient
+from app.resend_client import ResendEmailClient as BaseResendClient
 from app.utils import get_base_url
 
 logger = logging.getLogger(__name__)
