@@ -140,12 +140,14 @@ def checkout_success():
             flash('Welcome! Your team subscription is now active. You can invite team members from your organization settings.', 'success')
             return redirect(url_for('briefing.organization_settings'))
         else:
-            flash('Welcome! Your subscription is now active.', 'success')
+            flash('Welcome! Your subscription is now active. You can start creating your first brief!', 'success')
             return redirect(url_for('briefing.list_briefings'))
     else:
-        flash('Your payment was received! Your subscription is being activated - this usually takes a few seconds. '
-              'If you don\'t see your subscription active, please click "Manage Billing" to verify.', 'info')
-        return redirect(url_for('briefing.landing'))
+        # If we reach here, subscription wasn't synced properly
+        # Store a flag to show a helpful onboarding message
+        session['pending_subscription_activation'] = True
+        flash('Welcome! Your subscription is being activated. This usually takes just a few seconds - you\'ll be able to create briefs momentarily.', 'info')
+        return redirect(url_for('briefing.list_briefings'))
 
 
 @billing_bp.route('/portal')

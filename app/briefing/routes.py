@@ -589,6 +589,11 @@ def use_template(template_id):
     if not current_user.is_admin:
         sub = get_active_subscription(current_user)
         if not sub:
+            # Check if user just completed payment and subscription is activating
+            if session.get('pending_subscription_activation'):
+                session.pop('pending_subscription_activation', None)
+                flash('Your subscription is still activating. Please wait a few seconds and try again. You can also check "Manage Billing" to verify.', 'info')
+                return redirect(url_for('briefing.list_briefings'))
             flash('You need an active subscription to create briefings. Start your free trial today!', 'info')
             return redirect(url_for('briefing.landing'))
         
@@ -735,6 +740,11 @@ def create_briefing():
     if not current_user.is_admin:
         sub = get_active_subscription(current_user)
         if not sub:
+            # Check if user just completed payment and subscription is activating
+            if session.get('pending_subscription_activation'):
+                session.pop('pending_subscription_activation', None)
+                flash('Your subscription is still activating. Please wait a few seconds and try again. You can also check "Manage Billing" to verify.', 'info')
+                return redirect(url_for('briefing.list_briefings'))
             flash('You need an active subscription to create briefings. Start your free trial today!', 'info')
             return redirect(url_for('briefing.landing'))
         
