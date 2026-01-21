@@ -107,7 +107,15 @@ class BriefingEmailClient:
             # Fall through to default on any error
         
         # Fallback to default (just the email address, name is set separately via from_name)
-        return os.environ.get('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
+        from_email = os.environ.get('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
+        # Handle case where env var might include name (extract just the email)
+        if '<' in from_email and '>' in from_email:
+            # Extract email from format "Name <email>"
+            import re
+            match = re.search(r'<([^>]+)>', from_email)
+            if match:
+                return match.group(1)
+        return from_email
     
     def _generate_subject(self, brief_run: BriefRun, briefing: Briefing) -> str:
         """Generate email subject line"""

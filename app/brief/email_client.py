@@ -41,7 +41,13 @@ class ResendClient:
             raise ValueError("RESEND_API_KEY environment variable not set")
 
         self.rate_limiter = RateLimiter(self.RATE_LIMIT)
-        self.from_email = os.environ.get('BRIEF_FROM_EMAIL', 'Daily Brief <hello@brief.societyspeaks.io>')
+        # Get email address from env and format with name
+        from_email_addr = os.environ.get('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
+        # Handle case where env var might already include name (for backwards compat)
+        if '<' in from_email_addr and '>' in from_email_addr:
+            self.from_email = from_email_addr
+        else:
+            self.from_email = f'Daily Brief <{from_email_addr}>'
 
     def send_brief(
         self,
