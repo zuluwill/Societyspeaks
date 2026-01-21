@@ -460,11 +460,11 @@ def list_users():
     page = request.args.get('page', 1, type=int)
     per_page = 20
     
-    users = User.query.options(
-        db.joinedload(User.subscriptions).joinedload(Subscription.plan)
-    ).order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    # Note: User.subscriptions uses lazy='dynamic' which doesn't support eager loading
+    # We fetch subscriptions separately using get_active_subscription() below
+    users = User.query.order_by(User.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
     
-    # Get active subscription for each user (avoiding N+1 queries)
+    # Get active subscription for each user
     from app.billing.service import get_active_subscription
     for user in users.items:
         user._cached_active_sub = get_active_subscription(user)
