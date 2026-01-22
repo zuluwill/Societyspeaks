@@ -268,10 +268,12 @@ def score_articles_with_llm(articles: List[NewsArticle], batch_size: int = 25) -
     for i in range(0, len(to_score), batch_size):
         batch = to_score[i:i + batch_size]
         try:
-            if provider == 'openai':
-                _score_with_openai(batch, api_key)
-            elif provider == 'anthropic':
-                _score_with_anthropic(batch, api_key)
+            # Use no_autoflush to prevent query-invoked autoflush causing deadlocks
+            with db.session.no_autoflush:
+                if provider == 'openai':
+                    _score_with_openai(batch, api_key)
+                elif provider == 'anthropic':
+                    _score_with_anthropic(batch, api_key)
             logger.info(f"Scored batch {i // batch_size + 1} ({len(batch)} articles)")
             
             # Commit entire batch at once to avoid partial commit issues
