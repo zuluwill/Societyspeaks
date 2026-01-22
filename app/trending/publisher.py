@@ -9,6 +9,8 @@ import logging
 from datetime import datetime
 from typing import Optional
 
+from sqlalchemy.exc import IntegrityError
+
 from app import db
 from app.models import (
     TrendingTopic, Discussion, Statement, User,
@@ -60,7 +62,6 @@ def publish_topic(
         return Discussion.query.get(topic.discussion_id)
 
     base_slug = generate_slug(topic.title)
-    slug = get_unique_slug(Discussion, base_slug)
 
     # Use topic's stored geographic data if available, otherwise extract from articles
     if topic.geographic_scope and topic.geographic_scope != 'global':
@@ -71,20 +72,37 @@ def publish_topic(
     
     clean_description = strip_html_tags(topic.description) if topic.description else ""
     
-    discussion = Discussion(
-        title=topic.title,
-        description=clean_description,
-        slug=slug,
-        has_native_statements=True,
-        creator_id=admin_user.id,
-        topic=topic.primary_topic or 'Society',
-        geographic_scope=geographic_scope,
-        country=country,
-        is_featured=False
-    )
+    # Retry loop to handle race conditions with duplicate slugs
+    max_retries = 5
+    discussion = None
+    for attempt in range(max_retries):
+        slug = get_unique_slug(Discussion, base_slug)
+        
+        discussion = Discussion(
+            title=topic.title,
+            description=clean_description,
+            slug=slug,
+            has_native_statements=True,
+            creator_id=admin_user.id,
+            topic=topic.primary_topic or 'Society',
+            geographic_scope=geographic_scope,
+            country=country,
+            is_featured=False
+        )
+        
+        try:
+            db.session.add(discussion)
+            db.session.flush()
+            break  # Success, exit retry loop
+        except IntegrityError as e:
+            db.session.rollback()
+            if 'discussion_slug_key' in str(e) and attempt < max_retries - 1:
+                logger.warning(f"Slug collision for '{slug}', retrying (attempt {attempt + 1}/{max_retries})")
+                continue
+            raise  # Re-raise if not a slug collision or out of retries
     
-    db.session.add(discussion)
-    db.session.flush()
+    if discussion is None or discussion.id is None:
+        raise ValueError(f"Failed to create discussion after {max_retries} attempts")
     
     for ta in topic.articles:
         if ta.article:
