@@ -1340,7 +1340,9 @@ class DailyBrief(db.Model):
         """
         if hasattr(self, '_cached_item_count'):
             return self._cached_item_count
-        # len() works for both InstrumentedList (lazy relationships) and regular lists (eager-loaded)
+        from sqlalchemy.orm.dynamic import AppenderQuery
+        if isinstance(self.items, AppenderQuery):
+            return self.items.count()
         return len(self.items)
 
     @classmethod
