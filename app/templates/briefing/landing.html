@@ -1113,6 +1113,13 @@
     tabButton.classList.remove('text-slate-600');
     tabButton.classList.add('bg-white', 'shadow-sm', 'text-slate-900');
   }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash === '#pricing-organisations') {
+      showPricingTab('organisations');
+      document.getElementById('pricing').scrollIntoView();
+    }
+  });
 </script>
 
 <!-- Why We Built This Section -->
@@ -1239,7 +1246,7 @@
           <h3 class="font-semibold text-slate-900 mb-1">For organisations: additional controls</h3>
           <p class="text-slate-600 text-sm">Team and Enterprise plans include approval workflows, audit logs, custom data retention, and SSO/SAML integration.</p>
         </div>
-        <a href="#pricing" onclick="showPricingTab('organisations')" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm whitespace-nowrap" data-ph-capture-attribute-cta="security-view-org-plans">
+        <a href="#pricing-organisations" onclick="showPricingTab('organisations')" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm whitespace-nowrap" data-ph-capture-attribute-cta="security-view-org-plans">
           View organisation plans →
         </a>
       </div>
