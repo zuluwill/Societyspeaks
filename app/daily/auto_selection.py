@@ -43,6 +43,25 @@ WEIGHT_CLARITY = 0.20      # Statement clarity (shorter = better)
 WEIGHT_CONTROVERSY = 0.15  # Potential for divided opinions (engagement driver)
 WEIGHT_HISTORICAL = 0.15   # Learn from past performance
 
+# Priority topics - these get boosted for daily questions (major news/civic topics)
+PRIORITY_TOPICS = {
+    'Politics': 1.4,      # Major boost - core civic engagement
+    'Geopolitics': 1.4,   # Major boost - world events
+    'Economy': 1.3,       # Strong boost - affects everyone
+    'Society': 1.2,       # Moderate boost - social issues
+    'Technology': 1.1,    # Slight boost - tech policy matters
+    'Healthcare': 1.0,    # Neutral
+    'Business': 1.0,      # Neutral
+    'Culture': 0.8,       # Lower priority - entertainment focused
+    'Sport': 0.7,         # Lower priority
+}
+
+def get_topic_priority_boost(topic):
+    """Get priority multiplier for a topic category."""
+    if not topic:
+        return 1.0
+    return PRIORITY_TOPICS.get(topic, 1.0)
+
 
 def calculate_timeliness_score(created_at):
     """
@@ -201,6 +220,11 @@ def calculate_statement_engagement_score(statement, discussion=None):
         scores['controversy'] * WEIGHT_CONTROVERSY +
         scores['historical'] * WEIGHT_HISTORICAL
     )
+    
+    # Apply topic priority boost (Politics, Geopolitics get priority over Culture, etc.)
+    topic_boost = get_topic_priority_boost(topic)
+    total_score *= topic_boost
+    scores['topic_boost'] = topic_boost
 
     return total_score, scores
 
@@ -238,6 +262,11 @@ def calculate_topic_engagement_score(topic):
         scores['controversy'] * WEIGHT_CONTROVERSY +
         scores['historical'] * WEIGHT_HISTORICAL
     )
+    
+    # Apply topic priority boost (Politics, Geopolitics get priority over Culture, etc.)
+    topic_boost = get_topic_priority_boost(topic.topic if hasattr(topic, 'topic') else None)
+    total_score *= topic_boost
+    scores['topic_boost'] = topic_boost
 
     return total_score, scores
 
@@ -389,12 +418,14 @@ def select_next_question_source():
         selected = weighted_random_choice(top_candidates, scores)
 
         if selected:
+            topic_boost = selected['breakdown'].get('topic_boost', 1.0)
             current_app.logger.info(
                 f"Selected statement with engagement score {selected['score']:.2f} "
                 f"(civic={selected['breakdown']['civic']:.2f}, "
                 f"timeliness={selected['breakdown']['timeliness']:.2f}, "
                 f"clarity={selected['breakdown']['clarity']:.2f}, "
-                f"controversy={selected['breakdown']['controversy']:.2f})"
+                f"controversy={selected['breakdown']['controversy']:.2f}, "
+                f"topic_boost={topic_boost:.2f})"
             )
             return {
                 'source_type': 'discussion',
