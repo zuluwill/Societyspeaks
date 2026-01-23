@@ -25,7 +25,7 @@
             </p>
             
             {# PRIMARY ACTION: Quick submit without reason #}
-            <form id="quickVoteForm" method="POST" action="{{ url_for('daily.one_click_vote', token=token, vote_choice=vote_choice) }}">
+            <form id="quickVoteForm" method="POST" action="{{ url_for('daily.one_click_vote', token=token, vote_choice=vote_choice, source=source) if source else url_for('daily.one_click_vote', token=token, vote_choice=vote_choice) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" 
                         class="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center text-lg">
@@ -48,7 +48,7 @@
                 
                 {# Collapsible reason form #}
                 <div id="reasonFormContainer" class="hidden mt-4">
-                    <form id="reasonVoteForm" method="POST" action="{{ url_for('daily.one_click_vote', token=token, vote_choice=vote_choice) }}">
+                    <form id="reasonVoteForm" method="POST" action="{{ url_for('daily.one_click_vote', token=token, vote_choice=vote_choice, source=source) if source else url_for('daily.one_click_vote', token=token, vote_choice=vote_choice) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
                             Share why you feel this way
@@ -104,9 +104,15 @@
             </div>
             
             <div class="text-center mt-6">
+                {% if source == 'weekly_digest' %}
+                <a href="{{ url_for('daily.weekly_batch') }}" class="text-sm text-gray-500 hover:text-gray-700">
+                    Back to all 5 questions
+                </a>
+                {% else %}
                 <a href="{{ url_for('daily.today') }}" class="text-sm text-gray-500 hover:text-gray-700">
                     Or vote on the full page instead
                 </a>
+                {% endif %}
             </div>
         </div>
     </div>
