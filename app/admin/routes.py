@@ -1088,6 +1088,34 @@ def toggle_subscriber(subscriber_id):
     return redirect(url_for('admin.list_daily_subscribers'))
 
 
+@admin_bp.route('/daily-questions/subscribers/<int:subscriber_id>/frequency', methods=['POST'])
+@login_required
+@admin_required
+def update_subscriber_frequency(subscriber_id):
+    """Update subscriber email frequency preference"""
+    subscriber = DailyQuestionSubscriber.query.get_or_404(subscriber_id)
+    new_frequency = request.form.get('frequency', 'daily').lower()
+    
+    if new_frequency not in ['daily', 'weekly', 'monthly']:
+        flash('Invalid frequency option.', 'error')
+        return redirect(url_for('admin.list_daily_subscribers'))
+    
+    old_frequency = subscriber.email_frequency
+    subscriber.email_frequency = new_frequency
+    
+    # Set default preferences for weekly if switching to weekly
+    if new_frequency == 'weekly' and old_frequency != 'weekly':
+        if subscriber.preferred_send_day is None:
+            subscriber.preferred_send_day = 1  # Tuesday
+        if subscriber.preferred_send_hour is None:
+            subscriber.preferred_send_hour = 9  # 9am
+    
+    db.session.commit()
+    
+    flash(f'Updated {subscriber.email} to {new_frequency} emails.', 'success')
+    return redirect(url_for('admin.list_daily_subscribers'))
+
+
 @admin_bp.route('/daily-questions/subscribers/<int:subscriber_id>/delete', methods=['POST'])
 @login_required
 @admin_required
