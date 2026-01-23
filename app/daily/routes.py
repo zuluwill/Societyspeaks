@@ -831,6 +831,476 @@ def unsubscribe(token):
     return render_template('daily/unsubscribed.html', email=subscriber.email)
 
 
+@daily_bp.route('/daily/preferences', methods=['GET', 'POST'])
+def manage_preferences():
+    """
+    Allow users to manage email frequency and send time preferences.
+    Accessible via magic token from email or logged-in user session.
+    """
+    # Get subscriber from token or session
+    token = request.args.get('token')
+    subscriber = None
+
+    if token:
+        subscriber = DailyQuestionSubscriber.query.filter_by(magic_token=token).first()
+        if subscriber:
+            session['daily_subscriber_id'] = subscriber.id
+    else:
+        subscriber_id = session.get('daily_subscriber_id')
+        if subscriber_id:
+            subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+
+    # Also check if logged-in user has a subscription
+    if not subscriber and current_user.is_authenticated:
+        subscriber = DailyQuestionSubscriber.query.filter_by(user_id=current_user.id).first()
+
+    if not subscriber:
+        flash('Please use the link from your weekly digest email to manage preferences.', 'info')
+        return redirect(url_for('daily.subscribe'))
+
+    if not subscriber.is_active:
+        flash('Your subscription is currently inactive.', 'info')
+        return redirect(url_for('daily.subscribe'))
+
+    # Use model constants for DRY (valid frequencies and send days)
+    valid_frequencies = DailyQuestionSubscriber.VALID_EMAIL_FREQUENCIES
+    send_days = DailyQuestionSubscriber.SEND_DAYS
+
+    if request.method == 'POST':
+        validation_errors = []
+
+        # Capture old values BEFORE changes for PostHog tracking
+        old_frequency = subscriber.email_frequency
+
+        # Update frequency
+        frequency = request.form.get('email_frequency', 'weekly')
+        if frequency in valid_frequencies:
+            subscriber.email_frequency = frequency
+        else:
+            validation_errors.append(f"Invalid frequency: {frequency}")
+
+        # Update send day (for weekly subscribers)
+        if frequency == 'weekly':
+            try:
+                send_day = int(request.form.get('preferred_send_day', 1))
+                if 0 <= send_day <= 6:
+                    subscriber.preferred_send_day = send_day
+                else:
+                    validation_errors.append(f"Invalid send day: {send_day} (must be 0-6)")
+            except (ValueError, TypeError) as e:
+                validation_errors.append(f"Invalid send day format: {e}")
+
+            try:
+                send_hour = int(request.form.get('preferred_send_hour', 9))
+                if 0 <= send_hour <= 23:
+                    subscriber.preferred_send_hour = send_hour
+                else:
+                    validation_errors.append(f"Invalid send hour: {send_hour} (must be 0-23)")
+            except (ValueError, TypeError) as e:
+                validation_errors.append(f"Invalid send hour format: {e}")
+
+        # Update timezone
+        timezone = request.form.get('timezone', '').strip()
+        if timezone:
+            # Validate timezone
+            try:
+                import pytz
+                pytz.timezone(timezone)  # Will raise if invalid
+                subscriber.timezone = timezone
+            except pytz.exceptions.UnknownTimeZoneError:
+                validation_errors.append(f"Invalid timezone: {timezone}")
+            except Exception as e:
+                validation_errors.append(f"Error validating timezone: {e}")
+
+        if validation_errors:
+            for error in validation_errors:
+                flash(error, 'error')
+            current_app.logger.warning(
+                f"Subscriber {subscriber.id} preference update had errors: {validation_errors}"
+            )
+        else:
+            try:
+                # Track preference change with PostHog (old_frequency captured at start of POST)
+                try:
+                    import posthog
+                    if posthog.project_api_key:
+                        posthog.capture(
+                            subscriber.email,
+                            'frequency_preference_changed',
+                            {
+                                'old_frequency': old_frequency,
+                                'new_frequency': subscriber.email_frequency,
+                                'send_day': subscriber.preferred_send_day,
+                                'send_hour': subscriber.preferred_send_hour,
+                                'timezone': subscriber.timezone or 'UTC'
+                            }
+                        )
+                except Exception as e:
+                    current_app.logger.warning(f"PostHog tracking error: {e}")
+                
+                db.session.commit()
+                current_app.logger.info(
+                    f"Subscriber {subscriber.id} updated preferences: "
+                    f"frequency={subscriber.email_frequency}, "
+                    f"send_day={subscriber.preferred_send_day}, "
+                    f"send_hour={subscriber.preferred_send_hour}, "
+                    f"timezone={subscriber.timezone}"
+                )
+                flash('Your preferences have been updated successfully.', 'success')
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f"Error saving preferences: {e}")
+                flash('There was an error saving your preferences. Please try again.', 'error')
+
+        return redirect(url_for('daily.manage_preferences', token=token))
+
+    # GET: Show current preferences
+    return render_template('daily/preferences.html',
+        subscriber=subscriber,
+        send_days=send_days,
+        frequencies=valid_frequencies,
+        token=token
+    )
+
+
+@daily_bp.route('/daily/weekly')
+def weekly_batch():
+    """
+    Batch voting page for weekly digest subscribers.
+    Shows 5 questions at once, allowing sequential voting.
+    """
+    from app.daily.auto_selection import select_questions_for_weekly_digest
+    from app.daily.utils import get_discussion_stats_for_question
+
+    # Get subscriber from token or session
+    token = request.args.get('token')
+    subscriber = None
+
+    if token:
+        subscriber = DailyQuestionSubscriber.query.filter_by(magic_token=token).first()
+        if subscriber:
+            session['daily_subscriber_id'] = subscriber.id
+            session['daily_subscriber_token'] = token
+    else:
+        subscriber_id = session.get('daily_subscriber_id')
+        if subscriber_id:
+            subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+
+    # Also check logged-in user
+    if not subscriber and current_user.is_authenticated:
+        subscriber = DailyQuestionSubscriber.query.filter_by(user_id=current_user.id).first()
+
+    if not subscriber:
+        flash('Please use the link from your weekly digest email to access this page.', 'info')
+        return redirect(url_for('daily.subscribe'))
+
+    # Log in if user has account
+    if subscriber.user:
+        login_user(subscriber.user)
+
+    # Get specific question IDs if provided (from email link)
+    question_ids_param = request.args.get('questions')
+    questions = []
+    original_question_ids = None  # Track original order for email links
+
+    if question_ids_param:
+        # Parse comma-separated question IDs from email link
+        try:
+            original_question_ids = [int(qid.strip()) for qid in question_ids_param.split(',') if qid.strip()]
+            if original_question_ids:
+                questions = DailyQuestion.query.filter(
+                    DailyQuestion.id.in_(original_question_ids)
+                ).order_by(DailyQuestion.question_date.desc()).all()
+                
+                # Log if some questions weren't found
+                if len(questions) < len(original_question_ids):
+                    found_ids = {q.id for q in questions}
+                    missing_ids = set(original_question_ids) - found_ids
+                    current_app.logger.warning(
+                        f"Some question IDs from email not found in database: {missing_ids}. "
+                        f"Found {len(questions)}/{len(original_question_ids)} questions."
+                    )
+            else:
+                original_question_ids = None
+        except (ValueError, TypeError) as e:
+            current_app.logger.warning(f"Error parsing question IDs from URL: {e}")
+            original_question_ids = None
+
+    # Fall back to auto-selected questions from past week
+    if not questions:
+        questions = select_questions_for_weekly_digest(days_back=7, count=5)
+
+    if not questions:
+        flash('No questions available for this week yet.', 'info')
+        return redirect(url_for('daily.today'))
+
+    # Optimize: Eager load discussions to prevent N+1 queries
+    from sqlalchemy.orm import joinedload
+    question_ids = [q.id for q in questions]
+    questions = DailyQuestion.query.options(
+        joinedload(DailyQuestion.source_discussion)
+    ).filter(DailyQuestion.id.in_(question_ids)).order_by(DailyQuestion.question_date.desc()).all()
+    
+    # Preserve original order from question_ids_param (if provided)
+    if original_question_ids:
+        # Sort by original order from email
+        id_to_question = {q.id: q for q in questions}
+        ordered_questions = [id_to_question[qid] for qid in original_question_ids if qid in id_to_question]
+        # Only use ordered list if we found all questions (otherwise keep eager-loaded order)
+        if len(ordered_questions) == len(questions):
+            questions = ordered_questions
+        else:
+            # Some questions from email not found - log warning but continue with what we have
+            current_app.logger.warning(
+                f"Some question IDs from email not found: requested {len(original_question_ids)}, "
+                f"found {len(questions)}. Using available questions."
+            )
+
+    # Build question data with vote status, discussion stats, and source articles
+    questions_data = []
+    fingerprint = get_session_fingerprint() if not current_user.is_authenticated else None
+    
+    for question in questions:
+        # Check if already voted (with null safety)
+        user_vote = None
+        try:
+            if current_user.is_authenticated:
+                response = DailyQuestionResponse.query.filter_by(
+                    daily_question_id=question.id,
+                    user_id=current_user.id
+                ).first()
+                if response:
+                    user_vote = response.vote
+            else:
+                if fingerprint:
+                    response = DailyQuestionResponse.query.filter_by(
+                        daily_question_id=question.id,
+                        session_fingerprint=fingerprint
+                    ).first()
+                    if response:
+                        user_vote = response.vote
+        except Exception as e:
+            current_app.logger.warning(f"Error checking vote status for question {question.id}: {e}")
+
+        # Get discussion stats (with error handling)
+        try:
+            discussion_stats = get_discussion_stats_for_question(question)
+        except Exception as e:
+            current_app.logger.warning(f"Error getting discussion stats for question {question.id}: {e}", exc_info=True)
+            discussion_stats = {
+                'has_discussion': False,
+                'discussion_id': None,
+                'discussion_slug': None,
+                'discussion_title': None,
+                'participant_count': 0,
+                'response_count': 0,
+                'is_active': False,
+                'discussion_url': None
+            }
+
+        # Get vote counts for results display
+        try:
+            vote_counts = db.session.query(
+                DailyQuestionResponse.vote,
+                db.func.count(DailyQuestionResponse.id)
+            ).filter(
+                DailyQuestionResponse.daily_question_id == question.id
+            ).group_by(DailyQuestionResponse.vote).all()
+
+            vote_results = {'agree': 0, 'disagree': 0, 'unsure': 0, 'total': 0}
+            for vote_val, count in vote_counts:
+                vote_results['total'] += count
+                if vote_val == 1:
+                    vote_results['agree'] = count
+                elif vote_val == -1:
+                    vote_results['disagree'] = count
+                elif vote_val == 0:
+                    vote_results['unsure'] = count
+
+            # Calculate percentages
+            if vote_results['total'] > 0:
+                vote_results['agree_pct'] = round(vote_results['agree'] / vote_results['total'] * 100)
+                vote_results['disagree_pct'] = round(vote_results['disagree'] / vote_results['total'] * 100)
+                vote_results['unsure_pct'] = round(vote_results['unsure'] / vote_results['total'] * 100)
+            else:
+                vote_results['agree_pct'] = 0
+                vote_results['disagree_pct'] = 0
+                vote_results['unsure_pct'] = 0
+        except Exception as e:
+            current_app.logger.warning(f"Error getting vote results for question {question.id}: {e}")
+            vote_results = {'agree': 0, 'disagree': 0, 'unsure': 0, 'total': 0, 
+                          'agree_pct': 0, 'disagree_pct': 0, 'unsure_pct': 0}
+
+        # Get source articles (with error handling)
+        try:
+            source_articles = get_source_articles(question, limit=3)
+        except Exception as e:
+            current_app.logger.warning(f"Error getting source articles for question {question.id}: {e}", exc_info=True)
+            source_articles = []
+
+        questions_data.append({
+            'question': question,
+            'user_vote': user_vote,
+            'has_voted': user_vote is not None,
+            'discussion_stats': discussion_stats,
+            'vote_results': vote_results,
+            'source_articles': source_articles
+        })
+
+    # Count completed votes
+    votes_completed = sum(1 for q in questions_data if q['has_voted'])
+    all_voted = votes_completed == len(questions_data)
+
+    return render_template('daily/weekly_batch.html',
+        subscriber=subscriber,
+        questions=questions_data,
+        votes_completed=votes_completed,
+        total_questions=len(questions_data),
+        all_voted=all_voted,
+        token=token
+    )
+
+
+@daily_bp.route('/daily/weekly/vote', methods=['POST'])
+@limiter.limit("30 per minute")
+def weekly_batch_vote():
+    """
+    Handle a vote from the weekly batch page.
+    Records vote and returns updated state for the question.
+    
+    Security: Uses session-based authentication (subscriber_id in session).
+    For JSON requests, session is sufficient. For form submissions, CSRF would be checked.
+    """
+    # Get subscriber from session (session-based auth is sufficient for this endpoint)
+    subscriber_id = session.get('daily_subscriber_id')
+    if not subscriber_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+
+    subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+    if not subscriber or not subscriber.is_active:
+        return jsonify({'error': 'Subscriber not found or inactive'}), 404
+
+    # Log in if user has account
+    if subscriber.user:
+        login_user(subscriber.user)
+
+    # Parse request (expects JSON from AJAX)
+    if not request.is_json:
+        return jsonify({'error': 'Content-Type must be application/json'}), 400
+    
+    data = request.get_json()
+    question_id = data.get('question_id')
+    vote_choice = data.get('vote')
+    reason = data.get('reason', '').strip() if data.get('reason') else None
+
+    if not question_id or not vote_choice:
+        return jsonify({'error': 'Missing question_id or vote'}), 400
+
+    # Validate vote choice
+    if vote_choice not in VOTE_MAP:
+        return jsonify({'error': 'Invalid vote'}), 400
+
+    # Get the question
+    question = DailyQuestion.query.get(question_id)
+    if not question:
+        return jsonify({'error': 'Question not found'}), 404
+
+    # Check if already voted
+    if has_user_voted(question):
+        return jsonify({'error': 'Already voted', 'already_voted': True}), 400
+
+    try:
+        fingerprint = get_session_fingerprint()
+        new_vote = VOTE_MAP[vote_choice]
+
+        # Create the daily question response
+        response = DailyQuestionResponse(
+            daily_question_id=question.id,
+            user_id=current_user.id if current_user.is_authenticated else None,
+            session_fingerprint=fingerprint if not current_user.is_authenticated else None,
+            vote=new_vote,
+            reason=reason[:500] if reason else None,
+            reason_visibility=DEFAULT_EMAIL_VOTE_VISIBILITY if reason else None,
+            voted_via_email=True  # Mark as from weekly digest
+        )
+        db.session.add(response)
+
+        # Sync vote to statement if linked to discussion
+        sync_vote_to_statement(question, new_vote, fingerprint)
+
+        # Update subscriber streak
+        subscriber.update_participation_streak(has_reason=bool(reason))
+
+        db.session.commit()
+
+        current_app.logger.info(
+            f"Weekly batch vote recorded: {vote_choice} for question #{question.id} "
+            f"by subscriber {subscriber.id}"
+        )
+
+        # Get updated vote counts for this question
+        try:
+            vote_counts = db.session.query(
+                DailyQuestionResponse.vote,
+                db.func.count(DailyQuestionResponse.id)
+            ).filter(
+                DailyQuestionResponse.daily_question_id == question.id
+            ).group_by(DailyQuestionResponse.vote).all()
+
+            vote_results = {'agree': 0, 'disagree': 0, 'unsure': 0, 'total': 0}
+            for vote_val, count in vote_counts:
+                vote_results['total'] += count
+                if vote_val == 1:
+                    vote_results['agree'] = count
+                elif vote_val == -1:
+                    vote_results['disagree'] = count
+                elif vote_val == 0:
+                    vote_results['unsure'] = count
+
+            if vote_results['total'] > 0:
+                vote_results['agree_pct'] = round(vote_results['agree'] / vote_results['total'] * 100)
+                vote_results['disagree_pct'] = round(vote_results['disagree'] / vote_results['total'] * 100)
+                vote_results['unsure_pct'] = round(vote_results['unsure'] / vote_results['total'] * 100)
+            else:
+                vote_results['agree_pct'] = 0
+                vote_results['disagree_pct'] = 0
+                vote_results['unsure_pct'] = 0
+        except Exception as e:
+            current_app.logger.error(f"Error getting vote results: {e}")
+            vote_results = {'agree': 0, 'disagree': 0, 'unsure': 0, 'total': 0,
+                          'agree_pct': 0, 'disagree_pct': 0, 'unsure_pct': 0}
+
+        # Get discussion stats and source articles for mini results
+        try:
+            from app.daily.utils import get_discussion_stats_for_question
+            discussion_stats = get_discussion_stats_for_question(question)
+            source_articles = get_source_articles(question, limit=3)
+        except Exception as e:
+            current_app.logger.warning(f"Error getting discussion stats/articles: {e}", exc_info=True)
+            discussion_stats = {'has_discussion': False, 'discussion_url': None, 'participant_count': 0}
+            source_articles = []
+
+        return jsonify({
+            'success': True,
+            'vote': vote_choice,
+            'results': vote_results,
+            'discussion_stats': discussion_stats,
+            'source_articles': [
+                {
+                    'title': article.title if hasattr(article, 'title') else 'Source Article',
+                    'url': article.url if hasattr(article, 'url') else '#',
+                    'source_name': article.source.name if hasattr(article, 'source') and article.source else 'Unknown'
+                }
+                for article in source_articles[:3]
+            ]
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error processing weekly batch vote: {e}", exc_info=True)
+        return jsonify({'error': 'Failed to record vote'}), 500
+
+
 @daily_bp.route('/daily/m/<token>')
 def magic_link(token):
     """Magic link access for email subscribers - allows voting without login"""
@@ -911,16 +1381,23 @@ def one_click_vote(token, vote_choice):
     # Check if already voted
     if has_user_voted(question):
         flash('You have already voted on this question.', 'info')
+        # If from weekly digest, redirect to batch page to vote on remaining questions
+        source = request.args.get('source', '')
+        if source == 'weekly_digest':
+            session['daily_subscriber_token'] = subscriber.magic_token
+            return redirect(url_for('daily.weekly_batch', token=subscriber.magic_token))
         return redirect(url_for('daily.today'))
-    
+
     # GET request: Show confirmation page (prevents mail scanner prefetch from voting)
     if request.method == 'GET':
+        source = request.args.get('source', '')
         return render_template('daily/confirm_vote.html',
                              question=question,
                              vote_choice=vote_choice,
                              vote_label=VOTE_LABELS.get(VOTE_MAP.get(vote_choice), vote_choice.title()),
                              vote_emoji=VOTE_EMOJIS.get(vote_choice, ''),
-                             token=token)
+                             token=token,
+                             source=source)
     
     # POST request: Record the vote
     try:
@@ -979,6 +1456,14 @@ def one_click_vote(token, vote_choice):
         )
 
         flash('Vote recorded! Thanks for participating.', 'success')
+
+        # Check if user came from weekly digest - redirect to batch page to continue voting
+        source = request.args.get('source', '')
+        if source == 'weekly_digest':
+            # Store the subscriber's token in session for batch page access
+            session['daily_subscriber_token'] = subscriber.magic_token
+            return redirect(url_for('daily.weekly_batch', token=subscriber.magic_token))
+
         return redirect(url_for('daily.today'))
         
     except Exception as e:

@@ -968,9 +968,18 @@ def view_daily_question(question_id):
 @admin_required
 def list_daily_subscribers():
     """View all daily question subscribers"""
-    subscribers = DailyQuestionSubscriber.query.options(
+    # Get frequency filter from query params
+    frequency_filter = request.args.get('frequency', '').lower()
+    
+    query = DailyQuestionSubscriber.query.options(
         joinedload(DailyQuestionSubscriber.user)
-    ).order_by(
+    )
+    
+    # Apply frequency filter if provided
+    if frequency_filter in ['daily', 'weekly', 'monthly']:
+        query = query.filter_by(email_frequency=frequency_filter)
+    
+    subscribers = query.order_by(
         DailyQuestionSubscriber.created_at.desc()
     ).all()
     
@@ -987,12 +996,21 @@ def list_daily_subscribers():
                    for p in exclude_patterns)
     ]
     
+    # Count by frequency
+    frequency_counts = {
+        'daily': sum(1 for s in DailyQuestionSubscriber.query.filter_by(email_frequency='daily', is_active=True).all()),
+        'weekly': sum(1 for s in DailyQuestionSubscriber.query.filter_by(email_frequency='weekly', is_active=True).all()),
+        'monthly': sum(1 for s in DailyQuestionSubscriber.query.filter_by(email_frequency='monthly', is_active=True).all()),
+    }
+    
     return render_template(
         'admin/daily/subscribers.html',
         subscribers=subscribers,
         available_users=available_users,
         active_count=sum(1 for s in subscribers if s.is_active),
-        total_count=len(subscribers)
+        total_count=len(subscribers),
+        frequency_filter=frequency_filter,
+        frequency_counts=frequency_counts
     )
 
 

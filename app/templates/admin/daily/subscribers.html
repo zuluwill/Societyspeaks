@@ -84,7 +84,28 @@
 
     <div class="bg-white rounded-xl shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-lg font-semibold text-gray-900">All Subscribers</h3>
+            <div class="flex items-center gap-4">
+                <h3 class="text-lg font-semibold text-gray-900">All Subscribers</h3>
+                <!-- Frequency Filter -->
+                <div class="flex items-center gap-2">
+                    <a href="{{ url_for('admin.list_daily_subscribers') }}" 
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if not frequency_filter %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        All
+                    </a>
+                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='daily') }}" 
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'daily' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Daily ({{ frequency_counts.daily }})
+                    </a>
+                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='weekly') }}" 
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'weekly' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Weekly ({{ frequency_counts.weekly }})
+                    </a>
+                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='monthly') }}" 
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'monthly' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Monthly ({{ frequency_counts.monthly }})
+                    </a>
+                </div>
+            </div>
             {% if available_users %}
             <form action="{{ url_for('admin.bulk_subscribe_users') }}" method="POST" class="inline"
                   onsubmit="return confirm('This will subscribe ALL remaining {{ available_users|length }} users. Continue?');">
@@ -109,6 +130,7 @@
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Streak</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscribed</th>
@@ -129,6 +151,18 @@
                             <span class="text-sm text-gray-900">{{ sub.user.username }}</span>
                             {% else %}
                             <span class="text-sm text-gray-400">Email only</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                                {% if sub.email_frequency == 'daily' %}bg-blue-100 text-blue-800
+                                {% elif sub.email_frequency == 'weekly' %}bg-green-100 text-green-800
+                                {% elif sub.email_frequency == 'monthly' %}bg-purple-100 text-purple-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ sub.email_frequency|title }}
+                            </span>
+                            {% if sub.email_frequency == 'weekly' and sub.preferred_send_day is not none %}
+                            <span class="text-xs text-gray-500 ml-1">{{ sub.get_send_day_name() }} {{ sub.preferred_send_hour }}:00</span>
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">

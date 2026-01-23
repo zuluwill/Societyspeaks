@@ -106,7 +106,17 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                         </svg>
                     </a>
+                    <a href="{{ url_for('daily.subscribe') }}" 
+                       class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Get by Email
+                    </a>
                 </div>
+                <p class="text-sm text-gray-500 mt-3">
+                    📧 Get 5 questions weekly by email (default) • Choose daily or monthly in preferences
+                </p>
             </div>
             <div class="md:w-7/12">
                 {% if daily_question %}
@@ -193,7 +203,7 @@
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                             </svg>
-                            Daily at 8am
+                            Published daily • Email: weekly (default), daily, or monthly
                         </div>
                         <div class="bg-white rounded-lg p-5 shadow-sm border border-gray-100">
                             <p class="text-gray-800 font-medium">How it works:</p>

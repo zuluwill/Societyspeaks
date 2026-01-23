@@ -2,7 +2,7 @@
 
 {% block title %}Welcome to Daily Civic Questions - Society Speaks{% endblock %}
 
-{% block preheader %}You're subscribed! Answer a civic question each day.{% endblock %}
+{% block preheader %}You're subscribed! Get 5 civic questions each week (or choose daily).{% endblock %}
 
 {% block header_title %}Daily Questions{% endblock %}
 
@@ -18,7 +18,7 @@
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #374151; padding-bottom: 24px;">
-            Welcome to Daily Civic Questions! Each day, we'll send you a thought-provoking question about civic life, policy, or society.
+            Welcome to Daily Civic Questions! By default, you'll receive <strong>5 questions each week</strong> (on Tuesdays at 9am), but you can choose daily or monthly if you prefer.
         </td>
     </tr>
     <tr>
@@ -31,7 +31,7 @@
                 </tr>
                 <tr>
                     <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.8; color: #374151;">
-                        <strong>1.</strong> You'll receive a question by email each morning<br>
+                        <strong>1.</strong> You'll receive questions by email (weekly by default, or choose daily/monthly)<br>
                         <strong>2.</strong> Click the magic link to vote (no login needed)<br>
                         <strong>3.</strong> See how your view compares to others<br>
                         <strong>4.</strong> Build your participation streak!
@@ -60,10 +60,17 @@
         </td>
     </tr>
     <tr>
-        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #6b7280;">
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #6b7280; padding-bottom: 16px;">
             You can always visit <a href="{{ daily_question_url }}" style="color: #1e40af;">{{ daily_question_url }}</a> to see the latest question.
         </td>
     </tr>
+    {% if preferences_url %}
+    <tr>
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.6; color: #6b7280;">
+            Want to change your email frequency? <a href="{{ preferences_url }}" style="color: #1e40af; text-decoration: underline;">Manage your preferences</a>.
+        </td>
+    </tr>
+    {% endif %}
 </table>
 {% endblock %}
 

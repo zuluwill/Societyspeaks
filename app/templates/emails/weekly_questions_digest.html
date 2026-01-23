@@ -1,0 +1,217 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}{% if is_monthly %}10 Questions This Month{% else %}5 Questions This Week{% endif %} - Society Speaks{% endblock %}
+
+{% block preheader %}Vote on {% if is_monthly %}10{% else %}5{% endif %} civic questions{% if is_monthly %} this month{% else %} this week{% endif %}: {{ questions[0].question.question_text[:60] if questions else '' }}...{% endblock %}
+
+{% block header_title %}{% if is_monthly %}10 Questions This Month{% else %}5 Questions This Week{% endif %}{% endblock %}
+
+{% block header_subtitle %}
+<tr>
+    <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #bfdbfe;">
+        {% if is_monthly %}Your monthly civic digest{% else %}Your weekly civic digest{% endif %}
+    </td>
+</tr>
+{% endblock %}
+
+{% block content %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <!-- Intro Text -->
+    <tr>
+        <td style="padding-bottom: 24px;">
+            <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #374151; margin: 0;">
+                Here are {% if is_monthly %}10 questions from this month{% else %}5 questions from this week{% endif %}. Vote on the ones that interest you, then join the discussions.
+            </p>
+        </td>
+    </tr>
+
+    <!-- View All Questions Button (Primary CTA for Batch Experience) -->
+    <tr>
+        <td align="center" style="padding-bottom: 32px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="background-color: #f0fdf4; border-radius: 12px; border: 2px solid #22c55e;">
+                <tr>
+                    <td style="padding: 20px 28px;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <tr>
+                                <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #166534; padding-bottom: 12px;">
+                                    Best experience: Vote on all {{ questions|length }} at once
+                                </td>
+                            </tr>
+                            <tr>
+                                <td align="center">
+                                    <a href="{{ batch_url }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 14px 28px; background-color: #22c55e; border-radius: 8px;">
+                                        View All {{ questions|length }} Questions &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <!-- Divider -->
+    <tr>
+        <td style="padding-bottom: 24px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                    <td style="border-bottom: 1px solid #e5e7eb;"></td>
+                    <td style="padding: 0 12px; white-space: nowrap;">
+                        <span style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #9ca3af;">Or vote individually below</span>
+                    </td>
+                    <td style="border-bottom: 1px solid #e5e7eb;"></td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <!-- Questions Loop -->
+    {% for q_data in questions %}
+    <tr>
+        <td style="padding-bottom: 28px;">
+            <!-- Question Card -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <tr>
+                    <td style="padding: 24px;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                            <!-- Question Number Badge -->
+                            <tr>
+                                <td style="padding-bottom: 12px;">
+                                    <span style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 600; color: #6b7280; background-color: #e5e7eb; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        Question {{ loop.index }} of {{ questions|length }}
+                                    </span>
+                                </td>
+                            </tr>
+
+                            <!-- Question Text -->
+                            <tr>
+                                <td style="font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 600; line-height: 1.4; color: #0f172a; padding-bottom: 12px;">
+                                    "{{ q_data.question.question_text }}"
+                                </td>
+                            </tr>
+
+                            <!-- Context (if available) -->
+                            {% if q_data.question.context and q_data.question.context.strip() %}
+                            <tr>
+                                <td style="padding-bottom: 16px;">
+                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; line-height: 1.5; color: #6b7280; margin: 0; padding: 12px; background-color: #ffffff; border-radius: 6px; border-left: 3px solid #3b82f6;">
+                                        {{ q_data.question.context[:200] }}{% if q_data.question.context|length > 200 %}...{% endif %}
+                                    </p>
+                                </td>
+                            </tr>
+                            {% endif %}
+
+                            <!-- Vote Buttons (Primary CTA) -->
+                            <tr>
+                                <td align="center" style="padding-bottom: 12px;">
+                                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td style="padding: 0 4px;">
+                                                <a href="{{ q_data.vote_urls.agree }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 10px 18px; background-color: #2563eb; border-radius: 6px; white-space: nowrap;">
+                                                    &#10003; Agree
+                                                </a>
+                                            </td>
+                                            <td style="padding: 0 4px;">
+                                                <a href="{{ q_data.vote_urls.disagree }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 10px 18px; background-color: #dc2626; border-radius: 6px; white-space: nowrap;">
+                                                    &#10007; Disagree
+                                                </a>
+                                            </td>
+                                            <td style="padding: 0 4px;">
+                                                <a href="{{ q_data.vote_urls.unsure }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 10px 18px; background-color: #d97706; border-radius: 6px; white-space: nowrap;">
+                                                    ? Unsure
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- Discussion Link (Secondary - Awareness) -->
+                            {% if q_data.discussion_stats.has_discussion %}
+                            <tr>
+                                <td align="center">
+                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #6b7280; margin: 0;">
+                                        &#128172; {{ q_data.discussion_stats.participant_count }} people discussing
+                                        <a href="{{ q_data.discussion_stats.discussion_url }}?source=weekly_digest&q={{ q_data.question.id }}" style="color: #1e40af; text-decoration: underline;">View discussion &rarr;</a>
+                                    </p>
+                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #9ca3af; margin: 4px 0 0 0;">
+                                        (vote first, then join the conversation)
+                                    </p>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    {% endfor %}
+
+    <!-- Footer: View All Questions Again -->
+    <tr>
+        <td align="center" style="padding-top: 12px; border-top: 1px solid #e5e7eb;">
+            <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #6b7280; margin: 0 0 12px 0;">
+                Want to vote on all {{ questions|length }} at once?
+            </p>
+            <a href="{{ batch_url }}" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #1e40af; text-decoration: underline;">
+                View All {{ questions|length }} Questions &rarr;
+            </a>
+        </td>
+    </tr>
+</table>
+{% endblock %}
+
+{% block support_message %}
+<!-- Support Message - Promote Personal Briefs -->
+<tr>
+    <td style="background: linear-gradient(135deg, #1e40af 0%, #312e81 100%); padding: 32px 28px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            <tr>
+                <td align="center" style="font-family: Georgia, 'Times New Roman', serif; font-size: 20px; font-weight: 700; color: #ffffff; padding-bottom: 12px;">
+                    Support Open Source Civic Tech
+                </td>
+            </tr>
+            <tr>
+                <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; line-height: 1.6; color: #bfdbfe; padding-bottom: 20px;">
+                    Love the Weekly Questions? Try <strong style="color: #ffffff;">Personal Briefs</strong> &mdash; create custom daily digests from the sources you trust. Your subscription directly funds our free civic tools.
+                </td>
+            </tr>
+            <tr>
+                <td align="center" style="padding-bottom: 12px;">
+                    <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                            <td align="center" style="background-color: #ffffff; border-radius: 6px;">
+                                <a href="{{ base_url }}/briefings/landing" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #1e40af; text-decoration: none; padding: 12px 24px;">
+                                    &#10084; Support Our Work
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #93c5fd;">
+                    30-day free trial &bull; From £12/month &bull; Funds open source development
+                </td>
+            </tr>
+        </table>
+    </td>
+</tr>
+{% endblock %}
+
+{% block footer_links %}
+<tr>
+    <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #475569; padding-bottom: 8px;">
+        <a href="{{ preferences_url }}" target="_blank" style="color: #64748b; text-decoration: underline;">Manage preferences</a>
+        &bull;
+        <a href="{{ unsubscribe_url }}" target="_blank" style="color: #64748b; text-decoration: underline;">Unsubscribe</a>
+    </td>
+</tr>
+<tr>
+    <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #9ca3af;">
+        {% if is_monthly %}Receiving monthly digests on the 1st{% else %}Receiving {{ send_day_name }}s at {{ send_hour }}:00{% endif %}
+    </td>
+</tr>
+{% endblock %}

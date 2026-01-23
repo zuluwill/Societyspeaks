@@ -625,5 +625,156 @@ def auto_publish_todays_question():
         question.published_at = datetime.utcnow()
         db.session.commit()
         current_app.logger.info(f"Auto-published daily question #{question.question_number}")
-    
+
     return question
+
+
+def select_questions_for_weekly_digest(days_back=7, count=5):
+    """
+    Select questions from the past week for the weekly digest email.
+    Prioritizes questions linked to active discussions.
+
+    Args:
+        days_back: How many days to look back (default 7)
+        count: Number of questions to select (default 5)
+
+    Returns:
+        List of DailyQuestion objects, ordered by engagement potential
+    """
+    cutoff_date = date.today() - timedelta(days=days_back)
+
+    # Get published questions from the past week
+    questions = DailyQuestion.query.filter(
+        DailyQuestion.question_date >= cutoff_date,
+        DailyQuestion.question_date <= date.today(),
+        DailyQuestion.status == 'published'
+    ).order_by(DailyQuestion.question_date.desc()).all()
+
+    if not questions:
+        current_app.logger.warning(f"No published questions found in last {days_back} days")
+        return []
+
+    # Score questions for the digest (prioritize discussion-linked ones)
+    scored_questions = []
+    for question in questions:
+        score = 0.0
+
+        # Boost for having a linked discussion (most important for engagement)
+        if question.source_discussion_id:
+            score += 0.4
+
+            # Additional boost if discussion is active (has recent votes)
+            from app.models import StatementVote
+            yesterday = datetime.utcnow() - timedelta(hours=24)
+            recent_activity = StatementVote.query.filter(
+                StatementVote.discussion_id == question.source_discussion_id,
+                StatementVote.created_at >= yesterday
+            ).first()
+            if recent_activity:
+                score += 0.2
+
+        # Recency score (newer questions slightly preferred)
+        days_old = (date.today() - question.question_date).days
+        recency_score = 1.0 - (days_old / days_back) * 0.3
+        score += recency_score * 0.2
+
+        # Response count (questions with more responses are engaging)
+        response_count = DailyQuestionResponse.query.filter_by(
+            daily_question_id=question.id
+        ).count()
+        if response_count > 0:
+            score += min(response_count / 50, 0.2)  # Cap at 0.2
+
+        scored_questions.append((question, score))
+
+    # Sort by score descending
+    scored_questions.sort(key=lambda x: x[1], reverse=True)
+
+    # Return top N questions
+    selected = [q for q, score in scored_questions[:count]]
+
+    current_app.logger.info(
+        f"Selected {len(selected)} questions for weekly digest "
+        f"(from {len(questions)} available)"
+    )
+
+    return selected
+
+
+def select_questions_for_monthly_digest(days_back=30, count=10):
+    """
+    Select questions from the past month for the monthly digest email.
+    Prioritizes questions linked to active discussions and high engagement.
+
+    Args:
+        days_back: How many days to look back (default 30)
+        count: Number of questions to select (default 10)
+
+    Returns:
+        List of DailyQuestion objects, ordered by engagement potential
+    """
+    cutoff_date = date.today() - timedelta(days=days_back)
+
+    # Get published questions from the past month
+    questions = DailyQuestion.query.filter(
+        DailyQuestion.question_date >= cutoff_date,
+        DailyQuestion.question_date <= date.today(),
+        DailyQuestion.status == 'published'
+    ).order_by(DailyQuestion.question_date.desc()).all()
+
+    if not questions:
+        current_app.logger.warning(f"No published questions found in last {days_back} days")
+        return []
+
+    # Score questions for the digest (prioritize discussion-linked ones and high engagement)
+    scored_questions = []
+    for question in questions:
+        score = 0.0
+
+        # Boost for having a linked discussion (most important for engagement)
+        if question.source_discussion_id:
+            score += 0.3
+
+            # Additional boost if discussion is active (has recent votes)
+            from app.models import StatementVote
+            week_ago = datetime.utcnow() - timedelta(days=7)
+            recent_activity = StatementVote.query.filter(
+                StatementVote.discussion_id == question.source_discussion_id,
+                StatementVote.created_at >= week_ago
+            ).first()
+            if recent_activity:
+                score += 0.2
+
+        # Recency score (newer questions preferred, but less weight than weekly)
+        days_old = (date.today() - question.question_date).days
+        recency_score = 1.0 - (days_old / days_back) * 0.2
+        score += recency_score * 0.15
+
+        # Response count (questions with more responses are engaging)
+        response_count = DailyQuestionResponse.query.filter_by(
+            daily_question_id=question.id
+        ).count()
+        if response_count > 0:
+            score += min(response_count / 100, 0.25)  # Cap at 0.25, higher threshold for monthly
+
+        # Boost for questions with many votes (high engagement)
+        vote_count = DailyQuestionResponse.query.filter_by(
+            daily_question_id=question.id
+        ).count()
+        if vote_count > 20:  # Threshold for "high engagement"
+            score += 0.1
+
+        scored_questions.append((question, score))
+
+    # Sort by score descending
+    scored_questions.sort(key=lambda x: x[1], reverse=True)
+
+    # Return top N questions
+    selected = [q for q, score in scored_questions[:count]]
+
+    current_app.logger.info(
+        f"Selected {len(selected)} questions for monthly digest "
+        f"(from {len(questions)} available)"
+    )
+
+    return selected

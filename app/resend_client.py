@@ -361,11 +361,15 @@ class ResendEmailClient:
         unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.magic_token}"
         
         try:
+            # Build preferences URL for managing frequency
+            preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
+            
             html = render_template(
                 'emails/daily_question_welcome.html',
                 magic_link_url=magic_link_url,
                 daily_question_url=daily_question_url,
                 unsubscribe_url=unsubscribe_url,
+                preferences_url=preferences_url,
                 base_url=self.base_url
             )
         except Exception as e:
@@ -470,10 +474,156 @@ class ResendEmailClient:
         }
 
         success = self._send_with_retry(email_data)
-        
+
         if success:
             subscriber.last_email_sent = datetime.utcnow()
+
+        return success
+
+    def send_weekly_questions_digest(self, subscriber, questions) -> bool:
+        """
+        Send weekly digest email with 5 questions to a single subscriber.
+
+        Args:
+            subscriber: DailyQuestionSubscriber object (must have magic_token set)
+            questions: List of DailyQuestion objects (up to 5)
+
+        Returns:
+            bool: Success status
+        """
+        from app.daily.utils import get_discussion_stats_for_question
+
+        if not questions:
+            logger.warning(f"No questions provided for weekly digest to {subscriber.email}")
+            return False
+
+        # Build URLs with question IDs for batch page
+        question_ids = ','.join(str(q.id) for q in questions)
+        batch_url = f"{self.base_url}/daily/weekly?token={subscriber.magic_token}&questions={question_ids}"
+        preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
+        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.magic_token}"
+
+        # Build question data with vote URLs, discussion stats, and source articles
+        from app.daily.utils import build_question_email_data
         
+        questions_data = []
+        for question in questions:
+            # Use DRY helper function to build all question data (with base_url for email context)
+            q_data = build_question_email_data(question, subscriber, base_url=self.base_url)
+            questions_data.append(q_data)
+
+        # Get send day name for footer
+        send_day_name = subscriber.get_send_day_name()
+        send_hour = subscriber.preferred_send_hour
+
+        try:
+            html = render_template(
+                'emails/weekly_questions_digest.html',
+                questions=questions_data,
+                batch_url=batch_url,
+                preferences_url=preferences_url,
+                unsubscribe_url=unsubscribe_url,
+                send_day_name=send_day_name,
+                send_hour=send_hour,
+                base_url=self.base_url
+            )
+        except Exception as e:
+            logger.error(f"Template rendering failed for weekly_questions_digest: {e}")
+            return False
+
+        # Build subject line
+        first_question = questions[0].question_text[:50]
+        subject = f"5 Questions This Week: {first_question}..."
+
+        email_data = {
+            'from': self.from_email_daily,
+            'to': [subscriber.email],
+            'subject': subject,
+            'html': html,
+            'headers': {
+                'List-Unsubscribe': f'<{unsubscribe_url}>',
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+            }
+        }
+
+        success = self._send_with_retry(email_data)
+
+        if success:
+            subscriber.last_weekly_email_sent = datetime.utcnow()
+            subscriber.last_email_sent = datetime.utcnow()
+
+        return success
+
+    def send_monthly_questions_digest(self, subscriber, questions) -> bool:
+        """
+        Send monthly digest email with 10 questions to a single subscriber.
+
+        Args:
+            subscriber: DailyQuestionSubscriber object (must have magic_token set)
+            questions: List of DailyQuestion objects (up to 10)
+
+        Returns:
+            bool: Success status
+        """
+        from app.daily.utils import get_discussion_stats_for_question
+
+        if not questions:
+            logger.warning(f"No questions provided for monthly digest to {subscriber.email}")
+            return False
+
+        # Build URLs with question IDs for batch page
+        question_ids = ','.join(str(q.id) for q in questions)
+        batch_url = f"{self.base_url}/daily/weekly?token={subscriber.magic_token}&questions={question_ids}"
+        preferences_url = f"{self.base_url}/daily/preferences?token={subscriber.magic_token}"
+        unsubscribe_url = f"{self.base_url}/daily/unsubscribe/{subscriber.magic_token}"
+
+        # Build question data with vote URLs, discussion stats, and source articles
+        from app.daily.utils import build_question_email_data
+        
+        questions_data = []
+        for question in questions:
+            # Use DRY helper function to build all question data (with base_url for email context)
+            q_data = build_question_email_data(question, subscriber, base_url=self.base_url)
+            questions_data.append(q_data)
+
+        try:
+            # Reuse weekly digest template but with different title
+            html = render_template(
+                'emails/weekly_questions_digest.html',
+                questions=questions_data,
+                batch_url=batch_url,
+                preferences_url=preferences_url,
+                unsubscribe_url=unsubscribe_url,
+                send_day_name='Monthly',
+                send_hour=9,
+                base_url=self.base_url,
+                is_monthly=True
+            )
+        except Exception as e:
+            logger.error(f"Template rendering failed for monthly_questions_digest: {e}")
+            return False
+
+        # Build subject line
+        first_question = questions[0].question_text[:50]
+        subject = f"10 Questions This Month: {first_question}..."
+
+        email_data = {
+            'from': self.from_email_daily,
+            'to': [subscriber.email],
+            'subject': subject,
+            'html': html,
+            'headers': {
+                'List-Unsubscribe': f'<{unsubscribe_url}>',
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+            }
+        }
+
+        success = self._send_with_retry(email_data)
+
+        if success:
+            subscriber.last_weekly_email_sent = datetime.utcnow()  # Reuse field for monthly tracking
+            subscriber.last_email_sent = datetime.utcnow()
+
         return success
 
     def _build_daily_question_email(self, subscriber, question) -> Dict[str, Any]:
@@ -905,15 +1055,18 @@ def send_daily_question_to_all_subscribers() -> int:
         logger.info("No daily question to send - none published for today")
         return 0
 
-    # Get all active subscribers
-    total_subscribers = DailyQuestionSubscriber.query.filter_by(is_active=True).count()
+    # Get all active subscribers with 'daily' frequency (filter for weekly digest feature)
+    total_subscribers = DailyQuestionSubscriber.query.filter_by(
+        is_active=True,
+        email_frequency='daily'
+    ).count()
 
     if total_subscribers == 0:
-        logger.info("No active subscribers to send daily question to")
+        logger.info("No active daily frequency subscribers to send daily question to")
         return 0
 
     logger.info(
-        f"Starting daily question #{question.question_number} send to {total_subscribers} subscribers "
+        f"Starting daily question #{question.question_number} send to {total_subscribers} daily frequency subscribers "
         f"(using batch API for efficiency)"
     )
 
@@ -933,9 +1086,11 @@ def send_daily_question_to_all_subscribers() -> int:
     offset = 0
 
     while True:
-        # Get chunk of subscribers
-        subscribers = DailyQuestionSubscriber.query.filter_by(is_active=True)\
-            .order_by(DailyQuestionSubscriber.id)\
+        # Get chunk of subscribers (filtered by daily frequency)
+        subscribers = DailyQuestionSubscriber.query.filter_by(
+            is_active=True,
+            email_frequency='daily'
+        ).order_by(DailyQuestionSubscriber.id)\
             .offset(offset)\
             .limit(CHUNK_SIZE)\
             .all()

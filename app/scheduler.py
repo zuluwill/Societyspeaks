@@ -509,11 +509,37 @@ def init_scheduler(app):
         try:
             with app_instance.app_context():
                 # Use new Resend client with batch API for faster sending
-                from app.resend_client import send_daily_question_to_all_subscribers
+                from app.resend_client import get_resend_client
+                from app.models import DailyQuestion, DailyQuestionSubscriber
                 
                 logger.info("Background thread: Starting daily question email send (via Resend)")
-                sent = send_daily_question_to_all_subscribers()
-                logger.info(f"Background thread: Sent daily question to {sent} subscribers")
+                
+                # Get today's question
+                question = DailyQuestion.get_today()
+                if not question:
+                    logger.info("No daily question to send - none published for today")
+                    return
+                
+                # Filter to only daily frequency subscribers
+                daily_subscribers = DailyQuestionSubscriber.query.filter_by(
+                    is_active=True,
+                    email_frequency='daily'
+                ).all()
+                
+                logger.info(f"Found {len(daily_subscribers)} daily frequency subscribers")
+                
+                if not daily_subscribers:
+                    logger.info("No daily frequency subscribers to send to")
+                    return
+                
+                # Send to daily subscribers using batch API
+                client = get_resend_client()
+                result = client.send_daily_question_batch(daily_subscribers, question)
+                
+                logger.info(
+                    f"Background thread: Sent daily question to {result['sent']} subscribers, "
+                    f"{result['failed']} failed"
+                )
         except Exception as e:
             logger.error(f"Background thread: Daily question email error: {e}", exc_info=True)
         finally:
@@ -549,8 +575,269 @@ def init_scheduler(app):
         )
         email_thread.start()
         logger.info("Daily question email thread launched, scheduler continuing")
+
+
+    # Weekly digest email sending
+    _weekly_digest_in_progress = threading.Event()
     
-    
+    # Monthly digest email sending
+    _monthly_digest_in_progress = threading.Event()
+
+    def _run_weekly_digest_in_thread(app_instance):
+        """Run weekly digest send in background thread with its own app context"""
+        try:
+            with app_instance.app_context():
+                from datetime import datetime
+                from app import db
+                from app.models import DailyQuestionSubscriber
+                from app.resend_client import ResendClient
+                from app.daily.auto_selection import select_questions_for_weekly_digest
+                import pytz
+
+                logger.info("Background thread: Starting weekly digest processing")
+
+                # Get current UTC time
+                utc_now = datetime.utcnow()
+
+                # Get all active weekly subscribers
+                weekly_subscribers = DailyQuestionSubscriber.query.filter_by(
+                    is_active=True,
+                    email_frequency='weekly'
+                ).all()
+
+                logger.info(f"Found {len(weekly_subscribers)} weekly subscribers to check")
+
+                # Select questions for the digest (once, reuse for all subscribers)
+                questions = select_questions_for_weekly_digest(days_back=7, count=5)
+
+                if not questions:
+                    logger.warning("No questions available for weekly digest")
+                    return
+
+                logger.info(f"Selected {len(questions)} questions for weekly digest")
+
+                # Initialize Resend client
+                client = ResendClient()
+                sent_count = 0
+                skipped_count = 0
+
+                for subscriber in weekly_subscribers:
+                    try:
+                        # Check if it's the right time for this subscriber
+                        if not subscriber.should_receive_weekly_digest_now(utc_now):
+                            continue
+
+                        # Check if already sent this week
+                        if subscriber.has_received_weekly_digest_this_week():
+                            skipped_count += 1
+                            continue
+
+                        # Ensure subscriber has a magic token
+                        if not subscriber.magic_token:
+                            subscriber.generate_magic_token()
+                            db.session.commit()
+
+                        # Send the digest
+                        success = client.send_weekly_questions_digest(subscriber, questions)
+
+                        if success:
+                            sent_count += 1
+                            db.session.commit()
+                            logger.debug(f"Sent weekly digest to {subscriber.email}")
+                            
+                            # Track with PostHog
+                            try:
+                                import posthog
+                                if posthog.project_api_key:
+                                    posthog.capture(
+                                        subscriber.email,
+                                        'weekly_digest_sent',
+                                        {
+                                            'question_count': len(questions),
+                                            'question_ids': [q.id for q in questions],
+                                            'send_day': subscriber.preferred_send_day,
+                                            'send_hour': subscriber.preferred_send_hour,
+                                            'timezone': subscriber.timezone or 'UTC'
+                                        }
+                                    )
+                            except Exception as e:
+                                logger.warning(f"PostHog tracking error: {e}")
+                        else:
+                            logger.warning(f"Failed to send weekly digest to {subscriber.email}")
+
+                    except Exception as e:
+                        logger.error(f"Error sending weekly digest to {subscriber.email}: {e}")
+                        db.session.rollback()
+
+                logger.info(f"Weekly digest: sent to {sent_count} subscribers, skipped {skipped_count} (already sent)")
+
+        except Exception as e:
+            logger.error(f"Background thread: Weekly digest error: {e}", exc_info=True)
+        finally:
+            _weekly_digest_in_progress.clear()
+            logger.info("Background thread: Weekly digest processing complete")
+
+    def _run_monthly_digest_in_thread(app_instance):
+        """Run monthly digest send in background thread with its own app context"""
+        try:
+            with app_instance.app_context():
+                from datetime import datetime
+                from app import db
+                from app.models import DailyQuestionSubscriber
+                from app.resend_client import ResendClient
+                from app.daily.auto_selection import select_questions_for_monthly_digest
+                import pytz
+
+                logger.info("Background thread: Starting monthly digest processing")
+
+                # Get current UTC time
+                utc_now = datetime.utcnow()
+
+                # Get all active monthly subscribers
+                monthly_subscribers = DailyQuestionSubscriber.query.filter_by(
+                    is_active=True,
+                    email_frequency='monthly'
+                ).all()
+
+                logger.info(f"Found {len(monthly_subscribers)} monthly subscribers to check")
+
+                # Select questions for the digest (once, reuse for all subscribers)
+                questions = select_questions_for_monthly_digest(days_back=30, count=10)
+
+                if not questions:
+                    logger.warning("No questions available for monthly digest")
+                    return
+
+                logger.info(f"Selected {len(questions)} questions for monthly digest")
+
+                # Initialize Resend client
+                client = ResendClient()
+                sent_count = 0
+                skipped_count = 0
+
+                for subscriber in monthly_subscribers:
+                    try:
+                        # Check if it's the right time for this subscriber
+                        if not subscriber.should_receive_monthly_digest_now(utc_now):
+                            continue
+
+                        # Check if already sent this month
+                        if subscriber.has_received_monthly_digest_this_month():
+                            skipped_count += 1
+                            continue
+
+                        # Ensure subscriber has a magic token
+                        if not subscriber.magic_token:
+                            subscriber.generate_magic_token()
+                            db.session.commit()
+
+                        # Send the digest
+                        success = client.send_monthly_questions_digest(subscriber, questions)
+
+                        if success:
+                            sent_count += 1
+                            db.session.commit()
+                            logger.debug(f"Sent monthly digest to {subscriber.email}")
+                            
+                            # Track with PostHog
+                            try:
+                                import posthog
+                                if posthog.project_api_key:
+                                    posthog.capture(
+                                        subscriber.email,
+                                        'monthly_digest_sent',
+                                        {
+                                            'question_count': len(questions),
+                                            'question_ids': [q.id for q in questions],
+                                            'timezone': subscriber.timezone or 'UTC'
+                                        }
+                                    )
+                            except Exception as e:
+                                logger.warning(f"PostHog tracking error: {e}")
+                        else:
+                            logger.warning(f"Failed to send monthly digest to {subscriber.email}")
+
+                    except Exception as e:
+                        logger.error(f"Error sending monthly digest to {subscriber.email}: {e}")
+                        db.session.rollback()
+
+                logger.info(f"Monthly digest: sent to {sent_count} subscribers, skipped {skipped_count} (already sent)")
+
+        except Exception as e:
+            logger.error(f"Background thread: Monthly digest error: {e}", exc_info=True)
+        finally:
+            _monthly_digest_in_progress.clear()
+            logger.info("Background thread: Monthly digest processing complete")
+
+    @scheduler.scheduled_job('cron', minute=0, id='process_weekly_digest_sends')
+    def process_weekly_digest_sends():
+        """
+        Process weekly digest sends. Runs every hour on the hour.
+
+        Checks which subscribers should receive their weekly digest based on:
+        - Their preferred send day (0-6, default Tuesday=1)
+        - Their preferred send hour (0-23, default 9am)
+        - Their timezone
+
+        Example: If it's Tuesday 9am in Europe/London, send to all subscribers
+        who have preferred_send_day=1, preferred_send_hour=9, timezone='Europe/London'
+
+        IMPORTANT: Only sends in production to prevent duplicate emails from dev environment.
+        """
+        # Skip in development environment
+        if not _is_production_environment():
+            logger.debug("Skipping weekly digest processing - development environment")
+            return
+
+        if _weekly_digest_in_progress.is_set():
+            logger.warning("Weekly digest processing already in progress, skipping")
+            return
+
+        _weekly_digest_in_progress.set()
+        logger.info("Launching weekly digest processing in background thread")
+
+        digest_thread = threading.Thread(
+            target=_run_weekly_digest_in_thread,
+            args=(app,),
+            daemon=True,
+            name="weekly-digest-sender"
+        )
+        digest_thread.start()
+        logger.info("Weekly digest thread launched, scheduler continuing")
+
+    @scheduler.scheduled_job('cron', minute=0, id='process_monthly_digest_sends')
+    def process_monthly_digest_sends():
+        """
+        Process monthly digest sends. Runs every hour on the hour.
+
+        Checks which subscribers should receive their monthly digest based on:
+        - It's the 1st of the month
+        - It's 9am in the subscriber's timezone
+        - They haven't received it this month yet
+
+        IMPORTANT: Only sends in production to prevent duplicate emails from dev environment.
+        """
+        # Skip in development environment
+        if not _is_production_environment():
+            logger.debug("Skipping monthly digest processing - development environment")
+            return
+        
+        if _monthly_digest_in_progress.is_set():
+            logger.warning("Monthly digest send already in progress, skipping")
+            return
+        
+        _monthly_digest_in_progress.set()
+        logger.info("Launching monthly digest send in background thread")
+        
+        email_thread = threading.Thread(
+            target=_run_monthly_digest_in_thread,
+            args=(app,),
+            daemon=True,
+            name="monthly-digest-sender"
+        )
+        email_thread.start()
+        logger.info("Monthly digest thread launched, scheduler continuing")
+
     @scheduler.scheduled_job('cron', hour=14, minute=0, id='post_daily_question_to_social')
     def post_daily_question_to_social():
         """

@@ -2347,6 +2347,13 @@ class DailyQuestionSubscriber(db.Model):
     unsubscribe_reason = db.Column(db.String(50), nullable=True)
     unsubscribed_at = db.Column(db.DateTime, nullable=True)
 
+    # Weekly digest email preferences
+    email_frequency = db.Column(db.String(20), default='weekly')  # 'daily'|'weekly'|'monthly'
+    last_weekly_email_sent = db.Column(db.DateTime, nullable=True)
+    preferred_send_day = db.Column(db.Integer, default=1)  # 0=Mon, 1=Tue (default), ..., 6=Sun
+    preferred_send_hour = db.Column(db.Integer, default=9)  # 0-23, default 9am
+    timezone = db.Column(db.String(50), nullable=True)  # e.g., 'Europe/London', 'America/New_York'
+
     user = db.relationship('User', backref='daily_subscription')
     
     def generate_magic_token(self, expires_hours=48):
@@ -2502,7 +2509,125 @@ class DailyQuestionSubscriber(db.Model):
         if self.current_streak < 7:
             return self.thoughtful_participations >= self.current_streak * 0.5
         return self.thoughtful_participations >= self.current_streak * 0.4
+
+    # Weekly digest helper constants
+    SEND_DAYS = {
+        0: 'Monday',
+        1: 'Tuesday',
+        2: 'Wednesday',
+        3: 'Thursday',
+        4: 'Friday',
+        5: 'Saturday',
+        6: 'Sunday'
+    }
+    VALID_EMAIL_FREQUENCIES = ['daily', 'weekly', 'monthly']
+
+    def get_send_day_name(self):
+        """Return human-readable send day name"""
+        return self.SEND_DAYS.get(self.preferred_send_day, 'Tuesday')
+
+    def should_receive_weekly_digest_now(self, utc_now=None):
+        """
+        Check if this subscriber should receive their weekly digest right now.
+        Used by the hourly scheduler job.
+
+        Args:
+            utc_now: Current UTC datetime (optional, defaults to now)
+
+        Returns:
+            bool: True if it's the right day and hour in the subscriber's timezone
+        """
+        import pytz
+        from flask import current_app
+
+        if utc_now is None:
+            utc_now = datetime.utcnow()
+
+        # Only applies to weekly subscribers
+        if self.email_frequency != 'weekly':
+            return False
+
+        # Get subscriber's timezone (default to UTC)
+        try:
+            tz = pytz.timezone(self.timezone) if self.timezone else pytz.UTC
+        except pytz.exceptions.UnknownTimeZoneError:
+            # Log timezone error for debugging
+            if current_app:
+                current_app.logger.warning(
+                    f"Invalid timezone '{self.timezone}' for subscriber {self.id}, "
+                    f"defaulting to UTC"
+                )
+            tz = pytz.UTC
+
+        # Convert UTC to subscriber's local time
+        try:
+            local_now = utc_now.replace(tzinfo=pytz.UTC).astimezone(tz)
+        except Exception as e:
+            # Fallback to UTC on any timezone conversion error
+            if current_app:
+                current_app.logger.error(
+                    f"Error converting timezone for subscriber {self.id}: {e}, "
+                    f"defaulting to UTC"
+                )
+            local_now = utc_now.replace(tzinfo=pytz.UTC)
+
+        # Check if it's the right day and hour
+        return (local_now.weekday() == self.preferred_send_day and
+                local_now.hour == self.preferred_send_hour)
+
+    def has_received_weekly_digest_this_week(self):
+        """Check if weekly digest was already sent this week (within last 6 days)"""
+        if not self.last_weekly_email_sent:
+            return False
+        week_ago = datetime.utcnow() - timedelta(days=6)
+        return self.last_weekly_email_sent > week_ago
     
+    def has_received_monthly_digest_this_month(self):
+        """Check if monthly digest was already sent this month (within last 25 days)"""
+        if not self.last_weekly_email_sent:  # Reuse same field for monthly tracking
+            return False
+        month_ago = datetime.utcnow() - timedelta(days=25)
+        return self.last_weekly_email_sent > month_ago
+    
+    def should_receive_monthly_digest_now(self, utc_now=None):
+        """
+        Check if this subscriber should receive their monthly digest right now.
+        Monthly digests are sent on the 1st of each month at 9am in subscriber's timezone.
+
+        Args:
+            utc_now: Current UTC datetime (optional, defaults to now)
+
+        Returns:
+            bool: True if it's the 1st of the month and 9am in the subscriber's timezone
+        """
+        import pytz
+        from flask import current_app
+
+        if utc_now is None:
+            utc_now = datetime.utcnow()
+
+        # Only applies to monthly subscribers
+        if self.email_frequency != 'monthly':
+            return False
+
+        # Get subscriber's timezone (default to UTC)
+        try:
+            tz = pytz.timezone(self.timezone) if self.timezone else pytz.UTC
+        except pytz.exceptions.UnknownTimeZoneError:
+            current_app.logger.warning(
+                f"Invalid timezone '{self.timezone}' for subscriber {self.id}, defaulting to UTC"
+            )
+            tz = pytz.UTC
+
+        # Convert UTC to subscriber's local time
+        local_time = utc_now.astimezone(tz)
+
+        # Check if it's the 1st of the month and 9am (or within the hour)
+        is_first_of_month = local_time.day == 1
+        is_ninth_hour = local_time.hour == 9
+
+        return is_first_of_month and is_ninth_hour
+
     def to_dict(self):
         return {
             'id': self.id,

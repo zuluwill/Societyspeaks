@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Email Preferences - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-12">
+    <div class="max-w-lg mx-auto px-4">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Email Preferences</h1>
+            <p class="text-gray-600">Customize how you receive questions from Society Speaks</p>
+        </div>
+
+        <!-- Success/Error Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-6 p-4 rounded-lg {% if category == 'success' %}bg-green-50 text-green-800 border border-green-200{% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Preferences Form -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <form method="POST" action="{{ url_for('daily.manage_preferences', token=token) }}">
+                <!-- Email Frequency Section -->
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Email Frequency</h2>
+                    <p class="text-sm text-gray-600 mb-4">How often would you like to receive civic questions?</p>
+
+                    <div class="space-y-3">
+                        <label class="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors {% if subscriber.email_frequency == 'daily' %}border-blue-500 bg-blue-50{% else %}border-gray-200{% endif %}">
+                            <input type="radio" name="email_frequency" value="daily"
+                                   class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                                   {% if subscriber.email_frequency == 'daily' %}checked{% endif %}>
+                            <div class="ml-3">
+                                <span class="block font-medium text-gray-900">Daily</span>
+                                <span class="block text-sm text-gray-500">One question each day at your preferred time</span>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors {% if subscriber.email_frequency == 'weekly' %}border-blue-500 bg-blue-50{% else %}border-gray-200{% endif %}">
+                            <input type="radio" name="email_frequency" value="weekly"
+                                   class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                                   {% if subscriber.email_frequency == 'weekly' %}checked{% endif %}>
+                            <div class="ml-3">
+                                <span class="block font-medium text-gray-900">Weekly</span>
+                                <span class="block text-sm text-gray-500">5 questions once per week - vote on them all at once</span>
+                                <span class="inline-block mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">Recommended</span>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start p-4 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors {% if subscriber.email_frequency == 'monthly' %}border-blue-500 bg-blue-50{% else %}border-gray-200{% endif %}">
+                            <input type="radio" name="email_frequency" value="monthly"
+                                   class="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500"
+                                   {% if subscriber.email_frequency == 'monthly' %}checked{% endif %}>
+                            <div class="ml-3">
+                                <span class="block font-medium text-gray-900">Monthly</span>
+                                <span class="block text-sm text-gray-500">A digest of the best questions once per month</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Send Time Section (for weekly) -->
+                <div class="p-6 border-b border-gray-200" id="weekly-options">
+                    <h2 class="text-lg font-semibold text-gray-900 mb-4">Weekly Delivery Time</h2>
+                    <p class="text-sm text-gray-600 mb-4">Choose when you'd like to receive your weekly digest</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Day Selection -->
+                        <div>
+                            <label for="preferred_send_day" class="block text-sm font-medium text-gray-700 mb-2">Day of week</label>
+                            <select name="preferred_send_day" id="preferred_send_day"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                {% for day_value, day_name in send_days.items() %}
+                                    <option value="{{ day_value }}" {% if subscriber.preferred_send_day == day_value %}selected{% endif %}>
+                                        {{ day_name }}{% if day_value == 1 %} (Recommended){% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Hour Selection -->
+                        <div>
+                            <label for="preferred_send_hour" class="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                            <select name="preferred_send_hour" id="preferred_send_hour"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                {% for hour in range(24) %}
+                                    <option value="{{ hour }}" {% if subscriber.preferred_send_hour == hour %}selected{% endif %}>
+                                        {% if hour == 0 %}12:00 AM (Midnight)
+                                        {% elif hour < 12 %}{{ hour }}:00 AM
+                                        {% elif hour == 12 %}12:00 PM (Noon)
+                                        {% else %}{{ hour - 12 }}:00 PM
+                                        {% endif %}
+                                        {% if hour == 9 %} (Recommended){% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Timezone -->
+                    <div class="mt-4">
+                        <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
+                        <select name="timezone" id="timezone"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Auto-detect (UTC)</option>
+                            <optgroup label="Europe">
+                                <option value="Europe/London" {% if subscriber.timezone == 'Europe/London' %}selected{% endif %}>London (GMT/BST)</option>
+                                <option value="Europe/Paris" {% if subscriber.timezone == 'Europe/Paris' %}selected{% endif %}>Paris (CET)</option>
+                                <option value="Europe/Berlin" {% if subscriber.timezone == 'Europe/Berlin' %}selected{% endif %}>Berlin (CET)</option>
+                            </optgroup>
+                            <optgroup label="Americas">
+                                <option value="America/New_York" {% if subscriber.timezone == 'America/New_York' %}selected{% endif %}>New York (ET)</option>
+                                <option value="America/Chicago" {% if subscriber.timezone == 'America/Chicago' %}selected{% endif %}>Chicago (CT)</option>
+                                <option value="America/Denver" {% if subscriber.timezone == 'America/Denver' %}selected{% endif %}>Denver (MT)</option>
+                                <option value="America/Los_Angeles" {% if subscriber.timezone == 'America/Los_Angeles' %}selected{% endif %}>Los Angeles (PT)</option>
+                            </optgroup>
+                            <optgroup label="Asia/Pacific">
+                                <option value="Asia/Tokyo" {% if subscriber.timezone == 'Asia/Tokyo' %}selected{% endif %}>Tokyo (JST)</option>
+                                <option value="Asia/Shanghai" {% if subscriber.timezone == 'Asia/Shanghai' %}selected{% endif %}>Shanghai (CST)</option>
+                                <option value="Australia/Sydney" {% if subscriber.timezone == 'Australia/Sydney' %}selected{% endif %}>Sydney (AEST)</option>
+                            </optgroup>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">We'll send your digest at your preferred time in this timezone</p>
+                    </div>
+                </div>
+
+                <!-- Current Status -->
+                <div class="p-6 bg-gray-50 border-b border-gray-200">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Current subscription</h3>
+                    <p class="text-sm text-gray-600">
+                        <span class="font-medium">{{ subscriber.email }}</span>
+                        {% if subscriber.email_frequency == 'weekly' %}
+                            &bull; Weekly on {{ send_days[subscriber.preferred_send_day] }}s at
+                            {% if subscriber.preferred_send_hour == 0 %}12:00 AM
+                            {% elif subscriber.preferred_send_hour < 12 %}{{ subscriber.preferred_send_hour }}:00 AM
+                            {% elif subscriber.preferred_send_hour == 12 %}12:00 PM
+                            {% else %}{{ subscriber.preferred_send_hour - 12 }}:00 PM
+                            {% endif %}
+                        {% elif subscriber.email_frequency == 'daily' %}
+                            &bull; Daily emails
+                        {% else %}
+                            &bull; Monthly digest
+                        {% endif %}
+                    </p>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="p-6">
+                    <button type="submit"
+                            class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Save Preferences
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Unsubscribe Link -->
+        <div class="mt-6 text-center">
+            <p class="text-sm text-gray-500">
+                Don't want to receive any emails?
+                <a href="{{ url_for('daily.unsubscribe', token=token) }}" class="text-red-600 hover:text-red-700 underline">Unsubscribe</a>
+            </p>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="mt-4 text-center">
+            <a href="{{ url_for('daily.today') }}" class="text-sm text-blue-600 hover:text-blue-700">
+                &larr; Back to Today's Question
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide weekly options based on frequency selection
+document.addEventListener('DOMContentLoaded', function() {
+    const frequencyInputs = document.querySelectorAll('input[name="email_frequency"]');
+    const weeklyOptions = document.getElementById('weekly-options');
+
+    function updateVisibility() {
+        const selected = document.querySelector('input[name="email_frequency"]:checked');
+        if (selected && selected.value === 'weekly') {
+            weeklyOptions.style.display = 'block';
+        } else {
+            weeklyOptions.style.display = 'none';
+        }
+    }
+
+    frequencyInputs.forEach(input => {
+        input.addEventListener('change', updateVisibility);
+    });
+
+    updateVisibility();
+});
+</script>
+{% endblock %}
