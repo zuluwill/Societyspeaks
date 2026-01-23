@@ -2619,8 +2619,17 @@ class DailyQuestionSubscriber(db.Model):
             )
             tz = pytz.UTC
 
-        # Convert UTC to subscriber's local time
-        local_time = utc_now.astimezone(tz)
+        # Convert UTC to subscriber's local time (ensure tzinfo is set)
+        try:
+            local_time = utc_now.replace(tzinfo=pytz.UTC).astimezone(tz)
+        except Exception as e:
+            # Fallback to UTC on any timezone conversion error
+            if current_app:
+                current_app.logger.error(
+                    f"Error converting timezone for subscriber {self.id}: {e}, "
+                    f"defaulting to UTC"
+                )
+            local_time = utc_now.replace(tzinfo=pytz.UTC)
 
         # Check if it's the 1st of the month and 9am (or within the hour)
         is_first_of_month = local_time.day == 1

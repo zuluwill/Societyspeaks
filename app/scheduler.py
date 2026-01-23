@@ -590,7 +590,7 @@ def init_scheduler(app):
                 from datetime import datetime
                 from app import db
                 from app.models import DailyQuestionSubscriber
-                from app.resend_client import ResendClient
+                from app.resend_client import ResendEmailClient
                 from app.daily.auto_selection import select_questions_for_weekly_digest
                 import pytz
 
@@ -617,7 +617,7 @@ def init_scheduler(app):
                 logger.info(f"Selected {len(questions)} questions for weekly digest")
 
                 # Initialize Resend client
-                client = ResendClient()
+                client = ResendEmailClient()
                 sent_count = 0
                 skipped_count = 0
 
@@ -650,9 +650,9 @@ def init_scheduler(app):
                                 import posthog
                                 if posthog.project_api_key:
                                     posthog.capture(
-                                        subscriber.email,
-                                        'weekly_digest_sent',
-                                        {
+                                        distinct_id=subscriber.email,
+                                        event='weekly_digest_sent',
+                                        properties={
                                             'question_count': len(questions),
                                             'question_ids': [q.id for q in questions],
                                             'send_day': subscriber.preferred_send_day,
@@ -684,7 +684,7 @@ def init_scheduler(app):
                 from datetime import datetime
                 from app import db
                 from app.models import DailyQuestionSubscriber
-                from app.resend_client import ResendClient
+                from app.resend_client import ResendEmailClient
                 from app.daily.auto_selection import select_questions_for_monthly_digest
                 import pytz
 
@@ -711,7 +711,7 @@ def init_scheduler(app):
                 logger.info(f"Selected {len(questions)} questions for monthly digest")
 
                 # Initialize Resend client
-                client = ResendClient()
+                client = ResendEmailClient()
                 sent_count = 0
                 skipped_count = 0
 
@@ -744,9 +744,9 @@ def init_scheduler(app):
                                 import posthog
                                 if posthog.project_api_key:
                                     posthog.capture(
-                                        subscriber.email,
-                                        'monthly_digest_sent',
-                                        {
+                                        distinct_id=subscriber.email,
+                                        event='monthly_digest_sent',
+                                        properties={
                                             'question_count': len(questions),
                                             'question_ids': [q.id for q in questions],
                                             'timezone': subscriber.timezone or 'UTC'
