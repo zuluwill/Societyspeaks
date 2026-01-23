@@ -931,10 +931,13 @@ def archive_daily_question(question_id):
 @login_required
 @admin_required
 def delete_daily_question(question_id):
+    from app.models import DailyQuestionSelection
+    
     question = DailyQuestion.query.get_or_404(question_id)
     
     try:
         DailyQuestionResponse.query.filter_by(daily_question_id=question_id).delete()
+        DailyQuestionSelection.query.filter_by(daily_question_id=question_id).delete()
         db.session.delete(question)
         db.session.commit()
         flash('Daily question deleted successfully!', 'success')
