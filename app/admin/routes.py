@@ -932,8 +932,10 @@ def archive_daily_question(question_id):
 @admin_required
 def delete_daily_question(question_id):
     from app.models import DailyQuestionSelection
+    from app.daily.auto_selection import auto_schedule_upcoming_questions
     
     question = DailyQuestion.query.get_or_404(question_id)
+    question_date = question.question_date
     
     try:
         DailyQuestionResponse.query.filter_by(daily_question_id=question_id).delete()
@@ -941,6 +943,15 @@ def delete_daily_question(question_id):
         db.session.delete(question)
         db.session.commit()
         flash('Daily question deleted successfully!', 'success')
+        
+        try:
+            scheduled = auto_schedule_upcoming_questions(days_ahead=7)
+            if scheduled > 0:
+                flash(f'Automatically scheduled {scheduled} replacement question(s).', 'info')
+        except Exception as e:
+            current_app.logger.warning(f"Could not auto-schedule replacement: {e}")
+            flash('Note: Could not auto-generate a replacement. You may need to create one manually.', 'warning')
+            
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting daily question: {e}")
