@@ -154,8 +154,8 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="relative inline-block" x-data="{ open: false }">
-                                <button @click="open = !open" type="button" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80
+                            <div class="relative inline-block freq-dropdown">
+                                <button type="button" onclick="toggleFreqDropdown(this)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80
                                     {% if sub.email_frequency == 'daily' %}bg-blue-100 text-blue-800
                                     {% elif sub.email_frequency == 'weekly' %}bg-green-100 text-green-800
                                     {% elif sub.email_frequency == 'monthly' %}bg-purple-100 text-purple-800
@@ -165,8 +165,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </button>
-                                <div x-show="open" @click.away="open = false" x-cloak
-                                     class="absolute left-0 mt-1 w-32 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                                <div class="freq-menu hidden absolute left-0 mt-1 w-32 bg-white rounded-md shadow-lg z-10 border border-gray-200">
                                     <form action="{{ url_for('admin.update_subscriber_frequency', subscriber_id=sub.id) }}" method="POST">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" name="frequency" value="daily" 
@@ -272,6 +271,28 @@
 </div>
 
 <script>
+// Frequency dropdown toggle
+function toggleFreqDropdown(btn) {
+    // Close all other dropdowns first
+    document.querySelectorAll('.freq-menu').forEach(menu => {
+        if (menu !== btn.nextElementSibling) {
+            menu.classList.add('hidden');
+        }
+    });
+    // Toggle this dropdown
+    const menu = btn.nextElementSibling;
+    menu.classList.toggle('hidden');
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.freq-dropdown')) {
+        document.querySelectorAll('.freq-menu').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // Add users section
     const selectAll = document.getElementById('select-all');
