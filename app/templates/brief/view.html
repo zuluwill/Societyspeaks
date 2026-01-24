@@ -168,6 +168,60 @@
                     </div>
                     {% endif %}
 
+                    <!-- Market Signal Card -->
+                    {% if item.market_signal %}
+                    <div class="mt-4 bg-slate-50 border-l-4 border-indigo-500 rounded-r-lg p-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wide">
+                                📊 Market Signal
+                            </span>
+                            {% if item.market_signal.quality_tier == 'high' %}
+                            <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                                High Volume
+                            </span>
+                            {% endif %}
+                        </div>
+
+                        <p class="text-base font-medium text-slate-800 mb-3">
+                            "{{ item.market_signal.question }}"
+                        </p>
+
+                        <!-- Probability Bar -->
+                        <div class="mb-3">
+                            <div class="h-7 bg-slate-200 rounded overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 flex items-center justify-end pr-2"
+                                     style="width: {{ (item.market_signal.probability * 100)|round }}%; min-width: 50px;">
+                                    <span class="text-white font-semibold text-sm">
+                                        {{ (item.market_signal.probability * 100)|round }}%
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="flex items-center gap-3 text-sm text-slate-500 mb-3">
+                            {% if item.market_signal.change_24h_formatted and item.market_signal.change_24h_formatted != '—' %}
+                            <span class="{% if item.market_signal.change_24h > 0 %}text-green-600{% elif item.market_signal.change_24h < 0 %}text-red-600{% endif %}">
+                                {{ item.market_signal.change_24h_formatted }} today
+                            </span>
+                            <span>·</span>
+                            {% endif %}
+                            <span>${{ "{:,.0f}".format(item.market_signal.volume_24h or 0) }} volume</span>
+                            <span>·</span>
+                            <a href="{{ item.market_signal.url }}" target="_blank" rel="noopener"
+                               class="text-indigo-600 hover:text-indigo-700">
+                                View market →
+                            </a>
+                        </div>
+
+                        <!-- Disclaimer -->
+                        <p class="text-xs text-slate-400 italic border-t border-slate-200 pt-3">
+                            Markets reflect collective expectations, not certainty.
+                            Prices move on new information, rumours, and sentiment.
+                        </p>
+                    </div>
+                    {% endif %}
+
                     {% if item.blindspot_explanation %}
                     <div class="bg-amber-50 border-l-4 border-amber-500 rounded-r-lg p-5 mb-6">
                         <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">🔍 Coverage Gap Analysis</p>

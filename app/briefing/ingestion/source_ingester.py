@@ -56,6 +56,8 @@ class SourceIngester:
             return self._ingest_single_webpage(source)
         elif source.type == 'upload':
             return self._ingest_upload(source)
+        elif source.type == 'polymarket':
+            return self._ingest_polymarket(source)
         else:
             logger.warning(f"Unknown source type: {source.type}")
             return []
@@ -325,5 +327,17 @@ class SourceIngester:
             
         except Exception as e:
             logger.error(f"Error ingesting upload source {source.name}: {e}", exc_info=True)
+            db.session.rollback()
+            return []
+    
+    def _ingest_polymarket(self, source: InputSource) -> List[IngestedItem]:
+        """Ingest from Polymarket markets."""
+        try:
+            from app.polymarket.source_adapter import polymarket_source_adapter
+            items = polymarket_source_adapter.fetch_items(source)
+            logger.info(f"Ingested {len(items)} items from Polymarket source {source.name}")
+            return items
+        except Exception as e:
+            logger.error(f"Error ingesting Polymarket source {source.name}: {e}", exc_info=True)
             db.session.rollback()
             return []

@@ -1575,6 +1575,86 @@ def init_scheduler(app):
                 logger.error(f"Diversity check failed: {e}", exc_info=True)
 
 
+    # ==============================================================================
+    # POLYMARKET INTEGRATION JOBS
+    # ==============================================================================
+
+    @scheduler.scheduled_job('interval', hours=2, id='polymarket_sync')
+    def polymarket_sync_job():
+        """
+        Full sync of Polymarket markets.
+        Runs every 2 hours to discover new markets and update existing ones.
+        Generates embeddings for new high-quality markets.
+
+        Graceful degradation: If API fails, job completes without error.
+        """
+        with app.app_context():
+            from app.polymarket.service import polymarket_service
+
+            logger.info("Starting Polymarket market sync")
+            try:
+                stats = polymarket_service.sync_all_markets()
+                logger.info(f"Polymarket sync complete: created={stats['created']}, "
+                           f"updated={stats['updated']}, deactivated={stats['deactivated']}, "
+                           f"embeddings={stats.get('embeddings_generated', 0)}, errors={stats['errors']}")
+            except Exception as e:
+                logger.error(f"Polymarket sync failed: {e}", exc_info=True)
+
+
+    @scheduler.scheduled_job('interval', minutes=5, id='polymarket_price_refresh')
+    def polymarket_price_refresh_job():
+        """
+        Refresh prices for tracked Polymarket markets.
+        Runs every 5 minutes for timely price updates.
+
+        Prioritizes markets that are matched to active topics or daily questions.
+
+        Graceful degradation: If API fails, job completes without error.
+        """
+        with app.app_context():
+            from app.polymarket.service import polymarket_service
+            from app.models import TopicMarketMatch, DailyQuestion
+
+            logger.info("Starting Polymarket price refresh")
+            try:
+                # Get priority market IDs (markets linked to topics or questions)
+                topic_market_ids = [m.market_id for m in TopicMarketMatch.query.all()]
+                question_market_ids = [q.polymarket_market_id for q in
+                                       DailyQuestion.query.filter(
+                                           DailyQuestion.polymarket_market_id.isnot(None)
+                                       ).all()]
+                priority_ids = list(set(topic_market_ids + question_market_ids))
+
+                stats = polymarket_service.refresh_prices(priority_market_ids=priority_ids)
+                logger.info(f"Polymarket price refresh complete: updated={stats['updated']}, "
+                           f"errors={stats['errors']}")
+            except Exception as e:
+                logger.error(f"Polymarket price refresh failed: {e}", exc_info=True)
+
+
+    @scheduler.scheduled_job('interval', minutes=30, id='polymarket_matching')
+    def polymarket_matching_job():
+        """
+        Match trending topics to Polymarket markets.
+        Runs every 30 minutes to find relevant markets for new topics.
+
+        Only processes topics without existing matches (idempotent).
+
+        Graceful degradation: If matching fails, job completes without error.
+        """
+        with app.app_context():
+            from app.polymarket.matcher import market_matcher
+
+            logger.info("Starting Polymarket topic matching")
+            try:
+                stats = market_matcher.run_batch_matching(days_back=7, reprocess_existing=False)
+                logger.info(f"Polymarket matching complete: processed={stats['processed']}, "
+                           f"matched={stats['matched']}, skipped={stats['skipped']}, "
+                           f"errors={stats['errors']}")
+            except Exception as e:
+                logger.error(f"Polymarket matching failed: {e}", exc_info=True)
+
+
     logger.info("Scheduler initialized with jobs:")
     for job in scheduler.get_jobs():
         logger.info(f"  - {job.id}: {job.trigger}")

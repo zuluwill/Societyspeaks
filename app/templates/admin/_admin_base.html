@@ -1,0 +1,170 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-100">
+    <!-- Admin Header/Navigation -->
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex">
+                    <div class="flex-shrink-0 flex items-center">
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Admin Dashboard</h2>
+                    </div>
+                    <!-- Desktop Navigation -->
+                    <div class="hidden lg:ml-6 lg:flex lg:space-x-6">
+                        <a href="{{ url_for('admin.dashboard') }}"
+                           class="{% if request.endpoint == 'admin.dashboard' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Dashboard
+                        </a>
+                        <a href="{{ url_for('admin.list_profiles') }}"
+                           class="{% if 'profile' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Profiles
+                        </a>
+                        <a href="{{ url_for('admin.list_discussions') }}"
+                           class="{% if 'discussion' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Discussions
+                        </a>
+                        <a href="{{ url_for('admin.list_users') }}"
+                           class="{% if 'user' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Users
+                        </a>
+                        <a href="{{ url_for('trending.dashboard') }}"
+                           class="{% if 'trending' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Trending
+                        </a>
+                        <a href="{{ url_for('admin.list_daily_questions') }}"
+                           class="{% if 'daily' in request.endpoint or 'question' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Questions
+                        </a>
+                        <a href="{{ url_for('brief_admin.dashboard') }}"
+                           class="{% if 'brief' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Brief
+                        </a>
+                        <a href="{{ url_for('admin.list_response_flags') }}"
+                           class="{% if 'flag' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Flags
+                        </a>
+                        <a href="{{ url_for('admin.source_claims') }}"
+                           class="{% if 'source' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Source Claims
+                        </a>
+                        <a href="{{ url_for('admin.list_markets') }}"
+                           class="{% if 'polymarket' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Polymarket
+                        </a>
+                    </div>
+                </div>
+                <!-- Mobile menu button -->
+                <div class="flex items-center lg:hidden">
+                    <button id="admin-mobile-menu-btn" type="button"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                            aria-expanded="false">
+                        <span class="sr-only">Open main menu</span>
+                        <!-- Hamburger icon -->
+                        <svg id="admin-menu-icon-open" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                        <!-- Close icon -->
+                        <svg id="admin-menu-icon-close" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div id="admin-mobile-menu" class="hidden lg:hidden border-t border-gray-200">
+            <div class="pt-2 pb-3 space-y-1">
+                <a href="{{ url_for('admin.dashboard') }}"
+                   class="{% if request.endpoint == 'admin.dashboard' %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Dashboard
+                </a>
+                <a href="{{ url_for('admin.list_profiles') }}"
+                   class="{% if 'profile' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Profiles
+                </a>
+                <a href="{{ url_for('admin.list_discussions') }}"
+                   class="{% if 'discussion' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Discussions
+                </a>
+                <a href="{{ url_for('admin.list_users') }}"
+                   class="{% if 'user' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Users
+                </a>
+                <a href="{{ url_for('trending.dashboard') }}"
+                   class="{% if 'trending' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Trending Topics
+                </a>
+                <a href="{{ url_for('admin.list_daily_questions') }}"
+                   class="{% if 'daily' in request.endpoint or 'question' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Daily Questions
+                </a>
+                <a href="{{ url_for('brief_admin.dashboard') }}"
+                   class="{% if 'brief' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Daily Brief
+                </a>
+                <a href="{{ url_for('admin.list_response_flags') }}"
+                   class="{% if 'flag' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Flags
+                </a>
+                <a href="{{ url_for('admin.source_claims') }}"
+                   class="{% if 'source' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Source Claims
+                </a>
+                <a href="{{ url_for('admin.list_markets') }}"
+                   class="{% if 'polymarket' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Polymarket
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const menuBtn = document.getElementById('admin-mobile-menu-btn');
+        const mobileMenu = document.getElementById('admin-mobile-menu');
+        const iconOpen = document.getElementById('admin-menu-icon-open');
+        const iconClose = document.getElementById('admin-menu-icon-close');
+
+        if (menuBtn && mobileMenu) {
+            function toggleAdminMenu(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const isHidden = mobileMenu.classList.contains('hidden');
+                mobileMenu.classList.toggle('hidden');
+                iconOpen.classList.toggle('hidden');
+                iconClose.classList.toggle('hidden');
+                menuBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+            }
+
+            menuBtn.addEventListener('click', toggleAdminMenu);
+            menuBtn.addEventListener('touchend', function(e) {
+                e.preventDefault();
+                toggleAdminMenu(e);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!mobileMenu.classList.contains('hidden')) {
+                    if (!menuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+                        mobileMenu.classList.add('hidden');
+                        iconOpen.classList.remove('hidden');
+                        iconClose.classList.add('hidden');
+                        menuBtn.setAttribute('aria-expanded', 'false');
+                    }
+                }
+            });
+        }
+    });
+    </script>
+
+    <!-- Main Content -->
+    <div class="py-10">
+        <main>
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                {% block admin_content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</div>
+{% endblock %}

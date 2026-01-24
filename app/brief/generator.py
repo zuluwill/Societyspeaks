@@ -286,6 +286,16 @@ class BriefGenerator:
             cta_text=cta_text
         )
 
+        # Enrich with market signal (optional, failures are silent)
+        try:
+            from app.polymarket.matcher import market_matcher
+            market_signal = market_matcher.get_market_signal_for_topic(topic.id)
+            if market_signal:
+                item.market_signal = market_signal
+        except Exception as e:
+            logger.warning(f"Market signal enrichment failed for topic {topic.id}: {e}")
+            # Continue without market signal - brief generation succeeds
+
         return item
 
     def _generate_underreported_item(

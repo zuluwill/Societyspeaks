@@ -12,6 +12,12 @@ from werkzeug.security import generate_password_hash
 from app.utils import upload_to_object_storage  
 # Note: send_email removed during Resend migration. Using inline Resend call for admin welcome emails.
 from app.admin import admin_bp
+
+# Import Polymarket admin routes
+try:
+    from app.admin import polymarket_routes
+except ImportError:
+    pass  # Polymarket routes are optional
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 import time

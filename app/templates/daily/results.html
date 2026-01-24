@@ -166,6 +166,63 @@
                     {{ stats.total }} response{% if stats.total != 1 %}s{% endif %} recorded
                 </p>
             </div>
+
+            <!-- Consensus Divergence Card -->
+            {% if question.market_divergence and question.market_divergence.is_significant %}
+            <div class="mt-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="text-amber-700 text-lg">🔍</span>
+                    <span class="text-sm font-semibold text-amber-800 uppercase tracking-wide">
+                        Interesting Divergence
+                    </span>
+                </div>
+
+                <div class="space-y-2 mb-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-slate-600">Our community</span>
+                        <span class="font-semibold text-slate-800">
+                            {{ (question.market_divergence.user_probability * 100)|round }}% expect yes
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-slate-600">Prediction markets</span>
+                        <span class="font-semibold text-slate-800">
+                            {{ (question.market_divergence.market_probability * 100)|round }}% probability
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Visual comparison -->
+                <div class="flex gap-2 mb-3">
+                    <div class="flex-1">
+                        <div class="text-xs text-slate-500 mb-1">Community</div>
+                        <div class="h-3 bg-slate-200 rounded overflow-hidden">
+                            <div class="h-full bg-blue-500"
+                                 style="width: {{ (question.market_divergence.user_probability * 100)|round }}%"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-xs text-slate-500 mb-1">Market</div>
+                        <div class="h-3 bg-slate-200 rounded overflow-hidden">
+                            <div class="h-full bg-indigo-500"
+                                 style="width: {{ (question.market_divergence.market_probability * 100)|round }}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-sm text-amber-800">
+                    {% if question.market_divergence.direction == 'higher' %}
+                    Our community is <strong>more optimistic</strong> than prediction markets on this outcome.
+                    {% else %}
+                    Prediction markets are <strong>more confident</strong> than our community on this outcome.
+                    {% endif %}
+                    <a href="{{ question.market_divergence.market_url }}" target="_blank" rel="noopener"
+                       class="text-amber-700 hover:text-amber-900 underline ml-1">
+                        View market →
+                    </a>
+                </p>
+            </div>
+            {% endif %}
             
             {% if public_reasons and public_reasons|length > 0 %}
             <div class="border-t pt-6 mb-6">
