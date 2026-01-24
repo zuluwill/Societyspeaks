@@ -1117,6 +1117,10 @@ def update_subscriber_frequency(subscriber_id):
     old_frequency = subscriber.email_frequency
     subscriber.email_frequency = new_frequency
     
+    # Reactivate subscriber when changing frequency (admin action implies they want emails)
+    if not subscriber.is_active:
+        subscriber.is_active = True
+    
     # Set default preferences for weekly if switching to weekly
     if new_frequency == 'weekly' and old_frequency != 'weekly':
         if subscriber.preferred_send_day is None:
