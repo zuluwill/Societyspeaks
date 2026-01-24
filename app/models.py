@@ -1340,10 +1340,15 @@ class DailyBrief(db.Model):
         """
         if hasattr(self, '_cached_item_count'):
             return self._cached_item_count
-        from sqlalchemy.orm.dynamic import AppenderQuery
-        if isinstance(self.items, AppenderQuery):
+        # Use count() method if available (for lazy/dynamic relationships)
+        # Otherwise fall back to len() for eagerly loaded lists
+        if hasattr(self.items, 'count') and callable(self.items.count):
             return self.items.count()
-        return len(self.items)
+        try:
+            return len(self.items)
+        except TypeError:
+            # Fallback: query the database directly
+            return BriefItem.query.filter_by(brief_id=self.id).count()
 
     @classmethod
     def get_today(cls):
