@@ -25,14 +25,14 @@ logger = logging.getLogger(__name__)
 @brief_bp.route('/brief/today')
 @limiter.limit("60/minute")
 def today():
-    """Show today's brief"""
+    """Show today's brief - open to everyone, reading is free"""
     # Track social media clicks (conversion tracking)
     user_id = str(current_user.id) if current_user.is_authenticated else None
     track_social_click(request, user_id)
     
     brief = DailyBrief.get_today()
     
-    # Check if user is subscriber (must be eligible - active + valid subscription) or admin
+    # Check subscriber status for personalization (not access control)
     subscriber = None
     is_subscriber = False
     if 'brief_subscriber_id' in session:
@@ -40,20 +40,9 @@ def today():
         if subscriber and subscriber.is_subscribed_eligible():
             is_subscriber = True
     
-    # Admins can see full brief content
+    # Admins always marked as subscriber for UI consistency
     if current_user.is_authenticated and current_user.is_admin:
         is_subscriber = True
-
-    # Non-subscribers see the landing page with optional brief preview
-    if not is_subscriber:
-        items = []
-        if brief:
-            items = brief.items.order_by(BriefItem.position).all()
-        return render_template(
-            'brief/landing.html',
-            brief=brief,
-            items=items
-        )
 
     # No brief available for today - show most recent brief instead
     if not brief:
@@ -64,7 +53,6 @@ def today():
         
         if latest_brief:
             items = latest_brief.items.order_by(BriefItem.position).all()
-            flash("Today's brief publishes at 6pm UTC. Here's the most recent brief.", 'info')
             return render_template(
                 'brief/view.html',
                 brief=latest_brief,
@@ -72,10 +60,10 @@ def today():
                 subscriber=subscriber,
                 is_subscriber=is_subscriber,
                 is_today=False,
-                waiting_for_today=True
+                waiting_for_today=True,
+                show_email_capture=(not is_subscriber)
             )
         else:
-            flash("Today's brief publishes at 6pm UTC. Check back soon!", 'info')
             return render_template('brief/no_brief.html')
 
     # Get items ordered by position
@@ -87,14 +75,15 @@ def today():
         items=items,
         subscriber=subscriber,
         is_subscriber=is_subscriber,
-        is_today=True
+        is_today=True,
+        show_email_capture=(not is_subscriber)
     )
 
 
 @brief_bp.route('/brief/<date_str>')
 @limiter.limit("60/minute")
 def view_date(date_str):
-    """View brief for a specific date (YYYY-MM-DD format)"""
+    """View brief for a specific date (YYYY-MM-DD format) - open to everyone"""
     try:
         brief_date = datetime.strptime(date_str, '%Y-%m-%d').date()
     except ValueError:
@@ -103,7 +92,7 @@ def view_date(date_str):
 
     brief = DailyBrief.get_by_date(brief_date)
     
-    # Check if user is subscriber (must be eligible - active + valid subscription) or admin
+    # Check subscriber status for personalization (not access control)
     subscriber = None
     is_subscriber = False
     if 'brief_subscriber_id' in session:
@@ -111,13 +100,9 @@ def view_date(date_str):
         if subscriber and subscriber.is_subscribed_eligible():
             is_subscriber = True
     
-    # Admins can see full brief content
+    # Admins always marked as subscriber for UI consistency
     if current_user.is_authenticated and current_user.is_admin:
         is_subscriber = True
-
-    # Non-subscribers see the landing page (redirect to today for best experience)
-    if not is_subscriber:
-        return redirect(url_for('brief.today'))
 
     if not brief:
         flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
@@ -131,7 +116,8 @@ def view_date(date_str):
         items=items,
         subscriber=subscriber,
         is_subscriber=is_subscriber,
-        is_today=(brief_date == date.today())
+        is_today=(brief_date == date.today()),
+        show_email_capture=(not is_subscriber)
     )
 
 
@@ -297,6 +283,96 @@ def subscribe():
 def subscribe_success():
     """Subscription confirmation page"""
     return render_template('brief/subscribe_success.html')
+
+
+@brief_bp.route('/brief/subscribe/inline', methods=['POST'])
+@limiter.limit("5 per minute")
+def subscribe_inline():
+    """Inline subscription from email capture forms (AJAX-friendly)"""
+    email = request.form.get('email', '').strip().lower()
+    source = request.form.get('source', 'inline')
+    
+    # Validate email
+    if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'error': 'Please enter a valid email address.'}), 400
+        flash('Please enter a valid email address.', 'error')
+        return redirect(request.referrer or url_for('brief.today'))
+    
+    # Check if already subscribed
+    existing = DailyBriefSubscriber.query.filter_by(email=email).first()
+    
+    if existing:
+        if existing.status == 'active':
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': True, 'message': 'You\'re already subscribed!'})
+            flash('You\'re already subscribed to the Daily Brief!', 'info')
+            return redirect(request.referrer or url_for('brief.today'))
+        else:
+            # Reactivate
+            existing.status = 'active'
+            existing.generate_magic_token()
+            existing.start_trial()
+            existing.welcome_email_sent_at = None
+            db.session.commit()
+            
+            try:
+                from app.brief.email_client import ResendClient
+                email_client = ResendClient()
+                email_client.send_welcome(existing)
+            except Exception as e:
+                logger.error(f"Failed to send welcome email to {email}: {e}")
+            
+            # Set session for this subscriber
+            session['brief_subscriber_id'] = existing.id
+            session.modified = True
+            
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'success': True, 'message': 'Welcome back! Check your inbox.'})
+            flash('Welcome back! Your subscription has been reactivated.', 'success')
+            return redirect(request.referrer or url_for('brief.today'))
+    
+    # Check if user exists with this email
+    user = User.query.filter_by(email=email).first()
+    
+    try:
+        subscriber = DailyBriefSubscriber(
+            email=email,
+            user_id=user.id if user else None,
+            timezone='UTC',
+            preferred_send_hour=18
+        )
+        subscriber.generate_magic_token()
+        subscriber.start_trial()
+        
+        db.session.add(subscriber)
+        db.session.commit()
+        
+        logger.info(f"New inline brief subscriber: {email} (source: {source})")
+        
+        # Set session for this subscriber
+        session['brief_subscriber_id'] = subscriber.id
+        session.modified = True
+        
+        try:
+            from app.brief.email_client import ResendClient
+            email_client = ResendClient()
+            email_client.send_welcome(subscriber)
+        except Exception as e:
+            logger.error(f"Failed to send welcome email to {email}: {e}")
+        
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True, 'message': 'You\'re subscribed! Check your inbox.'})
+        flash('You\'re subscribed! Check your inbox for the welcome email.', 'success')
+        return redirect(request.referrer or url_for('brief.today'))
+        
+    except Exception as e:
+        logger.error(f"Error creating inline subscriber: {e}")
+        db.session.rollback()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'error': 'Something went wrong. Please try again.'}), 500
+        flash('Something went wrong. Please try again.', 'error')
+        return redirect(request.referrer or url_for('brief.today'))
 
 
 @brief_bp.route('/brief/unsubscribe/<token>')

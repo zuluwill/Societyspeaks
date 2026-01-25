@@ -11,7 +11,7 @@
             <!-- Left: Copy and CTA -->
             <div class="space-y-6">
                 <div class="inline-flex rounded-full bg-blue-700 px-3 py-1 text-sm font-semibold text-blue-100">
-                    Free with sign-up
+                    Free to read, no sign-up required
                 </div>
                 <h1 class="text-4xl lg:text-5xl font-bold leading-tight">
                     News Transparency Dashboard
@@ -20,30 +20,24 @@
                     See today's news from 60+ sources organised by political leaning. Filter by source, compare coverage, and spot what your usual outlets aren't telling you.
                 </p>
                 
-                <!-- Sign Up CTA -->
+                <!-- CTA - Go to Dashboard -->
                 <div class="bg-white/10 backdrop-blur rounded-xl p-6 border border-white/20">
-                    <div class="flex items-baseline gap-2 mb-3">
-                        <span class="text-3xl font-bold">Free</span>
-                    </div>
                     <p class="text-blue-100 text-sm mb-4">
-                        Get the Daily Brief delivered to your inbox + full dashboard access
+                        Full access to the dashboard. Get the Daily Brief delivered to stay informed.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-3">
-                        <a href="{{ url_for('brief.subscribe') }}"
+                        <a href="{{ url_for('news.dashboard') }}"
                            class="inline-flex items-center justify-center bg-white text-blue-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors shadow-lg">
-                            Sign Up Free
+                            View Dashboard
                             <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
                         </a>
                         <a href="{{ url_for('brief.today') }}"
                            class="inline-flex items-center justify-center border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white/10 transition-colors">
-                            See Example Brief
+                            Read Today's Brief
                         </a>
                     </div>
-                    <p class="text-xs text-blue-200 mt-3">
-                        No credit card required
-                    </p>
                 </div>
             </div>
             
@@ -329,7 +323,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
         </a>
-        <p class="text-blue-200 text-sm mt-4">100% free, no credit card required</p>
+        <p class="text-blue-200 text-sm mt-4">Free forever. No account required to read.</p>
     </div>
 </div>
 {% endblock %}

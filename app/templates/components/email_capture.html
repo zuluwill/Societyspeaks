@@ -1,0 +1,109 @@
+{% macro email_capture_inline(variant='default', context='brief') %}
+<div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 sm:p-8 border border-blue-100 shadow-sm" id="email-capture-section">
+    <div class="max-w-2xl mx-auto text-center">
+        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 mb-4">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+        </div>
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Get This Delivered</h3>
+        <p class="text-gray-600 mb-6">
+            {% if context == 'brief' %}
+            Most readers get the Daily Brief by email so they don't miss it.
+            {% else %}
+            Get the Daily Brief delivered when it matters — without the noise.
+            {% endif %}
+        </p>
+        
+        <form action="{{ url_for('brief.subscribe_inline') }}" method="POST" class="email-capture-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="source" value="{{ context }}" />
+            <div class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+                <input type="email" 
+                       name="email" 
+                       placeholder="Enter your email" 
+                       required
+                       class="flex-1 px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
+                       aria-label="Email address">
+                <button type="submit" 
+                        class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-500 transition-colors shadow-md whitespace-nowrap">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Subscribe Free
+                </button>
+            </div>
+            <p class="text-xs text-gray-500 mt-3">
+                Free forever. Unsubscribe anytime. We respect your inbox.
+            </p>
+        </form>
+        
+        <div class="email-capture-success hidden mt-4">
+            <div class="inline-flex items-center gap-2 text-emerald-600 font-medium">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                You're subscribed! Check your inbox for confirmation.
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro email_capture_compact(variant='default') %}
+<div class="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+        <div class="flex-1">
+            <h4 class="font-semibold text-gray-900 mb-1">Get this delivered to your inbox</h4>
+            <p class="text-sm text-gray-600">Daily at your preferred time</p>
+        </div>
+        <form action="{{ url_for('brief.subscribe_inline') }}" method="POST" class="email-capture-form flex flex-col sm:flex-row gap-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="source" value="compact" />
+            <input type="email" 
+                   name="email" 
+                   placeholder="Your email" 
+                   required
+                   class="px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm w-full sm:w-48"
+                   aria-label="Email address">
+            <button type="submit" 
+                    class="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-500 transition-colors whitespace-nowrap">
+                Subscribe
+            </button>
+        </form>
+    </div>
+</div>
+{% endmacro %}
+
+{% macro paid_brief_crosssell() %}
+<div class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 sm:p-8 border border-amber-200 shadow-sm">
+    <div class="max-w-2xl mx-auto">
+        <div class="flex items-start gap-4">
+            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">Want More? Create Custom Briefs</h3>
+                <p class="text-gray-600 text-sm mb-4">
+                    Build personalised briefings from 60+ sources. Pick your topics, choose your sources, set your schedule.
+                </p>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-medium">Economy & Markets</span>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-medium">Technology</span>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-medium">Sports</span>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-medium">+ Custom Topics</span>
+                </div>
+                <a href="{{ url_for('briefing.list_templates') }}" 
+                   class="inline-flex items-center text-amber-700 font-semibold hover:text-amber-800 transition-colors">
+                    Explore Custom Briefs
+                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

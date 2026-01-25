@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/email_capture.html" import email_capture_inline, email_capture_compact, paid_brief_crosssell %}
 
 {% block title %}{{ brief.title }} - Society Speaks{% endblock %}
 
@@ -18,6 +19,12 @@
         <div class="bg-blue-50 rounded-xl border border-blue-200 p-5 sm:p-6 mb-8 shadow-sm">
             <p class="text-blue-800 text-base leading-relaxed">{{ brief.intro_text }}</p>
         </div>
+        
+        {% if show_email_capture %}
+        <div class="mb-8">
+            {{ email_capture_compact() }}
+        </div>
+        {% endif %}
 
         <div class="space-y-8">
             {% for item in items %}
@@ -492,7 +499,16 @@
         </article>
         {% endif %}
 
-        <!-- Support Message -->
+        {% if show_email_capture %}
+        <div class="mt-8">
+            {{ email_capture_inline(context='brief') }}
+        </div>
+        
+        <div class="mt-8">
+            {{ paid_brief_crosssell() }}
+        </div>
+        {% else %}
+        <!-- Support Message for subscribers -->
         <div class="bg-gradient-to-br from-blue-800 to-indigo-900 rounded-2xl shadow-xl p-8 mt-8 text-center">
             <div class="max-w-xl mx-auto">
                 <h3 class="text-xl font-bold text-white mb-3">Help Us Bring Nuance Back to News</h3>
@@ -500,11 +516,11 @@
                     The Daily Brief is built on open source technology, designed to cut through noise and help you understand what actually matters. By subscribing, you're supporting independent, transparent journalism infrastructure that anyone can inspect, improve, or build upon.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                    <a href="{{ url_for('brief.subscribe') }}" class="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-800 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
+                    <a href="{{ url_for('briefing.list_templates') }}" class="inline-flex items-center justify-center px-6 py-3 bg-white text-blue-800 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        Support Our Work
+                        Explore Custom Briefs
                     </a>
                     <button onclick="navigator.share ? navigator.share({title: '{{ brief.title }}', url: window.location.href}) : navigator.clipboard.writeText(window.location.href).then(() => alert('Link copied!'))" 
                             class="inline-flex items-center justify-center px-6 py-3 bg-blue-700 text-white font-medium rounded-lg hover:bg-blue-600 transition-colors">
@@ -514,11 +530,9 @@
                         Share This Brief
                     </button>
                 </div>
-                <p class="text-blue-300 text-sm mt-4">
-                    100% of subscriptions fund open source development of Society Speaks
-                </p>
             </div>
         </div>
+        {% endif %}
 
         <div class="text-center text-sm text-gray-500 pb-8">
             <a href="{{ url_for('brief.archive') }}" class="hover:text-gray-700">View Archive</a>

@@ -212,12 +212,12 @@ def _parse_cached_articles(articles: List[Dict]) -> List[Dict]:
 @limiter.limit("60/minute")
 def dashboard():
     """
-    News transparency dashboard - subscriber only.
+    News transparency dashboard - open to everyone.
 
     Shows top articles from all 60+ sources across the political spectrum.
     Users can filter by source and by political leaning.
     """
-    # Check subscriber eligibility (reuse brief pattern)
+    # Check subscriber status for personalization (not access control)
     subscriber = None
     is_subscriber = False
 
@@ -226,13 +226,9 @@ def dashboard():
         if subscriber and subscriber.is_subscribed_eligible():
             is_subscriber = True
 
-    # Admins can access
+    # Admins always marked as subscriber for UI consistency
     if current_user.is_authenticated and current_user.is_admin:
         is_subscriber = True
-
-    # Non-subscribers see landing page
-    if not is_subscriber:
-        return render_template('news/landing.html')
 
     try:
         # Get cached or fresh dashboard data
@@ -253,6 +249,8 @@ def dashboard():
             right_sources=data['right_sources'],
             coverage=data['coverage'],
             subscriber=subscriber,
+            is_subscriber=is_subscriber,
+            show_email_capture=(not is_subscriber),
             today=date.today()
         )
 

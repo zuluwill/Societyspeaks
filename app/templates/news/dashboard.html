@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/email_capture.html" import email_capture_inline, email_capture_compact, paid_brief_crosssell %}
 
 {% block title %}News Transparency Dashboard - Society Speaks{% endblock %}
 
@@ -14,6 +15,26 @@
         <p class="text-sm text-blue-300 mt-1">
             We monitor 60+ sources daily across the political spectrum
         </p>
+        {% if show_email_capture %}
+        <div class="mt-6 max-w-md">
+            <form action="{{ url_for('brief.subscribe_inline') }}" method="POST" class="email-capture-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <input type="hidden" name="source" value="news_dashboard" />
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <input type="email" 
+                           name="email" 
+                           placeholder="Get the Daily Brief by email" 
+                           required
+                           class="flex-1 px-4 py-2.5 rounded-lg border-0 text-gray-900 placeholder-gray-500 text-sm focus:ring-2 focus:ring-white"
+                           aria-label="Email address">
+                    <button type="submit" 
+                            class="px-4 py-2.5 bg-white text-blue-600 text-sm font-semibold rounded-lg hover:bg-blue-50 transition-colors whitespace-nowrap">
+                        Subscribe Free
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
     </div>
 </div>
 
