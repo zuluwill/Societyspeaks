@@ -15,7 +15,8 @@ def init_routes(app):
     def inject_globals():
         return {
             'year': datetime.utcnow().year,
-            'topics': Discussion.TOPICS
+            'topics': Discussion.TOPICS,
+            'now': datetime.utcnow
         }
 
 
