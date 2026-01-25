@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for, abort
 from flask_login import login_required, current_user
-from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestion
+from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestion, DailyBrief
 from app import db
 from datetime import datetime
 from slugify import slugify
@@ -51,6 +51,15 @@ def index():
 
     # Get today's daily question for the homepage preview
     daily_question = DailyQuestion.get_today()
+    
+    # Get today's or most recent daily brief for the homepage preview
+    daily_brief = DailyBrief.get_today()
+    if not daily_brief:
+        # Fall back to most recent published brief
+        daily_brief = DailyBrief.query.filter_by(status='published').order_by(DailyBrief.date.desc()).first()
+    brief_items = []
+    if daily_brief:
+        brief_items = daily_brief.items.order_by(db.text('position')).limit(3).all()
 
     return render_template('index.html',
                          featured_discussions=featured_discussions,
@@ -60,7 +69,9 @@ def index():
                          country=country,
                          city=city,
                          topic=topic,
-                         daily_question=daily_question)
+                         daily_question=daily_question,
+                         daily_brief=daily_brief,
+                         brief_items=brief_items)
 
 
 @main_bp.route('/about')
