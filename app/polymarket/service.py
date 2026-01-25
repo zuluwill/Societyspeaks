@@ -114,6 +114,9 @@ class PolymarketService:
         if not response:
             return []
 
+        # API returns a list directly, not a dict with 'markets' key
+        if isinstance(response, list):
+            return response
         return response.get('markets', [])
 
     @safe_api_call(default_return=None)
@@ -129,9 +132,15 @@ class PolymarketService:
 
     @safe_api_call(default_return=[])
     def get_all_markets(self, limit: int = 500, offset: int = 0,
-                        active_only: bool = True) -> List[Dict]:
+                        active_only: bool = True, closed: bool = False) -> List[Dict]:
         """
         Get all markets (paginated) for full sync.
+
+        Args:
+            limit: Max markets to return
+            offset: Pagination offset
+            active_only: Only return active markets (legacy flag)
+            closed: If False, only return unclosed (current) markets
 
         Returns:
             List of market dicts
@@ -139,11 +148,14 @@ class PolymarketService:
         params = {
             'limit': limit,
             'offset': offset,
-            'active': active_only
+            'closed': closed
         }
         response = self._gamma_request('/markets', params=params)
         if not response:
             return []
+        # API returns a list directly, not a dict with 'markets' key
+        if isinstance(response, list):
+            return response
         return response.get('markets', [])
 
     @safe_api_call(default_return=None)
@@ -272,7 +284,8 @@ class PolymarketService:
         markets_needing_embeddings = []
 
         while True:
-            markets = self.get_all_markets(limit=limit, offset=offset, active_only=True)
+            # Fetch unclosed (current) markets - closed=False ensures we get active markets
+            markets = self.get_all_markets(limit=limit, offset=offset, closed=False)
             if not markets:
                 break
 
@@ -280,14 +293,15 @@ class PolymarketService:
                 try:
                     result, market_obj = self._upsert_market(market_data)
                     stats[result] += 1
-                    seen_condition_ids.add(market_data.get('condition_id'))
+                    condition_id = market_data.get('conditionId') or market_data.get('condition_id')
+                    seen_condition_ids.add(condition_id)
 
                     # Track markets that need embeddings
                     if result == 'created' and market_obj and market_obj.is_high_quality:
                         markets_needing_embeddings.append(market_obj)
 
                 except Exception as e:
-                    logger.warning(f"Error syncing market {market_data.get('condition_id')}: {e}")
+                    logger.warning(f"Error syncing market {market_data.get('conditionId')}: {e}")
                     stats['errors'] += 1
 
             if len(markets) < limit:
@@ -504,10 +518,33 @@ class PolymarketService:
         Returns:
             Tuple of ('created' or 'updated', market object)
         """
-        condition_id = data.get('condition_id')
+        import json
+        
+        # Map camelCase API fields to our expected format
+        condition_id = data.get('conditionId') or data.get('condition_id')
         if not condition_id:
-            raise ValueError("Market data missing condition_id")
+            raise ValueError("Market data missing conditionId")
 
+        # Parse JSON strings if needed (API returns outcomes/clobTokenIds as JSON strings)
+        outcomes = data.get('outcomes', [])
+        if isinstance(outcomes, str):
+            try:
+                outcomes = json.loads(outcomes)
+            except (json.JSONDecodeError, TypeError):
+                outcomes = []
+        
+        clob_token_ids = data.get('clobTokenIds') or data.get('clob_token_ids', [])
+        if isinstance(clob_token_ids, str):
+            try:
+                clob_token_ids = json.loads(clob_token_ids)
+            except (json.JSONDecodeError, TypeError):
+                clob_token_ids = []
+
+        # Extract numeric values with fallbacks
+        volume_24h = data.get('volume24hr') or data.get('volume_24h') or 0
+        volume_total = data.get('volumeNum') or data.get('volume_total') or 0
+        liquidity = data.get('liquidityNum') or data.get('liquidity') or 0
+        
         market = PolymarketMarket.query.filter_by(condition_id=condition_id).first()
 
         if market:
@@ -517,13 +554,13 @@ class PolymarketService:
             market.description = data.get('description')
             market.category = data.get('category')
             market.tags = data.get('tags', [])
-            market.outcomes = data.get('outcomes', [])
-            market.clob_token_ids = [o.get('token_id') for o in data.get('outcomes', []) if o.get('token_id')]
-            market.volume_24h = data.get('volume_24h', 0)
-            market.volume_total = data.get('volume_total', 0)
-            market.liquidity = data.get('liquidity', 0)
+            market.outcomes = outcomes
+            market.clob_token_ids = clob_token_ids
+            market.volume_24h = volume_24h
+            market.volume_total = volume_total
+            market.liquidity = liquidity
             market.trader_count = data.get('trader_count', 0)
-            market.end_date = self._parse_date(data.get('end_date'))
+            market.end_date = self._parse_date(data.get('endDate') or data.get('end_date'))
             market.resolution = data.get('resolution')
             market.is_active = data.get('active', True)
             market.last_synced_at = datetime.utcnow()
@@ -538,13 +575,13 @@ class PolymarketService:
                 description=data.get('description'),
                 category=data.get('category'),
                 tags=data.get('tags', []),
-                outcomes=data.get('outcomes', []),
-                clob_token_ids=[o.get('token_id') for o in data.get('outcomes', []) if o.get('token_id')],
-                volume_24h=data.get('volume_24h', 0),
-                volume_total=data.get('volume_total', 0),
-                liquidity=data.get('liquidity', 0),
+                outcomes=outcomes,
+                clob_token_ids=clob_token_ids,
+                volume_24h=volume_24h,
+                volume_total=volume_total,
+                liquidity=liquidity,
                 trader_count=data.get('trader_count', 0),
-                end_date=self._parse_date(data.get('end_date')),
+                end_date=self._parse_date(data.get('endDate') or data.get('end_date')),
                 is_active=data.get('active', True),
                 last_synced_at=datetime.utcnow()
             )
