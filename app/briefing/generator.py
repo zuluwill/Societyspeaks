@@ -352,10 +352,10 @@ class BriefingGenerator:
         # Second: fill discovery quota from non-preference items
         discovery_selected = select_from_pool(discovery_items, discovery_quota)
         
-        # Third: if we still need more, relax constraints and fill from all items
+        # Third: if we still need more, fill from all items (keep source diversity)
         if len(selected_items) < limit:
             remaining = limit - len(selected_items)
-            select_from_pool(all_unfiltered, remaining, relax_source_limit=True)
+            select_from_pool(all_unfiltered, remaining, relax_source_limit=False)
         
         # Empty results fallback: if filters are too aggressive, provide feedback
         filters_applied = bool(include_keywords or exclude_keywords or topic_preferences)
@@ -370,12 +370,21 @@ class BriefingGenerator:
                 fallback_items.append((item, score))
             fallback_items.sort(key=lambda x: x[1], reverse=True)
             
-            for item, score in fallback_items[:limit]:
+            # Apply source diversity in fallback too
+            fallback_source_counts = defaultdict(int)
+            for item, score in fallback_items:
+                if len(selected_items) >= limit:
+                    break
                 normalized = normalize_headline(item.title)
-                if normalized not in seen_headlines:
-                    seen_headlines.add(normalized)
-                    item._selection_score = score
-                    selected_items.append(item)
+                if normalized in seen_headlines:
+                    continue
+                # Enforce source diversity even in fallback
+                if fallback_source_counts[item.source_id] >= max_per_source:
+                    continue
+                seen_headlines.add(normalized)
+                item._selection_score = score
+                selected_items.append(item)
+                fallback_source_counts[item.source_id] += 1
             
             # Mark that fallback was used (can be shown to user)
             briefing._selection_fallback_used = True
