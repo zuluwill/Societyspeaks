@@ -11,10 +11,8 @@
         <div class="max-w-3xl mx-auto text-center">
             <p class="text-blue-300 text-xs font-semibold tracking-widest uppercase mb-3">Society Speaks</p>
             <h1 class="text-white text-3xl sm:text-4xl font-bold mb-3" style="font-family: Georgia, 'Times New Roman', Times, serif;">The Daily Brief</h1>
-            <p class="text-blue-200 text-sm">{{ brief.date.strftime('%A, %d %B %Y') }}</p>
-            {% if brief.published_at %}
-            <p class="text-blue-300/70 text-xs mt-2">Published {{ brief.published_at.strftime('%d %b %Y at %H:%M') }} UTC</p>
-            {% endif %}
+            <p class="text-blue-200 text-sm">{{ brief.date.strftime('%A, %d %B %Y') }} Edition</p>
+            <p class="text-blue-300/70 text-xs mt-2">Updated daily at 6pm UTC — today's edition publishes this evening</p>
         </div>
     </header>
 
