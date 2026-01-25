@@ -236,34 +236,23 @@
                                     <div class="tier-menu hidden absolute right-0 z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                                         <div class="py-1">
                                             {% if subscriber.tier != 'free' %}
-                                            <form action="{{ url_for('brief_admin.set_subscriber_tier', subscriber_id=subscriber.id) }}" method="POST">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="hidden" name="tier" value="free">
-                                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50">
-                                                    Grant Free Access
-                                                </button>
-                                            </form>
+                                            <button type="button" onclick="setSubscriberTier({{ subscriber.id }}, 'free')" class="w-full text-left px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50">
+                                                Grant Free Access
+                                            </button>
                                             {% endif %}
                                             {% if subscriber.tier == 'trial' %}
-                                            <form action="{{ url_for('brief_admin.extend_subscriber_trial', subscriber_id=subscriber.id) }}" method="POST" class="px-4 py-2">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <div class="flex items-center gap-2">
-                                                    <input type="number" name="days" value="14" min="1" max="365" 
-                                                           class="w-16 px-2 py-1 text-sm border border-gray-300 rounded">
-                                                    <button type="submit" class="text-sm text-blue-700 hover:text-blue-900">
-                                                        +days
-                                                    </button>
-                                                </div>
-                                            </form>
+                                            <div class="px-4 py-2 flex items-center gap-2">
+                                                <input type="number" id="extend-days-{{ subscriber.id }}" value="14" min="1" max="365" 
+                                                       class="w-16 px-2 py-1 text-sm border border-gray-300 rounded">
+                                                <button type="button" onclick="extendSubscriberTrial({{ subscriber.id }})" class="text-sm text-blue-700 hover:text-blue-900">
+                                                    +days
+                                                </button>
+                                            </div>
                                             {% endif %}
                                             {% if subscriber.tier != 'trial' %}
-                                            <form action="{{ url_for('brief_admin.set_subscriber_tier', subscriber_id=subscriber.id) }}" method="POST">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="hidden" name="tier" value="trial">
-                                                <button type="submit" class="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50">
-                                                    Reset to Trial
-                                                </button>
-                                            </form>
+                                            <button type="button" onclick="setSubscriberTier({{ subscriber.id }}, 'trial')" class="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50">
+                                                Reset to Trial
+                                            </button>
                                             {% endif %}
                                         </div>
                                     </div>
@@ -478,6 +467,48 @@ function deleteSubscriber(subscriberId, email) {
     }).catch(function(error) {
         console.error('Error:', error);
         alert('Failed to delete subscriber');
+    });
+}
+
+function setSubscriberTier(subscriberId, tier) {
+    fetch('/admin/brief/subscribers/' + subscriberId + '/set-tier', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'csrf_token=' + encodeURIComponent(csrfToken) + '&tier=' + encodeURIComponent(tier)
+    }).then(function(response) {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Failed to update tier');
+        }
+    }).catch(function(error) {
+        console.error('Error:', error);
+        alert('Failed to update tier');
+    });
+}
+
+function extendSubscriberTrial(subscriberId) {
+    var daysInput = document.getElementById('extend-days-' + subscriberId);
+    var days = daysInput ? daysInput.value : 14;
+    fetch('/admin/brief/subscribers/' + subscriberId + '/extend-trial', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'csrf_token=' + encodeURIComponent(csrfToken) + '&days=' + encodeURIComponent(days)
+    }).then(function(response) {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Failed to extend trial');
+        }
+    }).catch(function(error) {
+        console.error('Error:', error);
+        alert('Failed to extend trial');
     });
 }
 </script>
