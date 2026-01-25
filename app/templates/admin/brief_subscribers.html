@@ -203,33 +203,27 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                             <div class="flex items-center space-x-1">
-                                <!-- Toggle Active/Paused -->
-                                <form action="{{ url_for('brief_admin.toggle_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    {% if subscriber.status == 'active' %}
-                                    <button type="submit" class="text-yellow-600 hover:text-yellow-800 p-1" title="Pause">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </button>
-                                    {% else %}
-                                    <button type="submit" class="text-green-600 hover:text-green-800 p-1" title="Activate">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </button>
-                                    {% endif %}
-                                </form>
+                                <!-- Toggle Active/Paused (using AJAX to avoid nested form issues) -->
+                                {% if subscriber.status == 'active' %}
+                                <button type="button" onclick="toggleSubscriber({{ subscriber.id }})" class="text-yellow-600 hover:text-yellow-800 p-1" title="Pause">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>
+                                {% else %}
+                                <button type="button" onclick="toggleSubscriber({{ subscriber.id }})" class="text-green-600 hover:text-green-800 p-1" title="Activate">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </button>
+                                {% endif %}
                                 
-                                <!-- Resend Brief -->
-                                <form action="{{ url_for('brief_admin.resend_to_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="text-blue-600 hover:text-blue-800 p-1" title="Resend Today's Brief">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                        </svg>
-                                    </button>
-                                </form>
+                                <!-- Resend Brief (using AJAX) -->
+                                <button type="button" onclick="resendBrief({{ subscriber.id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Resend Today's Brief">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </button>
                                 
                                 <!-- Tier Management Dropdown -->
                                 <div class="relative inline-block tier-dropdown">
@@ -275,16 +269,12 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Delete -->
-                                <form action="{{ url_for('brief_admin.delete_subscriber', subscriber_id=subscriber.id) }}" method="POST" class="inline"
-                                      onsubmit="return confirm('Remove {{ subscriber.email }}? This cannot be undone.');">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="text-red-600 hover:text-red-800 p-1" title="Remove">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </form>
+                                <!-- Delete (using AJAX) -->
+                                <button type="button" onclick="deleteSubscriber({{ subscriber.id }}, '{{ subscriber.email|e }}')" class="text-red-600 hover:text-red-800 p-1" title="Remove">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -424,5 +414,71 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// AJAX functions for row actions (avoid nested forms issue)
+const csrfToken = '{{ csrf_token() }}';
+
+function toggleSubscriber(subscriberId) {
+    fetch('/admin/brief/subscribers/' + subscriberId + '/toggle', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'csrf_token=' + encodeURIComponent(csrfToken)
+    }).then(function(response) {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Failed to toggle subscriber status');
+        }
+    }).catch(function(error) {
+        console.error('Error:', error);
+        alert('Failed to toggle subscriber status');
+    });
+}
+
+function resendBrief(subscriberId) {
+    fetch('/admin/brief/subscribers/' + subscriberId + '/resend', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'csrf_token=' + encodeURIComponent(csrfToken)
+    }).then(function(response) {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Failed to resend brief');
+        }
+    }).catch(function(error) {
+        console.error('Error:', error);
+        alert('Failed to resend brief');
+    });
+}
+
+function deleteSubscriber(subscriberId, email) {
+    if (!confirm('Remove ' + email + '? This cannot be undone.')) {
+        return;
+    }
+    fetch('/admin/brief/subscribers/' + subscriberId + '/delete', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'csrf_token=' + encodeURIComponent(csrfToken)
+    }).then(function(response) {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Failed to delete subscriber');
+        }
+    }).catch(function(error) {
+        console.error('Error:', error);
+        alert('Failed to delete subscriber');
+    });
+}
 </script>
 {% endblock %}
