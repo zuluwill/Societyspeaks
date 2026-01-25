@@ -260,7 +260,7 @@ def subscribe():
                             'email': email,
                             'source': 'social' if request.referrer and ('utm_source' in request.referrer or any(d in request.referrer for d in ['twitter.com', 'x.com', 'bsky.social'])) else 'direct',
                             'referrer': request.referrer,
-                            'subscription_type': subscription_type
+                            'subscription_type': 'daily_brief'
                         }
                     )
             except Exception as e:

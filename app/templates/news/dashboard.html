@@ -360,7 +360,7 @@ function filterByLeaning(leaning) {
     currentLeaning = leaning;
     const columns = document.querySelectorAll('.leaning-column');
     const buttons = document.querySelectorAll('.leaning-btn');
-    
+
     // Update button styles
     buttons.forEach(btn => {
         if (btn.dataset.filter === leaning) {
@@ -371,16 +371,16 @@ function filterByLeaning(leaning) {
             btn.classList.add('bg-gray-100', 'text-gray-700');
         }
     });
-    
-    // Show/hide columns
+
+    // Show/hide columns using classes (not inline styles)
     columns.forEach(col => {
         if (leaning === 'all' || col.dataset.leaning === leaning) {
-            col.style.display = 'block';
+            col.classList.remove('hidden-by-filter');
         } else {
-            col.style.display = 'none';
+            col.classList.add('hidden-by-filter');
         }
     });
-    
+
     applyAllFilters();
 }
 
@@ -469,10 +469,9 @@ function applyAllFilters() {
     transform: translateY(-2px);
 }
 
-@media (max-width: 768px) {
-    .leaning-column {
-        display: block !important;
-    }
+/* Hide columns when filtered - works on all screen sizes */
+.hidden-by-filter {
+    display: none;
 }
 </style>
 {% endblock %}
