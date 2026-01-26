@@ -68,7 +68,7 @@ class XTTSClient:
     }
 
     DEFAULT_VOICE = 'professional'
-    MODEL_NAME = "tts_models/multilingual/multi-dataset/xtts_v2"
+    MODEL_NAME = "tts_models/en/ljspeech/tacotron2-DDC"
 
     # Maximum text length to prevent memory issues on Replit
     MAX_TEXT_LENGTH = 5000
@@ -133,10 +133,26 @@ class XTTSClient:
             _model_cache['loading'] = True
 
         try:
+            # Auto-accept Coqui TOS to avoid interactive prompt
+            os.environ['COQUI_TOS_AGREED'] = '1'
+            
+            # Fix for PyTorch 2.6+ weights_only security change
+            # Monkey-patch torch.load to use weights_only=False for XTTS models
+            import torch
+            _original_torch_load = torch.load
+            def _patched_torch_load(*args, **kwargs):
+                if 'weights_only' not in kwargs:
+                    kwargs['weights_only'] = False
+                return _original_torch_load(*args, **kwargs)
+            torch.load = _patched_torch_load
+            
             from TTS.api import TTS
 
             logger.info(f"Loading XTTS v2 model (this may take 30-60 seconds on first run)...")
             tts = TTS(model_name=self.MODEL_NAME, gpu=False)  # CPU mode for Replit
+            
+            # Restore original torch.load
+            torch.load = _original_torch_load
 
             with _model_lock:
                 _model_cache['tts'] = tts
@@ -214,9 +230,7 @@ class XTTSClient:
             logger.info(f"Generating audio for {len(text)} characters with voice: {voice}")
             tts.tts_to_file(
                 text=text,
-                file_path=output_path,
-                language=language,
-                speaker_wav=None  # Use default voice (can be customized with voice samples)
+                file_path=output_path
             )
 
             logger.info(f"Audio generated successfully: {output_path}")

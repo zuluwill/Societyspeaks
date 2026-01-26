@@ -263,31 +263,51 @@ class AudioGenerator:
                 db.session.commit()
                 return False
 
+            # Extract item data before long operations to avoid connection timeouts
+            item_data_list = []
             for item in items:
+                item_data = {
+                    'id': item.id,
+                    'audio_url': item.audio_url,
+                    'headline': item.headline if hasattr(item, 'headline') else None,
+                    'summary_bullets': item.summary_bullets if hasattr(item, 'summary_bullets') else None,
+                    'personal_impact': item.personal_impact if hasattr(item, 'personal_impact') else None,
+                    'so_what': item.so_what if hasattr(item, 'so_what') else None,
+                    'content_markdown': item.content_markdown[:500] if hasattr(item, 'content_markdown') and item.content_markdown else None,
+                }
+                item_data_list.append(item_data)
+            
+            # Close session to avoid timeout during long audio generation
+            db.session.close()
+
+            for item_data in item_data_list:
+                item_id = item_data['id']
                 try:
                     # Skip if audio already exists
-                    if item.audio_url:
-                        logger.info(f"Item {item.id} already has audio, skipping")
+                    if item_data['audio_url']:
+                        logger.info(f"Item {item_id} already has audio, skipping")
                         completed += 1
+                        # Refresh connection and update job
+                        job = AudioGenerationJob.query.get(job_id)
                         job.completed_items = completed
                         job.failed_items = failed
                         db.session.commit()
+                        db.session.close()
                         continue
 
                     # Build text content for audio (works for both BriefItem and BriefRunItem)
                     text_parts = []
-                    if item.headline:
-                        text_parts.append(item.headline)
-                    if item.summary_bullets:
-                        text_parts.append(". ".join(item.summary_bullets))
+                    if item_data['headline']:
+                        text_parts.append(item_data['headline'])
+                    if item_data['summary_bullets']:
+                        text_parts.append(". ".join(item_data['summary_bullets']))
                     # BriefItem has personal_impact and so_what, BriefRunItem has content_markdown
-                    if hasattr(item, 'personal_impact') and item.personal_impact:
-                        text_parts.append(item.personal_impact)
-                    if hasattr(item, 'so_what') and item.so_what:
-                        text_parts.append(item.so_what)
-                    if hasattr(item, 'content_markdown') and item.content_markdown:
-                        # Use first 500 chars of content_markdown for BriefRunItem
-                        text_parts.append(item.content_markdown[:500])
+                    if item_data['personal_impact']:
+                        text_parts.append(item_data['personal_impact'])
+                    if item_data['so_what']:
+                        text_parts.append(item_data['so_what'])
+                    if item_data['content_markdown']:
+                        text_parts.append(item_data['content_markdown'])
 
                     audio_text = ". ".join(text_parts)
                     
@@ -296,45 +316,62 @@ class AudioGenerator:
                         try:
                             audio_text = audio_text.decode('utf-8')
                         except UnicodeDecodeError:
-                            logger.error(f"Failed to decode text for item {item.id}")
+                            logger.error(f"Failed to decode text for item {item_id}")
                             failed += 1
+                            job = AudioGenerationJob.query.get(job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
+                            db.session.close()
                             continue
 
                     if not audio_text or len(audio_text.strip()) == 0:
-                        logger.warning(f"Item {item.id} has no text content, counting as failed")
+                        logger.warning(f"Item {item_id} has no text content, counting as failed")
                         failed += 1
+                        job = AudioGenerationJob.query.get(job_id)
                         job.completed_items = completed
                         job.failed_items = failed
                         db.session.commit()
+                        db.session.close()
                         continue
 
-                    # Generate audio file
-                    logger.info(f"Generating audio for item {item.id} ({len(audio_text)} chars)...")
+                    # Generate audio file (this is the LONG operation - 5+ minutes)
+                    logger.info(f"Generating audio for item {item_id} ({len(audio_text)} chars)...")
                     audio_path = None
+                    
+                    # Get voice_id before closing session
+                    job = AudioGenerationJob.query.get(job_id)
+                    voice_id = job.voice_id
+                    brief_type = job.brief_type
+                    brief_id = job.brief_id
+                    brief_run_id = job.brief_run_id
+                    db.session.close()
+                    
                     try:
                         audio_path = self.xtts_client.generate_audio(
                             text=audio_text,
-                            voice_id=job.voice_id
+                            voice_id=voice_id
                         )
 
                         if not audio_path:
-                            logger.error(f"Failed to generate audio for item {item.id}")
+                            logger.error(f"Failed to generate audio for item {item_id}")
                             failed += 1
+                            job = AudioGenerationJob.query.get(job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
+                            db.session.close()
                             continue
 
                         # Validate temp file exists and is readable
                         if not os.path.exists(audio_path) or not os.path.isfile(audio_path):
                             logger.error(f"Generated audio file does not exist: {audio_path}")
                             failed += 1
+                            job = AudioGenerationJob.query.get(job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
+                            db.session.close()
                             continue
 
                         # Read audio file (stream in chunks for memory efficiency on Replit)
@@ -347,11 +384,13 @@ class AudioGenerator:
                                 raise ValueError("Generated audio file is empty")
                                 
                         except Exception as read_error:
-                            logger.error(f"Failed to read audio file for item {item.id}: {read_error}")
+                            logger.error(f"Failed to read audio file for item {item_id}: {read_error}")
                             failed += 1
+                            job = AudioGenerationJob.query.get(job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
+                            db.session.close()
                             # Cleanup temp file on read error
                             if audio_path and os.path.exists(audio_path):
                                 try:
@@ -363,18 +402,20 @@ class AudioGenerator:
                         # Generate filename (sanitize to prevent path traversal)
                         timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
                         text_hash = hashlib.md5(audio_text.encode('utf-8')).hexdigest()[:8]
-                        if job.brief_type == 'brief_run':
-                            filename = f"brief_run_{job.brief_run_id}_item_{item.id}_{timestamp}_{text_hash}.wav"
+                        if brief_type == 'brief_run':
+                            filename = f"brief_run_{brief_run_id}_item_{item_id}_{timestamp}_{text_hash}.wav"
                         else:
-                            filename = f"brief_{job.brief_id}_item_{item.id}_{timestamp}_{text_hash}.wav"
+                            filename = f"brief_{brief_id}_item_{item_id}_{timestamp}_{text_hash}.wav"
                         
                         # Additional filename validation
                         if '..' in filename or '/' in filename or '\\' in filename:
                             logger.error(f"Invalid filename generated: {filename}")
                             failed += 1
+                            job = AudioGenerationJob.query.get(job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
+                            db.session.close()
                             # Cleanup temp file
                             if audio_path and os.path.exists(audio_path):
                                 try:
@@ -390,11 +431,13 @@ class AudioGenerator:
                         del audio_data
 
                         if not audio_url:
-                            logger.error(f"Failed to save audio for item {item.id}")
+                            logger.error(f"Failed to save audio for item {item_id}")
                             failed += 1
+                            job = AudioGenerationJob.query.get(job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
+                            db.session.close()
                             # Cleanup temp file on storage error
                             if audio_path and os.path.exists(audio_path):
                                 try:
@@ -403,9 +446,21 @@ class AudioGenerator:
                                     pass
                             continue
 
+                        # Re-query item from database with fresh connection
+                        item = item_model.query.get(item_id)
+                        if not item:
+                            logger.error(f"Item {item_id} no longer exists")
+                            failed += 1
+                            job = AudioGenerationJob.query.get(job_id)
+                            job.completed_items = completed
+                            job.failed_items = failed
+                            db.session.commit()
+                            db.session.close()
+                            continue
+                        
                         # Update item
                         item.audio_url = audio_url
-                        item.audio_voice_id = job.voice_id
+                        item.audio_voice_id = voice_id
                         item.audio_generated_at = datetime.utcnow()
 
                     finally:
@@ -417,24 +472,31 @@ class AudioGenerator:
                                 logger.warning(f"Failed to cleanup temp file {audio_path}: {cleanup_error}")
 
                     completed += 1
+                    # Refresh job from database
+                    job = AudioGenerationJob.query.get(job_id)
                     job.completed_items = completed
                     job.failed_items = failed
                     db.session.commit()
+                    db.session.close()
 
-                    logger.info(f"Generated audio for item {item.id} ({completed}/{job.total_items})")
+                    logger.info(f"Generated audio for item {item_id} ({completed}/{len(item_data_list)})")
 
                 except Exception as e:
-                    logger.error(f"Error processing item {item.id}: {e}", exc_info=True)
+                    logger.error(f"Error processing item {item_id}: {e}", exc_info=True)
                     failed += 1
-                    job.completed_items = completed
-                    job.failed_items = failed
                     try:
+                        job = AudioGenerationJob.query.get(job_id)
+                        job.completed_items = completed
+                        job.failed_items = failed
                         db.session.commit()
+                        db.session.close()
                     except Exception:
                         db.session.rollback()
+                        db.session.close()
                     continue
 
             # Mark job as completed
+            job = AudioGenerationJob.query.get(job_id)
             job.status = 'completed'
             job.completed_at = datetime.utcnow()
             db.session.commit()
