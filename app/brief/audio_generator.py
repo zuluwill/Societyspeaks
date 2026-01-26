@@ -12,6 +12,7 @@ Optimized for Replit:
 """
 
 import logging
+import re
 from typing import Optional
 from datetime import datetime, timedelta
 import hashlib
@@ -23,6 +24,7 @@ from app import db
 from app.models import DailyBrief, BriefItem, AudioGenerationJob
 from app.brief.xtts_client import XTTSClient
 from app.brief.audio_storage import audio_storage
+from app.utils.text_processing import strip_markdown_for_tts
 
 logger = logging.getLogger(__name__)
 
@@ -298,16 +300,30 @@ class AudioGenerator:
                     # Build text content for audio (works for both BriefItem and BriefRunItem)
                     text_parts = []
                     if item_data['headline']:
-                        text_parts.append(item_data['headline'])
+                        # Strip markdown from headline
+                        clean_headline = strip_markdown_for_tts(item_data['headline'])
+                        if clean_headline:
+                            text_parts.append(clean_headline)
                     if item_data['summary_bullets']:
-                        text_parts.append(". ".join(item_data['summary_bullets']))
+                        # Clean each bullet and join
+                        clean_bullets = [strip_markdown_for_tts(bullet) for bullet in item_data['summary_bullets'] if bullet]
+                        clean_bullets = [b for b in clean_bullets if b]  # Remove empty after cleaning
+                        if clean_bullets:
+                            text_parts.append(". ".join(clean_bullets))
                     # BriefItem has personal_impact and so_what, BriefRunItem has content_markdown
                     if item_data['personal_impact']:
-                        text_parts.append(item_data['personal_impact'])
+                        clean_impact = strip_markdown_for_tts(item_data['personal_impact'])
+                        if clean_impact:
+                            text_parts.append(clean_impact)
                     if item_data['so_what']:
-                        text_parts.append(item_data['so_what'])
+                        clean_so_what = strip_markdown_for_tts(item_data['so_what'])
+                        if clean_so_what:
+                            text_parts.append(clean_so_what)
                     if item_data['content_markdown']:
-                        text_parts.append(item_data['content_markdown'])
+                        # This is the main culprit - content_markdown often has lots of markdown
+                        clean_markdown = strip_markdown_for_tts(item_data['content_markdown'])
+                        if clean_markdown:
+                            text_parts.append(clean_markdown)
 
                     audio_text = ". ".join(text_parts)
                     

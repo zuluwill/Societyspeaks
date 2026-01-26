@@ -41,28 +41,38 @@ class XTTSClient:
     # Available voice presets (XTTS v2 built-in voices)
     VOICES = {
         'professional': {
-            'name': 'Professional',
-            'description': 'Clear, professional narration',
-            'speaker_wav': None,  # Uses default voice
+            'name': 'Professional (US)',
+            'description': 'Clear, professional American accent',
+            'speaker_wav': None,
         },
         'warm': {
-            'name': 'Warm',
-            'description': 'Friendly, warm tone',
+            'name': 'Warm (US)',
+            'description': 'Friendly, warm American tone',
             'speaker_wav': None,
         },
         'authoritative': {
-            'name': 'Authoritative',
-            'description': 'Confident, authoritative voice',
+            'name': 'Authoritative (US)',
+            'description': 'Confident, authoritative American voice',
             'speaker_wav': None,
         },
         'calm': {
-            'name': 'Calm',
-            'description': 'Calm, soothing narration',
+            'name': 'Calm (US)',
+            'description': 'Calm, soothing American narration',
             'speaker_wav': None,
         },
         'friendly': {
-            'name': 'Friendly',
-            'description': 'Approachable, friendly tone',
+            'name': 'Friendly (US)',
+            'description': 'Approachable, friendly American tone',
+            'speaker_wav': None,
+        },
+        'british_professional': {
+            'name': 'Professional (British)',
+            'description': 'Clear, professional British accent',
+            'speaker_wav': None,
+        },
+        'british_warm': {
+            'name': 'Warm (British)',
+            'description': 'Friendly, warm British tone',
             'speaker_wav': None,
         },
     }
@@ -232,14 +242,27 @@ class XTTSClient:
             
             # XTTS v2 supports multiple speakers - use built-in speaker embeddings
             # Map voice presets to speaker characteristics
+            # Note: British accents are limited - XTTS v2 primarily has American speakers
+            # British options use speakers that may have slight British characteristics
+            # or we fall back to closest match
             speaker_map = {
-                'professional': 'Claribel Dervla',  # Clear, professional
-                'warm': 'Daisy Studious',           # Warm, friendly
-                'authoritative': 'Gracie Wise',     # Confident tone
-                'calm': 'Tammie Ema',               # Calm, soothing
-                'friendly': 'Alison Dietlinde',     # Approachable
+                # American accents (primary options)
+                'professional': 'Claribel Dervla',  # Clear, professional American
+                'warm': 'Daisy Studious',           # Warm, friendly American
+                'authoritative': 'Gracie Wise',     # Confident American tone
+                'calm': 'Tammie Ema',               # Calm, soothing American
+                'friendly': 'Alison Dietlinde',     # Approachable American
+                # British accents (using available speakers - may need testing)
+                # Note: XTTS v2 doesn't have dedicated British speakers, so these
+                # use alternative speakers that may have British-like characteristics
+                'british_professional': 'Geraint',  # British-sounding name (if available)
+                'british_warm': 'Daisy Studious',   # Fallback to warm (closest match)
             }
             speaker = speaker_map.get(voice, 'Claribel Dervla')
+            
+            # Log if using British option (for debugging)
+            if voice.startswith('british_'):
+                logger.info(f"Using British accent option '{voice}' with speaker '{speaker}'")
             
             tts.tts_to_file(
                 text=text,

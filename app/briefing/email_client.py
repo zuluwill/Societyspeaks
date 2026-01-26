@@ -159,6 +159,12 @@ class BriefingEmailClient:
                 # Build full URL for logo
                 company_logo_url = f"{base_url}/profiles/image/{company.logo}"
         
+        # Get items for template (for audio links)
+        items = sorted(brief_run.items, key=lambda x: x.position or 0) if brief_run.items else []
+        
+        # Check if any items have audio
+        has_audio = any(item.audio_url for item in items)
+        
         # Try to render template, fallback to simple HTML
         try:
             html = render_template(
@@ -170,7 +176,9 @@ class BriefingEmailClient:
                 view_url=view_url,
                 unsubscribe_url=unsubscribe_url,
                 base_url=base_url,
-                company_logo_url=company_logo_url
+                company_logo_url=company_logo_url,
+                items=items,
+                has_audio=has_audio
             )
             return html
         except Exception as e:

@@ -1,4 +1,7 @@
 {% extends "layout.html" %}
+{% from "components/audio_player.html" import audio_player %}
+{% from "components/voice_selector.html" import voice_selector %}
+{% from "components/dive_deeper_links.html" import dive_deeper_links %}
 {% from "components/email_capture.html" import email_capture_inline, email_capture_compact, paid_brief_crosssell %}
 
 {% block title %}{{ brief.title }} - Society Speaks{% endblock %}
@@ -35,17 +38,11 @@
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">Listen to the Brief</h3>
                     <p class="text-sm text-gray-600">Generate audio for all stories in this brief</p>
                 </div>
-                <div class="flex items-center gap-3">
-                    <select id="voice-select" class="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white">
-                        <option value="professional">Professional</option>
-                        <option value="warm">Warm</option>
-                        <option value="authoritative">Authoritative</option>
-                        <option value="calm">Calm</option>
-                        <option value="friendly">Friendly</option>
-                    </select>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+                    {{ voice_selector('voice-select', 'text-sm border border-gray-300 rounded-lg px-3 py-2.5 sm:py-2 bg-white min-h-[44px] sm:min-h-0 flex-1 sm:flex-none') }}
                     <button data-brief-id="{{ brief.id }}"
                             id="generate-all-audio-btn"
-                            class="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
+                            class="inline-flex items-center justify-center gap-2 px-6 py-3 sm:py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors min-h-[44px] sm:min-h-0 w-full sm:w-auto"
                             aria-label="Generate audio for all items in this brief">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
@@ -55,12 +52,12 @@
                 </div>
             </div>
             <div id="audio-generation-status" class="hidden mt-4">
-                <div class="bg-white rounded-lg p-4">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="flex-1 bg-gray-200 rounded-full h-2">
-                            <div id="audio-progress-bar" class="bg-purple-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                <div class="bg-white rounded-lg p-4 sm:p-5 border border-gray-200">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="flex-1 bg-gray-200 rounded-full h-2.5 sm:h-2">
+                            <div id="audio-progress-bar" class="bg-purple-600 h-2.5 sm:h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
                         </div>
-                        <span id="audio-progress-text" class="text-sm font-medium text-gray-700">0%</span>
+                        <span id="audio-progress-text" class="text-sm font-medium text-gray-700 min-w-[3rem] text-right">0%</span>
                     </div>
                     <p id="audio-status-message" class="text-sm text-gray-600">Preparing...</p>
                 </div>
@@ -178,75 +175,10 @@
                     {% endif %}
 
                     <!-- Audio Player Section -->
-                    {% if item.audio_url %}
-                    <div class="mb-6">
-                        <audio id="audio-player-{{ item.id }}" controls class="w-full h-10">
-                            <source src="{{ item.audio_url }}" type="audio/wav">
-                            Your browser does not support the audio element.
-                        </audio>
-                        {% if item.audio_voice_id %}
-                        <p class="text-xs text-gray-500 mt-1">Voice: {{ item.audio_voice_id|title }}</p>
-                        {% endif %}
-                    </div>
-                    {% endif %}
+                    {{ audio_player(item) }}
 
                     <!-- Dive Deeper with AI Section -->
-                    <div class="mb-6">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="text-sm font-medium text-gray-700">Dive deeper with AI:</span>
-                            <a href="https://chat.openai.com/?q={{ (item.headline + ' ' + (item.summary_bullets|join(' '))|urlencode) }}" 
-                               target="_blank" 
-                               rel="noopener"
-                               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                                </svg>
-                                ChatGPT
-                            </a>
-                            <a href="https://claude.ai/new?prompt={{ ('Analyze this news story: ' + item.headline + ' ' + (item.summary_bullets|join(' ')))|urlencode }}" 
-                               target="_blank" 
-                               rel="noopener"
-                               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                                </svg>
-                                Claude
-                            </a>
-                            <a href="https://www.perplexity.ai/?q={{ (item.headline + ' ' + (item.summary_bullets|join(' ')))|urlencode }}" 
-                               target="_blank" 
-                               rel="noopener"
-                               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
-                                </svg>
-                                Perplexity
-                            </a>
-                            <button data-item-id="{{ item.id }}"
-                                    class="copy-dive-deeper-btn inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                                    aria-label="Copy text for AI analysis">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                                Copy Text
-                            </button>
-                        </div>
-                        <textarea id="dive-deeper-text-{{ item.id }}" class="hidden">{{ item.headline }}
-
-Key Points:
-{% for bullet in item.summary_bullets %}- {{ bullet }}
-{% endfor %}
-{% if item.personal_impact %}
-Why This Matters: {{ item.personal_impact }}
-{% endif %}
-{% if item.so_what %}
-So What: {{ item.so_what }}
-{% endif %}
-{% if item.deeper_context %}
-Deeper Context: {{ item.deeper_context }}
-{% endif %}
-
-Can you provide additional analysis, historical context, and implications of this story?</textarea>
-                    </div>
+                    {{ dive_deeper_links(item) }}
 
                     <!-- Want more detail? Section -->
                     {% if item.deeper_context %}
@@ -676,215 +608,46 @@ Can you provide additional analysis, historical context, and implications of thi
     </div>
 </div>
 
-<script>
-// Use event listeners instead of inline onclick (best practice)
-document.addEventListener('DOMContentLoaded', function() {
-    // Audio generation button
-    const generateBtn = document.getElementById('generate-all-audio-btn');
-    if (generateBtn) {
-        generateBtn.addEventListener('click', function() {
-            const briefId = this.dataset.briefId;
-            generateAllAudio(briefId);
-        });
+<style>
+/* Template-specific mobile optimizations */
+@media (max-width: 640px) {
+    #toast-container {
+        top: 1rem;
+        right: 1rem;
+        left: 1rem;
+        max-width: none;
+        width: auto;
     }
     
-    // Toggle deeper context buttons
-    document.querySelectorAll('.toggle-deeper-context-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const itemId = this.dataset.itemId;
-            toggleDeeperContext(itemId);
-        });
-    });
+    .toast {
+        min-width: auto;
+        width: 100%;
+    }
     
-    // Copy dive deeper text buttons
-    document.querySelectorAll('.copy-dive-deeper-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const itemId = this.dataset.itemId;
-            copyDiveDeeperText(itemId);
-        });
-    });
-});
-
-function toggleDeeperContext(itemId) {
-    const contextDiv = document.getElementById('deeper-context-' + itemId);
-    const icon = document.querySelector(`[data-icon-id="${itemId}"]`);
-    const button = document.querySelector(`.toggle-deeper-context-btn[data-item-id="${itemId}"]`);
+    /* Larger touch targets for mobile */
+    .toast-close {
+        min-width: 44px;
+        min-height: 44px;
+        padding: 8px;
+    }
     
-    if (!contextDiv || !button) return;
+    /* Better mobile audio player */
+    audio {
+        width: 100%;
+        height: 48px; /* Larger for mobile */
+    }
     
-    const isExpanded = !contextDiv.classList.contains('hidden');
+    /* Mobile-friendly buttons */
+    button, .inline-flex {
+        min-height: 44px; /* iOS recommended touch target */
+    }
     
-    if (isExpanded) {
-        contextDiv.classList.add('hidden');
-        if (icon) icon.style.transform = 'rotate(0deg)';
-        const span = button.querySelector('span');
-        if (span) span.textContent = 'Want a bit more detail?';
-        button.setAttribute('aria-expanded', 'false');
-    } else {
-        contextDiv.classList.remove('hidden');
-        if (icon) icon.style.transform = 'rotate(180deg)';
-        const span = button.querySelector('span');
-        if (span) span.textContent = 'Show less detail';
-        button.setAttribute('aria-expanded', 'true');
+    /* Better spacing on mobile */
+    .space-y-8 > * + * {
+        margin-top: 1.5rem;
     }
 }
+</style>
 
-async function generateAllAudio(briefId) {
-    const button = document.getElementById('generate-all-audio-btn');
-    const voiceSelect = document.getElementById('voice-select');
-    const statusDiv = document.getElementById('audio-generation-status');
-    const progressBar = document.getElementById('audio-progress-bar');
-    const progressText = document.getElementById('audio-progress-text');
-    const statusMessage = document.getElementById('audio-status-message');
-    
-    if (!button) return;
-    
-    // Disable button
-    button.disabled = true;
-    button.querySelector('span').textContent = 'Generating...';
-    
-    // Show status
-    statusDiv.classList.remove('hidden');
-    statusMessage.textContent = 'Creating audio generation job...';
-    
-    try {
-        const voiceId = voiceSelect ? voiceSelect.value : 'professional';
-        const response = await fetch(`/api/brief/${briefId}/audio/generate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ voice_id: voiceId })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Start polling for status
-            pollAudioJobStatus(data.job_id, progressBar, progressText, statusMessage, button);
-        } else {
-            showError('Failed to start audio generation: ' + (data.error || 'Unknown error'));
-            button.disabled = false;
-            const span = button.querySelector('span');
-            if (span) span.textContent = 'Generate All Audio';
-            if (statusDiv) statusDiv.classList.add('hidden');
-        }
-    } catch (error) {
-        console.error('Audio generation error:', error);
-        showError('Failed to start audio generation. Please try again.');
-        button.disabled = false;
-        const span = button.querySelector('span');
-        if (span) span.textContent = 'Generate All Audio';
-        if (statusDiv) statusDiv.classList.add('hidden');
-    }
-}
-
-function showError(message) {
-    // Better error handling - could use toast notification library
-    // For now, use alert but could be improved with inline error messages
-    alert(message);
-}
-
-async function pollAudioJobStatus(jobId, progressBar, progressText, statusMessage, button) {
-    const maxAttempts = 300; // 5 minutes max (300 * 1 second)
-    let attempts = 0;
-    
-    const poll = async () => {
-        try {
-            const response = await fetch(`/api/brief/audio/job/${jobId}/status`);
-            const data = await response.json();
-            
-            const progress = data.progress || 0;
-            const status = data.status;
-            
-            progressBar.style.width = progress + '%';
-            progressText.textContent = progress + '%';
-            
-            if (status === 'completed') {
-                const failedMsg = data.failed_items > 0 ? ` (${data.failed_items} failed)` : '';
-                statusMessage.textContent = `Completed! Generated audio for ${data.completed_items}/${data.total_items} items${failedMsg}.`;
-                button.disabled = false;
-                button.querySelector('span').textContent = 'Generate All Audio';
-                // Reload page after 2 seconds to show audio players
-                setTimeout(() => window.location.reload(), 2000);
-                return;
-            } else if (status === 'failed') {
-                statusMessage.textContent = 'Generation failed: ' + (data.error_message || 'Unknown error');
-                button.disabled = false;
-                button.querySelector('span').textContent = 'Retry Generation';
-                return;
-            } else if (status === 'processing') {
-                const processed = (data.completed_items || 0) + (data.failed_items || 0);
-                const failedMsg = data.failed_items > 0 ? ` (${data.failed_items} failed)` : '';
-                statusMessage.textContent = `Generating audio... ${processed}/${data.total_items} items processed${failedMsg}`;
-            } else {
-                statusMessage.textContent = 'Queued... waiting to start (model loading may take 30-60 seconds)';
-            }
-            
-            attempts++;
-            if (attempts < maxAttempts && status !== 'completed' && status !== 'failed') {
-                setTimeout(poll, 1000); // Poll every second
-            } else if (attempts >= maxAttempts) {
-                statusMessage.textContent = 'Generation is taking longer than expected. Please refresh the page.';
-                button.disabled = false;
-                button.querySelector('span').textContent = 'Generate All Audio';
-            }
-        } catch (error) {
-            console.error('Status polling error:', error);
-            statusMessage.textContent = 'Error checking status. Please refresh the page.';
-            button.disabled = false;
-            button.querySelector('span').textContent = 'Generate All Audio';
-        }
-    };
-    
-    poll();
-}
-
-function copyDiveDeeperText(itemId) {
-    const textarea = document.getElementById('dive-deeper-text-' + itemId);
-    if (!textarea) return;
-    
-    // Use modern Clipboard API if available
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(textarea.value).then(() => {
-            showCopyFeedback(itemId);
-        }).catch(err => {
-            console.error('Failed to copy:', err);
-            // Fallback to old method
-            fallbackCopy(textarea, itemId);
-        });
-    } else {
-        // Fallback for older browsers
-        fallbackCopy(textarea, itemId);
-    }
-}
-
-function fallbackCopy(textarea, itemId) {
-    textarea.classList.remove('hidden');
-    textarea.select();
-    try {
-        document.execCommand('copy');
-        showCopyFeedback(itemId);
-    } catch (err) {
-        console.error('Fallback copy failed:', err);
-    }
-    textarea.classList.add('hidden');
-}
-
-function showCopyFeedback(itemId) {
-    const button = document.querySelector(`.copy-dive-deeper-btn[data-item-id="${itemId}"]`);
-    if (!button) return;
-    
-    const originalHTML = button.innerHTML;
-    button.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> Copied!';
-    button.classList.add('text-green-600', 'bg-green-50');
-    button.setAttribute('aria-label', 'Text copied to clipboard');
-    
-    setTimeout(() => {
-        button.innerHTML = originalHTML;
-        button.classList.remove('text-green-600', 'bg-green-50');
-        button.setAttribute('aria-label', 'Copy text for AI analysis');
-    }, 2000);
-}
-</script>
+{# JavaScript is now in shared files: toast.js and brief-audio.js #}
 {% endblock %}

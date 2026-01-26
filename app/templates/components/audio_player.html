@@ -1,0 +1,16 @@
+{# Audio Player Component Macro #}
+{% macro audio_player(item, prefix='') %}
+    {% if item.audio_url %}
+    <div class="mb-4">
+        <div class="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+            <audio id="audio-player-{{ prefix }}{{ item.id }}" controls class="w-full h-10 sm:h-12" preload="metadata">
+                <source src="{{ item.audio_url }}" type="audio/wav">
+                Your browser does not support the audio element.
+            </audio>
+            {% if item.audio_voice_id %}
+            <p class="text-xs text-gray-500 mt-2 sm:mt-1">Voice: {{ item.audio_voice_id|title }}</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+{% endmacro %}

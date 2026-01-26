@@ -510,6 +510,28 @@
                                 </tr>
                                 {% endif %}
 
+                                <!-- Audio Link -->
+                                {% if item.audio_url %}
+                                <tr>
+                                    <td style="padding-top: 16px; padding-bottom: 16px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td align="center" style="background-color: #7c3aed; border-radius: 6px;">
+                                                    <a href="{{ base_url }}/brief/view/{{ brief.id }}#item-{{ item.id }}" target="_blank" style="display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; font-weight: 600; color: #ffffff; text-decoration: none; padding: 10px 20px;">
+                                                        🎧 Listen to this story
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        {% if item.audio_voice_id %}
+                                        <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #6b7280; text-align: center; margin-top: 6px; margin-bottom: 0;">
+                                            Voice: {{ item.audio_voice_id|title }}
+                                        </p>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endif %}
+
                                 <!-- CTA Button -->
                                 {% if item.discussion_id %}
                                 <tr>

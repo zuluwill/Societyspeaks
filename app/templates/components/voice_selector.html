@@ -1,0 +1,16 @@
+{# Voice Selector Component Macro #}
+{% macro voice_selector(select_id='voice-select', classes='text-sm border border-gray-300 rounded-lg px-3 py-2.5 sm:py-2 bg-white min-h-[44px] sm:min-h-0') %}
+<select id="{{ select_id }}" class="{{ classes }}">
+    <optgroup label="American Accent">
+        <option value="professional">Professional (US)</option>
+        <option value="warm">Warm (US)</option>
+        <option value="authoritative">Authoritative (US)</option>
+        <option value="calm">Calm (US)</option>
+        <option value="friendly">Friendly (US)</option>
+    </optgroup>
+    <optgroup label="British Accent">
+        <option value="british_professional">Professional (British)</option>
+        <option value="british_warm">Warm (British)</option>
+    </optgroup>
+</select>
+{% endmacro %}

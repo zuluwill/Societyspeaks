@@ -39,6 +39,76 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.1.1/compressor.min.js"></script>
     
+    <!-- Toast Notification Styles -->
+    <style>
+    .toast {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid;
+        animation: slideInRight 0.3s ease-out;
+        min-width: 280px;
+        max-width: 100%;
+    }
+    
+    .toast.toast-success { border-left-color: #10b981; }
+    .toast.toast-error { border-left-color: #ef4444; }
+    .toast.toast-info { border-left-color: #3b82f6; }
+    .toast.toast-warning { border-left-color: #f59e0b; }
+    
+    .toast-icon { flex-shrink: 0; width: 20px; height: 20px; }
+    .toast-content { flex: 1; font-size: 14px; line-height: 1.5; color: #1f2937; }
+    .toast-close {
+        flex-shrink: 0;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        color: #6b7280;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+        border-radius: 4px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+    
+    .toast-close:hover { opacity: 1; background: #f3f4f6; }
+    .toast-close:focus { outline: 2px solid #3b82f6; outline-offset: 2px; }
+    
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    .toast.fade-out {
+        animation: slideOutRight 0.3s ease-in forwards;
+    }
+    
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    @media (max-width: 640px) {
+        #toast-container {
+            top: 1rem;
+            right: 1rem;
+            left: 1rem;
+            max-width: none;
+            width: auto;
+        }
+        
+        .toast {
+            min-width: auto;
+            width: 100%;
+        }
+    }
+    </style>
+    
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
@@ -679,5 +749,12 @@
             });
         });
     </script>
+    
+    <!-- Shared JavaScript Components -->
+    <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/brief-audio.js') }}"></script>
+    
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 max-w-sm w-full sm:max-w-md" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>

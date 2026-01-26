@@ -228,14 +228,8 @@ def create_app():
     
     def strip_markdown(text):
         """Strip markdown formatting for plain text display (safe for truncation)."""
-        if not text:
-            return ''
-        text = re.sub(r'\[([^\]]+)\]\([^)]+\)', r'\1', text)
-        text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
-        text = re.sub(r'\*([^*]+)\*', r'\1', text)
-        text = re.sub(r'https?://\S+', '', text)
-        text = re.sub(r'\s+', ' ', text).strip()
-        return text
+        from app.utils.text_processing import strip_markdown as strip_markdown_func
+        return strip_markdown_func(text)
     
     app.jinja_env.filters['render_markdown'] = render_markdown_links
     app.jinja_env.filters['strip_markdown'] = strip_markdown

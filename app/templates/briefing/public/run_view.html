@@ -1,4 +1,6 @@
 {% extends "layout.html" %}
+{% from "components/audio_player.html" import audio_player %}
+{% from "components/dive_deeper_links.html" import dive_deeper_links %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-50">
@@ -58,6 +60,32 @@
                 </ul>
                 {% endif %}
 
+                <!-- Audio Player Section -->
+                {{ audio_player(item, 'public-') }}
+
+                <!-- Dive Deeper with AI Section -->
+                {{ dive_deeper_links(item, 'public') }}
+
+                <!-- Want more detail? Section -->
+                {% if item.deeper_context %}
+                <div class="mb-4">
+                    <button data-item-id="{{ item.id }}" 
+                            data-prefix="public"
+                            class="toggle-deeper-context-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                        <svg data-icon-id="{{ item.id }}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                        <span>Want a bit more detail?</span>
+                    </button>
+                    <div id="deeper-context-public-{{ item.id }}" 
+                         class="hidden mt-4 p-5 bg-slate-50 border-l-4 border-slate-400 rounded-r-lg">
+                        <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-line">
+                            {{ item.deeper_context }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 {% if item.content_html %}
                 <div class="prose max-w-none text-gray-600">
                     {{ item.content_html|safe }}
@@ -85,4 +113,6 @@
         </div>
     </div>
 </div>
+
+{# JavaScript is now in shared files: toast.js and brief-audio.js #}
 {% endblock %}
