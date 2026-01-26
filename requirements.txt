@@ -47,8 +47,8 @@ beautifulsoup4>=4.12.0
 readability-lxml>=0.8.1
 pytz>=2023.3
 
-# Audio/TTS (XTTS v2 - Open Source)
-TTS==0.22.0
+# Audio/TTS - Disabled for deployment (package too large for bundle)
+# TTS==0.22.0  # XTTS v2 requires PyTorch (~2GB+) - use API-based TTS for production
 requests>=2.31.0
 
 # Optional: S3 storage support
