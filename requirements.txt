@@ -34,7 +34,7 @@ APScheduler==3.10.4
 
 # Encryption for API keys (Phase 4)
 cryptography>=43.0.1
-pandas>=1.5.0,<2.0.0
+pandas>=2.0.0
 
 # Social Media Posting
 atproto>=0.0.30
@@ -47,13 +47,9 @@ beautifulsoup4>=4.12.0
 readability-lxml>=0.8.1
 pytz>=2023.3
 
-# Audio/TTS - Disabled for deployment (package too large for bundle)
-# TTS==0.22.0  # XTTS v2 requires PyTorch (~2GB+) - use API-based TTS for production
-requests>=2.31.0
-
-# Optional: S3 storage support
-# boto3>=1.34.0
-
 # Testing
 pytest>=7.4.0
 pytest-cov>=4.1.0
+
+# Pin protobuf to compatible version (required by replit, googleapis packages)
+protobuf>=4.21.8,<5.0.0
