@@ -48,7 +48,7 @@ readability-lxml>=0.8.1
 pytz>=2023.3
 
 # Audio/TTS (XTTS v2 - Open Source)
-TTS>=0.22.0
+TTS>=0.23.0
 requests>=2.31.0
 
 # Optional: S3 storage support
