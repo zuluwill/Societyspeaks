@@ -16,7 +16,7 @@ from typing import Optional, List, Tuple, Dict
 from urllib.parse import quote
 
 from flask import url_for
-from app.utils import get_base_url
+from app.storage_utils import get_base_url
 
 logger = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from replit.object_storage import Client
 from werkzeug.utils import secure_filename
 from werkzeug.datastructures import FileStorage
-from app.utils import get_recent_activity
+from app.storage_utils import get_recent_activity
 from app.middleware import track_profile_view
 
 
