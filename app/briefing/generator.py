@@ -432,6 +432,9 @@ class BriefingGenerator:
         # Generate content via LLM
         llm_content = self._generate_item_content(ingested_item, briefing)
         
+        # Generate deeper context (for "Want more detail?" feature)
+        deeper_context = self._generate_deeper_context(ingested_item, briefing, llm_content)
+        
         # Get source name for denormalized storage
         source_name = llm_content.get('source_name', '')
         if not source_name and ingested_item.source:
@@ -459,7 +462,8 @@ class BriefingGenerator:
             source_name=source_name,
             source_url=ingested_item.url,  # Link to original article
             topic_category=category,  # Store category for analytics and diversity tracking
-            selection_score=getattr(ingested_item, '_selection_score', None)  # Score at time of selection
+            selection_score=getattr(ingested_item, '_selection_score', None),  # Score at time of selection
+            deeper_context=deeper_context
         )
         
         return run_item
@@ -865,6 +869,115 @@ Respond in JSON format:
         html = html.replace('\n- ', '\n<li>')
         # Wrap in basic structure
         return f"<div class='brief-content'>{html}</div>"
+    
+    def _generate_deeper_context(
+        self,
+        ingested_item: IngestedItem,
+        briefing: Briefing,
+        existing_content: Dict[str, Any]
+    ) -> Optional[str]:
+        """
+        Generate deeper context for "Want more detail?" feature.
+        
+        Provides extended background, historical context, and deeper analysis
+        that goes beyond the summary bullets.
+        
+        Returns:
+            str: Extended context text, or None if generation fails
+        """
+        if not self.llm_available:
+            return None
+        
+        try:
+            # Get current date for context
+            current_date = datetime.now()
+            current_year = current_date.year
+            date_context = current_date.strftime('%d %B %Y')
+            
+            source_name = ingested_item.source.name if ingested_item.source else 'Unknown Source'
+            content_text = ingested_item.content_text[:4000] if ingested_item.content_text else ingested_item.title
+            
+            tone = briefing.tone or 'calm_neutral'
+            tone_instructions = self._get_tone_instructions(tone)
+            
+            prompt = f"""You are a senior news analyst providing deeper context for a news story.
+
+TODAY'S DATE: {date_context}
+CURRENT YEAR: {current_year}
+
+SOURCE: {source_name}
+TITLE: {ingested_item.title}
+
+EXISTING SUMMARY:
+Headline: {existing_content.get('headline', 'N/A')}
+Key Points: {chr(10).join(f"- {b}" for b in existing_content.get('bullets', []))}
+
+FULL CONTENT:
+{content_text}
+
+Generate a deeper dive (3-4 paragraphs) that provides:
+
+1. HISTORICAL CONTEXT: What led to this moment? What similar events happened before?
+2. BROADER IMPLICATIONS: What does this mean for related issues, sectors, or regions?
+3. KEY PLAYERS: Who are the main actors, organizations, or institutions involved?
+4. WHAT TO WATCH: What developments should readers monitor in the coming days/weeks?
+
+WRITING STYLE: {tone_instructions}
+
+Guidelines:
+- Use British English (analyse, centre, organisation)
+- Be specific with numbers, dates, and names
+- Provide genuine insight, not just restate the summary
+- Connect this story to larger trends or patterns
+- Keep tone calm and analytical
+- Avoid speculation - stick to what's known from sources
+
+Return ONLY the deeper context text (no JSON, no labels, just the prose)."""
+
+            if self.provider == 'openai':
+                import openai
+                client = openai.OpenAI(api_key=self.api_key)
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a news analyst providing deeper context."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=800
+                )
+                content = response.choices[0].message.content
+            elif self.provider == 'anthropic':
+                import anthropic
+                client = anthropic.Anthropic(api_key=self.api_key)
+                response = client.messages.create(
+                    model="claude-3-haiku-20240307",
+                    max_tokens=800,
+                    system="You are a news analyst providing deeper context.",
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                content_block = response.content[0]
+                content = getattr(content_block, 'text', None) or str(content_block)
+            else:
+                return None
+            
+            # Clean up response
+            context = content.strip() if content else None
+            
+            # Limit length (roughly 800-1200 words)
+            if context and len(context) > 2000:
+                truncated = context[:2000]
+                last_period = truncated.rfind('.')
+                if last_period > 1500:
+                    context = truncated[:last_period + 1]
+                else:
+                    context = truncated + "..."
+            
+            return context if context else None
+            
+        except Exception as e:
+            logger.warning(f"Failed to generate deeper context for item {ingested_item.id}: {e}")
+            return None
     
     def _markdown_to_html_simple(self, markdown: str) -> str:
         """Simple markdown to HTML converter"""

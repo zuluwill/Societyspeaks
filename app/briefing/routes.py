@@ -1832,6 +1832,50 @@ def unsubscribe(briefing_id, token):
 # BriefRun Management Routes
 # =============================================================================
 
+@briefing_bp.route('/api/<int:briefing_id>/runs/<int:run_id>/audio/generate', methods=['POST'])
+@login_required
+@limiter.limit("5 per minute")
+def generate_brief_run_audio(briefing_id, run_id):
+    """
+    Create batch audio generation job for BriefRun.
+    
+    Requires admin authentication - audio generation is resource-intensive.
+    """
+    from app.brief.audio_generator import audio_generator
+    from app.models import BriefRun
+    
+    # Require admin authentication
+    if not current_user.is_authenticated or not current_user.is_admin:
+        return jsonify({'error': 'Admin access required for audio generation'}), 403
+    
+    brief_run = BriefRun.query.filter_by(
+        id=run_id,
+        briefing_id=briefing_id
+    ).first_or_404()
+    
+    # Get voice ID from request (optional)
+    data = request.get_json() or {}
+    voice_id = data.get('voice_id')
+    
+    # Create generation job
+    job = audio_generator.create_generation_job(
+        brief_id=None,  # Not used for brief_run
+        voice_id=voice_id,
+        brief_type='brief_run',
+        brief_run_id=brief_run.id
+    )
+    
+    if not job:
+        return jsonify({'error': 'Failed to create audio generation job'}), 500
+    
+    return jsonify({
+        'success': True,
+        'job_id': job.id,
+        'status': job.status,
+        'total_items': job.total_items
+    })
+
+
 @briefing_bp.route('/<int:briefing_id>/runs/<int:run_id>', methods=['GET', 'POST'])
 @login_required
 @limiter.limit("60/minute")
@@ -1854,11 +1898,20 @@ def view_run(briefing_id, run_id):
     
     items = sorted(brief_run.items, key=lambda x: x.position or 0)
     
+    # Check for existing audio generation job
+    from app.models import AudioGenerationJob
+    existing_job = AudioGenerationJob.query.filter_by(
+        brief_run_id=brief_run.id,
+        brief_type='brief_run',
+        status__in=['queued', 'processing']
+    ).first()
+    
     return render_template(
         'briefing/run_view.html',
         briefing=briefing,
         brief_run=brief_run,
-        items=items
+        items=items,
+        existing_audio_job=existing_job
     )
 
 

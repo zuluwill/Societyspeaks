@@ -240,6 +240,9 @@ class BriefGenerator:
         # Generate content via LLM
         llm_content = self._generate_item_content(topic, articles)
 
+        # Generate deeper context (for "Want more detail?" feature)
+        deeper_context = self._generate_deeper_context(topic, articles, llm_content)
+
         # Extract verification links
         verification_links = self._extract_verification_links(articles)
 
@@ -274,6 +277,7 @@ class BriefGenerator:
             personal_impact=llm_content.get('personal_impact'),
             so_what=llm_content.get('so_what'),
             perspectives=llm_content.get('perspectives'),
+            deeper_context=deeper_context,
             coverage_distribution=coverage_data['distribution'],
             coverage_imbalance=coverage_data['imbalance_score'],
             source_count=coverage_data['source_count'],
@@ -348,6 +352,9 @@ class BriefGenerator:
         # Generate content via LLM (same as regular items)
         llm_content = self._generate_item_content(topic, articles)
 
+        # Generate deeper context
+        deeper_context = self._generate_deeper_context(topic, articles, llm_content)
+
         # Extract verification links
         verification_links = self._extract_verification_links(articles)
 
@@ -376,6 +383,7 @@ class BriefGenerator:
             personal_impact=llm_content.get('personal_impact'),
             so_what=llm_content.get('so_what'),
             perspectives=llm_content.get('perspectives'),
+            deeper_context=deeper_context,
             coverage_distribution=coverage_data['distribution'],
             coverage_imbalance=coverage_data['imbalance_score'],
             source_count=coverage_data['source_count'],
@@ -698,6 +706,104 @@ Return JSON:
             'so_what': None,
             'perspectives': None
         }
+
+    def _generate_deeper_context(
+        self,
+        topic: TrendingTopic,
+        articles: List[NewsArticle],
+        existing_content: Dict[str, Any]
+    ) -> Optional[str]:
+        """
+        Generate deeper context for "Want more detail?" feature.
+        
+        Provides extended background, historical context, and deeper analysis
+        that goes beyond the summary bullets.
+        
+        Returns:
+            str: Extended context text, or None if generation fails
+        """
+        if not self.llm_available:
+            return None
+        
+        try:
+            # Get current date for context
+            current_date = datetime.now()
+            current_year = current_date.year
+            date_context = current_date.strftime('%d %B %Y')
+            
+            # Prepare article summaries (use more articles for deeper context)
+            article_context = []
+            for i, article in enumerate(articles[:12], start=1):  # More articles for context
+                summary = article.summary[:400] if article.summary else article.title
+                source_name = article.source.name if article.source else 'Unknown'
+                pub_date = f" ({article.published_at.strftime('%d %b %Y')})" if article.published_at else ""
+                article_context.append(f"{i}. [{source_name}]{pub_date} {article.title}\n   {summary}")
+            
+            article_text = '\n'.join(article_context)
+            
+            prompt = f"""You are a senior news analyst providing deeper context for a news story.
+
+TODAY'S DATE: {date_context}
+CURRENT YEAR: {current_year}
+
+TOPIC: {topic.title}
+
+EXISTING SUMMARY:
+Headline: {existing_content.get('headline', 'N/A')}
+Key Points: {chr(10).join(f"- {b}" for b in existing_content.get('bullets', []))}
+So What: {existing_content.get('so_what', 'N/A')}
+
+ARTICLES:
+{article_text}
+
+Generate a deeper dive (3-4 paragraphs) that provides:
+
+1. HISTORICAL CONTEXT: What led to this moment? What similar events happened before?
+2. BROADER IMPLICATIONS: What does this mean for related issues, sectors, or regions?
+3. KEY PLAYERS: Who are the main actors, organizations, or institutions involved?
+4. WHAT TO WATCH: What developments should readers monitor in the coming days/weeks?
+
+Guidelines:
+- Use British English (analyse, centre, organisation)
+- Be specific with numbers, dates, and names
+- Provide genuine insight, not just restate the summary
+- Connect this story to larger trends or patterns
+- Keep tone calm and analytical
+- Avoid speculation - stick to what's known from sources
+
+Return ONLY the deeper context text (no JSON, no labels, just the prose)."""
+
+            response = self._call_llm(prompt)
+            
+            # Clean up response (remove JSON markers if present)
+            context = response.strip()
+            if context.startswith('{') or context.startswith('"'):
+                # Try to extract text from JSON
+                try:
+                    import json
+                    data = json.loads(context)
+                    if isinstance(data, dict):
+                        context = data.get('deeper_context') or data.get('context') or data.get('text', context)
+                    elif isinstance(data, str):
+                        context = data
+                except:
+                    pass
+            
+            # Limit length (roughly 800-1200 words)
+            if len(context) > 2000:
+                # Truncate at sentence boundary
+                truncated = context[:2000]
+                last_period = truncated.rfind('.')
+                if last_period > 1500:  # Only truncate if we have a reasonable sentence
+                    context = truncated[:last_period + 1]
+                else:
+                    context = truncated + "..."
+            
+            return context if context else None
+            
+        except Exception as e:
+            logger.warning(f"Failed to generate deeper context for topic {topic.id}: {e}")
+            return None
 
     def _extract_verification_links(
         self,

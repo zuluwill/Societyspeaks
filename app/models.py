@@ -1433,6 +1433,14 @@ class BriefItem(db.Model):
     # Schema: see PolymarketMarket.to_signal_dict()
     market_signal = db.Column(db.JSON)  # null if no matching market
 
+    # Deeper context for "Want more detail?" feature
+    deeper_context = db.Column(db.Text)  # Extended analysis and background
+
+    # Audio/TTS integration (XTTS v2 - open source)
+    audio_url = db.Column(db.String(500))  # URL to generated audio file
+    audio_voice_id = db.Column(db.String(100))  # XTTS voice ID used
+    audio_generated_at = db.Column(db.DateTime)  # When audio was generated
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -1460,6 +1468,9 @@ class BriefItem(db.Model):
             'cta_text': self.cta_text,
             'is_underreported': self.is_underreported,
             'market_signal': self.market_signal,
+            'deeper_context': self.deeper_context,
+            'audio_url': self.audio_url,
+            'audio_voice_id': self.audio_voice_id,
             'trending_topic': self.trending_topic.to_dict() if self.trending_topic else None
         }
 
@@ -1508,6 +1519,83 @@ class NewsPerspectiveCache(db.Model):
 
     def __repr__(self):
         return f'<NewsPerspectiveCache topic_id={self.trending_topic_id} date={self.generated_date}>'
+
+
+class AudioGenerationJob(db.Model):
+    """
+    Tracks batch audio generation jobs for daily briefs.
+
+    Allows generating audio for all items in a brief at once,
+    with progress tracking and status updates.
+
+    Optimized for Replit deployment with stale job recovery.
+    """
+    __tablename__ = 'audio_generation_job'
+    __table_args__ = (
+        db.Index('idx_audio_job_brief', 'brief_id'),
+        db.Index('idx_audio_job_status', 'status'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Support both DailyBrief and BriefRun (polymorphic)
+    brief_type = db.Column(db.String(20), nullable=False, default='daily_brief')  # 'daily_brief' | 'brief_run'
+    brief_id = db.Column(db.Integer, db.ForeignKey('daily_brief.id', ondelete='CASCADE'), nullable=True)  # For DailyBrief
+    brief_run_id = db.Column(db.Integer, db.ForeignKey('brief_run.id', ondelete='CASCADE'), nullable=True)  # For BriefRun
+    
+    voice_id = db.Column(db.String(100), nullable=True)  # XTTS voice ID
+
+    status = db.Column(db.String(20), nullable=False, default='queued')  # queued, processing, completed, failed
+    progress = db.Column(db.Integer, default=0)  # 0-100 percentage
+    total_items = db.Column(db.Integer, nullable=False)
+    completed_items = db.Column(db.Integer, default=0)
+    failed_items = db.Column(db.Integer, default=0)  # Track items that failed to generate
+    error_message = db.Column(db.Text, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    started_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+
+    # Relationships
+    brief = db.relationship('DailyBrief', backref='audio_jobs', foreign_keys=[brief_id])
+    brief_run = db.relationship('BriefRun', backref='audio_jobs', foreign_keys=[brief_run_id])
+
+    @property
+    def progress_percentage(self):
+        """Calculate progress percentage based on processed items (completed + failed)."""
+        if self.total_items == 0:
+            return 0
+        processed = (self.completed_items or 0) + (self.failed_items or 0)
+        # Cap at 100% to handle edge cases
+        return min(int((processed / self.total_items) * 100), 100)
+
+    @property
+    def is_stale(self):
+        """Check if job is stuck in processing for too long (30 minutes)."""
+        if self.status != 'processing' or not self.started_at:
+            return False
+        return datetime.utcnow() - self.started_at > timedelta(minutes=30)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'brief_type': self.brief_type,
+            'brief_id': self.brief_id,
+            'brief_run_id': self.brief_run_id,
+            'voice_id': self.voice_id,
+            'status': self.status,
+            'progress': self.progress_percentage,
+            'total_items': self.total_items,
+            'completed_items': self.completed_items or 0,
+            'failed_items': self.failed_items or 0,
+            'error_message': self.error_message,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'started_at': self.started_at.isoformat() if self.started_at else None,
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
+        }
+
+    def __repr__(self):
+        return f'<AudioGenerationJob brief_id={self.brief_id} status={self.status} progress={self.progress_percentage}%>'
 
 
 class AdminSettings(db.Model):
@@ -3320,6 +3408,14 @@ class BriefRunItem(db.Model):
     # Selection metadata (for learning/debugging)
     selection_score = db.Column(db.Float, nullable=True)  # Score at time of selection
 
+    # Deeper context for "Want more detail?" feature
+    deeper_context = db.Column(db.Text)  # Extended analysis and background
+
+    # Audio/TTS integration (XTTS v2 - open source)
+    audio_url = db.Column(db.String(500))  # URL to generated audio file
+    audio_voice_id = db.Column(db.String(100))  # XTTS voice ID used
+    audio_generated_at = db.Column(db.DateTime)  # When audio was generated
+
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -3334,6 +3430,9 @@ class BriefRunItem(db.Model):
             'headline': self.headline,
             'summary_bullets': self.summary_bullets,
             'content_markdown': self.content_markdown,
+            'deeper_context': self.deeper_context,
+            'audio_url': self.audio_url,
+            'audio_voice_id': self.audio_voice_id,
         }
 
     def __repr__(self):

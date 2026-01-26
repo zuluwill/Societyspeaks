@@ -497,6 +497,101 @@ def methodology():
     return render_template('brief/methodology.html')
 
 
+@brief_bp.route('/api/brief/<int:brief_id>/audio/generate', methods=['POST'])
+@limiter.limit("5 per minute")
+def generate_brief_audio(brief_id):
+    """
+    Create batch audio generation job for entire brief.
+
+    Requires admin authentication - audio generation is resource-intensive
+    and should be protected from abuse.
+    """
+    from app.brief.audio_generator import audio_generator
+
+    # Require admin authentication for audio generation
+    # This is a resource-intensive operation that should be protected
+    if not current_user.is_authenticated or not current_user.is_admin:
+        return jsonify({'error': 'Admin access required for audio generation'}), 403
+
+    brief = DailyBrief.query.get_or_404(brief_id)
+
+    # Get voice ID from request (optional)
+    data = request.get_json() or {}
+    voice_id = data.get('voice_id')
+
+    # Create generation job
+    job = audio_generator.create_generation_job(brief_id, voice_id=voice_id)
+
+    if not job:
+        return jsonify({'error': 'Failed to create audio generation job'}), 500
+
+    return jsonify({
+        'success': True,
+        'job_id': job.id,
+        'status': job.status,
+        'total_items': job.total_items
+    })
+
+
+@brief_bp.route('/api/brief/audio/job/<int:job_id>/status')
+@limiter.limit("30 per minute")
+def get_audio_job_status(job_id):
+    """Get status of audio generation job"""
+    from app.brief.audio_generator import audio_generator
+    from app.models import AudioGenerationJob
+    
+    job = AudioGenerationJob.query.get_or_404(job_id)
+    
+    return jsonify(job.to_dict())
+
+
+@brief_bp.route('/audio/<filename>')
+@limiter.limit("60 per minute")
+def serve_audio(filename):
+    """Serve audio files from storage"""
+    from app.brief.audio_storage import audio_storage
+    from flask import Response
+    
+    # Security: validate filename to prevent path traversal
+    if not filename or '..' in filename or '/' in filename or '\\' in filename:
+        return jsonify({'error': 'Invalid filename'}), 400
+    
+    # Additional validation: ensure filename matches expected pattern
+    # Format: brief_{brief_id}_item_{item_id}_{timestamp}_{hash}.wav
+    import re
+    expected_pattern = r'^brief_\d+_item_\d+_\d{8}_\d{6}_[a-f0-9]{8}\.(wav|mp3)$'
+    if not re.match(expected_pattern, filename):
+        logger.warning(f"Suspicious filename pattern: {filename}")
+        # Still allow it for backward compatibility, but log for monitoring
+    
+    try:
+        audio_data = audio_storage.get(filename)
+        
+        if not audio_data:
+            return jsonify({'error': 'Audio not found'}), 404
+        
+        # Determine content type from extension
+        if filename.endswith('.wav'):
+            mimetype = 'audio/wav'
+        elif filename.endswith('.mp3'):
+            mimetype = 'audio/mpeg'
+        else:
+            mimetype = 'audio/wav'  # Default
+        
+        return Response(
+            audio_data,
+            mimetype=mimetype,
+            headers={
+                'Content-Disposition': f'inline; filename="{filename}"',
+                'Cache-Control': 'public, max-age=31536000'  # Cache for 1 year
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Failed to serve audio: {e}")
+        return jsonify({'error': 'Failed to serve audio'}), 500
+
+
 @brief_bp.route('/brief/underreported')
 def underreported():
     """Show underreported stories (high civic value, low coverage)"""

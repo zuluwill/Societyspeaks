@@ -36,6 +36,46 @@
             </div>
         </div>
 
+        <!-- Generate All Audio Section (Admin Only) -->
+        {% if current_user.is_authenticated and current_user.is_admin %}
+        <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border border-purple-200 p-6 mb-8">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-1">Listen to the Brief</h3>
+                    <p class="text-sm text-gray-600">Generate audio for all stories in this brief</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select id="voice-select-run" class="text-sm border border-gray-300 rounded-lg px-3 py-2 bg-white">
+                        <option value="professional">Professional</option>
+                        <option value="warm">Warm</option>
+                        <option value="authoritative">Authoritative</option>
+                        <option value="calm">Calm</option>
+                        <option value="friendly">Friendly</option>
+                    </select>
+                    <button data-brief-run-id="{{ brief_run.id }}" data-briefing-id="{{ briefing.id }}"
+                            id="generate-all-audio-btn-run"
+                            class="inline-flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        </svg>
+                        <span>Generate All Audio</span>
+                    </button>
+                </div>
+            </div>
+            <div id="audio-generation-status-run" class="hidden mt-4">
+                <div class="bg-white rounded-lg p-4">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                            <div id="audio-progress-bar-run" class="bg-purple-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <span id="audio-progress-text-run" class="text-sm font-medium text-gray-700">0%</span>
+                    </div>
+                    <p id="audio-status-message-run" class="text-sm text-gray-600">Preparing...</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Content -->
         <div class="bg-white shadow rounded-lg p-8 mb-6">
             {% if brief_run.approved_html %}
@@ -55,21 +95,125 @@
         {% if items %}
         <div class="bg-white shadow rounded-lg p-6 mb-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Items ({{ items|length }})</h2>
-            <div class="space-y-4">
+            <div class="space-y-6">
                 {% for item in items %}
-                <div class="border-l-4 border-blue-500 pl-4 py-2">
-                    <h3 class="font-semibold text-gray-900">{{ item.headline or 'Item ' ~ item.position }}</h3>
+                <article class="bg-white rounded-lg border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-3">{{ item.headline or 'Item ' ~ item.position }}</h3>
+                    
                     {% if item.summary_bullets %}
-                    <ul class="mt-2 list-disc list-inside text-sm text-gray-600 space-y-1">
+                    <ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
                         {% for bullet in item.summary_bullets %}
                         <li>{{ bullet }}</li>
                         {% endfor %}
                     </ul>
                     {% endif %}
-                    {% if item.content_markdown %}
-                    <p class="mt-2 text-sm text-gray-600">{{ item.content_markdown[:200] }}...</p>
+                    
+                    <!-- Audio Player Section -->
+                    {% if item.audio_url %}
+                    <div class="mb-4">
+                        <audio id="audio-player-run-{{ item.id }}" controls class="w-full h-10">
+                            <source src="{{ item.audio_url }}" type="audio/wav">
+                            Your browser does not support the audio element.
+                        </audio>
+                        {% if item.audio_voice_id %}
+                        <p class="text-xs text-gray-500 mt-1">Voice: {{ item.audio_voice_id|title }}</p>
+                        {% endif %}
+                    </div>
                     {% endif %}
-                </div>
+
+                    <!-- Dive Deeper with AI Section -->
+                    <div class="mb-4">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="text-sm font-medium text-gray-700">Dive deeper with AI:</span>
+                            {% set item_text = item.headline + ' ' + (item.summary_bullets|join(' ') if item.summary_bullets else '') %}
+                            <a href="https://chat.openai.com/?q={{ item_text|urlencode }}" 
+                               target="_blank" 
+                               rel="noopener"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                                </svg>
+                                ChatGPT
+                            </a>
+                            <a href="https://claude.ai/new?prompt={{ ('Analyze this news story: ' + item_text)|urlencode }}" 
+                               target="_blank" 
+                               rel="noopener"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                                </svg>
+                                Claude
+                            </a>
+                            <a href="https://www.perplexity.ai/?q={{ item_text|urlencode }}" 
+                               target="_blank" 
+                               rel="noopener"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                                </svg>
+                                Perplexity
+                            </a>
+                            <button data-item-id="{{ item.id }}" 
+                                    class="copy-dive-deeper-btn inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                                Copy Text
+                            </button>
+                        </div>
+                        <textarea id="dive-deeper-text-run-{{ item.id }}" class="hidden">{{ item.headline }}
+
+Key Points:
+{% for bullet in item.summary_bullets %}- {{ bullet }}
+{% endfor %}
+{% if item.content_markdown %}
+Content: {{ item.content_markdown[:500] }}
+{% endif %}
+{% if item.deeper_context %}
+Deeper Context: {{ item.deeper_context }}
+{% endif %}
+
+Can you provide additional analysis, historical context, and implications of this story?</textarea>
+                    </div>
+
+                    <!-- Want more detail? Section -->
+                    {% if item.deeper_context %}
+                    <div class="mb-4">
+                        <button data-item-id="{{ item.id }}" 
+                                class="toggle-deeper-context-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                            <svg data-icon-id="{{ item.id }}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                            <span>Want a bit more detail?</span>
+                        </button>
+                        <div id="deeper-context-run-{{ item.id }}" 
+                             class="hidden mt-4 p-5 bg-slate-50 border-l-4 border-slate-400 rounded-r-lg">
+                            <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-line">
+                                {{ item.deeper_context }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if item.content_markdown %}
+                    <div class="prose max-w-none text-gray-600">
+                        {{ item.content_markdown|markdown|safe }}
+                    </div>
+                    {% elif item.content_html %}
+                    <div class="prose max-w-none text-gray-600">
+                        {{ item.content_html|safe }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if item.source_url %}
+                    <div class="mt-4 pt-4 border-t border-gray-100">
+                        <a href="{{ item.source_url }}" target="_blank" rel="noopener"
+                           class="text-sm text-blue-600 hover:text-blue-800">
+                            Read original source &rarr;
+                        </a>
+                    </div>
+                    {% endif %}
+                </article>
                 {% endfor %}
             </div>
         </div>
@@ -126,4 +270,199 @@
         </div>
     </div>
 </div>
+
+<script>
+// Use event listeners instead of inline onclick (best practice)
+document.addEventListener('DOMContentLoaded', function() {
+    // Audio generation for BriefRun
+    const generateBtn = document.getElementById('generate-all-audio-btn-run');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', function() {
+            const briefRunId = this.dataset.briefRunId;
+            const briefingId = this.dataset.briefingId;
+            generateAllAudioForRun(briefRunId, briefingId);
+        });
+    }
+    
+    // Toggle deeper context buttons
+    document.querySelectorAll('.toggle-deeper-context-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            toggleDeeperContextForRun(itemId);
+        });
+    });
+    
+    // Copy dive deeper text buttons
+    document.querySelectorAll('.copy-dive-deeper-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            copyDiveDeeperTextForRun(itemId);
+        });
+    });
+});
+
+function toggleDeeperContextForRun(itemId) {
+    const contextDiv = document.getElementById('deeper-context-run-' + itemId);
+    const icon = document.querySelector(`[data-icon-id="${itemId}"]`);
+    const button = document.querySelector(`.toggle-deeper-context-btn[data-item-id="${itemId}"]`);
+    
+    if (!contextDiv || !button) return;
+    
+    if (contextDiv.classList.contains('hidden')) {
+        contextDiv.classList.remove('hidden');
+        if (icon) icon.style.transform = 'rotate(180deg)';
+        const span = button.querySelector('span');
+        if (span) span.textContent = 'Show less detail';
+    } else {
+        contextDiv.classList.add('hidden');
+        if (icon) icon.style.transform = 'rotate(0deg)';
+        const span = button.querySelector('span');
+        if (span) span.textContent = 'Want a bit more detail?';
+    }
+}
+
+async function generateAllAudioForRun(briefRunId, briefingId) {
+    const button = document.getElementById('generate-all-audio-btn-run');
+    const voiceSelect = document.getElementById('voice-select-run');
+    const statusDiv = document.getElementById('audio-generation-status-run');
+    const progressBar = document.getElementById('audio-progress-bar-run');
+    const progressText = document.getElementById('audio-progress-text-run');
+    const statusMessage = document.getElementById('audio-status-message-run');
+    
+    if (!button) return;
+    
+    // Disable button
+    button.disabled = true;
+    const span = button.querySelector('span');
+    if (span) span.textContent = 'Generating...';
+    
+    // Show status
+    if (statusDiv) statusDiv.classList.remove('hidden');
+    if (statusMessage) statusMessage.textContent = 'Creating audio generation job...';
+    
+    try {
+        const voiceId = voiceSelect ? voiceSelect.value : 'professional';
+        const response = await fetch(`/briefing/api/${briefingId}/runs/${briefRunId}/audio/generate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ voice_id: voiceId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Start polling for status
+            pollAudioJobStatus(data.job_id, progressBar, progressText, statusMessage, button, 'run');
+        } else {
+            showError('Failed to start audio generation: ' + (data.error || 'Unknown error'));
+            button.disabled = false;
+            if (span) span.textContent = 'Generate All Audio';
+            if (statusDiv) statusDiv.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error('Audio generation error:', error);
+        showError('Failed to start audio generation. Please try again.');
+        button.disabled = false;
+        if (span) span.textContent = 'Generate All Audio';
+        if (statusDiv) statusDiv.classList.add('hidden');
+    }
+}
+
+async function pollAudioJobStatus(jobId, progressBar, progressText, statusMessage, button, suffix = '') {
+    const maxAttempts = 300; // 5 minutes max
+    let attempts = 0;
+    
+    const poll = async () => {
+        try {
+            const response = await fetch(`/api/brief/audio/job/${jobId}/status`);
+            const data = await response.json();
+            
+            const progress = data.progress || 0;
+            const status = data.status;
+            
+            if (progressBar) progressBar.style.width = progress + '%';
+            if (progressText) progressText.textContent = progress + '%';
+            
+            if (status === 'completed') {
+                const failedMsg = data.failed_items > 0 ? ` (${data.failed_items} failed)` : '';
+                if (statusMessage) statusMessage.textContent = `Completed! Generated audio for ${data.completed_items}/${data.total_items} items${failedMsg}.`;
+                if (button) {
+                    button.disabled = false;
+                    const span = button.querySelector('span');
+                    if (span) span.textContent = 'Generate All Audio';
+                }
+                // Reload page after 2 seconds
+                setTimeout(() => window.location.reload(), 2000);
+                return;
+            } else if (status === 'failed') {
+                if (statusMessage) statusMessage.textContent = 'Generation failed: ' + (data.error_message || 'Unknown error');
+                if (button) {
+                    button.disabled = false;
+                    const span = button.querySelector('span');
+                    if (span) span.textContent = 'Retry Generation';
+                }
+                return;
+            } else if (status === 'processing') {
+                const processed = (data.completed_items || 0) + (data.failed_items || 0);
+                const failedMsg = data.failed_items > 0 ? ` (${data.failed_items} failed)` : '';
+                if (statusMessage) statusMessage.textContent = `Generating audio... ${processed}/${data.total_items} items processed${failedMsg}`;
+            } else {
+                if (statusMessage) statusMessage.textContent = 'Queued... waiting to start (model loading may take 30-60 seconds)';
+            }
+            
+            attempts++;
+            if (attempts < maxAttempts && status !== 'completed' && status !== 'failed') {
+                setTimeout(poll, 1000);
+            } else if (attempts >= maxAttempts) {
+                if (statusMessage) statusMessage.textContent = 'Generation is taking longer than expected. Please refresh the page.';
+                if (button) {
+                    button.disabled = false;
+                    const span = button.querySelector('span');
+                    if (span) span.textContent = 'Generate All Audio';
+                }
+            }
+        } catch (error) {
+            console.error('Status polling error:', error);
+            if (statusMessage) statusMessage.textContent = 'Error checking status. Please refresh the page.';
+            if (button) {
+                button.disabled = false;
+                const span = button.querySelector('span');
+                if (span) span.textContent = 'Generate All Audio';
+            }
+        }
+    };
+    
+    poll();
+}
+
+function copyDiveDeeperTextForRun(itemId) {
+    const textarea = document.getElementById('dive-deeper-text-run-' + itemId);
+    if (!textarea) return;
+    
+    textarea.classList.remove('hidden');
+    textarea.select();
+    document.execCommand('copy');
+    textarea.classList.add('hidden');
+    
+    // Show feedback
+    const button = event.target.closest('button');
+    if (!button) return;
+    const originalHTML = button.innerHTML;
+    button.innerHTML = '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> Copied!';
+    button.classList.add('text-green-600', 'bg-green-50');
+    
+    setTimeout(() => {
+        button.innerHTML = originalHTML;
+        button.classList.remove('text-green-600', 'bg-green-50');
+    }, 2000);
+}
+
+function showError(message) {
+    // Better error handling - could use toast notification library
+    // For now, use alert but could be improved
+    alert(message);
+}
+</script>
 {% endblock %}
