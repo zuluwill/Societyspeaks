@@ -65,6 +65,7 @@ BRIEF_FROM_EMAIL = "hello@brief.societyspeaks.io"
 APP_BASE_URL = "https://societyspeaks.io"
 RESEND_FROM_EMAIL = "Society Speaks <hello@brief.societyspeaks.io>"
 RESEND_DAILY_FROM_EMAIL = "Daily Questions <daily@brief.societyspeaks.io>"
+AUDIO_ENABLED = "false"
 
 [userenv.production]
 
