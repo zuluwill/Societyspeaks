@@ -2,8 +2,8 @@
 Shared constants and utilities for the trending module.
 """
 
-import re
-import html
+# Import centralized text processing utilities (DRY)
+from app.utils.text_processing import strip_html_tags
 
 VALID_TOPICS = [
     'Healthcare', 'Environment', 'Education', 'Technology', 'Economy',
@@ -49,17 +49,7 @@ They value:
 """
 
 
-def strip_html_tags(text: str) -> str:
-    """Remove HTML tags and decode HTML entities from text."""
-    if not text:
-        return ""
-    text = re.sub(r'<br\s*/?>', ' ', text)
-    text = re.sub(r'<p\s*/?>', ' ', text)
-    text = re.sub(r'</p>', ' ', text)
-    text = re.sub(r'<[^>]+>', '', text)
-    text = html.unescape(text)
-    text = re.sub(r'\s+', ' ', text)
-    return text.strip()
+# strip_html_tags is imported from app.utils.text_processing (DRY)
 
 
 def extract_geographic_info_from_articles(articles) -> tuple:
