@@ -252,11 +252,10 @@ class XTTSClient:
                 'authoritative': 'Gracie Wise',     # Confident American tone
                 'calm': 'Tammie Ema',               # Calm, soothing American
                 'friendly': 'Alison Dietlinde',     # Approachable American
-                # British accents (using available speakers - may need testing)
-                # Note: XTTS v2 doesn't have dedicated British speakers, so these
-                # use alternative speakers that may have British-like characteristics
-                'british_professional': 'Geraint',  # British-sounding name (if available)
-                'british_warm': 'Daisy Studious',   # Fallback to warm (closest match)
+                # British accents - XTTS v2 doesn't have dedicated British speakers
+                # Using Claribel Dervla which has clear articulation suitable for formal content
+                'british_professional': 'Claribel Dervla',  # Clear, professional (best available)
+                'british_warm': 'Daisy Studious',   # Warm, friendly
             }
             speaker = speaker_map.get(voice, 'Claribel Dervla')
             
