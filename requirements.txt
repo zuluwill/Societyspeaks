@@ -34,7 +34,7 @@ APScheduler==3.10.4
 
 # Encryption for API keys (Phase 4)
 cryptography>=43.0.1
-pandas>=2.0.0
+pandas>=1.5.0,<2.0.0
 
 # Social Media Posting
 atproto>=0.0.30
@@ -48,7 +48,7 @@ readability-lxml>=0.8.1
 pytz>=2023.3
 
 # Audio/TTS (XTTS v2 - Open Source)
-TTS>=0.23.0
+TTS==0.22.0
 requests>=2.31.0
 
 # Optional: S3 storage support
