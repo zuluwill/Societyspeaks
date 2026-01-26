@@ -1064,45 +1064,42 @@ def process_scheduled_bluesky_posts() -> int:
     """
     Process any discussions that are due to be posted to Bluesky.
     Called by the scheduler every 15 minutes.
-    
-    Uses mark-before-post pattern to prevent double-posting if multiple
-    scheduler instances run concurrently.
-    
+
+    Uses FOR UPDATE SKIP LOCKED to prevent double-posting when multiple
+    scheduler instances (Replit autoscale) run concurrently. Each instance
+    processes only unlocked rows, ensuring no duplicates.
+
     Returns:
         Number of posts sent
     """
     from app import db
     from app.models import Discussion
-    
-    try:
-        now = datetime.utcnow()
-        
-        # Find discussions that are scheduled and due (scheduled time has passed, not yet posted)
-        due_posts = Discussion.query.filter(
-            Discussion.bluesky_scheduled_at.isnot(None),
-            Discussion.bluesky_scheduled_at <= now,
-            Discussion.bluesky_posted_at.is_(None)
-        ).all()
-    except Exception as e:
-        logger.error(f"Error querying scheduled Bluesky posts: {e}")
-        return 0
-    
-    if not due_posts:
-        logger.debug("No scheduled Bluesky posts due")
-        return 0
-    
-    logger.info(f"Processing {len(due_posts)} scheduled Bluesky posts")
 
     base_url = get_base_url()
     posted_count = 0
-    
-    for discussion in due_posts:
+    max_posts_per_run = 10  # Safety limit to prevent runaway loops
+
+    for _ in range(max_posts_per_run):
         try:
-            # CONCURRENT POST HANDLING: Mark as "in progress" before posting
-            # This prevents double-posting if another scheduler instance picks up the same post
+            now = datetime.utcnow()
+
+            # Use FOR UPDATE SKIP LOCKED to prevent race conditions with autoscale
+            # This ensures only one instance processes each post, even when multiple
+            # scheduler instances query at the same time
+            discussion = Discussion.query.filter(
+                Discussion.bluesky_scheduled_at.isnot(None),
+                Discussion.bluesky_scheduled_at <= now,
+                Discussion.bluesky_posted_at.is_(None)
+            ).with_for_update(skip_locked=True).first()
+
+            if not discussion:
+                # No more unlocked posts to process
+                break
+
+            # Mark as "in progress" immediately while we hold the lock
             discussion.bluesky_posted_at = datetime.utcnow()
             db.session.commit()
-            
+
             discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
 
             # Pass discussion object to leverage insights (DRY: reuse existing data)
@@ -1112,7 +1109,7 @@ def process_scheduled_bluesky_posts() -> int:
                 discussion_url=discussion_url,
                 discussion=discussion
             )
-            
+
             if uri:
                 # Update with actual post URI (bluesky_posted_at already set above)
                 discussion.bluesky_post_uri = uri
@@ -1124,17 +1121,18 @@ def process_scheduled_bluesky_posts() -> int:
                 discussion.bluesky_posted_at = None
                 db.session.commit()
                 logger.warning(f"Failed to post discussion {discussion.id} to Bluesky (no URI returned) - will retry")
-                
+
         except Exception as e:
-            logger.error(f"Error posting discussion {discussion.id} to Bluesky: {e}")
+            logger.error(f"Error processing scheduled Bluesky post: {e}")
             try:
-                # Clear bluesky_posted_at on error so it can be retried
-                discussion.bluesky_posted_at = None
-                db.session.commit()
-            except Exception:
                 db.session.rollback()
+            except Exception:
+                pass
             continue
-    
+
+    if posted_count > 0:
+        logger.info(f"Processed {posted_count} scheduled Bluesky posts")
+
     return posted_count
 
 
@@ -1187,51 +1185,48 @@ def process_scheduled_x_posts() -> int:
     """
     Process any discussions that are due to be posted to X.
     Called by the scheduler every 15 minutes.
-    
-    Uses mark-before-post pattern to prevent double-posting if multiple
-    scheduler instances run concurrently.
-    
+
+    Uses FOR UPDATE SKIP LOCKED to prevent double-posting when multiple
+    scheduler instances (Replit autoscale) run concurrently. Each instance
+    processes only unlocked rows, ensuring no duplicates.
+
     Returns:
         Number of posts sent
     """
     from app import db
     from app.models import Discussion
-    
+
     # Check rate limit once at the start (optimization)
     is_limited, limit_reason = _is_x_rate_limited()
     if is_limited:
         logger.warning(f"X rate limit reached, skipping all scheduled posts: {limit_reason}")
         return 0
-    
-    try:
-        now = datetime.utcnow()
-        
-        # Find discussions that are scheduled and due (scheduled time has passed, not yet posted)
-        due_posts = Discussion.query.filter(
-            Discussion.x_scheduled_at.isnot(None),
-            Discussion.x_scheduled_at <= now,
-            Discussion.x_posted_at.is_(None)
-        ).all()
-    except Exception as e:
-        logger.error(f"Error querying scheduled X posts: {e}")
-        return 0
-    
-    if not due_posts:
-        logger.debug("No scheduled X posts due")
-        return 0
-    
-    logger.info(f"Processing {len(due_posts)} scheduled X posts")
 
     base_url = get_base_url()
     posted_count = 0
-    
-    for discussion in due_posts:
+    max_posts_per_run = 10  # Safety limit to prevent runaway loops
+
+    for _ in range(max_posts_per_run):
         try:
-            # CONCURRENT POST HANDLING: Mark as "in progress" before posting
-            # This prevents double-posting if another scheduler instance picks up the same post
+            now = datetime.utcnow()
+
+            # Use FOR UPDATE SKIP LOCKED to prevent race conditions with autoscale
+            # This ensures only one instance processes each post, even when multiple
+            # scheduler instances query at the same time
+            discussion = Discussion.query.filter(
+                Discussion.x_scheduled_at.isnot(None),
+                Discussion.x_scheduled_at <= now,
+                Discussion.x_posted_at.is_(None)
+            ).with_for_update(skip_locked=True).first()
+
+            if not discussion:
+                # No more unlocked posts to process
+                break
+
+            # Mark as "in progress" immediately while we hold the lock
             discussion.x_posted_at = datetime.utcnow()
             db.session.commit()
-            
+
             discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
 
             # Pass discussion object to leverage insights (DRY: reuse existing data)
@@ -1241,7 +1236,7 @@ def process_scheduled_x_posts() -> int:
                 discussion_url=discussion_url,
                 discussion=discussion
             )
-            
+
             if tweet_id:
                 # Update with actual tweet ID (x_posted_at already set above)
                 discussion.x_post_id = tweet_id
@@ -1253,22 +1248,23 @@ def process_scheduled_x_posts() -> int:
                 discussion.x_posted_at = None
                 db.session.commit()
                 logger.warning(f"Failed to post discussion {discussion.id} to X (no ID returned) - will retry")
-        
+
         except DuplicatePostError:
             # Content already exists on X - treat as success, keep x_posted_at set
             # We can't get the tweet_id but the content is posted
-            logger.info(f"Discussion {discussion.id} already posted to X (duplicate detected) - marking as complete")
+            logger.info(f"Discussion already posted to X (duplicate detected) - marking as complete")
             posted_count += 1
             # x_posted_at is already set, just continue
-                
+
         except Exception as e:
-            logger.error(f"Error posting discussion {discussion.id} to X: {e}")
+            logger.error(f"Error processing scheduled X post: {e}")
             try:
-                # Clear x_posted_at on error so it can be retried
-                discussion.x_posted_at = None
-                db.session.commit()
-            except Exception:
                 db.session.rollback()
+            except Exception:
+                pass
             continue
-    
+
+    if posted_count > 0:
+        logger.info(f"Processed {posted_count} scheduled X posts")
+
     return posted_count
