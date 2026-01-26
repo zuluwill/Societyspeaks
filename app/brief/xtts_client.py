@@ -68,7 +68,8 @@ class XTTSClient:
     }
 
     DEFAULT_VOICE = 'professional'
-    MODEL_NAME = "tts_models/en/ljspeech/tacotron2-DDC"
+    # Use XTTS v2 for higher quality multi-speaker synthesis
+    MODEL_NAME = "tts_models/multilingual/multi-dataset/xtts_v2"
 
     # Maximum text length to prevent memory issues on Replit
     MAX_TEXT_LENGTH = 5000
@@ -226,11 +227,25 @@ class XTTSClient:
                 output_path = temp_file.name
                 temp_file.close()
 
-            # Generate audio
+            # Generate audio with XTTS v2
             logger.info(f"Generating audio for {len(text)} characters with voice: {voice}")
+            
+            # XTTS v2 supports multiple speakers - use built-in speaker embeddings
+            # Map voice presets to speaker characteristics
+            speaker_map = {
+                'professional': 'Claribel Dervla',  # Clear, professional
+                'warm': 'Daisy Studious',           # Warm, friendly
+                'authoritative': 'Gracie Wise',     # Confident tone
+                'calm': 'Tammie Ema',               # Calm, soothing
+                'friendly': 'Alison Dietlinde',     # Approachable
+            }
+            speaker = speaker_map.get(voice, 'Claribel Dervla')
+            
             tts.tts_to_file(
                 text=text,
-                file_path=output_path
+                file_path=output_path,
+                speaker=speaker,
+                language=language
             )
 
             logger.info(f"Audio generated successfully: {output_path}")
