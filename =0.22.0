@@ -436,3 +436,7 @@ Building wheels for collected packages: gruut, encodec, bnnumerizer, jieba, doco
   Stored in directory: /home/runner/workspace/.cache/pip/wheels/e0/e7/a0/7c416a3eeaa94ca71bf7bcbc6289cced2263d8ba35e82444bb
 Successfully built gruut encodec bnnumerizer jieba docopt gruut-ipa gruut_lang_de gruut_lang_en gruut_lang_es gruut_lang_fr
 Installing collected packages: sudachipy, jieba, jamo, hangul-romanize, gruut_lang_fr, gruut_lang_es, gruut_lang_en, gruut_lang_de, docopt, bnunicodenormalizer, bnnumerizer, bangla, wasabi, typeguard, triton, tensorboard-data-server, sudachidict_core, spacy-loggers, spacy-legacy, soxr, smart-open, safetensors, regex, python-crfsuite, pysbd, pypinyin, pyparsing, psutil, preshed, platformdirs, pillow, nvidia-cudnn-cu12, numba, num2words, msgpack, more_itertools, markdown, lazy_loader, kiwisolver, jsonlines, gruut-ipa, grpcio, fonttools, einops, decorator, cython, cycler, coqpit, contourpy, cloudpathlib, blis, Babel, audioread, anyascii, absl-py, tensorboard, soundfile, pooch, pandas, nltk, matplotlib, inflect, dateparser, torch, pynndescent, librosa, huggingface-hub, gruut, g2pkk, confection, weasel, umap-learn, trainer, torchaudio, tokenizers, thinc, transformers, spacy, encodec, TTS
+  Attempting uninstall: pandas
+    Found existing installation: pandas 1.5.3
+    Uninstalling pandas-1.5.3:
+      Successfully uninstalled pandas-1.5.3
