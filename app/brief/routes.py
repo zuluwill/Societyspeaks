@@ -8,7 +8,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import current_user
 from datetime import date, datetime, timedelta
 from app.brief import brief_bp
-from app import db, limiter
+from app import db, limiter, csrf
 from app.models import DailyBrief, BriefItem, DailyBriefSubscriber, BriefTeam, User, EmailEvent
 from app.brief.email_client import send_brief_to_subscriber
 from app.trending.conversion_tracking import track_social_click
@@ -498,6 +498,7 @@ def methodology():
 
 
 @brief_bp.route('/api/brief/<int:brief_id>/audio/generate', methods=['POST'])
+@csrf.exempt
 @limiter.limit("5 per minute")
 def generate_brief_audio(brief_id):
     """

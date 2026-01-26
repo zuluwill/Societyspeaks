@@ -14,7 +14,7 @@ from app.briefing.validators import (
     validate_file_upload, validate_timezone, validate_cadence,
     validate_visibility, validate_mode, validate_send_hour, validate_send_minute
 )
-from app import db, limiter
+from app import db, limiter, csrf
 from app.models import (
     Briefing, BriefRun, BriefRunItem, BriefTemplate, InputSource, IngestedItem,
     BriefingSource, BriefRecipient, SendingDomain, User, CompanyProfile, NewsSource,
@@ -1833,6 +1833,7 @@ def unsubscribe(briefing_id, token):
 # =============================================================================
 
 @briefing_bp.route('/api/<int:briefing_id>/runs/<int:run_id>/audio/generate', methods=['POST'])
+@csrf.exempt
 @login_required
 @limiter.limit("5 per minute")
 def generate_brief_run_audio(briefing_id, run_id):
