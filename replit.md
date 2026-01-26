@@ -69,5 +69,25 @@ PostgreSQL is the primary database, optimized with connection pooling, health ch
 - **Tailwind CSS**: Utility-first CSS framework.
 - **Node.js**: For frontend asset management.
 
+### Audio Generation (TTS)
+- **Coqui XTTS v2**: Open-source text-to-speech for generating audio versions of brief items
+  - CPU-friendly, runs without GPU
+  - Model caching for memory efficiency on Replit
+  - Voice presets: professional, warm, authoritative, calm, friendly
+  - Batch audio generation with job tracking
+- **Audio Storage**: Uses Replit Object Storage for persistence
+  - Automatic fallback chain: S3 → Replit → Filesystem
+  - Path traversal prevention and file validation
+  - LRU cache strategy for storage management
+
 ### Geographic Data
 - **Static JSON files**: For country/city data.
+
+## Recent Changes (January 2026)
+
+### Audio Generation Feature
+- Added batch audio generation for Daily Briefs and Paid Briefing Runs using XTTS v2
+- Database migrations: `deeper_context` field, `audio_url`, `audio_voice_id`, `audio_generated_at` on brief items
+- AudioGenerationJob model for tracking generation progress with failed item tracking
+- Memory-optimized processing with temp file cleanup
+- Background scheduler job processes audio queue every 10 seconds

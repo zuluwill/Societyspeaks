@@ -360,13 +360,13 @@ class AudioGenerator:
                                     pass
                             continue
 
-                    # Generate filename (sanitize to prevent path traversal)
-                    timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-                    text_hash = hashlib.md5(audio_text.encode('utf-8')).hexdigest()[:8]
-                    if job.brief_type == 'brief_run':
-                        filename = f"brief_run_{job.brief_run_id}_item_{item.id}_{timestamp}_{text_hash}.wav"
-                    else:
-                        filename = f"brief_{job.brief_id}_item_{item.id}_{timestamp}_{text_hash}.wav"
+                        # Generate filename (sanitize to prevent path traversal)
+                        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+                        text_hash = hashlib.md5(audio_text.encode('utf-8')).hexdigest()[:8]
+                        if job.brief_type == 'brief_run':
+                            filename = f"brief_run_{job.brief_run_id}_item_{item.id}_{timestamp}_{text_hash}.wav"
+                        else:
+                            filename = f"brief_{job.brief_id}_item_{item.id}_{timestamp}_{text_hash}.wav"
                         
                         # Additional filename validation
                         if '..' in filename or '/' in filename or '\\' in filename:

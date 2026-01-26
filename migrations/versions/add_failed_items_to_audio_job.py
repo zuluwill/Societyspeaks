@@ -12,7 +12,7 @@ from sqlalchemy import inspect
 
 # revision identifiers, used by Alembic.
 revision = 'add_failed_items'
-down_revision = 'audio_job_model'
+down_revision = 'brief_run_item_audio'
 branch_labels = None
 depends_on = None
 
