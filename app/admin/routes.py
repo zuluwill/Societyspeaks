@@ -9,7 +9,7 @@ from functools import wraps
 from datetime import date, datetime, timedelta
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
-from app.utils import upload_to_object_storage  
+from app.storage_utils import upload_to_object_storage  
 # Note: send_email removed during Resend migration. Using inline Resend call for admin welcome emails.
 from app.admin import admin_bp
 

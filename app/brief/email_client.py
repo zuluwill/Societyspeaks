@@ -15,7 +15,7 @@ from typing import List, Optional
 from flask import render_template, current_app
 from app.models import DailyBrief, DailyBriefSubscriber, BriefItem, db
 from app.email_utils import RateLimiter
-from app.utils import get_base_url
+from app.storage_utils import get_base_url
 
 logger = logging.getLogger(__name__)
 

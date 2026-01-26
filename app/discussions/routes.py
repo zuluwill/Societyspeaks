@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app import db, limiter
 from app.discussions.forms import CreateDiscussionForm
 from app.models import Discussion, DiscussionParticipant, TrendingTopic, DiscussionSourceArticle, NewsArticle, NewsSource
-from app.utils import get_recent_activity
+from app.storage_utils import get_recent_activity
 from app.middleware import track_discussion_view 
 from app.email_utils import create_discussion_notification
 from app.webhook_security import webhook_required, webhook_with_timestamp

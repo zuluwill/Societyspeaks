@@ -5,7 +5,7 @@ from app.models import User, Discussion, IndividualProfile, CompanyProfile, Prof
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
 from datetime import datetime, timedelta
-from app.utils import get_recent_activity
+from app.storage_utils import get_recent_activity
 from itsdangerous import URLSafeTimedSerializer
 # Email functions (migrated from Loops to Resend)
 from app.resend_client import send_password_reset_email, send_welcome_email
