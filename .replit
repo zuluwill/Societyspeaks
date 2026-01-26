@@ -10,7 +10,7 @@ packages = ["cargo", "glibcLocales", "libiconv", "libxcrypt", "openssl", "pkg-co
 
 [deployment]
 run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--timeout=120", "run:app"]
-deploymentTarget = "autoscale"
+deploymentTarget = "vm"
 build = ["bash", "-c", "pip install -r requirements.txt && flask db upgrade && npx tailwindcss -i ./app/static/src/input.css -o ./app/static/css/output.css --minify"]
 
 [[ports]]
