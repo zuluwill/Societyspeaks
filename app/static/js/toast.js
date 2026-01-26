@@ -14,7 +14,7 @@
         if (!container) {
             container = document.createElement('div');
             container.id = 'toast-container';
-            container.className = 'fixed top-4 right-4 z-50 space-y-2 max-w-sm w-full sm:max-w-md';
+            container.className = 'fixed top-4 right-4 z-50 space-y-2 max-w-sm pointer-events-none';
             container.setAttribute('aria-live', 'polite');
             container.setAttribute('aria-atomic', 'true');
             document.body.appendChild(container);
@@ -35,7 +35,7 @@
         if (!container) return;
         
         const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
+        toast.className = `toast toast-${type} pointer-events-auto`;
         toast.setAttribute('role', 'alert');
         
         // Icons for different types
