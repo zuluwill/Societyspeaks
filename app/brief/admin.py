@@ -189,7 +189,20 @@ def publish(brief_id):
     db.session.commit()
 
     logger.info(f"Brief {brief.id} published by {current_user.email}")
-    flash(f'Brief published! Emails will send at scheduled times.', 'success')
+
+    # Automatically queue audio generation for the published brief
+    try:
+        from app.brief.audio_generator import AudioGenerator
+        audio_gen = AudioGenerator()
+        job = audio_gen.create_generation_job(brief_id=brief.id, voice_id='professional')
+        if job:
+            logger.info(f"Audio generation job {job.id} queued for brief {brief.id}")
+            flash(f'Brief published! Audio generation started. Emails will send at scheduled times.', 'success')
+        else:
+            flash(f'Brief published! Emails will send at scheduled times.', 'success')
+    except Exception as e:
+        logger.error(f"Failed to queue audio generation for brief {brief.id}: {e}")
+        flash(f'Brief published! Emails will send at scheduled times.', 'success')
 
     return redirect(url_for('brief_admin.preview', date_str=brief.date.isoformat()))
 

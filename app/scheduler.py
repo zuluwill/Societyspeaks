@@ -1490,6 +1490,16 @@ def init_scheduler(app):
                     db.session.commit()
 
                     logger.info(f"Auto-published brief: {brief.title}")
+
+                    # Automatically queue audio generation for the published brief
+                    try:
+                        from app.brief.audio_generator import AudioGenerator
+                        audio_gen = AudioGenerator()
+                        job = audio_gen.create_generation_job(brief_id=brief.id, voice_id='professional')
+                        if job:
+                            logger.info(f"Audio generation job {job.id} queued for auto-published brief {brief.id}")
+                    except Exception as e:
+                        logger.error(f"Failed to queue audio generation for brief {brief.id}: {e}")
                 else:
                     # Either already published, skipped, or doesn't exist
                     existing = DailyBrief.query.filter_by(date=date.today()).first()
