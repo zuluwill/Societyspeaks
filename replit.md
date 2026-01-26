@@ -85,6 +85,18 @@ PostgreSQL is the primary database, optimized with connection pooling, health ch
 
 ## Recent Changes (January 2026)
 
+### Mobile Touch Event Fixes (Jan 26)
+- Fixed unclickable elements on mobile caused by invisible overlay divs
+- Removed duplicate toast container from layout.html that was blocking touch events
+- Added `pointer-events-none` to toast containers in both toast.js and toast.html
+- Added `pointer-events-auto` to individual toast notifications so they remain clickable
+- Added `pointer-events-none` to decorative hero section overlay in index.html
+
+### Audio Feature Controls
+- Added `AUDIO_ENABLED` environment variable to control audio UI visibility
+- Audio generation section in Daily Brief and Briefing Run views now conditionally renders based on config
+- Set to `false` by default since TTS (XTTS v2) is not currently installed
+
 ### Audio Generation Feature
 - Added batch audio generation for Daily Briefs and Paid Briefing Runs using XTTS v2
 - Database migrations: `deeper_context` field, `audio_url`, `audio_voice_id`, `audio_generated_at` on brief items
