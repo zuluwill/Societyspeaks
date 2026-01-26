@@ -283,44 +283,125 @@
 
     // Initialize event listeners
     function init() {
-        document.addEventListener('DOMContentLoaded', function() {
+        // Function to set up event listeners
+        function setupListeners() {
             // Audio generation for DailyBrief
             const generateBtn = document.getElementById('generate-all-audio-btn');
-            if (generateBtn) {
-                generateBtn.addEventListener('click', function() {
+            if (generateBtn && !generateBtn.hasAttribute('data-listener-attached')) {
+                generateBtn.setAttribute('data-listener-attached', 'true');
+                let touchHandled = false;
+                
+                generateBtn.addEventListener('click', function(e) {
+                    if (!touchHandled) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const briefId = this.dataset.briefId;
+                        generateAllAudio(briefId);
+                    }
+                });
+                // Also handle touch events for mobile
+                generateBtn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    touchHandled = true;
                     const briefId = this.dataset.briefId;
                     generateAllAudio(briefId);
-                });
+                    setTimeout(() => { touchHandled = false; }, 300);
+                }, { passive: false });
             }
             
             // Audio generation for BriefRun
             const generateBtnRun = document.getElementById('generate-all-audio-btn-run');
-            if (generateBtnRun) {
-                generateBtnRun.addEventListener('click', function() {
+            if (generateBtnRun && !generateBtnRun.hasAttribute('data-listener-attached')) {
+                generateBtnRun.setAttribute('data-listener-attached', 'true');
+                let touchHandled = false;
+                
+                generateBtnRun.addEventListener('click', function(e) {
+                    if (!touchHandled) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const briefRunId = this.dataset.briefRunId;
+                        const briefingId = this.dataset.briefingId;
+                        generateAllAudioForRun(briefRunId, briefingId);
+                    }
+                });
+                // Also handle touch events for mobile
+                generateBtnRun.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    touchHandled = true;
                     const briefRunId = this.dataset.briefRunId;
                     const briefingId = this.dataset.briefingId;
                     generateAllAudioForRun(briefRunId, briefingId);
-                });
+                    setTimeout(() => { touchHandled = false; }, 300);
+                }, { passive: false });
             }
             
             // Toggle deeper context buttons (works with any prefix)
             document.querySelectorAll('.toggle-deeper-context-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const itemId = this.dataset.itemId;
-                    const prefix = this.dataset.prefix || '';
-                    toggleDeeperContext(itemId, prefix);
-                });
+                if (!btn.hasAttribute('data-listener-attached')) {
+                    btn.setAttribute('data-listener-attached', 'true');
+                    let touchHandled = false;
+                    
+                    btn.addEventListener('click', function(e) {
+                        if (!touchHandled) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const itemId = this.dataset.itemId;
+                            const prefix = this.dataset.prefix || '';
+                            toggleDeeperContext(itemId, prefix);
+                        }
+                    });
+                    // Also handle touch events for mobile
+                    btn.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        touchHandled = true;
+                        const itemId = this.dataset.itemId;
+                        const prefix = this.dataset.prefix || '';
+                        toggleDeeperContext(itemId, prefix);
+                        setTimeout(() => { touchHandled = false; }, 300);
+                    }, { passive: false });
+                }
             });
             
             // Copy dive deeper text buttons (works with any prefix)
             document.querySelectorAll('.copy-dive-deeper-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const itemId = this.dataset.itemId;
-                    const prefix = this.dataset.prefix || '';
-                    copyDiveDeeperText(itemId, prefix);
-                });
+                if (!btn.hasAttribute('data-listener-attached')) {
+                    btn.setAttribute('data-listener-attached', 'true');
+                    let touchHandled = false;
+                    
+                    btn.addEventListener('click', function(e) {
+                        if (!touchHandled) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const itemId = this.dataset.itemId;
+                            const prefix = this.dataset.prefix || '';
+                            copyDiveDeeperText(itemId, prefix);
+                        }
+                    });
+                    // Also handle touch events for mobile
+                    btn.addEventListener('touchend', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        touchHandled = true;
+                        const itemId = this.dataset.itemId;
+                        const prefix = this.dataset.prefix || '';
+                        copyDiveDeeperText(itemId, prefix);
+                        setTimeout(() => { touchHandled = false; }, 300);
+                    }, { passive: false });
+                }
             });
-        });
+        }
+        
+        // Check if DOM is already loaded
+        if (document.readyState === 'loading') {
+            // DOM hasn't finished loading yet, wait for it
+            document.addEventListener('DOMContentLoaded', setupListeners);
+        } else {
+            // DOM is already loaded, run immediately
+            setupListeners();
+        }
     }
 
     // Export to global scope
