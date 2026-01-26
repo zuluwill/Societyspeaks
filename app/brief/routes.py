@@ -558,8 +558,9 @@ def serve_audio(filename):
     
     # Additional validation: ensure filename matches expected pattern
     # Format: brief_{brief_id}_item_{item_id}_{timestamp}_{hash}.wav
+    # Or: brief_run_{run_id}_item_{item_id}_{timestamp}_{hash}.wav
     import re
-    expected_pattern = r'^brief_\d+_item_\d+_\d{8}_\d{6}_[a-f0-9]{8}\.(wav|mp3)$'
+    expected_pattern = r'^brief(_run)?_\d+_item_\d+_\d{8}_\d{6}_[a-f0-9]{8}\.(wav|mp3)$'
     if not re.match(expected_pattern, filename):
         logger.warning(f"Suspicious filename pattern: {filename}")
         # Still allow it for backward compatibility, but log for monitoring
