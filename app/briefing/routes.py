@@ -1301,6 +1301,74 @@ def list_sources():
     )
 
 
+@briefing_bp.route('/sources/<int:source_id>/edit', methods=['GET', 'POST'])
+@login_required
+@limiter.limit("20/minute")
+@source_owner_required
+def edit_source(source_id):
+    """Edit an input source"""
+    source = g.source
+    
+    if request.method == 'POST':
+        try:
+            name = request.form.get('name', '').strip()
+            
+            is_valid, error = validate_briefing_name(name)
+            if not is_valid:
+                flash(error, 'error')
+                return redirect(url_for('briefing.edit_source', source_id=source_id))
+            
+            if source.type == 'rss':
+                url = request.form.get('url', '').strip()
+                is_valid, error = validate_rss_url(url)
+                if not is_valid:
+                    flash(error, 'error')
+                    return redirect(url_for('briefing.edit_source', source_id=source_id))
+                source.config_json = {'url': url}
+            
+            source.name = name
+            db.session.commit()
+            
+            flash(f'Source "{name}" updated successfully', 'success')
+            return redirect(url_for('briefing.list_sources'))
+            
+        except Exception as e:
+            logger.error(f"Error updating source: {e}", exc_info=True)
+            db.session.rollback()
+            flash('An error occurred while updating the source', 'error')
+    
+    return render_template('briefing/edit_source.html', source=source)
+
+
+@briefing_bp.route('/sources/<int:source_id>/delete', methods=['POST'])
+@login_required
+@limiter.limit("10/minute")
+@source_owner_required
+def delete_source(source_id):
+    """Delete an input source"""
+    source = g.source
+    
+    try:
+        source_name = source.name
+        
+        # Check if source is used in any briefings
+        linked_briefings = BriefingSource.query.filter_by(source_id=source_id).all()
+        if linked_briefings:
+            for bs in linked_briefings:
+                db.session.delete(bs)
+        
+        db.session.delete(source)
+        db.session.commit()
+        
+        flash(f'Source "{source_name}" has been deleted', 'success')
+    except Exception as e:
+        logger.error(f"Error deleting source: {e}", exc_info=True)
+        db.session.rollback()
+        flash('An error occurred while deleting the source', 'error')
+    
+    return redirect(url_for('briefing.list_sources'))
+
+
 @briefing_bp.route('/sources/add/rss', methods=['GET', 'POST'])
 @login_required
 @limiter.limit("10/minute")
@@ -1331,6 +1399,19 @@ def add_rss_source():
                     flash('You need to be part of an organization to create org sources', 'error')
                     return redirect(url_for('briefing.add_rss_source'))
                 owner_id = user_org.id
+            
+            # Check for duplicate URL to prevent multi-click duplicates
+            existing_source = InputSource.query.filter_by(
+                owner_type=owner_type,
+                owner_id=owner_id,
+                type='rss'
+            ).filter(
+                InputSource.config_json['url'].astext == url
+            ).first()
+            
+            if existing_source:
+                flash(f'A source with this RSS feed URL already exists: "{existing_source.name}"', 'info')
+                return redirect(url_for('briefing.list_sources'))
             
             source = InputSource(
                 owner_type=owner_type,
