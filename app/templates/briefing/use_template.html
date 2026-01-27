@@ -15,7 +15,7 @@
     </div>
 
     <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white">
+        <div class="p-6 text-white" style="background-color: {{ template.default_accent_color or '#2563EB' }}">
             <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
                     {{ render_icon(template.icon, 'w-6 h-6') }}
@@ -23,7 +23,7 @@
                 <div>
                     <h1 class="text-2xl font-bold">{{ template.name }}</h1>
                     {% if template.tagline %}
-                    <p class="text-blue-100">{{ template.tagline }}</p>
+                    <p style="color: rgba(255, 255, 255, 0.85);">{{ template.tagline }}</p>
                     {% endif %}
                 </div>
             </div>
@@ -116,6 +116,7 @@
                             {% endfor %}
                         </select>
                     </div>
+                    <p class="mt-1 text-xs text-gray-500">Default: 6:00 PM - a popular time for end-of-day reading</p>
                 </div>
             </div>
 
@@ -209,4 +210,25 @@
         </form>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-detect user's timezone
+    try {
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const timezoneSelect = document.getElementById('timezone');
+        if (timezoneSelect && userTimezone) {
+            for (let option of timezoneSelect.options) {
+                if (option.value === userTimezone) {
+                    option.selected = true;
+                    break;
+                }
+            }
+        }
+    } catch (e) {
+        // Fallback to UTC if detection fails
+        console.log('Timezone detection failed, using UTC');
+    }
+});
+</script>
 {% endblock %}

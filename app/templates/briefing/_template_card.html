@@ -3,13 +3,15 @@
     <div class="p-6">
         <div class="flex items-start justify-between mb-3">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                {% set accent_color = (template.default_accent_color or '#3B82F6')[:7] %}
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+                     style="background-color: {{ accent_color }}33; color: {{ accent_color }}">
                     {{ render_icon(template.icon) }}
                 </div>
                 <div>
                     <h3 class="font-semibold text-gray-900">{{ template.name }}</h3>
                     {% if template.tagline %}
-                    <p class="text-sm text-blue-600">{{ template.tagline }}</p>
+                    <p class="text-sm" style="color: {{ template.default_accent_color or '#3B82F6' }}">{{ template.tagline }}</p>
                     {% endif %}
                 </div>
             </div>
@@ -41,17 +43,18 @@
         </div>
         
         <div class="flex gap-2">
-            <a href="{{ url_for('briefing.use_template', template_id=template.id) }}" 
-               class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
+            <a href="{{ url_for('briefing.use_template', template_id=template.id) }}"
+               class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 text-white rounded-lg transition-colors text-sm font-medium"
+               style="background-color: {{ template.default_accent_color or '#2563EB' }}">
                 Use Template
             </a>
-            <a href="{{ url_for('briefing.preview_template', template_id=template.id) }}" 
-               class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
-               title="View details">
+            <a href="{{ url_for('briefing.preview_template', template_id=template.id) }}"
+               class="inline-flex items-center gap-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                 </svg>
+                Preview
             </a>
         </div>
     </div>

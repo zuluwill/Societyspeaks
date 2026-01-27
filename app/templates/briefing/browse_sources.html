@@ -30,7 +30,7 @@
                        class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         Add RSS Feed
                     </a>
-                    <a href="{{ url_for('briefing.upload_source') }}"
+                    <a href="{{ url_for('briefing.upload_source', briefing_id=briefing_id if briefing_id else None) }}"
                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                         Upload File
                     </a>
@@ -40,40 +40,63 @@
 
         <!-- Search and Filters -->
         <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-            <form method="GET" action="{{ url_for('briefing.browse_sources') }}" class="flex flex-col md:flex-row gap-4">
+            <div class="flex flex-col md:flex-row gap-4">
                 <div class="flex-1">
-                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search sources..."
+                    <input type="text" id="source-search" value="{{ search_query }}" placeholder="Search sources... (filters as you type)"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div class="w-full md:w-48">
-                    <select name="type" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <select id="source-type-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="">All Types</option>
                         {% for stype in source_types %}
-                        <option value="{{ stype }}" {% if source_type == stype %}selected{% endif %}>{{ stype|upper }}</option>
+                        <option value="{{ stype|lower }}" {% if source_type == stype %}selected{% endif %}>{{ stype|upper }}</option>
                         {% endfor %}
                     </select>
                 </div>
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700">
-                    Search
-                </button>
-                {% if search_query or source_type %}
-                <a href="{{ url_for('briefing.browse_sources') }}" class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50">
+                <button type="button" id="clear-filters" class="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 hidden">
                     Clear
-                </a>
-                {% endif %}
-            </form>
+                </button>
+            </div>
+            <p id="filter-status" class="text-xs text-gray-500 mt-2 hidden"></p>
         </div>
+
+        {% if not briefing %}
+        <!-- Guidance when no briefing context -->
+        <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+            <div class="flex gap-3">
+                <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                    <h4 class="font-medium text-amber-900">Want to add sources to a briefing?</h4>
+                    <p class="text-sm text-amber-800 mt-1">
+                        Open one of your briefings first, then browse sources to add them directly.
+                    </p>
+                    <a href="{{ url_for('briefing.list_briefings') }}"
+                       class="inline-flex items-center gap-1 text-sm text-amber-900 font-medium mt-2 hover:underline">
+                        View my briefings
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- System Sources -->
         {% if system_sources %}
-        <div class="mb-8">
+        <div class="mb-8 source-section" id="system-sources-section">
             <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                System Sources 
-                <span class="text-sm font-normal text-gray-500">({{ system_sources|length }} curated sources)</span>
+                System Sources
+                <span class="text-sm font-normal text-gray-500" data-count="{{ system_sources|length }}">({{ system_sources|length }} curated sources)</span>
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {% for source_info in system_sources %}
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                <div class="source-card bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                     data-name="{{ source_info.name|lower }}"
+                     data-type="{{ source_info.type|lower }}"
+                     data-category="system">
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex-1">
                             <h3 class="text-sm font-semibold text-gray-900">{{ source_info.name }}</h3>
@@ -91,6 +114,11 @@
                         {% endif %}
                     </p>
                     {% if briefing_id and briefing %}
+                    {% if source_info.source_obj and source_info.source_obj.status == 'extracting' %}
+                    <p class="text-xs text-gray-500 italic">Extracting text... will be ready shortly</p>
+                    {% elif source_info.source_obj and source_info.source_obj.status == 'failed' %}
+                    <p class="text-xs text-red-600 italic">Extraction failed. Please check the source.</p>
+                    {% else %}
                     <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}"
                           class="inline" onsubmit="return confirm('Add {{ source_info.name }} to briefing?');">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -100,6 +128,7 @@
                             Add to Briefing
                         </button>
                     </form>
+                    {% endif %}
                     {% elif not briefing_id %}
                     <p class="text-xs text-gray-500 italic">Open a briefing to add sources</p>
                     {% endif %}
@@ -111,14 +140,17 @@
 
         <!-- User Sources -->
         {% if user_sources %}
-        <div class="mb-8">
+        <div class="mb-8 source-section" id="user-sources-section">
             <h2 class="text-xl font-semibold text-gray-900 mb-4">
-                Your Sources 
-                <span class="text-sm font-normal text-gray-500">({{ user_sources|length }})</span>
+                Your Sources
+                <span class="text-sm font-normal text-gray-500" data-count="{{ user_sources|length }}">({{ user_sources|length }})</span>
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {% for source_info in user_sources %}
-                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
+                <div class="source-card bg-white rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                     data-name="{{ source_info.name|lower }}"
+                     data-type="{{ source_info.type|lower }}"
+                     data-category="user">
                     <div class="flex justify-between items-start mb-2">
                         <div class="flex-1">
                             <h3 class="text-sm font-semibold text-gray-900">{{ source_info.name }}</h3>
@@ -138,6 +170,11 @@
                         </span>
                     </div>
                     {% if briefing_id and briefing %}
+                    {% if source_info.source_obj.status == 'extracting' %}
+                    <p class="text-xs text-gray-500 italic">Extracting text... will be ready shortly</p>
+                    {% elif source_info.source_obj.status == 'failed' %}
+                    <p class="text-xs text-red-600 italic">Extraction failed. Please check the source.</p>
+                    {% else %}
                     <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}"
                           class="inline" onsubmit="return confirm('Add {{ source_info.name }} to briefing?');">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -147,6 +184,7 @@
                             Add to Briefing
                         </button>
                     </form>
+                    {% endif %}
                     {% elif not briefing_id %}
                     <p class="text-xs text-gray-500 italic">Open a briefing to add sources</p>
                     {% endif %}
@@ -174,4 +212,99 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('source-search');
+    const typeFilter = document.getElementById('source-type-filter');
+    const clearButton = document.getElementById('clear-filters');
+    const filterStatus = document.getElementById('filter-status');
+    const sourceCards = document.querySelectorAll('.source-card');
+    const sourceSections = document.querySelectorAll('.source-section');
+
+    let debounceTimer;
+
+    function filterSources() {
+        const query = searchInput.value.toLowerCase().trim();
+        const type = typeFilter.value.toLowerCase();
+
+        let visibleCount = 0;
+        let totalCount = sourceCards.length;
+
+        sourceCards.forEach(card => {
+            const name = card.dataset.name || '';
+            const cardType = card.dataset.type || '';
+
+            const matchesQuery = !query || name.includes(query);
+            const matchesType = !type || cardType === type;
+
+            if (matchesQuery && matchesType) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Update section visibility and counts
+        sourceSections.forEach(section => {
+            const cards = section.querySelectorAll('.source-card');
+            const visibleCards = Array.from(cards).filter(c => c.style.display !== 'none');
+            const countSpan = section.querySelector('[data-count]');
+
+            if (visibleCards.length === 0) {
+                section.style.display = 'none';
+            } else {
+                section.style.display = '';
+                if (countSpan) {
+                    const originalCount = countSpan.dataset.count;
+                    if (visibleCards.length < parseInt(originalCount)) {
+                        countSpan.textContent = `(${visibleCards.length} of ${originalCount})`;
+                    } else {
+                        countSpan.textContent = section.id === 'system-sources-section'
+                            ? `(${originalCount} curated sources)`
+                            : `(${originalCount})`;
+                    }
+                }
+            }
+        });
+
+        // Show/hide clear button and status
+        if (query || type) {
+            clearButton.classList.remove('hidden');
+            filterStatus.classList.remove('hidden');
+            if (visibleCount === 0 && totalCount > 0) {
+                filterStatus.textContent = `No sources match your search`;
+            } else {
+                filterStatus.textContent = `Showing ${visibleCount} of ${totalCount} sources`;
+            }
+        } else {
+            clearButton.classList.add('hidden');
+            filterStatus.classList.add('hidden');
+        }
+    }
+
+    // Debounced search input
+    searchInput.addEventListener('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(filterSources, 200);
+    });
+
+    // Immediate filter on type change
+    typeFilter.addEventListener('change', filterSources);
+
+    // Clear filters
+    clearButton.addEventListener('click', function() {
+        searchInput.value = '';
+        typeFilter.value = '';
+        filterSources();
+        searchInput.focus();
+    });
+
+    // Run initial filter if there are pre-filled values
+    if (searchInput.value || typeFilter.value) {
+        filterSources();
+    }
+});
+</script>
 {% endblock %}

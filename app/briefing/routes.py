@@ -526,16 +526,18 @@ def marketplace():
         )
     
     templates = query.order_by(BriefTemplate.sort_order, BriefTemplate.name).all()
-    
-    # Separate featured templates
-    featured_templates = [t for t in templates if t.is_featured] if not category_filter else []
-    
-    # Group templates by category
+
+    # Separate featured templates - show featured that match category filter (if any)
+    featured_templates = [t for t in templates if t.is_featured]
+    if category_filter:
+        featured_templates = [t for t in featured_templates if t.category == category_filter]
+
+    # Group templates by category (exclude featured to avoid duplication)
     templates_by_category = {}
     for cat_key in categories.keys():
         if category_filter and category_filter != cat_key:
             continue
-        cat_templates = [t for t in templates if t.category == cat_key and (not t.is_featured or category_filter)]
+        cat_templates = [t for t in templates if t.category == cat_key and not t.is_featured]
         if cat_templates:
             templates_by_category[cat_key] = cat_templates
     
@@ -707,9 +709,9 @@ def use_template(template_id):
                 flash(msg, 'success')
             else:
                 if sources_failed > 0:
-                    flash(f'Briefing "{name}" created from template, but {sources_failed} sources could not be added.', 'warning')
+                    flash(f'Briefing "{name}" created from template, but {sources_failed} sources could not be added. Add more sources below to start generating briefs.', 'warning')
                 else:
-                    flash(f'Briefing "{name}" created from template!', 'success')
+                    flash(f'Briefing "{name}" created from template! Add sources below to start generating briefs.', 'success')
             return redirect(url_for('briefing.detail', briefing_id=briefing.id))
             
         except Exception as e:
@@ -923,9 +925,9 @@ def create_briefing():
                 flash(msg, 'success')
             else:
                 if sources_failed > 0:
-                    flash(f'Briefing "{name}" created successfully, but {sources_failed} sources from template could not be added.', 'warning')
+                    flash(f'Briefing "{name}" created successfully, but {sources_failed} sources from template could not be added. Add more sources below to start generating briefs.', 'warning')
                 else:
-                    flash(f'Briefing "{name}" created successfully!', 'success')
+                    flash(f'Briefing "{name}" created successfully! Add sources below to start generating briefs.', 'success')
             return redirect(url_for('briefing.detail', briefing_id=briefing.id))
 
         except Exception as e:
@@ -1459,6 +1461,9 @@ def add_rss_source():
 @require_feature('document_uploads')
 def upload_source():
     """Upload PDF/DOCX file as source"""
+    # Get briefing_id from query param or form (for redirect after upload)
+    briefing_id = request.args.get('briefing_id', type=int) or request.form.get('briefing_id', type=int)
+    
     if request.method == 'POST':
         try:
             from replit.object_storage import Client
@@ -1515,6 +1520,14 @@ def upload_source():
             db.session.commit()
             
             flash(f'File uploaded successfully. Text extraction in progress...', 'success')
+            
+            # Redirect back to briefing if provided, otherwise to sources list
+            if briefing_id:
+                # Verify user has access to briefing
+                briefing = Briefing.query.get(briefing_id)
+                if briefing and can_access_briefing(current_user, briefing):
+                    return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+            
             return redirect(url_for('briefing.list_sources'))
             
         except Exception as e:
@@ -1522,7 +1535,7 @@ def upload_source():
             db.session.rollback()
             flash('An error occurred while uploading the file', 'error')
     
-    return render_template('briefing/upload_source.html')
+    return render_template('briefing/upload_source.html', briefing_id=briefing_id)
 
 
 @briefing_bp.route('/<int:briefing_id>/sources/add', methods=['POST'])

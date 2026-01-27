@@ -18,6 +18,9 @@
         <div class="bg-white shadow rounded-lg">
             <form method="POST" enctype="multipart/form-data" class="p-6 space-y-6">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if request.args.get('briefing_id') %}
+                <input type="hidden" name="briefing_id" value="{{ request.args.get('briefing_id') }}">
+                {% endif %}
                 <div>
                     <label for="file" class="block text-sm font-medium text-gray-700">File *</label>
                     <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
@@ -45,10 +48,17 @@
                 </div>
 
                 <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                    {% if request.args.get('briefing_id') %}
+                    <a href="{{ url_for('briefing.detail', briefing_id=request.args.get('briefing_id')) }}"
+                       class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    {% else %}
                     <a href="{{ url_for('briefing.list_sources') }}"
                        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                         Cancel
                     </a>
+                    {% endif %}
                     <button type="submit"
                             class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
                         Upload File

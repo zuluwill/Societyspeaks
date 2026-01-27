@@ -16,6 +16,28 @@
             <p class="mt-2 text-gray-600">Set up a personalised brief with your preferred sources and schedule</p>
         </div>
 
+        <!-- Workflow guidance -->
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4 sm:p-5 mb-6 shadow-sm">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <div class="flex-shrink-0">
+                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-semibold text-blue-900 mb-1">Two-Step Setup Process</h3>
+                    <p class="text-sm text-blue-800 mb-2">
+                        <strong>Step 1:</strong> Create your briefing below with basic settings (name, schedule, template).
+                    </p>
+                    <p class="text-sm text-blue-800">
+                        <strong>Step 2:</strong> On the next screen, you'll add content sources (RSS feeds, curated sources, or documents) and customize AI settings.
+                    </p>
+                </div>
+            </div>
+        </div>
+
         <div class="bg-white shadow rounded-lg">
             <form method="POST" class="p-6 space-y-6">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -107,7 +129,7 @@
                         </select>
                     </div>
                 </div>
-                <p class="text-sm text-gray-500">Choose the time (hour and minute) when briefs should be sent in your selected timezone</p>
+                <p class="text-sm text-gray-500">Default: 6:00 PM - a popular time for end-of-day reading. Adjust to match your schedule.</p>
 
                 <!-- Mode -->
                 <div>
@@ -244,9 +266,25 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Auto-detect user's timezone before initializing Choices.js
+    try {
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const timezoneSelect = document.getElementById('timezone');
+        if (timezoneSelect && userTimezone) {
+            for (let option of timezoneSelect.options) {
+                if (option.value === userTimezone) {
+                    option.selected = true;
+                    break;
+                }
+            }
+        }
+    } catch (e) {
+        console.log('Timezone detection failed, using UTC');
+    }
+
     // Initialize Choices.js for timezone dropdown (DRY - using reusable macro)
     {{ init_choices_dropdown('timezone', 'Search timezones...', 'Select a timezone...') }}
-    
+
     // Sync color picker with text input
     const colorPicker = document.getElementById('accent_color');
     const colorText = document.getElementById('accent_color_text');
