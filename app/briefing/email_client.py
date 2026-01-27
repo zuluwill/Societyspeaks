@@ -75,6 +75,17 @@ class BriefingEmailClient:
             
             if success:
                 logger.info(f"Sent BriefRun {brief_run.id} to {recipient.email}")
+                
+                # Record analytics event
+                try:
+                    from app.lib.email_analytics import EmailAnalytics
+                    EmailAnalytics.record_send(
+                        email=recipient.email,
+                        category=EmailAnalytics.CATEGORY_DAILY_BRIEF,
+                        subject=self._generate_subject(brief_run, briefing)
+                    )
+                except Exception as analytics_error:
+                    logger.warning(f"Failed to record analytics for {recipient.email}: {analytics_error}")
             
             return success
             

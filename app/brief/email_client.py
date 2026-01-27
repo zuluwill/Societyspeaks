@@ -96,6 +96,19 @@ class ResendClient:
                 subscriber.total_briefs_received += 1
                 db.session.commit()
                 logger.info(f"Sent brief to {subscriber.email}")
+                
+                # Record analytics event
+                try:
+                    from app.lib.email_analytics import EmailAnalytics
+                    EmailAnalytics.record_send(
+                        email=subscriber.email,
+                        category=EmailAnalytics.CATEGORY_DAILY_BRIEF,
+                        subject=brief.title,
+                        brief_subscriber_id=subscriber.id,
+                        brief_id=brief.id
+                    )
+                except Exception as analytics_error:
+                    logger.warning(f"Failed to record analytics for {subscriber.email}: {analytics_error}")
 
             return success
 

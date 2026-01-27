@@ -85,6 +85,16 @@ PostgreSQL is the primary database, optimized with connection pooling, health ch
 
 ## Recent Changes (January 2026)
 
+### Email Analytics Tracking Fix (Jan 27)
+- Fixed missing email analytics: "sent" events were not being recorded since Jan 19
+- Added `EmailAnalytics.record_send()` calls to all email senders:
+  - Daily Brief emails (`app/brief/email_client.py`)
+  - BriefRun emails (`app/briefing/email_client.py`)
+  - Daily Question emails (`app/resend_client.py`)
+  - Weekly/Monthly Question Digest emails (`app/resend_client.py`)
+  - Batch email sending (`app/resend_client.py`)
+- Fixed engagement_tracker.py SyntaxError: removed duplicate `global _x_rate_limited_until` declaration
+
 ### Weekly Batch Template Fix (Jan 27)
 - Fixed critical bug: `weekly_batch.html` was extending `base.html` (non-existent) instead of `layout.html`
 - This caused a `TemplateNotFound` 500 error when accessing `/daily/weekly` with question parameters

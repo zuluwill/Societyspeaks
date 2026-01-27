@@ -477,6 +477,19 @@ class ResendEmailClient:
 
         if success:
             subscriber.last_email_sent = datetime.utcnow()
+            
+            # Record analytics event
+            try:
+                from app.lib.email_analytics import EmailAnalytics
+                EmailAnalytics.record_send(
+                    email=subscriber.email,
+                    category=EmailAnalytics.CATEGORY_DAILY_QUESTION,
+                    subject=f"Daily Question #{question.question_number}: {question.topic_category or 'Civic'}",
+                    question_subscriber_id=subscriber.id,
+                    daily_question_id=question.id
+                )
+            except Exception as analytics_error:
+                logger.warning(f"Failed to record analytics for {subscriber.email}: {analytics_error}")
 
         return success
 
@@ -551,6 +564,18 @@ class ResendEmailClient:
         if success:
             subscriber.last_weekly_email_sent = datetime.utcnow()
             subscriber.last_email_sent = datetime.utcnow()
+            
+            # Record analytics event
+            try:
+                from app.lib.email_analytics import EmailAnalytics
+                EmailAnalytics.record_send(
+                    email=subscriber.email,
+                    category=EmailAnalytics.CATEGORY_DAILY_QUESTION,
+                    subject=subject,
+                    question_subscriber_id=subscriber.id
+                )
+            except Exception as analytics_error:
+                logger.warning(f"Failed to record analytics for {subscriber.email}: {analytics_error}")
 
         return success
 
@@ -623,6 +648,18 @@ class ResendEmailClient:
         if success:
             subscriber.last_weekly_email_sent = datetime.utcnow()  # Reuse field for monthly tracking
             subscriber.last_email_sent = datetime.utcnow()
+            
+            # Record analytics event
+            try:
+                from app.lib.email_analytics import EmailAnalytics
+                EmailAnalytics.record_send(
+                    email=subscriber.email,
+                    category=EmailAnalytics.CATEGORY_DAILY_QUESTION,
+                    subject=subject,
+                    question_subscriber_id=subscriber.id
+                )
+            except Exception as analytics_error:
+                logger.warning(f"Failed to record analytics for {subscriber.email}: {analytics_error}")
 
         return success
 
@@ -738,6 +775,19 @@ class ResendEmailClient:
                 if batch_result['sent'] > 0:
                     for subscriber in batch_subscribers:
                         subscriber.last_email_sent = datetime.utcnow()
+                        
+                        # Record analytics event for each successful send
+                        try:
+                            from app.lib.email_analytics import EmailAnalytics
+                            EmailAnalytics.record_send(
+                                email=subscriber.email,
+                                category=EmailAnalytics.CATEGORY_DAILY_QUESTION,
+                                subject=f"Daily Question #{question.question_number}: {question.topic_category or 'Civic'}",
+                                question_subscriber_id=subscriber.id,
+                                daily_question_id=question.id
+                            )
+                        except Exception as analytics_error:
+                            logger.warning(f"Failed to record analytics for {subscriber.email}: {analytics_error}")
 
             processed += len(batch_subscribers)
 
