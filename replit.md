@@ -85,6 +85,11 @@ PostgreSQL is the primary database, optimized with connection pooling, health ch
 
 ## Recent Changes (January 2026)
 
+### Weekly Batch Template Fix (Jan 27)
+- Fixed critical bug: `weekly_batch.html` was extending `base.html` (non-existent) instead of `layout.html`
+- This caused a `TemplateNotFound` 500 error when accessing `/daily/weekly` with question parameters
+- All daily templates now correctly extend `layout.html`
+
 ### Mobile Touch Event Fixes (Jan 26)
 - Fixed unclickable elements on mobile caused by invisible overlay divs
 - Removed duplicate toast container from layout.html that was blocking touch events
