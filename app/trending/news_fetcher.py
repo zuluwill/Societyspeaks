@@ -507,7 +507,7 @@ def seed_default_sources():
             'source_type': 'guardian',
             'reputation_score': 0.85,
             'country': 'United Kingdom',
-            'political_leaning': -1.0  # Lean Left
+            'political_leaning': -2.0  # Left (moved from Lean Left per AllSides chart v11)
         },
         {
             'name': 'The Atlantic',
@@ -515,7 +515,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United States',
-            'political_leaning': -1.0  # Lean Left
+            'political_leaning': -2.0  # Left per AllSides
         },
         {
             'name': 'The Independent',
@@ -523,7 +523,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.75,
             'country': 'United Kingdom',
-            'political_leaning': -1.0  # Lean Left
+            'political_leaning': -2.0  # Left per AllSides
         },
         {
             'name': 'The New Yorker',
@@ -534,12 +534,20 @@ def seed_default_sources():
             'political_leaning': -2.0  # Left
         },
         {
+            'name': 'Vox',
+            'feed_url': 'https://www.vox.com/rss/index.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': -2.0  # Left per AllSides
+        },
+        {
             'name': 'New Statesman',
             'feed_url': 'https://www.newstatesman.com/feed',
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United Kingdom',
-            'political_leaning': -1.0  # Lean Left - British progressive
+            'political_leaning': -2.0  # Left - British progressive
         },
         {
             'name': 'The Intercept',
@@ -547,7 +555,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.75,
             'country': 'United States',
-            'political_leaning': -1.5  # Left - investigative journalism
+            'political_leaning': -2.0  # Left - investigative journalism
         },
         {
             'name': 'ProPublica',
@@ -555,7 +563,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.9,
             'country': 'United States',
-            'political_leaning': -0.5  # Lean Left - investigative, non-profit
+            'political_leaning': -1.0  # Centre-Left - investigative, non-profit
         },
         {
             'name': 'Slow Boring',
@@ -563,7 +571,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United States',
-            'political_leaning': -0.5  # Lean Left - Matt Yglesias policy analysis
+            'political_leaning': -1.0  # Centre-Left - Matt Yglesias policy analysis
         },
         {
             'name': 'Noahpinion',
@@ -571,7 +579,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': -0.5  # Lean Left - Noah Smith economics
+            'political_leaning': -1.0  # Centre-Left - Noah Smith economics
         },
         {
             'name': 'Commonweal',
@@ -579,7 +587,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': -0.5  # Lean Left - Catholic intellectual, social justice
+            'political_leaning': -1.0  # Centre-Left - Catholic intellectual, social justice
         },
         {
             'name': 'Matt Taibbi',
@@ -587,7 +595,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.75,
             'country': 'United States',
-            'political_leaning': -1.0  # Lean Left - heterodox, anti-establishment
+            'political_leaning': -2.0  # Left - heterodox, anti-establishment
         },
         {
             'name': 'Freddie deBoer',
@@ -595,7 +603,55 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.75,
             'country': 'United States',
-            'political_leaning': -1.5  # Left - education, mental health, socialist
+            'political_leaning': -2.0  # Left - education, mental health, socialist
+        },
+        {
+            'name': 'Yascha Mounk',
+            'feed_url': 'https://yaschamounk.substack.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': -0.5  # Lean Left - Persuasion, big ideas
+        },
+        {
+            'name': 'Ezra Klein',
+            'feed_url': 'https://ezraklein.substack.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': -1.0  # Lean Left - policy analysis
+        },
+        {
+            'name': 'Anne Applebaum',
+            'feed_url': 'https://anneapplebaum.substack.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': -0.5  # Lean Left - democracy, foreign affairs
+        },
+        {
+            'name': 'Jonathan Rauch',
+            'feed_url': 'https://jrauch.substack.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': -0.5  # Lean Left - liberalism, institutions
+        },
+        {
+            'name': 'Zeynep Tufekci',
+            'feed_url': 'https://zeynep.substack.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': -0.5  # Lean Left - tech, society, science (now NYT columnist)
+        },
+        {
+            'name': 'Francis Fukuyama',
+            'feed_url': 'https://francisfukuyama.substack.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - democracy, development
         },
         
         # ==========================================================================
@@ -608,6 +664,94 @@ def seed_default_sources():
             'reputation_score': 0.9,
             'country': 'United Kingdom',
             'political_leaning': 0  # Centre
+        },
+        {
+            'name': 'BBC World Service',
+            'feed_url': 'https://feeds.bbci.co.uk/news/world/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - global news service
+        },
+        {
+            'name': 'Politico',
+            'feed_url': 'https://rss.politico.com/politics-news.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': -1.0  # Lean Left per AllSides
+        },
+        {
+            'name': 'Euractiv',
+            'feed_url': 'https://www.euractiv.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'Belgium',
+            'political_leaning': 0  # Centre - EU policy news
+        },
+        {
+            'name': 'Carnegie Endowment',
+            'feed_url': 'https://carnegieendowment.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': -0.5  # Left-Center per MBFC
+        },
+        {
+            'name': 'International Crisis Group',
+            'feed_url': 'https://www.crisisgroup.org/rss-0',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'International',
+            'political_leaning': -0.5  # Left-Center per MBFC
+        },
+        {
+            'name': 'World Economic Forum',
+            'feed_url': 'https://www.weforum.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'International',
+            'political_leaning': -0.5  # Left-Center per MBFC
+        },
+        {
+            'name': 'UN News',
+            'feed_url': 'https://news.un.org/en/rss-feeds',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'International',
+            'political_leaning': 0  # Centre - UN official news
+        },
+        {
+            'name': 'IEA',
+            'feed_url': 'https://www.iea.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'International',
+            'political_leaning': 0  # Centre - energy policy, data-driven
+        },
+        {
+            'name': 'WHO',
+            'feed_url': 'https://www.who.int/news-room/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.95,
+            'country': 'International',
+            'political_leaning': 0  # Centre - global health organization
+        },
+        {
+            'name': 'Chartbook',
+            'feed_url': 'https://adamtooze.substack.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': -0.5  # Lean Left - Adam Tooze economics, geopolitics
+        },
+        {
+            'name': 'Ian Bremmer',
+            'feed_url': 'https://www.gzeromedia.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - geopolitical analysis, Eurasia Group
         },
         {
             'name': 'Financial Times',
@@ -674,6 +818,54 @@ def seed_default_sources():
             'political_leaning': 0  # Centre - tech/business analysis
         },
         {
+            'name': 'Platformer',
+            'feed_url': 'https://platformer.substack.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - Casey Newton, Silicon Valley & democracy
+        },
+        {
+            'name': 'Not Boring',
+            'feed_url': 'https://notboring.substack.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - Packy McCormick, tech strategy
+        },
+        {
+            'name': 'The Pragmatic Engineer',
+            'feed_url': 'https://blog.pragmaticengineer.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - Gergely Orosz, Big Tech & startups
+        },
+        {
+            'name': 'Simon Willison',
+            'feed_url': 'https://simonwillison.net/atom/everything/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - tech, programming, data
+        },
+        {
+            'name': 'Paul Graham',
+            'feed_url': 'https://anonyonoor.com/feeds/paul-graham',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - essays on startups, programming, life
+        },
+        {
+            'name': 'Cory Doctorow',
+            'feed_url': 'https://pluralistic.net/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': -1.0  # Lean Left - tech, politics, culture
+        },
+        {
             'name': 'Farnam Street',
             'feed_url': 'https://fs.blog/feed/',
             'source_type': 'rss',
@@ -687,7 +879,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 0  # Centre - global news
+            'political_leaning': -1.0  # Lean Left per AllSides
         },
         {
             'name': 'Rest of World',
@@ -751,7 +943,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.9,
             'country': 'United Kingdom',
-            'political_leaning': 0  # Centre - climate science/policy, factual
+            'political_leaning': -0.5  # Left-Center per MBFC
         },
         {
             'name': 'South China Morning Post',
@@ -760,6 +952,158 @@ def seed_default_sources():
             'reputation_score': 0.8,
             'country': 'Hong Kong',
             'political_leaning': 0  # Centre - Asia/China coverage (China News feed)
+        },
+        {
+            'name': 'Spiegel International',
+            'feed_url': 'https://www.spiegel.de/international/index.rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'Germany',
+            'political_leaning': -0.5  # Left-Center per MBFC
+        },
+        {
+            'name': 'Deutsche Welle',
+            'feed_url': 'https://rss.dw.com/rdf/rss-en-all',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'Germany',
+            'political_leaning': 0  # Centre per AllSides - German public broadcaster
+        },
+        {
+            'name': 'Le Monde English',
+            'feed_url': 'https://www.lemonde.fr/en/international/rss_full.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'France',
+            'political_leaning': -0.5  # Lean Left - French newspaper, English edition
+        },
+        {
+            'name': 'France24',
+            'feed_url': 'https://www.france24.com/en/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'France',
+            'political_leaning': 0  # Centre - French international news
+        },
+        {
+            'name': 'El País English',
+            'feed_url': 'https://english.elpais.com/rss/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'Spain',
+            'political_leaning': -0.5  # Lean Left - Spanish newspaper, English edition
+        },
+        {
+            'name': 'Nikkei Asia',
+            'feed_url': 'https://asia.nikkei.com/rss/feed/nar',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'Japan',
+            'political_leaning': 0.5  # Right-Center per MBFC
+        },
+        {
+            'name': 'Caixin Global',
+            'feed_url': 'https://www.caixinglobal.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'China',
+            'political_leaning': 0  # Centre - Chinese business news, English edition
+        },
+        {
+            'name': 'Sixth Tone',
+            'feed_url': 'https://www.sixthtone.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'China',
+            'political_leaning': 0  # Centre - China-focused news, English by design
+        },
+        {
+            'name': 'Channel NewsAsia',
+            'feed_url': 'https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'Singapore',
+            'political_leaning': 0  # Centre - Singapore-based Asian news
+        },
+        {
+            'name': 'Straits Times',
+            'feed_url': 'https://www.straitstimes.com/news/singapore/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'Singapore',
+            'political_leaning': 0.5  # Right-Center per MBFC (pro-government)
+        },
+        {
+            'name': 'Haaretz',
+            'feed_url': 'https://www.haaretz.com/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'Israel',
+            'political_leaning': -1.0  # Lean Left per AllSides - Israeli newspaper
+        },
+        {
+            'name': 'The National',
+            'feed_url': 'https://www.thenationalnews.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United Arab Emirates',
+            'political_leaning': 0  # Centre - UAE newspaper, English by design
+        },
+        {
+            'name': 'Al Monitor',
+            'feed_url': 'https://www.al-monitor.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'United States',
+            'political_leaning': -0.5  # Left-Center per MBFC
+        },
+        {
+            'name': 'Africa Confidential',
+            'feed_url': 'https://www.africa-confidential.com/rss.aspx',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'International',
+            'political_leaning': 0  # Centre - African political news
+        },
+        {
+            'name': 'Mail & Guardian',
+            'feed_url': 'http://mg.co.za/rss/',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'South Africa',
+            'political_leaning': -2.0  # Left per MBFC
+        },
+        {
+            'name': 'Daily Maverick',
+            'feed_url': 'https://www.dailymaverick.co.za/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'South Africa',
+            'political_leaning': 0  # Least Biased per MBFC
+        },
+        {
+            'name': 'AllAfrica',
+            'feed_url': 'https://allafrica.com/tools/headlines/rdf/latest/headlines.rdf',
+            'source_type': 'rss',
+            'reputation_score': 0.8,
+            'country': 'International',
+            'political_leaning': 0  # Centre - African news aggregation
+        },
+        {
+            'name': 'Americas Quarterly',
+            'feed_url': 'https://www.americasquarterly.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - Latin America analysis
+        },
+        {
+            'name': 'El País América',
+            'feed_url': 'https://english.elpais.com/news/america/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'Spain',
+            'political_leaning': -0.5  # Lean Left - El País, Americas edition
         },
         {
             'name': 'Ars Technica',
@@ -775,7 +1119,159 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United States',
-            'political_leaning': -0.3  # Slight Lean Left - think tank, research-backed
+            'political_leaning': 0  # Centre - think tank, research-backed
+        },
+        {
+            'name': 'Institute for Government',
+            'feed_url': 'https://www.instituteforgovernment.org.uk/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - UK government effectiveness think tank
+        },
+        {
+            'name': 'Institute for Fiscal Studies',
+            'feed_url': 'https://feeds.acast.com/public/shows/5ea004d9fbcc383829c71657',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - UK fiscal policy research
+        },
+        {
+            'name': 'Resolution Foundation',
+            'feed_url': 'https://www.resolutionfoundation.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - UK living standards think tank
+        },
+        {
+            'name': 'UK Parliament',
+            'feed_url': 'https://bills.parliament.uk/rss/allbills.rss',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - official parliamentary proceedings
+        },
+        {
+            'name': 'RAND Corporation',
+            'feed_url': 'https://www.rand.org/pubs/new.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - policy research, objective analysis
+        },
+        {
+            'name': 'Chatham House',
+            'feed_url': 'https://www.chathamhouse.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - international affairs think tank
+        },
+        {
+            'name': 'CSIS',
+            'feed_url': 'https://www.csis.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - Center for Strategic and International Studies
+        },
+        {
+            'name': 'OECD',
+            'feed_url': 'https://www.oecd.org/newsroom/index.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'International',
+            'political_leaning': 0  # Centre - economic policy, international cooperation
+        },
+        {
+            'name': 'World Bank',
+            'feed_url': 'https://blogs.worldbank.org/en/blogs',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'International',
+            'political_leaning': 0  # Centre - development economics, global poverty
+        },
+        {
+            'name': 'IMF',
+            'feed_url': 'https://www.imf.org/en/rss-list',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'International',
+            'political_leaning': 0  # Centre - monetary policy, global finance
+        },
+        {
+            'name': 'Office for National Statistics',
+            'feed_url': 'https://ons.gov.uk/releasecalendar',
+            'source_type': 'rss',
+            'reputation_score': 0.95,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - official UK statistics
+        },
+        {
+            'name': 'Office for Budget Responsibility',
+            'feed_url': 'https://obr.uk/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United Kingdom',
+            'political_leaning': 0  # Centre - UK fiscal forecasts
+        },
+        {
+            'name': 'Pew Research Center',
+            'feed_url': 'https://www.pewresearch.org/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - nonpartisan fact tank
+        },
+        {
+            'name': 'Our World in Data',
+            'feed_url': 'https://ourworldindata.org/atom.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.95,
+            'country': 'International',
+            'political_leaning': -0.5  # Left-Center per MBFC
+        },
+        {
+            'name': 'Eurostat',
+            'feed_url': 'https://ec.europa.eu/eurostat/api/dissemination/catalogue/rss/en/statistics-update.rss',
+            'source_type': 'rss',
+            'reputation_score': 0.95,
+            'country': 'European Union',
+            'political_leaning': 0  # Centre - official EU statistics
+        },
+        {
+            'name': 'US Census Bureau',
+            'feed_url': 'https://www.census.gov/newsroom/press-releases/by-year.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.95,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - official US demographic and economic data
+        },
+        {
+            'name': 'Nieman Lab',
+            'feed_url': 'https://www.niemanlab.org/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - future of journalism
+        },
+        {
+            'name': 'Columbia Journalism Review',
+            'feed_url': 'https://www.cjr.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - media criticism and analysis
+        },
+        {
+            'name': 'Poynter',
+            'feed_url': 'https://www.poynter.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0  # Centre - journalism education and ethics
         },
         
         # ==========================================================================
@@ -787,7 +1283,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.75,
             'country': 'United Kingdom',
-            'political_leaning': 0.5  # Centre-Right - contrarian
+            'political_leaning': 0.5  # Center (slight right) per AllSides
         },
         {
             'name': 'The Telegraph',
@@ -795,7 +1291,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United Kingdom',
-            'political_leaning': 1.5  # Lean Right to Right
+            'political_leaning': 2.0  # Right per AllSides
         },
         {
             'name': 'The Dispatch',
@@ -803,7 +1299,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United States',
-            'political_leaning': 0.5  # Centre-Right - fact-based conservative
+            'political_leaning': 1.0  # Centre-Right - fact-based conservative
         },
         {
             'name': 'The Spectator',
@@ -811,7 +1307,15 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United Kingdom',
-            'political_leaning': 1.0  # Lean Right - British conservative magazine
+            'political_leaning': 2.0  # Right per AllSides - British conservative magazine
+        },
+        {
+            'name': 'The Times',
+            'feed_url': 'https://www.thetimes.co.uk/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': 1.0  # Lean Right - UK broadsheet
         },
         {
             'name': 'Reason',
@@ -819,7 +1323,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 0.5  # Centre-Right - libertarian
+            'political_leaning': 1.0  # Centre-Right per AllSides - libertarian
         },
         {
             'name': 'The Free Press',
@@ -827,7 +1331,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 0.5  # Centre-Right - heterodox journalism
+            'political_leaning': 1.0  # Centre-Right - heterodox journalism
         },
         {
             'name': 'The Critic',
@@ -835,7 +1339,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.75,
             'country': 'United Kingdom',
-            'political_leaning': 0.5  # Centre-Right - British intellectual
+            'political_leaning': 1.5  # Right per MBFC
         },
         {
             'name': 'Marginal Revolution',
@@ -843,7 +1347,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United States',
-            'political_leaning': 0.5  # Centre-Right - Tyler Cowen economics, libertarian-leaning
+            'political_leaning': 1.0  # Centre-Right - Tyler Cowen economics, libertarian-leaning
         },
         {
             'name': 'Cato Institute',
@@ -851,7 +1355,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 0.5  # Centre-Right - libertarian think tank (Cato@Liberty blog)
+            'political_leaning': 1.0  # Centre-Right per AllSides - libertarian think tank
         },
         {
             'name': 'Manhattan Institute',
@@ -859,7 +1363,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 1.0  # Lean Right - pairs with City Journal
+            'political_leaning': 2.0  # Right - pairs with City Journal
         },
         {
             'name': 'Andrew Sullivan',
@@ -867,7 +1371,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 0.5  # Centre-Right - heterodox conservative
+            'political_leaning': 1.0  # Centre-Right - heterodox conservative
         },
         
         # ==========================================================================
@@ -879,7 +1383,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 1.5  # Right - traditional conservative
+            'political_leaning': 2.0  # Right per AllSides - traditional conservative
         },
         {
             'name': 'The American Conservative',
@@ -887,7 +1391,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.75,
             'country': 'United States',
-            'political_leaning': 1.0  # Lean Right - paleoconservative
+            'political_leaning': 2.0  # Right per AllSides - paleoconservative
         },
         {
             'name': 'City Journal',
@@ -895,7 +1399,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 1.0  # Lean Right - urban policy conservative
+            'political_leaning': 2.0  # Right - urban policy conservative
         },
         {
             'name': 'The Commentary Magazine',
@@ -903,7 +1407,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 1.5  # Right - neoconservative
+            'political_leaning': 2.0  # Right - neoconservative
         },
         {
             'name': 'First Things',
@@ -911,7 +1415,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': 1.5  # Right - religious conservative intellectual
+            'political_leaning': 2.0  # Right - religious conservative intellectual
         },
         {
             'name': 'Christianity Today',
@@ -919,7 +1423,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.75,
             'country': 'United States',
-            'political_leaning': 1.0  # Lean Right - evangelical, nuanced
+            'political_leaning': 1.0  # Right-Center per MBFC - evangelical
         },
         
         # ==========================================================================
@@ -931,7 +1435,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United Kingdom',
-            'political_leaning': -1.0  # Lean Left - UK political podcast
+            'political_leaning': -2.0  # Left - UK political podcast
         },
         {
             'name': 'The Rest Is Politics',
@@ -947,7 +1451,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United Kingdom',
-            'political_leaning': 0.5  # Centre-Right - libertarian/classical liberal
+            'political_leaning': 1.0  # Centre-Right - libertarian/classical liberal
         },
         {
             'name': 'All-In Podcast',
@@ -955,7 +1459,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United States',
-            'political_leaning': 0.5  # Centre-Right - tech/business, libertarian lean
+            'political_leaning': 1.0  # Centre-Right - tech/business, libertarian lean
         },
         {
             'name': 'The Tim Ferriss Show',
@@ -1007,7 +1511,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United States',
-            'political_leaning': 0
+            'political_leaning': -0.5  # Left-Center per MBFC
         },
         {
             'name': 'The Athletic',
@@ -1035,7 +1539,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.9,
             'country': 'United States',
-            'political_leaning': 0
+            'political_leaning': -0.5  # Left-Center per MBFC
         },
         {
             'name': 'Nature News',
@@ -1102,12 +1606,28 @@ def seed_default_sources():
             'political_leaning': 0
         },
         {
-            'name': 'AP News',
+            'name': 'Associated Press',
             'feed_url': 'https://rsshub.app/apnews/topics/apf-topnews',
             'source_type': 'rss',
             'reputation_score': 0.95,
             'country': 'United States',
             'political_leaning': 0
+        },
+        {
+            'name': 'Wall Street Journal',
+            'feed_url': 'https://feeds.content.dowjones.io/public/rss/RSSWorldNews',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': 0.5  # Centre-Right - business news
+        },
+        {
+            'name': 'The New York Times',
+            'feed_url': 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.9,
+            'country': 'United States',
+            'political_leaning': -1.0  # Lean Left
         },
         
         # ==========================================================================
@@ -1119,7 +1639,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United States',
-            'political_leaning': -0.5
+            'political_leaning': -2.0  # Left per AllSides
         },
         {
             'name': 'The Verge',
@@ -1127,7 +1647,7 @@ def seed_default_sources():
             'source_type': 'rss',
             'reputation_score': 0.8,
             'country': 'United States',
-            'political_leaning': -0.5
+            'political_leaning': -1.0  # Lean Left per AllSides
         },
         
         # ==========================================================================
