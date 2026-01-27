@@ -187,7 +187,6 @@ def fetch_x_engagement(tweet_id: str) -> Optional[Dict]:
         # Handle rate limiting gracefully - skip this fetch and set cooldown
         if '429' in str(e) or 'rate limit' in error_str or 'too many requests' in error_str:
             # Set rate limit cooldown for 15 minutes (X rate limit window)
-            global _x_rate_limited_until
             _x_rate_limited_until = datetime.utcnow() + timedelta(minutes=15)
             logger.warning(f"X rate limited while fetching engagement for {tweet_id}, pausing until {_x_rate_limited_until}")
             return None
