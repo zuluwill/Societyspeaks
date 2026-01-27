@@ -2,7 +2,7 @@
 News Transparency Routes
 
 Main routes:
-- /news: Dashboard showing articles from all 60+ sources (subscriber-only)
+- /news: Dashboard showing articles from all 140+ sources (subscriber-only)
 - /api/news/perspectives/<id>: Lazy-load perspectives (subscriber-only)
 """
 
@@ -214,7 +214,7 @@ def dashboard():
     """
     News transparency dashboard - open to everyone.
 
-    Shows top articles from all 60+ sources across the political spectrum.
+    Shows top articles from all 140+ sources across the political spectrum.
     Users can filter by source and by political leaning.
     """
     # Check subscriber status for personalization (not access control)

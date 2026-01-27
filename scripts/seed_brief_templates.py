@@ -397,7 +397,7 @@ SAMPLE_OUTPUTS = {
 RECOMMENDED_SOURCES = {
     'politics-public-policy': [
         {'name': 'Reuters', 'type': 'rss'},
-        {'name': 'AP News', 'type': 'rss'},
+        {'name': 'Associated Press', 'type': 'rss'},
         {'name': 'The Guardian', 'type': 'guardian'},
         {'name': 'Politico EU', 'type': 'rss'},
         {'name': 'Foreign Affairs', 'type': 'rss'},

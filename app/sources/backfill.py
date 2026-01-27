@@ -18,7 +18,7 @@ KNOWN_PODCASTS = {
     'The Tim Ferriss Show',
     'Modern Wisdom',
     'Acquired Podcast',
-    'The Ezra Klein Show',
+    'Ezra Klein',  # Updated from 'The Ezra Klein Show'
     'Honestly with Bari Weiss',
     'The Prof G Pod',
     'Conversations with Tyler',
