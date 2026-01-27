@@ -21,20 +21,9 @@ from app.trending.publisher import publish_topic, merge_topic_into_discussion
 from app.trending.seed_generator import generate_seed_statements
 from app.trending.scorer import score_topic
 from app.trending.news_fetcher import clean_summary
+from app.decorators import admin_required
 
 logger = logging.getLogger(__name__)
-
-
-def admin_required(f):
-    """Decorator to require admin access."""
-    from functools import wraps
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin:
-            flash("Admin access required", "error")
-            return redirect(url_for('main.index'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 @trending_bp.route('/')

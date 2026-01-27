@@ -4,21 +4,213 @@ Brief Routes
 Public routes for daily brief viewing, subscription, and archive.
 """
 
+import base64
+import hashlib
+import hmac
+import logging
+import os
+import re
+
+import pytz
 from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app
 from flask_login import current_user
+from sqlalchemy import func
 from datetime import date, datetime, timedelta
+
 from app.brief import brief_bp
 from app import db, limiter, csrf
 from app.models import DailyBrief, BriefItem, DailyBriefSubscriber, BriefTeam, User, EmailEvent
-from app.brief.email_client import send_brief_to_subscriber
+from app.brief.email_client import send_brief_to_subscriber, ResendClient
 from app.trending.conversion_tracking import track_social_click
-import re
-import logging
-import hmac
-import hashlib
-import os
+from app.decorators import admin_required
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# Constants
+# =============================================================================
+
+VALID_SEND_HOURS = [6, 8, 18]
+DEFAULT_SEND_HOUR = 18
+ARCHIVE_PER_PAGE = 30
+PREFERENCES_TOKEN_EXPIRE_HOURS = 168  # 7 days
+
+
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
+def is_tts_available():
+    """Check if TTS is available (XTTS package installed)."""
+    try:
+        from app.brief.xtts_client import XTTSClient
+        client = XTTSClient()
+        return client.available
+    except ImportError:
+        logger.debug("XTTS package not installed")
+        return False
+    except Exception as e:
+        logger.warning(f"Error checking TTS availability: {e}")
+        return False
+
+
+def get_subscriber_status():
+    """
+    Get subscriber and eligibility status from session.
+
+    Returns:
+        tuple: (subscriber, is_subscriber) where subscriber is the DailyBriefSubscriber
+               instance (or None) and is_subscriber is a boolean.
+    """
+    subscriber = None
+    is_subscriber = False
+
+    if 'brief_subscriber_id' in session:
+        subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
+        if subscriber and subscriber.is_subscribed_eligible():
+            is_subscriber = True
+
+    # Admins always marked as subscriber for UI consistency
+    if current_user.is_authenticated and current_user.is_admin:
+        is_subscriber = True
+
+    return subscriber, is_subscriber
+
+
+def _process_subscription(
+    email: str,
+    timezone: str = 'UTC',
+    preferred_hour: int = DEFAULT_SEND_HOUR,
+    update_preferences_on_reactivate: bool = True,
+    set_session: bool = False,
+    track_posthog: bool = False,
+    source: str = None
+) -> dict:
+    """
+    Common subscription processing logic.
+
+    Handles new subscriptions, reactivations, and already-active cases.
+
+    Args:
+        email: Subscriber email address
+        timezone: Timezone for email delivery (default UTC)
+        preferred_hour: Preferred send hour (default DEFAULT_SEND_HOUR)
+        update_preferences_on_reactivate: Whether to update tz/hour on reactivation
+        set_session: Whether to set session['brief_subscriber_id']
+        track_posthog: Whether to track with PostHog
+        source: Source tracking string for logging
+
+    Returns:
+        dict with keys:
+            - 'status': 'created' | 'reactivated' | 'already_active' | 'error'
+            - 'subscriber': DailyBriefSubscriber instance (or None on error)
+            - 'message': Human-readable message
+            - 'error': Error message (only if status == 'error')
+    """
+    # Check if already subscribed
+    existing = DailyBriefSubscriber.query.filter_by(email=email).first()
+
+    if existing:
+        if existing.status == 'active':
+            return {
+                'status': 'already_active',
+                'subscriber': existing,
+                'message': 'This email is already subscribed to the daily brief.'
+            }
+        else:
+            # Reactivate
+            existing.status = 'active'
+            if update_preferences_on_reactivate:
+                existing.timezone = timezone
+                existing.preferred_send_hour = preferred_hour
+            existing.generate_magic_token()
+            existing.start_trial()
+            existing.welcome_email_sent_at = None
+            db.session.commit()
+
+            # Send welcome email
+            try:
+                email_client = ResendClient()
+                email_client.send_welcome(existing)
+            except Exception as e:
+                logger.error(f"Failed to send welcome email to {email}: {e}")
+
+            # Optionally set session
+            if set_session:
+                session['brief_subscriber_id'] = existing.id
+                session.modified = True
+
+            return {
+                'status': 'reactivated',
+                'subscriber': existing,
+                'message': 'Welcome back! Your subscription has been reactivated.'
+            }
+
+    # Check if user exists with this email
+    user = User.query.filter_by(email=email).first()
+
+    try:
+        subscriber = DailyBriefSubscriber(
+            email=email,
+            user_id=user.id if user else None,
+            timezone=timezone,
+            preferred_send_hour=preferred_hour
+        )
+        subscriber.generate_magic_token()
+        subscriber.start_trial()
+
+        db.session.add(subscriber)
+        db.session.commit()
+
+        source_str = f" (source: {source})" if source else ""
+        logger.info(f"New brief subscriber: {email}{source_str}")
+
+        # Send welcome email
+        try:
+            email_client = ResendClient()
+            email_client.send_welcome(subscriber)
+        except Exception as e:
+            logger.error(f"Failed to send welcome email to {email}: {e}")
+
+        # Optionally set session
+        if set_session:
+            session['brief_subscriber_id'] = subscriber.id
+            session.modified = True
+
+        # Optionally track with PostHog
+        if track_posthog:
+            try:
+                import posthog
+                if posthog:
+                    posthog.capture(
+                        distinct_id=str(user.id) if user else email,
+                        event='daily_brief_subscribed',
+                        properties={
+                            'email': email,
+                            'source': 'social' if request.referrer and ('utm_source' in request.referrer or any(d in request.referrer for d in ['twitter.com', 'x.com', 'bsky.social'])) else 'direct',
+                            'referrer': request.referrer,
+                            'subscription_type': 'daily_brief'
+                        }
+                    )
+            except Exception as e:
+                logger.warning(f"PostHog tracking error: {e}")
+
+        return {
+            'status': 'created',
+            'subscriber': subscriber,
+            'message': 'Successfully subscribed! Check your email for the first brief.'
+        }
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Subscription error for {email}: {e}")
+        return {
+            'status': 'error',
+            'subscriber': None,
+            'message': 'An error occurred. Please try again.',
+            'error': str(e)
+        }
 
 
 @brief_bp.route('/brief')
@@ -29,20 +221,11 @@ def today():
     # Track social media clicks (conversion tracking)
     user_id = str(current_user.id) if current_user.is_authenticated else None
     track_social_click(request, user_id)
-    
+
     brief = DailyBrief.get_today()
-    
+
     # Check subscriber status for personalization (not access control)
-    subscriber = None
-    is_subscriber = False
-    if 'brief_subscriber_id' in session:
-        subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
-        if subscriber and subscriber.is_subscribed_eligible():
-            is_subscriber = True
-    
-    # Admins always marked as subscriber for UI consistency
-    if current_user.is_authenticated and current_user.is_admin:
-        is_subscriber = True
+    subscriber, is_subscriber = get_subscriber_status()
 
     # No brief available for today - show most recent brief instead
     if not brief:
@@ -61,7 +244,8 @@ def today():
                 is_subscriber=is_subscriber,
                 is_today=False,
                 waiting_for_today=True,
-                show_email_capture=(not is_subscriber)
+                show_email_capture=(not is_subscriber),
+                tts_available=is_tts_available()
             )
         else:
             return render_template('brief/no_brief.html')
@@ -76,7 +260,8 @@ def today():
         subscriber=subscriber,
         is_subscriber=is_subscriber,
         is_today=True,
-        show_email_capture=(not is_subscriber)
+        show_email_capture=(not is_subscriber),
+        tts_available=is_tts_available()
     )
 
 
@@ -91,18 +276,9 @@ def view_date(date_str):
         return redirect(url_for('brief.today'))
 
     brief = DailyBrief.get_by_date(brief_date)
-    
+
     # Check subscriber status for personalization (not access control)
-    subscriber = None
-    is_subscriber = False
-    if 'brief_subscriber_id' in session:
-        subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
-        if subscriber and subscriber.is_subscribed_eligible():
-            is_subscriber = True
-    
-    # Admins always marked as subscriber for UI consistency
-    if current_user.is_authenticated and current_user.is_admin:
-        is_subscriber = True
+    subscriber, is_subscriber = get_subscriber_status()
 
     if not brief:
         flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
@@ -117,7 +293,8 @@ def view_date(date_str):
         subscriber=subscriber,
         is_subscriber=is_subscriber,
         is_today=(brief_date == date.today()),
-        show_email_capture=(not is_subscriber)
+        show_email_capture=(not is_subscriber),
+        tts_available=is_tts_available()
     )
 
 
@@ -125,11 +302,7 @@ def view_date(date_str):
 @limiter.limit("60/minute")
 def archive():
     """Browse brief archive"""
-    from sqlalchemy import func
-    from app.models import BriefItem
-    
     page = request.args.get('page', 1, type=int)
-    per_page = 30
 
     # Check if user is subscriber
     subscriber = None
@@ -143,7 +316,7 @@ def archive():
         DailyBrief.date.desc()
     ).paginate(
         page=page,
-        per_page=per_page,
+        per_page=ARCHIVE_PER_PAGE,
         error_out=False
     )
 
@@ -178,7 +351,7 @@ def subscribe():
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         timezone = request.form.get('timezone', 'UTC')
-        preferred_hour = request.form.get('preferred_hour', 18, type=int)
+        preferred_hour = request.form.get('preferred_hour', DEFAULT_SEND_HOUR, type=int)
 
         # Validate email
         if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
@@ -186,93 +359,37 @@ def subscribe():
             return redirect(url_for('brief.subscribe'))
 
         # Validate timezone
-        import pytz
         try:
             pytz.timezone(timezone)
         except (pytz.UnknownTimeZoneError, KeyError):
             timezone = 'UTC'
 
         # Validate preferred hour
-        if preferred_hour not in [6, 8, 18]:
-            preferred_hour = 18
+        if preferred_hour not in VALID_SEND_HOURS:
+            preferred_hour = DEFAULT_SEND_HOUR
 
-        # Check if already subscribed
-        existing = DailyBriefSubscriber.query.filter_by(email=email).first()
+        # Process subscription using shared helper
+        result = _process_subscription(
+            email=email,
+            timezone=timezone,
+            preferred_hour=preferred_hour,
+            update_preferences_on_reactivate=True,
+            set_session=False,
+            track_posthog=True
+        )
 
-        if existing:
-            if existing.status == 'active':
-                flash('This email is already subscribed to the daily brief.', 'info')
-                return redirect(url_for('brief.subscribe_success'))
-            else:
-                # Reactivate
-                existing.status = 'active'
-                existing.timezone = timezone
-                existing.preferred_send_hour = preferred_hour
-                existing.generate_magic_token()
-                existing.start_trial()
-                # Clear welcome_email_sent_at to allow re-sending for reactivated subscribers
-                existing.welcome_email_sent_at = None
-                db.session.commit()
-
-                try:
-                    from app.brief.email_client import ResendClient
-                    email_client = ResendClient()
-                    email_client.send_welcome(existing)
-                except Exception as e:
-                    logger.error(f"Failed to send welcome email to {email}: {e}")
-
-                flash('Welcome back! Your subscription has been reactivated.', 'success')
-                return redirect(url_for('brief.subscribe_success'))
-
-        # Check if user exists with this email
-        user = User.query.filter_by(email=email).first()
-
-        try:
-            subscriber = DailyBriefSubscriber(
-                email=email,
-                user_id=user.id if user else None,
-                timezone=timezone,
-                preferred_send_hour=preferred_hour
-            )
-            subscriber.generate_magic_token()
-            subscriber.start_trial()  # 14-day trial
-
-            db.session.add(subscriber)
-            db.session.commit()
-
-            logger.info(f"New brief subscriber: {email}")
-
-            try:
-                from app.brief.email_client import ResendClient
-                email_client = ResendClient()
-                email_client.send_welcome(subscriber)
-            except Exception as e:
-                logger.error(f"Failed to send welcome email to {email}: {e}")
-
-            # Track conversion with PostHog
-            try:
-                import posthog
-                if posthog:
-                    posthog.capture(
-                        distinct_id=str(user.id) if user else email,
-                        event='daily_brief_subscribed',
-                        properties={
-                            'email': email,
-                            'source': 'social' if request.referrer and ('utm_source' in request.referrer or any(d in request.referrer for d in ['twitter.com', 'x.com', 'bsky.social'])) else 'direct',
-                            'referrer': request.referrer,
-                            'subscription_type': 'daily_brief'
-                        }
-                    )
-            except Exception as e:
-                logger.warning(f"PostHog tracking error: {e}")
-            
-            flash('Successfully subscribed! Check your email for the first brief.', 'success')
+        # Handle result
+        if result['status'] == 'already_active':
+            flash(result['message'], 'info')
             return redirect(url_for('brief.subscribe_success'))
-
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Subscription error for {email}: {e}")
-            flash('An error occurred. Please try again.', 'error')
+        elif result['status'] == 'reactivated':
+            flash(result['message'], 'success')
+            return redirect(url_for('brief.subscribe_success'))
+        elif result['status'] == 'created':
+            flash(result['message'], 'success')
+            return redirect(url_for('brief.subscribe_success'))
+        else:  # error
+            flash(result['message'], 'error')
             return redirect(url_for('brief.subscribe'))
 
     # GET request - show subscription form
@@ -291,85 +408,48 @@ def subscribe_inline():
     """Inline subscription from email capture forms (AJAX-friendly)"""
     email = request.form.get('email', '').strip().lower()
     source = request.form.get('source', 'inline')
-    
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     # Validate email
     if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if is_ajax:
             return jsonify({'success': False, 'error': 'Please enter a valid email address.'}), 400
         flash('Please enter a valid email address.', 'error')
         return redirect(request.referrer or url_for('brief.today'))
-    
-    # Check if already subscribed
-    existing = DailyBriefSubscriber.query.filter_by(email=email).first()
-    
-    if existing:
-        if existing.status == 'active':
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({'success': True, 'message': 'You\'re already subscribed!'})
-            flash('You\'re already subscribed to the Daily Brief!', 'info')
-            return redirect(request.referrer or url_for('brief.today'))
-        else:
-            # Reactivate
-            existing.status = 'active'
-            existing.generate_magic_token()
-            existing.start_trial()
-            existing.welcome_email_sent_at = None
-            db.session.commit()
-            
-            try:
-                from app.brief.email_client import ResendClient
-                email_client = ResendClient()
-                email_client.send_welcome(existing)
-            except Exception as e:
-                logger.error(f"Failed to send welcome email to {email}: {e}")
-            
-            # Set session for this subscriber
-            session['brief_subscriber_id'] = existing.id
-            session.modified = True
-            
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify({'success': True, 'message': 'Welcome back! Check your inbox.'})
-            flash('Welcome back! Your subscription has been reactivated.', 'success')
-            return redirect(request.referrer or url_for('brief.today'))
-    
-    # Check if user exists with this email
-    user = User.query.filter_by(email=email).first()
-    
-    try:
-        subscriber = DailyBriefSubscriber(
-            email=email,
-            user_id=user.id if user else None,
-            timezone='UTC',
-            preferred_send_hour=18
-        )
-        subscriber.generate_magic_token()
-        subscriber.start_trial()
-        
-        db.session.add(subscriber)
-        db.session.commit()
-        
-        logger.info(f"New inline brief subscriber: {email} (source: {source})")
-        
-        # Set session for this subscriber
-        session['brief_subscriber_id'] = subscriber.id
-        session.modified = True
-        
-        try:
-            from app.brief.email_client import ResendClient
-            email_client = ResendClient()
-            email_client.send_welcome(subscriber)
-        except Exception as e:
-            logger.error(f"Failed to send welcome email to {email}: {e}")
-        
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': True, 'message': 'You\'re subscribed! Check your inbox.'})
-        flash('You\'re subscribed! Check your inbox for the welcome email.', 'success')
+
+    # Process subscription using shared helper
+    # Note: update_preferences_on_reactivate=False to keep existing preferences
+    result = _process_subscription(
+        email=email,
+        timezone='UTC',
+        preferred_hour=DEFAULT_SEND_HOUR,
+        update_preferences_on_reactivate=False,
+        set_session=True,
+        track_posthog=False,
+        source=source
+    )
+
+    # Handle result with inline-specific messages and responses
+    if result['status'] == 'already_active':
+        if is_ajax:
+            return jsonify({'success': True, 'message': "You're already subscribed!"})
+        flash("You're already subscribed to the Daily Brief!", 'info')
         return redirect(request.referrer or url_for('brief.today'))
-        
-    except Exception as e:
-        logger.error(f"Error creating inline subscriber: {e}")
-        db.session.rollback()
-        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+
+    elif result['status'] == 'reactivated':
+        if is_ajax:
+            return jsonify({'success': True, 'message': 'Welcome back! Check your inbox.'})
+        flash('Welcome back! Your subscription has been reactivated.', 'success')
+        return redirect(request.referrer or url_for('brief.today'))
+
+    elif result['status'] == 'created':
+        if is_ajax:
+            return jsonify({'success': True, 'message': "You're subscribed! Check your inbox."})
+        flash("You're subscribed! Check your inbox for the welcome email.", 'success')
+        return redirect(request.referrer or url_for('brief.today'))
+
+    else:  # error
+        if is_ajax:
             return jsonify({'success': False, 'error': 'Something went wrong. Please try again.'}), 500
         flash('Something went wrong. Please try again.', 'error')
         return redirect(request.referrer or url_for('brief.today'))
@@ -432,7 +512,7 @@ def manage_preferences(token):
     if subscriber.magic_token_expires and subscriber.magic_token_expires < datetime.utcnow():
         # Regenerate token for active subscribers
         if subscriber.status == 'active':
-            subscriber.generate_magic_token(expires_hours=168)  # 7 days
+            subscriber.generate_magic_token(expires_hours=PREFERENCES_TOKEN_EXPIRE_HOURS)
             db.session.commit()
         flash('Your link has expired. Please check your latest email for a new link.', 'warning')
         return redirect(url_for('brief.today'))
@@ -442,17 +522,16 @@ def manage_preferences(token):
         new_timezone = request.form.get('timezone', 'UTC')
         # Validate timezone
         try:
-            import pytz
             pytz.timezone(new_timezone)
             subscriber.timezone = new_timezone
         except Exception:
             subscriber.timezone = 'UTC'
 
         # Update send hour
-        new_hour = request.form.get('preferred_send_hour', '18')
+        new_hour = request.form.get('preferred_send_hour', str(DEFAULT_SEND_HOUR))
         try:
             hour = int(new_hour)
-            if hour in [6, 8, 18]:
+            if hour in VALID_SEND_HOURS:
                 subscriber.preferred_send_hour = hour
         except (ValueError, TypeError):
             pass
@@ -500,6 +579,7 @@ def methodology():
 @brief_bp.route('/api/brief/<int:brief_id>/audio/generate', methods=['POST'])
 @csrf.exempt
 @limiter.limit("5 per minute")
+@admin_required
 def generate_brief_audio(brief_id):
     """
     Create batch audio generation job for entire brief.
@@ -508,11 +588,6 @@ def generate_brief_audio(brief_id):
     and should be protected from abuse.
     """
     from app.brief.audio_generator import audio_generator
-
-    # Require admin authentication for audio generation
-    # This is a resource-intensive operation that should be protected
-    if not current_user.is_authenticated or not current_user.is_admin:
-        return jsonify({'error': 'Admin access required for audio generation'}), 403
 
     brief = DailyBrief.query.get_or_404(brief_id)
 
@@ -656,17 +731,10 @@ def api_brief_by_date(date_str):
 
 
 @brief_bp.route('/brief/admin/test-send', methods=['POST'])
+@admin_required
 def admin_test_send():
     """Send a test brief email (admin only, development use)"""
-    import os
-    from flask_login import current_user
-    from app.brief.email_client import ResendClient
-    from datetime import date
     import secrets
-
-    # Only allow admins
-    if not current_user.is_authenticated or not current_user.is_admin:
-        return jsonify({'error': 'Admin access required'}), 403
 
     data = request.get_json() or {}
     email = data.get('email')
@@ -794,39 +862,38 @@ def resend_webhook():
     try:
         # Verify webhook signature (Resend uses svix for webhooks)
         webhook_secret = os.environ.get('RESEND_WEBHOOK_SECRET')
-        
-        if webhook_secret:
+
+        # Check for both None and empty string
+        if webhook_secret and webhook_secret.strip():
             # Get signature headers from Resend/Svix
             svix_id = request.headers.get('svix-id')
             svix_timestamp = request.headers.get('svix-timestamp')
             svix_signature = request.headers.get('svix-signature')
-            
+
             if not all([svix_id, svix_timestamp, svix_signature]):
                 logger.warning("Missing webhook signature headers")
                 return jsonify({'error': 'Missing signature headers'}), 401
-            
+
             # Guard against empty string headers
             if not svix_signature.strip():
                 logger.warning("Empty webhook signature header")
                 return jsonify({'error': 'Empty signature header'}), 401
-            
+
             # Verify signature using HMAC-SHA256
             payload_bytes = request.get_data()
             signed_content = f"{svix_id}.{svix_timestamp}.{payload_bytes.decode('utf-8')}"
-            
+
             # Extract the base64 encoded secret
             secret_bytes = webhook_secret.encode('utf-8')
             if webhook_secret.startswith('whsec_'):
-                import base64
                 secret_bytes = base64.b64decode(webhook_secret[6:])
-            
+
             expected_sig = hmac.new(
                 secret_bytes,
                 signed_content.encode('utf-8'),
                 hashlib.sha256
             ).digest()
-            
-            import base64
+
             expected_sig_b64 = base64.urlsafe_b64encode(expected_sig).decode('utf-8')
             
             # Svix sends signatures as "v1,<sig> v1,<sig2>" or just "v1,<sig>"
@@ -890,17 +957,13 @@ def resend_webhook():
 
 
 @brief_bp.route('/brief/admin/analytics')
+@admin_required
 def admin_analytics():
     """
     Unified email analytics dashboard.
     Uses EmailAnalytics service for DRY stats retrieval.
     """
-    from flask_login import current_user
     from app.lib.email_analytics import EmailAnalytics
-    
-    if not current_user.is_authenticated or not current_user.is_admin:
-        flash('Admin access required', 'error')
-        return redirect(url_for('brief.today'))
     
     # Get filter params
     category_filter = request.args.get('category', None)

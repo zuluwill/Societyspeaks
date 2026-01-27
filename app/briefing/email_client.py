@@ -10,12 +10,55 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 from flask import render_template, current_app
+from sqlalchemy import update
 from app import db
 from app.models import BriefRun, BriefRecipient, Briefing, SendingDomain
 from app.resend_client import ResendEmailClient as BaseResendClient
 from app.storage_utils import get_base_url
 
 logger = logging.getLogger(__name__)
+
+
+def _mark_brief_run_sent(brief_run: BriefRun, reason: str = "sent") -> bool:
+    """
+    Atomically mark a BriefRun as sent using UPDATE with WHERE clause.
+
+    This prevents race conditions where multiple processes might try to
+    mark the same BriefRun as sent simultaneously (TOCTOU vulnerability).
+
+    Args:
+        brief_run: BriefRun instance to mark as sent
+        reason: Reason for marking as sent (for logging)
+
+    Returns:
+        True if this process successfully marked it as sent,
+        False if another process already marked it
+    """
+    try:
+        result = db.session.execute(
+            update(BriefRun)
+            .where(BriefRun.id == brief_run.id)
+            .where(BriefRun.sent_at == None)  # noqa: E711 - SQLAlchemy requires == None
+            .values(sent_at=datetime.utcnow(), status='sent')
+        )
+        db.session.commit()
+
+        if result.rowcount == 0:
+            # Another process already marked it - refresh to get actual sent_at
+            db.session.refresh(brief_run)
+            logger.warning(
+                f"BriefRun {brief_run.id} already sent at {brief_run.sent_at} by another process. "
+                f"Reason for this attempt: {reason}"
+            )
+            return False
+
+        logger.info(f"BriefRun {brief_run.id} marked as sent ({reason})")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to mark BriefRun {brief_run.id} as sent: {e}")
+        db.session.rollback()
+        return False
 
 
 class BriefingEmailClient:
@@ -263,19 +306,10 @@ class BriefingEmailClient:
         # Handle case where no eligible recipients exist (e.g., all recipients added after run)
         # Mark as sent to prevent infinite retries of old runs
         if total_recipients == 0:
-            db.session.refresh(brief_run)
-            if not brief_run.sent_at:
-                brief_run.sent_at = datetime.utcnow()
-                brief_run.status = 'sent'
-                try:
-                    db.session.commit()
-                    logger.info(
-                        f"BriefRun {brief_run.id} marked as sent (no eligible recipients - "
-                        f"all recipients added after run was created)"
-                    )
-                except Exception as e:
-                    logger.error(f"Failed to mark BriefRun {brief_run.id} as sent: {e}")
-                    db.session.rollback()
+            _mark_brief_run_sent(
+                brief_run,
+                reason="no eligible recipients - all recipients added after run was created"
+            )
             return {'sent': 0, 'failed': 0, 'method': 'none', 'skipped': 'no_eligible_recipients'}
 
         # Use batch sending for larger recipient lists (threshold: 10+)
@@ -284,23 +318,9 @@ class BriefingEmailClient:
         else:
             result = self._send_individual_to_recipients(brief_run, recipients)
 
-        # Update brief_run sent_at if any were sent (with race condition protection)
+        # Update brief_run sent_at if any were sent (with atomic race condition protection)
         if result['sent'] > 0:
-            # Refresh from database to check if another process already sent it
-            db.session.refresh(brief_run)
-            if not brief_run.sent_at:
-                brief_run.sent_at = datetime.utcnow()
-                brief_run.status = 'sent'
-                try:
-                    db.session.commit()
-                except Exception as e:
-                    logger.error(f"Failed to update sent_at for BriefRun {brief_run.id}: {e}")
-                    db.session.rollback()
-            else:
-                logger.warning(
-                    f"BriefRun {brief_run.id} already sent at {brief_run.sent_at} by another process. "
-                    f"Skipping duplicate status update (recipients may have received duplicate emails)."
-                )
+            _mark_brief_run_sent(brief_run, reason=f"sent to {result['sent']} recipients")
 
         logger.info(
             f"Sent BriefRun {brief_run.id} to {result['sent']}/{total_recipients} recipients "

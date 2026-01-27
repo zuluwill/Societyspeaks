@@ -11,31 +11,13 @@ from app import db
 from app.models import DailyBrief, BriefItem, TrendingTopic, User
 from app.brief.generator import generate_daily_brief
 from app.brief.topic_selector import select_todays_topics
-from functools import wraps
+from app.decorators import admin_required
 import logging
 
 logger = logging.getLogger(__name__)
 
 # Create admin blueprint
 brief_admin_bp = Blueprint('brief_admin', __name__, url_prefix='/admin/brief')
-
-
-def admin_required(f):
-    """Decorator to require admin access"""
-    @wraps(f)
-    @login_required
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated:
-            flash('Please log in to access admin features.', 'error')
-            return redirect(url_for('auth.login'))
-
-        # Check if user is admin (adjust based on your User model)
-        if not getattr(current_user, 'is_admin', False):
-            flash('Admin access required.', 'error')
-            return redirect(url_for('index'))
-
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 @brief_admin_bp.route('/')

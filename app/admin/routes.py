@@ -5,13 +5,13 @@ from app import db
 from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from app.admin.forms import UserAssignmentForm
-from functools import wraps
 from datetime import date, datetime, timedelta
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
-from app.storage_utils import upload_to_object_storage  
+from app.storage_utils import upload_to_object_storage
 # Note: send_email removed during Resend migration. Using inline Resend call for admin welcome emails.
 from app.admin import admin_bp
+from app.decorators import admin_required
 
 # Import Polymarket admin routes
 try:
@@ -21,18 +21,6 @@ except ImportError:
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 import time
-
-
-
-
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin:
-            flash('You need administrator privileges to access this area.', 'error')
-            return redirect(url_for('main.index'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 
 # Admin dashboard
