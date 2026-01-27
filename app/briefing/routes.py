@@ -1413,6 +1413,22 @@ def add_rss_source():
                 flash(f'A source with this RSS feed URL already exists: "{existing_source.name}"', 'info')
                 return redirect(url_for('briefing.list_sources'))
             
+            # Check if we already have this URL as a system source or curated news source
+            system_source = InputSource.query.filter_by(
+                owner_type='system',
+                type='rss'
+            ).filter(
+                InputSource.config_json['url'].astext == url
+            ).first()
+            
+            if not system_source:
+                # Also check NewsSource table for curated sources
+                news_source = NewsSource.query.filter_by(feed_url=url).first()
+                if news_source:
+                    flash(f'This feed is already available as a curated source: "{news_source.name}". You can add it directly from the source library.', 'info')
+            elif system_source:
+                flash(f'This feed is already available as a system source: "{system_source.name}". You can add it directly from the source library.', 'info')
+            
             source = InputSource(
                 owner_type=owner_type,
                 owner_id=owner_id,
