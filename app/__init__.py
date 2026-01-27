@@ -476,16 +476,34 @@ def create_app():
         return render_template('errors/429.html', error_code=429, 
                error_message="Too many requests. Please try again later."), 429
 
+    # Health check endpoint - must respond immediately for deployment health checks
+    @app.route('/health')
+    def health_check():
+        """Simple health check endpoint that responds immediately."""
+        return {'status': 'healthy'}, 200
+
     # Initialize and start background scheduler (Phase 3.3)
     # Only runs in production, not during migrations or tests
+    # IMPORTANT: Scheduler startup is deferred to avoid blocking gunicorn port binding
     if not app.config.get('TESTING') and not app.config.get('SQLALCHEMY_MIGRATE'):
+        import threading
         from app.scheduler import init_scheduler, start_scheduler
-        try:
-            init_scheduler(app)
-            start_scheduler()
-            app.logger.info("Background scheduler started successfully")
-        except Exception as e:
-            app.logger.error(f"Failed to start scheduler: {e}")
+        
+        def _deferred_scheduler_start():
+            """Start scheduler after a short delay to allow gunicorn to bind port first."""
+            import time
+            time.sleep(5)  # Wait 5 seconds for gunicorn to be fully ready
+            try:
+                init_scheduler(app)
+                start_scheduler()
+                app.logger.info("Background scheduler started successfully (deferred)")
+            except Exception as e:
+                app.logger.error(f"Failed to start scheduler: {e}")
+        
+        # Start scheduler in background thread to avoid blocking
+        scheduler_thread = threading.Thread(target=_deferred_scheduler_start, daemon=True)
+        scheduler_thread.start()
+        app.logger.info("Scheduler startup deferred to background thread")
 
 
     return app

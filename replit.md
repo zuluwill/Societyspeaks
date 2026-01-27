@@ -31,6 +31,12 @@ The platform uses a unified content ingestion system through the `InputSource` a
 ### Feature Specifications
 The platform integrates Pol.is for discussion dynamics, supports topic categorization, and geographic filtering. A dedicated News feed page displays discussions from trending topics with source transparency. Security measures include Flask-Talisman (CSP), Flask-Limiter (rate limiting), Flask-SeaSurf (CSRF protection), and Werkzeug for password hashing. Replit Object Storage handles user-uploaded images. The platform supports dual individual and company profiles. Daily question emails include one-click voting with privacy-controlled comment sharing and syncing to linked discussion statements for authenticated users. Source pages provide comprehensive metadata and an "Engagement Score." A political diversity system monitors and ensures balanced representation of political leanings across content.
 
+### Deployment Architecture
+The application uses gunicorn with a single worker for Replit VM deployments. Key deployment considerations:
+- **Health Check Endpoint**: `/health` returns `{"status": "healthy"}` immediately, allowing deployment health checks to pass before background tasks initialize
+- **Deferred Scheduler Startup**: APScheduler background jobs are initialized in a separate thread after a 5-second delay, preventing the scheduler from blocking gunicorn's port binding during startup
+- **Production Detection**: The `REPLIT_DEPLOYMENT=1` environment variable is the only reliable indicator of production deployment (NOT `FLASK_ENV`)
+
 ### System Design Choices
 PostgreSQL is the primary database, optimized with connection pooling, health checks, pagination, eager loading, and indexing. Redis caching further enhances performance. Logging is centralized, and configuration uses `config.py` with environment variables. A `SparsityAwareScaler` is used in consensus clustering to identify diverse opinion groups. A "Participation Gate" requires users to vote on statements before viewing consensus analysis to prevent anchoring bias. Briefing templates are available via a marketplace, enforcing guardrails upon cloning. Briefing output includes structured HTML with branding, email analytics (open/click tracking), and Slack integration.
 
