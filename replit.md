@@ -88,6 +88,7 @@ PostgreSQL is the primary database, optimized with connection pooling, health ch
 ### Weekly Batch Template Fix (Jan 27)
 - Fixed critical bug: `weekly_batch.html` was extending `base.html` (non-existent) instead of `layout.html`
 - This caused a `TemplateNotFound` 500 error when accessing `/daily/weekly` with question parameters
+- Added missing CSRF token to AJAX vote requests (`X-CSRFToken` header)
 - All daily templates now correctly extend `layout.html`
 
 ### Mobile Touch Event Fixes (Jan 26)
