@@ -237,6 +237,9 @@ class BriefingEmailClient:
 
         Uses batch sending for efficiency when recipient count exceeds threshold.
         Falls back to individual sending for small lists or when batch fails.
+        
+        Only sends to recipients who were added BEFORE the brief run was created,
+        preventing new recipients from receiving a flood of historical briefs.
 
         Args:
             brief_run: BriefRun instance
@@ -245,9 +248,35 @@ class BriefingEmailClient:
             dict: {'sent': count, 'failed': count, 'method': 'batch'|'individual'}
         """
         briefing = brief_run.briefing
-        recipients = briefing.recipients.filter_by(status='active').all()
+        
+        # Only send to recipients who were added before this run was created
+        # This prevents new recipients from receiving all historical runs
+        # Use created_at with fallback to scheduled_at for robustness
+        run_timestamp = brief_run.created_at or brief_run.scheduled_at
+        recipients = briefing.recipients.filter(
+            BriefRecipient.status == 'active',
+            BriefRecipient.created_at <= run_timestamp
+        ).all()
 
         total_recipients = len(recipients)
+        
+        # Handle case where no eligible recipients exist (e.g., all recipients added after run)
+        # Mark as sent to prevent infinite retries of old runs
+        if total_recipients == 0:
+            db.session.refresh(brief_run)
+            if not brief_run.sent_at:
+                brief_run.sent_at = datetime.utcnow()
+                brief_run.status = 'sent'
+                try:
+                    db.session.commit()
+                    logger.info(
+                        f"BriefRun {brief_run.id} marked as sent (no eligible recipients - "
+                        f"all recipients added after run was created)"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to mark BriefRun {brief_run.id} as sent: {e}")
+                    db.session.rollback()
+            return {'sent': 0, 'failed': 0, 'method': 'none', 'skipped': 'no_eligible_recipients'}
 
         # Use batch sending for larger recipient lists (threshold: 10+)
         if total_recipients >= 10:
