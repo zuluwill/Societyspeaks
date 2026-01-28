@@ -102,10 +102,7 @@
     {% if discussions.items %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for discussion in discussions.items %}
-        <div class="discussion-card-wrapper"
-             data-title="{{ discussion.title|e }}"
-             data-topic="{{ discussion.topic|e }}"
-             data-description="{{ discussion.description|strip_markdown|e }}">
+        <div>
             {{ discussion_card(discussion) }}
         </div>
         {% endfor %}
@@ -179,25 +176,16 @@
         </div>
     {% endif %}
 
+    <script src="{{ url_for('static', filename='js/search-filter.js') }}"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('discussion-search');
-        const clearBtn = document.getElementById('discussion-search-clear');
-        
-        if (searchInput && clearBtn) {
-            // Show/hide clear button based on input value
-            function updateClearBtn() {
-                clearBtn.classList.toggle('hidden', !searchInput.value);
-            }
-            updateClearBtn();
-            searchInput.addEventListener('input', updateClearBtn);
-            
-            // Clear button clears and submits to show all results
-            clearBtn.addEventListener('click', function() {
-                searchInput.value = '';
-                searchInput.form.submit();
-            });
-        }
+        // Server-side search with auto-submit
+        setupServerSearch({
+            inputId: 'discussion-search',
+            clearBtnId: 'discussion-search-clear',
+            autoSubmit: true,
+            debounceMs: 400
+        });
     });
     </script>
 

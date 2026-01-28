@@ -92,23 +92,27 @@ content %}
         <div class="relative flex-1">
           <input
             type="text"
+            id="article-search"
             name="q"
             value="{{ search_term or '' }}"
-            placeholder="Search articles by headline, content, or source..."
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            placeholder="Search by headline, summary, or source..."
+            class="w-full pl-10 pr-12 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
           />
           <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
+          <button
+            id="article-search-clear"
+            type="button"
+            class="absolute inset-y-0 right-0 px-3 text-xs text-gray-500 hover:text-gray-700 {{ '' if search_term else 'hidden' }}"
+            aria-label="Clear search"
+          >
+            Clear
+          </button>
         </div>
         <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
           Search
         </button>
-        {% if search_term %}
-        <a href="{{ url_for('news.dashboard') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium">
-          Clear
-        </a>
-        {% endif %}
       </form>
       {% if search_term %}
       <p class="mt-2 text-sm text-gray-600">
@@ -299,50 +303,6 @@ content %}
         </div>
       </div>
 
-      <!-- Article Search -->
-      <div class="flex-1 min-w-[220px]">
-        <div class="flex flex-col gap-1">
-          <div class="relative">
-            <span
-              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
-            >
-              <svg
-                class="h-4 w-4 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-4.35-4.35M11 18a7 7 0 100-14 7 7 0 000 14z"
-                />
-              </svg>
-            </span>
-            <input
-              id="article-search"
-              type="text"
-              class="block w-full pl-9 pr-20 py-2 text-sm border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Search articles, topics, publications..."
-            />
-            <button
-              id="article-search-clear"
-              type="button"
-              class="absolute inset-y-0 right-0 px-3 text-xs text-gray-500 hover:text-gray-700 hidden"
-              aria-label="Clear search"
-            >
-              Clear
-            </button>
-          </div>
-          <p
-            id="article-filter-status"
-            class="text-xs text-gray-500 hidden"
-            aria-live="polite"
-            role="status"
-          ></p>
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -593,10 +553,19 @@ content %}
 
 <script src="{{ url_for('static', filename='js/search-filter.js') }}"></script>
 <script>
+  // Server-side search with auto-submit, clear button and Escape key
+  document.addEventListener("DOMContentLoaded", function() {
+    setupServerSearch({
+      inputId: "article-search",
+      clearBtnId: "article-search-clear",
+      autoSubmit: true,
+      debounceMs: 400
+    });
+  });
+
   let currentLeaning = "all";
   let currentType = "all";
   let selectedSources = new Set();
-  let currentSearch = "";
 
   // Initialize all sources as selected
   document.querySelectorAll(".source-checkbox").forEach((cb) => {
@@ -706,73 +675,24 @@ content %}
       badge.classList.add("hidden");
     }
 
-    // Filter articles by source, leaning, content type, and search
+    // Filter articles by source, leaning, and content type
     const cards = document.querySelectorAll(".article-card");
-    let visibleCount = 0;
-    const totalCount = cards.length;
 
     cards.forEach((card) => {
       const sourceId = card.dataset.sourceId;
       const leaning = card.dataset.leaning;
       const type = card.dataset.type;
-      const title = (card.dataset.title || "").toLowerCase();
-      const summary = (card.dataset.summary || "").toLowerCase();
-      const sourceName = (card.dataset.sourceName || "").toLowerCase();
 
       const matchesLeaning =
         currentLeaning === "all" || leaning === currentLeaning;
       const matchesSource = selectedSources.has(sourceId);
       const matchesType = currentType === "all" || type === currentType;
-      const matchesSearch =
-        !currentSearch ||
-        title.includes(currentSearch) ||
-        summary.includes(currentSearch) ||
-        sourceName.includes(currentSearch);
 
-      const isVisible =
-        matchesLeaning && matchesSource && matchesType && matchesSearch;
+      const isVisible = matchesLeaning && matchesSource && matchesType;
       card.style.display = isVisible ? "" : "none";
-
-      if (isVisible) {
-        visibleCount += 1;
-      }
     });
-
-    // Update filter status
-    const statusEl = document.getElementById("article-filter-status");
-    if (statusEl) {
-      if (
-        !currentSearch &&
-        selectedSources.size ===
-          document.querySelectorAll(".source-checkbox").length &&
-        currentType === "all" &&
-        currentLeaning === "all"
-      ) {
-        statusEl.classList.add("hidden");
-        statusEl.textContent = "";
-      } else {
-        statusEl.classList.remove("hidden");
-        if (visibleCount === 0 && totalCount > 0) {
-          statusEl.textContent = "No articles match your current filters";
-        } else {
-          statusEl.textContent = `Showing ${visibleCount} of ${totalCount} articles`;
-        }
-      }
-    }
   }
 
-  document.addEventListener("DOMContentLoaded", function () {
-    // Use shared utility for search input handling
-    // This integrates with the multi-filter system above
-    setupSearchInput({
-      inputId: "article-search",
-      clearBtnId: "article-search-clear",
-      onSearch: function(query) {
-        currentSearch = query;
-        applyAllFilters();
-      }
-    });
-  });
 </script>
 
 <style>

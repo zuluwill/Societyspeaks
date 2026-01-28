@@ -62,14 +62,6 @@ discussion_card %} {% block head %}
   .topic-scroll::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
   }
-  /* Smooth filter transitions for discussion cards */
-  .discussion-card-wrapper {
-    transition: opacity 0.15s ease-out;
-  }
-  .discussion-card-wrapper[style*="display: none"] {
-    opacity: 0;
-    pointer-events: none;
-  }
 </style>
 {% endblock %} {% block content %}
 <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -321,12 +313,7 @@ discussion_card %} {% block head %}
     <div class="topic-scroll overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
       <div class="flex gap-4 sm:gap-6" style="min-width: max-content">
         {% for discussion in topic_discussions %}
-        <div
-          class="w-72 sm:w-80 flex-shrink-0 discussion-card-wrapper"
-          data-title="{{ discussion.title|e }}"
-          data-topic="{{ topic|e }}"
-          data-description="{{ discussion.description|strip_markdown|e }}"
-        >
+        <div class="w-72 sm:w-80 flex-shrink-0">
           {{ discussion_card(discussion) }}
         </div>
         {% endfor %}
@@ -366,12 +353,7 @@ discussion_card %} {% block head %}
   {% endif %} {% elif discussions %} {% if discussions.items %}
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for discussion in discussions.items %}
-    <div
-      class="discussion-card-wrapper"
-      data-title="{{ discussion.title|e }}"
-      data-topic="{{ discussion.topic|e }}"
-      data-description="{{ discussion.description|strip_markdown|e }}"
-    >
+    <div>
       {{ discussion_card(discussion) }}
     </div>
     {% endfor %}
@@ -500,24 +482,16 @@ discussion_card %} {% block head %}
   {% endif %}
 </div>
 {% endblock %} {% block scripts %} {{ super() }}
+<script src="{{ url_for('static', filename='js/search-filter.js') }}"></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const searchInput = document.getElementById("discussion-search");
-    const clearBtn = document.getElementById("discussion-search-clear");
-    
-    if (searchInput && clearBtn) {
-      // Show/hide clear button based on input value
-      function updateClearBtn() {
-        clearBtn.classList.toggle("hidden", !searchInput.value);
-      }
-      searchInput.addEventListener("input", updateClearBtn);
-      
-      // Clear button clears and submits to show all results
-      clearBtn.addEventListener("click", function() {
-        searchInput.value = "";
-        searchInput.form.submit();
-      });
-    }
+    // Server-side search with auto-submit
+    setupServerSearch({
+      inputId: "discussion-search",
+      clearBtnId: "discussion-search-clear",
+      autoSubmit: true,
+      debounceMs: 400
+    });
   });
 </script>
 {% endblock %}

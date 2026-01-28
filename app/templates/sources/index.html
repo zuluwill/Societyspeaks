@@ -23,39 +23,16 @@ source_logo %} {% block head %}
     "url": "{{ url_for('sources.index', _external=True) }}"
   }
 </script>
-<style>
-  /* Smooth filter transitions for source cards */
-  .source-card {
-    transition: opacity 0.15s ease-out, transform 0.2s, box-shadow 0.2s;
-  }
-  .source-card[style*="display: none"] {
-    opacity: 0;
-    pointer-events: none;
-  }
-</style>
 {% endblock %} {% block scripts %} {{ super() }}
 <script src="{{ url_for('static', filename='js/search-filter.js') }}"></script>
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    createSearchFilter({
+    // Server-side search with auto-submit
+    setupServerSearch({
       inputId: "source-search",
       clearBtnId: "source-search-clear",
-      statusId: "source-filter-status",
-      itemSelector: ".source-card",
-      getSearchableText: function(card) {
-        return [
-          card.dataset.name || "",
-          card.dataset.category || "",
-          card.dataset.country || "",
-          card.dataset.leaning || ""
-        ].join(" ");
-      },
-      messages: {
-        noResults: "No sources match your search on this page",
-        showingResults: function(visible, total) {
-          return "Showing " + visible + " of " + total + " sources on this page";
-        }
-      }
+      autoSubmit: true,
+      debounceMs: 400
     });
   });
 </script>
@@ -112,16 +89,6 @@ source_logo %} {% block head %}
           Clear
         </button>
       </div>
-      <p
-        id="source-filter-status"
-        class="mt-1 text-xs text-gray-500 hidden"
-        aria-live="polite"
-        role="status"
-      ></p>
-      <p class="mt-1 text-xs text-gray-400">
-        Type to filter this page instantly. Press Enter or click "Apply Filters" to search all sources.
-      </p>
-
       <!-- Filters -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <!-- Category Filter -->
@@ -231,11 +198,7 @@ source_logo %} {% block head %}
     item.discussion_count %} {% if source.slug %}
     <a
       href="{{ url_for('sources.view_source', slug=source.slug) }}"
-      class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden group source-card"
-      data-name="{{ source.name|lower }}"
-      data-category="{{ source.source_category or '' }}"
-      data-country="{{ source.country or '' }}"
-      data-leaning="{{ source.political_leaning_label or '' }}"
+      class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 overflow-hidden group"
     >
       <!-- Source Card -->
       <div class="p-5">
