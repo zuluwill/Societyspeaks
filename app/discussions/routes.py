@@ -25,9 +25,11 @@ discussions_bp = Blueprint('discussions', __name__)
 def news_feed():
     """Display discussions generated from trending news topics."""
     from app.models import NewsSource
+    from sqlalchemy import or_
     
     page = request.args.get('page', 1, type=int)
     topic_filter = request.args.get('topic', None)
+    search_term = request.args.get('q', '').strip()
     view_mode = request.args.get('view', 'latest')  # 'latest' (default), 'topics', or filtered by topic
     
     news_discussion_ids = db.session.query(TrendingTopic.discussion_id).filter(
@@ -36,6 +38,10 @@ def news_feed():
     
     # Get active news sources for transparency
     news_sources = NewsSource.query.filter_by(is_active=True).order_by(NewsSource.name).all()
+    
+    # If searching, always use flat view
+    if search_term:
+        view_mode = 'latest'
     
     if view_mode == 'topics' and not topic_filter:
         # Group discussions by topic for topic-organized view
@@ -55,6 +61,7 @@ def news_feed():
             topics=Discussion.TOPICS,
             topic_filter=None,
             view_mode=view_mode,
+            search_term='',
             discussions=None
         )
     else:
@@ -65,6 +72,15 @@ def news_feed():
         
         if topic_filter:
             query = query.filter(Discussion.topic == topic_filter)
+        
+        # Apply search filter
+        if search_term:
+            query = query.filter(
+                or_(
+                    Discussion.title.ilike(f"%{search_term}%"),
+                    Discussion.description.ilike(f"%{search_term}%")
+                )
+            )
         
         discussions = query.order_by(Discussion.created_at.desc()).paginate(
             page=page, per_page=12, error_out=False
@@ -77,6 +93,7 @@ def news_feed():
             topics=Discussion.TOPICS,
             topic_filter=topic_filter,
             view_mode=view_mode,
+            search_term=search_term,
             topics_with_discussions=None
         )
 
