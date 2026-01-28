@@ -180,22 +180,22 @@ def init_commands(app):
             click.echo(f"Error sending test email: {str(e)}", err=True)
 
     @app.cli.command('seed-allsides')
-    @click.option('--update', is_flag=True, help='Update existing ratings')
-    def seed_allsides_cmd(update):
-        """Seed AllSides political leaning ratings"""
+    @click.option('--force', is_flag=True, help='Force update all ratings even if unchanged')
+    def seed_allsides_cmd(force):
+        """Seed political leaning ratings from AllSides and MBFC"""
         try:
-            click.echo("Updating AllSides ratings...")
-            results = update_source_leanings()
+            click.echo("Updating political leaning ratings (AllSides + MBFC)...")
+            results = update_source_leanings(force=force)
 
             click.echo(f"✓ Updated: {results['updated']} sources")
-            click.echo(f"  Skipped: {results['skipped']} (already rated)")
+            click.echo(f"  Unchanged: {results['unchanged']}")
             if results['not_found']:
                 click.echo(f"  Not found: {len(results['not_found'])} sources")
                 for name in results['not_found']:
                     click.echo(f"    - {name}")
 
         except Exception as e:
-            click.echo(f"Error seeding AllSides: {str(e)}", err=True)
+            click.echo(f"Error seeding ratings: {str(e)}", err=True)
 
     @app.cli.command('test-topic-selection')
     @click.option('--limit', default=5, help='Number of topics to select')

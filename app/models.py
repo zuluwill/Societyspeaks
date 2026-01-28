@@ -959,7 +959,7 @@ class NewsSource(db.Model):
 
     # Political leaning for coverage analysis (-3 to +3: left to right, 0 = center)
     political_leaning = db.Column(db.Float)  # -2=Left, -1=Lean Left, 0=Center, 1=Lean Right, 2=Right
-    leaning_source = db.Column(db.String(50))  # 'allsides', 'manual', 'llm_inferred'
+    leaning_source = db.Column(db.String(50))  # 'allsides', 'mbfc', 'adfontesmedia', 'manual'
     leaning_updated_at = db.Column(db.DateTime)
 
     last_fetched_at = db.Column(db.DateTime)
