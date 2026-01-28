@@ -308,7 +308,7 @@
         class="mb-4"
         style="background: #f8f9fa; padding: 16px; border-radius: 8px"
       >
-        <div class="vote-buttons-grid" data-statement-id="{{ statement.id }}">
+        <div class="vote-buttons-grid" data-statement-id="{{ statement.id }}" data-quick-response-url="{{ url_for('statements.quick_response', statement_id=statement.id) }}">
           <!-- Agree Button -->
           <button
             type="button"
@@ -913,6 +913,11 @@
       // Check if prompt already exists
       if (statementDiv.querySelector('.argument-prompt')) return;
 
+      // Get URL from data attribute (best practice - avoids hardcoded paths)
+      const voteGrid = statementDiv.querySelector('.vote-buttons-grid');
+      const quickResponseUrl = voteGrid ? voteGrid.dataset.quickResponseUrl : '';
+      if (!quickResponseUrl) return;
+
       const position = voteValue === 1 ? 'pro' : 'con';
       const positionLabel = voteValue === 1 ? 'supporting' : 'opposing';
 
@@ -923,7 +928,7 @@
                       <p class="text-sm font-medium text-purple-900 mb-2">
                           Want to explain your ${positionLabel} view?
                       </p>
-                      <form action="/statements/${statementId}/quick-response" method="POST" class="flex flex-col sm:flex-row gap-2">
+                      <form action="${quickResponseUrl}" method="POST" class="flex flex-col sm:flex-row gap-2">
                           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                           <input type="hidden" name="position" value="${position}">
                           <input type="text" name="content"
