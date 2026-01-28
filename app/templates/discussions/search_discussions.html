@@ -21,6 +21,16 @@
       "url": "{{ url_for('discussions.search_discussions', _external=True) }}"
     }
     </script>
+    <style>
+      /* Smooth filter transitions for discussion cards */
+      .discussion-card-wrapper {
+        transition: opacity 0.15s ease-out;
+      }
+      .discussion-card-wrapper[style*="display: none"] {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -34,7 +44,7 @@
     <!-- Search and Filters -->
     <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
         <form method="GET" action="{{ url_for('discussions.search_discussions') }}" class="space-y-4">
-            <!-- Search Bar -->
+            <!-- Search Bar (server + client-side filter) -->
             <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,11 +52,22 @@
                     </svg>
                 </div>
                 <input type="text" 
+                       id="discussion-search"
                        name="q" 
                        value="{{ search_term }}"
                        placeholder="Search discussions..." 
-                       class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                       class="block w-full pl-10 pr-16 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                <button id="discussion-search-clear"
+                        type="button"
+                        class="absolute inset-y-0 right-0 px-3 text-xs text-gray-500 hover:text-gray-700 hidden"
+                        aria-label="Clear search">
+                    Clear
+                </button>
             </div>
+            <p id="discussion-filter-status" class="mt-1 text-xs text-gray-500 hidden" aria-live="polite" role="status"></p>
+            <p class="mt-1 text-xs text-gray-400">
+                Type to filter this page instantly. Press Enter or click "Apply Filters" to search all discussions.
+            </p>
 
             <!-- Filters -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -95,7 +116,12 @@
     {% if discussions.items %}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for discussion in discussions.items %}
+        <div class="discussion-card-wrapper"
+             data-title="{{ discussion.title|e }}"
+             data-topic="{{ discussion.topic|e }}"
+             data-description="{{ discussion.description|strip_markdown|e }}">
             {{ discussion_card(discussion) }}
+        </div>
         {% endfor %}
     </div>
 
@@ -167,45 +193,29 @@
         </div>
     {% endif %}
 
+    <script src="{{ url_for('static', filename='js/search-filter.js') }}"></script>
     <script>
-        const cityCache = {};
-
-        function fetchCities() {
-            const countrySelect = document.getElementById('country-select');
-            const selectedCountry = countrySelect.value;
-            const citySelect = document.getElementById('city-select');
-
-            // Check if cities for the selected country are already cached
-            if (cityCache[selectedCountry]) {
-                populateCityDropdown(cityCache[selectedCountry]);
-                return;
+    document.addEventListener('DOMContentLoaded', function() {
+        createSearchFilter({
+            inputId: 'discussion-search',
+            clearBtnId: 'discussion-search-clear',
+            statusId: 'discussion-filter-status',
+            itemSelector: '.discussion-card-wrapper',
+            getSearchableText: function(wrapper) {
+                return [
+                    wrapper.dataset.title || '',
+                    wrapper.dataset.topic || '',
+                    wrapper.dataset.description || ''
+                ].join(' ');
+            },
+            messages: {
+                noResults: 'No discussions match your search on this page',
+                showingResults: function(visible, total) {
+                    return 'Showing ' + visible + ' of ' + total + ' discussions on this page';
+                }
             }
-
-            // Fetch cities from the existing endpoint and cache them
-            fetch(`/api/cities/${selectedCountry}`)
-                .then(response => response.json())
-                .then(cities => {
-                    cityCache[selectedCountry] = cities; // Cache the fetched cities
-                    populateCityDropdown(cities);
-                })
-                .catch(error => {
-                    console.error('Error fetching cities:', error);
-                    populateCityDropdown([]); // Clear the dropdown if there's an error
-                });
-        }
-
-        function populateCityDropdown(cities) {
-            const citySelect = document.getElementById('city-select');
-            citySelect.innerHTML = ''; // Clear previous options
-            citySelect.disabled = cities.length === 0;
-
-            cities.forEach(city => {
-                const option = document.createElement('option');
-                option.value = city;
-                option.textContent = city;
-                citySelect.appendChild(option);
-            });
-        }
+        });
+    });
     </script>
 
 </div>
