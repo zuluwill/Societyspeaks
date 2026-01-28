@@ -20,6 +20,7 @@ import signal
 logger = logging.getLogger(__name__)
 scheduler = None
 _shutdown_registered = False
+_shutting_down = False
 
 
 def _is_production_environment() -> bool:
@@ -1724,15 +1725,26 @@ def shutdown_scheduler(wait: bool = False):
         wait: If True, wait for running jobs to complete. 
               Default False to avoid blocking during worker shutdown.
     """
-    global scheduler
+    global scheduler, _shutting_down
+    
+    _shutting_down = True
     
     if scheduler:
         try:
             if scheduler.running:
+                # Remove all pending jobs first to prevent "cannot schedule new futures" errors
+                try:
+                    for job in scheduler.get_jobs():
+                        job.remove()
+                except Exception:
+                    pass
+                
                 scheduler.shutdown(wait=wait)
                 logger.info("Scheduler shut down gracefully")
-        except Exception as e:
-            logger.warning(f"Error during scheduler shutdown (may already be stopped): {e}")
+        except (RuntimeError, Exception) as e:
+            # Ignore "cannot schedule new futures after shutdown" errors
+            if "cannot schedule new futures" not in str(e):
+                logger.warning(f"Error during scheduler shutdown (may already be stopped): {e}")
 
 
 def _register_shutdown_handlers():
