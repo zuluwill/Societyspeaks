@@ -208,6 +208,19 @@ def _parse_cached_articles(articles: List[Dict]) -> List[Dict]:
     return articles
 
 
+def _filter_articles_by_search(articles: List[Dict], search_term: str) -> List[Dict]:
+    """Filter articles by search term (matches title or summary)."""
+    if not search_term:
+        return articles
+    search_lower = search_term.lower()
+    return [
+        a for a in articles
+        if search_lower in (a.get('title') or '').lower()
+        or search_lower in (a.get('summary') or '').lower()
+        or search_lower in (a.get('source_name') or '').lower()
+    ]
+
+
 @news_bp.route('/news')
 @limiter.limit("60/minute")
 def dashboard():
@@ -217,6 +230,8 @@ def dashboard():
     Shows top articles from all 140+ sources across the political spectrum.
     Users can filter by source and by political leaning.
     """
+    search_term = request.args.get('q', '').strip()
+    
     # Check subscriber status for personalization (not access control)
     subscriber = None
     is_subscriber = False
@@ -238,6 +253,24 @@ def dashboard():
         left_articles = _parse_cached_articles(data['left_articles'])
         center_articles = _parse_cached_articles(data['center_articles'])
         right_articles = _parse_cached_articles(data['right_articles'])
+        
+        # Apply search filter if provided
+        if search_term:
+            left_articles = _filter_articles_by_search(left_articles, search_term)
+            center_articles = _filter_articles_by_search(center_articles, search_term)
+            right_articles = _filter_articles_by_search(right_articles, search_term)
+
+        # Recalculate coverage for search results
+        total_articles = len(left_articles) + len(center_articles) + len(right_articles)
+        coverage = {
+            'left_pct': round((len(left_articles) / total_articles * 100)) if total_articles > 0 else 0,
+            'center_pct': round((len(center_articles) / total_articles * 100)) if total_articles > 0 else 0,
+            'right_pct': round((len(right_articles) / total_articles * 100)) if total_articles > 0 else 0,
+            'left_count': len(left_articles),
+            'center_count': len(center_articles),
+            'right_count': len(right_articles),
+            'total': total_articles
+        } if search_term else data['coverage']
 
         return render_template(
             'news/dashboard.html',
@@ -247,11 +280,12 @@ def dashboard():
             left_sources=data['left_sources'],
             center_sources=data['center_sources'],
             right_sources=data['right_sources'],
-            coverage=data['coverage'],
+            coverage=coverage,
             subscriber=subscriber,
             is_subscriber=is_subscriber,
             show_email_capture=(not is_subscriber),
-            today=date.today()
+            today=date.today(),
+            search_term=search_term
         )
 
     except Exception as e:
