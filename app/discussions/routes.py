@@ -257,11 +257,17 @@ def view_discussion(discussion_id, slug):
 
 
 def fetch_discussions(search, country, city, topic, keywords, page, per_page=9, sort='recent'):
+    from sqlalchemy import or_
     query = Discussion.query
 
-    # Apply filters if provided
+    # Apply filters if provided - search both title and description
     if search:
-        query = query.filter(Discussion.title.ilike(f"%{search}%"))
+        query = query.filter(
+            or_(
+                Discussion.title.ilike(f"%{search}%"),
+                Discussion.description.ilike(f"%{search}%")
+            )
+        )
     if country:
         query = query.filter_by(country=country)
     if city:
