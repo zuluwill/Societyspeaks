@@ -294,8 +294,8 @@ class BriefingEmailClient:
         
         # Only send to recipients who were added before this run was created
         # This prevents new recipients from receiving all historical runs
-        # Use created_at with fallback to scheduled_at for robustness
-        run_timestamp = brief_run.created_at or brief_run.scheduled_at
+        # Use scheduled_at as the effective creation time (BriefRun doesn't have created_at field)
+        run_timestamp = brief_run.scheduled_at
         recipients = briefing.recipients.filter(
             BriefRecipient.status == 'active',
             BriefRecipient.created_at <= run_timestamp
