@@ -20,13 +20,13 @@
     <form method="POST" action="{{ url_for('auth.register') }}" class="mt-6">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label class="block text-sm font-medium text-gray-700">Username</label>
-        <input type="text" name="username" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
+        <input type="text" name="username" autocomplete="username" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
 
         <label class="block text-sm font-medium text-gray-700 mt-4">Email</label>
-        <input type="email" name="email" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
+        <input type="email" name="email" autocomplete="email" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
 
         <label class="block text-sm font-medium text-gray-700 mt-4">Password</label>
-        <input type="password" name="password" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
+        <input type="password" name="password" autocomplete="new-password" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
 
         <div class="mt-4">
             <label class="block text-sm font-medium text-gray-700">Verify you're human: What is {{ captcha_num1 }} + {{ captcha_num2 }}?</label>

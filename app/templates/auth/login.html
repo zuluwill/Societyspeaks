@@ -19,10 +19,10 @@
     <form method="POST" action="{{ url_for('auth.login') }}" class="mt-6">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <label class="block text-sm font-medium text-gray-700">Email</label>
-        <input type="email" name="email" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
+        <input type="email" name="email" autocomplete="email" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
 
         <label class="block text-sm font-medium text-gray-700 mt-4">Password</label>
-        <input type="password" name="password" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
+        <input type="password" name="password" autocomplete="current-password" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
 
         <div class="flex items-center justify-between mt-2">
             <a href="{{ url_for('auth.password_reset_request') }}" class="text-sm text-blue-500 hover:underline">Forgot Password?</a>
