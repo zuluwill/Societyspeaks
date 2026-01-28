@@ -21,16 +21,6 @@
       "url": "{{ url_for('discussions.search_discussions', _external=True) }}"
     }
     </script>
-    <style>
-      /* Smooth filter transitions for discussion cards */
-      .discussion-card-wrapper {
-        transition: opacity 0.15s ease-out;
-      }
-      .discussion-card-wrapper[style*="display: none"] {
-        opacity: 0;
-        pointer-events: none;
-      }
-    </style>
 {% endblock %}
 
 {% block content %}
@@ -64,10 +54,6 @@
                     Clear
                 </button>
             </div>
-            <p id="discussion-filter-status" class="mt-1 text-xs text-gray-500 hidden" aria-live="polite" role="status"></p>
-            <p class="mt-1 text-xs text-gray-400">
-                Type to filter this page instantly. Press Enter or click "Apply Filters" to search all discussions.
-            </p>
 
             <!-- Filters -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -193,28 +179,25 @@
         </div>
     {% endif %}
 
-    <script src="{{ url_for('static', filename='js/search-filter.js') }}"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        createSearchFilter({
-            inputId: 'discussion-search',
-            clearBtnId: 'discussion-search-clear',
-            statusId: 'discussion-filter-status',
-            itemSelector: '.discussion-card-wrapper',
-            getSearchableText: function(wrapper) {
-                return [
-                    wrapper.dataset.title || '',
-                    wrapper.dataset.topic || '',
-                    wrapper.dataset.description || ''
-                ].join(' ');
-            },
-            messages: {
-                noResults: 'No discussions match your search on this page',
-                showingResults: function(visible, total) {
-                    return 'Showing ' + visible + ' of ' + total + ' discussions on this page';
-                }
+        const searchInput = document.getElementById('discussion-search');
+        const clearBtn = document.getElementById('discussion-search-clear');
+        
+        if (searchInput && clearBtn) {
+            // Show/hide clear button based on input value
+            function updateClearBtn() {
+                clearBtn.classList.toggle('hidden', !searchInput.value);
             }
-        });
+            updateClearBtn();
+            searchInput.addEventListener('input', updateClearBtn);
+            
+            // Clear button clears and submits to show all results
+            clearBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                searchInput.form.submit();
+            });
+        }
     });
     </script>
 
