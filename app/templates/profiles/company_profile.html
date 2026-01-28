@@ -71,14 +71,26 @@
                                 <p class="text-gray-600 text-lg mt-2">{{ profile.description }}</p>
                             {% endif %}
                         </div>
-                        <!-- Share Button -->
-                        {% from "components/share_button.html" import share_button %}
-                        {{ share_button(
-                            title=profile.company_name + " is driving change through public discourse on SocietySpeaks",
-                            url=url_for('profiles.view_company_profile', company_name=profile.slug, _external=True),
-                            description="Join " + profile.company_name + " in shaping policy solutions through meaningful dialogue on SocietySpeaks.io. Be part of the conversation that matters!",
-                            button_style="primary"
-                        ) }}
+                        <div class="flex items-center gap-3">
+                            <!-- Edit Profile Button (only visible to profile owner) -->
+                            {% if current_user.is_authenticated and current_user.profile_type == 'company' and current_user.company_profile and current_user.company_profile.id == profile.id %}
+                            <a href="{{ url_for('profiles.edit_company_profile', company_name=profile.slug) }}" 
+                               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Edit Profile
+                            </a>
+                            {% endif %}
+                            <!-- Share Button -->
+                            {% from "components/share_button.html" import share_button %}
+                            {{ share_button(
+                                title=profile.company_name + " is driving change through public discourse on SocietySpeaks",
+                                url=url_for('profiles.view_company_profile', company_name=profile.slug, _external=True),
+                                description="Join " + profile.company_name + " in shaping policy solutions through meaningful dialogue on SocietySpeaks.io. Be part of the conversation that matters!",
+                                button_style="primary"
+                            ) }}
+                        </div>
                     </div>
 
                     <!-- Location -->
