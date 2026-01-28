@@ -54,7 +54,7 @@ discussion.title }}{% endblock %} {% block content %}
       action="{{ url_for('moderation.bulk_moderation_action', discussion_id=discussion.id) }}"
       id="bulkForm"
     >
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <div class="mb-4 flex space-x-2">
         <button
           type="button"
@@ -85,7 +85,8 @@ discussion.title }}{% endblock %} {% block content %}
             <!-- Statement Content -->
             <div class="bg-gray-50 p-3 rounded mb-3">
               <div class="text-sm text-gray-600 mb-1">
-                Statement by {{ flag.statement.user.name }}:
+                Statement by {% if flag.statement.user %}{{
+                flag.statement.user.username }}{% else %}Anonymous{% endif %}:
               </div>
               <div class="text-gray-900">{{ flag.statement.content }}</div>
               <div class="text-sm text-gray-500 mt-2">
@@ -103,7 +104,8 @@ discussion.title }}{% endblock %} {% block content %}
                 {{ flag.flag_reason }}
               </span>
               <span class="text-gray-600 text-sm">
-                Flagged by {{ flag.flagger_user.name }} on {{
+                Flagged by {% if flag.flagger_user %}{{
+                flag.flagger_user.username }}{% else %}Unknown{% endif %} on {{
                 flag.created_at.strftime('%b %d, %Y') }}
               </span>
             </div>
@@ -124,7 +126,11 @@ discussion.title }}{% endblock %} {% block content %}
                 action="{{ url_for('moderation.review_flag', discussion_id=discussion.id, flag_id=flag.id) }}"
                 class="inline"
               >
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
                 <input type="hidden" name="action" value="approve" />
                 <button
                   type="submit"
@@ -138,7 +144,11 @@ discussion.title }}{% endblock %} {% block content %}
                 action="{{ url_for('moderation.review_flag', discussion_id=discussion.id, flag_id=flag.id) }}"
                 class="inline"
               >
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input
+                  type="hidden"
+                  name="csrf_token"
+                  value="{{ csrf_token() }}"
+                />
                 <input type="hidden" name="action" value="reject" />
                 <button
                   type="submit"

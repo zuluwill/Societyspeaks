@@ -307,10 +307,19 @@
                     {% set cov_center_pct = (item.coverage_distribution.get('center', 0) * 100)|int %}
                     {% set cov_right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
                     {% set cov_total = cov_left_pct + cov_center_pct + cov_right_pct %}
-                    {% if cov_total > 0 %}
+
+                    {# Check which perspectives have actual sources - defensive for None/invalid types #}
+                    {% set sources_dict = item.sources_by_leaning if item.sources_by_leaning is mapping else {} %}
+                    {% set left_sources = sources_dict.get('left', []) or [] %}
+                    {% set center_sources = sources_dict.get('center', []) or [] %}
+                    {% set right_sources = sources_dict.get('right', []) or [] %}
+                    {% set has_any_sources = left_sources|length > 0 or center_sources|length > 0 or right_sources|length > 0 %}
+
+                    {# Only show coverage bar if we have actual sources to back it up #}
+                    {% if cov_total > 0 and has_any_sources %}
                     <div class="mb-6">
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Coverage Balance</p>
-                        
+
                         <!-- Coverage Bar with proper colors -->
                         <div class="w-full h-3 rounded-full overflow-hidden mb-3" style="display: flex; background-color: #e5e7eb;">
                             {% if cov_left_pct > 0 %}
@@ -323,30 +332,47 @@
                             <div style="width: {{ cov_right_pct }}%; background-color: #ef4444; height: 100%;"></div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="flex justify-between text-xs">
-                            <span class="text-blue-600 font-medium">{{ cov_left_pct }}% Left</span>
-                            <span class="text-purple-600 font-medium">{{ cov_center_pct }}% Centre</span>
-                            <span class="text-red-600 font-medium">{{ cov_right_pct }}% Right</span>
+                            <span class="text-blue-600 font-medium">
+                                {% if left_sources|length > 0 %}{{ cov_left_pct }}% Left ({{ left_sources|length }}){% else %}<span class="text-gray-400">No left coverage</span>{% endif %}
+                            </span>
+                            <span class="text-purple-600 font-medium">
+                                {% if center_sources|length > 0 %}{{ cov_center_pct }}% Centre ({{ center_sources|length }}){% else %}<span class="text-gray-400">No centre coverage</span>{% endif %}
+                            </span>
+                            <span class="text-red-600 font-medium">
+                                {% if right_sources|length > 0 %}{{ cov_right_pct }}% Right ({{ right_sources|length }}){% else %}<span class="text-gray-400">No right coverage</span>{% endif %}
+                            </span>
                         </div>
-                        
-                        {% if item.sources_by_leaning %}
-                        {% set has_sources = (item.sources_by_leaning.get('left') and item.sources_by_leaning.left|length > 0) or (item.sources_by_leaning.get('center') and item.sources_by_leaning.center|length > 0) or (item.sources_by_leaning.get('right') and item.sources_by_leaning.right|length > 0) %}
-                        {% if has_sources %}
+
+                        {# Show source names when available #}
+                        {% if has_any_sources %}
                         <div class="mt-3 pt-3 border-t border-gray-100">
                             <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                                {% if item.sources_by_leaning.get('left') and item.sources_by_leaning.left|length > 0 %}
-                                <span><span class="text-blue-600 font-medium">Left:</span> {{ item.sources_by_leaning.left|join(', ') }}</span>
+                                {% if left_sources|length > 0 %}
+                                <span><span class="text-blue-600 font-medium">Left:</span> {{ left_sources|join(', ') }}</span>
                                 {% endif %}
-                                {% if item.sources_by_leaning.get('center') and item.sources_by_leaning.center|length > 0 %}
-                                <span><span class="text-purple-600 font-medium">Centre:</span> {{ item.sources_by_leaning.center|join(', ') }}</span>
+                                {% if center_sources|length > 0 %}
+                                <span><span class="text-purple-600 font-medium">Centre:</span> {{ center_sources|join(', ') }}</span>
                                 {% endif %}
-                                {% if item.sources_by_leaning.get('right') and item.sources_by_leaning.right|length > 0 %}
-                                <span><span class="text-red-600 font-medium">Right:</span> {{ item.sources_by_leaning.right|join(', ') }}</span>
+                                {% if right_sources|length > 0 %}
+                                <span><span class="text-red-600 font-medium">Right:</span> {{ right_sources|join(', ') }}</span>
                                 {% endif %}
                             </div>
                         </div>
                         {% endif %}
+
+                        {# Transparency note when perspectives are missing #}
+                        {% if left_sources|length == 0 or right_sources|length == 0 %}
+                        <p class="text-xs text-gray-400 mt-2 italic">
+                            {% if left_sources|length == 0 and right_sources|length == 0 %}
+                            Only centre sources covered this story.
+                            {% elif left_sources|length == 0 %}
+                            Left-leaning outlets did not cover this story in our source roster.
+                            {% elif right_sources|length == 0 %}
+                            Right-leaning outlets did not cover this story in our source roster.
+                            {% endif %}
+                        </p>
                         {% endif %}
                     </div>
                     {% endif %}

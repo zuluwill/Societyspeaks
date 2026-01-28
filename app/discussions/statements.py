@@ -305,20 +305,31 @@ def vote_statement(statement_id):
     - Authenticated users: votes stored in DB with user_id
     - Anonymous users: votes stored in DB with session_fingerprint (can be merged to account later)
     """
+    is_form_post = not request.is_json and request.headers.get('X-Requested-With') != 'XMLHttpRequest'
+
     user_agent = request.headers.get('User-Agent', '').lower()
     bot_indicators = ['bot', 'crawler', 'spider', 'preview', 'fetch', 'slurp', 'mediapartners']
     if any(indicator in user_agent for indicator in bot_indicators):
+        if is_form_post:
+            flash('Automated requests are not allowed.', 'error')
+            return redirect(url_for('statements.view_statement', statement_id=statement_id))
         return jsonify({'error': 'Automated requests not allowed'}), 403
-    
+
     statement = Statement.query.get_or_404(statement_id)
 
     if request.is_json:
         data = request.get_json()
         if data is None or 'vote' not in data:
+            if is_form_post:
+                flash('Vote value is required.', 'error')
+                return redirect(url_for('statements.view_statement', statement_id=statement_id))
             return jsonify({'error': 'Vote value is required'}), 400
         try:
             vote_value = int(data.get('vote'))
         except (ValueError, TypeError):
+            if is_form_post:
+                flash('Invalid vote value.', 'error')
+                return redirect(url_for('statements.view_statement', statement_id=statement_id))
             return jsonify({'error': 'Invalid vote value format'}), 400
         confidence = data.get('confidence', 3)
         try:
@@ -330,10 +341,16 @@ def vote_statement(statement_id):
     else:
         vote_raw = request.form.get('vote')
         if vote_raw is None or vote_raw == '':
+            if is_form_post:
+                flash('Vote value is required.', 'error')
+                return redirect(url_for('statements.view_statement', statement_id=statement_id))
             return jsonify({'error': 'Vote value is required'}), 400
         try:
             vote_value = int(vote_raw)
         except (ValueError, TypeError):
+            if is_form_post:
+                flash('Invalid vote value.', 'error')
+                return redirect(url_for('statements.view_statement', statement_id=statement_id))
             return jsonify({'error': 'Invalid vote value format'}), 400
         confidence_raw = request.form.get('confidence', 3)
         try:
@@ -344,6 +361,9 @@ def vote_statement(statement_id):
             confidence = 3
 
     if vote_value not in [-1, 0, 1]:
+        if is_form_post:
+            flash('Invalid vote value. Must be Agree, Disagree, or Unsure.', 'error')
+            return redirect(url_for('statements.view_statement', statement_id=statement_id))
         return jsonify({'error': 'Invalid vote value. Must be -1, 0, or 1'}), 400
 
     try:
@@ -528,6 +548,11 @@ def vote_statement(statement_id):
             )
     except Exception as e:
         current_app.logger.warning(f"Participant tracking error: {e}")
+
+    # Form POST from view_statement page: redirect back so user sees updated page
+    if is_form_post:
+        flash('Vote recorded.', 'success')
+        return redirect(url_for('statements.view_statement', statement_id=statement_id))
 
     return jsonify({
         'success': True,
@@ -766,6 +791,57 @@ def get_statement_votes(statement_id):
 # PHASE 2: RESPONSE ROUTES (Threaded Pro/Con Arguments)
 # =============================================================================
 
+@statements_bp.route('/statements/<int:statement_id>/quick-response', methods=['POST'])
+@login_required
+@limiter.limit("30 per minute")
+def quick_response(statement_id):
+    """
+    Quick inline response from voting UI.
+    Creates a brief response without full form validation.
+    """
+    statement = Statement.query.get_or_404(statement_id)
+    discussion = statement.discussion
+
+    # Defensive check for orphaned statement
+    if not discussion:
+        flash("Discussion not found", "error")
+        return redirect(url_for('discussions.search_discussions'))
+
+    content = request.form.get('content', '').strip()
+    position = request.form.get('position', 'neutral')
+
+    # Validate position (same validation as create_response for DRY)
+    valid_positions = ['pro', 'con', 'neutral']
+    if position not in valid_positions:
+        position = 'neutral'
+
+    # Only create response if content meets minimum length
+    min_length = 5
+    if content and len(content) >= min_length:
+        try:
+            response = Response(
+                statement_id=statement.id,
+                user_id=current_user.id,
+                parent_response_id=None,
+                position=position,
+                content=content[:500]  # Limit to 500 chars for quick responses
+            )
+            db.session.add(response)
+            db.session.commit()
+            flash("Your thought has been added!", "success")
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating quick response: {e}")
+            flash("Couldn't save your response. Try again?", "warning")
+    elif content and len(content) < min_length:
+        flash(f"Response must be at least {min_length} characters", "info")
+
+    # Redirect back to discussion with anchor to statement
+    return redirect(url_for('discussions.view_discussion',
+                          discussion_id=discussion.id,
+                          slug=discussion.slug) + f'#statement-{statement_id}')
+
+
 @statements_bp.route('/statements/<int:statement_id>/responses/create', methods=['GET', 'POST'])
 @login_required
 @limiter.limit("20 per minute")
@@ -776,7 +852,12 @@ def create_response(statement_id):
     """
     statement = Statement.query.get_or_404(statement_id)
     form = ResponseForm()
-    
+    # Pre-fill position from query param when coming from inline "write a detailed argument" link
+    if request.method == 'GET':
+        position_param = request.args.get('position')
+        if position_param in ('pro', 'con', 'neutral'):
+            form.position.data = position_param
+
     if form.validate_on_submit():
         try:
             response = Response(
@@ -797,7 +878,6 @@ def create_response(statement_id):
             current_app.logger.error(f"Error creating response: {e}")
             flash("An error occurred while posting your response", "danger")
     
-    # GET request - show the response form
     return render_template('discussions/create_response.html', 
                          statement=statement, 
                          form=form)

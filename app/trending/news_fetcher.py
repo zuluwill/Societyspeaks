@@ -1493,7 +1493,132 @@ def seed_default_sources():
             'country': 'United States',
             'political_leaning': 0  # Centre - business deep dives, apolitical
         },
-        
+
+        # ==========================================================================
+        # ADDITIONAL RIGHT-LEANING SOURCES (for coverage balance)
+        # Added to ensure better L/C/R balance in Daily Brief
+        # ==========================================================================
+        {
+            'name': 'National Review',
+            'feed_url': 'https://www.nationalreview.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.80,
+            'country': 'United States',
+            'political_leaning': 1.5  # Right per AllSides - conservative magazine
+        },
+        {
+            'name': 'The Dispatch',
+            'feed_url': 'https://thedispatch.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 1.0  # Centre-Right - fact-based conservative journalism
+        },
+        {
+            'name': 'Commentary Magazine',
+            'feed_url': 'https://www.commentary.org/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.80,
+            'country': 'United States',
+            'political_leaning': 1.5  # Right - neoconservative intellectual magazine
+        },
+        {
+            'name': 'The American Conservative',
+            'feed_url': 'https://www.theamericanconservative.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'United States',
+            'political_leaning': 1.5  # Right - paleoconservative, non-interventionist
+        },
+        {
+            'name': 'City Journal',
+            'feed_url': 'https://www.city-journal.org/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.80,
+            'country': 'United States',
+            'political_leaning': 1.0  # Centre-Right - Manhattan Institute, urban policy
+        },
+        {
+            'name': 'The Federalist',
+            'feed_url': 'https://thefederalist.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.70,
+            'country': 'United States',
+            'political_leaning': 1.5  # Right per MBFC - conservative opinion
+        },
+        {
+            'name': 'Washington Examiner',
+            'feed_url': 'https://www.washingtonexaminer.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'United States',
+            'political_leaning': 1.5  # Right per AllSides - conservative news
+        },
+        {
+            'name': 'Daily Wire',
+            'feed_url': 'https://www.dailywire.com/feeds/rss.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.70,
+            'country': 'United States',
+            'political_leaning': 2.0  # Right per AllSides - conservative media
+        },
+        {
+            'name': 'The Spectator US',
+            'feed_url': 'https://spectator.org/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.75,
+            'country': 'United States',
+            'political_leaning': 1.5  # Right - conservative opinion magazine
+        },
+        {
+            'name': 'RealClearPolitics',
+            'feed_url': 'https://www.realclearpolitics.com/index.xml',
+            'source_type': 'rss',
+            'reputation_score': 0.80,
+            'country': 'United States',
+            'political_leaning': 0.5  # Lean Right per AllSides - aggregator with conservative lean
+        },
+        {
+            'name': 'The Free Press',
+            'feed_url': 'https://www.thefp.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': 0.5  # Lean Right - Bari Weiss, heterodox journalism
+        },
+        {
+            'name': 'Hot Air',
+            'feed_url': 'https://hotair.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.70,
+            'country': 'United States',
+            'political_leaning': 1.5  # Right per MBFC - conservative blog
+        },
+        {
+            'name': 'Power Line',
+            'feed_url': 'https://www.powerlineblog.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.70,
+            'country': 'United States',
+            'political_leaning': 1.5  # Right per MBFC - conservative blog
+        },
+        {
+            'name': 'Tablet Magazine',
+            'feed_url': 'https://www.tabletmag.com/feed',
+            'source_type': 'rss',
+            'reputation_score': 0.80,
+            'country': 'United States',
+            'political_leaning': 0.5  # Lean Right - Jewish affairs, heterodox
+        },
+        {
+            'name': 'Law & Liberty',
+            'feed_url': 'https://lawliberty.org/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.80,
+            'country': 'United States',
+            'political_leaning': 1.0  # Centre-Right - legal/constitutional conservatism
+        },
+
         # ==========================================================================
         # SPORTS SOURCES
         # ==========================================================================

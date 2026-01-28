@@ -27,8 +27,8 @@ endblock %} {% block content %}
     {% for parent in thread[:-1] %}
     <div class="mb-2 pl-4 border-l-2 border-gray-300">
       <div class="text-sm text-gray-600">
-        {{ parent.user.name }} · {{ parent.position|upper if parent.position
-        else 'Comment' }}
+        {% if parent.user %}{{ parent.user.username }}{% else %}Anonymous{%
+        endif %} · {{ parent.position|upper if parent.position else 'Comment' }}
       </div>
       <div class="text-gray-800">{{ parent.content }}</div>
     </div>
@@ -46,8 +46,9 @@ endblock %} {% block content %}
           {{ response.position|upper if response.position else 'Comment' }}
         </span>
         <div class="text-gray-600 text-sm">
-          by {{ response.user.name }} · {{ response.created_at.strftime('%B %d,
-          %Y at %I:%M %p') }}
+          by {% if response.user %}{{ response.user.username }}{% else
+          %}Anonymous{% endif %} · {{ response.created_at.strftime('%B %d, %Y at
+          %I:%M %p') }}
         </div>
       </div>
       {% if current_user.is_authenticated and (current_user.id ==
@@ -66,11 +67,11 @@ endblock %} {% block content %}
           action="{{ url_for('statements.delete_response', response_id=response.id) }}"
           class="inline"
         >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <button
             type="submit"
             class="text-red-600 hover:underline text-sm"
-            onclick="return confirm('Delete this response?')"
+            onclick="return confirm('Delete this response?');"
           >
             Delete
           </button>
@@ -131,8 +132,8 @@ endblock %} {% block content %}
           {{ child.position|upper if child.position else 'Comment' }}
         </span>
         <span class="text-gray-600 text-xs"
-          >{{ child.user.name }} · {{ child.created_at.strftime('%b %d')
-          }}</span
+          >{% if child.user %}{{ child.user.username }}{% else %}Anonymous{%
+          endif %} · {{ child.created_at.strftime('%b %d') }}</span
         >
       </div>
       <div class="text-gray-800">{{ child.content }}</div>
@@ -154,7 +155,7 @@ endblock %} {% block content %}
       method="POST"
       action="{{ url_for('statements.create_response', statement_id=response.statement_id) }}"
     >
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <input
         type="hidden"
         name="parent_response_id"

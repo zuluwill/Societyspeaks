@@ -1,6 +1,29 @@
 {% extends 'layout.html' %} {% block title %}Statement - {{ discussion.title
 }}{% endblock %} {% block content %}
 <div class="container mx-auto px-4 py-8">
+  <!-- Back Button (Top) -->
+  <div class="mb-4">
+    <a
+      href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
+      class="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+    >
+      <svg
+        class="w-5 h-5 mr-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M10 19l-7-7m0 0l7-7m-7 7h18"
+        />
+      </svg>
+      Back to Discussion
+    </a>
+  </div>
+
   <!-- Breadcrumb -->
   <div class="mb-6">
     <nav class="text-sm">
@@ -29,7 +52,10 @@
             class="bg-gray-100 px-3 py-1 rounded-full text-xs font-semibold uppercase"
             >{{ statement.statement_type }}</span
           >
-          <span>Posted by {% if statement.user %}{{ statement.user.username }}{% else %}<span class="text-gray-400">Anonymous</span>{% endif %}</span>
+          <span
+            >Posted by {% if statement.user %}{{ statement.user.username }}{%
+            else %}<span class="text-gray-400">Anonymous</span>{% endif %}</span
+          >
           <span>•</span>
           <span
             >{{ statement.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span
@@ -39,106 +65,74 @@
       </div>
     </div>
 
-    <!-- Voting Buttons - Mobile First Design -->
+    <!-- Voting Buttons - Mobile First Design (authenticated and anonymous) -->
+    {% set vote_btn_base = "w-full px-4 py-4 rounded-lg font-bold
+    transition-colors flex flex-col items-center justify-center gap-1" %} {% set
+    vote_btn_anon = " opacity-75 hover:opacity-100" if not
+    current_user.is_authenticated else "" %} {% set vote_btn_title = '
+    title="Vote without an account"' if not current_user.is_authenticated else
+    "" %}
     <div class="border-t border-gray-200 pt-4">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {% if current_user.is_authenticated %}
         <form
           method="POST"
           action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}"
         >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <input type="hidden" name="vote" value="1" />
           <button
             type="submit"
-            class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-4 rounded-lg font-bold transition-colors flex flex-col items-center justify-center gap-1"
+            class="{{ vote_btn_base }} bg-green-500 hover:bg-green-600 text-white{{ vote_btn_anon }}"
+            {{
+            vote_btn_title|safe
+            }}
           >
             <div class="text-sm uppercase tracking-wide">✓ Agree</div>
-            <div class="text-2xl font-bold">{{ statement.vote_count_agree }}</div>
+            <div class="text-2xl font-bold">
+              {{ statement.vote_count_agree }}
+            </div>
           </button>
         </form>
-
         <form
           method="POST"
           action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}"
         >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <input type="hidden" name="vote" value="-1" />
           <button
             type="submit"
-            class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-4 rounded-lg font-bold transition-colors flex flex-col items-center justify-center gap-1"
+            class="{{ vote_btn_base }} bg-red-500 hover:bg-red-600 text-white{{ vote_btn_anon }}"
+            {{
+            vote_btn_title|safe
+            }}
           >
             <div class="text-sm uppercase tracking-wide">✗ Disagree</div>
-            <div class="text-2xl font-bold">{{ statement.vote_count_disagree }}</div>
+            <div class="text-2xl font-bold">
+              {{ statement.vote_count_disagree }}
+            </div>
           </button>
         </form>
-
         <form
           method="POST"
           action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}"
         >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <input type="hidden" name="vote" value="0" />
           <button
             type="submit"
-            class="w-full bg-gray-400 hover:bg-gray-500 text-white px-4 py-4 rounded-lg font-bold transition-colors flex flex-col items-center justify-center gap-1"
+            class="{{ vote_btn_base }} bg-gray-400 hover:bg-gray-500 text-white{{ vote_btn_anon }}"
+            {{
+            vote_btn_title|safe
+            }}
           >
             <div class="text-sm uppercase tracking-wide">? Unsure</div>
-            <div class="text-2xl font-bold">{{ statement.vote_count_unsure }}</div>
+            <div class="text-2xl font-bold">
+              {{ statement.vote_count_unsure }}
+            </div>
           </button>
         </form>
-        {% else %}
-        <!-- Anonymous users can also vote (forms will work with session tracking) -->
-        <form
-          method="POST"
-          action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}"
-        >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="vote" value="1" />
-          <button
-            type="submit"
-            class="w-full bg-green-500 hover:bg-green-600 text-white px-4 py-4 rounded-lg font-bold transition-colors flex flex-col items-center justify-center gap-1 opacity-75 hover:opacity-100"
-            title="Vote without an account"
-          >
-            <div class="text-sm uppercase tracking-wide">✓ Agree</div>
-            <div class="text-2xl font-bold">{{ statement.vote_count_agree }}</div>
-          </button>
-        </form>
-
-        <form
-          method="POST"
-          action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}"
-        >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="vote" value="-1" />
-          <button
-            type="submit"
-            class="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-4 rounded-lg font-bold transition-colors flex flex-col items-center justify-center gap-1 opacity-75 hover:opacity-100"
-            title="Vote without an account"
-          >
-            <div class="text-sm uppercase tracking-wide">✗ Disagree</div>
-            <div class="text-2xl font-bold">{{ statement.vote_count_disagree }}</div>
-          </button>
-        </form>
-
-        <form
-          method="POST"
-          action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}"
-        >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <input type="hidden" name="vote" value="0" />
-          <button
-            type="submit"
-            class="w-full bg-gray-400 hover:bg-gray-500 text-white px-4 py-4 rounded-lg font-bold transition-colors flex flex-col items-center justify-center gap-1 opacity-75 hover:opacity-100"
-            title="Vote without an account"
-          >
-            <div class="text-sm uppercase tracking-wide">? Unsure</div>
-            <div class="text-2xl font-bold">{{ statement.vote_count_unsure }}</div>
-          </button>
-        </form>
-        {% endif %}
       </div>
-      
+
       <!-- Statistics -->
       <div class="mt-4 text-center sm:text-right">
         <div class="text-3xl font-bold text-gray-900">
@@ -169,19 +163,34 @@
         method="POST"
         action="{{ url_for('statements.create_response', statement_id=statement.id) }}"
       >
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
         <div class="mb-4">
           <label class="block text-gray-700 font-medium mb-2">Position</label>
+          {% set vote_val = user_vote.vote if user_vote and user_vote.vote is
+          not none else none %}
           <select
             name="position"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2"
+            id="position-select"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 min-h-[44px]"
             required
           >
-            <option value="pro">Pro (Supporting this statement)</option>
-            <option value="con">Con (Opposing this statement)</option>
-            <option value="neutral">Neutral (Commentary)</option>
+            <option value="pro" {% if vote_val == 1 %}selected{% endif %}>
+              Pro (Supporting this statement)
+            </option>
+            <option value="con" {% if vote_val == -1 %}selected{% endif %}>
+              Con (Opposing this statement)
+            </option>
+            <option value="neutral" {% if vote_val is none or vote_val == 0 %}selected{% endif %}>
+              Neutral (Commentary)
+            </option>
           </select>
+          {% if vote_val is not none %}
+          <p class="text-xs text-gray-500 mt-1">
+            Pre-selected based on your {{ 'agree' if vote_val == 1 else
+            'disagree' if vote_val == -1 else 'unsure' }} vote
+          </p>
+          {% endif %}
         </div>
 
         <div class="mb-4">
@@ -220,49 +229,70 @@
 
     <!-- Response List -->
     <div class="space-y-4">
-      {% if responses %}
-        {% for response in responses %}
-        <div class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
-          <div class="flex items-start justify-between mb-2">
-            <div class="flex items-center space-x-2">
-              <!-- Position Badge -->
-              {% if response.position == 'pro' %}
-              <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold uppercase">Pro</span>
-              {% elif response.position == 'con' %}
-              <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold uppercase">Con</span>
-              {% else %}
-              <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-semibold uppercase">Neutral</span>
-              {% endif %}
-              
-              <!-- Author -->
-              {% if response.user %}
-              <span class="text-sm text-gray-600">{{ response.user.username }}</span>
-              {% else %}
-              <span class="text-sm text-gray-400">Anonymous</span>
-              {% endif %}
-              
-              <span class="text-gray-400">•</span>
-              
-              <!-- Timestamp -->
-              <span class="text-sm text-gray-500">
-                {{ response.created_at.strftime('%b %d, %Y at %I:%M %p') }}
-              </span>
-            </div>
-          </div>
-          
-          <!-- Response Content -->
-          <div class="text-gray-800 leading-relaxed">
-            {{ response.content }}
+      {% if responses %} {% for response in responses %}
+      <div
+        class="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors"
+      >
+        <div class="flex items-start justify-between mb-2">
+          <div class="flex items-center space-x-2">
+            <!-- Position Badge -->
+            {% if response.position == 'pro' %}
+            <span
+              class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold uppercase"
+              >Pro</span
+            >
+            {% elif response.position == 'con' %}
+            <span
+              class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-semibold uppercase"
+              >Con</span
+            >
+            {% else %}
+            <span
+              class="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs font-semibold uppercase"
+              >Neutral</span
+            >
+            {% endif %}
+
+            <!-- Author -->
+            {% if response.user %}
+            <span class="text-sm text-gray-600"
+              >{{ response.user.username }}</span
+            >
+            {% else %}
+            <span class="text-sm text-gray-400">Anonymous</span>
+            {% endif %}
+
+            <span class="text-gray-400">•</span>
+
+            <!-- Timestamp -->
+            <span class="text-sm text-gray-500">
+              {{ response.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+            </span>
           </div>
         </div>
-        {% endfor %}
-      {% else %}
-        <div class="text-center py-8 bg-gray-50 rounded-lg">
-          <svg class="mx-auto h-12 w-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-          </svg>
-          <p class="text-gray-500">No responses yet. Be the first to share your perspective!</p>
-        </div>
+
+        <!-- Response Content -->
+        <div class="text-gray-800 leading-relaxed">{{ response.content }}</div>
+      </div>
+      {% endfor %} {% else %}
+      <div class="text-center py-8 bg-gray-50 rounded-lg">
+        <svg
+          class="mx-auto h-12 w-12 text-gray-400 mb-3"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          ></path>
+        </svg>
+        <p class="text-gray-500">
+          No responses yet. Be the first to share your perspective!
+        </p>
+      </div>
       {% endif %}
     </div>
   </div>
