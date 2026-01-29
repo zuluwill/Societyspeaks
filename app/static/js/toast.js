@@ -98,6 +98,7 @@
 
     // Export to global scope
     window.showToast = showToast;
+    window.showToastNotification = showToast; // Alias for compatibility
     window.dismissToast = dismissToast;
     window.showError = showError;
     window.showSuccess = showSuccess;
