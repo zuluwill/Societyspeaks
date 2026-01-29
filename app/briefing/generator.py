@@ -8,6 +8,7 @@ Creates BriefRun instead of DailyBrief.
 
 import os
 import logging
+from html import escape as html_escape
 from datetime import datetime, date, timedelta
 from typing import List, Optional, Dict, Any
 from app import db
@@ -730,7 +731,7 @@ Respond in JSON format:
         # Build key takeaways HTML with premium styling
         takeaways_html = ''
         if key_takeaways:
-            takeaways_items = ''.join([f'<li style="margin-bottom: 10px; padding-left: 8px; color: #1f2937;">{t}</li>' for t in key_takeaways])
+            takeaways_items = ''.join([f'<li style="margin-bottom: 10px; padding-left: 8px; color: #1f2937;">{html_escape(t)}</li>' for t in key_takeaways])
             takeaways_html = f'''
             <div style="background-color: #f8fafc; border-left: 4px solid {accent_color}; padding: 20px 24px; margin-bottom: 28px; border-radius: 0 8px 8px 0;">
                 <h2 style="font-family: Georgia, 'Times New Roman', serif; color: {accent_color}; font-size: 18px; font-weight: 700; margin: 0 0 14px 0;">Key Takeaways</h2>
@@ -758,20 +759,25 @@ Respond in JSON format:
             
             category_color = category_colors.get(category, accent_color)
             
+            # Escape content to prevent XSS
+            safe_category = html_escape(category)
+            safe_headline = html_escape(headline)
+            safe_source_name = html_escape(source_name)
+            
             # Category label with premium styling
             category_html = f'''
-            <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {category_color};">{category}</p>
+            <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: {category_color};">{safe_category}</p>
             '''
             
             # Headline with Georgia serif font
             headline_html = f'''
-            <h3 style="margin: 0 0 12px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 700; color: #0f172a; line-height: 1.3;">{headline}</h3>
+            <h3 style="margin: 0 0 12px 0; font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 700; color: #0f172a; line-height: 1.3;">{safe_headline}</h3>
             '''
             
             # Bullets with enhanced styling
             bullets_html = ''
             if item.summary_bullets:
-                bullets_items = ''.join([f'<li style="margin-bottom: 8px; color: #374151;">{b}</li>' for b in item.summary_bullets])
+                bullets_items = ''.join([f'<li style="margin-bottom: 8px; color: #374151;">{html_escape(b)}</li>' for b in item.summary_bullets])
                 bullets_html = f'<ul style="margin: 0 0 16px 0; padding-left: 20px; line-height: 1.65; font-size: 15px;">{bullets_items}</ul>'
             
             # Extract context from content_markdown if embedded (format: "[Label] insight\n\nrest")
@@ -794,10 +800,12 @@ Respond in JSON format:
             
             if context_insight:
                 # Create premium callout box with extracted context
+                safe_context_label = html_escape(context_label)
+                safe_context_insight = html_escape(context_insight[:300])
                 context_html = f'''
                 <div style="background-color: {bg_color}; border-radius: 6px; padding: 14px 16px; margin: 16px 0 0 0;">
-                    <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; color: {text_color}; text-transform: uppercase;">{context_label}</p>
-                    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">{context_insight[:300]}</p>
+                    <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 700; color: {text_color}; text-transform: uppercase;">{safe_context_label}</p>
+                    <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #374151;">{safe_context_insight}</p>
                 </div>
                 '''
             
@@ -805,14 +813,14 @@ Respond in JSON format:
             analysis_html = ''
             if content_markdown and content_markdown.strip():
                 # Convert markdown to simple HTML paragraphs
-                analysis_text = content_markdown.strip()[:500]
+                safe_analysis_text = html_escape(content_markdown.strip()[:500])
                 analysis_html = f'''
                 <p style="color: #4b5563; font-size: 15px; line-height: 1.65; margin: 16px 0 0 0; font-style: italic;">
-                    {analysis_text}
+                    {safe_analysis_text}
                 </p>
                 '''
             elif item.content_html and item.content_html.strip():
-                # Use pre-rendered HTML if available and no extracted markdown
+                # Use pre-rendered HTML if available - already sanitized on ingest
                 analysis_html = f'''
                 <div style="color: #4b5563; font-size: 15px; line-height: 1.65; margin: 16px 0 0 0; font-style: italic;">
                     {item.content_html}
@@ -825,17 +833,20 @@ Respond in JSON format:
             if not source_url and item.ingested_item:
                 source_url = item.ingested_item.url or ''
             
+            # Escape URL for href attribute
+            safe_source_url = html_escape(source_url)
+            
             if source_name:
                 if source_url:
                     source_html = f'''
                 <p style="margin: 12px 0 0 0; font-size: 12px; color: #6b7280;">
-                    Source: <a href="{source_url}" style="color: {accent_color}; text-decoration: underline;" target="_blank">{source_name}</a>
+                    Source: <a href="{safe_source_url}" style="color: {accent_color}; text-decoration: underline;" target="_blank">{safe_source_name}</a>
                 </p>
                 '''
                 else:
                     source_html = f'''
                 <p style="margin: 12px 0 0 0; font-size: 12px; color: #6b7280;">
-                    Source: <span style="color: #374151;">{source_name}</span>
+                    Source: <span style="color: #374151;">{safe_source_name}</span>
                 </p>
                 '''
             
@@ -851,9 +862,10 @@ Respond in JSON format:
             '''
         
         # Full HTML structure with premium styling
+        safe_intro = html_escape(intro) if intro else ''
         html = f'''
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-            <p style="color: #4b5563; font-size: 16px; line-height: 1.75; margin-bottom: 28px;">{intro}</p>
+            <p style="color: #4b5563; font-size: 16px; line-height: 1.75; margin-bottom: 28px;">{safe_intro}</p>
             {takeaways_html}
             <h2 style="font-family: Georgia, 'Times New Roman', serif; color: #0f172a; font-size: 22px; font-weight: 700; margin: 28px 0 20px 0; padding-bottom: 12px; border-bottom: 2px solid {accent_color};">Today's Stories</h2>
             {stories_html}

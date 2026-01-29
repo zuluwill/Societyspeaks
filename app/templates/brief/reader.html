@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ brief.title }} - Society Speaks Daily Brief</title>
-    <meta name="description" content="{{ brief.intro_text[:160] }}">
+    <meta name="description" content="{{ (brief.intro_text or '')[:160] }}">
 
     <!-- Open Graph for reader apps -->
     <meta property="og:title" content="{{ brief.title }}">
-    <meta property="og:description" content="{{ brief.intro_text[:200] }}">
+    <meta property="og:description" content="{{ (brief.intro_text or '')[:200] }}">
     <meta property="og:type" content="article">
     <meta property="og:url" content="{{ request.url }}">
 

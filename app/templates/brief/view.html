@@ -7,7 +7,7 @@
 
 {% block title %}{{ brief.title }} - Society Speaks{% endblock %}
 
-{% block meta_description %}{{ brief.intro_text[:160] }}{% endblock %}
+{% block meta_description %}{{ (brief.intro_text or '')[:160] }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-slate-100 to-white">
