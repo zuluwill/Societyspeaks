@@ -10,14 +10,22 @@ async function handleImageUpload(input, previewId) {
     // Validate file type
     const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     if (!validTypes.includes(file.type)) {
-        alert('Please upload a valid image file (JPG, JPEG, or PNG)');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Please upload a valid image file (JPG, JPEG, or PNG)', 'error');
+        } else {
+            alert('Please upload a valid image file (JPG, JPEG, or PNG)');
+        }
         input.value = '';
         return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-        alert('File size should not exceed 5MB');
+        if (typeof window.showToast === 'function') {
+            window.showToast('File size should not exceed 5MB', 'error');
+        } else {
+            alert('File size should not exceed 5MB');
+        }
         input.value = '';
         return;
     }
@@ -85,7 +93,11 @@ async function handleImageUpload(input, previewId) {
 
     } catch (error) {
         console.error('Error processing image:', error);
-        alert('Error processing image. Please try again.');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Error processing image. Please try again.', 'error');
+        } else {
+            alert('Error processing image. Please try again.');
+        }
         if (progressBar) {
             progressBar.classList.add('hidden');
         }
@@ -207,6 +219,10 @@ async function applyCrop(previewId) {
         closeCropModal(previewId);
     } catch (error) {
         console.error('Error processing cropped image:', error);
-        alert('Error processing image. Please try again.');
+        if (typeof window.showToast === 'function') {
+            window.showToast('Error processing image. Please try again.', 'error');
+        } else {
+            alert('Error processing image. Please try again.');
+        }
     }
 }

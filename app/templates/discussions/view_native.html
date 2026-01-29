@@ -754,21 +754,17 @@
 
 <!-- AJAX Voting Script -->
 <script>
-  // Show toast notification
-  function showToast(message, type = 'error') {
-      const toast = document.createElement('div');
-      toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white z-50 ${
-          type === 'success' ? 'bg-green-600' : 'bg-red-600'
-      }`;
-      toast.textContent = message;
-      document.body.appendChild(toast);
-
-      setTimeout(() => {
-          toast.style.opacity = '0';
-          toast.style.transition = 'opacity 0.3s';
-          setTimeout(() => document.body.removeChild(toast), 300);
-      }, 3000);
-  }
+  // Use global showToast from toast.js (loaded in layout.html)
+  // Local wrapper ensures we use the unified toast system
+  const showToast = (message, type = 'error') => {
+      if (typeof window.showToast === 'function') {
+          window.showToast(message, type);
+      } else {
+          // Fallback if toast.js not loaded
+          console.warn('Toast system not available');
+          console.log(`[${type}] ${message}`);
+      }
+  };
 
   async function voteOnStatement(statementId, voteValue, confidence = 3) {
       const statementDiv = document.querySelector(`[data-statement-id="${statementId}"]`);
