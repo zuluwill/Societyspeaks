@@ -1,19 +1,18 @@
 {#
-Listen With Dropdown Component
+Open in Reader App Dropdown Component
 
-Provides multiple ways to listen to content:
-1. Native audio (if XTTS audio exists)
-2. Browser TTS (speechSynthesis API)
-3. Share to reader apps (ElevenReader, Pocket, etc.)
+Allows users to open content in their preferred reader app for listening:
+- ElevenReader (AI voice narration)
+- Pocket (save & listen later)
+- Instapaper (clean reading)
+- Share/Copy link (for any other app)
 
 URLs and title are passed via data attributes (no inline user content in handlers).
 
 Usage:
-  {{ listen_with(has_audio=True, audio_url='/audio/file.wav', reader_url='/brief/2025-01-29/reader', brief_title='Brief') }}
+  {{ listen_with(reader_url='/brief/2025-01-29/reader', brief_title='Brief') }}
 
 Parameters:
-  - has_audio: Boolean - whether native XTTS audio is available
-  - audio_url: String - URL to the first audio file (for quick play)
   - reader_url: String - URL to the reader-optimized version of the page
   - brief_title: String - title for sharing
 #}
@@ -21,8 +20,7 @@ Parameters:
 {% macro listen_with(has_audio=False, audio_url=None, reader_url=None, brief_title='Brief') %}
 <div class="listen-with-container relative"
      data-reader-url="{{ (reader_url or request.url)|e }}"
-     data-brief-title="{{ brief_title|e }}"
-     {% if has_audio and audio_url %}data-audio-url="{{ audio_url|e }}"{% endif %}>
+     data-brief-title="{{ brief_title|e }}">
 
     <button type="button"
             aria-haspopup="true"
@@ -31,7 +29,7 @@ Parameters:
         <svg class="w-5 h-5 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
         </svg>
-        <span>Listen with...</span>
+        <span>Open in reader app</span>
         <svg class="w-4 h-4 text-gray-400 listen-chevron transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         </svg>
@@ -41,43 +39,6 @@ Parameters:
     <div class="listen-menu hidden absolute left-0 z-50 mt-2 w-72 max-w-[calc(100vw-2rem)] origin-top-left rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
          role="menu">
         <div class="p-2">
-            {% if has_audio and audio_url %}
-            <!-- Native Audio -->
-            <button type="button"
-                    data-action="native-audio"
-                    class="listen-menu-item flex items-center gap-3 w-full px-3 py-2.5 min-h-[44px] sm:min-h-0 text-left text-sm text-gray-700 rounded-lg hover:bg-blue-50 hover:text-blue-700 transition-colors touch-manipulation"
-                    role="menuitem">
-                <span class="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex-shrink-0">
-                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
-                    </svg>
-                </span>
-                <div class="min-w-0">
-                    <p class="font-medium">Native Audio</p>
-                    <p class="text-xs text-gray-500">Play generated audio</p>
-                </div>
-            </button>
-            {% endif %}
-
-            <!-- Browser Read Aloud -->
-            <button type="button"
-                    data-action="browser-tts"
-                    class="browser-tts-btn listen-menu-item flex items-center gap-3 w-full px-3 py-2.5 min-h-[44px] sm:min-h-0 text-left text-sm text-gray-700 rounded-lg hover:bg-gray-50 transition-colors touch-manipulation"
-                    role="menuitem">
-                <span class="tts-icon flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex-shrink-0">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                    </svg>
-                </span>
-                <div class="min-w-0">
-                    <p class="font-medium tts-label">Browser Read Aloud</p>
-                    <p class="text-xs text-gray-500">Use your browser's voice</p>
-                </div>
-            </button>
-
-            <div class="my-2 border-t border-gray-100" aria-hidden="true"></div>
-            <p class="px-3 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">Open in Reader App</p>
-
             <!-- ElevenReader -->
             <button type="button"
                     data-action="elevenreader"

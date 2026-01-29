@@ -1,19 +1,9 @@
 /**
- * Listen With dropdown: native audio, browser TTS, reader apps, share.
+ * Open in Reader App dropdown: share to reader apps (ElevenReader, Pocket, etc.)
  * Reads URLs/title from container data attributes (no inline user content in handlers).
  */
 (function () {
   "use strict";
-
-  var ttsActive = false;
-
-  function getContainer(buttonOrElement) {
-    var el = buttonOrElement;
-    while (el && !el.classList.contains("listen-with-container")) {
-      el = el.parentElement;
-    }
-    return el;
-  }
 
   function toggleListenMenu(button) {
     var menu = button.nextElementSibling;
@@ -44,143 +34,26 @@
     }
   }
 
-  function toggleBrowserTTS(button) {
-    var synth = window.speechSynthesis;
-    if (!synth) {
-      showListenToast("Your browser doesn't support text-to-speech", "error");
-      return;
-    }
-
-    var icon = button.querySelector(".tts-icon");
-    var label = button.querySelector(".tts-label");
-
-    if (synth.speaking || ttsActive) {
-      synth.cancel();
-      ttsActive = false;
-      button.classList.remove("bg-green-50", "text-green-700");
-      if (icon) {
-        icon.classList.remove("bg-green-100", "text-green-600");
-        icon.classList.add("bg-gray-100", "text-gray-600");
-      }
-      if (label) label.textContent = "Browser Read Aloud";
-      showListenToast("Stopped reading", "info");
-      return;
-    }
-
-    var articles = document.querySelectorAll("article");
-    var text = "";
-    if (articles.length > 0) {
-      articles.forEach(function (article) {
-        text += article.innerText + "\n\n";
-      });
-    } else {
-      var prose = document.querySelector(".prose");
-      var main = document.querySelector("main");
-      text = prose ? prose.innerText : (main ? main.innerText : document.body.innerText);
-    }
-    if (!text.trim()) {
-      showListenToast("No content found to read", "error");
-      return;
-    }
-
-    // Show starting feedback immediately
-    showListenToast("Starting read aloud...", "info");
-
-    ttsActive = true;
-    button.classList.add("bg-green-50", "text-green-700");
-    if (icon) {
-      icon.classList.remove("bg-gray-100", "text-gray-600");
-      icon.classList.add("bg-green-100", "text-green-600");
-    }
-    if (label) label.textContent = "Stop Reading";
-
-    var utterance = new SpeechSynthesisUtterance(text.substring(0, 10000));
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-
-    // Wait for voices to load if needed
-    var voices = synth.getVoices();
-    if (voices.length === 0) {
-      // Voices not loaded yet, wait a moment
-      setTimeout(function() {
-        voices = synth.getVoices();
-        setVoiceAndSpeak(utterance, voices, synth, button, icon, label);
-      }, 100);
-    } else {
-      setVoiceAndSpeak(utterance, voices, synth, button, icon, label);
-    }
-  }
-
-  function setVoiceAndSpeak(utterance, voices, synth, button, icon, label) {
-    var preferredVoice =
-      voices.find(function (v) {
-        return v.lang.indexOf("en") === 0 && v.name.indexOf("Google") !== -1;
-      }) ||
-      voices.find(function (v) {
-        return v.lang.indexOf("en") === 0;
-      });
-    if (preferredVoice) utterance.voice = preferredVoice;
-
-    utterance.onstart = function () {
-      showListenToast("Reading aloud. Click again to stop.", "success");
-    };
-
-    utterance.onerror = function (e) {
-      ttsActive = false;
-      button.classList.remove("bg-green-50", "text-green-700");
-      if (icon) {
-        icon.classList.remove("bg-green-100", "text-green-600");
-        icon.classList.add("bg-gray-100", "text-gray-600");
-      }
-      if (label) label.textContent = "Browser Read Aloud";
-      if (e.error !== 'interrupted') {
-        showListenToast("Speech failed: " + e.error, "error");
-      }
-    };
-
-    utterance.onend = function () {
-      ttsActive = false;
-      button.classList.remove("bg-green-50", "text-green-700");
-      if (icon) {
-        icon.classList.remove("bg-green-100", "text-green-600");
-        icon.classList.add("bg-gray-100", "text-gray-600");
-      }
-      if (label) label.textContent = "Browser Read Aloud";
-    };
-    synth.speak(utterance);
-  }
-
-  function playNativeAudio(url) {
-    if (!url) return;
-    var audio = new Audio(url);
-    audio.play().catch(function (err) {
-      console.error("Audio playback failed:", err);
-      showListenToast("Failed to play audio", "error");
-    });
-  }
-
   function shareToReaderApp(app, url, title) {
     var readerUrl =
       url && url.indexOf("/reader") !== -1 ? url : (url || "") + "/reader";
 
     switch (app) {
       case "elevenreader":
-        // ElevenReader doesn't have a registered URL scheme, so copy the link
-        // and provide clear instructions
         copyAndNotify(
           readerUrl,
           "Link copied! Open the ElevenReader app and paste this URL to listen.",
         );
         break;
       case "pocket":
-        // Open Pocket save page - note: may fail on dev domains
-        showListenToast("Opening Pocket... (may not work with dev URLs)", "info");
+        showListenToast("Opening Pocket...", "info");
         window.open(
           "https://getpocket.com/save?url=" + encodeURIComponent(readerUrl),
           "_blank",
         );
         break;
       case "instapaper":
+        showListenToast("Opening Instapaper...", "info");
         window.open(
           "https://www.instapaper.com/hello2?url=" +
             encodeURIComponent(readerUrl),
@@ -255,14 +128,7 @@
         var action = menuItem.getAttribute("data-action");
         var readerUrl = container.getAttribute("data-reader-url") || "";
         var title = container.getAttribute("data-brief-title") || "Brief";
-        if (action === "native-audio") {
-          playNativeAudio(container.getAttribute("data-audio-url"));
-        } else if (action === "browser-tts") {
-          toggleBrowserTTS(menuItem);
-          return;
-        } else {
-          shareToReaderApp(action, readerUrl, title);
-        }
+        shareToReaderApp(action, readerUrl, title);
         var menu = container.querySelector(".listen-menu");
         if (menu) menu.classList.add("hidden");
         if (toggleBtn) {
@@ -284,12 +150,6 @@
     });
   });
 
-  if (window.speechSynthesis) {
-    window.speechSynthesis.onvoiceschanged = function () {
-      window.speechSynthesis.getVoices();
-    };
-  }
-
   // Handle ?listen=true URL parameter (from email CTAs)
   function handleListenParam() {
     var params = new URLSearchParams(window.location.search);
@@ -297,7 +157,7 @@
       var container = document.querySelector(".listen-with-container");
       if (!container) return;
 
-      // Scroll to the listen dropdown
+      // Scroll to the reader app dropdown
       setTimeout(function () {
         container.scrollIntoView({ behavior: "smooth", block: "center" });
 
