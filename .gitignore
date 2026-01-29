@@ -165,3 +165,6 @@ attached_assets/
 
 # Internal docs and planning (keep out of open-source repo; may contain sensitive/strategic info)
 docs/
+
+# Replit deployment/config (stays local; Replit still uses it from filesystem)
+replit.md
