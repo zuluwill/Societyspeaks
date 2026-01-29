@@ -46,6 +46,11 @@
 
   function toggleBrowserTTS(button) {
     var synth = window.speechSynthesis;
+    if (!synth) {
+      showListenToast("Your browser doesn't support text-to-speech", "error");
+      return;
+    }
+
     var icon = button.querySelector(".tts-icon");
     var label = button.querySelector(".tts-label");
 
@@ -58,6 +63,7 @@
         icon.classList.add("bg-gray-100", "text-gray-600");
       }
       if (label) label.textContent = "Browser Read Aloud";
+      showListenToast("Stopped reading", "info");
       return;
     }
 
@@ -69,12 +75,16 @@
       });
     } else {
       var prose = document.querySelector(".prose");
-      text = prose ? prose.innerText : document.body.innerText;
+      var main = document.querySelector("main");
+      text = prose ? prose.innerText : (main ? main.innerText : document.body.innerText);
     }
     if (!text.trim()) {
-      showListenToast("No content to read", "error");
+      showListenToast("No content found to read", "error");
       return;
     }
+
+    // Show starting feedback immediately
+    showListenToast("Starting read aloud...", "info");
 
     ttsActive = true;
     button.classList.add("bg-green-50", "text-green-700");
@@ -87,7 +97,21 @@
     var utterance = new SpeechSynthesisUtterance(text.substring(0, 10000));
     utterance.rate = 1.0;
     utterance.pitch = 1.0;
+
+    // Wait for voices to load if needed
     var voices = synth.getVoices();
+    if (voices.length === 0) {
+      // Voices not loaded yet, wait a moment
+      setTimeout(function() {
+        voices = synth.getVoices();
+        setVoiceAndSpeak(utterance, voices, synth, button, icon, label);
+      }, 100);
+    } else {
+      setVoiceAndSpeak(utterance, voices, synth, button, icon, label);
+    }
+  }
+
+  function setVoiceAndSpeak(utterance, voices, synth, button, icon, label) {
     var preferredVoice =
       voices.find(function (v) {
         return v.lang.indexOf("en") === 0 && v.name.indexOf("Google") !== -1;
@@ -96,6 +120,23 @@
         return v.lang.indexOf("en") === 0;
       });
     if (preferredVoice) utterance.voice = preferredVoice;
+
+    utterance.onstart = function () {
+      showListenToast("Reading aloud. Click again to stop.", "success");
+    };
+
+    utterance.onerror = function (e) {
+      ttsActive = false;
+      button.classList.remove("bg-green-50", "text-green-700");
+      if (icon) {
+        icon.classList.remove("bg-green-100", "text-green-600");
+        icon.classList.add("bg-gray-100", "text-gray-600");
+      }
+      if (label) label.textContent = "Browser Read Aloud";
+      if (e.error !== 'interrupted') {
+        showListenToast("Speech failed: " + e.error, "error");
+      }
+    };
 
     utterance.onend = function () {
       ttsActive = false;
@@ -124,29 +165,16 @@
 
     switch (app) {
       case "elevenreader":
-        if (navigator.share) {
-          navigator
-            .share({
-              title: title || "Brief",
-              text: "Listen to this in ElevenReader:",
-              url: readerUrl,
-            })
-            .then(function () {})
-            .catch(function (e) {
-              if (e.name !== "AbortError")
-                copyAndNotify(
-                  readerUrl,
-                  "Link copied! Open ElevenReader and paste the link.",
-                );
-            });
-          return;
-        }
+        // ElevenReader doesn't have a registered URL scheme, so copy the link
+        // and provide clear instructions
         copyAndNotify(
           readerUrl,
-          "Link copied! Open ElevenReader and paste the link.",
+          "Link copied! Open the ElevenReader app and paste this URL to listen.",
         );
         break;
       case "pocket":
+        // Open Pocket save page - note: may fail on dev domains
+        showListenToast("Opening Pocket... (may not work with dev URLs)", "info");
         window.open(
           "https://getpocket.com/save?url=" + encodeURIComponent(readerUrl),
           "_blank",
