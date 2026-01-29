@@ -760,13 +760,16 @@ def subscribe():
             try:
                 import posthog
                 if posthog:
+                    ref = request.referrer or ''
                     posthog.capture(
                         distinct_id=str(user.id) if user else email,
                         event='daily_question_subscribed',
                         properties={
+                            'subscription_tier': 'free',
+                            'plan_name': 'Daily Question',
                             'email': email,
-                            'source': 'social' if 'utm_source' in request.referrer or any(d in request.referrer for d in ['twitter.com', 'x.com', 'bsky.social']) else 'direct',
-                            'referrer': request.referrer
+                            'source': 'social' if ('utm_source' in ref or any(d in ref for d in ['twitter.com', 'x.com', 'bsky.social'])) else 'direct',
+                            'referrer': request.referrer,
                         }
                     )
             except Exception as e:
@@ -819,6 +822,21 @@ def unsubscribe(token):
     subscriber.unsubscribe_reason = reason
     subscriber.unsubscribed_at = datetime.utcnow()
     db.session.commit()
+
+    try:
+        import posthog
+        if posthog:
+            distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
+            posthog.capture(
+                distinct_id=distinct_id,
+                event='daily_question_unsubscribed',
+                properties={
+                    'email': subscriber.email,
+                    'reason': reason,
+                }
+            )
+    except Exception as e:
+        current_app.logger.warning(f"PostHog tracking error: {e}")
 
     current_app.logger.info(
         f"Subscriber {subscriber.id} ({subscriber.email}) unsubscribed. Reason: {reason}"
@@ -923,11 +941,12 @@ def manage_preferences():
                 # Track preference change with PostHog (old_frequency captured at start of POST)
                 try:
                     import posthog
-                    if posthog.project_api_key:
+                    if getattr(posthog, 'project_api_key', None):
+                        distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
                         posthog.capture(
-                            subscriber.email,
-                            'frequency_preference_changed',
-                            {
+                            distinct_id=distinct_id,
+                            event='frequency_preference_changed',
+                            properties={
                                 'old_frequency': old_frequency,
                                 'new_frequency': subscriber.email_frequency,
                                 'send_day': subscriber.preferred_send_day,
@@ -1449,6 +1468,26 @@ def one_click_vote(token, vote_choice):
 
         db.session.commit()
 
+        try:
+            import posthog
+            if posthog:
+                distinct_id = str(current_user.id) if current_user.is_authenticated else subscriber.email
+                posthog.capture(
+                    distinct_id=distinct_id,
+                    event='daily_question_participated',
+                    properties={
+                        'question_id': question.id,
+                        'question_number': question.question_number,
+                        'vote': vote_choice,
+                        'has_reason': bool(reason),
+                        'is_authenticated': current_user.is_authenticated,
+                        'voted_via_email': True,
+                        'source': request.args.get('source', 'email'),
+                    }
+                )
+        except Exception as e:
+            current_app.logger.warning(f"PostHog tracking error: {e}")
+
         current_app.logger.info(
             f"One-click email vote recorded: {vote_choice} for question #{question.question_number} "
             f"(email_q#{email_question_id}) by subscriber {subscriber.id}"
@@ -1581,6 +1620,25 @@ def vote():
                 subscriber.update_participation_streak(has_reason=bool(reason))
         
         db.session.commit()
+
+        try:
+            import posthog
+            if posthog:
+                distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint() or 'anonymous'
+                posthog.capture(
+                    distinct_id=distinct_id,
+                    event='daily_question_participated',
+                    properties={
+                        'question_id': question.id,
+                        'question_number': question.question_number,
+                        'vote': vote_value,
+                        'has_reason': bool(reason),
+                        'is_authenticated': current_user.is_authenticated,
+                        'voted_via_email': False,
+                    }
+                )
+        except Exception as e:
+            current_app.logger.warning(f"PostHog tracking error: {e}")
 
         return redirect(url_for('daily.today'))
 
