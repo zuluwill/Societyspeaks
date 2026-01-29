@@ -3,6 +3,7 @@
 {% from "components/voice_selector.html" import voice_selector %}
 {% from "components/dive_deeper_links.html" import dive_deeper_links %}
 {% from "components/email_capture.html" import email_capture_inline, email_capture_compact, paid_brief_crosssell %}
+{% from "components/listen_with.html" import listen_with %}
 
 {% block title %}{{ brief.title }} - Society Speaks{% endblock %}
 
@@ -23,7 +24,18 @@
         <div class="bg-blue-50 rounded-xl border border-blue-200 p-5 sm:p-6 mb-8 shadow-sm">
             <p class="text-blue-800 text-base leading-relaxed">{{ brief.intro_text }}</p>
         </div>
-        
+
+        <!-- Listen With Dropdown -->
+        <div class="mb-8 flex justify-center">
+            {% set first_audio_item = items|selectattr('audio_url')|first %}
+            {{ listen_with(
+                has_audio=(first_audio_item is defined and first_audio_item.audio_url),
+                audio_url=(first_audio_item.audio_url if first_audio_item is defined and first_audio_item.audio_url else none),
+                reader_url=url_for('brief.reader_view', date_str=brief.date.strftime('%Y-%m-%d'), _external=True),
+                brief_title=brief.title
+            ) }}
+        </div>
+
         {% if show_email_capture %}
         <div class="mb-8">
             {{ email_capture_compact() }}

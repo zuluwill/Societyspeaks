@@ -2485,6 +2485,41 @@ def public_brief_run(briefing_id, run_id):
     )
 
 
+@briefing_bp.route('/public/<int:briefing_id>/runs/<int:run_id>/reader')
+@limiter.limit("60/minute")
+def public_brief_run_reader(briefing_id, run_id):
+    """
+    Reader-optimized view for a public brief run.
+
+    Clean, minimal HTML designed for:
+    - Reader apps (ElevenReader, Pocket, Instapaper)
+    - Browser reader mode
+    - Text-to-speech tools
+    - Accessibility
+    """
+    briefing = Briefing.query.get_or_404(briefing_id)
+
+    # Check if briefing is public
+    if briefing.visibility != 'public':
+        flash('This briefing is not publicly accessible', 'error')
+        return redirect(url_for('index'))
+
+    brief_run = BriefRun.query.filter_by(
+        id=run_id,
+        briefing_id=briefing_id,
+        status='sent'
+    ).first_or_404()
+
+    items = sorted(brief_run.items, key=lambda x: x.position or 0)
+
+    return render_template(
+        'briefing/public/run_reader.html',
+        briefing=briefing,
+        brief_run=brief_run,
+        items=items
+    )
+
+
 # =============================================================================
 # Test Generation & Preview Routes
 # =============================================================================

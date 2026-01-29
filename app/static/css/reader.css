@@ -1,0 +1,180 @@
+/**
+ * Shared reader-optimized styles for Daily Brief and user brief reader views.
+ * Used by brief/reader.html and briefing/public/run_reader.html.
+ * Optimized for: reader apps, browser reader mode, TTS, print, accessibility.
+ */
+
+:root {
+  --text-color: #1a1a1a;
+  --muted-color: #666;
+  --border-color: #e5e5e5;
+  --bg-color: #fff;
+  --accent-color: #1e40af;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--text-color);
+  background: var(--bg-color);
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1.5rem, env(safe-area-inset-right, 0px));
+  -webkit-text-size-adjust: 100%;
+}
+
+header {
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.publication {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent-color);
+  margin-bottom: 0.5rem;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+
+.date {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  color: var(--muted-color);
+}
+
+.intro {
+  font-size: 1.125rem;
+  color: var(--muted-color);
+  font-style: italic;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+article {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+article:last-of-type {
+  border-bottom: none;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+
+.summary-list {
+  list-style: none;
+  margin-bottom: 1.5rem;
+}
+
+.summary-list li {
+  position: relative;
+  padding-left: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.summary-list li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+  color: var(--accent-color);
+  font-weight: bold;
+}
+
+.deeper-context {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f1f5f9;
+  border-radius: 4px;
+  font-size: 0.9375rem;
+}
+
+.deeper-context h3 {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-color);
+  margin-bottom: 0.5rem;
+}
+
+footer {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--border-color);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 0.875rem;
+  color: var(--muted-color);
+  text-align: center;
+}
+
+footer a {
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive: small phones */
+@media (max-width: 480px) {
+  body {
+    font-size: 16px;
+    padding: 1.5rem 1rem;
+  }
+  h1 {
+    font-size: 1.5rem;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Responsive: tablets and large phones */
+@media (max-width: 640px) {
+  body {
+    padding: 1.75rem 1.25rem;
+  }
+}
+
+/* Print */
+@media print {
+  body {
+    max-width: none;
+    padding: 0;
+  }
+  a {
+    color: inherit;
+  }
+  article {
+    page-break-inside: avoid;
+  }
+}

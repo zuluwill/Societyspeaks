@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ briefing.name }} - {{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Brief' }}</title>
+    <meta name="description" content="{{ briefing.name }} brief from {{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Society Speaks' }}">
+
+    <!-- Open Graph for reader apps -->
+    <meta property="og:title" content="{{ briefing.name }}">
+    <meta property="og:description" content="Brief from {{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Society Speaks' }}">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ request.url }}">
+
+    <!-- Article metadata for reader apps -->
+    {% if brief_run.sent_at %}
+    <meta property="article:published_time" content="{{ brief_run.sent_at.isoformat() }}">
+    {% endif %}
+    <meta property="article:author" content="{{ briefing.name }}">
+
+    <!-- Shared reader styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reader.css') }}">
+
+    <!-- Run-specific styles -->
+    <style>
+        .prose {
+            font-size: 1rem;
+            line-height: 1.75;
+        }
+
+        .prose h1,
+        .prose h2,
+        .prose h3,
+        .prose h4 {
+            font-weight: 700;
+            line-height: 1.3;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .prose h1 { font-size: 1.75rem; }
+        .prose h2 { font-size: 1.5rem; }
+        .prose h3 { font-size: 1.25rem; }
+
+        .prose p { margin-bottom: 1rem; }
+
+        .prose ul,
+        .prose ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .prose li { margin-bottom: 0.5rem; }
+
+        .prose a {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+
+        .prose blockquote {
+            border-left: 4px solid var(--border-color);
+            padding-left: 1rem;
+            margin: 1rem 0;
+            font-style: italic;
+            color: var(--muted-color);
+        }
+
+        .source-link {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.875rem;
+        }
+
+        .source-link a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .source-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <p class="publication">{{ briefing.name }}</p>
+        <h1>{{ brief_run.scheduled_at.strftime('%B %d, %Y') if brief_run.scheduled_at else 'Brief' }}</h1>
+        {% if brief_run.sent_at %}
+        <p class="date">Published {{ brief_run.sent_at.strftime('%B %d, %Y at %H:%M UTC') }}</p>
+        {% endif %}
+    </header>
+
+    <main>
+        <!-- Rendered HTML content if available -->
+        {% if brief_run.approved_html %}
+        <div class="prose">{{ brief_run.approved_html|safe }}</div>
+        {% elif brief_run.draft_html %}
+        <div class="prose">{{ brief_run.draft_html|safe }}</div>
+        {% endif %}
+
+        <!-- Individual items -->
+        {% if items %}
+        {% for item in items %}
+        <article>
+            <h2>{{ item.headline }}</h2>
+
+            {% if item.summary_bullets %}
+            <ul class="summary-list">
+                {% for bullet in item.summary_bullets %}
+                <li>{{ bullet }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if item.deeper_context %}
+            <div class="deeper-context">
+                <h3>More Context</h3>
+                <p>{{ item.deeper_context }}</p>
+            </div>
+            {% endif %}
+
+            {% if item.content_html %}
+            <div class="prose">{{ item.content_html|safe }}</div>
+            {% elif item.content_markdown %}
+            <p>{{ item.content_markdown }}</p>
+            {% endif %}
+
+            {% if item.ingested_item and item.ingested_item.url %}
+            <div class="source-link">
+                <a href="{{ item.ingested_item.url }}" rel="noopener">Read original source &rarr;</a>
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>Published by <a href="{{ url_for('briefing.public_briefing', briefing_id=briefing.id, _external=True) }}">{{ briefing.name }}</a></p>
+        <p>Powered by <a href="{{ url_for('index', _external=True) }}">Society Speaks</a></p>
+        <p><a href="{{ url_for('briefing.public_brief_run', briefing_id=briefing.id, run_id=brief_run.id, _external=True) }}">View full version</a></p>
+    </footer>
+</body>
+</html>

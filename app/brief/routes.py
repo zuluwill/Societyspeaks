@@ -298,6 +298,59 @@ def view_date(date_str):
     )
 
 
+@brief_bp.route('/brief/<date_str>/reader')
+@limiter.limit("60/minute")
+def reader_view(date_str):
+    """
+    Reader-optimized view for a brief.
+
+    Clean, minimal HTML designed for:
+    - Reader apps (ElevenReader, Pocket, Instapaper)
+    - Browser reader mode
+    - Text-to-speech tools
+    - Accessibility
+    """
+    try:
+        brief_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date format. Use YYYY-MM-DD.', 'error')
+        return redirect(url_for('brief.today'))
+
+    brief = DailyBrief.get_by_date(brief_date)
+
+    if not brief:
+        flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
+        return render_template('brief/no_brief.html', requested_date=brief_date)
+
+    items = brief.items.order_by(BriefItem.position).all()
+
+    return render_template(
+        'brief/reader.html',
+        brief=brief,
+        items=items
+    )
+
+
+@brief_bp.route('/brief/today/reader')
+@limiter.limit("60/minute")
+def reader_today():
+    """Reader view for today's brief - redirects to date-specific reader URL."""
+    brief = DailyBrief.get_today()
+
+    if not brief:
+        # Fall back to most recent
+        latest_brief = DailyBrief.query.filter_by(
+            status='published'
+        ).order_by(DailyBrief.date.desc()).first()
+
+        if latest_brief:
+            return redirect(url_for('brief.reader_view', date_str=latest_brief.date.strftime('%Y-%m-%d')))
+        else:
+            return render_template('brief/no_brief.html')
+
+    return redirect(url_for('brief.reader_view', date_str=brief.date.strftime('%Y-%m-%d')))
+
+
 @brief_bp.route('/brief/archive')
 @limiter.limit("60/minute")
 def archive():

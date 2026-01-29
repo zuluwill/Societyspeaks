@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ brief.title }} - Society Speaks Daily Brief</title>
+    <meta name="description" content="{{ brief.intro_text[:160] }}">
+
+    <!-- Open Graph for reader apps -->
+    <meta property="og:title" content="{{ brief.title }}">
+    <meta property="og:description" content="{{ brief.intro_text[:200] }}">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ request.url }}">
+
+    <!-- Article metadata for reader apps -->
+    <meta property="article:published_time" content="{{ brief.date.isoformat() }}">
+    <meta property="article:author" content="Society Speaks">
+    <meta property="article:section" content="News">
+
+    <!-- Shared reader styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reader.css') }}">
+
+    <!-- Brief-specific styles -->
+    <style>
+        .item-number {
+            display: inline-block;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            background: #eff6ff;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+
+        .under-radar {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .callout {
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+            border-left: 4px solid;
+            background: #f8f9fa;
+        }
+
+        .callout-impact {
+            border-color: var(--accent-color);
+            background: #eff6ff;
+        }
+
+        .callout-why {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .callout-label {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .callout-impact .callout-label { color: var(--accent-color); }
+        .callout-why .callout-label { color: #b45309; }
+
+        .perspectives {
+            margin: 1.5rem 0;
+        }
+
+        .perspectives h3 {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted-color);
+            margin-bottom: 0.75rem;
+        }
+
+        .perspective {
+            margin-bottom: 0.75rem;
+            font-size: 0.9375rem;
+        }
+
+        .perspective-label { font-weight: 700; }
+        .left { color: #2563eb; }
+        .center { color: #7c3aed; }
+        .right { color: #dc2626; }
+
+        .coverage {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.875rem;
+            color: var(--muted-color);
+            margin: 1rem 0;
+        }
+
+        .sources {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .sources h3 {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--muted-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .sources ul {
+            list-style: none;
+            font-size: 0.875rem;
+        }
+
+        .sources li { margin-bottom: 0.25rem; }
+        .sources a { color: var(--accent-color); text-decoration: none; }
+        .sources a:hover { text-decoration: underline; }
+
+        /* Lens Check Section */
+        .lens-check {
+            margin-top: 3rem;
+            padding: 1.5rem;
+            background: #faf5ff;
+            border-radius: 8px;
+        }
+
+        .lens-check h2 {
+            color: #7c3aed;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .lens-story {
+            font-style: italic;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e9d5ff;
+        }
+
+        .lens-perspectives { display: grid; gap: 1rem; }
+
+        .lens-perspective {
+            padding: 1rem;
+            background: white;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+
+        .lens-left { border-color: #2563eb; }
+        .lens-center { border-color: #7c3aed; }
+        .lens-right { border-color: #dc2626; }
+
+        .lens-perspective h4 {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .lens-left h4 { color: #2563eb; }
+        .lens-center h4 { color: #7c3aed; }
+        .lens-right h4 { color: #dc2626; }
+
+        .contrast-analysis {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            border-radius: 0 4px 4px 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <p class="publication">Society Speaks Daily Brief</p>
+        <h1>{{ brief.title }}</h1>
+        <p class="date">{{ brief.date.strftime('%A, %d %B %Y') }}</p>
+    </header>
+
+    {% if brief.intro_text %}
+    <p class="intro">{{ brief.intro_text }}</p>
+    {% endif %}
+
+    <main>
+        {% for item in items %}
+        <article>
+            {% if item.is_underreported %}
+            <span class="item-number under-radar">Under the Radar</span>
+            {% else %}
+            <span class="item-number">Story {{ item.position }}</span>
+            {% endif %}
+
+            <h2>{{ item.headline }}</h2>
+
+            {% if item.summary_bullets %}
+            <ul class="summary-list">
+                {% for bullet in item.summary_bullets %}
+                <li>{{ bullet }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% if item.personal_impact %}
+            <div class="callout callout-impact">
+                <p class="callout-label">Why This Matters To You</p>
+                <p>{{ item.personal_impact }}</p>
+            </div>
+            {% endif %}
+
+            {% if item.so_what %}
+            <div class="callout callout-why">
+                <p class="callout-label">Why It Matters</p>
+                <p>{{ item.so_what }}</p>
+            </div>
+            {% endif %}
+
+            {% if item.deeper_context %}
+            <div class="deeper-context">
+                <h3>More Context</h3>
+                <p>{{ item.deeper_context }}</p>
+            </div>
+            {% endif %}
+
+            {% if item.perspectives %}
+            <div class="perspectives">
+                <h3>How It's Being Framed</h3>
+                {% if item.perspectives.get('left') %}
+                <p class="perspective">
+                    <span class="perspective-label left">Left:</span> {{ item.perspectives.get('left') }}
+                </p>
+                {% endif %}
+                {% if item.perspectives.get('center') %}
+                <p class="perspective">
+                    <span class="perspective-label center">Centre:</span> {{ item.perspectives.get('center') }}
+                </p>
+                {% endif %}
+                {% if item.perspectives.get('right') %}
+                <p class="perspective">
+                    <span class="perspective-label right">Right:</span> {{ item.perspectives.get('right') }}
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if item.coverage_distribution %}
+            {% set left_pct = (item.coverage_distribution.get('left', 0) * 100)|int %}
+            {% set center_pct = (item.coverage_distribution.get('center', 0) * 100)|int %}
+            {% set right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
+            <p class="coverage">
+                Coverage: {{ left_pct }}% left | {{ center_pct }}% centre | {{ right_pct }}% right
+                {% if item.source_count %}({{ item.source_count }} sources){% endif %}
+            </p>
+            {% endif %}
+
+            {% if item.verification_links %}
+            <div class="sources">
+                <h3>Verify It Yourself</h3>
+                <ul>
+                    {% for link in item.verification_links %}
+                    <li><a href="{{ link.url }}" rel="noopener">{{ link.description }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
+
+        {% if brief.lens_check %}
+        <section class="lens-check">
+            <h2>Same Story, Different Lens</h2>
+
+            {% if brief.lens_check.story_summary %}
+            <p class="lens-story">{{ brief.lens_check.story_summary }}</p>
+            {% endif %}
+
+            <div class="lens-perspectives">
+                {% if brief.lens_check.perspectives.left %}
+                <div class="lens-perspective lens-left">
+                    <h4>Left ({{ brief.lens_check.perspectives.left.source_count }} sources)</h4>
+                    {% if brief.lens_check.perspectives.left.emphasis %}
+                    <p><strong>Emphasis:</strong> {{ brief.lens_check.perspectives.left.emphasis }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if brief.lens_check.perspectives.centre %}
+                <div class="lens-perspective lens-center">
+                    <h4>Centre ({{ brief.lens_check.perspectives.centre.source_count }} sources)</h4>
+                    {% if brief.lens_check.perspectives.centre.emphasis %}
+                    <p><strong>Emphasis:</strong> {{ brief.lens_check.perspectives.centre.emphasis }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if brief.lens_check.perspectives.right %}
+                <div class="lens-perspective lens-right">
+                    <h4>Right ({{ brief.lens_check.perspectives.right.source_count }} sources)</h4>
+                    {% if brief.lens_check.perspectives.right.emphasis %}
+                    <p><strong>Emphasis:</strong> {{ brief.lens_check.perspectives.right.emphasis }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            {% if brief.lens_check.contrast_analysis %}
+            <div class="contrast-analysis">
+                <p><strong>The Contrast:</strong> {{ brief.lens_check.contrast_analysis }}</p>
+            </div>
+            {% endif %}
+        </section>
+        {% endif %}
+    </main>
+
+    <footer>
+        <p>Published {{ brief.date.strftime('%B %d, %Y') }} by <a href="{{ url_for('index', _external=True) }}">Society Speaks</a></p>
+        <p>
+            <a href="{{ url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}">View full version</a>
+            | <a href="{{ url_for('brief.methodology', _external=True) }}">Our methodology</a>
+        </p>
+    </footer>
+</body>
+</html>
