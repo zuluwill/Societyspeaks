@@ -161,3 +161,6 @@ cython_debug/
 
 # Sensitive assets - screenshots, logs, and temporary files
 attached_assets/
+
+# Internal docs and planning (keep out of open-source repo; may contain sensitive/strategic info)
+docs/
