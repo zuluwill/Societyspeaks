@@ -11,6 +11,7 @@ import logging
 from html import escape as html_escape
 from datetime import datetime, date, timedelta
 from typing import List, Optional, Dict, Any
+from sqlalchemy.exc import IntegrityError
 from app import db
 from app.models import (
     Briefing, BriefRun, BriefRunItem, IngestedItem, InputSource
@@ -74,7 +75,7 @@ class BriefingGenerator:
                 logger.info(f"BriefRun already exists for briefing {briefing.id} at {scheduled_at}")
                 return existing
             
-            # Create BriefRun
+            # Create BriefRun with race condition handling
             brief_run = BriefRun(
                 briefing_id=briefing.id,
                 scheduled_at=scheduled_at,
@@ -82,8 +83,21 @@ class BriefingGenerator:
                 generated_at=datetime.utcnow()
             )
             
-            db.session.add(brief_run)
-            db.session.flush()  # Get brief_run.id
+            try:
+                db.session.add(brief_run)
+                db.session.flush()  # Get brief_run.id
+            except IntegrityError as e:
+                # Race condition: another worker created the record between our check and insert
+                db.session.rollback()
+                logger.info(f"Race condition detected for briefing {briefing.id} at {scheduled_at}, fetching existing record")
+                existing = BriefRun.query.filter_by(
+                    briefing_id=briefing.id,
+                    scheduled_at=scheduled_at
+                ).first()
+                if existing:
+                    return existing
+                # If still not found, re-raise the error
+                raise
             
             # Generate content
             title = self._generate_brief_title(briefing, ingested_items)
