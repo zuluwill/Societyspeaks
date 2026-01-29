@@ -145,7 +145,7 @@ def create_discussion():
         db.session.commit()
         
         # Track discussion creation with PostHog
-        if posthog:
+        if posthog and getattr(posthog, 'project_api_key', None):
             try:
                 posthog.capture(
                     distinct_id=str(current_user.id),

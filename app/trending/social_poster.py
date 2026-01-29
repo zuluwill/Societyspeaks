@@ -636,7 +636,7 @@ def post_to_bluesky(
         # Track with PostHog
         try:
             import posthog
-            if posthog:
+            if posthog and getattr(posthog, 'project_api_key', None):
                 posthog.capture(
                     distinct_id='system',
                     event='social_post_created',
@@ -866,7 +866,7 @@ def post_to_x(
         if response and response.data:
             try:
                 import posthog
-                if posthog:
+                if posthog and getattr(posthog, 'project_api_key', None):
                     posthog.capture(
                         distinct_id='system',
                         event='social_post_created',

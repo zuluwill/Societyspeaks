@@ -171,7 +171,7 @@ def register():
         db.session.commit()
         
         # Track user signup with PostHog
-        if posthog:
+        if posthog and getattr(posthog, 'project_api_key', None):
             try:
                 posthog.capture(
                     distinct_id=str(new_user.id),
@@ -238,7 +238,7 @@ def login():
         login_user(user)
         
         # Track login with PostHog
-        if posthog:
+        if posthog and getattr(posthog, 'project_api_key', None):
             try:
                 posthog.capture(
                     distinct_id=str(user.id),
@@ -371,7 +371,7 @@ def logout():
     session.clear()
     
     # Track logout with PostHog
-    if posthog:
+    if posthog and getattr(posthog, 'project_api_key', None):
         try:
             posthog.capture(distinct_id=user_id, event='user_logged_out')
         except Exception as e:

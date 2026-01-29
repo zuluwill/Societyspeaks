@@ -209,7 +209,7 @@ def create_statement(discussion_id):
         db.session.commit()
         
         # Track statement creation with PostHog
-        if posthog:
+        if posthog and getattr(posthog, 'project_api_key', None):
             try:
                 distinct_id = str(identifier['user_id']) if identifier['user_id'] else identifier['session_fingerprint']
                 posthog.capture(
@@ -482,27 +482,27 @@ def vote_statement(statement_id):
             db.session.commit()
 
     # Track vote with PostHog (also track if from social media)
-    if posthog:
+    if posthog and getattr(posthog, 'project_api_key', None):
         try:
             # Check if this is from social media (conversion tracking)
             referer = request.headers.get('Referer', '') if hasattr(request, 'headers') else ''
             request_url = request.url if hasattr(request, 'url') else ''
             is_social = any(domain in referer for domain in ['twitter.com', 'x.com', 'bsky.social', 'bluesky.social']) or 'utm_source' in request_url
-            
+
             if current_user.is_authenticated:
                 distinct_id = str(current_user.id)
             else:
                 distinct_id = get_statement_vote_fingerprint()
-            
+
             vote_label = {1: 'agree', -1: 'disagree', 0: 'unsure'}.get(vote_value, 'unknown')
-            
+
             properties = {
                 'statement_id': statement_id,
                 'discussion_id': statement.discussion_id,
                 'vote': vote_label,
                 'is_authenticated': current_user.is_authenticated
             }
-            
+
             # Add social media tracking if applicable
             if is_social:
                 properties['source'] = 'social'
@@ -513,7 +513,7 @@ def vote_statement(statement_id):
                     event='discussion_participated_from_social',
                     properties=properties
                 )
-            
+
             # Always track the vote
             posthog.capture(
                 distinct_id=distinct_id,

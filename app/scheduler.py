@@ -649,7 +649,7 @@ def init_scheduler(app):
                             # Track with PostHog
                             try:
                                 import posthog
-                                if getattr(posthog, 'project_api_key', None):
+                                if posthog and getattr(posthog, 'project_api_key', None):
                                     posthog.capture(
                                         distinct_id=subscriber.email,
                                         event='weekly_digest_sent',
@@ -743,7 +743,7 @@ def init_scheduler(app):
                             # Track with PostHog
                             try:
                                 import posthog
-                                if getattr(posthog, 'project_api_key', None):
+                                if posthog and getattr(posthog, 'project_api_key', None):
                                     posthog.capture(
                                         distinct_id=subscriber.email,
                                         event='monthly_digest_sent',
@@ -894,7 +894,7 @@ def init_scheduler(app):
                         logger.info(f"Posted daily question #{question.question_number} to X: {tweet_id}")
                         
                         # Track with PostHog
-                        if getattr(posthog, 'project_api_key', None):
+                        if posthog and getattr(posthog, 'project_api_key', None):
                             try:
                                 posthog.capture(
                                     distinct_id='system',
@@ -929,7 +929,7 @@ def init_scheduler(app):
                         logger.info(f"Posted daily question #{question.question_number} to Bluesky: {bluesky_uri}")
                         
                         # Track with PostHog
-                        if getattr(posthog, 'project_api_key', None):
+                        if posthog and getattr(posthog, 'project_api_key', None):
                             try:
                                 posthog.capture(
                                     distinct_id='system',
@@ -995,7 +995,7 @@ def init_scheduler(app):
                         logger.info(f"Posted weekly insights to X: {tweet_id}")
                         
                         # Track with PostHog
-                        if getattr(posthog, 'project_api_key', None):
+                        if posthog and getattr(posthog, 'project_api_key', None):
                             try:
                                 posthog.capture(
                                     distinct_id='system',
@@ -1026,7 +1026,7 @@ def init_scheduler(app):
                         logger.info(f"Posted weekly insights to Bluesky: {bluesky_uri}")
                         
                         # Track with PostHog
-                        if getattr(posthog, 'project_api_key', None):
+                        if posthog and getattr(posthog, 'project_api_key', None):
                             try:
                                 posthog.capture(
                                     distinct_id='system',
@@ -1100,7 +1100,7 @@ def init_scheduler(app):
                         logger.info(f"Posted daily brief to X: {tweet_id}")
                         
                         # Track with PostHog
-                        if getattr(posthog, 'project_api_key', None):
+                        if posthog and getattr(posthog, 'project_api_key', None):
                             try:
                                 posthog.capture(
                                     distinct_id='system',
@@ -1135,7 +1135,7 @@ def init_scheduler(app):
                         logger.info(f"Posted daily brief to Bluesky: {bluesky_uri}")
                         
                         # Track with PostHog
-                        if getattr(posthog, 'project_api_key', None):
+                        if posthog and getattr(posthog, 'project_api_key', None):
                             try:
                                 posthog.capture(
                                     distinct_id='system',

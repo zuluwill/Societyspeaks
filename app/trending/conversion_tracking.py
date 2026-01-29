@@ -31,9 +31,9 @@ def track_social_conversion(
     """
     try:
         import posthog
-        if not posthog:
+        if not posthog or not getattr(posthog, 'project_api_key', None):
             return
-        
+
         posthog.capture(
             distinct_id=distinct_id or 'anonymous',
             event=event_name,

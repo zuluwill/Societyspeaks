@@ -759,7 +759,7 @@ def subscribe():
             # Track conversion with PostHog
             try:
                 import posthog
-                if posthog:
+                if posthog and getattr(posthog, 'project_api_key', None):
                     ref = request.referrer or ''
                     posthog.capture(
                         distinct_id=str(user.id) if user else email,
@@ -825,7 +825,7 @@ def unsubscribe(token):
 
     try:
         import posthog
-        if posthog:
+        if posthog and getattr(posthog, 'project_api_key', None):
             distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
             posthog.capture(
                 distinct_id=distinct_id,
@@ -941,7 +941,7 @@ def manage_preferences():
                 # Track preference change with PostHog (old_frequency captured at start of POST)
                 try:
                     import posthog
-                    if getattr(posthog, 'project_api_key', None):
+                    if posthog and getattr(posthog, 'project_api_key', None):
                         distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
                         posthog.capture(
                             distinct_id=distinct_id,
@@ -1470,7 +1470,7 @@ def one_click_vote(token, vote_choice):
 
         try:
             import posthog
-            if posthog:
+            if posthog and getattr(posthog, 'project_api_key', None):
                 distinct_id = str(current_user.id) if current_user.is_authenticated else subscriber.email
                 posthog.capture(
                     distinct_id=distinct_id,
@@ -1623,7 +1623,7 @@ def vote():
 
         try:
             import posthog
-            if posthog:
+            if posthog and getattr(posthog, 'project_api_key', None):
                 distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint() or 'anonymous'
                 posthog.capture(
                     distinct_id=distinct_id,
