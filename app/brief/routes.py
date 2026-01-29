@@ -125,7 +125,7 @@ def _process_subscription(
                 existing.timezone = timezone
                 existing.preferred_send_hour = preferred_hour
             existing.generate_magic_token()
-            existing.start_trial()
+            existing.grant_free_access()  # Daily brief is free; no trial
             existing.welcome_email_sent_at = None
             db.session.commit()
 
@@ -158,7 +158,7 @@ def _process_subscription(
             preferred_send_hour=preferred_hour
         )
         subscriber.generate_magic_token()
-        subscriber.start_trial()
+        subscriber.grant_free_access()  # Daily brief is free; no trial
 
         db.session.add(subscriber)
         db.session.commit()
@@ -801,12 +801,11 @@ def admin_test_send():
         subscriber = DailyBriefSubscriber(
             email=email,
             status='active',
-            tier='trial',
             timezone='Europe/London',
             preferred_send_hour=8,
             magic_token=secrets.token_urlsafe(32),
-            trial_ends_at=datetime.utcnow() + timedelta(days=14)
         )
+        subscriber.grant_free_access()
         db.session.add(subscriber)
         db.session.commit()
         logger.info(f"Created test subscriber: {email}")
