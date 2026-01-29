@@ -95,6 +95,20 @@ def checkout():
         if not checkout_session.url:
             flash('Payment session error. Please try again.', 'error')
             return redirect(url_for('briefing.landing'))
+        try:
+            import posthog
+            if posthog and getattr(posthog, 'project_api_key', None):
+                posthog.capture(
+                    distinct_id=str(current_user.id),
+                    event='checkout_started',
+                    properties={
+                        'plan_code': plan_code,
+                        'billing_interval': billing_interval,
+                        'plan_name': target_plan.name if target_plan else plan_code,
+                    }
+                )
+        except Exception as e:
+            current_app.logger.warning(f"PostHog tracking error: {e}")
         return redirect(checkout_session.url, code=303)
     except ValueError as e:
         flash(str(e), 'error')
@@ -135,6 +149,30 @@ def checkout_success():
                 sync_success = True
                 if sub and sub.plan and sub.plan.is_organisation:
                     is_org_plan = True
+                # Track paid briefing subscription with PostHog (only when we just synced from this checkout)
+                if sub and sub.plan:
+                    try:
+                        import posthog
+                        if posthog and getattr(posthog, 'project_api_key', None):
+                            meta = getattr(checkout_session, 'metadata', None) or {}
+                            interval = meta.get('billing_interval', 'month')
+                            plan = sub.plan
+                            price_pence = plan.price_yearly if interval == 'year' else plan.price_monthly
+                            price_display = (price_pence / 100.0) if price_pence else None
+                            posthog.capture(
+                                distinct_id=str(current_user.id),
+                                event='paid_briefing_subscribed',
+                                properties={
+                                    'subscription_tier': 'paid',
+                                    'plan_name': plan.name,
+                                    'plan_code': plan.code,
+                                    'billing_interval': interval,
+                                    'price_pence': price_pence,
+                                    'price': price_display,
+                                }
+                            )
+                    except Exception as e:
+                        current_app.logger.warning(f"PostHog tracking error: {e}")
         except stripe.error.StripeError as e:
             current_app.logger.error(f"Stripe error retrieving checkout session: {e}")
         except ValueError as e:
@@ -301,10 +339,27 @@ def handle_subscription_deleted(subscription_data):
     """Handle subscription cancellation."""
     sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
     if sub:
+        user_id = sub.user_id
+        plan_name = sub.plan.name if sub.plan else None
+        plan_code = sub.plan.code if sub.plan else None
         sub.status = 'canceled'
         sub.canceled_at = db.func.now()
         db.session.commit()
         current_app.logger.info(f"Canceled subscription {sub.id}")
+        try:
+            import posthog
+            if posthog and getattr(posthog, 'project_api_key', None) and user_id:
+                posthog.capture(
+                    distinct_id=str(user_id),
+                    event='paid_briefing_canceled',
+                    properties={
+                        'subscription_id': sub.id,
+                        'plan_name': plan_name,
+                        'plan_code': plan_code,
+                    }
+                )
+        except Exception as e:
+            current_app.logger.warning(f"PostHog tracking error: {e}")
 
 
 def handle_payment_failed(invoice_data):
@@ -359,6 +414,22 @@ def pending_checkout():
         if not checkout_session.url:
             flash('Payment session error. Please try again.', 'error')
             return redirect(url_for('briefing.landing'))
+        try:
+            import posthog
+            target_plan = PricingPlan.query.filter_by(code=plan_code).first()
+            if posthog and getattr(posthog, 'project_api_key', None):
+                posthog.capture(
+                    distinct_id=str(current_user.id),
+                    event='checkout_started',
+                    properties={
+                        'plan_code': plan_code,
+                        'billing_interval': billing_interval,
+                        'plan_name': target_plan.name if target_plan else plan_code,
+                        'source': 'pending_checkout',
+                    }
+                )
+        except Exception as e:
+            current_app.logger.warning(f"PostHog tracking error: {e}")
         return redirect(checkout_session.url, code=303)
     except ValueError as e:
         flash(str(e), 'error')

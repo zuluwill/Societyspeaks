@@ -178,6 +178,21 @@ def create_individual_profile():
             db.session.add(profile)
             db.session.commit()
 
+            try:
+                import posthog
+                if posthog and getattr(posthog, 'project_api_key', None):
+                    posthog.capture(
+                        distinct_id=str(current_user.id),
+                        event='profile_created',
+                        properties={
+                            'profile_type': 'individual',
+                            'profile_id': profile.id,
+                            'profile_slug': profile.slug,
+                        }
+                    )
+            except Exception as e:
+                current_app.logger.warning(f"PostHog tracking error: {e}")
+
             flash("Individual profile created successfully!", "success")
             return redirect(url_for('profiles.view_individual_profile', username=profile.slug))
 
@@ -231,6 +246,21 @@ def create_company_profile():
             current_user.profile_type = 'company'
             db.session.add(profile)
             db.session.commit()
+
+            try:
+                import posthog
+                if posthog and getattr(posthog, 'project_api_key', None):
+                    posthog.capture(
+                        distinct_id=str(current_user.id),
+                        event='profile_created',
+                        properties={
+                            'profile_type': 'company',
+                            'profile_id': profile.id,
+                            'profile_slug': profile.slug,
+                        }
+                    )
+            except Exception as e:
+                current_app.logger.warning(f"PostHog tracking error: {e}")
 
             flash("Company profile created successfully!", "success")
             return redirect(url_for('profiles.view_company_profile', company_name=profile.slug))
@@ -302,6 +332,22 @@ def edit_individual_profile(username):
             profile.update_slug()
 
             db.session.commit()
+
+            try:
+                import posthog
+                if posthog and getattr(posthog, 'project_api_key', None):
+                    posthog.capture(
+                        distinct_id=str(current_user.id),
+                        event='profile_edited',
+                        properties={
+                            'profile_type': 'individual',
+                            'profile_id': profile.id,
+                            'profile_slug': profile.slug,
+                        }
+                    )
+            except Exception as e:
+                current_app.logger.warning(f"PostHog tracking error: {e}")
+
             flash("Profile updated successfully!", "success")
             return redirect(url_for('profiles.view_individual_profile', username=profile.slug))
 
@@ -354,6 +400,22 @@ def edit_company_profile(company_name):
             profile.update_slug()
 
             db.session.commit()
+
+            try:
+                import posthog
+                if posthog and getattr(posthog, 'project_api_key', None):
+                    posthog.capture(
+                        distinct_id=str(current_user.id),
+                        event='profile_edited',
+                        properties={
+                            'profile_type': 'company',
+                            'profile_id': profile.id,
+                            'profile_slug': profile.slug,
+                        }
+                    )
+            except Exception as e:
+                current_app.logger.warning(f"PostHog tracking error: {e}")
+
             flash("Company profile updated successfully!", "success")
             return redirect(url_for('profiles.view_company_profile', company_name=profile.slug))
 

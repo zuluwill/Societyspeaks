@@ -182,15 +182,18 @@ def _process_subscription(
         if track_posthog:
             try:
                 import posthog
-                if posthog:
+                if posthog and getattr(posthog, 'project_api_key', None):
+                    ref = request.referrer or ''
                     posthog.capture(
                         distinct_id=str(user.id) if user else email,
                         event='daily_brief_subscribed',
                         properties={
+                            'subscription_tier': 'free',
+                            'plan_name': 'Daily Brief',
                             'email': email,
-                            'source': 'social' if request.referrer and ('utm_source' in request.referrer or any(d in request.referrer for d in ['twitter.com', 'x.com', 'bsky.social'])) else 'direct',
+                            'source': 'social' if ('utm_source' in ref or any(d in ref for d in ['twitter.com', 'x.com', 'bsky.social'])) else 'direct',
                             'referrer': request.referrer,
-                            'subscription_type': 'daily_brief'
+                            'subscription_type': 'daily_brief',
                         }
                     )
             except Exception as e:
@@ -478,7 +481,7 @@ def subscribe_inline():
         preferred_hour=DEFAULT_SEND_HOUR,
         update_preferences_on_reactivate=False,
         set_session=True,
-        track_posthog=False,
+        track_posthog=True,
         source=source
     )
 
@@ -521,6 +524,20 @@ def unsubscribe(token):
     subscriber.status = 'unsubscribed'
     subscriber.unsubscribed_at = datetime.utcnow()
     db.session.commit()
+
+    try:
+        import posthog
+        if posthog and getattr(posthog, 'project_api_key', None):
+            distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
+            posthog.capture(
+                distinct_id=distinct_id,
+                event='daily_brief_unsubscribed',
+                properties={
+                    'email': subscriber.email,
+                }
+            )
+    except Exception as e:
+        logger.warning(f"PostHog tracking error: {e}")
 
     logger.info(f"Brief unsubscribe: {subscriber.email}")
 

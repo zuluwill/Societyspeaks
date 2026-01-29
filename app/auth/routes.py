@@ -30,6 +30,15 @@ def verify_email(token):
     if user:
         user.email_verified = True
         db.session.commit()
+        if posthog and getattr(posthog, 'project_api_key', None):
+            try:
+                posthog.capture(
+                    distinct_id=str(user.id),
+                    event='email_verified',
+                    properties={'user_id': user.id}
+                )
+            except Exception as e:
+                current_app.logger.warning(f"PostHog tracking error: {e}")
         flash('Your email has been verified! You can now log in.', 'success')
     else:
         flash('That is an invalid or expired token', 'warning')
@@ -399,6 +408,16 @@ def password_reset_request():
             # Send the password reset email with the generated token
             send_password_reset_email(user, reset_token)
 
+            if posthog and getattr(posthog, 'project_api_key', None):
+                try:
+                    posthog.capture(
+                        distinct_id=str(user.id),
+                        event='password_reset_requested',
+                        properties={'user_id': user.id}
+                    )
+                except Exception as e:
+                    current_app.logger.warning(f"PostHog tracking error: {e}")
+
         flash("Password reset instructions have been sent to your email.", "info")
         return redirect(url_for('auth.login'))
 
@@ -428,6 +447,15 @@ def password_reset(token):
 
         try:
             db.session.commit()  # Save changes to the database
+            if posthog and getattr(posthog, 'project_api_key', None):
+                try:
+                    posthog.capture(
+                        distinct_id=str(user.id),
+                        event='password_reset_completed',
+                        properties={'user_id': user.id}
+                    )
+                except Exception as e:
+                    current_app.logger.warning(f"PostHog tracking error: {e}")
             flash("Your password has been reset successfully!", "success")
             return redirect(url_for('auth.login'))
         except Exception as e:
