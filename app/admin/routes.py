@@ -119,6 +119,7 @@ def create_individual_profile():
 def edit_individual_profile(profile_id):
     profile = IndividualProfile.query.get_or_404(profile_id)
     form = IndividualProfileForm(obj=profile)
+    form.submit.label.text = 'Save Changes'
     user_form = UserAssignmentForm(obj=profile.user)
 
     if request.method == 'GET':
@@ -202,6 +203,7 @@ def create_company_profile():
 def edit_company_profile(profile_id):
     profile = CompanyProfile.query.get_or_404(profile_id)
     form = CompanyProfileForm(obj=profile)
+    form.submit.label.text = 'Save Changes'
     user_form = UserAssignmentForm(obj=profile.user)
 
     if request.method == 'GET':

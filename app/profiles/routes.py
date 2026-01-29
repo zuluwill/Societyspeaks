@@ -267,6 +267,7 @@ def edit_individual_profile(username):
         return redirect(url_for('main.index'))
 
     form = IndividualProfileForm(obj=profile)
+    form.submit.label.text = 'Save Changes'
 
     if form.validate_on_submit():
         try:
@@ -321,6 +322,7 @@ def edit_company_profile(company_name):
         return redirect(url_for('main.index'))
 
     form = CompanyProfileForm(obj=profile)
+    form.submit.label.text = 'Save Changes'
 
     if form.validate_on_submit():
         try:

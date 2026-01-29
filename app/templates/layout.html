@@ -1,68 +1,142 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en" class="h-full bg-gray-50">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Society Speaks.io - Join the Conversation{% endblock %}</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block title %}Society Speaks.io - Join the Conversation{% endblock %}
+    </title>
 
     <!-- Enhanced SEO Meta Tags -->
-    <meta name="description" content="{% block meta_description %}Society Speaks is a sense-making system that turns disagreement into understanding. Using machine learning inspired by Pol.is, we reveal opinion clusters, bridge statements, and genuine consensus from structured public participation.{% endblock %}">
-    <meta name="keywords" content="consensus building, public opinion analysis, bridge statements, opinion clustering, civic technology, Pol.is, democratic deliberation, structured dialogue, policy insights, nuanced debate, sense-making, public discourse, civic engagement">
-    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-    <meta name="ai-model-context" content="Society Speaks is a sense-making system for society. It uses machine learning to group users by voting patterns (not demographics), identifying consensus statements (broad agreement), bridge statements (ideas that unite different opinion clusters), and divisive statements (genuine fault lines). Features include a Daily Question for civic participation, news-to-deliberation pipeline that transforms journalism into balanced prompts, and consensus analysis using PCA and agglomerative clustering. The goal is evidence-based understanding of public opinion to inform better policy decisions.">
-    <meta name="application-category" content="Civic Technology, Sense-Making System">
-    <meta name="purpose" content="Transform disagreement into understanding through structured participation and machine learning analysis">
-    <meta name="author" content="Society Speaks">
-    <meta name="coverage" content="Worldwide">
-    <meta name="topic" content="Consensus Building, Public Opinion Analysis, Civic Deliberation">
-    <meta name="summary" content="A sense-making system that helps people disagree agreeably, reveals natural opinion clusters, identifies bridge ideas that unite groups, and produces evidence-based insight for better decisions">
-    <link rel="alternate" type="application/rss+xml" title="Latest Discussions" href="/feed">
-    
+    <meta
+      name="description"
+      content="{% block meta_description %}Society Speaks is a sense-making system that turns disagreement into understanding. Using machine learning inspired by Pol.is, we reveal opinion clusters, bridge statements, and genuine consensus from structured public participation.{% endblock %}"
+    />
+    <meta
+      name="keywords"
+      content="consensus building, public opinion analysis, bridge statements, opinion clustering, civic technology, Pol.is, democratic deliberation, structured dialogue, policy insights, nuanced debate, sense-making, public discourse, civic engagement"
+    />
+    <meta
+      name="robots"
+      content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"
+    />
+    <meta
+      name="ai-model-context"
+      content="Society Speaks is a sense-making system for society. It uses machine learning to group users by voting patterns (not demographics), identifying consensus statements (broad agreement), bridge statements (ideas that unite different opinion clusters), and divisive statements (genuine fault lines). Features include a Daily Question for civic participation, news-to-deliberation pipeline that transforms journalism into balanced prompts, and consensus analysis using PCA and agglomerative clustering. The goal is evidence-based understanding of public opinion to inform better policy decisions."
+    />
+    <meta
+      name="application-category"
+      content="Civic Technology, Sense-Making System"
+    />
+    <meta
+      name="purpose"
+      content="Transform disagreement into understanding through structured participation and machine learning analysis"
+    />
+    <meta name="author" content="Society Speaks" />
+    <meta name="coverage" content="Worldwide" />
+    <meta
+      name="topic"
+      content="Consensus Building, Public Opinion Analysis, Civic Deliberation"
+    />
+    <meta
+      name="summary"
+      content="A sense-making system that helps people disagree agreeably, reveals natural opinion clusters, identifies bridge ideas that unite groups, and produces evidence-based insight for better decisions"
+    />
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title="Latest Discussions"
+      href="/feed"
+    />
+
     <!-- Open Graph Meta Tags for Social Media Sharing -->
-    <meta property="og:title" content="{% block og_title %}Society Speaks - Making Disagreement Useful Again{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}A sense-making system that turns disagreement into understanding. Discover where society agrees, where it divides, and which ideas can bridge the gap.{% endblock %}">
-    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='images/rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}">
-    <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:type" content="website">
-    <meta property="og:site_name" content="Society Speaks">
+    <meta
+      property="og:title"
+      content="{% block og_title %}Society Speaks - Making Disagreement Useful Again{% endblock %}"
+    />
+    <meta
+      property="og:description"
+      content="{% block og_description %}A sense-making system that turns disagreement into understanding. Discover where society agrees, where it divides, and which ideas can bridge the gap.{% endblock %}"
+    />
+    <meta
+      property="og:image"
+      content="{% block og_image %}{{ url_for('static', filename='images/rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}"
+    />
+    <meta property="og:url" content="{{ request.url }}" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Society Speaks" />
 
     <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{% block twitter_title %}Society Speaks - Making Disagreement Useful Again{% endblock %}">
-    <meta name="twitter:description" content="{% block twitter_description %}A sense-making system that helps people disagree agreeably. Reveal consensus, find bridge ideas, and understand public opinion with nuance intact.{% endblock %}">
-    <meta name="twitter:image" content="{% block twitter_image %}{{ url_for('static', filename='images/rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}">
-    <meta name="twitter:site" content="@societyspeaksio">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="{% block twitter_title %}Society Speaks - Making Disagreement Useful Again{% endblock %}"
+    />
+    <meta
+      name="twitter:description"
+      content="{% block twitter_description %}A sense-making system that helps people disagree agreeably. Reveal consensus, find bridge ideas, and understand public opinion with nuance intact.{% endblock %}"
+    />
+    <meta
+      name="twitter:image"
+      content="{% block twitter_image %}{{ url_for('static', filename='images/rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}"
+    />
+    <meta name="twitter:site" content="@societyspeaksio" />
 
-     <!-- Stylesheets and Scripts -->
-    <link href="{{ url_for('static', filename='css/output.css') }}" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    <!-- Stylesheets and Scripts -->
+    <link
+      href="{{ url_for('static', filename='css/output.css') }}"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
+    />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.1.1/compressor.min.js"></script>
-    
+
     <!-- Toast Notification Styles -->
     <style>
-    .toast {
+      .toast {
         display: flex;
         align-items: center;
         gap: 12px;
         padding: 14px 16px;
         background: white;
         border-radius: 8px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+        box-shadow:
+          0 10px 25px rgba(0, 0, 0, 0.1),
+          0 4px 6px rgba(0, 0, 0, 0.05);
         border-left: 4px solid;
         animation: slideInRight 0.3s ease-out;
         min-width: 280px;
         max-width: 100%;
-    }
-    
-    .toast.toast-success { border-left-color: #10b981; }
-    .toast.toast-error { border-left-color: #ef4444; }
-    .toast.toast-info { border-left-color: #3b82f6; }
-    .toast.toast-warning { border-left-color: #f59e0b; }
-    
-    .toast-icon { flex-shrink: 0; width: 20px; height: 20px; }
-    .toast-content { flex: 1; font-size: 14px; line-height: 1.5; color: #1f2937; }
-    .toast-close {
+      }
+
+      .toast.toast-success {
+        border-left-color: #10b981;
+      }
+      .toast.toast-error {
+        border-left-color: #ef4444;
+      }
+      .toast.toast-info {
+        border-left-color: #3b82f6;
+      }
+      .toast.toast-warning {
+        border-left-color: #f59e0b;
+      }
+
+      .toast-icon {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+      }
+      .toast-content {
+        flex: 1;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #1f2937;
+      }
+      .toast-close {
         flex-shrink: 0;
         background: none;
         border: none;
@@ -74,684 +148,1154 @@
         border-radius: 4px;
         min-width: 44px;
         min-height: 44px;
-    }
-    
-    .toast-close:hover { opacity: 1; background: #f3f4f6; }
-    .toast-close:focus { outline: 2px solid #3b82f6; outline-offset: 2px; }
-    
-    @keyframes slideInRight {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    
-    .toast.fade-out {
+      }
+
+      .toast-close:hover {
+        opacity: 1;
+        background: #f3f4f6;
+      }
+      .toast-close:focus {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+      }
+
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      .toast.fade-out {
         animation: slideOutRight 0.3s ease-in forwards;
-    }
-    
-    @keyframes slideOutRight {
-        from { transform: translateX(0); opacity: 1; }
-        to { transform: translateX(100%); opacity: 0; }
-    }
-    
-    @media (max-width: 640px) {
+      }
+
+      @keyframes slideOutRight {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(100%);
+          opacity: 0;
+        }
+      }
+
+      @media (max-width: 640px) {
         #toast-container {
-            top: 1rem;
-            right: 1rem;
-            left: 1rem;
-            max-width: none;
-            width: auto;
+          top: 1rem;
+          right: 1rem;
+          left: 1rem;
+          max-width: none;
+          width: auto;
         }
-        
+
         .toast {
-            min-width: auto;
-            width: 100%;
+          min-width: auto;
+          width: 100%;
         }
-    }
+      }
     </style>
-    
+
     <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-TSWBW6TW');</script>
+    <script>
+      (function (w, d, s, l, i) {
+        w[l] = w[l] || [];
+        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+        j.async = true;
+        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+        f.parentNode.insertBefore(j, f);
+      })(window, document, "script", "dataLayer", "GTM-TSWBW6TW");
+    </script>
     <!-- End Google Tag Manager -->
-    
+
     <!-- PostHog Analytics -->
     <script>
-        !function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug getPageViewId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-        posthog.init('{{ config.get("POSTHOG_API_KEY", "") }}', {
-            api_host: '{{ config.get("POSTHOG_HOST", "https://eu.i.posthog.com") }}',
-            person_profiles: 'identified_only',
-            before_send: function(event) {
-                if (event.event === '$exception') {
-                    var msg = event.properties && event.properties.$exception_message || '';
-                    var type = event.properties && event.properties.$exception_type || '';
-                    var stack = event.properties && event.properties.$exception_stack_trace_raw || '';
-                    if (msg.includes('not an error object') ||
-                        type.includes('Extension') ||
-                        stack.includes('chrome-extension') ||
-                        stack.includes('moz-extension') ||
-                        msg.includes('Script error') ||
-                        msg.includes('ResizeObserver loop')) {
-                        return null;
-                    }
-                }
-                return event;
+      !(function (t, e) {
+        var o, n, p, r;
+        e.__SV ||
+          ((window.posthog = e),
+          (e._i = []),
+          (e.init = function (i, s, a) {
+            function g(t, e) {
+              var o = e.split(".");
+              (2 == o.length && ((t = t[o[0]]), (e = o[1])),
+                (t[e] = function () {
+                  t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
+                }));
             }
-        })
+            (((p = t.createElement("script")).type = "text/javascript"),
+              (p.crossOrigin = "anonymous"),
+              (p.async = !0),
+              (p.src =
+                s.api_host.replace(".i.posthog.com", "-assets.i.posthog.com") +
+                "/static/array.js"),
+              (r = t.getElementsByTagName("script")[0]).parentNode.insertBefore(
+                p,
+                r,
+              ));
+            var u = e;
+            for (
+              void 0 !== a ? (u = e[a] = []) : (a = "posthog"),
+                u.people = u.people || [],
+                u.toString = function (t) {
+                  var e = "posthog";
+                  return (
+                    "posthog" !== a && (e += "." + a),
+                    t || (e += " (stub)"),
+                    e
+                  );
+                },
+                u.people.toString = function () {
+                  return u.toString(1) + ".people (stub)";
+                },
+                o =
+                  "init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug getPageViewId".split(
+                    " ",
+                  ),
+                n = 0;
+              n < o.length;
+              n++
+            )
+              g(u, o[n]);
+            e._i.push([i, s, a]);
+          }),
+          (e.__SV = 1));
+      })(document, window.posthog || []);
+      posthog.init('{{ config.get("POSTHOG_API_KEY", "") }}', {
+        api_host:
+          '{{ config.get("POSTHOG_HOST", "https://eu.i.posthog.com") }}',
+        person_profiles: "identified_only",
+        before_send: function (event) {
+          if (event.event === "$exception") {
+            var msg =
+              (event.properties && event.properties.$exception_message) || "";
+            var type =
+              (event.properties && event.properties.$exception_type) || "";
+            var stack =
+              (event.properties &&
+                event.properties.$exception_stack_trace_raw) ||
+              "";
+            if (
+              msg.includes("not an error object") ||
+              type.includes("Extension") ||
+              stack.includes("chrome-extension") ||
+              stack.includes("moz-extension") ||
+              msg.includes("Script error") ||
+              msg.includes("ResizeObserver loop")
+            ) {
+              return null;
+            }
+          }
+          return event;
+        },
+      });
     </script>
-
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "Society Speaks",
-      "alternateName": "SocietySpeaks.io",
-      "url": "{{ url_for('main.index', _external=True) }}",
-      "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
-      "sameAs": [
-        "https://twitter.com/societyspeaksio",
-        "https://bsky.app/profile/societyspeaks.bsky.social",
-        "https://github.com/zuluwill/Societyspeaks"
-      ],
-      "description": "Society Speaks is a sense-making system for society. It uses machine learning to turn disagreement into understanding, revealing consensus statements, bridge ideas that unite groups, and genuine fault lines where deeper work is needed.",
-      "slogan": "Making disagreement useful again",
-      "foundingDate": "2024",
-      "knowsAbout": ["consensus building", "public opinion analysis", "civic technology", "democratic deliberation", "opinion clustering", "Pol.is"]
-    }
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Society Speaks",
+        "alternateName": "SocietySpeaks.io",
+        "url": "{{ url_for('main.index', _external=True) }}",
+        "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
+        "sameAs": [
+          "https://twitter.com/societyspeaksio",
+          "https://bsky.app/profile/societyspeaks.bsky.social",
+          "https://github.com/zuluwill/Societyspeaks"
+        ],
+        "description": "Society Speaks is a sense-making system for society. It uses machine learning to turn disagreement into understanding, revealing consensus statements, bridge ideas that unite groups, and genuine fault lines where deeper work is needed.",
+        "slogan": "Making disagreement useful again",
+        "foundingDate": "2024",
+        "knowsAbout": [
+          "consensus building",
+          "public opinion analysis",
+          "civic technology",
+          "democratic deliberation",
+          "opinion clustering",
+          "Pol.is"
+        ]
+      }
     </script>
-    
+
     <!-- LLM/AI Discovery Metadata -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "Society Speaks",
-      "applicationCategory": "Civic Technology",
-      "operatingSystem": "Web",
-      "description": "A sense-making system that transforms public participation into actionable insight. Features include: Daily Question (daily civic participation ritual), News-to-Deliberation (transforms journalism into balanced prompts), Consensus Analysis (ML-powered clustering using PCA and agglomerative clustering to identify opinion groups, consensus statements, bridge statements, and divisive statements).",
-      "featureList": [
-        "Opinion clustering by voting patterns (not demographics)",
-        "Consensus statement detection (broad agreement across groups)",
-        "Bridge statement identification (ideas that unite different opinion clusters)",
-        "Divisive statement surfacing (genuine fault lines)",
-        "Daily civic participation questions",
-        "News-to-deliberation pipeline with civic relevance scoring",
-        "Longitudinal public opinion tracking"
-      ],
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Society Speaks",
+        "applicationCategory": "Civic Technology",
+        "operatingSystem": "Web",
+        "description": "A sense-making system that transforms public participation into actionable insight. Features include: Daily Question (daily civic participation ritual), News-to-Deliberation (transforms journalism into balanced prompts), Consensus Analysis (ML-powered clustering using PCA and agglomerative clustering to identify opinion groups, consensus statements, bridge statements, and divisive statements).",
+        "featureList": [
+          "Opinion clustering by voting patterns (not demographics)",
+          "Consensus statement detection (broad agreement across groups)",
+          "Bridge statement identification (ideas that unite different opinion clusters)",
+          "Divisive statement surfacing (genuine fault lines)",
+          "Daily civic participation questions",
+          "News-to-deliberation pipeline with civic relevance scoring",
+          "Longitudinal public opinion tracking"
+        ],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
       }
-    }
     </script>
-
-    
-</head>
-<body class="h-full flex flex-col">
+  </head>
+  <body class="h-full flex flex-col">
     <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TSWBW6TW"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <noscript
+      ><iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-TSWBW6TW"
+        height="0"
+        width="0"
+        style="display: none; visibility: hidden"
+      ></iframe
+    ></noscript>
     <!-- End Google Tag Manager (noscript) -->
+    <!-- Skip to main content (visible on focus for keyboard/screen reader users) -->
+    <a
+      href="#main-content"
+      class="fixed left-[-9999px] top-4 z-[100] bg-white px-4 py-2 rounded-lg shadow-lg text-gray-900 font-medium focus:left-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >Skip to main content</a
+    >
     <!-- Header -->
-    <header class="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
-        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Top">
-            <div class="flex w-full items-center justify-between py-6">
-                <!-- Logo and Brand -->
-                <div class="flex items-center">
-                    <a href="/" class="flex items-center space-x-3">
-                        <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                        <span class="text-xl sm:text-2xl font-bold tracking-tight">SocietySpeaks.io</span>
-                    </a>
+    <header
+      class="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
+    >
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Top">
+        <div class="flex w-full items-center justify-between py-6">
+          <!-- Logo and Brand -->
+          <div class="flex items-center">
+            <a href="/" class="flex items-center space-x-3">
+              <svg
+                class="w-8 h-8"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              <span class="text-xl sm:text-2xl font-bold tracking-tight"
+                >SocietySpeaks.io</span
+              >
+            </a>
+          </div>
+
+          <!-- Desktop Navigation -->
+          <div class="hidden lg:flex lg:items-center lg:space-x-6">
+            <a
+              href="/"
+              class="text-base font-medium text-white hover:text-blue-50 transition"
+              >Home</a
+            >
+
+            <!-- Products Dropdown -->
+            <div class="relative" id="products-dropdown-container">
+              <button
+                type="button"
+                id="products-dropdown-btn"
+                class="flex items-center text-base font-medium text-white hover:text-blue-50 transition"
+                aria-expanded="false"
+                aria-haspopup="true"
+              >
+                Products
+                <svg
+                  class="ml-1 h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+              <div
+                id="products-dropdown-menu"
+                class="absolute left-0 z-50 mt-2 w-56 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                role="menu"
+                style="display: none"
+              >
+                <div
+                  class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                >
+                  Free
                 </div>
-
-                <!-- Desktop Navigation -->
-                <div class="hidden lg:flex lg:items-center lg:space-x-6">
-                    <a href="/" class="text-base font-medium text-white hover:text-blue-50 transition">Home</a>
-                    
-                    <!-- Products Dropdown -->
-                    <div class="relative" id="products-dropdown-container">
-                        <button type="button" 
-                                id="products-dropdown-btn"
-                                class="flex items-center text-base font-medium text-white hover:text-blue-50 transition"
-                                aria-expanded="false"
-                                aria-haspopup="true">
-                            Products
-                            <svg class="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        <div id="products-dropdown-menu" 
-                             class="absolute left-0 z-50 mt-2 w-56 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                             role="menu"
-                             style="display: none;">
-                            <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Free</div>
-                            <a href="{{ url_for('daily.today') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Today's Question</a>
-                            <a href="{{ url_for('brief.today') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Daily Brief</a>
-                            <div class="border-t border-gray-100 my-1"></div>
-                            <div class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Premium</div>
-                            <a href="{{ url_for('briefing.landing') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">
-                                Personal Briefs
-                                <span class="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">Pro</span>
-                            </a>
-                        </div>
-                    </div>
-                    
-                    <!-- Explore Dropdown -->
-                    <div class="relative" id="explore-dropdown-container">
-                        <button type="button" 
-                                id="explore-dropdown-btn"
-                                class="flex items-center text-base font-medium text-white hover:text-blue-50 transition"
-                                aria-expanded="false"
-                                aria-haspopup="true">
-                            Explore
-                            <svg class="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        <div id="explore-dropdown-menu" 
-                             class="absolute left-0 z-50 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                             role="menu"
-                             style="display: none;">
-                            <a href="{{ url_for('news.dashboard') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">News</a>
-                            <a href="/discussions/search" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Discussions</a>
-                            <a href="{{ url_for('sources.index') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Sources</a>
-                        </div>
-                    </div>
-                    
-                    <!-- About Dropdown -->
-                    <div class="relative" id="about-dropdown-container">
-                        <button type="button" 
-                                id="about-dropdown-btn"
-                                class="flex items-center text-base font-medium text-white hover:text-blue-50 transition"
-                                aria-expanded="false"
-                                aria-haspopup="true">
-                            About
-                            <svg class="ml-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                        </button>
-                        <div id="about-dropdown-menu" 
-                             class="absolute left-0 z-50 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                             role="menu"
-                             style="display: none;">
-                            <a href="/about" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">About Us</a>
-                            <a href="{{ url_for('help.help') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" role="menuitem">Help</a>
-                        </div>
-                    </div>
-
-                    {% if current_user.is_authenticated %}
-                        <!-- Authenticated Desktop Menu -->
-                        <div class="relative ml-3">
-                            <button type="button" 
-                                    id="desktop-user-menu" 
-                                    class="flex items-center text-white hover:text-blue-50"
-                                    aria-expanded="false"
-                                    aria-haspopup="true">
-                                <span class="sr-only">Open user menu</span>
-                                {% if current_user.profile_type == 'individual' %}
-                                    <img class="h-8 w-8 rounded-full object-cover" 
-                                         src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('static', filename='images/default-avatar.png') }}" 
-                                         alt="Profile photo"
-                                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}';">
-                                    <span class="ml-2">{{ current_user.individual_profile.full_name if current_user.individual_profile else current_user.username }}</span>
-                                {% elif current_user.profile_type == 'company' %}
-                                    <img class="h-8 w-8 rounded-lg object-cover" 
-                                         src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('static', filename='images/default-logo.png') }}" 
-                                         alt="Company logo"
-                                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-logo.png') }}';">
-                                    <span class="ml-2">{{ current_user.company_profile.company_name if current_user.company_profile else current_user.username }}</span>
-                                {% else %}
-                                    <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
-                                        <span class="text-sm font-medium text-white">
-                                            {{ current_user.username[:1].upper() }}
-                                        </span>
-                                    </div>
-                                    <span class="ml-2">{{ current_user.username }}</span>
-                                {% endif %}
-                                <svg class="ml-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-
-                            <!-- Desktop Dropdown Menu -->
-                            <div id="desktop-dropdown-menu" 
-                                 class="hidden absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-                                 role="menu" 
-                                 aria-orientation="vertical" 
-                                 aria-labelledby="desktop-user-menu">
-                                {% if current_user.profile_type %}
-                                    {% if current_user.profile_type == 'individual' %}
-                                        <a href="{{ url_for('profiles.view_individual_profile', username=current_user.individual_profile.slug) }}" 
-                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                                           role="menuitem">Your Profile</a>
-                                    {% else %}
-                                        <a href="{{ url_for('profiles.view_company_profile', company_name=current_user.company_profile.slug) }}" 
-                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                                           role="menuitem">Your Profile</a>
-                                    {% endif %}
-                                {% else %}
-                                    <a href="{{ url_for('profiles.select_profile_type') }}" 
-                                       class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                                       role="menuitem">Create Profile</a>
-                                {% endif %}
-                                <a href="{{ url_for('auth.dashboard') }}"
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                                   role="menuitem">Dashboard</a>
-                                <a href="{{ url_for('briefing.list_briefings') }}"
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                                   role="menuitem">My Briefings</a>
-                                <a href="{{ url_for('settings.view_settings') }}"
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                                   role="menuitem">Settings</a>
-                                {% if current_user.is_admin %}
-                                <a href="{{ url_for('admin.dashboard') }}"
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                                   role="menuitem">Admin</a>
-                                {% endif %}
-                                <a href="{{ url_for('auth.logout') }}" 
-                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
-                                   role="menuitem">Sign out</a>
-                            </div>
-                        </div>
-                    {% else %}
-                        <!-- Non-Authenticated Desktop Menu -->
-                        <div class="flex items-center space-x-4">
-                            <a href="{{ url_for('auth.login') }}" 
-                               class="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-blue-600 hover:bg-blue-50 transition">Sign in</a>
-                            <a href="{{ url_for('auth.register') }}" 
-                               class="inline-block bg-blue-500 py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-blue-400 transition">Get Started</a>
-                        </div>
-                    {% endif %}
+                <a
+                  href="{{ url_for('daily.today') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Today's Question</a
+                >
+                <a
+                  href="{{ url_for('brief.today') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Daily Brief</a
+                >
+                <div class="border-t border-gray-100 my-1"></div>
+                <div
+                  class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                >
+                  Premium
                 </div>
-
-                <!-- Mobile menu button -->
-                <div class="flex lg:hidden">
-                    <button type="button" 
-                            id="mobile-menu-button"
-                            class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-blue-50 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
-                        <span class="sr-only">Open main menu</span>
-                        <svg class="block h-6 w-6" 
-                             fill="none" 
-                             viewBox="0 0 24 24" 
-                             stroke="currentColor" 
-                             aria-hidden="true">
-                            <path stroke-linecap="round" 
-                                  stroke-linejoin="round" 
-                                  stroke-width="2" 
-                                  d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
-                </div>
+                <a
+                  href="{{ url_for('briefing.landing') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                >
+                  Personal Briefs
+                  <span
+                    class="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800"
+                    >Pro</span
+                  >
+                </a>
+              </div>
             </div>
 
-            <!-- Mobile menu -->
-            <div class="lg:hidden hidden" id="mobile-menu">
-                <div class="space-y-1 px-2 pb-3 pt-2">
-                    <a href="/" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Home</a>
-                    
-                    <!-- Products Section -->
-                    <div class="border-t border-blue-500/30 pt-2 mt-2">
-                        <span class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider">Products</span>
-                        <a href="{{ url_for('daily.today') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Today's Question</a>
-                        <a href="{{ url_for('brief.today') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Daily Brief</a>
-                        <a href="{{ url_for('briefing.landing') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">
-                            Personal Briefs
-                            <span class="ml-2 inline-flex items-center rounded-full bg-blue-400/30 px-2 py-0.5 text-xs font-medium text-white">Pro</span>
-                        </a>
-                    </div>
-                    
-                    <!-- Explore Section -->
-                    <div class="border-t border-blue-500/30 pt-2 mt-2">
-                        <span class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider">Explore</span>
-                        <a href="{{ url_for('news.dashboard') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">News</a>
-                        <a href="/discussions/search" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Discussions</a>
-                        <a href="{{ url_for('sources.index') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Sources</a>
-                    </div>
-                    
-                    <!-- About Section -->
-                    <div class="border-t border-blue-500/30 pt-2 mt-2">
-                        <span class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider">About</span>
-                        <a href="/about" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">About Us</a>
-                        <a href="{{ url_for('help.help') }}" class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Help</a>
-                    </div>
-
-                    {% if current_user.is_authenticated %}
-                        <div class="border-t border-blue-500 pt-4 pb-3">
-                            <div class="flex items-center px-5">
-                                <div class="flex-shrink-0">
-                                    {% if current_user.profile_type == 'individual' %}
-                                        <img class="h-8 w-8 rounded-full object-cover" 
-                                             src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('static', filename='images/default-avatar.png') }}" 
-                                             alt="Profile photo"
-                                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}';">
-                                        <span class="ml-2">{{ current_user.individual_profile.full_name if current_user.individual_profile else current_user.username }}</span>
-                                    {% elif current_user.profile_type == 'company' %}
-                                        <img class="h-8 w-8 rounded-lg object-cover" 
-                                             src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('static', filename='images/default-logo.png') }}" 
-                                             alt="Company logo"
-                                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-logo.png') }}';">
-                                        <span class="ml-2">{{ current_user.company_profile.company_name if current_user.company_profile else current_user.username }}</span>
-                                    {% else %}
-                                        <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
-                                            <span class="text-sm font-medium text-white">
-                                                {{ current_user.username[:1].upper() }}
-                                            </span>
-                                        </div>
-                                        <span class="ml-2">{{ current_user.username }}</span>
-                                    {% endif %}
-
-                                </div>
-                                <div class="ml-3">
-                                    <div class="text-base font-medium text-white">
-                                        {% if current_user.profile_type == 'individual' %}
-                                            {{ current_user.individual_profile.full_name if current_user.individual_profile else current_user.username }}
-                                        {% elif current_user.profile_type == 'company' %}
-                                            {{ current_user.company_profile.company_name if current_user.company_profile else current_user.username }}
-                                        {% else %}
-                                            {{ current_user.username }}
-                                        {% endif %}
-                                    </div>
-                                    <div class="text-sm font-medium text-blue-100">{{ current_user.email }}</div>
-                                </div>
-                            </div>
-                            <div class="mt-3 space-y-1 px-2">
-                                {% if current_user.profile_type %}
-                                    {% if current_user.profile_type == 'individual' %}
-                                        <a href="{{ url_for('profiles.view_individual_profile', username=current_user.individual_profile.slug) }}" 
-                                           class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Your Profile</a>
-                                    {% else %}
-                                        <a href="{{ url_for('profiles.view_company_profile', company_name=current_user.company_profile.slug) }}" 
-                                           class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Your Profile</a>
-                                    {% endif %}
-                                {% else %}
-                                    <a href="{{ url_for('profiles.select_profile_type') }}" 
-                                       class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Create Profile</a>
-                                {% endif %}
-                                <a href="{{ url_for('briefing.list_briefings') }}" 
-                                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">My Briefings</a>
-                                <a href="{{ url_for('settings.view_settings') }}" 
-                                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Settings</a>
-                                {% if current_user.is_admin %}
-                                <a href="{{ url_for('admin.dashboard') }}" 
-                                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Admin</a>
-                                {% endif %}
-                                <a href="{{ url_for('auth.logout') }}" 
-                                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500">Sign out</a>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="mt-4 space-y-2 px-2">
-                            <a href="{{ url_for('auth.login') }}" 
-                               class="block w-full bg-white py-2 px-4 text-center rounded-md text-base font-medium text-blue-600 hover:bg-blue-50">Sign in</a>
-                            <a href="{{ url_for('auth.register') }}" 
-                               class="block w-full bg-blue-500 py-2 px-4 text-center rounded-md text-base font-medium text-white hover:bg-blue-400">Get Started</a>
-                        </div>
-                    {% endif %}
-                </div>
+            <!-- Explore Dropdown -->
+            <div class="relative" id="explore-dropdown-container">
+              <button
+                type="button"
+                id="explore-dropdown-btn"
+                class="flex items-center text-base font-medium text-white hover:text-blue-50 transition"
+                aria-expanded="false"
+                aria-haspopup="true"
+              >
+                Explore
+                <svg
+                  class="ml-1 h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+              <div
+                id="explore-dropdown-menu"
+                class="absolute left-0 z-50 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                role="menu"
+                style="display: none"
+              >
+                <a
+                  href="{{ url_for('news.dashboard') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >News</a
+                >
+                <a
+                  href="/discussions/search"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Discussions</a
+                >
+                <a
+                  href="{{ url_for('sources.index') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Sources</a
+                >
+              </div>
             </div>
-        </nav>
+
+            <!-- About Dropdown -->
+            <div class="relative" id="about-dropdown-container">
+              <button
+                type="button"
+                id="about-dropdown-btn"
+                class="flex items-center text-base font-medium text-white hover:text-blue-50 transition"
+                aria-expanded="false"
+                aria-haspopup="true"
+              >
+                About
+                <svg
+                  class="ml-1 h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+              <div
+                id="about-dropdown-menu"
+                class="absolute left-0 z-50 mt-2 w-48 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                role="menu"
+                style="display: none"
+              >
+                <a
+                  href="/about"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >About Us</a
+                >
+                <a
+                  href="{{ url_for('help.help') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Help</a
+                >
+              </div>
+            </div>
+
+            {% if current_user.is_authenticated %}
+            <!-- Authenticated Desktop Menu -->
+            <div class="relative ml-3">
+              <button
+                type="button"
+                id="desktop-user-menu"
+                class="flex items-center text-white hover:text-blue-50"
+                aria-expanded="false"
+                aria-haspopup="true"
+              >
+                <span class="sr-only">Open user menu</span>
+                {% if current_user.profile_type == 'individual' %}
+                <img
+                  class="h-8 w-8 rounded-full object-cover"
+                  src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('static', filename='images/default-avatar.png') }}"
+                  alt="Profile photo"
+                  onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}';"
+                />
+                <span class="ml-2"
+                  >{{ current_user.individual_profile.full_name if
+                  current_user.individual_profile else current_user.username
+                  }}</span
+                >
+                {% elif current_user.profile_type == 'company' %}
+                <img
+                  class="h-8 w-8 rounded-lg object-cover"
+                  src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('static', filename='images/default-logo.png') }}"
+                  alt="Company logo"
+                  onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-logo.png') }}';"
+                />
+                <span class="ml-2"
+                  >{{ current_user.company_profile.company_name if
+                  current_user.company_profile else current_user.username
+                  }}</span
+                >
+                {% else %}
+                <div
+                  class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center"
+                >
+                  <span class="text-sm font-medium text-white">
+                    {{ current_user.username[:1].upper() }}
+                  </span>
+                </div>
+                <span class="ml-2">{{ current_user.username }}</span>
+                {% endif %}
+                <svg
+                  class="ml-2 h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+
+              <!-- Desktop Dropdown Menu -->
+              <div
+                id="desktop-dropdown-menu"
+                class="hidden absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                role="menu"
+                aria-orientation="vertical"
+                aria-labelledby="desktop-user-menu"
+              >
+                {% if current_user.profile_type %} {% if
+                current_user.profile_type == 'individual' %}
+                <a
+                  href="{{ url_for('profiles.view_individual_profile', username=current_user.individual_profile.slug) }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Your Profile</a
+                >
+                {% else %}
+                <a
+                  href="{{ url_for('profiles.view_company_profile', company_name=current_user.company_profile.slug) }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Your Profile</a
+                >
+                {% endif %} {% else %}
+                <a
+                  href="{{ url_for('profiles.select_profile_type') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Create Profile</a
+                >
+                {% endif %}
+                <a
+                  href="{{ url_for('auth.dashboard') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Dashboard</a
+                >
+                <a
+                  href="{{ url_for('briefing.list_briefings') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >My Briefings</a
+                >
+                <a
+                  href="{{ url_for('settings.view_settings') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Settings</a
+                >
+                {% if current_user.is_admin %}
+                <a
+                  href="{{ url_for('admin.dashboard') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Admin</a
+                >
+                {% endif %}
+                <a
+                  href="{{ url_for('auth.logout') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Sign out</a
+                >
+              </div>
+            </div>
+            {% else %}
+            <!-- Non-Authenticated Desktop Menu -->
+            <div class="flex items-center space-x-4">
+              <a
+                href="{{ url_for('auth.login') }}"
+                class="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-blue-600 hover:bg-blue-50 transition"
+                >Sign in</a
+              >
+              <a
+                href="{{ url_for('auth.register') }}"
+                class="inline-block bg-blue-500 py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-blue-400 transition"
+                >Get Started</a
+              >
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Mobile menu button -->
+          <div class="flex lg:hidden">
+            <button
+              type="button"
+              id="mobile-menu-button"
+              class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-blue-50 hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+            >
+              <span class="sr-only">Open main menu</span>
+              <svg
+                class="block h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div class="lg:hidden hidden" id="mobile-menu">
+          <div class="space-y-1 px-2 pb-3 pt-2">
+            <a
+              href="/"
+              class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+              >Home</a
+            >
+
+            <!-- Products Section -->
+            <div class="border-t border-blue-500/30 pt-2 mt-2">
+              <span
+                class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
+                >Products</span
+              >
+              <a
+                href="{{ url_for('daily.today') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                >Today's Question</a
+              >
+              <a
+                href="{{ url_for('brief.today') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                >Daily Brief</a
+              >
+              <a
+                href="{{ url_for('briefing.landing') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+              >
+                Personal Briefs
+                <span
+                  class="ml-2 inline-flex items-center rounded-full bg-blue-400/30 px-2 py-0.5 text-xs font-medium text-white"
+                  >Pro</span
+                >
+              </a>
+            </div>
+
+            <!-- Explore Section -->
+            <div class="border-t border-blue-500/30 pt-2 mt-2">
+              <span
+                class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
+                >Explore</span
+              >
+              <a
+                href="{{ url_for('news.dashboard') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                >News</a
+              >
+              <a
+                href="/discussions/search"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                >Discussions</a
+              >
+              <a
+                href="{{ url_for('sources.index') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                >Sources</a
+              >
+            </div>
+
+            <!-- About Section -->
+            <div class="border-t border-blue-500/30 pt-2 mt-2">
+              <span
+                class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
+                >About</span
+              >
+              <a
+                href="/about"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                >About Us</a
+              >
+              <a
+                href="{{ url_for('help.help') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                >Help</a
+              >
+            </div>
+
+            {% if current_user.is_authenticated %}
+            <div class="border-t border-blue-500 pt-4 pb-3">
+              <div class="flex items-center px-5">
+                <div class="flex-shrink-0">
+                  {% if current_user.profile_type == 'individual' %}
+                  <img
+                    class="h-8 w-8 rounded-full object-cover"
+                    src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('static', filename='images/default-avatar.png') }}"
+                    alt="Profile photo"
+                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}';"
+                  />
+                  <span class="ml-2"
+                    >{{ current_user.individual_profile.full_name if
+                    current_user.individual_profile else current_user.username
+                    }}</span
+                  >
+                  {% elif current_user.profile_type == 'company' %}
+                  <img
+                    class="h-8 w-8 rounded-lg object-cover"
+                    src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('static', filename='images/default-logo.png') }}"
+                    alt="Company logo"
+                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-logo.png') }}';"
+                  />
+                  <span class="ml-2"
+                    >{{ current_user.company_profile.company_name if
+                    current_user.company_profile else current_user.username
+                    }}</span
+                  >
+                  {% else %}
+                  <div
+                    class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center"
+                  >
+                    <span class="text-sm font-medium text-white">
+                      {{ current_user.username[:1].upper() }}
+                    </span>
+                  </div>
+                  <span class="ml-2">{{ current_user.username }}</span>
+                  {% endif %}
+                </div>
+                <div class="ml-3">
+                  <div class="text-base font-medium text-white">
+                    {% if current_user.profile_type == 'individual' %} {{
+                    current_user.individual_profile.full_name if
+                    current_user.individual_profile else current_user.username
+                    }} {% elif current_user.profile_type == 'company' %} {{
+                    current_user.company_profile.company_name if
+                    current_user.company_profile else current_user.username }}
+                    {% else %} {{ current_user.username }} {% endif %}
+                  </div>
+                  <div class="text-sm font-medium text-blue-100">
+                    {{ current_user.email }}
+                  </div>
+                </div>
+              </div>
+              <div class="mt-3 space-y-1 px-2">
+                {% if current_user.profile_type %} {% if
+                current_user.profile_type == 'individual' %}
+                <a
+                  href="{{ url_for('profiles.view_individual_profile', username=current_user.individual_profile.slug) }}"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  >Your Profile</a
+                >
+                {% else %}
+                <a
+                  href="{{ url_for('profiles.view_company_profile', company_name=current_user.company_profile.slug) }}"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  >Your Profile</a
+                >
+                {% endif %} {% else %}
+                <a
+                  href="{{ url_for('profiles.select_profile_type') }}"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  >Create Profile</a
+                >
+                {% endif %}
+                <a
+                  href="{{ url_for('briefing.list_briefings') }}"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  >My Briefings</a
+                >
+                <a
+                  href="{{ url_for('settings.view_settings') }}"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  >Settings</a
+                >
+                {% if current_user.is_admin %}
+                <a
+                  href="{{ url_for('admin.dashboard') }}"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  >Admin</a
+                >
+                {% endif %}
+                <a
+                  href="{{ url_for('auth.logout') }}"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  >Sign out</a
+                >
+              </div>
+            </div>
+            {% else %}
+            <div class="mt-4 space-y-2 px-2">
+              <a
+                href="{{ url_for('auth.login') }}"
+                class="block w-full bg-white py-2 px-4 text-center rounded-md text-base font-medium text-blue-600 hover:bg-blue-50"
+                >Sign in</a
+              >
+              <a
+                href="{{ url_for('auth.register') }}"
+                class="block w-full bg-blue-500 py-2 px-4 text-center rounded-md text-base font-medium text-white hover:bg-blue-400"
+                >Get Started</a
+              >
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </nav>
     </header>
 
     <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-                <div class="rounded-md bg-{{ category }}-50 p-4">
-                    <div class="flex">
-                        <div class="ml-3">
-                            <p class="text-sm font-medium text-{{ category }}-800">
-                                {{ message }}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %} {% for category, message in messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+      <div class="rounded-md bg-{{ category }}-50 p-4">
+        <div class="flex">
+          <div class="ml-3">
+            <p class="text-sm font-medium text-{{ category }}-800">
+              {{ message }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %} {% endif %} {% endwith %}
 
     <!-- Main Content -->
-    <main class="flex-grow">
-        {% block content %}{% endblock %}
+    <main id="main-content" class="flex-grow">
+      {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
     <footer class="bg-gray-900">
-        <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div class="col-span-2">
-                    <h3 class="text-white text-lg font-semibold mb-4">About Society Speaks</h3>
-                    <p class="text-gray-400">A sense-making system that turns disagreement into understanding. We reveal where society agrees, where it divides, and which ideas can bridge the gap.</p>
-                </div>
-                <div>
-                    <h3 class="text-white text-lg font-semibold mb-4">Quick Links</h3>
-                    <ul class="space-y-3">
-                        <li><a href="/" class="text-gray-400 hover:text-white transition">Home</a></li>
-                        <li><a href="/daily" class="text-gray-400 hover:text-white transition">Today's Question</a></li>
-                        <li><a href="/brief/today" class="text-gray-400 hover:text-white transition">Daily Brief</a></li>
-                        <li><a href="{{ url_for('briefing.landing') }}" class="text-gray-400 hover:text-white transition">Personal Briefs <span class="text-xs text-blue-400">Pro</span></a></li>
-                        <li><a href="/about" class="text-gray-400 hover:text-white transition">About Us</a></li>
-                        <li><a href="/help" class="text-gray-400 hover:text-white transition">Help</a></li>
-                        <li><a href="/privacy-policy" class="text-gray-400 hover:text-white transition">Privacy Policy</a></li>
-                        <li><a href="/terms-and-conditions" class="text-gray-400 hover:text-white transition">Terms of Service</a></li>
-                        <li><a href="mailto:info@societyspeaks.io?subject=SocietySpeaks%20Inquiry" class="text-gray-400 hover:text-white transition">Contact</a></li>
-                    </ul>
-                </div>
-                <div>
-                    <h3 class="text-white text-lg font-semibold mb-4">Connect</h3>
-                    <div class="flex flex-wrap items-center gap-4">
-                        <a href="https://x.com/societyspeaksio" class="text-gray-400 hover:text-white transition" target="_blank" rel="noopener noreferrer">
-                            <span class="sr-only">X (formerly Twitter)</span>
-                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                            </svg>
-                        </a>
-                        <a href="https://bsky.app/profile/societyspeaks.bsky.social" class="text-gray-400 hover:text-white transition" target="_blank" rel="noopener noreferrer">
-                            <span class="sr-only">Bluesky</span>
-                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"/>
-                            </svg>
-                        </a>
-                        <a href="https://github.com/zuluwill/Societyspeaks" class="text-gray-400 hover:text-white transition" target="_blank" rel="noopener noreferrer">
-                            <span class="sr-only">GitHub</span>
-                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                            </svg>
-                        </a>
-                        <div>
-                            <iframe src="https://github.com/sponsors/zuluwill/button" 
-                                    title="Sponsor zuluwill" 
-                                    height="32" 
-                                    width="114" 
-                                    style="border: 0; border-radius: 6px;">
-                            </iframe>
-                        </div>
-                    </div>
-                </div>
+      <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div class="col-span-2">
+            <h3 class="text-white text-lg font-semibold mb-4">
+              About Society Speaks
+            </h3>
+            <p class="text-gray-400">
+              A sense-making system that turns disagreement into understanding.
+              We reveal where society agrees, where it divides, and which ideas
+              can bridge the gap.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-white text-lg font-semibold mb-4">Quick Links</h3>
+            <ul class="space-y-3">
+              <li>
+                <a href="/" class="text-gray-400 hover:text-white transition"
+                  >Home</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/daily"
+                  class="text-gray-400 hover:text-white transition"
+                  >Today's Question</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/brief/today"
+                  class="text-gray-400 hover:text-white transition"
+                  >Daily Brief</a
+                >
+              </li>
+              <li>
+                <a
+                  href="{{ url_for('briefing.landing') }}"
+                  class="text-gray-400 hover:text-white transition"
+                  >Personal Briefs
+                  <span class="text-xs text-blue-400">Pro</span></a
+                >
+              </li>
+              <li>
+                <a
+                  href="/about"
+                  class="text-gray-400 hover:text-white transition"
+                  >About Us</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/help"
+                  class="text-gray-400 hover:text-white transition"
+                  >Help</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/privacy-policy"
+                  class="text-gray-400 hover:text-white transition"
+                  >Privacy Policy</a
+                >
+              </li>
+              <li>
+                <a
+                  href="/terms-and-conditions"
+                  class="text-gray-400 hover:text-white transition"
+                  >Terms of Service</a
+                >
+              </li>
+              <li>
+                <a
+                  href="mailto:info@societyspeaks.io?subject=SocietySpeaks%20Inquiry"
+                  class="text-gray-400 hover:text-white transition"
+                  >Contact</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-white text-lg font-semibold mb-4">Connect</h3>
+            <div class="flex flex-wrap items-center gap-4">
+              <a
+                href="https://x.com/societyspeaksio"
+                class="text-gray-400 hover:text-white transition"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="sr-only">X (formerly Twitter)</span>
+                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                  />
+                </svg>
+              </a>
+              <a
+                href="https://bsky.app/profile/societyspeaks.bsky.social"
+                class="text-gray-400 hover:text-white transition"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="sr-only">Bluesky</span>
+                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z"
+                  />
+                </svg>
+              </a>
+              <a
+                href="https://github.com/zuluwill/Societyspeaks"
+                class="text-gray-400 hover:text-white transition"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span class="sr-only">GitHub</span>
+                <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                    fill-rule="evenodd"
+                    d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                  />
+                </svg>
+              </a>
+              <div>
+                <iframe
+                  src="https://github.com/sponsors/zuluwill/button"
+                  title="Sponsor zuluwill"
+                  height="32"
+                  width="114"
+                  style="border: 0; border-radius: 6px"
+                >
+                </iframe>
+              </div>
             </div>
-            <div class="mt-8 pt-8 border-t border-gray-800 text-center">
-                <p class="text-gray-400">&copy; 2024 SocietySpeaks.io. All rights reserved. Made with ❤️ by <a href="https://linktr.ee/gohandizo" class="hover:text-gray-300">William Roberts</a></p>
-    
-            </div>
+          </div>
         </div>
+        <div class="mt-8 pt-8 border-t border-gray-800 text-center">
+          <p class="text-gray-400">
+            &copy; 2024 SocietySpeaks.io. All rights reserved. Made with ❤️ by
+            <a href="https://linktr.ee/gohandizo" class="hover:text-gray-300"
+              >William Roberts</a
+            >
+          </p>
+        </div>
+      </div>
     </footer>
 
     <!-- Toast Notifications -->
     {% include "components/toast.html" %}
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Mobile menu toggle - improved for touch devices
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
+      document.addEventListener("DOMContentLoaded", function () {
+        // Mobile menu toggle - improved for touch devices
+        const mobileMenuButton = document.getElementById("mobile-menu-button");
+        const mobileMenu = document.getElementById("mobile-menu");
 
-            if (mobileMenuButton && mobileMenu) {
-                // Handle both click and touch events
-                function toggleMobileMenu(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    mobileMenu.classList.toggle('hidden');
-                    
-                    // Update aria-expanded for accessibility
-                    const isExpanded = !mobileMenu.classList.contains('hidden');
-                    mobileMenuButton.setAttribute('aria-expanded', isExpanded);
-                }
-                
-                mobileMenuButton.addEventListener('click', toggleMobileMenu);
-                mobileMenuButton.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    toggleMobileMenu(e);
-                });
-                
-                // Close mobile menu when clicking outside
-                document.addEventListener('click', function(e) {
-                    if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-                        if (!mobileMenuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
-                            mobileMenu.classList.add('hidden');
-                            mobileMenuButton.setAttribute('aria-expanded', 'false');
-                        }
-                    }
-                });
+        if (mobileMenuButton && mobileMenu) {
+          // Handle both click and touch events
+          function toggleMobileMenu(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            mobileMenu.classList.toggle("hidden");
+
+            // Update aria-expanded for accessibility
+            const isExpanded = !mobileMenu.classList.contains("hidden");
+            mobileMenuButton.setAttribute("aria-expanded", isExpanded);
+          }
+
+          mobileMenuButton.addEventListener("click", toggleMobileMenu);
+          mobileMenuButton.addEventListener("touchend", function (e) {
+            e.preventDefault();
+            toggleMobileMenu(e);
+          });
+
+          // Close mobile menu when clicking outside
+          document.addEventListener("click", function (e) {
+            if (mobileMenu && !mobileMenu.classList.contains("hidden")) {
+              if (
+                !mobileMenuButton.contains(e.target) &&
+                !mobileMenu.contains(e.target)
+              ) {
+                mobileMenu.classList.add("hidden");
+                mobileMenuButton.setAttribute("aria-expanded", "false");
+              }
             }
+          });
+        }
 
-            // Desktop user menu toggle - improved for mobile/touch
-            const userMenuButton = document.getElementById('desktop-user-menu');
-            const userMenuDropdown = document.getElementById('desktop-dropdown-menu');
+        // Desktop user menu toggle - improved for mobile/touch
+        const userMenuButton = document.getElementById("desktop-user-menu");
+        const userMenuDropdown = document.getElementById(
+          "desktop-dropdown-menu",
+        );
 
-            if (userMenuButton && userMenuDropdown) {
-                let touchHandled = false;
-                
-                function toggleUserMenu(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    userMenuDropdown.classList.toggle('hidden');
-                    
-                    // Update aria-expanded for accessibility
-                    const isExpanded = !userMenuDropdown.classList.contains('hidden');
-                    userMenuButton.setAttribute('aria-expanded', isExpanded);
-                }
-                
-                userMenuButton.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    touchHandled = true;
-                    toggleUserMenu(e);
-                    setTimeout(function() { touchHandled = false; }, 300);
-                }, { passive: false });
-                
-                userMenuButton.addEventListener('click', function(e) {
-                    if (!touchHandled) {
-                        toggleUserMenu(e);
-                    }
-                });
+        if (userMenuButton && userMenuDropdown) {
+          let touchHandled = false;
 
-                // Close the dropdown when clicking/touching outside
-                document.addEventListener('click', function(e) {
-                    if (!userMenuButton.contains(e.target) && !userMenuDropdown.contains(e.target)) {
-                        userMenuDropdown.classList.add('hidden');
-                        userMenuButton.setAttribute('aria-expanded', 'false');
-                    }
-                });
+          function toggleUserMenu(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            userMenuDropdown.classList.toggle("hidden");
+
+            // Update aria-expanded for accessibility
+            const isExpanded = !userMenuDropdown.classList.contains("hidden");
+            userMenuButton.setAttribute("aria-expanded", isExpanded);
+          }
+
+          userMenuButton.addEventListener(
+            "touchend",
+            function (e) {
+              e.preventDefault();
+              touchHandled = true;
+              toggleUserMenu(e);
+              setTimeout(function () {
+                touchHandled = false;
+              }, 300);
+            },
+            { passive: false },
+          );
+
+          userMenuButton.addEventListener("click", function (e) {
+            if (!touchHandled) {
+              toggleUserMenu(e);
             }
-            
-            // Navigation dropdown menus (Products, Explore, About)
-            const dropdowns = [
-                { btn: 'products-dropdown-btn', menu: 'products-dropdown-menu', container: 'products-dropdown-container' },
-                { btn: 'explore-dropdown-btn', menu: 'explore-dropdown-menu', container: 'explore-dropdown-container' },
-                { btn: 'about-dropdown-btn', menu: 'about-dropdown-menu', container: 'about-dropdown-container' }
-            ];
-            
-            function closeAllDropdowns(exceptMenu) {
-                dropdowns.forEach(function(d) {
-                    if (d.menu !== exceptMenu) {
-                        const m = document.getElementById(d.menu);
-                        const b = document.getElementById(d.btn);
-                        if (m) m.style.display = 'none';
-                        if (b) b.setAttribute('aria-expanded', 'false');
-                    }
-                });
+          });
+
+          // Close the dropdown when clicking/touching outside
+          document.addEventListener("click", function (e) {
+            if (
+              !userMenuButton.contains(e.target) &&
+              !userMenuDropdown.contains(e.target)
+            ) {
+              userMenuDropdown.classList.add("hidden");
+              userMenuButton.setAttribute("aria-expanded", "false");
             }
-            
-            dropdowns.forEach(function(dropdown) {
-                const btn = document.getElementById(dropdown.btn);
-                const menu = document.getElementById(dropdown.menu);
-                const container = document.getElementById(dropdown.container);
-                
-                if (btn && menu) {
-                    // Ensure menu is hidden on load
-                    menu.style.display = 'none';
-                    
-                    // Click toggle
-                    btn.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        closeAllDropdowns(dropdown.menu);
-                        const isHidden = menu.style.display === 'none';
-                        menu.style.display = isHidden ? 'block' : 'none';
-                        btn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
-                        if (isHidden) {
-                            const firstLink = menu.querySelector('a');
-                            if (firstLink) firstLink.focus();
-                        }
-                    });
-                    
-                    // Keyboard: Enter/Space to toggle, Escape to close
-                    btn.addEventListener('keydown', function(e) {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            btn.click();
-                        } else if (e.key === 'Escape') {
-                            menu.style.display = 'none';
-                            btn.setAttribute('aria-expanded', 'false');
-                        }
-                    });
-                    
-                    // Escape key within menu closes it
-                    menu.addEventListener('keydown', function(e) {
-                        if (e.key === 'Escape') {
-                            menu.style.display = 'none';
-                            btn.setAttribute('aria-expanded', 'false');
-                            btn.focus();
-                        }
-                    });
-                    
-                    // Close dropdown when focus leaves the container
-                    if (container) {
-                        container.addEventListener('focusout', function(e) {
-                            setTimeout(function() {
-                                if (!container.contains(document.activeElement)) {
-                                    menu.style.display = 'none';
-                                    btn.setAttribute('aria-expanded', 'false');
-                                }
-                            }, 0);
-                        });
-                    }
-                }
+          });
+        }
+
+        // Navigation dropdown menus (Products, Explore, About)
+        const dropdowns = [
+          {
+            btn: "products-dropdown-btn",
+            menu: "products-dropdown-menu",
+            container: "products-dropdown-container",
+          },
+          {
+            btn: "explore-dropdown-btn",
+            menu: "explore-dropdown-menu",
+            container: "explore-dropdown-container",
+          },
+          {
+            btn: "about-dropdown-btn",
+            menu: "about-dropdown-menu",
+            container: "about-dropdown-container",
+          },
+        ];
+
+        function closeAllDropdowns(exceptMenu) {
+          dropdowns.forEach(function (d) {
+            if (d.menu !== exceptMenu) {
+              const m = document.getElementById(d.menu);
+              const b = document.getElementById(d.btn);
+              if (m) m.style.display = "none";
+              if (b) b.setAttribute("aria-expanded", "false");
+            }
+          });
+        }
+
+        dropdowns.forEach(function (dropdown) {
+          const btn = document.getElementById(dropdown.btn);
+          const menu = document.getElementById(dropdown.menu);
+          const container = document.getElementById(dropdown.container);
+
+          if (btn && menu) {
+            // Ensure menu is hidden on load
+            menu.style.display = "none";
+
+            // Click toggle
+            btn.addEventListener("click", function (e) {
+              e.preventDefault();
+              e.stopPropagation();
+              closeAllDropdowns(dropdown.menu);
+              const isHidden = menu.style.display === "none";
+              menu.style.display = isHidden ? "block" : "none";
+              btn.setAttribute("aria-expanded", isHidden ? "true" : "false");
+              if (isHidden) {
+                const firstLink = menu.querySelector("a");
+                if (firstLink) firstLink.focus();
+              }
             });
-            
-            // Close all nav dropdowns when clicking outside
-            document.addEventListener('click', function(e) {
-                dropdowns.forEach(function(dropdown) {
-                    const btn = document.getElementById(dropdown.btn);
-                    const menu = document.getElementById(dropdown.menu);
-                    if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
-                        menu.style.display = 'none';
-                        btn.setAttribute('aria-expanded', 'false');
-                    }
-                });
+
+            // Keyboard: Enter/Space to toggle, Escape to close
+            btn.addEventListener("keydown", function (e) {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                btn.click();
+              } else if (e.key === "Escape") {
+                menu.style.display = "none";
+                btn.setAttribute("aria-expanded", "false");
+              }
             });
+
+            // Escape key within menu closes it
+            menu.addEventListener("keydown", function (e) {
+              if (e.key === "Escape") {
+                menu.style.display = "none";
+                btn.setAttribute("aria-expanded", "false");
+                btn.focus();
+              }
+            });
+
+            // Close dropdown when focus leaves the container
+            if (container) {
+              container.addEventListener("focusout", function (e) {
+                setTimeout(function () {
+                  if (!container.contains(document.activeElement)) {
+                    menu.style.display = "none";
+                    btn.setAttribute("aria-expanded", "false");
+                  }
+                }, 0);
+              });
+            }
+          }
         });
+
+        // Close all nav dropdowns when clicking outside
+        document.addEventListener("click", function (e) {
+          dropdowns.forEach(function (dropdown) {
+            const btn = document.getElementById(dropdown.btn);
+            const menu = document.getElementById(dropdown.menu);
+            if (
+              btn &&
+              menu &&
+              !btn.contains(e.target) &&
+              !menu.contains(e.target)
+            ) {
+              menu.style.display = "none";
+              btn.setAttribute("aria-expanded", "false");
+            }
+          });
+        });
+      });
     </script>
-    
+
     <!-- Shared JavaScript Components -->
     <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
     <script src="{{ url_for('static', filename='js/brief-audio.js') }}"></script>
-</body>
+  </body>
 </html>
