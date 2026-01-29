@@ -45,13 +45,6 @@
           "Link copied! Open the ElevenReader app and paste this URL to listen.",
         );
         break;
-      case "pocket":
-        showListenToast("Opening Pocket...", "info");
-        window.open(
-          "https://getpocket.com/save?url=" + encodeURIComponent(readerUrl),
-          "_blank",
-        );
-        break;
       case "instapaper":
         showListenToast("Opening Instapaper...", "info");
         window.open(
