@@ -107,6 +107,7 @@ def checkout():
                         'plan_name': target_plan.name if target_plan else plan_code,
                     }
                 )
+                posthog.flush()  # Ensure event is sent before redirect
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")
         return redirect(checkout_session.url, code=303)
@@ -171,6 +172,8 @@ def checkout_success():
                                     'price': price_display,
                                 }
                             )
+                            posthog.flush()  # Critical: ensure subscription event is sent
+                            current_app.logger.info(f"PostHog: paid_briefing_subscribed for user {current_user.id}")
                     except Exception as e:
                         current_app.logger.warning(f"PostHog tracking error: {e}")
         except stripe.error.StripeError as e:
@@ -428,6 +431,7 @@ def pending_checkout():
                         'source': 'pending_checkout',
                     }
                 )
+                posthog.flush()  # Ensure event is sent before redirect
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")
         return redirect(checkout_session.url, code=303)
