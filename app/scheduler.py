@@ -11,6 +11,7 @@ Designed for Replit deployment (single-instance friendly)
 """
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
+from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MISSED
 from datetime import datetime, timedelta
 import logging
 import threading
@@ -18,6 +19,25 @@ import atexit
 import signal
 
 logger = logging.getLogger(__name__)
+
+
+def _job_error_listener(event):
+    """
+    Handle job errors gracefully, especially during shutdown.
+    Suppresses "cannot schedule new futures after shutdown" errors
+    which are harmless and occur during Gunicorn worker restarts.
+    """
+    if event.exception:
+        error_msg = str(event.exception)
+        if "cannot schedule new futures after shutdown" in error_msg:
+            # This is expected during worker restarts, don't log as error
+            logger.debug(f"Job {event.job_id} skipped during shutdown (expected)")
+        elif "interpreter shutdown" in error_msg:
+            logger.debug(f"Job {event.job_id} skipped during interpreter shutdown (expected)")
+        else:
+            # Log other errors normally
+            logger.error(f"Job {event.job_id} raised an exception: {event.exception}", 
+                        exc_info=event.traceback)
 scheduler = None
 _shutdown_registered = False
 _shutting_down = False
@@ -1711,8 +1731,10 @@ def start_scheduler():
     
     if not scheduler.running:
         _register_shutdown_handlers()
+        # Add error listener to handle shutdown errors gracefully
+        scheduler.add_listener(_job_error_listener, EVENT_JOB_ERROR)
         scheduler.start()
-        logger.info("Scheduler started with shutdown handlers")
+        logger.info("Scheduler started with shutdown handlers and error listener")
     else:
         logger.warning("Scheduler already running")
 
