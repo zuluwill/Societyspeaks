@@ -231,8 +231,16 @@ def create_app():
         from app.utils.text_processing import strip_markdown as strip_markdown_func
         return strip_markdown_func(text)
     
+    def convert_markdown(text):
+        """Convert markdown to HTML."""
+        if not text:
+            return ''
+        import markdown as md
+        return Markup(md.markdown(text, extensions=['extra', 'nl2br']))
+    
     app.jinja_env.filters['render_markdown'] = render_markdown_links
     app.jinja_env.filters['strip_markdown'] = strip_markdown
+    app.jinja_env.filters['markdown'] = convert_markdown
     
     # Initialize rate limiter with improved Redis handling
     try:
