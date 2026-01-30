@@ -140,6 +140,16 @@ def create_app():
         posthog.project_api_key = posthog_api_key
         posthog.host = posthog_host
         posthog.debug = env != "production"
+        
+        # Register atexit handler to flush PostHog events on shutdown
+        import atexit
+        def flush_posthog():
+            try:
+                posthog.flush()
+                posthog.shutdown()
+            except Exception:
+                pass
+        atexit.register(flush_posthog)
 
     # Initialize Talisman with simplified CSP
     # Note: force_https=False because Replit's proxy handles HTTPS termination

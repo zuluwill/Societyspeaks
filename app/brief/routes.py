@@ -536,6 +536,8 @@ def unsubscribe(token):
                     'email': subscriber.email,
                 }
             )
+            posthog.flush()  # Ensure event is sent immediately
+            logger.info(f"PostHog event sent: daily_brief_unsubscribed for {subscriber.email}")
     except Exception as e:
         logger.warning(f"PostHog tracking error: {e}")
 
