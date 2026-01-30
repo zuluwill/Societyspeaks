@@ -2111,10 +2111,10 @@ def view_run(briefing_id, run_id):
     
     # Check for existing audio generation job
     from app.models import AudioGenerationJob
-    existing_job = AudioGenerationJob.query.filter_by(
-        brief_run_id=brief_run.id,
-        brief_type='brief_run',
-        status__in=['queued', 'processing']
+    existing_job = AudioGenerationJob.query.filter(
+        AudioGenerationJob.brief_run_id == brief_run.id,
+        AudioGenerationJob.brief_type == 'brief_run',
+        AudioGenerationJob.status.in_(['queued', 'processing'])
     ).first()
     
     return render_template(
