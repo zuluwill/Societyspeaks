@@ -2031,6 +2031,8 @@ def unsubscribe(briefing_id, token):
                         'recipient_id': recipient.id,
                     }
                 )
+                posthog.flush()  # Critical: ensure churn event is sent
+                logger.info(f"PostHog: briefing_recipient_unsubscribed for {recipient.email}")
         except Exception as e:
             logger.warning(f"PostHog tracking error: {e}")
         flash('You have been unsubscribed from this briefing', 'success')

@@ -361,6 +361,8 @@ def handle_subscription_deleted(subscription_data):
                         'plan_code': plan_code,
                     }
                 )
+                posthog.flush()  # Critical: ensure churn event is sent
+                current_app.logger.info(f"PostHog: paid_briefing_canceled for user {user_id}")
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")
 

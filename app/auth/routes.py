@@ -37,6 +37,7 @@ def verify_email(token):
                     event='email_verified',
                     properties={'user_id': user.id}
                 )
+                posthog.flush()  # Ensure activation event is sent
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
         flash('Your email has been verified! You can now log in.', 'success')
@@ -178,6 +179,7 @@ def register():
                     event='user_signed_up',
                     properties={'username': username}
                 )
+                posthog.flush()  # Ensure signup event is sent
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
 
