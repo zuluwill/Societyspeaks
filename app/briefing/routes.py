@@ -2616,8 +2616,26 @@ def public_brief_run_reader(briefing_id, run_id):
 
     # Check if briefing is public
     if briefing.visibility != 'public':
-        flash('This briefing is not publicly accessible', 'error')
-        return redirect(url_for('index'))
+        # Check if current user is the owner
+        is_owner = False
+        if current_user.is_authenticated:
+            if briefing.owner_type == 'user' and briefing.owner_id == current_user.id:
+                is_owner = True
+            elif briefing.owner_type == 'org':
+                # Check if user is a member of the org
+                from app.models import OrgMembership
+                membership = OrgMembership.query.filter_by(
+                    user_id=current_user.id,
+                    company_id=briefing.owner_id
+                ).first()
+                if membership:
+                    is_owner = True
+        
+        return render_template(
+            'briefing/public/not_public.html',
+            briefing=briefing,
+            is_owner=is_owner
+        )
 
     brief_run = BriefRun.query.filter_by(
         id=run_id,
