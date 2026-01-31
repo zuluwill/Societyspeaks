@@ -19,6 +19,49 @@ from app.storage_utils import get_base_url
 logger = logging.getLogger(__name__)
 
 
+def _claim_brief_run_for_sending(brief_run: BriefRun) -> bool:
+    """
+    Atomically claim a BriefRun for sending using UPDATE with WHERE clause.
+    
+    This MUST be called BEFORE sending starts to prevent race conditions
+    where multiple scheduler jobs try to send the same brief.
+
+    Args:
+        brief_run: BriefRun instance to claim
+
+    Returns:
+        True if this process successfully claimed it for sending,
+        False if another process already claimed it or it was already sent
+    """
+    try:
+        # Atomically change status from 'approved' to 'sending'
+        # This prevents other processes from picking up the same brief_run
+        result = db.session.execute(
+            update(BriefRun)
+            .where(BriefRun.id == brief_run.id)
+            .where(BriefRun.status == 'approved')  # Only claim if still approved
+            .values(status='sending')
+        )
+        db.session.commit()
+
+        if result.rowcount == 0:
+            # Another process already claimed it or it's no longer approved
+            db.session.refresh(brief_run)
+            logger.warning(
+                f"BriefRun {brief_run.id} could not be claimed for sending "
+                f"(current status: {brief_run.status}). Another process may be handling it."
+            )
+            return False
+
+        logger.info(f"Claimed BriefRun {brief_run.id} for sending (status -> 'sending')")
+        return True
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error claiming BriefRun {brief_run.id}: {e}", exc_info=True)
+        return False
+
+
 def _mark_brief_run_sent(brief_run: BriefRun, reason: str = "sent") -> bool:
     """
     Atomically mark a BriefRun as sent using UPDATE with WHERE clause.
@@ -35,6 +78,7 @@ def _mark_brief_run_sent(brief_run: BriefRun, reason: str = "sent") -> bool:
         False if another process already marked it
     """
     try:
+        # Accept either 'approved' or 'sending' status (for backward compatibility and new flow)
         result = db.session.execute(
             update(BriefRun)
             .where(BriefRun.id == brief_run.id)
@@ -452,6 +496,8 @@ def send_brief_run_emails(brief_run_id: int, skip_subscription_check: bool = Fal
     """
     Convenience function to send BriefRun emails.
     
+    Uses atomic claim mechanism to prevent duplicate sends from concurrent processes.
+    
     Args:
         brief_run_id: BriefRun ID
         skip_subscription_check: Skip subscription validation (for admin/testing only)
@@ -467,9 +513,22 @@ def send_brief_run_emails(brief_run_id: int, skip_subscription_check: bool = Fal
         logger.error(f"BriefRun {brief_run_id} not found")
         return {'sent': 0, 'failed': 0}
     
+    # Check status - must be 'approved' to send
+    # 'sending' means another process already claimed it (treat as already in progress)
+    # 'sent' means it's already been sent
+    if brief_run.status == 'sending':
+        logger.info(f"BriefRun {brief_run_id} is already being sent by another process, skipping")
+        return {'sent': 0, 'failed': 0, 'skipped_reason': 'already_sending'}
+    
     if brief_run.status != 'approved':
-        logger.warning(f"BriefRun {brief_run_id} is not approved (status: {brief_run.status}), skipping send")
+        logger.warning(f"BriefRun {brief_run_id} is not approved (status: {brief_run.status}), skipping")
         return {'sent': 0, 'failed': 0}
+    
+    # Atomically claim the brief_run for sending BEFORE we start
+    # This prevents race conditions where multiple scheduler jobs try to send
+    if not _claim_brief_run_for_sending(brief_run):
+        logger.info(f"BriefRun {brief_run_id} already claimed by another process, skipping")
+        return {'sent': 0, 'failed': 0, 'skipped_reason': 'already_claimed'}
     
     # Check subscription status before sending (unless explicitly skipped for admin)
     if not skip_subscription_check:
@@ -499,7 +558,27 @@ def send_brief_run_emails(brief_run_id: int, skip_subscription_check: bool = Fal
                 f"Skipping send for BriefRun {brief_run_id} - owner has no active subscription "
                 f"(owner_type={briefing.owner_type}, owner_id={briefing.owner_id})"
             )
+            # Reset status back to approved so it doesn't get stuck in 'sending'
+            db.session.execute(
+                update(BriefRun)
+                .where(BriefRun.id == brief_run_id)
+                .where(BriefRun.status == 'sending')
+                .values(status='approved')
+            )
+            db.session.commit()
             return {'sent': 0, 'failed': 0, 'skipped_reason': 'no_active_subscription'}
     
-    client = BriefingEmailClient()
-    return client.send_brief_run_to_all_recipients(brief_run)
+    try:
+        client = BriefingEmailClient()
+        return client.send_brief_run_to_all_recipients(brief_run)
+    except Exception as e:
+        # If sending fails completely, reset status to approved for retry
+        logger.error(f"Error sending BriefRun {brief_run_id}: {e}", exc_info=True)
+        db.session.execute(
+            update(BriefRun)
+            .where(BriefRun.id == brief_run_id)
+            .where(BriefRun.status == 'sending')
+            .values(status='approved')
+        )
+        db.session.commit()
+        raise

@@ -1483,6 +1483,31 @@ def init_scheduler(app):
                         
             except Exception as e:
                 logger.error(f"Error in approved BriefRuns sender: {e}", exc_info=True)
+            
+            # Recovery: Reset any runs stuck in 'sending' status for too long (>10 minutes)
+            # This handles cases where a process crashed mid-send
+            try:
+                from sqlalchemy import update
+                stuck_cutoff = datetime.utcnow() - timedelta(minutes=10)
+                
+                # Find runs that are stuck in 'sending' status
+                # We check if they've been in this state too long by using the scheduled_at
+                # as a proxy (sending should complete within minutes of scheduled time)
+                result = db.session.execute(
+                    update(BriefRun)
+                    .where(BriefRun.status == 'sending')
+                    .where(BriefRun.sent_at == None)
+                    .where(BriefRun.scheduled_at < stuck_cutoff)
+                    .values(status='approved')
+                )
+                db.session.commit()
+                
+                if result.rowcount > 0:
+                    logger.warning(f"Reset {result.rowcount} stuck 'sending' BriefRuns back to 'approved'")
+                    
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Error recovering stuck sends: {e}", exc_info=True)
 
     @scheduler.scheduled_job('cron', hour=18, minute=0, id='auto_publish_brief')
     def auto_publish_daily_brief():
