@@ -246,6 +246,8 @@ pip install -r requirements.txt
 flask db upgrade
 ```
 
+**Alembic / multiple heads:** If `flask db upgrade` fails with "multiple head revisions", the migration history has branched. Merge heads before deploying: `flask db merge heads -m "merge_heads"`, then run `flask db upgrade` again.
+
 ## Project Structure
 
 ```
