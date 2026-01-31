@@ -1488,6 +1488,7 @@ def init_scheduler(app):
             # This handles cases where a process crashed mid-send
             # Using claimed_at (when the send was claimed) instead of scheduled_at for accuracy
             try:
+                from app import db
                 from sqlalchemy import update, or_
                 stuck_cutoff = datetime.utcnow() - timedelta(minutes=15)
                 
