@@ -82,11 +82,31 @@ def create_app():
 
     # Check for production environment and initialize Sentry only in production
     if os.getenv("FLASK_ENV") == "production":
+        def _sentry_before_send(event, hint):
+            """Drop known-harmless errors that occur during worker/scheduler shutdown."""
+            def is_shutdown_error(msg):
+                return msg and "cannot schedule new futures after shutdown" in msg
+
+            if "log_record" in hint:
+                record = hint["log_record"]
+                msg = (record.getMessage() or "") if hasattr(record, "getMessage") else str(record.msg or "")
+                if is_shutdown_error(msg):
+                    return None
+            exc_info = hint.get("exc_info")
+            if exc_info and exc_info[0] is RuntimeError and is_shutdown_error(str(exc_info[1] or "")):
+                return None
+            # Event may have exception in payload (e.g. from logging integration)
+            for exc in (event.get("exception") or {}).get("values") or []:
+                if exc.get("type") == "RuntimeError" and is_shutdown_error(exc.get("value") or ""):
+                    return None
+            return event
+
         sentry_sdk.init(
             dsn=os.getenv("SENTRY_DSN"),
             integrations=[FlaskIntegration()],
             traces_sample_rate=1.0,
             profiles_sample_rate=1.0,
+            before_send=_sentry_before_send,
             _experiments={
                 "continuous_profiling_auto_start": True,
             },
