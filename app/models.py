@@ -3467,29 +3467,41 @@ class BriefEmailOpen(db.Model):
 class BriefEmailSend(db.Model):
     """
     Tracks individual email sends to prevent duplicate deliveries.
-    
+
     Uses a two-phase commit pattern:
     1. Before send: INSERT with status='claimed' (claims the recipient)
     2. After send: UPDATE to status='sent' (confirms delivery)
-    
+
     This prevents duplicates even if the process crashes between send and record.
+
+    Status flow:
+    - 'claimed' -> 'sent' (success)
+    - 'claimed' -> 'failed' (can retry up to MAX_SEND_ATTEMPTS)
+    - 'failed' -> 'claimed' -> 'sent' (retry succeeded)
+    - 'failed' -> 'permanently_failed' (exceeded MAX_SEND_ATTEMPTS)
     """
     __tablename__ = 'brief_email_send'
     __table_args__ = (
         db.Index('idx_brief_email_send_run', 'brief_run_id'),
         db.Index('idx_brief_email_send_recipient', 'recipient_id'),
+        db.Index('idx_brief_email_send_run_status', 'brief_run_id', 'status'),  # For cleanup queries
         # Unique constraint: each recipient can only receive each brief_run once
         db.UniqueConstraint('brief_run_id', 'recipient_id', name='uq_brief_run_recipient_send'),
     )
 
+    # Maximum number of send attempts before marking as permanently failed
+    MAX_SEND_ATTEMPTS = 3
+
     id = db.Column(db.Integer, primary_key=True)
     brief_run_id = db.Column(db.Integer, db.ForeignKey('brief_run.id', ondelete='CASCADE'), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey('brief_recipient.id', ondelete='CASCADE'), nullable=False)
-    status = db.Column(db.String(20), default='sent')  # 'claimed' | 'sent' | 'failed'
+    status = db.Column(db.String(20), default='sent')  # 'claimed' | 'sent' | 'failed' | 'permanently_failed'
     claimed_at = db.Column(db.DateTime, default=datetime.utcnow)  # When claim was created
     sent_at = db.Column(db.DateTime, nullable=True)  # When email was actually sent
     resend_id = db.Column(db.String(100), nullable=True)  # Resend message ID for tracking
-    
+    attempt_count = db.Column(db.Integer, default=1, nullable=False)  # Number of send attempts
+    failure_reason = db.Column(db.String(500), nullable=True)  # Why the send failed (for debugging)
+
     # Relationships
     brief_run = db.relationship('BriefRun', backref='email_sends')
     recipient = db.relationship('BriefRecipient', backref='email_sends')

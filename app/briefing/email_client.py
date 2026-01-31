@@ -362,35 +362,76 @@ class BriefingEmailClient:
         ).all()
 
         # Filter out recipients who have already been sent this brief_run
-        # Only filter out 'sent' status - 'claimed' status older than 10 minutes
+        # Only filter out 'sent' status - 'claimed' status older than stale timeout
         # should be treated as stale (crashed process) and can be retried
-        stale_cutoff = datetime.utcnow() - timedelta(minutes=10)
-        
-        # Clean up stale claims FIRST (claimed > 10 minutes ago) to allow retry
+
+        # Dynamic stale timeout: minimum 15 min, +1 min per 100 recipients
+        # This ensures large sends don't get prematurely marked as stale
+        recipient_count = len(all_eligible_recipients)
+        stale_minutes = max(15, 15 + (recipient_count // 100))
+        stale_cutoff = datetime.utcnow() - timedelta(minutes=stale_minutes)
+
+        # Mark stale claims as failed (not delete) to preserve audit trail
         # This handles cases where a process crashed after send but before marking sent
-        # Also clean up any 'failed' status entries so they can be retried
-        cleanup_result = db.session.execute(
+        stale_result = db.session.execute(
             db.text("""
-                DELETE FROM brief_email_send 
-                WHERE brief_run_id = :brief_run_id 
-                AND (
-                    (status = 'claimed' AND claimed_at < :stale_cutoff)
-                    OR status = 'failed'
-                )
+                UPDATE brief_email_send
+                SET status = 'failed',
+                    failure_reason = 'Stale claim - process may have crashed',
+                    attempt_count = attempt_count + 1
+                WHERE brief_run_id = :brief_run_id
+                AND status = 'claimed'
+                AND claimed_at < :stale_cutoff
             """),
             {'brief_run_id': brief_run.id, 'stale_cutoff': stale_cutoff}
         )
-        if cleanup_result.rowcount > 0:
-            logger.info(f"Cleaned up {cleanup_result.rowcount} stale/failed claim(s) for BriefRun {brief_run.id}")
+        if stale_result.rowcount > 0:
+            logger.info(f"Marked {stale_result.rowcount} stale claim(s) as failed for BriefRun {brief_run.id}")
+
+        # Mark failed records that exceeded max attempts as permanently_failed
+        # MAX_SEND_ATTEMPTS is defined in BriefEmailSend model
+        max_attempts = BriefEmailSend.MAX_SEND_ATTEMPTS
+        permanent_result = db.session.execute(
+            db.text("""
+                UPDATE brief_email_send
+                SET status = 'permanently_failed'
+                WHERE brief_run_id = :brief_run_id
+                AND status = 'failed'
+                AND attempt_count >= :max_attempts
+            """),
+            {'brief_run_id': brief_run.id, 'max_attempts': max_attempts}
+        )
+        if permanent_result.rowcount > 0:
+            logger.warning(
+                f"Marked {permanent_result.rowcount} recipient(s) as permanently_failed "
+                f"(exceeded {max_attempts} attempts) for BriefRun {brief_run.id}"
+            )
+
+        # Reset failed records (under max attempts) back to allow retry
+        # This allows the claim mechanism to pick them up again
+        retry_result = db.session.execute(
+            db.text("""
+                DELETE FROM brief_email_send
+                WHERE brief_run_id = :brief_run_id
+                AND status = 'failed'
+                AND attempt_count < :max_attempts
+            """),
+            {'brief_run_id': brief_run.id, 'max_attempts': max_attempts}
+        )
+        if retry_result.rowcount > 0:
+            logger.info(f"Cleared {retry_result.rowcount} failed record(s) for retry in BriefRun {brief_run.id}")
+
         db.session.commit()
         
-        # Now get recipients that are definitively sent or actively being processed
+        # Now get recipients that are definitively handled (no retry needed)
         # 'sent' status = definitely delivered, exclude
+        # 'permanently_failed' status = exceeded retry limit, exclude
         # 'claimed' status with recent claimed_at = currently in progress, exclude
         already_handled = BriefEmailSend.query.filter(
             BriefEmailSend.brief_run_id == brief_run.id,
             db.or_(
                 BriefEmailSend.status == 'sent',
+                BriefEmailSend.status == 'permanently_failed',
                 db.and_(
                     BriefEmailSend.status == 'claimed',
                     BriefEmailSend.claimed_at > stale_cutoff  # Recently claimed, in progress
@@ -510,13 +551,19 @@ class BriefingEmailClient:
                     self._mark_recipient_sent(brief_run.id, recipient.id)
                     sent += 1
                 else:
-                    # Step 3b: Send failed, remove claim for retry
-                    self._mark_recipient_failed(brief_run.id, recipient.id)
+                    # Step 3b: Send failed, mark with reason for retry
+                    self._mark_recipient_failed(
+                        brief_run.id, recipient.id,
+                        reason="send_brief_run returned False"
+                    )
                     failed += 1
             except Exception as e:
                 logger.error(f"Error sending to {recipient.email}: {e}")
-                # Remove claim on exception for retry
-                self._mark_recipient_failed(brief_run.id, recipient.id)
+                # Mark failed with exception details for debugging
+                self._mark_recipient_failed(
+                    brief_run.id, recipient.id,
+                    reason=f"Exception: {str(e)}"
+                )
                 failed += 1
 
         if skipped > 0:
@@ -594,26 +641,45 @@ class BriefingEmailClient:
             return False
     
     def _mark_recipient_failed(
-        self, 
-        brief_run_id: int, 
-        recipient_id: int
+        self,
+        brief_run_id: int,
+        recipient_id: int,
+        reason: str = None
     ) -> bool:
         """
-        Mark a claimed recipient as failed (so it can be retried).
-        
-        Deletes the claim record so the recipient can be retried.
+        Mark a claimed recipient as failed.
+
+        Keeps the record for audit trail and retry limiting.
+        Updates status to 'failed' and increments attempt_count.
+        Records failure_reason for debugging.
+
+        Args:
+            brief_run_id: The brief run ID
+            recipient_id: The recipient ID
+            reason: Optional reason for the failure (for debugging)
+
+        Returns:
+            True if update succeeded, False otherwise
         """
         try:
+            # Truncate reason if too long for the column
+            if reason and len(reason) > 500:
+                reason = reason[:497] + '...'
+
             db.session.execute(
                 db.text("""
-                    DELETE FROM brief_email_send 
-                    WHERE brief_run_id = :brief_run_id 
+                    UPDATE brief_email_send
+                    SET status = 'failed',
+                        failure_reason = :reason,
+                        attempt_count = attempt_count + 1
+                    WHERE brief_run_id = :brief_run_id
                     AND recipient_id = :recipient_id
                     AND status = 'claimed'
                 """),
                 {
                     'brief_run_id': brief_run_id,
-                    'recipient_id': recipient_id
+                    'recipient_id': recipient_id,
+                    'reason': reason
                 }
             )
             db.session.commit()
@@ -691,8 +757,11 @@ class BriefingEmailClient:
                     email_to_recipient.append(recipient)
                 except Exception as e:
                     logger.error(f"Error preparing email for {recipient.email}: {e}")
-                    # Remove claim for retry
-                    self._mark_recipient_failed(brief_run.id, recipient.id)
+                    # Mark failed with reason for debugging
+                    self._mark_recipient_failed(
+                        brief_run.id, recipient.id,
+                        reason=f"Error preparing email: {str(e)}"
+                    )
                     total_failed += 1
 
             if batch_emails:
@@ -714,9 +783,14 @@ class BriefingEmailClient:
                         for recipient in email_to_recipient:
                             self._mark_recipient_sent(brief_run.id, recipient.id)
                     else:
-                        # Batch failed completely - remove claims for retry
+                        # Batch failed completely - mark as failed with reason
+                        batch_errors = batch_result.get('errors', ['Unknown batch error'])
+                        error_reason = f"Batch send failed: {'; '.join(str(e) for e in batch_errors[:3])}"
                         for recipient in email_to_recipient:
-                            self._mark_recipient_failed(brief_run.id, recipient.id)
+                            self._mark_recipient_failed(
+                                brief_run.id, recipient.id,
+                                reason=error_reason
+                            )
 
                     batch_num = (batch_start // BATCH_SIZE) + 1
                     total_batches = (len(recipients) + BATCH_SIZE - 1) // BATCH_SIZE
@@ -727,10 +801,13 @@ class BriefingEmailClient:
 
                 except Exception as e:
                     logger.error(f"Batch send failed, falling back to individual: {e}")
-                    # Remove claims and fallback to individual sending for claimed recipients
+                    # Mark claims as failed with reason before fallback
                     for recipient in email_to_recipient:
-                        self._mark_recipient_failed(brief_run.id, recipient.id)
-                    
+                        self._mark_recipient_failed(
+                            brief_run.id, recipient.id,
+                            reason=f"Batch exception, falling back: {str(e)}"
+                        )
+
                     # Fallback to individual sending (will re-claim)
                     fallback_result = self._send_individual_to_recipients(brief_run, claimed_recipients)
                     total_sent += fallback_result.get('sent', 0)

@@ -1520,22 +1520,61 @@ def init_scheduler(app):
             # Cleanup stale email claims (recipients stuck in 'claimed' status > 15 minutes)
             # This is a safety net for crashes between send and mark_sent
             try:
+                from app import db
                 from app.models import BriefEmailSend
                 stale_claim_cutoff = datetime.utcnow() - timedelta(minutes=15)
-                
-                result = db.session.execute(
-                    update(BriefEmailSend)
-                    .where(BriefEmailSend.status == 'claimed')
-                    .where(BriefEmailSend.claimed_at < stale_claim_cutoff)
-                    .values(status='failed')  # Mark as failed so they can be retried
+
+                # Mark stale claims as failed with reason and increment attempt_count
+                stale_result = db.session.execute(
+                    db.text("""
+                        UPDATE brief_email_send
+                        SET status = 'failed',
+                            failure_reason = 'Stale claim - scheduler cleanup',
+                            attempt_count = attempt_count + 1
+                        WHERE status = 'claimed'
+                        AND claimed_at < :stale_cutoff
+                    """),
+                    {'stale_cutoff': stale_claim_cutoff}
                 )
                 db.session.commit()
-                
-                if result.rowcount > 0:
+
+                if stale_result.rowcount > 0:
                     logger.warning(
-                        f"Marked {result.rowcount} stale email claims as failed for retry"
+                        f"Marked {stale_result.rowcount} stale email claims as failed for retry"
                     )
-                    
+
+                # Mark records that exceeded max attempts as permanently_failed
+                max_attempts = BriefEmailSend.MAX_SEND_ATTEMPTS
+                permanent_result = db.session.execute(
+                    db.text("""
+                        UPDATE brief_email_send
+                        SET status = 'permanently_failed'
+                        WHERE status = 'failed'
+                        AND attempt_count >= :max_attempts
+                    """),
+                    {'max_attempts': max_attempts}
+                )
+                db.session.commit()
+
+                if permanent_result.rowcount > 0:
+                    logger.warning(
+                        f"Marked {permanent_result.rowcount} email sends as permanently_failed "
+                        f"(exceeded {max_attempts} attempts)"
+                    )
+
+                # Alert on permanently failed emails in the last 24 hours
+                # This helps with operational visibility
+                permanent_failures_24h = BriefEmailSend.query.filter(
+                    BriefEmailSend.status == 'permanently_failed',
+                    BriefEmailSend.claimed_at > datetime.utcnow() - timedelta(hours=24)
+                ).count()
+
+                if permanent_failures_24h > 0:
+                    logger.error(
+                        f"ALERT: {permanent_failures_24h} emails permanently failed in last 24h. "
+                        f"Manual investigation required. Check brief_email_send table for details."
+                    )
+
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error cleaning up stale email claims: {e}", exc_info=True)
