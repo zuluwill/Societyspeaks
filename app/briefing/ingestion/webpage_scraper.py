@@ -89,31 +89,74 @@ def clean_cookie_content_from_text(text: str) -> str:
     lines = text.split('\n')
     cleaned_lines = []
     skip_next = 0
+    in_cookie_section = False
+    cookie_section_lines = 0
     
     for i, line in enumerate(lines):
         if skip_next > 0:
             skip_next -= 1
             continue
+        
+        line_lower = line.lower().strip()
+        
+        # Detect start of cookie table/section
+        if line_lower in ('cookie', 'cookies', 'cookie name', 'name'):
+            # Check if next few lines look like cookie table content
+            next_lines = [l.lower().strip() for l in lines[i+1:i+5] if l.strip()]
+            if any('duration' in nl or 'expiry' in nl or 'purpose' in nl or 
+                   re.match(r'^\d+\s*(year|month|day)', nl) for nl in next_lines):
+                in_cookie_section = True
+                cookie_section_lines = 0
+                continue
+        
+        # Track cookie section - exit when we hit clearly non-cookie content
+        if in_cookie_section:
+            cookie_section_lines += 1
+            # Check if this line is cookie-table content
+            is_table_content = any([
+                line_lower in ('cookie', 'duration', 'description', 'purpose', 'expiry', 'type', 'no description available.', 'no description available'),
+                re.match(r'^\d+\s*(year|month|day|hour|minute|session)s?\.?$', line_lower),
+                re.match(r'^[a-z_]{1,30}$', line_lower),  # Cookie names like "pc", "_ga"
+                line_lower.startswith('cookie:'),
+                line_lower.startswith('duration:'),
+                not line.strip(),  # Empty lines
+            ])
+            
+            # Exit cookie section if: hit normal content OR been in section too long
+            if not is_table_content or cookie_section_lines > 15:
+                in_cookie_section = False
+                # Only continue (skip) if this was still table content
+                if is_table_content:
+                    continue
+            else:
+                continue
             
         # Skip lines that match cookie patterns
         is_cookie_content = False
         for pattern in COOKIE_CONTENT_PATTERNS:
             if pattern.search(line):
                 is_cookie_content = True
-                # Skip a few lines after cookie content (likely part of cookie table)
                 skip_next = 3
                 break
         
-        # Also skip lines that look like cookie table entries
-        line_lower = line.lower().strip()
+        if is_cookie_content:
+            continue
+        
+        # Skip lines that look like cookie table entries
         if any([
             line_lower.startswith('cookie:'),
             line_lower.startswith('duration:'),
             line_lower.startswith('description:'),
+            line_lower.startswith('purpose:'),
+            line_lower.startswith('expiry:'),
             line_lower == 'no description available.',
             line_lower == 'no description available',
+            line_lower in ('cookie', 'duration', 'description', 'purpose', 'expiry', 'type'),
             re.match(r'^\d+\s*(year|month|day|hour|minute|session)s?$', line_lower),
-            re.match(r'^(necessary|functional|analytics|performance|marketing|advertising)\s*cookies?$', line_lower),
+            re.match(r'^(necessary|functional|analytics|performance|marketing|advertising|targeting)\s*cookies?$', line_lower),
+            # Common cookie names
+            re.match(r'^[a-z_]{1,30}$', line_lower) and i + 1 < len(lines) and 
+                re.match(r'^\d+\s*(year|month|day|session)', lines[i+1].lower().strip()),
         ]):
             is_cookie_content = True
             skip_next = 2
