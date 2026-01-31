@@ -322,7 +322,7 @@
     </main>
 
     <footer>
-        <p>Published {{ brief.date.strftime('%B %d, %Y') }} by <a href="{{ url_for('index', _external=True) }}">Society Speaks</a></p>
+        <p>Published {{ brief.date.strftime('%B %d, %Y') }} by <a href="{{ url_for('main.index', _external=True) }}">Society Speaks</a></p>
         <p>
             <a href="{{ url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d'), _external=True) }}">View full version</a>
             | <a href="{{ url_for('brief.methodology', _external=True) }}">Our methodology</a>

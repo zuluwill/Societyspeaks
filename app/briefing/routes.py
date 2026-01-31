@@ -2009,7 +2009,7 @@ def unsubscribe(briefing_id, token):
 
     if not recipient:
         flash('Invalid unsubscribe link', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
     if recipient.status == 'unsubscribed':
         flash('You are already unsubscribed', 'info')
@@ -2560,7 +2560,7 @@ def public_briefing(briefing_id):
     # Check if briefing is public
     if briefing.visibility != 'public':
         flash('This briefing is not publicly accessible', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
     # Get sent runs only
     runs = BriefRun.query.filter_by(
@@ -2584,7 +2584,7 @@ def public_brief_run(briefing_id, run_id):
     # Check if briefing is public
     if briefing.visibility != 'public':
         flash('This briefing is not publicly accessible', 'error')
-        return redirect(url_for('index'))
+        return redirect(url_for('main.index'))
 
     brief_run = BriefRun.query.filter_by(
         id=run_id,
