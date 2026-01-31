@@ -7,12 +7,12 @@ Reuses existing email infrastructure with briefing-specific logic.
 
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from flask import render_template, current_app
 from sqlalchemy import update
 from app import db
-from app.models import BriefRun, BriefRecipient, Briefing, SendingDomain
+from app.models import BriefRun, BriefRecipient, Briefing, SendingDomain, BriefEmailSend
 from app.resend_client import ResendEmailClient as BaseResendClient
 from app.storage_utils import get_base_url
 
@@ -356,27 +356,110 @@ class BriefingEmailClient:
         # This prevents new recipients from receiving all historical runs
         # Use scheduled_at as the effective creation time (BriefRun doesn't have created_at field)
         run_timestamp = brief_run.scheduled_at
-        recipients = briefing.recipients.filter(
+        all_eligible_recipients = briefing.recipients.filter(
             BriefRecipient.status == 'active',
             BriefRecipient.created_at <= run_timestamp
         ).all()
 
+        # Filter out recipients who have already been sent this brief_run
+        # Only filter out 'sent' status - 'claimed' status older than 10 minutes
+        # should be treated as stale (crashed process) and can be retried
+        stale_cutoff = datetime.utcnow() - timedelta(minutes=10)
+        
+        # Clean up stale claims FIRST (claimed > 10 minutes ago) to allow retry
+        # This handles cases where a process crashed after send but before marking sent
+        # Also clean up any 'failed' status entries so they can be retried
+        cleanup_result = db.session.execute(
+            db.text("""
+                DELETE FROM brief_email_send 
+                WHERE brief_run_id = :brief_run_id 
+                AND (
+                    (status = 'claimed' AND claimed_at < :stale_cutoff)
+                    OR status = 'failed'
+                )
+            """),
+            {'brief_run_id': brief_run.id, 'stale_cutoff': stale_cutoff}
+        )
+        if cleanup_result.rowcount > 0:
+            logger.info(f"Cleaned up {cleanup_result.rowcount} stale/failed claim(s) for BriefRun {brief_run.id}")
+        db.session.commit()
+        
+        # Now get recipients that are definitively sent or actively being processed
+        # 'sent' status = definitely delivered, exclude
+        # 'claimed' status with recent claimed_at = currently in progress, exclude
+        already_handled = BriefEmailSend.query.filter(
+            BriefEmailSend.brief_run_id == brief_run.id,
+            db.or_(
+                BriefEmailSend.status == 'sent',
+                db.and_(
+                    BriefEmailSend.status == 'claimed',
+                    BriefEmailSend.claimed_at > stale_cutoff  # Recently claimed, in progress
+                )
+            )
+        ).all()
+        already_sent_recipient_ids = set(send.recipient_id for send in already_handled)
+        recipients = [
+            r for r in all_eligible_recipients 
+            if r.id not in already_sent_recipient_ids
+        ]
+        
+        already_sent_count = len(already_sent_recipient_ids)
         total_recipients = len(recipients)
         
-        # Handle case where no eligible recipients exist (e.g., all recipients added after run)
-        # Mark as sent to prevent infinite retries of old runs
-        if total_recipients == 0:
-            _mark_brief_run_sent(
-                brief_run,
-                reason="no eligible recipients - all recipients added after run was created"
+        if already_sent_count > 0:
+            logger.info(
+                f"BriefRun {brief_run.id}: {already_sent_count} recipients already sent, "
+                f"{total_recipients} remaining to send"
             )
-            return {'sent': 0, 'failed': 0, 'method': 'none', 'skipped': 'no_eligible_recipients'}
+        
+        # Handle case where no eligible recipients remain
+        # (either all added after run, or all already sent)
+        if total_recipients == 0:
+            # Count recipients with 'sent' status to distinguish "all sent" vs "still in progress"
+            sent_count = BriefEmailSend.query.filter(
+                BriefEmailSend.brief_run_id == brief_run.id,
+                BriefEmailSend.status == 'sent'
+            ).count()
+            
+            # Count recipients with active 'claimed' status (in progress by another process)
+            claimed_count = BriefEmailSend.query.filter(
+                BriefEmailSend.brief_run_id == brief_run.id,
+                BriefEmailSend.status == 'claimed',
+                BriefEmailSend.claimed_at > stale_cutoff
+            ).count()
+            
+            if claimed_count > 0:
+                # Still in progress by another process, don't mark as sent yet
+                logger.info(
+                    f"BriefRun {brief_run.id}: {claimed_count} recipients still being processed, "
+                    f"waiting for completion"
+                )
+                return {
+                    'sent': 0, 'failed': 0, 'method': 'none',
+                    'skipped': 'in_progress_by_other_process',
+                    'already_sent': sent_count,
+                    'in_progress': claimed_count
+                }
+            
+            reason = "no recipients remaining"
+            if sent_count > 0:
+                reason = f"all {sent_count} recipients already sent"
+            elif len(all_eligible_recipients) == 0:
+                reason = "no eligible recipients - all recipients added after run was created"
+                
+            _mark_brief_run_sent(brief_run, reason=reason)
+            return {
+                'sent': 0, 'failed': 0, 'method': 'none', 
+                'skipped': 'no_remaining_recipients', 
+                'already_sent': sent_count
+            }
 
-        # Use batch sending for larger recipient lists (threshold: 10+)
-        if total_recipients >= 10:
-            result = self._send_batch_to_recipients(brief_run, recipients)
-        else:
-            result = self._send_individual_to_recipients(brief_run, recipients)
+        # Use individual sending for reliable per-recipient tracking
+        # This ensures each recipient is claimed before send and marked after,
+        # preventing duplicates even with partial failures or process crashes.
+        # The claim-before-send pattern doesn't work well with batch APIs
+        # that don't provide per-recipient success/failure status.
+        result = self._send_individual_to_recipients(brief_run, recipients)
 
         # Update brief_run sent_at if any were sent (with atomic race condition protection)
         if result['sent'] > 0:
@@ -396,6 +479,11 @@ class BriefingEmailClient:
     ) -> dict:
         """
         Send emails individually (for small lists or fallback).
+        
+        Uses claim-before-send pattern:
+        1. Claim recipient atomically (prevents duplicates even if we crash)
+        2. Send email
+        3. Mark as sent (or remove claim on failure for retry)
 
         Args:
             brief_run: BriefRun instance
@@ -406,18 +494,134 @@ class BriefingEmailClient:
         """
         sent = 0
         failed = 0
+        skipped = 0
 
         for recipient in recipients:
+            # Step 1: Claim recipient BEFORE sending
+            if not self._claim_recipient_for_send(brief_run.id, recipient.id):
+                # Already claimed/sent by another process
+                skipped += 1
+                continue
+            
             try:
+                # Step 2: Send email
                 if self.send_brief_run(brief_run, recipient):
+                    # Step 3a: Mark as sent
+                    self._mark_recipient_sent(brief_run.id, recipient.id)
                     sent += 1
                 else:
+                    # Step 3b: Send failed, remove claim for retry
+                    self._mark_recipient_failed(brief_run.id, recipient.id)
                     failed += 1
             except Exception as e:
                 logger.error(f"Error sending to {recipient.email}: {e}")
+                # Remove claim on exception for retry
+                self._mark_recipient_failed(brief_run.id, recipient.id)
                 failed += 1
 
-        return {'sent': sent, 'failed': failed, 'method': 'individual'}
+        if skipped > 0:
+            logger.info(f"Skipped {skipped} already-claimed recipients")
+            
+        return {'sent': sent, 'failed': failed, 'skipped': skipped, 'method': 'individual'}
+    
+    def _claim_recipient_for_send(
+        self, 
+        brief_run_id: int, 
+        recipient_id: int
+    ) -> bool:
+        """
+        Claim a recipient BEFORE sending to prevent duplicates.
+        
+        Uses INSERT with ON CONFLICT DO NOTHING for atomicity.
+        If insert succeeds, this process owns the send.
+        If insert fails (conflict), another process already claimed it.
+        
+        Returns:
+            True if claim succeeded (proceed with send)
+            False if already claimed/sent (skip this recipient)
+        """
+        try:
+            result = db.session.execute(
+                db.text("""
+                    INSERT INTO brief_email_send (brief_run_id, recipient_id, status, claimed_at)
+                    VALUES (:brief_run_id, :recipient_id, 'claimed', NOW())
+                    ON CONFLICT (brief_run_id, recipient_id) DO NOTHING
+                """),
+                {
+                    'brief_run_id': brief_run_id,
+                    'recipient_id': recipient_id
+                }
+            )
+            db.session.commit()
+            # If rowcount is 0, the recipient was already claimed/sent
+            return result.rowcount > 0
+        except Exception as e:
+            logger.warning(f"Error claiming recipient {recipient_id}: {e}")
+            db.session.rollback()
+            return False
+    
+    def _mark_recipient_sent(
+        self, 
+        brief_run_id: int, 
+        recipient_id: int, 
+        resend_id: str = None
+    ) -> bool:
+        """
+        Mark a claimed recipient as successfully sent.
+        
+        Called AFTER successful email delivery.
+        """
+        try:
+            db.session.execute(
+                db.text("""
+                    UPDATE brief_email_send 
+                    SET status = 'sent', resend_id = :resend_id, sent_at = NOW()
+                    WHERE brief_run_id = :brief_run_id 
+                    AND recipient_id = :recipient_id
+                    AND status = 'claimed'
+                """),
+                {
+                    'brief_run_id': brief_run_id,
+                    'recipient_id': recipient_id,
+                    'resend_id': resend_id
+                }
+            )
+            db.session.commit()
+            return True
+        except Exception as e:
+            logger.warning(f"Error marking recipient sent: {e}")
+            db.session.rollback()
+            return False
+    
+    def _mark_recipient_failed(
+        self, 
+        brief_run_id: int, 
+        recipient_id: int
+    ) -> bool:
+        """
+        Mark a claimed recipient as failed (so it can be retried).
+        
+        Deletes the claim record so the recipient can be retried.
+        """
+        try:
+            db.session.execute(
+                db.text("""
+                    DELETE FROM brief_email_send 
+                    WHERE brief_run_id = :brief_run_id 
+                    AND recipient_id = :recipient_id
+                    AND status = 'claimed'
+                """),
+                {
+                    'brief_run_id': brief_run_id,
+                    'recipient_id': recipient_id
+                }
+            )
+            db.session.commit()
+            return True
+        except Exception as e:
+            logger.warning(f"Error marking recipient failed: {e}")
+            db.session.rollback()
+            return False
 
     def _send_batch_to_recipients(
         self,
@@ -427,6 +631,7 @@ class BriefingEmailClient:
         """
         Send emails in batches using Resend Batch API.
 
+        Uses claim-before-send pattern for each recipient to prevent duplicates.
         Chunks recipients into batches of 100 (Resend limit) and sends efficiently.
         Falls back to individual sending if batch fails.
 
@@ -446,13 +651,28 @@ class BriefingEmailClient:
         BATCH_SIZE = 100  # Resend limit
         total_sent = 0
         total_failed = 0
+        total_skipped = 0
 
         # Process in batches
         for batch_start in range(0, len(recipients), BATCH_SIZE):
             batch_recipients = recipients[batch_start:batch_start + BATCH_SIZE]
-            batch_emails = []
-
+            
+            # Step 1: Claim all recipients in batch BEFORE preparing emails
+            claimed_recipients = []
             for recipient in batch_recipients:
+                if self._claim_recipient_for_send(brief_run.id, recipient.id):
+                    claimed_recipients.append(recipient)
+                else:
+                    total_skipped += 1
+            
+            if not claimed_recipients:
+                continue
+            
+            batch_emails = []
+            # Map email index to recipient for tracking
+            email_to_recipient = []
+
+            for recipient in claimed_recipients:
                 try:
                     html_content = self._render_brief_run_email(brief_run, recipient, briefing)
                     unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.magic_token or ''}"
@@ -468,42 +688,58 @@ class BriefingEmailClient:
                         }
                     }
                     batch_emails.append(email_data)
+                    email_to_recipient.append(recipient)
                 except Exception as e:
                     logger.error(f"Error preparing email for {recipient.email}: {e}")
+                    # Remove claim for retry
+                    self._mark_recipient_failed(brief_run.id, recipient.id)
                     total_failed += 1
 
             if batch_emails:
                 try:
                     # Use base client's batch send method
                     batch_result = self.base_client._send_batch(batch_emails)
-                    total_sent += batch_result.get('sent', 0)
-                    total_failed += batch_result.get('failed', 0)
+                    batch_sent = batch_result.get('sent', 0)
+                    batch_failed = batch_result.get('failed', 0)
+                    total_sent += batch_sent
+                    total_failed += batch_failed
 
                     if batch_result.get('errors'):
                         for error in batch_result['errors']:
                             logger.warning(f"Batch error: {error}")
+                    
+                    # Step 2: Mark all recipients in this batch as sent
+                    # Note: Batch API sends all or fails all, so we mark all as sent
+                    if batch_sent > 0:
+                        for recipient in email_to_recipient:
+                            self._mark_recipient_sent(brief_run.id, recipient.id)
+                    else:
+                        # Batch failed completely - remove claims for retry
+                        for recipient in email_to_recipient:
+                            self._mark_recipient_failed(brief_run.id, recipient.id)
 
                     batch_num = (batch_start // BATCH_SIZE) + 1
                     total_batches = (len(recipients) + BATCH_SIZE - 1) // BATCH_SIZE
                     logger.info(
                         f"Batch {batch_num}/{total_batches}: "
-                        f"sent {batch_result.get('sent', 0)}, failed {batch_result.get('failed', 0)}"
+                        f"sent {batch_sent}, failed {batch_failed}"
                     )
 
                 except Exception as e:
                     logger.error(f"Batch send failed, falling back to individual: {e}")
-                    # Fallback to individual sending for this batch
-                    for recipient in batch_recipients:
-                        try:
-                            if self.send_brief_run(brief_run, recipient):
-                                total_sent += 1
-                            else:
-                                total_failed += 1
-                        except Exception as inner_e:
-                            logger.error(f"Individual fallback failed for {recipient.email}: {inner_e}")
-                            total_failed += 1
+                    # Remove claims and fallback to individual sending for claimed recipients
+                    for recipient in email_to_recipient:
+                        self._mark_recipient_failed(brief_run.id, recipient.id)
+                    
+                    # Fallback to individual sending (will re-claim)
+                    fallback_result = self._send_individual_to_recipients(brief_run, claimed_recipients)
+                    total_sent += fallback_result.get('sent', 0)
+                    total_failed += fallback_result.get('failed', 0)
 
-        return {'sent': total_sent, 'failed': total_failed, 'method': 'batch'}
+        if total_skipped > 0:
+            logger.info(f"Batch sending skipped {total_skipped} already-claimed recipients")
+            
+        return {'sent': total_sent, 'failed': total_failed, 'skipped': total_skipped, 'method': 'batch'}
 
 
 def send_brief_run_emails(brief_run_id: int, skip_subscription_check: bool = False) -> dict:

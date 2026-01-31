@@ -1516,6 +1516,29 @@ def init_scheduler(app):
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error recovering stuck sends: {e}", exc_info=True)
+            
+            # Cleanup stale email claims (recipients stuck in 'claimed' status > 15 minutes)
+            # This is a safety net for crashes between send and mark_sent
+            try:
+                from app.models import BriefEmailSend
+                stale_claim_cutoff = datetime.utcnow() - timedelta(minutes=15)
+                
+                result = db.session.execute(
+                    update(BriefEmailSend)
+                    .where(BriefEmailSend.status == 'claimed')
+                    .where(BriefEmailSend.claimed_at < stale_claim_cutoff)
+                    .values(status='failed')  # Mark as failed so they can be retried
+                )
+                db.session.commit()
+                
+                if result.rowcount > 0:
+                    logger.warning(
+                        f"Marked {result.rowcount} stale email claims as failed for retry"
+                    )
+                    
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Error cleaning up stale email claims: {e}", exc_info=True)
 
     @scheduler.scheduled_job('cron', hour=18, minute=0, id='auto_publish_brief')
     def auto_publish_daily_brief():

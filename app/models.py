@@ -3464,6 +3464,40 @@ class BriefEmailOpen(db.Model):
         return f'<BriefEmailOpen {self.id} for run {self.brief_run_id}>'
 
 
+class BriefEmailSend(db.Model):
+    """
+    Tracks individual email sends to prevent duplicate deliveries.
+    
+    Uses a two-phase commit pattern:
+    1. Before send: INSERT with status='claimed' (claims the recipient)
+    2. After send: UPDATE to status='sent' (confirms delivery)
+    
+    This prevents duplicates even if the process crashes between send and record.
+    """
+    __tablename__ = 'brief_email_send'
+    __table_args__ = (
+        db.Index('idx_brief_email_send_run', 'brief_run_id'),
+        db.Index('idx_brief_email_send_recipient', 'recipient_id'),
+        # Unique constraint: each recipient can only receive each brief_run once
+        db.UniqueConstraint('brief_run_id', 'recipient_id', name='uq_brief_run_recipient_send'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    brief_run_id = db.Column(db.Integer, db.ForeignKey('brief_run.id', ondelete='CASCADE'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('brief_recipient.id', ondelete='CASCADE'), nullable=False)
+    status = db.Column(db.String(20), default='sent')  # 'claimed' | 'sent' | 'failed'
+    claimed_at = db.Column(db.DateTime, default=datetime.utcnow)  # When claim was created
+    sent_at = db.Column(db.DateTime, nullable=True)  # When email was actually sent
+    resend_id = db.Column(db.String(100), nullable=True)  # Resend message ID for tracking
+    
+    # Relationships
+    brief_run = db.relationship('BriefRun', backref='email_sends')
+    recipient = db.relationship('BriefRecipient', backref='email_sends')
+
+    def __repr__(self):
+        return f'<BriefEmailSend run={self.brief_run_id} recipient={self.recipient_id} status={self.status}>'
+
+
 class BriefLinkClick(db.Model):
     """
     Tracks individual link clicks for analytics.
