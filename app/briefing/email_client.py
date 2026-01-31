@@ -407,11 +407,12 @@ class BriefingEmailClient:
                 f"(exceeded {max_attempts} attempts) for BriefRun {brief_run.id}"
             )
 
-        # Reset failed records (under max attempts) back to allow retry
-        # This allows the claim mechanism to pick them up again
+        # Reset failed records (under max attempts) to 'pending' to allow retry
+        # The claim mechanism will update pending -> claimed
         retry_result = db.session.execute(
             db.text("""
-                DELETE FROM brief_email_send
+                UPDATE brief_email_send
+                SET status = 'pending'
                 WHERE brief_run_id = :brief_run_id
                 AND status = 'failed'
                 AND attempt_count < :max_attempts
@@ -419,7 +420,7 @@ class BriefingEmailClient:
             {'brief_run_id': brief_run.id, 'max_attempts': max_attempts}
         )
         if retry_result.rowcount > 0:
-            logger.info(f"Cleared {retry_result.rowcount} failed record(s) for retry in BriefRun {brief_run.id}")
+            logger.info(f"Reset {retry_result.rowcount} failed record(s) to pending for retry in BriefRun {brief_run.id}")
 
         db.session.commit()
         
@@ -579,20 +580,27 @@ class BriefingEmailClient:
         """
         Claim a recipient BEFORE sending to prevent duplicates.
         
-        Uses INSERT with ON CONFLICT DO NOTHING for atomicity.
-        If insert succeeds, this process owns the send.
-        If insert fails (conflict), another process already claimed it.
+        Uses UPSERT pattern:
+        - New recipient: INSERT with status='claimed'
+        - Pending retry: UPDATE status='pending' -> 'claimed'
+        - Already claimed/sent: DO NOTHING
         
         Returns:
             True if claim succeeded (proceed with send)
             False if already claimed/sent (skip this recipient)
         """
         try:
+            # Use UPSERT: insert if new, or update if pending (retry case)
+            # DO NOTHING if already claimed, sent, or permanently_failed
             result = db.session.execute(
                 db.text("""
-                    INSERT INTO brief_email_send (brief_run_id, recipient_id, status, claimed_at)
-                    VALUES (:brief_run_id, :recipient_id, 'claimed', NOW())
-                    ON CONFLICT (brief_run_id, recipient_id) DO NOTHING
+                    INSERT INTO brief_email_send (brief_run_id, recipient_id, status, claimed_at, attempt_count)
+                    VALUES (:brief_run_id, :recipient_id, 'claimed', NOW(), 1)
+                    ON CONFLICT (brief_run_id, recipient_id) 
+                    DO UPDATE SET 
+                        status = 'claimed',
+                        claimed_at = NOW()
+                    WHERE brief_email_send.status = 'pending'
                 """),
                 {
                     'brief_run_id': brief_run_id,
@@ -600,7 +608,7 @@ class BriefingEmailClient:
                 }
             )
             db.session.commit()
-            # If rowcount is 0, the recipient was already claimed/sent
+            # If rowcount is 0, the recipient was already claimed/sent/permanently_failed
             return result.rowcount > 0
         except Exception as e:
             logger.warning(f"Error claiming recipient {recipient_id}: {e}")

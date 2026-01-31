@@ -91,14 +91,17 @@ PostgreSQL is the primary database, optimized with connection pooling, health ch
 
 ## Recent Changes (January 2026)
 
-### Duplicate Email Prevention System (Jan 31)
+### Duplicate Email Prevention & Retry System (Jan 31)
 - Implemented comprehensive multi-layer duplicate email prevention for briefing emails:
   - **Brief-level atomic claim**: BriefRun status='approved'→'sending' with `claimed_at` timestamp and `send_attempts` counter
   - **Per-recipient tracking**: BriefEmailSend table with claim-before-send pattern prevents duplicates even on process crashes
-  - **Stale claim recovery**: Cleanup runs before each send (10 min cutoff) and via scheduler (15 min cutoff)
+  - **Stale claim recovery**: Dynamic timeout (15 min + 1 min per 100 recipients), stale claims marked 'failed' for retry
   - **Completion gating**: Brief only marked as 'sent' when all recipients resolved (no active claims in progress)
+- **Retry limiting**: MAX_SEND_ATTEMPTS=3 with `attempt_count` and `failure_reason` tracking
+  - Failed records kept for audit trail, reset to 'pending' for retry (preserves attempt_count)
+  - Records exceeding max attempts marked 'permanently_failed' and excluded from future retries
+  - UPSERT claim mechanism: INSERT new or UPDATE pending→claimed while preserving attempt_count
 - Individual sends used instead of batch API for reliable per-recipient status tracking
-- Failed/stale claims are deleted to allow retry on next send attempt
 
 ### Email Analytics Tracking Fix (Jan 27)
 - Fixed missing email analytics: "sent" events were not being recorded since Jan 19
