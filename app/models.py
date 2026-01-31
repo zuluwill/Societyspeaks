@@ -3340,6 +3340,10 @@ class BriefRun(db.Model):
     scheduled_at = db.Column(db.DateTime, nullable=False)  # When it should run
     generated_at = db.Column(db.DateTime, nullable=True)
     sent_at = db.Column(db.DateTime, nullable=True)
+    
+    # Send claim tracking (for preventing duplicate sends)
+    claimed_at = db.Column(db.DateTime, nullable=True)  # When a process claimed this for sending
+    send_attempts = db.Column(db.Integer, default=0)  # Number of send attempts
 
     # Analytics tracking
     emails_sent = db.Column(db.Integer, default=0)  # Count of emails sent
