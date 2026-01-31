@@ -33,14 +33,24 @@ def _claim_brief_run_for_sending(brief_run: BriefRun) -> bool:
         True if this process successfully claimed it for sending,
         False if another process already claimed it or it was already sent
     """
+    from sqlalchemy import text
+    
     try:
-        # Atomically change status from 'approved' to 'sending'
+        # Atomically:
+        # 1. Change status from 'approved' to 'sending'
+        # 2. Set claimed_at to now (for recovery mechanism)
+        # 3. Increment send_attempts (for monitoring/debugging)
         # This prevents other processes from picking up the same brief_run
         result = db.session.execute(
             update(BriefRun)
             .where(BriefRun.id == brief_run.id)
             .where(BriefRun.status == 'approved')  # Only claim if still approved
-            .values(status='sending')
+            .where(BriefRun.sent_at == None)  # Extra safety: only if not already sent
+            .values(
+                status='sending',
+                claimed_at=datetime.utcnow(),
+                send_attempts=BriefRun.send_attempts + 1
+            )
         )
         db.session.commit()
 
@@ -49,11 +59,15 @@ def _claim_brief_run_for_sending(brief_run: BriefRun) -> bool:
             db.session.refresh(brief_run)
             logger.warning(
                 f"BriefRun {brief_run.id} could not be claimed for sending "
-                f"(current status: {brief_run.status}). Another process may be handling it."
+                f"(current status: {brief_run.status}, sent_at: {brief_run.sent_at}). "
+                f"Another process may be handling it."
             )
             return False
 
-        logger.info(f"Claimed BriefRun {brief_run.id} for sending (status -> 'sending')")
+        logger.info(
+            f"Claimed BriefRun {brief_run.id} for sending "
+            f"(status -> 'sending', attempt #{brief_run.send_attempts + 1})"
+        )
         return True
 
     except Exception as e:

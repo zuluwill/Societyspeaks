@@ -1484,21 +1484,29 @@ def init_scheduler(app):
             except Exception as e:
                 logger.error(f"Error in approved BriefRuns sender: {e}", exc_info=True)
             
-            # Recovery: Reset any runs stuck in 'sending' status for too long (>10 minutes)
+            # Recovery: Reset any runs stuck in 'sending' status for too long (>15 minutes)
             # This handles cases where a process crashed mid-send
+            # Using claimed_at (when the send was claimed) instead of scheduled_at for accuracy
             try:
-                from sqlalchemy import update
-                stuck_cutoff = datetime.utcnow() - timedelta(minutes=10)
+                from sqlalchemy import update, or_
+                stuck_cutoff = datetime.utcnow() - timedelta(minutes=15)
                 
                 # Find runs that are stuck in 'sending' status
-                # We check if they've been in this state too long by using the scheduled_at
-                # as a proxy (sending should complete within minutes of scheduled time)
+                # Check claimed_at to determine how long they've been in 'sending' state
+                # Also handle legacy runs without claimed_at (fall back to scheduled_at)
                 result = db.session.execute(
                     update(BriefRun)
                     .where(BriefRun.status == 'sending')
                     .where(BriefRun.sent_at == None)
-                    .where(BriefRun.scheduled_at < stuck_cutoff)
-                    .values(status='approved')
+                    .where(
+                        or_(
+                            # Primary: check claimed_at if available
+                            BriefRun.claimed_at < stuck_cutoff,
+                            # Fallback for legacy runs without claimed_at
+                            (BriefRun.claimed_at == None) & (BriefRun.scheduled_at < stuck_cutoff)
+                        )
+                    )
+                    .values(status='approved', claimed_at=None)  # Clear claimed_at for retry
                 )
                 db.session.commit()
                 
