@@ -6,6 +6,7 @@ Uses readability algorithms to extract article content.
 """
 
 import logging
+import re
 import socket
 import ipaddress
 import requests
@@ -14,6 +15,117 @@ from datetime import datetime
 from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
+
+# Patterns to identify cookie-related content in text
+COOKIE_CONTENT_PATTERNS = [
+    # Cookie table patterns (common on privacy policy pages)
+    re.compile(r'\bCookie[:\s]*\w+[\s\n]+Duration[:\s]*\d+\s*(year|month|day|hour|minute|session)', re.IGNORECASE),
+    re.compile(r'\bDuration[:\s]*\d+\s*(year|month|day)[\s\n]+Description', re.IGNORECASE),
+    re.compile(r'No description available\.?[\s\n]+Cookie', re.IGNORECASE),
+    # Cookie consent text
+    re.compile(r'This (website|site) uses cookies', re.IGNORECASE),
+    re.compile(r'We use cookies to', re.IGNORECASE),
+    re.compile(r'By (continuing|clicking|using)', re.IGNORECASE),
+    re.compile(r'Accept (all )?cookies', re.IGNORECASE),
+    re.compile(r'Cookie (settings|preferences|policy)', re.IGNORECASE),
+    re.compile(r'Manage (cookie|your) preferences', re.IGNORECASE),
+]
+
+# CSS classes and IDs commonly used for cookie banners
+COOKIE_ELEMENT_SELECTORS = [
+    'cookie', 'consent', 'gdpr', 'privacy-banner', 'cookie-banner',
+    'cookie-notice', 'cookie-consent', 'cookie-policy', 'cookie-popup',
+    'cc-banner', 'cc-window', 'ccm-', 'cookieconsent', 'cookie-law',
+    'eu-cookie', 'onetrust', 'trustarc', 'cookiebot', 'termly',
+    'osano', 'complianz', 'iubenda', 'quantcast', 'usercentrics'
+]
+
+
+def remove_cookie_elements(soup):
+    """
+    Remove cookie consent banners and related elements from BeautifulSoup.
+    
+    Args:
+        soup: BeautifulSoup object
+    """
+    # Remove elements by common cookie-related class/id patterns
+    for selector in COOKIE_ELEMENT_SELECTORS:
+        # Find by class containing the selector
+        for elem in soup.find_all(class_=lambda x: x and selector in str(x).lower()):
+            elem.decompose()
+        # Find by id containing the selector
+        for elem in soup.find_all(id=lambda x: x and selector in str(x).lower()):
+            elem.decompose()
+        # Find by data attributes
+        for elem in soup.find_all(attrs={'data-cookie': True}):
+            elem.decompose()
+        for elem in soup.find_all(attrs={'data-consent': True}):
+            elem.decompose()
+    
+    # Remove common cookie banner elements by role
+    for elem in soup.find_all(attrs={'role': 'dialog'}):
+        text = elem.get_text().lower()
+        if 'cookie' in text or 'consent' in text or 'privacy' in text:
+            elem.decompose()
+    
+    # Remove elements with aria-label mentioning cookies
+    for elem in soup.find_all(attrs={'aria-label': lambda x: x and 'cookie' in str(x).lower()}):
+        elem.decompose()
+
+
+def clean_cookie_content_from_text(text: str) -> str:
+    """
+    Remove cookie policy content from extracted text.
+    
+    Args:
+        text: Extracted article text
+        
+    Returns:
+        Cleaned text with cookie content removed
+    """
+    if not text:
+        return text
+    
+    lines = text.split('\n')
+    cleaned_lines = []
+    skip_next = 0
+    
+    for i, line in enumerate(lines):
+        if skip_next > 0:
+            skip_next -= 1
+            continue
+            
+        # Skip lines that match cookie patterns
+        is_cookie_content = False
+        for pattern in COOKIE_CONTENT_PATTERNS:
+            if pattern.search(line):
+                is_cookie_content = True
+                # Skip a few lines after cookie content (likely part of cookie table)
+                skip_next = 3
+                break
+        
+        # Also skip lines that look like cookie table entries
+        line_lower = line.lower().strip()
+        if any([
+            line_lower.startswith('cookie:'),
+            line_lower.startswith('duration:'),
+            line_lower.startswith('description:'),
+            line_lower == 'no description available.',
+            line_lower == 'no description available',
+            re.match(r'^\d+\s*(year|month|day|hour|minute|session)s?$', line_lower),
+            re.match(r'^(necessary|functional|analytics|performance|marketing|advertising)\s*cookies?$', line_lower),
+        ]):
+            is_cookie_content = True
+            skip_next = 2
+        
+        if not is_cookie_content:
+            cleaned_lines.append(line)
+    
+    # Clean up multiple consecutive empty lines
+    result = '\n'.join(cleaned_lines)
+    result = re.sub(r'\n{3,}', '\n\n', result)
+    
+    return result.strip()
 
 
 # Blocked IP ranges for SSRF protection
@@ -141,6 +253,15 @@ def scrape_webpage(url: str, timeout: int = 10) -> Optional[Dict]:
         
         html_content = response.text
         
+        # Pre-process HTML to remove cookie elements before extraction
+        try:
+            from bs4 import BeautifulSoup
+            pre_soup = BeautifulSoup(html_content, 'html.parser')
+            remove_cookie_elements(pre_soup)
+            html_content = str(pre_soup)
+        except Exception as e:
+            logger.debug(f"Pre-processing failed for {url}: {e}")
+        
         # Try readability-lxml first (better extraction)
         try:
             from readability import Document
@@ -152,7 +273,14 @@ def scrape_webpage(url: str, timeout: int = 10) -> Optional[Dict]:
             # Clean HTML tags from content
             from bs4 import BeautifulSoup
             soup = BeautifulSoup(content, 'html.parser')
+            
+            # Remove any remaining cookie elements
+            remove_cookie_elements(soup)
+            
             clean_content = soup.get_text(separator='\n', strip=True)
+            
+            # Clean cookie content from extracted text
+            clean_content = clean_cookie_content_from_text(clean_content)
             
             # Try to extract published date from meta tags
             published_at = None
@@ -194,6 +322,9 @@ def scrape_webpage(url: str, timeout: int = 10) -> Optional[Dict]:
                 for script in soup(["script", "style", "nav", "header", "footer", "aside"]):
                     script.decompose()
                 
+                # Remove cookie consent elements
+                remove_cookie_elements(soup)
+                
                 # Try to find main content
                 main_content = soup.find('main') or soup.find('article') or soup.find('body')
                 
@@ -201,6 +332,9 @@ def scrape_webpage(url: str, timeout: int = 10) -> Optional[Dict]:
                     content = main_content.get_text(separator='\n', strip=True)
                 else:
                     content = soup.get_text(separator='\n', strip=True)
+                
+                # Clean cookie content from text
+                content = clean_cookie_content_from_text(content)
                 
                 # Get title
                 title_tag = soup.find('title')
