@@ -390,9 +390,9 @@
                     {% endif %}
                     {% endif %}
 
-                    <!-- Original News Sources -->
-                    {% if item.trending_topic and item.trending_topic.articles %}
-                    {% set topic_articles = item.trending_topic.articles.all()[:5] %}
+                    <!-- Original News Sources (topic_articles_by_topic_id avoids N+1 when provided by view) -->
+                    {% if item.trending_topic %}
+                    {% set topic_articles = (topic_articles_by_topic_id.get(item.trending_topic.id, [])[:5] if topic_articles_by_topic_id is defined else item.trending_topic.articles.all()[:5]) %}
                     {% if topic_articles %}
                     <div class="mb-6">
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">📰 Read the Original Sources</p>

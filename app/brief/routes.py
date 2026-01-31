@@ -17,9 +17,20 @@ from flask_login import current_user
 from sqlalchemy import func
 from datetime import date, datetime, timedelta
 
+from sqlalchemy.orm import joinedload
+
 from app.brief import brief_bp
 from app import db, limiter, csrf
-from app.models import DailyBrief, BriefItem, DailyBriefSubscriber, BriefTeam, User, EmailEvent
+from app.models import (
+    DailyBrief,
+    BriefItem,
+    DailyBriefSubscriber,
+    BriefTeam,
+    User,
+    EmailEvent,
+    TrendingTopicArticle,
+    NewsArticle,
+)
 from app.brief.email_client import send_brief_to_subscriber, ResendClient
 from app.trending.conversion_tracking import track_social_click
 from app.decorators import admin_required
@@ -76,6 +87,39 @@ def get_subscriber_status():
         is_subscriber = True
 
     return subscriber, is_subscriber
+
+
+def _items_with_topic_articles(brief):
+    """
+    Load brief items with trending_topic and topic articles (NewsArticle) eager-loaded
+    to avoid N+1 queries when rendering the brief view.
+
+    Returns (items, topic_articles_by_topic_id) for use in render_template.
+    Articles are ordered by similarity_score (highest first) for consistent display.
+    """
+    items = (
+        BriefItem.query.filter_by(brief_id=brief.id)
+        .order_by(BriefItem.position)
+        .options(joinedload(BriefItem.trending_topic))
+        .all()
+    )
+    topic_ids = [i.trending_topic_id for i in items if i.trending_topic_id]
+    topic_articles_by_topic_id = {}
+    if topic_ids:
+        topic_article_list = (
+            TrendingTopicArticle.query.filter(TrendingTopicArticle.topic_id.in_(topic_ids))
+            .options(
+                joinedload(TrendingTopicArticle.article).joinedload(NewsArticle.source)
+            )
+            .order_by(
+                TrendingTopicArticle.topic_id,  # Group by topic for consistent slicing
+                TrendingTopicArticle.similarity_score.desc().nullslast()  # Most relevant first
+            )
+            .all()
+        )
+        for ta in topic_article_list:
+            topic_articles_by_topic_id.setdefault(ta.topic_id, []).append(ta)
+    return items, topic_articles_by_topic_id
 
 
 def _process_subscription(
@@ -238,11 +282,12 @@ def today():
         ).order_by(DailyBrief.date.desc()).first()
         
         if latest_brief:
-            items = latest_brief.items.order_by(BriefItem.position).all()
+            items, topic_articles_by_topic_id = _items_with_topic_articles(latest_brief)
             return render_template(
                 'brief/view.html',
                 brief=latest_brief,
                 items=items,
+                topic_articles_by_topic_id=topic_articles_by_topic_id,
                 subscriber=subscriber,
                 is_subscriber=is_subscriber,
                 is_today=False,
@@ -253,13 +298,14 @@ def today():
         else:
             return render_template('brief/no_brief.html')
 
-    # Get items ordered by position
-    items = brief.items.order_by(BriefItem.position).all()
+    # Get items with topic and article data eager-loaded (avoids N+1)
+    items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
 
     return render_template(
         'brief/view.html',
         brief=brief,
         items=items,
+        topic_articles_by_topic_id=topic_articles_by_topic_id,
         subscriber=subscriber,
         is_subscriber=is_subscriber,
         is_today=True,
@@ -287,12 +333,13 @@ def view_date(date_str):
         flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
         return render_template('brief/no_brief.html', requested_date=brief_date)
 
-    items = brief.items.order_by(BriefItem.position).all()
+    items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
 
     return render_template(
         'brief/view.html',
         brief=brief,
         items=items,
+        topic_articles_by_topic_id=topic_articles_by_topic_id,
         subscriber=subscriber,
         is_subscriber=is_subscriber,
         is_today=(brief_date == date.today()),
