@@ -1487,9 +1487,11 @@ def init_scheduler(app):
             # Recovery: Reset any runs stuck in 'sending' status for too long (>15 minutes)
             # This handles cases where a process crashed mid-send
             # Using claimed_at (when the send was claimed) instead of scheduled_at for accuracy
+            from app import db
+            from sqlalchemy import update, or_
+            from app.models import BriefEmailSend
+            
             try:
-                from app import db
-                from sqlalchemy import update, or_
                 stuck_cutoff = datetime.utcnow() - timedelta(minutes=15)
                 
                 # Find runs that are stuck in 'sending' status
@@ -1511,8 +1513,9 @@ def init_scheduler(app):
                 )
                 db.session.commit()
                 
-                if result.rowcount > 0:
-                    logger.warning(f"Reset {result.rowcount} stuck 'sending' BriefRuns back to 'approved'")
+                rows_affected = result.rowcount if hasattr(result, 'rowcount') else 0
+                if rows_affected > 0:
+                    logger.warning(f"Reset {rows_affected} stuck 'sending' BriefRuns back to 'approved'")
                     
             except Exception as e:
                 db.session.rollback()
@@ -1521,8 +1524,6 @@ def init_scheduler(app):
             # Cleanup stale email claims (recipients stuck in 'claimed' status > 15 minutes)
             # This is a safety net for crashes between send and mark_sent
             try:
-                from app import db
-                from app.models import BriefEmailSend
                 stale_claim_cutoff = datetime.utcnow() - timedelta(minutes=15)
 
                 # Mark stale claims as failed with reason and increment attempt_count
@@ -1539,9 +1540,10 @@ def init_scheduler(app):
                 )
                 db.session.commit()
 
-                if stale_result.rowcount > 0:
+                stale_rows = stale_result.rowcount if hasattr(stale_result, 'rowcount') else 0
+                if stale_rows > 0:
                     logger.warning(
-                        f"Marked {stale_result.rowcount} stale email claims as failed for retry"
+                        f"Marked {stale_rows} stale email claims as failed for retry"
                     )
 
                 # Mark records that exceeded max attempts as permanently_failed
@@ -1557,9 +1559,10 @@ def init_scheduler(app):
                 )
                 db.session.commit()
 
-                if permanent_result.rowcount > 0:
+                permanent_rows = permanent_result.rowcount if hasattr(permanent_result, 'rowcount') else 0
+                if permanent_rows > 0:
                     logger.warning(
-                        f"Marked {permanent_result.rowcount} email sends as permanently_failed "
+                        f"Marked {permanent_rows} email sends as permanently_failed "
                         f"(exceeded {max_attempts} attempts)"
                     )
 
