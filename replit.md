@@ -89,6 +89,15 @@ PostgreSQL is the primary database, optimized with connection pooling, health ch
 ### Geographic Data
 - **Static JSON files**: For country/city data.
 
+## Recent Changes (February 2026)
+
+### Static Asset Object Storage Migration (Feb 1)
+- Moved hero and speaker images from filesystem to Replit Object Storage to prevent OSError [Errno 5] I/O errors
+- New route `/assets/<path:filename>` serves images from object storage with 1-hour cache headers
+- Upload script `scripts/upload_static_assets.py` manages asset synchronization
+- Templates updated to use object storage route instead of static file references
+- This architectural change makes the app stateless for these assets and eliminates disk I/O failure modes
+
 ## Recent Changes (January 2026)
 
 ### Duplicate Email Prevention & Retry System (Jan 31)
