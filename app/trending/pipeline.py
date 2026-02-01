@@ -40,7 +40,9 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     
     if articles:
         try:
-            articles = score_articles_with_llm(articles)
+            # Use no_autoflush to prevent query-invoked autoflush issues during LLM scoring
+            with db.session.no_autoflush:
+                articles = score_articles_with_llm(articles)
             db.session.commit()
         except Exception as e:
             logger.error(f"Error scoring articles: {e}")
@@ -48,15 +50,18 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     
     try:
         from app.models import NewsSource
-        premium_unscored = NewsArticle.query.join(NewsSource).filter(
-            NewsArticle.relevance_score.is_(None),
-            NewsSource.reputation_score >= 0.7,
-            NewsArticle.fetched_at >= datetime.utcnow() - timedelta(days=7)
-        ).all()
+        # Use no_autoflush to prevent autoflush during query
+        with db.session.no_autoflush:
+            premium_unscored = NewsArticle.query.join(NewsSource).filter(
+                NewsArticle.relevance_score.is_(None),
+                NewsSource.reputation_score >= 0.7,
+                NewsArticle.fetched_at >= datetime.utcnow() - timedelta(days=7)
+            ).all()
         
         if premium_unscored:
             logger.info(f"Scoring {len(premium_unscored)} unscored premium source articles")
-            score_articles_with_llm(premium_unscored)
+            with db.session.no_autoflush:
+                score_articles_with_llm(premium_unscored)
             db.session.commit()
     except Exception as e:
         logger.error(f"Error scoring premium articles: {e}")

@@ -26,6 +26,8 @@ def news_feed():
     """Display discussions generated from trending news topics."""
     from app.models import NewsSource
     from sqlalchemy import or_
+    from sqlalchemy.orm import load_only
+    from collections import defaultdict
     
     page = request.args.get('page', 1, type=int)
     topic_filter = request.args.get('topic', None)
@@ -44,15 +46,28 @@ def news_feed():
         view_mode = 'latest'
     
     if view_mode == 'topics' and not topic_filter:
-        # Group discussions by topic for topic-organized view
-        topics_with_discussions = {}
-        for topic in Discussion.TOPICS:
-            topic_discussions = Discussion.query.filter(
-                Discussion.id.in_(news_discussion_ids),
-                Discussion.topic == topic
-            ).order_by(Discussion.created_at.desc()).limit(6).all()
-            if topic_discussions:
-                topics_with_discussions[topic] = topic_discussions
+        # Optimized: Fetch news discussions in a single query and group by topic in Python
+        # This eliminates N+1 queries (one per topic)
+        # Limit to 150 total to prevent unbounded loading (6 per topic * ~15 active topics = 90)
+        all_news_discussions = Discussion.query.options(
+            load_only(
+                Discussion.id, Discussion.title, Discussion.description,
+                Discussion.topic, Discussion.slug, Discussion.created_at,
+                Discussion.participant_count, Discussion.has_native_statements,
+                Discussion.is_featured, Discussion.geographic_scope, Discussion.country
+            )
+        ).filter(
+            Discussion.id.in_(news_discussion_ids)
+        ).order_by(Discussion.created_at.desc()).limit(150).all()
+        
+        # Group by topic and limit to 6 per topic
+        topics_with_discussions = defaultdict(list)
+        for discussion in all_news_discussions:
+            if len(topics_with_discussions[discussion.topic]) < 6:
+                topics_with_discussions[discussion.topic].append(discussion)
+        
+        # Convert to regular dict and filter empty topics
+        topics_with_discussions = {k: v for k, v in topics_with_discussions.items() if v}
         
         return render_template(
             'discussions/news_feed.html',
@@ -66,7 +81,15 @@ def news_feed():
         )
     else:
         # Flat paginated view for single topic or 'all' view
-        query = Discussion.query.filter(
+        # Use load_only to avoid loading unnecessary columns (only load what templates need)
+        query = Discussion.query.options(
+            load_only(
+                Discussion.id, Discussion.title, Discussion.description,
+                Discussion.topic, Discussion.slug, Discussion.created_at,
+                Discussion.participant_count, Discussion.has_native_statements,
+                Discussion.is_featured, Discussion.geographic_scope, Discussion.country
+            )
+        ).filter(
             Discussion.id.in_(news_discussion_ids)
         )
         
