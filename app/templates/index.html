@@ -75,7 +75,7 @@
             <!-- Right column -->
             <div class="lg:col-span-6">
                 <div class="relative rounded-xl bg-white shadow-xl overflow-hidden">
-                    <img src="{{ url_for('static', filename='images/hero-optimized.jpg') }}" 
+                    <img src="{{ url_for('profiles.get_static_asset', filename='hero-optimized.jpg') }}" 
                          alt="Discussion visualization" 
                          class="w-full h-full object-cover"
                          loading="eager"/>
@@ -728,7 +728,7 @@
                 </blockquote>
                 <div class="mt-6 flex items-center">
                     <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
-                        <img src="{{ url_for('static', filename='images/speakers/Margaret_Mead.jpg') }}" alt="Margaret Mead" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
+                        <img src="{{ url_for('profiles.get_static_asset', filename='speakers/Margaret_Mead.jpg') }}" alt="Margaret Mead" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
                     </div>
                     <div class="ml-4">
                         <cite class="font-semibold text-gray-900">Margaret Mead</cite>
@@ -749,7 +749,7 @@
                 </blockquote>
                 <div class="mt-6 flex items-center">
                     <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
-                        <img src="{{ url_for('static', filename='images/speakers/Nelson_Mandela.jpg') }}" alt="Nelson Mandela" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
+                        <img src="{{ url_for('profiles.get_static_asset', filename='speakers/Nelson_Mandela.jpg') }}" alt="Nelson Mandela" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
                     </div>
                     <div class="ml-4">
                         <cite class="font-semibold text-gray-900">Nelson Mandela</cite>
@@ -770,7 +770,7 @@
                 </blockquote>
                 <div class="mt-6 flex items-center">
                     <div class="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
-                        <img src="{{ url_for('static', filename='images/speakers/John_Stuart_Mill.jpg') }}" alt="John Stuart Mill" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
+                        <img src="{{ url_for('profiles.get_static_asset', filename='speakers/John_Stuart_Mill.jpg') }}" alt="John Stuart Mill" class="h-full w-full object-cover" onerror="this.src='{{ url_for('static', filename='images/default-avatar.png') }}'">
                     </div>
                     <div class="ml-4">
                         <cite class="font-semibold text-gray-900">John Stuart Mill</cite>
