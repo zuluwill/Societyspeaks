@@ -144,8 +144,10 @@ def create_app():
 
     
 
-    # Add these lines near the top of create_app
-    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Static file configuration
+    # Set cache age for static files (1 hour) to reduce file I/O and improve resilience
+    # This helps prevent OSError [Errno 5] I/O errors during high load
+    app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 3600  # 1 hour in seconds
     app.config['STATIC_FOLDER'] = 'static'
 
     # Add correct MIME types
