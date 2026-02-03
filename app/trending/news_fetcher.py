@@ -550,6 +550,14 @@ def seed_default_sources():
             'political_leaning': -2.0  # Left - British progressive
         },
         {
+            'name': 'The Observer',
+            'feed_url': 'https://www.theguardian.com/theobserver/rss',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': -2.0  # Left - UK Sunday paper, Guardian sibling
+        },
+        {
             'name': 'The Intercept',
             'feed_url': 'https://theintercept.com/feed/?rss',
             'source_type': 'rss',
@@ -1753,6 +1761,14 @@ def seed_default_sources():
             'reputation_score': 0.9,
             'country': 'United States',
             'political_leaning': -1.0  # Lean Left
+        },
+        {
+            'name': 'Time',
+            'feed_url': 'https://time.com/feed/',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United States',
+            'political_leaning': -1.0  # Lean Left per AllSides
         },
         
         # ==========================================================================

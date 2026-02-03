@@ -142,8 +142,6 @@ def create_app():
         app.config['CITIES_BY_COUNTRY'] = {}
 
 
-    
-
     # Static file configuration
     # Set cache age for static files (1 hour) to reduce file I/O and improve resilience
     # This helps prevent OSError [Errno 5] I/O errors during high load
