@@ -9,7 +9,7 @@ from app.email_utils import create_discussion_notification
 from app.webhook_security import webhook_required, webhook_with_timestamp
 from app.discussions.consensus import get_user_vote_count, PARTICIPATION_THRESHOLD
 from app.trending.conversion_tracking import track_social_click
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 import json
 import os
 try:
@@ -211,9 +211,10 @@ def view_discussion(discussion_id, slug):
     from sqlalchemy import desc, func
     
     # Eager load creator and source_article_links with nested article.source to prevent N+1 queries
+    # Using selectinload for nested relationships to ensure proper eager loading
     discussion = Discussion.query.options(
         joinedload(Discussion.creator),
-        joinedload(Discussion.source_article_links)
+        selectinload(Discussion.source_article_links)
         .joinedload(DiscussionSourceArticle.article)
         .joinedload(NewsArticle.source)
     ).get_or_404(discussion_id)
