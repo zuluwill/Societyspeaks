@@ -15,6 +15,7 @@ import hashlib
 
 from app import db
 from app.models import InputSource, IngestedItem, PolymarketMarket
+from sqlalchemy.exc import IntegrityError
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,13 @@ class PolymarketSourceAdapter:
                 if item:
                     items.append(item)
 
-            db.session.commit()
+            try:
+                db.session.commit()
+            except IntegrityError as e:
+                # Handle race condition: another process inserted the same content
+                db.session.rollback()
+                logger.warning(f"Duplicate content detected during polymarket ingestion for source {source.id}: {e}")
+                return []
             return items
 
         except Exception as e:

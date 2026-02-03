@@ -136,13 +136,25 @@ class SourceIngester:
             # Update source metadata
             source.last_fetched_at = datetime.utcnow()
             source.fetch_error_count = 0
-            db.session.commit()
+            
+            try:
+                db.session.commit()
+            except IntegrityError as e:
+                # Handle race condition: another process inserted the same content
+                db.session.rollback()
+                logger.warning(f"Duplicate content detected during RSS ingestion for {source.name}, some items skipped: {e}")
+                # Update source metadata in a new transaction
+                source.last_fetched_at = datetime.utcnow()
+                source.fetch_error_count = 0
+                db.session.commit()
+                return []
             
             logger.info(f"Ingested {len(new_items)} new items from RSS source {source.name}")
             return new_items
             
         except Exception as e:
             logger.error(f"Error ingesting RSS source {source.name}: {e}", exc_info=True)
+            db.session.rollback()
             source.fetch_error_count = (source.fetch_error_count or 0) + 1
             db.session.commit()
             return []
@@ -200,13 +212,25 @@ class SourceIngester:
             # Update source metadata
             source.last_fetched_at = datetime.utcnow()
             source.fetch_error_count = 0
-            db.session.commit()
+            
+            try:
+                db.session.commit()
+            except IntegrityError as e:
+                # Handle race condition: another process inserted the same content
+                db.session.rollback()
+                logger.warning(f"Duplicate content detected during URL list ingestion for {source.name}, some items skipped: {e}")
+                # Update source metadata in a new transaction
+                source.last_fetched_at = datetime.utcnow()
+                source.fetch_error_count = 0
+                db.session.commit()
+                return []
             
             logger.info(f"Ingested {len(new_items)} new items from URL list source {source.name}")
             return new_items
             
         except Exception as e:
             logger.error(f"Error ingesting URL list source {source.name}: {e}", exc_info=True)
+            db.session.rollback()
             source.fetch_error_count = (source.fetch_error_count or 0) + 1
             db.session.commit()
             return []
@@ -265,13 +289,25 @@ class SourceIngester:
             db.session.add(item)
             source.last_fetched_at = datetime.utcnow()
             source.fetch_error_count = 0
-            db.session.commit()
+            
+            try:
+                db.session.commit()
+            except IntegrityError as e:
+                # Handle race condition: another process inserted the same content
+                db.session.rollback()
+                logger.warning(f"Duplicate content detected during webpage ingestion for {source.name}: {e}")
+                # Update source metadata in a new transaction
+                source.last_fetched_at = datetime.utcnow()
+                source.fetch_error_count = 0
+                db.session.commit()
+                return []
             
             logger.info(f"Ingested webpage {source.name}")
             return [item]
             
         except Exception as e:
             logger.error(f"Error ingesting webpage source {source.name}: {e}", exc_info=True)
+            db.session.rollback()
             source.fetch_error_count = (source.fetch_error_count or 0) + 1
             db.session.commit()
             return []
@@ -320,7 +356,14 @@ class SourceIngester:
             
             db.session.add(item)
             source.last_fetched_at = datetime.utcnow()
-            db.session.commit()
+            
+            try:
+                db.session.commit()
+            except IntegrityError as e:
+                # Handle race condition: another process inserted the same content
+                db.session.rollback()
+                logger.warning(f"Duplicate content detected during upload ingestion for {source.name}: {e}")
+                return []
             
             logger.info(f"Ingested upload source {source.name}")
             return [item]
