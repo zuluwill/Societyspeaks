@@ -100,7 +100,10 @@ def _items_with_topic_articles(brief):
     items = (
         BriefItem.query.filter_by(brief_id=brief.id)
         .order_by(BriefItem.position)
-        .options(joinedload(BriefItem.trending_topic))
+        .options(
+            joinedload(BriefItem.trending_topic),
+            joinedload(BriefItem.discussion)
+        )
         .all()
     )
     topic_ids = [i.trending_topic_id for i in items if i.trending_topic_id]
