@@ -1,12 +1,18 @@
-from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for, abort
+from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for, abort, send_file, make_response
 from flask_login import login_required, current_user
 from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestion, DailyBrief
 from app import db
-from datetime import datetime
+from datetime import datetime, date
 from slugify import slugify
 from app.seo import generate_sitemap
+from replit.object_storage import Client
+from sqlalchemy.orm import joinedload
+import io
+import mimetypes
+import os
 
 main_bp = Blueprint('main', __name__)
+asset_client = Client()
 
 def init_routes(app):
     app.register_blueprint(main_bp)
@@ -50,7 +56,12 @@ def index():
     discussions = pagination.items
 
     # Get today's daily question for the homepage preview
-    daily_question = DailyQuestion.get_today()
+    daily_question = DailyQuestion.query.options(
+        joinedload(DailyQuestion.source_discussion)
+    ).filter_by(
+        question_date=date.today(),
+        status='published'
+    ).first()
     
     # Get today's or most recent daily brief for the homepage preview
     daily_brief = DailyBrief.get_today()
@@ -77,6 +88,52 @@ def index():
 @main_bp.route('/about')
 def about():
     return render_template('about.html')
+
+
+def _serve_object_storage_asset(filename):
+    """Serve static assets from object storage to avoid disk I/O."""
+    if '..' in filename or filename.startswith('/'):
+        current_app.logger.warning(f"Blocked path traversal attempt for asset: {filename}")
+        abort(404)
+
+    storage_path = f"static_assets/{filename}"
+
+    try:
+        file_data = asset_client.download_as_bytes(storage_path)
+    except Exception as error:
+        current_app.logger.error(f"Error fetching asset {storage_path}: {error}")
+        return Response("Service unavailable", status=503)
+
+    if not file_data:
+        current_app.logger.info(f"Asset not found in storage: {storage_path}")
+        abort(404)
+
+    mime_type, _ = mimetypes.guess_type(filename)
+    if not mime_type:
+        mime_type = 'application/octet-stream'
+
+    response = make_response(
+        send_file(
+            io.BytesIO(file_data),
+            mimetype=mime_type,
+            as_attachment=False,
+            download_name=os.path.basename(filename)
+        )
+    )
+    response.headers['Cache-Control'] = 'public, max-age=3600'
+    return response
+
+
+@main_bp.route('/assets/<path:filename>')
+def serve_asset(filename):
+    """Serve static assets from object storage."""
+    return _serve_object_storage_asset(filename)
+
+
+@main_bp.route('/images/<path:filename>')
+def serve_static_image(filename):
+    """Back-compat image route served from object storage."""
+    return _serve_object_storage_asset(f"images/{filename}")
 
 
 

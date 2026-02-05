@@ -60,7 +60,7 @@
     />
     <meta
       property="og:image"
-      content="{% block og_image %}{{ url_for('profiles.get_static_asset', filename='rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}"
+      content="{% block og_image %}{{ url_for('main.serve_asset', filename='rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}"
     />
     <meta property="og:url" content="{{ request.url }}" />
     <meta property="og:type" content="website" />
@@ -78,7 +78,7 @@
     />
     <meta
       name="twitter:image"
-      content="{% block twitter_image %}{{ url_for('profiles.get_static_asset', filename='rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}"
+      content="{% block twitter_image %}{{ url_for('main.serve_asset', filename='rod-long-optimized-1200x628.jpg', _external=True) }}{% endblock %}"
     />
     <meta name="twitter:site" content="@societyspeaksio" />
 
@@ -307,7 +307,7 @@
         "name": "Society Speaks",
         "alternateName": "SocietySpeaks.io",
         "url": "{{ url_for('main.index', _external=True) }}",
-        "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
+        "logo": "{{ url_for('main.serve_asset', filename='images/logo.png', _external=True) }}",
         "sameAs": [
           "https://twitter.com/societyspeaksio",
           "https://bsky.app/profile/societyspeaks.bsky.social",
@@ -580,9 +580,9 @@
                 {% if current_user.profile_type == 'individual' %}
                 <img
                   class="h-8 w-8 rounded-full object-cover"
-                  src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('static', filename='images/default-avatar.png') }}"
+                  src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('main.serve_asset', filename='images/default-avatar.png') }}"
                   alt="Profile photo"
-                  onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}';"
+                  onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}';"
                 />
                 <span class="ml-2"
                   >{{ current_user.individual_profile.full_name if
@@ -592,9 +592,9 @@
                 {% elif current_user.profile_type == 'company' %}
                 <img
                   class="h-8 w-8 rounded-lg object-cover"
-                  src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('static', filename='images/default-logo.png') }}"
+                  src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}"
                   alt="Company logo"
-                  onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-logo.png') }}';"
+                  onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';"
                 />
                 <span class="ml-2"
                   >{{ current_user.company_profile.company_name if
@@ -817,9 +817,9 @@
                   {% if current_user.profile_type == 'individual' %}
                   <img
                     class="h-8 w-8 rounded-full object-cover"
-                    src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('static', filename='images/default-avatar.png') }}"
+                    src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('main.serve_asset', filename='images/default-avatar.png') }}"
                     alt="Profile photo"
-                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}';"
+                    onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}';"
                   />
                   <span class="ml-2"
                     >{{ current_user.individual_profile.full_name if
@@ -829,9 +829,9 @@
                   {% elif current_user.profile_type == 'company' %}
                   <img
                     class="h-8 w-8 rounded-lg object-cover"
-                    src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('static', filename='images/default-logo.png') }}"
+                    src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}"
                     alt="Company logo"
-                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-logo.png') }}';"
+                    onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';"
                   />
                   <span class="ml-2"
                     >{{ current_user.company_profile.company_name if

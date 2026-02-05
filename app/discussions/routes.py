@@ -351,7 +351,7 @@ def view_discussion(discussion_id, slug):
         selectinload(Discussion.source_article_links)
         .joinedload(DiscussionSourceArticle.article)
         .joinedload(NewsArticle.source)
-    ).get_or_404(discussion_id)
+    ).filter_by(id=discussion_id).first_or_404()
     # Redirect if the slug in the URL doesn't match the discussion's slug
     if discussion.slug != slug:
         return redirect(url_for('discussions.view_discussion', 

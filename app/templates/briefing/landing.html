@@ -3,10 +3,10 @@
 {% block meta_description %}Replace 15 newsletters with one calm daily brief. Tailored to your sources, delivered on your schedule. Used by policy researchers, analysts, and think tanks.{% endblock %}
 {% block og_title %}Personal Briefs - One daily brief from sources you trust{% endblock %}
 {% block og_description %}Stop reading 15 newsletters. Start knowing what matters. Synthesised daily briefs from the sources you actually trust. From £12/month.{% endblock %}
-{% block og_image %}{{ url_for('static', filename='images/briefing-og-image.jpg', _external=True) }}{% endblock %}
+{% block og_image %}{{ url_for('main.serve_asset', filename='images/briefing-og-image.jpg', _external=True) }}{% endblock %}
 {% block twitter_title %}Personal Briefs - Stop drowning in newsletters. Start knowing what matters.{% endblock %}
 {% block twitter_description %}Replace 15 newsletters with one calm daily brief. Tailored to your sources, delivered on your schedule. From £12/month.{% endblock %}
-{% block twitter_image %}{{ url_for('static', filename='images/briefing-og-image.jpg', _external=True) }}{% endblock %}
+{% block twitter_image %}{{ url_for('main.serve_asset', filename='images/briefing-og-image.jpg', _external=True) }}{% endblock %}
 
 {% block head %}
 <link rel="canonical" href="{{ url_for('briefing.landing', _external=True) }}">

@@ -42,7 +42,7 @@
                  onclick="document.getElementById('{{ field.id }}').click()">
                 <img id="{{ preview_id }}" 
                      class="w-full h-full object-cover" 
-                     src="{{ url_for('static', filename='images/default-' + ('avatar' if 'profile' in preview_id else 'logo') + '.png') }}" 
+                     src="{{ url_for('main.serve_asset', filename='images/default-' + ('avatar' if 'profile' in preview_id else 'logo') + '.png') }}" 
                      alt="{{ field.label.text }} preview">
                 <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <span class="text-white text-xs">Click to change</span>
@@ -53,7 +53,7 @@
                  onclick="document.getElementById('{{ field.id }}').click()">
                 <img id="{{ preview_id }}" 
                      class="w-full h-full object-cover" 
-                     src="{{ url_for('static', filename='images/default-banner.png') }}" 
+                     src="{{ url_for('main.serve_asset', filename='images/default-banner.png') }}" 
                      alt="{{ field.label.text }} preview">
                 <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <span class="text-white text-sm">Click to change</span>

@@ -39,10 +39,10 @@
     <!-- Banner Image -->
     <div class="relative h-60 bg-gray-200 rounded-lg overflow-hidden">
         <img 
-            src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('static', filename='images/default-banner.png') }}" 
+            src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('main.serve_asset', filename='images/default-banner.png') }}" 
             alt="Banner Image" 
             class="w-full h-full object-cover"
-            onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-banner.png') }}';"
+            onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-banner.png') }}';"
         >
         <!-- Dark overlay for text readability -->
         <div class="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/50 to-transparent"></div>
@@ -54,10 +54,10 @@
             <!-- Company Logo -->
             <div class="w-40 h-40 bg-white rounded-lg overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
                 <img 
-                    src="{{ url_for('profiles.get_image', filename=profile.logo) if profile.logo else url_for('static', filename='images/default-logo.png') }}" 
+                    src="{{ url_for('profiles.get_image', filename=profile.logo) if profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}" 
                     alt="Company Logo" 
                     class="w-full h-full object-cover"
-                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='/images/default-logo.png') }}';"
+                    onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';"
                 >
             </div>
 

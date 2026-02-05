@@ -254,6 +254,9 @@ def create_app():
     login_manager.login_view = 'auth.login'
     login_manager.login_message_category = "info"
     app.jinja_env.globals.update(current_user=current_user)
+
+    from app.utils.db_diagnostics import init_n_plus_one_guard
+    init_n_plus_one_guard(app)
     
     import re
     from markupsafe import Markup, escape

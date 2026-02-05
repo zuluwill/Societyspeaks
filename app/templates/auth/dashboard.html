@@ -72,19 +72,19 @@
             {% if profile %}
                 <div class="flex items-center mb-4">
                     {% if current_user.profile_type == 'individual' %}
-                        <img src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('static', filename='images/default-avatar.png') }}"
+                        <img src="{{ url_for('profiles.get_image', filename=current_user.individual_profile.profile_image) if current_user.individual_profile and current_user.individual_profile.profile_image else url_for('main.serve_asset', filename='images/default-avatar.png') }}"
                              alt="Profile photo"
                              class="w-16 h-16 rounded-full object-cover"
-                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-avatar.png') }}';">
+                             onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}';">
                         <div class="ml-4">
                             <p class="font-medium text-gray-900">{{ current_user.individual_profile.full_name }}</p>
                             <p class="text-sm text-gray-500">Individual Profile</p>
                         </div>
                     {% elif current_user.profile_type == 'company' %}
-                        <img src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('static', filename='images/default-logo.png') }}"
+                        <img src="{{ url_for('profiles.get_image', filename=current_user.company_profile.logo) if current_user.company_profile and current_user.company_profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}"
                              alt="Company logo"
                              class="w-16 h-16 rounded-lg object-cover"
-                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/default-logo.png') }}';">
+                             onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';">
                         <div class="ml-4">
                             <p class="font-medium text-gray-900">{{ current_user.company_profile.company_name }}</p>
                             <p class="text-sm text-gray-500">Company Profile</p>

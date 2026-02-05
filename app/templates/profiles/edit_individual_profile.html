@@ -25,7 +25,7 @@
                                  onclick="document.getElementById('{{ form.profile_image.id }}').click()">
                                 <img id="profile-preview" 
                                      class="w-full h-full object-cover" 
-                                     src="{{ url_for('profiles.get_image', filename=profile.profile_image) if profile.profile_image else url_for('static', filename='images/default-avatar.png') }}" 
+                                     src="{{ url_for('profiles.get_image', filename=profile.profile_image) if profile.profile_image else url_for('main.serve_asset', filename='images/default-avatar.png') }}" 
                                      alt="Profile Picture">
                                 <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                     <span class="text-white text-xs">Click to change</span>
@@ -49,7 +49,7 @@
                                  onclick="document.getElementById('{{ form.banner_image.id }}').click()">
                                 <img id="banner-preview" 
                                      class="w-full h-full object-cover" 
-                                     src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('static', filename='images/default-banner.png') }}" 
+                                     src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('main.serve_asset', filename='images/default-banner.png') }}" 
                                      alt="Banner Image">
                                 <div class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                     <span class="text-white text-sm">Click to change</span>

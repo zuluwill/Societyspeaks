@@ -29,6 +29,7 @@ from app.billing.service import (
     remove_team_member, update_member_role, check_team_seat_limit, accept_invitation,
     get_user_organization
 )
+from sqlalchemy.orm import joinedload, selectinload
 import logging
 
 logger = logging.getLogger(__name__)
@@ -1003,7 +1004,13 @@ def create_briefing():
 @limiter.limit("60/minute")
 def detail(briefing_id):
     """View briefing details"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = (
+        Briefing.query.options(
+            selectinload(Briefing.sources).joinedload(BriefingSource.source)
+        )
+        .filter_by(id=briefing_id)
+        .first_or_404()
+    )
 
     # Check permissions (DRY)
     is_allowed, redirect_response = check_briefing_permission(
@@ -1017,7 +1024,7 @@ def detail(briefing_id):
     # Get related data with priority info
     sources_with_priority = []
     for bs in briefing.sources:
-        source = bs.source if hasattr(bs, 'source') else InputSource.query.get(bs.source_id)
+        source = bs.source
         if source:
             source._priority = getattr(bs, 'priority', 1) or 1
             sources_with_priority.append(source)
@@ -2918,7 +2925,13 @@ def test_send(briefing_id):
 @limiter.limit("10/minute")
 def duplicate_briefing(briefing_id):
     """Duplicate a briefing with all its sources and recipients"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = (
+        Briefing.query.options(
+            selectinload(Briefing.sources).joinedload(BriefingSource.source)
+        )
+        .filter_by(id=briefing_id)
+        .first_or_404()
+    )
     
     # Check permissions (DRY)
     is_allowed, redirect_response = check_briefing_permission(
@@ -2952,7 +2965,7 @@ def duplicate_briefing(briefing_id):
         sources_copied = 0
         for briefing_source in briefing.sources:
             # Verify source still exists
-            source = InputSource.query.get(briefing_source.source_id)
+            source = briefing_source.source
             if source and can_access_source(current_user, source):
                 new_source = BriefingSource(
                     briefing_id=new_briefing.id,

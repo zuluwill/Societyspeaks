@@ -375,7 +375,15 @@ def reader_view(date_str):
         flash(f'No brief available for {brief_date.strftime("%B %d, %Y")}', 'info')
         return render_template('brief/no_brief.html', requested_date=brief_date)
 
-    items = brief.items.order_by(BriefItem.position).all()
+    items = (
+        BriefItem.query.filter_by(brief_id=brief.id)
+        .order_by(BriefItem.position)
+        .options(
+            joinedload(BriefItem.trending_topic),
+            joinedload(BriefItem.discussion)
+        )
+        .all()
+    )
 
     return render_template(
         'brief/reader.html',
