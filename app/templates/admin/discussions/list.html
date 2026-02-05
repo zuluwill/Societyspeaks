@@ -5,6 +5,22 @@
 <div class="min-h-screen bg-gray-100 py-6">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1 class="text-2xl font-semibold text-gray-900">Manage Discussions</h1>
+
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+            <span class="text-sm text-gray-500">Filter:</span>
+            <a href="{{ url_for('admin.list_discussions', status='') }}"
+               class="px-3 py-1.5 rounded-md text-sm border {% if not status_filter %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-200 hover:bg-gray-50{% endif %}">
+                All
+            </a>
+            <a href="{{ url_for('admin.list_discussions', status='open') }}"
+               class="px-3 py-1.5 rounded-md text-sm border {% if status_filter == 'open' %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-200 hover:bg-gray-50{% endif %}">
+                Open
+            </a>
+            <a href="{{ url_for('admin.list_discussions', status='closed') }}"
+               class="px-3 py-1.5 rounded-md text-sm border {% if status_filter == 'closed' %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-700 border-gray-200 hover:bg-gray-50{% endif %}">
+                Closed
+            </a>
+        </div>
         
         <div class="mt-4 bg-white shadow overflow-hidden sm:rounded-lg">
             <table class="min-w-full divide-y divide-gray-200">
@@ -13,6 +29,7 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Creator</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -28,10 +45,24 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ discussion.created_at.strftime('%Y-%m-%d') }}</div>
                         </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if discussion.is_closed %}
+                                <span class="px-2 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full">Closed</span>
+                            {% else %}
+                                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Open</span>
+                            {% endif %}
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex justify-end space-x-2">
                                 <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" 
                                    class="text-blue-600 hover:text-blue-900">View</a>
+                                <form action="{{ url_for('admin.toggle_discussion_closed', discussion_id=discussion.id) }}" method="POST" class="inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit"
+                                            class="text-amber-600 hover:text-amber-900">
+                                        {% if discussion.is_closed %}Reopen{% else %}Close{% endif %}
+                                    </button>
+                                </form>
                                 <form action="{{ url_for('admin.delete_discussion', discussion_id=discussion.id) }}" method="POST" class="inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" 
@@ -50,17 +81,17 @@
         <nav class="flex justify-center mt-6">
             <ul class="flex space-x-2">
                 {% if discussions.has_prev %}
-                <li><a href="?page={{ discussions.prev_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Previous</a></li>
+                <li><a href="?page={{ discussions.prev_num }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Previous</a></li>
                 {% endif %}
                 {% for page_num in discussions.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if page_num %}
-                        <li><a href="?page={{ page_num }}" class="px-3 py-2 border rounded-md {% if page_num == discussions.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
+                        <li><a href="?page={{ page_num }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-3 py-2 border rounded-md {% if page_num == discussions.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
                     {% else %}
                         <li class="px-3 py-2">...</li>
                     {% endif %}
                 {% endfor %}
                 {% if discussions.has_next %}
-                <li><a href="?page={{ discussions.next_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Next</a></li>
+                <li><a href="?page={{ discussions.next_num }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Next</a></li>
                 {% endif %}
             </ul>
         </nav>

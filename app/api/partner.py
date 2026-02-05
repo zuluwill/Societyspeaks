@@ -7,7 +7,7 @@ All endpoints return JSON and use standardized error responses.
 import re
 import html
 from flask import Blueprint, request, jsonify, current_app
-from app import db, limiter, cache
+from app import db, limiter, cache, csrf
 from flask_login import current_user
 
 from app.models import (
@@ -17,7 +17,7 @@ from app.models import (
 from app.discussions.statements import get_statement_vote_fingerprint
 from app.api.errors import api_error
 from app.api.utils import (
-    get_rate_limit_key, get_partner_ref, build_discussion_urls,
+    get_rate_limit_key, get_partner_ref, build_discussion_urls, append_ref_param,
     get_discussion_participant_count, get_discussion_statement_count,
     sanitize_partner_ref, track_partner_event
 )
@@ -46,6 +46,15 @@ def lookup_by_article_url():
     """
     from app.lib.url_normalizer import normalize_url
 
+    # Check if this partner ref is disabled (kill switch)
+    ref = request.args.get('ref', '')
+    ref_normalized = sanitize_partner_ref(ref)
+    disabled_refs = current_app.config.get('DISABLED_PARTNER_REFS') or []
+    if not isinstance(disabled_refs, list):
+        disabled_refs = []
+    if ref_normalized and ref_normalized in disabled_refs:
+        return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
+
     # Get and validate URL parameter
     url = request.args.get('url')
     if not url:
@@ -60,7 +69,13 @@ def lookup_by_article_url():
     cache_key = f"lookup:{normalized}"
     cached = cache.get(cache_key)
     if cached:
-        return jsonify(cached)
+        response_data = cached
+        if ref_normalized:
+            response_data = dict(cached)
+            response_data['embed_url'] = append_ref_param(response_data['embed_url'], ref_normalized)
+            response_data['consensus_url'] = append_ref_param(response_data['consensus_url'], ref_normalized)
+            response_data['snapshot_url'] = append_ref_param(response_data['snapshot_url'], ref_normalized)
+        return jsonify(response_data)
 
     # Look up NewsArticle by normalized_url
     article = NewsArticle.query.filter_by(normalized_url=normalized).first()
@@ -87,7 +102,7 @@ def lookup_by_article_url():
     # If we need soft-delete in future, add is_deleted column to Discussion model
 
     # Build response
-    urls = build_discussion_urls(discussion)
+    urls = build_discussion_urls(discussion, include_ref=False)
     response_data = {
         'discussion_id': discussion.id,
         'slug': discussion.slug,
@@ -98,8 +113,15 @@ def lookup_by_article_url():
         'source': source
     }
 
-    # Cache for 5 minutes
+    # Cache base response (without ref) for 5 minutes
     cache.set(cache_key, response_data, timeout=300)
+
+    # Add ref to URLs for this request only (do not cache ref-specific URLs)
+    if ref_normalized:
+        response_data = dict(response_data)
+        response_data['embed_url'] = append_ref_param(response_data['embed_url'], ref_normalized)
+        response_data['consensus_url'] = append_ref_param(response_data['consensus_url'], ref_normalized)
+        response_data['snapshot_url'] = append_ref_param(response_data['snapshot_url'], ref_normalized)
 
     # Track API lookup event
     track_partner_event('partner_api_lookup', {
@@ -133,11 +155,24 @@ def get_snapshot(discussion_id):
     Example:
         GET /api/discussions/123/snapshot?ref=observer
     """
+    # Check if this partner ref is disabled (kill switch)
+    ref = request.args.get('ref', '')
+    ref_normalized = sanitize_partner_ref(ref)
+    disabled_refs = current_app.config.get('DISABLED_PARTNER_REFS') or []
+    if not isinstance(disabled_refs, list):
+        disabled_refs = []
+    if ref_normalized and ref_normalized in disabled_refs:
+        return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
+
     # Try cache first
     cache_key = f"snapshot:{discussion_id}"
     cached = cache.get(cache_key)
     if cached:
-        return jsonify(cached)
+        response_data = cached
+        if ref_normalized:
+            response_data = dict(cached)
+            response_data['consensus_url'] = append_ref_param(response_data['consensus_url'], ref_normalized)
+        return jsonify(response_data)
 
     # Load discussion
     discussion = Discussion.query.get(discussion_id)
@@ -154,7 +189,7 @@ def get_snapshot(discussion_id):
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
 
     # Build response
-    urls = build_discussion_urls(discussion)
+    urls = build_discussion_urls(discussion, include_ref=False)
 
     response_data = {
         'discussion_id': discussion.id,
@@ -180,8 +215,13 @@ def get_snapshot(discussion_id):
                     teaser = teaser[:147] + '...'
                 response_data['teaser_text'] = teaser
 
-    # Cache for 10 minutes (invalidated when new analysis is created)
+    # Cache base response (without ref) for 10 minutes (invalidated when new analysis is created)
     cache.set(cache_key, response_data, timeout=600)
+
+    # Add ref to consensus_url for this request only
+    if ref_normalized:
+        response_data = dict(response_data)
+        response_data['consensus_url'] = append_ref_param(response_data['consensus_url'], ref_normalized)
 
     # Track snapshot API event
     track_partner_event('partner_api_snapshot', {
@@ -563,6 +603,7 @@ def oembed():
 
 
 @partner_bp.route('/embed/flag', methods=['POST'])
+@csrf.exempt
 @limiter.limit("10 per minute", key_func=get_rate_limit_key)
 def flag_statement_from_embed():
     """
@@ -594,6 +635,14 @@ def flag_statement_from_embed():
     flag_reason = data.get('flag_reason')
     partner_ref = data.get('ref', '')
 
+    # Reject flags from disabled partner refs (kill switch)
+    ref_str = sanitize_partner_ref(partner_ref)
+    disabled_refs = current_app.config.get('DISABLED_PARTNER_REFS') or []
+    if not isinstance(disabled_refs, list):
+        disabled_refs = []
+    if ref_str and ref_str in disabled_refs:
+        return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
+
     if not statement_id:
         return api_error('missing_statement_id', 'The statement_id field is required.', 400)
 
@@ -608,7 +657,13 @@ def flag_statement_from_embed():
 
     # Get user identifier (required: at least one of user_id or session_fingerprint)
     user_id = current_user.id if current_user.is_authenticated else None
-    session_fingerprint = get_statement_vote_fingerprint() if not user_id else None
+    # Prefer embed-provided fingerprint for iframe reliability (cookies may be blocked)
+    embed_fingerprint = data.get('embed_fingerprint')
+    if embed_fingerprint and isinstance(embed_fingerprint, str):
+        from app.discussions.statements import normalize_embed_fingerprint
+        session_fingerprint = normalize_embed_fingerprint(embed_fingerprint)
+    else:
+        session_fingerprint = get_statement_vote_fingerprint() if not user_id else None
     if not user_id and not session_fingerprint:
         return api_error(
             'identifier_required',
@@ -639,7 +694,7 @@ def flag_statement_from_embed():
             flagger_user_id=user_id,
             session_fingerprint=session_fingerprint,
             flag_reason=flag_reason,
-            additional_context=f"Reported from embed (ref: {partner_ref})" if partner_ref else "Reported from embed"
+            additional_context=f"Reported from embed (ref: {ref_str})" if ref_str else "Reported from embed"
         )
         db.session.add(flag)
         db.session.commit()
@@ -655,7 +710,7 @@ def flag_statement_from_embed():
             'statement_id': statement_id,
             'discussion_id': statement.discussion_id,
             'flag_reason': flag_reason,
-            'partner_ref': partner_ref
+            'partner_ref': ref_str or partner_ref
         })
 
     except Exception as e:

@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+
+{% block content %}
+{% macro metrics_table(rows) %}
+  {% if rows %}
+    <table class="min-w-full divide-y divide-gray-200 text-sm">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Ref</th>
+          <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Votes</th>
+          <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Participants</th>
+          <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Last Vote</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200 bg-white">
+        {% for row in rows %}
+          <tr>
+            <td class="px-4 py-2 text-gray-900">{{ row.ref }}</td>
+            <td class="px-4 py-2 text-gray-900">{{ row.vote_count }}</td>
+            <td class="px-4 py-2 text-gray-900">{{ row.participant_count }}</td>
+            <td class="px-4 py-2 text-gray-500">{{ row.last_vote_at.strftime('%Y-%m-%d') if row.last_vote_at else '—' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="text-sm text-gray-500">No partner activity yet.</p>
+  {% endif %}
+{% endmacro %}
+
+<div class="min-h-screen bg-gray-100 py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-2xl font-semibold text-gray-900">Partner Metrics</h1>
+        <p class="text-sm text-gray-500">Votes and participation by partner ref.</p>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="{{ url_for('admin.partner_metrics_csv') }}" class="text-sm text-gray-700 hover:text-gray-900">Download CSV</a>
+        <a href="{{ url_for('admin.dashboard') }}" class="text-sm text-blue-600 hover:text-blue-900">Back to dashboard</a>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">Allowlisted Origins</h2>
+        {% if partner_origins %}
+          <ul class="text-sm text-gray-700 space-y-1">
+            {% for origin in partner_origins %}
+              <li>{{ origin }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-sm text-gray-500">No partner origins configured.</p>
+        {% endif %}
+      </div>
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">Disabled Partner Refs</h2>
+        {% if disabled_refs %}
+          <ul class="text-sm text-gray-700 space-y-1">
+            {% for ref in disabled_refs %}
+              <li>{{ ref }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-sm text-gray-500">No disabled refs.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+      <h2 class="text-lg font-semibold text-gray-900 mb-4">Partner-Created Discussions</h2>
+      {% if partner_discussions %}
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Partner ID</th>
+              <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Discussions</th>
+              <th class="px-4 py-2 text-left font-medium text-gray-500 uppercase tracking-wider">Last Created</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 bg-white">
+            {% for row in partner_discussions %}
+              <tr>
+                <td class="px-4 py-2 text-gray-900">{{ row.partner_id }}</td>
+                <td class="px-4 py-2 text-gray-900">{{ row.discussion_count }}</td>
+                <td class="px-4 py-2 text-gray-500">{{ row.last_created_at.strftime('%Y-%m-%d') if row.last_created_at else '—' }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="text-sm text-gray-500">No partner-created discussions.</p>
+      {% endif %}
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">All Time</h2>
+        {{ metrics_table(metrics_all) }}
+      </div>
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Last 30 Days</h2>
+        {{ metrics_table(metrics_30d) }}
+      </div>
+      <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Last 7 Days</h2>
+        {{ metrics_table(metrics_7d) }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

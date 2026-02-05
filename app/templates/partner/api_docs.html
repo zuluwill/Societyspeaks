@@ -14,6 +14,16 @@
     </nav>
     <h1 class="text-3xl font-bold text-gray-900 mb-2">API Reference</h1>
     <p class="text-gray-600">Integrate Society Speaks programmatically. All endpoints return JSON.</p>
+
+    <!-- Testing the API -->
+    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <h3 class="font-semibold text-blue-900 mb-2">Testing the API</h3>
+      <ul class="text-blue-800 text-sm space-y-1">
+        <li><strong>Interactive playground:</strong> <a href="{{ url_for('partner.api_playground') }}" class="underline font-medium">Open API Playground</a> to try lookup, snapshot, and oEmbed from your browser (Swagger UI). Requests run against this site.</li>
+        <li><strong>Create Discussion</strong> requires an API key; add it in the playground using the Authorize button (X-API-Key).</li>
+        <li><strong>From the command line:</strong> use the <code class="bg-blue-100 px-1 rounded">curl</code> examples in each section below, replacing the base URL and parameters as needed.</li>
+      </ul>
+    </div>
   </header>
 
   <div class="space-y-12">
@@ -153,7 +163,8 @@
     <!-- Embed URL -->
     <section>
       <h2 class="text-xl font-bold text-gray-900 mb-4">Embed URL Parameters</h2>
-      <p class="text-gray-600 mb-4">Customize the embed appearance with URL parameters.</p>
+      <p class="text-gray-600 mb-2">Customize the embed appearance with URL parameters.</p>
+      <p class="text-sm text-gray-500 mb-4">Embeds are available for Society Speaks native discussions.</p>
 
       <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
@@ -418,6 +429,22 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- Cost and abuse protection -->
+    <section>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Cost and Abuse Protection</h2>
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <p class="text-amber-900 text-sm mb-3">
+          <strong>Who pays for what:</strong> Lookup, snapshot, oEmbed, and the embed page do not use our LLM. They are rate-limited per IP (and optional <code>ref</code>) to prevent abuse. <strong>Create Discussion</strong> is the only endpoint that can trigger AI-generated seed statements (OpenAI/Anthropic); it uses <em>our</em> API keys, not yours.
+        </p>
+        <p class="text-amber-900 text-sm mb-3">
+          <strong>Partners use keys we issue.</strong> Only requests with a valid <code>X-API-Key</code> (from our allowlist) can create discussions. We do not use partner-provided LLM keys for the create flow. If a key is abused, we revoke it.
+        </p>
+        <p class="text-amber-900 text-sm">
+          <strong>Create Discussion</strong> is limited to <strong>30 requests per hour per API key</strong>. Combined with key control, this caps LLM and database cost from the create endpoint.
+        </p>
       </div>
     </section>
 

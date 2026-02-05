@@ -12,6 +12,7 @@ from app.trending.conversion_tracking import track_social_click
 from sqlalchemy.orm import joinedload, selectinload
 import json
 import os
+import re
 try:
     import posthog
 except ImportError:
@@ -194,7 +195,14 @@ def create_discussion():
 @discussions_bp.route('/<int:discussion_id>', methods=['GET'])
 def view_discussion_redirect(discussion_id):
     """Redirect discussion URLs without slug to the canonical URL with slug."""
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = Discussion.query.get(discussion_id)
+    if not discussion:
+        base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+        return render_template(
+            'discussions/embed_unavailable.html',
+            unavailable_reason='deleted',
+            base_url=base_url
+        ), 410
     return redirect(url_for('discussions.view_discussion',
                           discussion_id=discussion.id,
                           slug=discussion.slug), code=301)
@@ -224,12 +232,28 @@ def embed_discussion(discussion_id):
 
     # Check if embed feature is enabled
     if not current_app.config.get('EMBED_ENABLED', True):
-        return render_template('discussions/embed_unavailable.html'), 503
+        base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+        return render_template(
+            'discussions/embed_unavailable.html',
+            base_url=base_url
+        ), 503
+
+    # Get partner ref and check if this ref is disabled (kill switch)
+    ref = request.args.get('ref', '')
+    from app.api.utils import sanitize_partner_ref, append_ref_param
+    ref_normalized = sanitize_partner_ref(ref)
+    disabled_refs = current_app.config.get('DISABLED_PARTNER_REFS') or []
+    if not isinstance(disabled_refs, list):
+        disabled_refs = []
+    if ref_normalized and ref_normalized in disabled_refs:
+        base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+        return render_template(
+            'discussions/embed_unavailable.html',
+            unavailable_reason='disabled',
+            base_url=base_url
+        ), 403
 
     discussion = Discussion.query.get_or_404(discussion_id)
-
-    # Get partner ref for analytics
-    ref = request.args.get('ref', '')
 
     # Get theme parameters
     theme = request.args.get('theme', 'default')
@@ -237,16 +261,25 @@ def embed_discussion(discussion_id):
     bg_color = request.args.get('bg', '')
     font = request.args.get('font', '')
 
-    # Validate font against allowlist (single source: app.partner.constants)
-    from app.partner.constants import EMBED_ALLOWED_FONTS
+    # Validate font/theme against allowlists (single source: app.partner.constants)
+    from app.partner.constants import EMBED_ALLOWED_FONTS, EMBED_THEMES
     if font and font not in EMBED_ALLOWED_FONTS:
         font = ''
+    if theme not in EMBED_THEMES:
+        theme = 'default'
+
+    # Validate hex colors to avoid CSS injection
+    hex_pattern = re.compile(r'^[0-9a-fA-F]{3,6}$')
+    if primary_color and not hex_pattern.match(primary_color):
+        primary_color = ''
+    if bg_color and not hex_pattern.match(bg_color):
+        bg_color = ''
 
     # Build consensus URL
     base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
     consensus_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}/consensus"
-    if ref:
-        consensus_url = f"{consensus_url}?ref={ref}"
+    if ref_normalized:
+        consensus_url = append_ref_param(consensus_url, ref_normalized)
 
     # Get statements for voting
     statements = []
@@ -270,17 +303,19 @@ def embed_discussion(discussion_id):
     except Exception as e:
         current_app.logger.debug(f"Embed tracking error: {e}")
 
-    # Render template
+    # Render template (pass base_url for "Powered by" and content policy link)
     response = make_response(render_template(
         'discussions/embed_discussion.html',
         discussion=discussion,
         statements=statements,
         consensus_url=consensus_url,
-        ref=ref,
+        base_url=base_url,
+        ref=ref_normalized or '',
         theme=theme,
         primary_color=primary_color,
         bg_color=bg_color,
-        font=font
+        font=font,
+        is_closed=discussion.is_closed
     ))
 
     # Set CSP frame-ancestors header for partner allowlist

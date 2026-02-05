@@ -73,6 +73,16 @@ To see our future plans and ideas, check out [IDEAS.md](./IDEAS.md).
 
 You can try the live version at https://societyspeaks.io/
 
+## Partner integration (embeds & API)
+
+Publishers can embed Society Speaks on their articles and use the Partner API for lookup, snapshots, and optional discussion creation.
+
+- **Partner hub:** [For Publishers](https://societyspeaks.io/for-publishers) — overview, three primitives, embed code generator, Rules of the Record.
+- **API reference:** [API Reference](https://societyspeaks.io/for-publishers/api) — lookup by article URL, snapshot, oEmbed, create discussion; all with curl examples.
+- **Try the API:** [API Playground](https://societyspeaks.io/for-publishers/api-playground) — interactive Swagger UI to call the Partner API from the browser.
+
+**Optional:** set `DEMO_DISCUSSION_ID` in your environment (e.g. `DEMO_DISCUSSION_ID=123`) to show a “See example embed” link on the partner hub so visitors can open a live embed in one click.
+
 ## Tech Stack
 
 | Category | Technology |

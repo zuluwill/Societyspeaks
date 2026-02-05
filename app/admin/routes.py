@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan
+from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan, StatementVote
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from app.admin.forms import UserAssignmentForm
 from datetime import date, datetime, timedelta
@@ -436,18 +436,147 @@ def delete_discussion(discussion_id):
     return redirect(url_for('admin.list_discussions'))
 
 
+@admin_bp.route('/discussions/<int:discussion_id>/toggle-closed', methods=['POST'])
+@login_required
+@admin_required
+def toggle_discussion_closed(discussion_id):
+    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion.is_closed = not discussion.is_closed
+    db.session.commit()
+    status_label = 'closed' if discussion.is_closed else 'reopened'
+    flash(f"Discussion '{discussion.title}' {status_label}.", 'success')
+    return redirect(request.referrer or url_for('admin.list_discussions'))
+
+
 @admin_bp.route('/discussions')
 @login_required
 @admin_required
 def list_discussions():
     page = request.args.get('page', 1, type=int)
     per_page = 20
+    status_filter = request.args.get('status', '').strip().lower()
     
-    discussions = Discussion.query.options(
+    query = Discussion.query.options(
         db.joinedload(Discussion.creator)
-    ).order_by(Discussion.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    )
+    if status_filter == 'closed':
+        query = query.filter(Discussion.is_closed.is_(True))
+    elif status_filter == 'open':
+        query = query.filter(Discussion.is_closed.is_(False))
+    discussions = query.order_by(Discussion.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
     
-    return render_template('admin/discussions/list.html', discussions=discussions)
+    return render_template('admin/discussions/list.html', discussions=discussions, status_filter=status_filter)
+
+
+@admin_bp.route('/partners/metrics')
+@login_required
+@admin_required
+def partner_metrics():
+    from sqlalchemy import func, distinct, case, cast, String, literal
+
+    def build_metrics(days=None):
+        query = StatementVote.query.filter(
+            StatementVote.partner_ref.isnot(None),
+            StatementVote.partner_ref != ''
+        ).filter(
+            db.or_(
+                StatementVote.user_id.isnot(None),
+                StatementVote.session_fingerprint.isnot(None)
+            )
+        )
+        if days:
+            query = query.filter(StatementVote.created_at >= datetime.utcnow() - timedelta(days=days))
+
+        participant_key = case(
+            (StatementVote.user_id.isnot(None), literal('u:') + cast(StatementVote.user_id, String)),
+            else_=literal('a:') + StatementVote.session_fingerprint
+        )
+
+        return query.with_entities(
+            StatementVote.partner_ref.label('ref'),
+            func.count(StatementVote.id).label('vote_count'),
+            func.count(distinct(participant_key)).label('participant_count'),
+            func.max(StatementVote.created_at).label('last_vote_at')
+        ).group_by(StatementVote.partner_ref).order_by(func.count(StatementVote.id).desc()).all()
+
+    metrics_all = build_metrics()
+    metrics_30d = build_metrics(days=30)
+    metrics_7d = build_metrics(days=7)
+
+    partner_discussions = Discussion.query.filter(
+        Discussion.partner_id.isnot(None),
+        Discussion.partner_id != ''
+    ).with_entities(
+        Discussion.partner_id.label('partner_id'),
+        func.count(Discussion.id).label('discussion_count'),
+        func.max(Discussion.created_at).label('last_created_at')
+    ).group_by(Discussion.partner_id).order_by(func.count(Discussion.id).desc()).all()
+
+    partner_origins = current_app.config.get('PARTNER_ORIGINS', [])
+    if isinstance(partner_origins, str):
+        partner_origins = [o.strip() for o in partner_origins.split(',') if o.strip()]
+    disabled_refs = current_app.config.get('DISABLED_PARTNER_REFS', [])
+    if isinstance(disabled_refs, str):
+        disabled_refs = [r.strip() for r in disabled_refs.split(',') if r.strip()]
+
+    return render_template(
+        'admin/partners/metrics.html',
+        metrics_all=metrics_all,
+        metrics_30d=metrics_30d,
+        metrics_7d=metrics_7d,
+        partner_discussions=partner_discussions,
+        partner_origins=partner_origins,
+        disabled_refs=disabled_refs
+    )
+
+
+@admin_bp.route('/partners/metrics.csv')
+@login_required
+@admin_required
+def partner_metrics_csv():
+    from sqlalchemy import func, distinct, case, cast, String, literal
+    import csv
+    from io import StringIO
+    from flask import Response
+
+    query = StatementVote.query.filter(
+        StatementVote.partner_ref.isnot(None),
+        StatementVote.partner_ref != ''
+    ).filter(
+        db.or_(
+            StatementVote.user_id.isnot(None),
+            StatementVote.session_fingerprint.isnot(None)
+        )
+    )
+
+    participant_key = case(
+        (StatementVote.user_id.isnot(None), literal('u:') + cast(StatementVote.user_id, String)),
+        else_=literal('a:') + StatementVote.session_fingerprint
+    )
+
+    rows = query.with_entities(
+        StatementVote.partner_ref.label('ref'),
+        func.count(StatementVote.id).label('vote_count'),
+        func.count(distinct(participant_key)).label('participant_count'),
+        func.max(StatementVote.created_at).label('last_vote_at')
+    ).group_by(StatementVote.partner_ref).order_by(func.count(StatementVote.id).desc()).all()
+
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ref', 'vote_count', 'participant_count', 'last_vote_at'])
+    for row in rows:
+        writer.writerow([
+            row.ref,
+            row.vote_count,
+            row.participant_count,
+            row.last_vote_at.isoformat() if row.last_vote_at else ''
+        ])
+
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=partner_metrics.csv'}
+    )
 
 @admin_bp.route('/users')
 @login_required

@@ -4,6 +4,7 @@ from redis.retry import Retry
 from redis.exceptions import ConnectionError, TimeoutError
 from dotenv import load_dotenv
 from datetime import timedelta
+import json
 import os
 import logging
 
@@ -25,6 +26,24 @@ class Config:
 
     # Feature flag to enable/disable embed functionality
     EMBED_ENABLED = os.getenv('EMBED_ENABLED', 'true').lower() == 'true'
+
+    # Optional: comma-separated list of partner refs that are disabled (embed and API return 403/unavailable)
+    # Example: DISABLED_PARTNER_REFS=bad-actor,revoked-partner
+    _disabled_refs = os.getenv('DISABLED_PARTNER_REFS', '')
+    DISABLED_PARTNER_REFS = [r.strip().lower() for r in _disabled_refs.split(',') if r.strip()]
+
+    # Optional: discussion ID to show "See example embed" on the partner hub (e.g. DEMO_DISCUSSION_ID=123)
+    _demo_id = os.getenv('DEMO_DISCUSSION_ID', '').strip()
+    DEMO_DISCUSSION_ID = int(_demo_id) if _demo_id.isdigit() else None
+
+    # Partner API keys for Create Discussion (you issue these; partners do not use their own keys)
+    # JSON object: {"secret_key_1": "partner_id_1", "secret_key_2": "partner_id_2"}
+    # Only holders of these keys can call POST /api/partner/discussions (rate limited 30/hour per key)
+    _partner_keys_str = os.getenv('PARTNER_API_KEYS', '{}')
+    try:
+        PARTNER_API_KEYS = json.loads(_partner_keys_str) if isinstance(_partner_keys_str, str) else _partner_keys_str
+    except (ValueError, TypeError):
+        PARTNER_API_KEYS = {}
 
     # At start of Config class
     if not SQLALCHEMY_DATABASE_URI:

@@ -14,6 +14,7 @@
     </nav>
     <h1 class="text-3xl font-bold text-gray-900 mb-2">Embed Code Generator</h1>
     <p class="text-gray-600">Enter your article URL or discussion ID, customize the theme, and get a ready-to-paste iframe.</p>
+    <p class="text-sm text-gray-500 mt-2">Embeds are available for Society Speaks native discussions.</p>
   </header>
 
   <div class="grid lg:grid-cols-2 gap-8">
@@ -170,7 +171,7 @@
           <h2 class="font-semibold text-gray-900">Embed Code</h2>
           <button
             type="button"
-            onclick="copyCode()"
+            onclick="copyCodeFrom('embedCode', 'copyBtn')"
             id="copyBtn"
             class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
           >
@@ -183,6 +184,52 @@
         <pre id="embedCode" class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto whitespace-pre-wrap"><code>&lt;!-- Enter a discussion ID to generate embed code --&gt;</code></pre>
       </div>
 
+      <!-- Auto-resize Snippet -->
+      <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-900">Auto-resize Snippet</h2>
+          <button
+            type="button"
+            onclick="copyCodeFrom('resizeSnippet', 'copyResizeBtn')"
+            id="copyResizeBtn"
+            class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            Copy
+          </button>
+        </div>
+        <pre id="resizeSnippet" class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto whitespace-pre-wrap"><code>&lt;script&gt;
+window.addEventListener('message', (event) =&gt; {
+  if (event.data &amp;&amp; event.data.type === 'societyspeaks:embed:resize') {
+    const iframe = document.getElementById('societyspeaks-embed');
+    if (iframe) iframe.style.height = event.data.height + 'px';
+  }
+});
+&lt;/script&gt;</code></pre>
+      </div>
+
+      <!-- Performance Hints -->
+      <div class="bg-white border border-gray-200 rounded-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-gray-900">Performance Hints</h2>
+          <button
+            type="button"
+            onclick="copyCodeFrom('preconnectSnippet', 'copyPreconnectBtn')"
+            id="copyPreconnectBtn"
+            class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+            Copy
+          </button>
+        </div>
+        <pre id="preconnectSnippet" class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto whitespace-pre-wrap"><code>&lt;link rel="preconnect" href="{{ base_url }}"&gt;
+&lt;link rel="dns-prefetch" href="{{ base_url }}"&gt;</code></pre>
+      </div>
+
       <!-- Tips -->
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h3 class="font-semibold text-blue-900 mb-2">Tips</h3>
@@ -191,6 +238,8 @@
           <li>Default height is 600px; adjust based on statement count</li>
           <li>Add <code class="bg-blue-100 px-1 rounded">ref</code> to track participation from your site</li>
           <li>The embed posts its height via postMessage for dynamic sizing</li>
+          <li>Add the auto-resize snippet to avoid scrollbars</li>
+          <li>Use preconnect hints to speed up first paint</li>
         </ul>
       </div>
     </div>
@@ -315,6 +364,7 @@
 
     // Update code snippet
     const iframeCode = `<iframe
+  id="societyspeaks-embed"
   src="${embedUrl}"
   width="100%"
   height="600"
@@ -326,9 +376,9 @@
     codeEl.textContent = iframeCode;
   }
 
-  function copyCode() {
-    const code = document.getElementById('embedCode').querySelector('code').textContent;
-    const copyBtn = document.getElementById('copyBtn');
+  function copyCodeFrom(containerId, buttonId) {
+    const code = document.getElementById(containerId).querySelector('code').textContent;
+    const copyBtn = document.getElementById(buttonId);
 
     navigator.clipboard.writeText(code).then(() => {
       const originalText = copyBtn.innerHTML;

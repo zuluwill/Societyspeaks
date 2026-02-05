@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+{% block title %}API Playground - Society Speaks{% endblock %}
+{% block meta_description %}Try the Society Speaks Partner API from your browser. Lookup, snapshot, and oEmbed endpoints with interactive requests.{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-6">
+  <header class="mb-4">
+    <nav class="text-sm text-gray-500 mb-2">
+      <a href="{{ url_for('partner.hub') }}" class="hover:text-blue-600">For Publishers</a>
+      <span class="mx-2">/</span>
+      <a href="{{ url_for('partner.api_docs') }}" class="hover:text-blue-600">API Reference</a>
+      <span class="mx-2">/</span>
+      <span class="text-gray-900">API Playground</span>
+    </nav>
+    <h1 class="text-2xl font-bold text-gray-900">API Playground</h1>
+    <p class="text-gray-600 text-sm mt-1">
+      Try the Partner API from your browser. Requests are sent to this site. Create Discussion requires an API key.
+    </p>
+  </header>
+
+  <div id="swagger-ui" class="rounded-lg border border-gray-200 overflow-hidden"></div>
+</div>
+
+<script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js" crossorigin></script>
+<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css">
+
+<script>
+  window.onload = function() {
+    window.ui = SwaggerUIBundle({
+      url: "{{ url_for('partner.openapi_spec') }}",
+      dom_id: '#swagger-ui',
+      presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+      ],
+      layout: "BaseLayout",
+      deepLinking: true,
+      tryItOutEnabled: true
+    });
+  };
+</script>
+{% endblock %}

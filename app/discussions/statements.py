@@ -6,7 +6,7 @@ Adapted from pol.is patterns with Society Speaks enhancements
 """
 from flask import render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app, session
 from flask_login import login_required, current_user
-from app import db, limiter
+from app import db, limiter, csrf
 from app.discussions.statement_forms import StatementForm, VoteForm, ResponseForm, FlagStatementForm
 from app.models import Discussion, Statement, StatementVote, Response, StatementFlag, DiscussionParticipant
 from app.email_utils import create_discussion_notification
@@ -16,6 +16,8 @@ from datetime import datetime, timedelta
 import hashlib
 import re
 import secrets
+from flask_limiter.util import get_remote_address
+from flask_wtf.csrf import validate_csrf, CSRFError
 try:
     import posthog
 except ImportError:
@@ -25,6 +27,7 @@ statements_bp = Blueprint('statements', __name__)
 
 STATEMENT_CLIENT_COOKIE_NAME = 'statement_client_id'
 STATEMENT_CLIENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
+EMBED_FINGERPRINT_MAX_LENGTH = 128
 
 
 def calculate_wilson_score(agree, disagree, confidence=0.95):
@@ -274,6 +277,55 @@ def get_statement_vote_fingerprint():
     return fingerprint
 
 
+def normalize_embed_fingerprint(value):
+    """Normalize and hash an embed-provided fingerprint for anonymous tracking."""
+    if not value or not isinstance(value, str):
+        return None
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+    if len(cleaned) > EMBED_FINGERPRINT_MAX_LENGTH:
+        cleaned = cleaned[:EMBED_FINGERPRINT_MAX_LENGTH]
+    return hashlib.sha256(cleaned.encode()).hexdigest()
+
+
+def extract_partner_ref_from_request():
+    """Extract partner ref from query params, JSON body, or form."""
+    ref = request.args.get('ref', '')
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        if isinstance(data, dict) and data.get('ref'):
+            ref = data.get('ref')
+    else:
+        form_ref = request.form.get('ref')
+        if form_ref:
+            ref = form_ref
+    from app.api.utils import sanitize_partner_ref
+    return sanitize_partner_ref(ref)
+
+
+def extract_embed_fingerprint_from_request():
+    """Extract embed fingerprint from JSON body or form."""
+    value = None
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        if isinstance(data, dict):
+            value = data.get('embed_fingerprint')
+    else:
+        value = request.form.get('embed_fingerprint')
+    return normalize_embed_fingerprint(value)
+
+
+def get_vote_rate_limit_key():
+    """Rate limit key by IP + ref + optional embed fingerprint."""
+    ip = get_remote_address()
+    ref = extract_partner_ref_from_request() or 'unknown'
+    embed_fp = extract_embed_fingerprint_from_request()
+    if embed_fp:
+        return f"{ip}:{ref}:{embed_fp[:12]}"
+    return f"{ip}:{ref}"
+
+
 def set_statement_client_id_cookie_if_needed(response):
     """Set the long-lived client ID cookie if it doesn't exist."""
     client_id, is_new = get_or_create_statement_client_id()
@@ -339,7 +391,8 @@ def check_integrity_rate_limit(discussion, user_identifier):
 
 
 @statements_bp.route('/statements/<int:statement_id>/vote', methods=['POST'])
-@limiter.limit(get_vote_rate_limit)
+@csrf.exempt
+@limiter.limit(get_vote_rate_limit, key_func=get_vote_rate_limit_key)
 def vote_statement(statement_id):
     """
     Vote on a statement (agree/disagree/unsure)
@@ -351,6 +404,22 @@ def vote_statement(statement_id):
     Includes integrity controls for sensitive discussions (stricter rate limits).
     """
     is_form_post = not request.is_json and request.headers.get('X-Requested-With') != 'XMLHttpRequest'
+    is_embed_request = request.headers.get('X-Embed-Request', '').lower() in ('1', 'true', 'yes')
+
+    # Manual CSRF validation (embed requests are exempt)
+    if not is_embed_request:
+        csrf_token = (
+            request.form.get('csrf_token') or
+            request.headers.get('X-CSRFToken') or
+            request.headers.get('X-CSRF-Token')
+        )
+        try:
+            validate_csrf(csrf_token)
+        except CSRFError:
+            if is_form_post:
+                flash('Your session has expired. Please refresh and try again.', 'error')
+                return redirect(url_for('statements.view_statement', statement_id=statement_id))
+            return jsonify({'error': 'csrf_failed'}), 400
 
     user_agent = request.headers.get('User-Agent', '').lower()
     bot_indicators = ['bot', 'crawler', 'spider', 'preview', 'fetch', 'slurp', 'mediapartners']
@@ -361,10 +430,19 @@ def vote_statement(statement_id):
         return jsonify({'error': 'Automated requests not allowed'}), 403
 
     statement = Statement.query.get_or_404(statement_id)
+    discussion = statement.discussion
+    if discussion and discussion.is_closed:
+        if is_form_post:
+            flash('This discussion is closed and no longer accepts votes.', 'error')
+            return redirect(url_for('statements.view_statement', statement_id=statement_id))
+        return jsonify({'error': 'discussion_closed'}), 403
 
     # Check integrity mode rate limits
-    user_identifier = get_user_identifier()
-    discussion = statement.discussion
+    embed_fingerprint = extract_embed_fingerprint_from_request()
+    if current_user.is_authenticated:
+        user_identifier = {'user_id': current_user.id, 'session_fingerprint': None}
+    else:
+        user_identifier = {'user_id': None, 'session_fingerprint': embed_fingerprint or get_statement_vote_fingerprint()}
     allowed, rate_message = check_integrity_rate_limit(discussion, user_identifier)
     if not allowed:
         if is_form_post:
@@ -399,6 +477,8 @@ def vote_statement(statement_id):
         # Override ref from JSON body if provided
         if data.get('ref'):
             partner_ref = data.get('ref')
+        if data.get('embed_fingerprint'):
+            embed_fingerprint = normalize_embed_fingerprint(data.get('embed_fingerprint'))
     else:
         vote_raw = request.form.get('vote')
         if vote_raw is None or vote_raw == '':
@@ -423,6 +503,19 @@ def vote_statement(statement_id):
         # Check form for ref if not in query params
         if not partner_ref and request.form.get('ref'):
             partner_ref = request.form.get('ref')
+        if request.form.get('embed_fingerprint'):
+            embed_fingerprint = normalize_embed_fingerprint(request.form.get('embed_fingerprint'))
+
+    # Reject votes from disabled partner refs (kill switch)
+    ref_str = (partner_ref if isinstance(partner_ref, str) else str(partner_ref or '')).strip().lower()
+    disabled_refs = current_app.config.get('DISABLED_PARTNER_REFS') or []
+    if not isinstance(disabled_refs, list):
+        disabled_refs = []
+    if ref_str and ref_str in disabled_refs:
+        if is_form_post:
+            flash('Voting from this partner is currently unavailable.', 'error')
+            return redirect(url_for('statements.view_statement', statement_id=statement_id))
+        return jsonify({'error': 'Embed and API access has been revoked for this partner.'}), 403
 
     # Sanitize partner_ref (shared rule: see app.api.utils.sanitize_partner_ref)
     from app.api.utils import sanitize_partner_ref
@@ -474,7 +567,7 @@ def vote_statement(statement_id):
             db.session.commit()
 
         else:
-            fingerprint = get_statement_vote_fingerprint()
+            fingerprint = embed_fingerprint or get_statement_vote_fingerprint()
             
             existing_vote = StatementVote.query.filter_by(
                 statement_id=statement_id,
@@ -597,7 +690,9 @@ def vote_statement(statement_id):
     try:
         discussion = statement.discussion
         user_id = current_user.id if current_user.is_authenticated else None
-        fingerprint = get_statement_vote_fingerprint() if not user_id else None
+        fingerprint = embed_fingerprint if not user_id else None
+        if not fingerprint and not user_id:
+            fingerprint = get_statement_vote_fingerprint()
 
         # Track participant (returns existing or creates new)
         participant, is_new = DiscussionParticipant.track_participant(

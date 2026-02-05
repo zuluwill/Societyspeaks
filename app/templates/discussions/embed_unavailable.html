@@ -73,9 +73,15 @@
     </svg>
     <h1 class="unavailable-title">Embed Temporarily Unavailable</h1>
     <p class="unavailable-message">
-      The voting widget is currently unavailable. Please visit Society Speaks directly to participate.
+      {% if unavailable_reason == 'disabled' %}
+        Embed access has been revoked for this partner.
+      {% elif unavailable_reason == 'deleted' %}
+        This discussion is no longer available.
+      {% else %}
+        The voting widget is currently unavailable. Please visit Society Speaks directly to participate.
+      {% endif %}
     </p>
-    <a href="https://societyspeaks.io" class="unavailable-link" target="_blank" rel="noopener">
+    <a href="{{ base_url or 'https://societyspeaks.io' }}" class="unavailable-link" target="_blank" rel="noopener">
       Visit Society Speaks
     </a>
   </div>

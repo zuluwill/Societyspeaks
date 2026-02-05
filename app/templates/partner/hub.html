@@ -121,6 +121,17 @@
         <h3 class="text-xl font-bold mb-2">API Documentation</h3>
         <p class="text-gray-300 text-sm">Lookup by article URL, get snapshots, and build dynamic integrations.</p>
       </a>
+
+      {% if demo_discussion_id %}
+      <a href="{{ base_url }}/discussions/{{ demo_discussion_id }}/embed" target="_blank" rel="noopener" class="block bg-white border-2 border-gray-200 hover:border-blue-500 text-gray-900 rounded-xl p-6 text-center transition-colors md:col-span-2">
+        <svg class="w-10 h-10 mx-auto mb-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+        </svg>
+        <h3 class="text-xl font-bold mb-2">See Example Embed</h3>
+        <p class="text-gray-600 text-sm">View a live embed in a new tab. Try voting and clicking through to the full consensus.</p>
+      </a>
+      {% endif %}
     </div>
   </section>
 
@@ -189,11 +200,38 @@
     </div>
   </section>
 
+  <!-- For Partners: Allowlist, Pilot, Uptime, Vote-only -->
+  <section class="mb-16 bg-gray-50 rounded-xl p-8">
+    <h2 class="text-2xl font-bold text-gray-900 mb-6">For Partners</h2>
+
+    <div class="space-y-6 text-gray-700">
+      <div>
+        <h3 class="font-semibold text-gray-900 mb-2">Allowlist &amp; access</h3>
+        <p class="text-sm">Your domain must be allowlisted for embedding and API access. Request access via <a href="mailto:partners@societyspeaks.io" class="text-blue-600 hover:underline">partners@societyspeaks.io</a>; we add your production and staging/preview origins (e.g. <code class="bg-gray-200 px-1 rounded">staging.yoursite.com</code>) within <strong>1 business day</strong>. Include any staging domains when you request so you can test before go-live.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold text-gray-900 mb-2">Pilot success</h3>
+        <p class="text-sm">We measure pilot success by: (1) partner can embed in under 30 minutes, (2) no critical (P0) bugs in the first week, (3) partner would recommend. We review after each pilot and refine copy and process; we do not change the embed contract or API without notice.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold text-gray-900 mb-2">Uptime</h3>
+        <p class="text-sm">We operate the service on a best-effort basis. We do not offer a formal SLA unless agreed in writing. An optional status page may be published later; for incidents we will notify affected partners when appropriate.</p>
+      </div>
+      <div>
+        <h3 class="font-semibold text-gray-900 mb-2">Vote-only embed</h3>
+        <p class="text-sm">The embed is vote-only: readers vote on statements and can report; they cannot submit new statements from the embed. Full details in the <a href="{{ url_for('partner.rules_of_record') }}" class="text-blue-600 hover:underline">Rules of the Record</a>.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer Links -->
   <section class="border-t border-gray-200 pt-8">
     <div class="flex flex-wrap justify-center gap-6 text-sm">
       <a href="{{ url_for('partner.rules_of_record') }}" class="text-gray-600 hover:text-blue-600">Rules of the Record</a>
+      <a href="{{ url_for('main.content_policy') }}" class="text-gray-600 hover:text-blue-600">Content Policy</a>
+      <a href="{{ url_for('main.privacy_policy') }}" class="text-gray-600 hover:text-blue-600">Privacy Policy</a>
       <a href="{{ url_for('partner.api_docs') }}" class="text-gray-600 hover:text-blue-600">API Reference</a>
+      <a href="{{ url_for('partner.api_playground') }}" class="text-gray-600 hover:text-blue-600">API Playground</a>
       <a href="{{ url_for('partner.embed_generator') }}" class="text-gray-600 hover:text-blue-600">Embed Generator</a>
       <a href="mailto:partners@societyspeaks.io" class="text-gray-600 hover:text-blue-600">Contact Us</a>
     </div>

@@ -44,7 +44,7 @@ def init_api(app):
         partner_bp,
         origins=origins,
         methods=['GET', 'POST', 'OPTIONS'],
-        allow_headers=['Content-Type', 'X-Requested-With', 'X-Partner-Ref'],
+        allow_headers=['Content-Type', 'X-Requested-With', 'X-Partner-Ref', 'X-API-Key'],
         max_age=86400,  # Cache preflight for 24 hours
         supports_credentials=False  # No cookies needed for API
     )

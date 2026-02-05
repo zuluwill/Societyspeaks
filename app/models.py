@@ -436,6 +436,10 @@ class Discussion(db.Model):
     # Enable stricter rate limits and monitoring for high-profile or sensitive discussions
     integrity_mode = db.Column(db.Boolean, default=False, nullable=False)
 
+    # Discussion lifecycle
+    # Closed discussions remain visible but no longer accept votes (embed or full site)
+    is_closed = db.Column(db.Boolean, default=False, nullable=False)
+
     # Constants for geographic scope
     SCOPE_GLOBAL = 'global'
     SCOPE_COUNTRY = 'country'

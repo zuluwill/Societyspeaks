@@ -1,0 +1,247 @@
+openapi: 3.0.3
+info:
+  title: Society Speaks Partner API
+  description: |
+    Integrate Society Speaks on your site. Look up discussions by article URL,
+    get participation snapshots, and embed the voting widget.
+    All endpoints return JSON. See the [Partner Hub](.) for full documentation.
+  version: 1.0.0
+  contact:
+    name: Society Speaks
+    url: https://societyspeaks.io
+
+servers:
+  - url: /
+    description: Same origin (use when trying from API Playground)
+
+paths:
+  /api/discussions/by-article-url:
+    get:
+      summary: Lookup by article URL
+      description: Find a discussion by the URL of your article. Returns embed, consensus, and snapshot URLs.
+      operationId: lookupByArticleUrl
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: The article URL (URL-encoded)
+          schema:
+            type: string
+            example: "https://example.com/article"
+        - name: ref
+          in: query
+          required: false
+          description: Partner reference for analytics
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Discussion found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  discussion_id:
+                    type: integer
+                  slug:
+                    type: string
+                  title:
+                    type: string
+                  embed_url:
+                    type: string
+                    format: uri
+                  consensus_url:
+                    type: string
+                    format: uri
+                  snapshot_url:
+                    type: string
+                    format: uri
+                  source:
+                    type: string
+                    enum: [rss, partner]
+        '400':
+          description: Invalid or missing URL
+        '404':
+          description: No discussion found for this URL
+
+  /api/discussions/{discussion_id}/snapshot:
+    get:
+      summary: Get discussion snapshot
+      description: Get participation counts and metadata. Does not include analysis content.
+      operationId: getSnapshot
+      parameters:
+        - name: discussion_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: ref
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Snapshot data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  discussion_id:
+                    type: integer
+                  discussion_title:
+                    type: string
+                  participant_count:
+                    type: integer
+                  statement_count:
+                    type: integer
+                  has_analysis:
+                    type: boolean
+                  consensus_url:
+                    type: string
+                    format: uri
+                  opinion_groups:
+                    type: integer
+                    description: Present when has_analysis is true
+                  analyzed_at:
+                    type: string
+                    format: date-time
+                  teaser_text:
+                    type: string
+        '404':
+          description: Discussion not found
+
+  /api/oembed:
+    get:
+      summary: oEmbed provider
+      description: Returns oEmbed JSON for Society Speaks discussion URLs (for platforms that support oEmbed).
+      operationId: getOembed
+      parameters:
+        - name: url
+          in: query
+          required: true
+          description: Society Speaks discussion or consensus URL
+          schema:
+            type: string
+            format: uri
+        - name: maxwidth
+          in: query
+          schema:
+            type: integer
+        - name: maxheight
+          in: query
+          schema:
+            type: integer
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json]
+            default: json
+      responses:
+        '200':
+          description: oEmbed response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    example: "rich"
+                  version:
+                    type: string
+                  title:
+                    type: string
+                  provider_name:
+                    type: string
+                  html:
+                    type: string
+                  width:
+                    type: integer
+                  height:
+                    type: integer
+        '400':
+          description: Invalid URL
+        '404':
+          description: Discussion not found
+
+  /api/partner/discussions:
+    post:
+      summary: Create discussion (authenticated)
+      description: Create a discussion for an article not ingested via RSS. Requires X-API-Key header.
+      operationId: createDiscussion
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - article_url
+                - title
+              properties:
+                article_url:
+                  type: string
+                  format: uri
+                title:
+                  type: string
+                  maxLength: 200
+                excerpt:
+                  type: string
+                source_name:
+                  type: string
+                seed_statements:
+                  type: array
+                  items:
+                    type: object
+                    required: [content]
+                    properties:
+                      content:
+                        type: string
+                      position:
+                        type: string
+                        enum: [pro, con, neutral]
+      responses:
+        '201':
+          description: Discussion created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  discussion_id:
+                    type: integer
+                  slug:
+                    type: string
+                  title:
+                    type: string
+                  embed_url:
+                    type: string
+                  consensus_url:
+                    type: string
+                  snapshot_url:
+                    type: string
+                  source:
+                    type: string
+                    example: partner
+                  statement_count:
+                    type: integer
+        '400':
+          description: Invalid request or missing excerpt/seed_statements
+        '401':
+          description: Missing or invalid API key
+        '409':
+          description: Discussion already exists for this URL
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Partner API key (required for Create Discussion)

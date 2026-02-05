@@ -104,6 +104,12 @@ def terms_and_conditions():
     return render_template('terms-and-conditions.html')
 
 
+@main_bp.route('/content-policy')
+def content_policy():
+    """Short content policy for partners: what we allow and remove. Linked from partner hub and embed footer."""
+    return render_template('content-policy.html')
+
+
 
 @main_bp.route('/sitemap.xml')
 def sitemap():

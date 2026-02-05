@@ -4,6 +4,7 @@ Shared utilities for Partner API.
 Contains rate limiting helpers, request parsing, analytics, and common functions.
 """
 import re
+from urllib.parse import urlparse, parse_qs, urlencode, urlunparse
 import logging
 from typing import Optional
 
@@ -38,11 +39,19 @@ def get_rate_limit_key():
     - One abusive visitor doesn't exhaust limits for all visitors from that IP
     - Partners can have per-partner rate limit tiers in future
 
-    Returns:
-        str: Rate limit key in format "ip_address:partner_ref"
+    Ref is sanitized and truncated to avoid DoS via very long ref strings.
     """
     ip = get_remote_address()
-    ref = request.args.get('ref', 'unknown')
+    ref_raw = get_partner_ref()
+    if not ref_raw and request.is_json:
+        data = request.get_json(silent=True) or {}
+        if isinstance(data, dict):
+            ref_raw = data.get('ref')
+    if not isinstance(ref_raw, str):
+        ref_raw = 'unknown'
+    ref = sanitize_partner_ref(ref_raw) if ref_raw and ref_raw != 'unknown' else (ref_raw or 'unknown')
+    if not ref:
+        ref = 'unknown'
     return f"{ip}:{ref}"
 
 
@@ -80,6 +89,7 @@ def build_discussion_urls(discussion, include_ref=True):
         dict: Dictionary with embed_url, consensus_url, snapshot_url
     """
     ref = get_partner_ref() if include_ref else None
+    ref = sanitize_partner_ref(ref) if ref else None
     base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
 
     # Build URLs
@@ -89,15 +99,34 @@ def build_discussion_urls(discussion, include_ref=True):
 
     # Add ref parameter if we have partner context
     if ref:
-        embed_url = f"{embed_url}?ref={ref}"
-        consensus_url = f"{consensus_url}?ref={ref}"
-        snapshot_url = f"{snapshot_url}?ref={ref}"
+        embed_url = append_ref_param(embed_url, ref)
+        consensus_url = append_ref_param(consensus_url, ref)
+        snapshot_url = append_ref_param(snapshot_url, ref)
 
     return {
         'embed_url': embed_url,
         'consensus_url': consensus_url,
         'snapshot_url': snapshot_url
     }
+
+
+def append_ref_param(url: str, ref: str) -> str:
+    """
+    Append or replace the ref query parameter on a URL.
+
+    Uses sanitized ref to avoid URL or analytics injection.
+    """
+    if not url or not ref:
+        return url
+    sanitized = sanitize_partner_ref(ref)
+    if not sanitized:
+        return url
+
+    parsed = urlparse(url)
+    query = parse_qs(parsed.query)
+    query['ref'] = [sanitized]
+    new_query = urlencode(query, doseq=True)
+    return urlunparse(parsed._replace(query=new_query))
 
 
 def is_partner_origin_allowed(origin):

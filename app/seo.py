@@ -113,6 +113,11 @@ def generate_sitemap():
         f'    <loc>{base_url}/terms-and-conditions</loc>',
         '    <priority>0.5</priority>',
         '    <changefreq>monthly</changefreq>',
+        '  </url>',
+        '  <url>',
+        f'    <loc>{base_url}/content-policy</loc>',
+        '    <priority>0.5</priority>',
+        '    <changefreq>monthly</changefreq>',
         '  </url>'
     ])
 

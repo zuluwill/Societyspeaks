@@ -393,6 +393,17 @@
       display: block;
     }
 
+    /* Closed discussion banner */
+    .closed-banner {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 10px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 0.875rem;
+      text-align: center;
+    }
+
     /* Responsive */
     @media (max-width: 480px) {
       body {
@@ -599,6 +610,12 @@
       You're offline. Votes will be saved when you reconnect.
     </div>
 
+    {% if is_closed %}
+    <div class="closed-banner" role="status">
+      This discussion is closed. You can still view the full record.
+    </div>
+    {% endif %}
+
     <!-- Header -->
     <header class="embed-header">
       <h1 class="embed-title">{{ discussion.title }}</h1>
@@ -637,6 +654,7 @@
             data-vote="1"
             onclick="vote({{ statement.id }}, 1, this)"
             aria-label="Agree with this statement"
+            {% if is_closed %}disabled{% endif %}
           >
             <span class="vote-btn__loading">
               <svg class="spinner" viewBox="0 0 24 24" fill="none">
@@ -657,6 +675,7 @@
             data-vote="-1"
             onclick="vote({{ statement.id }}, -1, this)"
             aria-label="Disagree with this statement"
+            {% if is_closed %}disabled{% endif %}
           >
             <span class="vote-btn__loading">
               <svg class="spinner" viewBox="0 0 24 24" fill="none">
@@ -677,6 +696,7 @@
             data-vote="0"
             onclick="vote({{ statement.id }}, 0, this)"
             aria-label="Unsure about this statement"
+            {% if is_closed %}disabled{% endif %}
           >
             <span class="vote-btn__loading">
               <svg class="spinner" viewBox="0 0 24 24" fill="none">
@@ -720,7 +740,12 @@
       <svg class="empty-state__icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
       </svg>
+      {% if discussion.has_native_statements %}
       <p>No statements yet. Check back soon!</p>
+      {% else %}
+      <p>This discussion is not currently available for embed voting.</p>
+      <p><a href="{{ consensus_url }}" target="_blank" rel="noopener">View the full discussion on Society Speaks</a></p>
+      {% endif %}
     </div>
     {% endif %}
 
@@ -730,7 +755,8 @@
         View Full Analysis
       </a>
       <p class="embed-attribution">
-        Powered by <a href="https://societyspeaks.io" target="_blank" rel="noopener">Society Speaks</a>
+        Powered by <a href="{{ base_url or 'https://societyspeaks.io' }}" target="_blank" rel="noopener">Society Speaks</a>
+        <span class="embed-attribution-sep">·</span> <a href="{{ (base_url or 'https://societyspeaks.io') }}/content-policy" target="_blank" rel="noopener">Content Policy</a>
       </p>
     </footer>
   </div>
@@ -778,11 +804,30 @@
       csrfToken: '{{ csrf_token() }}',
       partnerRef: '{{ ref|e }}',
       consensusUrl: '{{ consensus_url }}',
-      voteGateThreshold: 5
+      voteGateThreshold: 5,
+      isClosed: {{ 'true' if is_closed else 'false' }}
     };
 
     // Storage key for this discussion's votes
     const STORAGE_KEY = `ss_votes_${config.discussionId}`;
+    const EMBED_PARTICIPANT_KEY = 'ss_embed_participant_id';
+    function getEmbedParticipantId() {
+      try {
+        let existing = localStorage.getItem(EMBED_PARTICIPANT_KEY);
+        if (existing) return existing;
+        const newId = (window.crypto && window.crypto.randomUUID)
+          ? window.crypto.randomUUID()
+          : `ss_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+        localStorage.setItem(EMBED_PARTICIPANT_KEY, newId);
+        return newId;
+      } catch (e) {
+        return `ss_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      }
+    }
+
+    const embedParticipantId = getEmbedParticipantId();
+    let analysisSnapshot = null;
+    let analysisFetchInFlight = null;
 
     // Pending votes queue for offline support
     let pendingVotes = [];
@@ -827,12 +872,21 @@
 
       if (!progressEl) return;
 
+      if (config.isClosed) {
+        progressEl.classList.add('vote-progress--complete');
+        countEl.textContent = `${count} / ${threshold} votes`;
+        fillEl.style.width = `${Math.min((count / threshold) * 100, 100)}%`;
+        hintEl.innerHTML = `This discussion is closed. <a href="${config.consensusUrl}" target="_blank" rel="noopener">View full record</a>`;
+        return;
+      }
+
       countEl.textContent = `${count} / ${threshold} votes`;
       fillEl.style.width = `${Math.min((count / threshold) * 100, 100)}%`;
 
       if (count >= threshold) {
         progressEl.classList.add('vote-progress--complete');
-        hintEl.innerHTML = `Thanks for participating! <a href="${config.consensusUrl}" target="_blank" rel="noopener">View full analysis</a>`;
+        applyAnalysisHint(hintEl);
+        ensureAnalysisSnapshot();
       } else {
         progressEl.classList.remove('vote-progress--complete');
         const remaining = threshold - count;
@@ -840,6 +894,46 @@
           ? 'Vote on 1 more statement to unlock analysis'
           : `Vote on ${remaining} more statements to unlock analysis`;
       }
+    }
+
+    function applyAnalysisHint(hintEl) {
+      if (!analysisSnapshot) {
+        hintEl.innerHTML = `Thanks for participating! <a href="${config.consensusUrl}" target="_blank" rel="noopener">View full analysis</a>`;
+        return;
+      }
+      if (analysisSnapshot.has_analysis) {
+        hintEl.innerHTML = `Thanks for participating! <a href="${config.consensusUrl}" target="_blank" rel="noopener">View full analysis</a>`;
+      } else {
+        const count = analysisSnapshot.participant_count || 0;
+        hintEl.innerHTML = `Analysis is not ready yet (${count} participants so far). <a href="${config.consensusUrl}" target="_blank" rel="noopener">View the record</a>`;
+      }
+    }
+
+    function buildSnapshotUrl() {
+      let url = `/api/discussions/${config.discussionId}/snapshot`;
+      if (config.partnerRef) {
+        url += `?ref=${encodeURIComponent(config.partnerRef)}`;
+      }
+      return url;
+    }
+
+    async function ensureAnalysisSnapshot() {
+      if (analysisSnapshot || analysisFetchInFlight) return;
+      analysisFetchInFlight = fetch(buildSnapshotUrl())
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data && typeof data === 'object') {
+            analysisSnapshot = data;
+            const hintEl = document.getElementById('voteHint');
+            if (hintEl) {
+              applyAnalysisHint(hintEl);
+            }
+          }
+        })
+        .catch(() => null)
+        .finally(() => {
+          analysisFetchInFlight = null;
+        });
     }
 
     function markVotedStatement(statementId, voteValue) {
@@ -948,14 +1042,16 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': config.csrfToken
+            'X-CSRFToken': config.csrfToken,
+            'X-Embed-Request': 'true'
           },
           credentials: 'include',
           signal: controller.signal,
           body: JSON.stringify({
             vote: voteValue,
             confidence: 3,
-            ref: config.partnerRef
+            ref: config.partnerRef,
+            embed_fingerprint: embedParticipantId
           })
         });
 
@@ -979,6 +1075,10 @@
     }
 
     async function vote(statementId, voteValue, button) {
+      if (config.isClosed) {
+        showToast('This discussion is closed. You can view the full record.', 'warning');
+        return;
+      }
       const card = button.closest('.statement-card');
       const buttons = card.querySelectorAll('.vote-btn');
 
@@ -1036,6 +1136,10 @@
             showToast("You're voting too fast. Please wait a moment.", 'warning');
             return;
           }
+          if (error.data && error.data.error === 'discussion_closed') {
+            showToast('This discussion is closed. You can view the full record.', 'warning');
+            return;
+          }
 
           if (retries < maxRetries) {
             retries++;
@@ -1060,6 +1164,17 @@
     // ===========================================
     // PostMessage for parent frame communication
     // ===========================================
+    function getParentOrigin() {
+      try {
+        if (document.referrer) {
+          return new URL(document.referrer).origin;
+        }
+      } catch (e) {
+        // Ignore referrer parsing errors
+      }
+      return '*';
+    }
+
     function sendHeightToParent() {
       if (window.parent === window) return;
 
@@ -1068,7 +1183,7 @@
         type: 'societyspeaks:embed:resize',
         discussionId: config.discussionId,
         height: height
-      }, '*');
+      }, getParentOrigin());
     }
 
     function notifyParentLoaded() {
@@ -1078,7 +1193,7 @@
         type: 'societyspeaks:embed:loaded',
         discussionId: config.discussionId,
         statementCount: config.statementCount
-      }, '*');
+      }, getParentOrigin());
     }
 
     // ===========================================
@@ -1148,13 +1263,15 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': config.csrfToken
+            'X-CSRFToken': config.csrfToken,
+            'X-Embed-Request': 'true'
           },
           credentials: 'include',
           body: JSON.stringify({
             statement_id: statementId,
             flag_reason: reason,
-            ref: config.partnerRef
+            ref: config.partnerRef,
+            embed_fingerprint: embedParticipantId
           })
         });
 

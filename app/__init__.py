@@ -237,6 +237,16 @@ def create_app():
         app.logger.error(f"Cache initialization error: {e}")
         cache.init_app(app, config={'CACHE_TYPE': 'SimpleCache'})
 
+    # Verify Redis-backed cache in production when REDIS_URL is set
+    if os.getenv("FLASK_ENV") == "production" and os.getenv('REDIS_URL'):
+        cache_type = None
+        try:
+            cache_type = cache.config.get('CACHE_TYPE')
+        except Exception:
+            cache_type = app.config.get('CACHE_TYPE')
+        if cache_type != 'RedisCache':
+            app.logger.error("CRITICAL: Cache is not using Redis in production despite REDIS_URL being set.")
+
     db.init_app(app)
     migrate.init_app(app, db)
     csrf.init_app(app)
