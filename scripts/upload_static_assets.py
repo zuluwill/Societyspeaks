@@ -45,7 +45,7 @@ def upload_assets():
         return True
 
     for full_path, storage_name in assets:
-        storage_path = f"static_assets/{storage_name}"
+        storage_path = f"static_assets/images/{storage_name}"
 
         try:
             with open(full_path, 'rb') as f:
