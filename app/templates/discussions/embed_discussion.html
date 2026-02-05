@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ discussion.title }} - Society Speaks</title>
+  <meta name="robots" content="noindex">
+
+  <!-- Performance hints -->
+  <link rel="preconnect" href="{{ request.url_root }}">
+  <link rel="dns-prefetch" href="{{ request.url_root }}">
+  <!-- Prefetch consensus page for faster CTA navigation -->
+  <link rel="prefetch" href="{{ consensus_url }}">
+
+  <style>
+    /* CSS Custom Properties for theming */
+    :root {
+      --embed-primary: {% if primary_color %}#{{ primary_color }}{% else %}#1e40af{% endif %};
+      --embed-primary-hover: {% if primary_color %}#{{ primary_color }}dd{% else %}#1e3a8a{% endif %};
+      --embed-bg: {% if bg_color %}#{{ bg_color }}{% else %}#ffffff{% endif %};
+      --embed-text: #1f2937;
+      --embed-text-light: #6b7280;
+      --embed-border: #e5e7eb;
+      --embed-agree: #22c55e;
+      --embed-agree-hover: #16a34a;
+      --embed-disagree: #ef4444;
+      --embed-disagree-hover: #dc2626;
+      --embed-unsure: #6b7280;
+      --embed-unsure-hover: #4b5563;
+      --embed-font: {% if font %}"{{ font }}", {% endif %}system-ui, -apple-system, sans-serif;
+    }
+
+    /* Theme presets */
+    {% if theme == 'observer' %}
+    :root {
+      --embed-primary: #000000;
+      --embed-primary-hover: #333333;
+      --embed-font: Georgia, "Times New Roman", serif;
+    }
+    {% elif theme == 'time' %}
+    :root {
+      --embed-primary: #e90606;
+      --embed-primary-hover: #c40505;
+      --embed-font: "Source Serif Pro", Georgia, serif;
+    }
+    {% elif theme == 'ted' %}
+    :root {
+      --embed-primary: #e62b1e;
+      --embed-primary-hover: #c42419;
+      --embed-font: Inter, system-ui, sans-serif;
+    }
+    {% endif %}
+
+    /* Base styles */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: var(--embed-font);
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--embed-text);
+      background-color: var(--embed-bg);
+    }
+
+    .embed-container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .embed-header {
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--embed-border);
+    }
+
+    .embed-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0 0 4px 0;
+      color: var(--embed-text);
+    }
+
+    .embed-meta {
+      font-size: 0.875rem;
+      color: var(--embed-text-light);
+    }
+
+    /* Vote progress bar */
+    .vote-progress {
+      background: #f3f4f6;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+
+    .vote-progress__label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--embed-text);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .vote-progress__bar {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .vote-progress__fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--embed-primary), var(--embed-agree));
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    .vote-progress__hint {
+      font-size: 0.75rem;
+      color: var(--embed-text-light);
+      margin-top: 6px;
+    }
+
+    .vote-progress--complete {
+      background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+      border: 1px solid #86efac;
+    }
+
+    .vote-progress--complete .vote-progress__label {
+      color: #166534;
+    }
+
+    /* Statement card */
+    .statement-card {
+      padding: 16px;
+      margin-bottom: 16px;
+      background: var(--embed-bg);
+      border: 1px solid var(--embed-border);
+      border-radius: 8px;
+    }
+
+    .statement-card--voted {
+      border-color: var(--embed-primary);
+      border-width: 2px;
+    }
+
+    .statement-content {
+      font-size: 1rem;
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .statement-type {
+      display: inline-block;
+      font-size: 0.625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 6px;
+      background: #f3f4f6;
+      color: var(--embed-text-light);
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    /* Vote buttons grid */
+    .vote-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .vote-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 8px;
+      min-height: 70px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 700;
+      color: white;
+      transition: background-color 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+
+    .vote-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .vote-btn:active {
+      transform: translateY(0);
+    }
+
+    .vote-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .vote-btn--agree {
+      background-color: var(--embed-agree);
+    }
+    .vote-btn--agree:hover:not(:disabled) {
+      background-color: var(--embed-agree-hover);
+    }
+    .vote-btn--agree.vote-btn--selected {
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.4);
+    }
+
+    .vote-btn--disagree {
+      background-color: var(--embed-disagree);
+    }
+    .vote-btn--disagree:hover:not(:disabled) {
+      background-color: var(--embed-disagree-hover);
+    }
+    .vote-btn--disagree.vote-btn--selected {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.4);
+    }
+
+    .vote-btn--unsure {
+      background-color: var(--embed-unsure);
+    }
+    .vote-btn--unsure:hover:not(:disabled) {
+      background-color: var(--embed-unsure-hover);
+    }
+    .vote-btn--unsure.vote-btn--selected {
+      box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.4);
+    }
+
+    .vote-btn__label {
+      font-size: 0.625rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .vote-btn__count {
+      font-size: 1.5rem;
+    }
+
+    .vote-btn__loading {
+      display: none;
+    }
+
+    .vote-btn--loading .vote-btn__loading {
+      display: block;
+    }
+
+    .vote-btn--loading .vote-btn__content {
+      display: none;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner {
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+
+    /* Vote stats */
+    .vote-stats {
+      margin-top: 8px;
+      font-size: 0.75rem;
+      color: var(--embed-text-light);
+      text-align: center;
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 20px;
+      background: #1f2937;
+      color: white;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.2s;
+      max-width: calc(100% - 32px);
+      text-align: center;
+    }
+
+    .toast--visible {
+      opacity: 1;
+    }
+
+    .toast--success {
+      background: #059669;
+    }
+
+    .toast--error {
+      background: #dc2626;
+    }
+
+    .toast--warning {
+      background: #d97706;
+    }
+
+    .toast__retry {
+      margin-left: 8px;
+      padding: 4px 8px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.75rem;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 32px 16px;
+      color: var(--embed-text-light);
+    }
+
+    .empty-state__icon {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    /* Footer / Attribution */
+    .embed-footer {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--embed-border);
+      text-align: center;
+    }
+
+    .embed-cta {
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: var(--embed-primary);
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border-radius: 6px;
+      transition: background-color 0.15s;
+    }
+
+    .embed-cta:hover {
+      background-color: var(--embed-primary-hover);
+    }
+
+    .embed-attribution {
+      margin-top: 12px;
+      font-size: 0.75rem;
+      color: var(--embed-text-light);
+    }
+
+    .embed-attribution a {
+      color: var(--embed-primary);
+      text-decoration: none;
+    }
+
+    .embed-attribution a:hover {
+      text-decoration: underline;
+    }
+
+    /* Offline banner */
+    .offline-banner {
+      display: none;
+      background: #fef3c7;
+      color: #92400e;
+      padding: 8px 16px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 0.875rem;
+      text-align: center;
+    }
+
+    .offline-banner--visible {
+      display: block;
+    }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      body {
+        padding: 12px;
+      }
+
+      .vote-btn {
+        padding: 10px 6px;
+        min-height: 60px;
+      }
+
+      .vote-btn__count {
+        font-size: 1.25rem;
+      }
+    }
+
+    /* Accessibility */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .vote-btn:focus-visible {
+      outline: 3px solid var(--embed-primary);
+      outline-offset: 2px;
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      .vote-btn,
+      .toast,
+      .vote-progress__fill {
+        transition: none;
+      }
+
+      .spinner {
+        animation: none;
+      }
+    }
+
+    /* Flag/Report button */
+    .statement-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--embed-border);
+    }
+
+    .flag-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      color: var(--embed-text-light);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .flag-btn:hover {
+      color: var(--embed-disagree);
+      border-color: var(--embed-disagree);
+    }
+
+    .flag-btn:focus-visible {
+      outline: 2px solid var(--embed-primary);
+      outline-offset: 2px;
+    }
+
+    .flag-btn--flagged {
+      color: var(--embed-disagree);
+      cursor: default;
+    }
+
+    .flag-btn svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Flag modal */
+    .flag-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1001;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .flag-modal--visible {
+      display: flex;
+    }
+
+    .flag-modal__content {
+      background: var(--embed-bg);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .flag-modal__title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 0 0 12px 0;
+    }
+
+    .flag-modal__options {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .flag-modal__option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--embed-border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+    }
+
+    .flag-modal__option:hover {
+      border-color: var(--embed-primary);
+      background: #f9fafb;
+    }
+
+    .flag-modal__option input {
+      margin: 0;
+    }
+
+    .flag-modal__option span {
+      font-size: 0.875rem;
+    }
+
+    .flag-modal__buttons {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .flag-modal__btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+
+    .flag-modal__btn--cancel {
+      background: transparent;
+      border: 1px solid var(--embed-border);
+      color: var(--embed-text);
+    }
+
+    .flag-modal__btn--cancel:hover {
+      background: #f3f4f6;
+    }
+
+    .flag-modal__btn--submit {
+      background: var(--embed-disagree);
+      border: none;
+      color: white;
+    }
+
+    .flag-modal__btn--submit:hover {
+      background: var(--embed-disagree-hover);
+    }
+
+    .flag-modal__btn--submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="embed-container" role="main">
+    <!-- Skip link for accessibility -->
+    <a href="#statements-list" class="sr-only">Skip to statements</a>
+
+    <!-- Offline banner -->
+    <div id="offlineBanner" class="offline-banner" role="alert">
+      You're offline. Votes will be saved when you reconnect.
+    </div>
+
+    <!-- Header -->
+    <header class="embed-header">
+      <h1 class="embed-title">{{ discussion.title }}</h1>
+      <p class="embed-meta">
+        {{ statements|length }} statement{% if statements|length != 1 %}s{% endif %} to vote on
+      </p>
+    </header>
+
+    <!-- Vote progress (5-vote gate) -->
+    {% if statements %}
+    <div id="voteProgress" class="vote-progress" role="status" aria-live="polite">
+      <div class="vote-progress__label">
+        <span>Your progress</span>
+        <span id="voteCount">0 / 5 votes</span>
+      </div>
+      <div class="vote-progress__bar">
+        <div id="voteProgressFill" class="vote-progress__fill" style="width: 0%"></div>
+      </div>
+      <p class="vote-progress__hint" id="voteHint">Vote on statements to help build consensus</p>
+    </div>
+    {% endif %}
+
+    <!-- Statements -->
+    {% if statements %}
+    <div id="statements-list" class="statements-list" role="list" aria-label="Statements to vote on">
+      {% for statement in statements %}
+      <article class="statement-card" role="listitem" data-statement-id="{{ statement.id }}">
+        <span class="statement-type">{{ statement.statement_type }}</span>
+        <p class="statement-content">{{ statement.content }}</p>
+
+        <div class="vote-grid" role="group" aria-label="Vote options for this statement">
+          <!-- Agree -->
+          <button
+            type="button"
+            class="vote-btn vote-btn--agree"
+            data-vote="1"
+            onclick="vote({{ statement.id }}, 1, this)"
+            aria-label="Agree with this statement"
+          >
+            <span class="vote-btn__loading">
+              <svg class="spinner" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+                <path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            </span>
+            <span class="vote-btn__content">
+              <span class="vote-btn__label">Agree</span>
+              <span class="vote-btn__count" data-count="agree">{{ statement.vote_count_agree }}</span>
+            </span>
+          </button>
+
+          <!-- Disagree -->
+          <button
+            type="button"
+            class="vote-btn vote-btn--disagree"
+            data-vote="-1"
+            onclick="vote({{ statement.id }}, -1, this)"
+            aria-label="Disagree with this statement"
+          >
+            <span class="vote-btn__loading">
+              <svg class="spinner" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+                <path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            </span>
+            <span class="vote-btn__content">
+              <span class="vote-btn__label">Disagree</span>
+              <span class="vote-btn__count" data-count="disagree">{{ statement.vote_count_disagree }}</span>
+            </span>
+          </button>
+
+          <!-- Unsure -->
+          <button
+            type="button"
+            class="vote-btn vote-btn--unsure"
+            data-vote="0"
+            onclick="vote({{ statement.id }}, 0, this)"
+            aria-label="Unsure about this statement"
+          >
+            <span class="vote-btn__loading">
+              <svg class="spinner" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" opacity="0.25"/>
+                <path fill="currentColor" opacity="0.75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+              </svg>
+            </span>
+            <span class="vote-btn__content">
+              <span class="vote-btn__label">Unsure</span>
+              <span class="vote-btn__count" data-count="unsure">{{ statement.vote_count_unsure }}</span>
+            </span>
+          </button>
+        </div>
+
+        <div class="vote-stats" aria-live="polite">
+          <span class="total-votes">{{ statement.total_votes }}</span> total votes
+          {% if statement.total_votes > 0 %}
+          &middot; <span class="agreement-rate">{{ "%.0f"|format(statement.agreement_rate * 100) }}%</span> agreement
+          {% endif %}
+        </div>
+
+        <div class="statement-actions">
+          <button
+            type="button"
+            class="flag-btn"
+            data-statement-id="{{ statement.id }}"
+            onclick="openFlagModal({{ statement.id }})"
+            aria-label="Report this statement"
+          >
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+            </svg>
+            <span class="flag-btn__text">Report</span>
+          </button>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <svg class="empty-state__icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+      </svg>
+      <p>No statements yet. Check back soon!</p>
+    </div>
+    {% endif %}
+
+    <!-- Footer with CTA -->
+    <footer class="embed-footer">
+      <a href="{{ consensus_url }}" class="embed-cta" target="_blank" rel="noopener" id="consensusLink">
+        View Full Analysis
+      </a>
+      <p class="embed-attribution">
+        Powered by <a href="https://societyspeaks.io" target="_blank" rel="noopener">Society Speaks</a>
+      </p>
+    </footer>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+
+  <!-- Flag modal -->
+  <div id="flagModal" class="flag-modal" role="dialog" aria-modal="true" aria-labelledby="flagModalTitle">
+    <div class="flag-modal__content">
+      <h2 id="flagModalTitle" class="flag-modal__title">Report this statement</h2>
+      <form id="flagForm">
+        <input type="hidden" id="flagStatementId" name="statement_id" value="">
+        <div class="flag-modal__options" role="radiogroup" aria-label="Reason for reporting">
+          <label class="flag-modal__option">
+            <input type="radio" name="flag_reason" value="spam" required>
+            <span>Spam or advertising</span>
+          </label>
+          <label class="flag-modal__option">
+            <input type="radio" name="flag_reason" value="harassment">
+            <span>Harassment or abuse</span>
+          </label>
+          <label class="flag-modal__option">
+            <input type="radio" name="flag_reason" value="misinformation">
+            <span>Misinformation</span>
+          </label>
+          <label class="flag-modal__option">
+            <input type="radio" name="flag_reason" value="off_topic">
+            <span>Off-topic or irrelevant</span>
+          </label>
+        </div>
+        <div class="flag-modal__buttons">
+          <button type="button" class="flag-modal__btn flag-modal__btn--cancel" onclick="closeFlagModal()">Cancel</button>
+          <button type="submit" class="flag-modal__btn flag-modal__btn--submit" id="flagSubmitBtn" disabled>Submit Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Configuration
+    const config = {
+      discussionId: {{ discussion.id }},
+      statementCount: {{ statements|length }},
+      csrfToken: '{{ csrf_token() }}',
+      partnerRef: '{{ ref|e }}',
+      consensusUrl: '{{ consensus_url }}',
+      voteGateThreshold: 5
+    };
+
+    // Storage key for this discussion's votes
+    const STORAGE_KEY = `ss_votes_${config.discussionId}`;
+
+    // Pending votes queue for offline support
+    let pendingVotes = [];
+    let isOnline = navigator.onLine;
+
+    // ===========================================
+    // LocalStorage helpers
+    // ===========================================
+    function getStoredVotes() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function storeVote(statementId, voteValue) {
+      try {
+        const votes = getStoredVotes();
+        votes[statementId] = voteValue;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(votes));
+      } catch (e) {
+        // localStorage unavailable (private browsing) - continue without persistence
+      }
+    }
+
+    function getVoteCount() {
+      return Object.keys(getStoredVotes()).length;
+    }
+
+    // ===========================================
+    // UI Updates
+    // ===========================================
+    function updateVoteProgress() {
+      const count = getVoteCount();
+      const threshold = config.voteGateThreshold;
+      const progressEl = document.getElementById('voteProgress');
+      const countEl = document.getElementById('voteCount');
+      const fillEl = document.getElementById('voteProgressFill');
+      const hintEl = document.getElementById('voteHint');
+
+      if (!progressEl) return;
+
+      countEl.textContent = `${count} / ${threshold} votes`;
+      fillEl.style.width = `${Math.min((count / threshold) * 100, 100)}%`;
+
+      if (count >= threshold) {
+        progressEl.classList.add('vote-progress--complete');
+        hintEl.innerHTML = `Thanks for participating! <a href="${config.consensusUrl}" target="_blank" rel="noopener">View full analysis</a>`;
+      } else {
+        progressEl.classList.remove('vote-progress--complete');
+        const remaining = threshold - count;
+        hintEl.textContent = remaining === 1
+          ? 'Vote on 1 more statement to unlock analysis'
+          : `Vote on ${remaining} more statements to unlock analysis`;
+      }
+    }
+
+    function markVotedStatement(statementId, voteValue) {
+      const card = document.querySelector(`[data-statement-id="${statementId}"]`);
+      if (!card) return;
+
+      card.classList.add('statement-card--voted');
+
+      // Clear all selected states first
+      card.querySelectorAll('.vote-btn').forEach(btn => {
+        btn.classList.remove('vote-btn--selected');
+      });
+
+      // Mark the selected vote
+      const voteMap = { 1: 'agree', '-1': 'disagree', 0: 'unsure' };
+      const voteClass = voteMap[voteValue] || voteMap[String(voteValue)];
+      const selectedBtn = card.querySelector(`.vote-btn--${voteClass}`);
+      if (selectedBtn) {
+        selectedBtn.classList.add('vote-btn--selected');
+      }
+    }
+
+    function restoreVoteUI() {
+      const storedVotes = getStoredVotes();
+      Object.entries(storedVotes).forEach(([statementId, voteValue]) => {
+        markVotedStatement(statementId, voteValue);
+      });
+      updateVoteProgress();
+    }
+
+    // ===========================================
+    // Toast notifications
+    // ===========================================
+    function showToast(message, type = 'info', showRetry = false, retryFn = null) {
+      const toast = document.getElementById('toast');
+      toast.innerHTML = message;
+
+      if (showRetry && retryFn) {
+        const retryBtn = document.createElement('button');
+        retryBtn.className = 'toast__retry';
+        retryBtn.textContent = 'Retry';
+        retryBtn.onclick = () => {
+          toast.classList.remove('toast--visible');
+          retryFn();
+        };
+        toast.appendChild(retryBtn);
+      }
+
+      toast.className = 'toast toast--visible' + (type ? ' toast--' + type : '');
+
+      clearTimeout(toast._timeout);
+      toast._timeout = setTimeout(() => {
+        toast.classList.remove('toast--visible');
+      }, showRetry ? 10000 : 3000);
+    }
+
+    // ===========================================
+    // Offline handling
+    // ===========================================
+    function updateOnlineStatus() {
+      isOnline = navigator.onLine;
+      const banner = document.getElementById('offlineBanner');
+
+      if (banner) {
+        if (isOnline) {
+          banner.classList.remove('offline-banner--visible');
+          if (pendingVotes.length > 0) {
+            processPendingVotes();
+          }
+        } else {
+          banner.classList.add('offline-banner--visible');
+        }
+      }
+    }
+
+    async function processPendingVotes() {
+      while (pendingVotes.length > 0 && isOnline) {
+        const { statementId, voteValue, resolve, reject } = pendingVotes[0];
+        try {
+          await submitVoteToServer(statementId, voteValue);
+          pendingVotes.shift();
+          resolve();
+        } catch (error) {
+          // If still offline or rate limited, stop processing
+          if (!isOnline || error.status === 429) {
+            break;
+          }
+          pendingVotes.shift();
+          reject(error);
+        }
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    // ===========================================
+    // Voting
+    // ===========================================
+    async function submitVoteToServer(statementId, voteValue) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+      try {
+        const response = await fetch(`/statements/${statementId}/vote`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': config.csrfToken
+          },
+          credentials: 'include',
+          signal: controller.signal,
+          body: JSON.stringify({
+            vote: voteValue,
+            confidence: 3,
+            ref: config.partnerRef
+          })
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const error = new Error('Vote failed');
+          error.status = response.status;
+          error.data = await response.json().catch(() => ({}));
+          throw error;
+        }
+
+        return await response.json();
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          error.message = 'Request timed out';
+        }
+        throw error;
+      }
+    }
+
+    async function vote(statementId, voteValue, button) {
+      const card = button.closest('.statement-card');
+      const buttons = card.querySelectorAll('.vote-btn');
+
+      // Disable all buttons
+      buttons.forEach(btn => btn.disabled = true);
+
+      // Show loading state
+      button.classList.add('vote-btn--loading');
+
+      // Optimistically update localStorage and UI
+      storeVote(statementId, voteValue);
+      markVotedStatement(statementId, voteValue);
+      updateVoteProgress();
+
+      // If offline, queue the vote
+      if (!isOnline) {
+        showToast('Vote saved offline. Will sync when connected.', 'warning');
+        button.classList.remove('vote-btn--loading');
+        buttons.forEach(btn => btn.disabled = false);
+
+        return new Promise((resolve, reject) => {
+          pendingVotes.push({ statementId, voteValue, resolve, reject });
+        });
+      }
+
+      // Submit to server with retry logic
+      let retries = 0;
+      const maxRetries = 3;
+      const retryDelays = [1000, 2000, 4000];
+
+      const attemptVote = async () => {
+        try {
+          const data = await submitVoteToServer(statementId, voteValue);
+
+          if (data.success) {
+            // Update vote counts from server
+            card.querySelector('[data-count="agree"]').textContent = data.vote_count_agree;
+            card.querySelector('[data-count="disagree"]').textContent = data.vote_count_disagree;
+            card.querySelector('[data-count="unsure"]').textContent = data.vote_count_unsure;
+
+            // Update stats
+            const statsEl = card.querySelector('.vote-stats');
+            const total = data.total_votes;
+            const agreePct = Math.round(data.agreement_rate * 100);
+            statsEl.innerHTML = `<span class="total-votes">${total}</span> total votes` +
+              (total > 0 ? ` &middot; <span class="agreement-rate">${agreePct}%</span> agreement` : '');
+
+            showToast('Vote recorded!', 'success');
+          } else {
+            throw new Error(data.error || 'Failed to record vote');
+          }
+        } catch (error) {
+          // Handle specific error codes
+          if (error.status === 429) {
+            showToast("You're voting too fast. Please wait a moment.", 'warning');
+            return;
+          }
+
+          if (retries < maxRetries) {
+            retries++;
+            await new Promise(r => setTimeout(r, retryDelays[retries - 1]));
+            return attemptVote();
+          }
+
+          // Max retries reached
+          showToast("Couldn't save vote.", 'error', true, () => {
+            retries = 0;
+            attemptVote();
+          });
+        } finally {
+          button.classList.remove('vote-btn--loading');
+          buttons.forEach(btn => btn.disabled = false);
+        }
+      };
+
+      await attemptVote();
+    }
+
+    // ===========================================
+    // PostMessage for parent frame communication
+    // ===========================================
+    function sendHeightToParent() {
+      if (window.parent === window) return;
+
+      const height = document.documentElement.scrollHeight;
+      window.parent.postMessage({
+        type: 'societyspeaks:embed:resize',
+        discussionId: config.discussionId,
+        height: height
+      }, '*');
+    }
+
+    function notifyParentLoaded() {
+      if (window.parent === window) return;
+
+      window.parent.postMessage({
+        type: 'societyspeaks:embed:loaded',
+        discussionId: config.discussionId,
+        statementCount: config.statementCount
+      }, '*');
+    }
+
+    // ===========================================
+    // Flag/Report functionality
+    // ===========================================
+    const FLAG_STORAGE_KEY = `ss_flags_${config.discussionId}`;
+
+    function getStoredFlags() {
+      try {
+        const stored = localStorage.getItem(FLAG_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function storeFlag(statementId) {
+      try {
+        const flags = getStoredFlags();
+        flags[statementId] = true;
+        localStorage.setItem(FLAG_STORAGE_KEY, JSON.stringify(flags));
+      } catch (e) {
+        // localStorage unavailable - continue without persistence
+      }
+    }
+
+    function openFlagModal(statementId) {
+      // Check if already flagged
+      const flags = getStoredFlags();
+      if (flags[statementId]) {
+        showToast('You have already reported this statement.', 'info');
+        return;
+      }
+
+      const modal = document.getElementById('flagModal');
+      const statementIdInput = document.getElementById('flagStatementId');
+      const form = document.getElementById('flagForm');
+
+      statementIdInput.value = statementId;
+      form.reset();
+      document.getElementById('flagSubmitBtn').disabled = true;
+      modal.classList.add('flag-modal--visible');
+
+      // Focus first option for accessibility
+      modal.querySelector('input[type="radio"]').focus();
+    }
+
+    function closeFlagModal() {
+      const modal = document.getElementById('flagModal');
+      modal.classList.remove('flag-modal--visible');
+    }
+
+    async function submitFlag(e) {
+      e.preventDefault();
+
+      const statementId = document.getElementById('flagStatementId').value;
+      const reason = document.querySelector('input[name="flag_reason"]:checked')?.value;
+      const submitBtn = document.getElementById('flagSubmitBtn');
+
+      if (!reason) return;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        const response = await fetch(`/api/embed/flag`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': config.csrfToken
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            statement_id: statementId,
+            flag_reason: reason,
+            ref: config.partnerRef
+          })
+        });
+
+        if (response.ok || response.status === 409) {
+          // 409 = already flagged, treat as success
+          storeFlag(statementId);
+          markStatementAsFlagged(statementId);
+          closeFlagModal();
+          showToast('Thank you for your report. We will review it.', 'success');
+        } else {
+          throw new Error('Failed to submit report');
+        }
+      } catch (error) {
+        showToast('Could not submit report. Please try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Report';
+      }
+    }
+
+    function markStatementAsFlagged(statementId) {
+      const flagBtn = document.querySelector(`.flag-btn[data-statement-id="${statementId}"]`);
+      if (flagBtn) {
+        flagBtn.classList.add('flag-btn--flagged');
+        flagBtn.querySelector('.flag-btn__text').textContent = 'Reported';
+        flagBtn.disabled = true;
+      }
+    }
+
+    function restoreFlagUI() {
+      const flags = getStoredFlags();
+      Object.keys(flags).forEach(statementId => {
+        markStatementAsFlagged(statementId);
+      });
+    }
+
+    // ===========================================
+    // Initialization
+    // ===========================================
+    document.addEventListener('DOMContentLoaded', () => {
+      // Restore UI from localStorage
+      restoreVoteUI();
+      restoreFlagUI();
+
+      // Notify parent of load
+      notifyParentLoaded();
+
+      // Send initial height
+      sendHeightToParent();
+
+      // Update height on resize or content change
+      const resizeObserver = new ResizeObserver(() => {
+        sendHeightToParent();
+      });
+      resizeObserver.observe(document.body);
+
+      // Check online status
+      updateOnlineStatus();
+
+      // Flag modal event listeners
+      const flagForm = document.getElementById('flagForm');
+      const flagSubmitBtn = document.getElementById('flagSubmitBtn');
+
+      flagForm.addEventListener('submit', submitFlag);
+
+      // Enable submit button when reason selected
+      flagForm.querySelectorAll('input[name="flag_reason"]').forEach(input => {
+        input.addEventListener('change', () => {
+          flagSubmitBtn.disabled = false;
+        });
+      });
+
+      // Close modal on backdrop click
+      document.getElementById('flagModal').addEventListener('click', (e) => {
+        if (e.target.classList.contains('flag-modal')) {
+          closeFlagModal();
+        }
+      });
+
+      // Close modal on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          closeFlagModal();
+        }
+      });
+    });
+  </script>
+</body>
+</html>

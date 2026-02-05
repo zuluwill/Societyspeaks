@@ -12,6 +12,13 @@
   rel="canonical"
   href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}"
 />
+<!-- oEmbed discovery link for auto-embedding -->
+<link
+  rel="alternate"
+  type="application/json+oembed"
+  href="{{ url_for('partner_api.oembed', url=url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True), _external=True) }}"
+  title="{{ discussion.title }}"
+/>
 
 <!-- Structured Data for SEO -->
 <script type="application/ld+json">

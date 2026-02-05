@@ -585,3 +585,87 @@ def init_commands(app):
             click.echo(f"Error seeding brief templates: {str(e)}", err=True)
             import traceback
             traceback.print_exc()
+
+    @app.cli.command('backfill-normalized-urls')
+    @click.option('--batch-size', default=500, help='Number of articles to process per batch')
+    @click.option('--dry-run', is_flag=True, help='Show what would be done without making changes')
+    def backfill_normalized_urls_cmd(batch_size, dry_run):
+        """
+        Backfill normalized_url and url_hash for existing NewsArticle records.
+
+        This command should be run after the migration that adds the normalized_url
+        and url_hash columns to the news_article table.
+
+        Example:
+            flask backfill-normalized-urls
+            flask backfill-normalized-urls --batch-size=1000
+            flask backfill-normalized-urls --dry-run
+        """
+        from app.models import NewsArticle
+        from app.lib.url_normalizer import normalize_url, url_hash
+
+        try:
+            # Count total articles needing update
+            total = NewsArticle.query.filter(
+                NewsArticle.normalized_url.is_(None)
+            ).count()
+
+            if total == 0:
+                click.echo("✓ All articles already have normalized_url set")
+                return
+
+            click.echo(f"Found {total} articles needing normalized_url backfill")
+
+            if dry_run:
+                click.echo("(Dry run - no changes will be made)")
+                # Show a few examples
+                samples = NewsArticle.query.filter(
+                    NewsArticle.normalized_url.is_(None)
+                ).limit(5).all()
+                for article in samples:
+                    normalized = normalize_url(article.url)
+                    click.echo(f"  {article.url[:60]}...")
+                    click.echo(f"    -> {normalized[:60] if normalized else 'INVALID'}...")
+                return
+
+            processed = 0
+            updated = 0
+            errors = 0
+
+            while processed < total:
+                # Get batch of articles
+                articles = NewsArticle.query.filter(
+                    NewsArticle.normalized_url.is_(None)
+                ).limit(batch_size).all()
+
+                if not articles:
+                    break
+
+                for article in articles:
+                    try:
+                        normalized = normalize_url(article.url)
+                        if normalized:
+                            article.normalized_url = normalized
+                            article.url_hash = url_hash(article.url)
+                            updated += 1
+                        else:
+                            # URL couldn't be normalized - log but don't fail
+                            click.echo(f"  Warning: Could not normalize URL for article {article.id}: {article.url[:50]}...")
+                            errors += 1
+                    except Exception as e:
+                        click.echo(f"  Error processing article {article.id}: {e}")
+                        errors += 1
+
+                    processed += 1
+
+                # Commit batch
+                db.session.commit()
+                click.echo(f"  Processed {processed}/{total} ({updated} updated, {errors} errors)")
+
+            click.echo(f"\n✓ Backfill complete: {updated} updated, {errors} errors out of {total} articles")
+
+        except Exception as e:
+            db.session.rollback()
+            click.echo(f"Error during backfill: {str(e)}", err=True)
+            import traceback
+            traceback.print_exc()

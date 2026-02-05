@@ -195,9 +195,108 @@ def create_discussion():
 def view_discussion_redirect(discussion_id):
     """Redirect discussion URLs without slug to the canonical URL with slug."""
     discussion = Discussion.query.get_or_404(discussion_id)
-    return redirect(url_for('discussions.view_discussion', 
-                          discussion_id=discussion.id, 
+    return redirect(url_for('discussions.view_discussion',
+                          discussion_id=discussion.id,
                           slug=discussion.slug), code=301)
+
+
+@discussions_bp.route('/<int:discussion_id>/embed', methods=['GET'])
+def embed_discussion(discussion_id):
+    """
+    Partner embed view for voting on a discussion.
+
+    This is a minimal, frameable page that shows:
+    - Discussion title
+    - Statement list with vote controls
+    - Link to full consensus on Society Speaks
+
+    Query Parameters:
+        ref: Partner reference for analytics
+        theme: Preset theme (observer, time, ted, or default)
+        primary: Primary color hex (e.g., 1e40af)
+        bg: Background color hex
+        font: Font family from allowlist
+
+    The route sets special CSP headers to allow framing from partner origins.
+    """
+    from flask import make_response
+    from app.models import Statement
+
+    # Check if embed feature is enabled
+    if not current_app.config.get('EMBED_ENABLED', True):
+        return render_template('discussions/embed_unavailable.html'), 503
+
+    discussion = Discussion.query.get_or_404(discussion_id)
+
+    # Get partner ref for analytics
+    ref = request.args.get('ref', '')
+
+    # Get theme parameters
+    theme = request.args.get('theme', 'default')
+    primary_color = request.args.get('primary', '')
+    bg_color = request.args.get('bg', '')
+    font = request.args.get('font', '')
+
+    # Validate font against allowlist (single source: app.partner.constants)
+    from app.partner.constants import EMBED_ALLOWED_FONTS
+    if font and font not in EMBED_ALLOWED_FONTS:
+        font = ''
+
+    # Build consensus URL
+    base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+    consensus_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}/consensus"
+    if ref:
+        consensus_url = f"{consensus_url}?ref={ref}"
+
+    # Get statements for voting
+    statements = []
+    if discussion.has_native_statements:
+        statements = Statement.query.filter(
+            Statement.discussion_id == discussion.id,
+            Statement.is_deleted == False
+        ).order_by(Statement.created_at.asc()).all()
+
+    # Track embed load event
+    try:
+        from app.api.utils import track_partner_event
+        track_partner_event('partner_embed_loaded', {
+            'discussion_id': discussion.id,
+            'discussion_title': discussion.title,
+            'statement_count': len(statements),
+            'theme': theme,
+            'has_custom_colors': bool(primary_color or bg_color),
+            'has_custom_font': bool(font)
+        })
+    except Exception as e:
+        current_app.logger.debug(f"Embed tracking error: {e}")
+
+    # Render template
+    response = make_response(render_template(
+        'discussions/embed_discussion.html',
+        discussion=discussion,
+        statements=statements,
+        consensus_url=consensus_url,
+        ref=ref,
+        theme=theme,
+        primary_color=primary_color,
+        bg_color=bg_color,
+        font=font
+    ))
+
+    # Set CSP frame-ancestors header for partner allowlist
+    partner_origins = current_app.config.get('PARTNER_ORIGINS', [])
+    if partner_origins:
+        frame_ancestors = "'self' " + " ".join(partner_origins)
+    else:
+        # In development, allow any origin for testing
+        frame_ancestors = "'self' *" if current_app.config.get('ENV') == 'development' else "'self'"
+
+    response.headers['Content-Security-Policy'] = f"frame-ancestors {frame_ancestors}"
+
+    # Remove X-Frame-Options to allow framing (CSP frame-ancestors takes precedence)
+    response.headers.pop('X-Frame-Options', None)
+
+    return response
 
 
 @discussions_bp.route('/<int:discussion_id>/<slug>', methods=['GET'])

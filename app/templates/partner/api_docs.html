@@ -1,0 +1,479 @@
+{% extends "layout.html" %}
+
+{% block title %}API Reference - Society Speaks{% endblock %}
+
+{% block meta_description %}API documentation for Society Speaks partner integration. Lookup discussions by article URL, get participation snapshots, and embed voting widgets.{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-12">
+  <header class="mb-8">
+    <nav class="text-sm text-gray-500 mb-4">
+      <a href="{{ url_for('partner.hub') }}" class="hover:text-blue-600">For Publishers</a>
+      <span class="mx-2">/</span>
+      <span class="text-gray-900">API Reference</span>
+    </nav>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">API Reference</h1>
+    <p class="text-gray-600">Integrate Society Speaks programmatically. All endpoints return JSON.</p>
+  </header>
+
+  <div class="space-y-12">
+    <!-- Base URL -->
+    <section>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Base URL</h2>
+      <code class="block bg-gray-900 text-green-400 px-4 py-3 rounded-lg">{{ base_url }}/api</code>
+    </section>
+
+    <!-- Lookup API -->
+    <section>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Lookup by Article URL</h2>
+      <p class="text-gray-600 mb-4">Find a discussion by the URL of your article.</p>
+
+      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+          <code class="text-sm">
+            <span class="text-blue-600 font-bold">GET</span>
+            <span class="text-gray-900">/api/discussions/by-article-url</span>
+          </code>
+        </div>
+        <div class="p-4 space-y-4">
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Query Parameters</h4>
+            <table class="w-full text-sm">
+              <tr class="border-b">
+                <td class="py-2 font-mono text-purple-600">url</td>
+                <td class="py-2 text-gray-500">required</td>
+                <td class="py-2 text-gray-600">The article URL (URL-encoded)</td>
+              </tr>
+              <tr>
+                <td class="py-2 font-mono text-purple-600">ref</td>
+                <td class="py-2 text-gray-500">optional</td>
+                <td class="py-2 text-gray-600">Partner reference for analytics</td>
+              </tr>
+            </table>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
+            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article"</pre>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Success Response (200)</h4>
+            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+  "discussion_id": 123,
+  "slug": "should-we-reform-housing-policy",
+  "title": "Should we reform housing policy?",
+  "embed_url": "{{ base_url }}/discussions/123/embed",
+  "consensus_url": "{{ base_url }}/discussions/123/should-we.../consensus",
+  "snapshot_url": "{{ base_url }}/api/discussions/123/snapshot",
+  "source": "rss"
+}</pre>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Error Responses</h4>
+            <div class="space-y-2 text-sm">
+              <div class="flex gap-4">
+                <code class="text-red-600">400</code>
+                <span class="text-gray-600"><code>missing_url</code> - URL parameter required</span>
+              </div>
+              <div class="flex gap-4">
+                <code class="text-red-600">400</code>
+                <span class="text-gray-600"><code>invalid_url</code> - URL could not be parsed</span>
+              </div>
+              <div class="flex gap-4">
+                <code class="text-red-600">404</code>
+                <span class="text-gray-600"><code>no_discussion</code> - No discussion for this URL</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Snapshot API -->
+    <section>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Get Discussion Snapshot</h2>
+      <p class="text-gray-600 mb-4">Get participation counts and metadata. Does not include analysis content.</p>
+
+      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+          <code class="text-sm">
+            <span class="text-blue-600 font-bold">GET</span>
+            <span class="text-gray-900">/api/discussions/{discussion_id}/snapshot</span>
+          </code>
+        </div>
+        <div class="p-4 space-y-4">
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Path Parameters</h4>
+            <table class="w-full text-sm">
+              <tr>
+                <td class="py-2 font-mono text-purple-600">discussion_id</td>
+                <td class="py-2 text-gray-500">required</td>
+                <td class="py-2 text-gray-600">The discussion ID</td>
+              </tr>
+            </table>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
+            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">curl "{{ base_url }}/api/discussions/123/snapshot"</pre>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Success Response (200)</h4>
+            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+  "discussion_id": 123,
+  "discussion_title": "Should we reform housing policy?",
+  "participant_count": 847,
+  "statement_count": 12,
+  "has_analysis": true,
+  "opinion_groups": 3,
+  "analyzed_at": "2026-02-05T10:30:00Z",
+  "consensus_url": "{{ base_url }}/discussions/123/.../consensus",
+  "teaser_text": "Housing reform debate reveals surprising common ground"
+}</pre>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">When Analysis Not Ready</h4>
+            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+  "discussion_id": 123,
+  "discussion_title": "Should we reform housing policy?",
+  "participant_count": 23,
+  "statement_count": 5,
+  "has_analysis": false,
+  "consensus_url": "{{ base_url }}/discussions/123/.../consensus"
+}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Embed URL -->
+    <section>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Embed URL Parameters</h2>
+      <p class="text-gray-600 mb-4">Customize the embed appearance with URL parameters.</p>
+
+      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+          <code class="text-sm text-gray-900">{{ base_url }}/discussions/{discussion_id}/embed</code>
+        </div>
+        <div class="p-4">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b">
+                <th class="py-2 text-left font-semibold text-gray-900">Parameter</th>
+                <th class="py-2 text-left font-semibold text-gray-900">Description</th>
+                <th class="py-2 text-left font-semibold text-gray-900">Example</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b">
+                <td class="py-3 font-mono text-purple-600">theme</td>
+                <td class="py-3 text-gray-600">Preset theme: <code>default</code>, <code>observer</code>, <code>time</code>, <code>ted</code></td>
+                <td class="py-3 font-mono text-gray-500">theme=observer</td>
+              </tr>
+              <tr class="border-b">
+                <td class="py-3 font-mono text-purple-600">primary</td>
+                <td class="py-3 text-gray-600">Primary color (hex without #)</td>
+                <td class="py-3 font-mono text-gray-500">primary=1e40af</td>
+              </tr>
+              <tr class="border-b">
+                <td class="py-3 font-mono text-purple-600">bg</td>
+                <td class="py-3 text-gray-600">Background color (hex without #)</td>
+                <td class="py-3 font-mono text-gray-500">bg=f9fafb</td>
+              </tr>
+              <tr class="border-b">
+                <td class="py-3 font-mono text-purple-600">font</td>
+                <td class="py-3 text-gray-600">Font family from allowlist</td>
+                <td class="py-3 font-mono text-gray-500">font=Georgia</td>
+              </tr>
+              <tr>
+                <td class="py-3 font-mono text-purple-600">ref</td>
+                <td class="py-3 text-gray-600">Partner reference for analytics</td>
+                <td class="py-3 font-mono text-gray-500">ref=observer</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+            <p class="text-sm text-blue-800">
+              <strong>Allowed fonts:</strong> system-ui, Georgia, Inter, Lato, Open Sans, Source Serif Pro
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PostMessage Events -->
+    <section>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">PostMessage Events</h2>
+      <p class="text-gray-600 mb-4">The embed communicates with the parent frame via postMessage.</p>
+
+      <div class="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
+        <div>
+          <h4 class="font-semibold text-gray-900 mb-2">societyspeaks:embed:loaded</h4>
+          <p class="text-gray-600 text-sm mb-2">Sent when the embed finishes loading.</p>
+          <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+  "type": "societyspeaks:embed:loaded",
+  "discussionId": 123,
+  "statementCount": 5
+}</pre>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-gray-900 mb-2">societyspeaks:embed:resize</h4>
+          <p class="text-gray-600 text-sm mb-2">Sent when the embed content height changes. Use to resize iframe.</p>
+          <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+  "type": "societyspeaks:embed:resize",
+  "discussionId": 123,
+  "height": 450
+}</pre>
+        </div>
+
+        <div>
+          <h4 class="font-semibold text-gray-900 mb-2">Example: Auto-resize iframe</h4>
+          <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">window.addEventListener('message', (event) => {
+  if (event.data.type === 'societyspeaks:embed:resize') {
+    const iframe = document.querySelector('iframe[src*="societyspeaks"]');
+    if (iframe) iframe.style.height = event.data.height + 'px';
+  }
+});</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- oEmbed -->
+    <section>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">oEmbed Provider</h2>
+      <p class="text-gray-600 mb-4">Enable automatic embedding of Society Speaks discussions in platforms that support oEmbed.</p>
+
+      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+          <code class="text-sm">
+            <span class="text-blue-600 font-bold">GET</span>
+            <span class="text-gray-900">/api/oembed</span>
+          </code>
+        </div>
+        <div class="p-4 space-y-4">
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Query Parameters</h4>
+            <table class="w-full text-sm">
+              <tr class="border-b">
+                <td class="py-2 font-mono text-purple-600">url</td>
+                <td class="py-2 text-gray-500">required</td>
+                <td class="py-2 text-gray-600">Society Speaks discussion URL</td>
+              </tr>
+              <tr class="border-b">
+                <td class="py-2 font-mono text-purple-600">maxwidth</td>
+                <td class="py-2 text-gray-500">optional</td>
+                <td class="py-2 text-gray-600">Maximum embed width</td>
+              </tr>
+              <tr class="border-b">
+                <td class="py-2 font-mono text-purple-600">maxheight</td>
+                <td class="py-2 text-gray-500">optional</td>
+                <td class="py-2 text-gray-600">Maximum embed height</td>
+              </tr>
+              <tr>
+                <td class="py-2 font-mono text-purple-600">format</td>
+                <td class="py-2 text-gray-500">optional</td>
+                <td class="py-2 text-gray-600">Response format (only "json" supported)</td>
+              </tr>
+            </table>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
+            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">curl "{{ base_url }}/api/oembed?url={{ base_url }}/discussions/123/my-discussion"</pre>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Success Response (200)</h4>
+            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+  "type": "rich",
+  "version": "1.0",
+  "title": "Should we reform housing policy?",
+  "provider_name": "Society Speaks",
+  "provider_url": "{{ base_url }}",
+  "html": "&lt;iframe src=\"{{ base_url }}/discussions/123/embed\" ...&gt;&lt;/iframe&gt;",
+  "width": 600,
+  "height": 400,
+  "cache_age": 3600
+}</pre>
+          </div>
+
+          <div class="p-3 bg-blue-50 rounded-lg">
+            <p class="text-sm text-blue-800">
+              <strong>Auto-discovery:</strong> Discussion pages include a <code>&lt;link rel="alternate" type="application/json+oembed"&gt;</code> tag for automatic oEmbed discovery by compatible platforms.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Create Discussion API -->
+    <section>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Create Discussion (Authenticated)</h2>
+      <p class="text-gray-600 mb-4">Create a discussion for an article not ingested via RSS. Requires API key.</p>
+
+      <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+        <div class="bg-gray-50 px-4 py-3 border-b border-gray-200">
+          <code class="text-sm">
+            <span class="text-green-600 font-bold">POST</span>
+            <span class="text-gray-900">/api/partner/discussions</span>
+          </code>
+        </div>
+        <div class="p-4 space-y-4">
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Headers</h4>
+            <table class="w-full text-sm">
+              <tr class="border-b">
+                <td class="py-2 font-mono text-purple-600">X-API-Key</td>
+                <td class="py-2 text-gray-500">required</td>
+                <td class="py-2 text-gray-600">Your partner API key</td>
+              </tr>
+              <tr>
+                <td class="py-2 font-mono text-purple-600">Content-Type</td>
+                <td class="py-2 text-gray-500">required</td>
+                <td class="py-2 text-gray-600">application/json</td>
+              </tr>
+            </table>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Request Body</h4>
+            <table class="w-full text-sm">
+              <tr class="border-b">
+                <td class="py-2 font-mono text-purple-600">article_url</td>
+                <td class="py-2 text-gray-500">required</td>
+                <td class="py-2 text-gray-600">The article URL (will be normalized)</td>
+              </tr>
+              <tr class="border-b">
+                <td class="py-2 font-mono text-purple-600">title</td>
+                <td class="py-2 text-gray-500">required</td>
+                <td class="py-2 text-gray-600">Discussion title (max 200 chars)</td>
+              </tr>
+              <tr class="border-b">
+                <td class="py-2 font-mono text-purple-600">excerpt</td>
+                <td class="py-2 text-gray-500">conditional</td>
+                <td class="py-2 text-gray-600">Article excerpt for AI-generated statements</td>
+              </tr>
+              <tr class="border-b">
+                <td class="py-2 font-mono text-purple-600">seed_statements</td>
+                <td class="py-2 text-gray-500">conditional</td>
+                <td class="py-2 text-gray-600">Array of {content, position} statements</td>
+              </tr>
+              <tr>
+                <td class="py-2 font-mono text-purple-600">source_name</td>
+                <td class="py-2 text-gray-500">optional</td>
+                <td class="py-2 text-gray-600">Your publication name for attribution</td>
+              </tr>
+            </table>
+            <p class="text-xs text-gray-500 mt-2">Note: Either <code>excerpt</code> or <code>seed_statements</code> must be provided.</p>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
+            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">curl -X POST "{{ base_url }}/api/partner/discussions" \
+  -H "X-API-Key: your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "article_url": "https://example.com/article/urban-cars",
+    "title": "Should cities ban cars from downtown areas?",
+    "excerpt": "A new study shows that car-free zones improve air quality...",
+    "source_name": "Example News"
+  }'</pre>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Success Response (201)</h4>
+            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+  "discussion_id": 456,
+  "slug": "should-cities-ban-cars-from-downtown-areas",
+  "title": "Should cities ban cars from downtown areas?",
+  "embed_url": "{{ base_url }}/discussions/456/embed",
+  "consensus_url": "{{ base_url }}/discussions/456/.../consensus",
+  "snapshot_url": "{{ base_url }}/api/discussions/456/snapshot",
+  "source": "partner",
+  "statement_count": 5
+}</pre>
+          </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Error Responses</h4>
+            <div class="space-y-2 text-sm">
+              <div class="flex gap-4">
+                <code class="text-red-600">401</code>
+                <span class="text-gray-600"><code>invalid_api_key</code> - Missing or invalid API key</span>
+              </div>
+              <div class="flex gap-4">
+                <code class="text-red-600">400</code>
+                <span class="text-gray-600"><code>missing_content</code> - Need excerpt or seed_statements</span>
+              </div>
+              <div class="flex gap-4">
+                <code class="text-red-600">409</code>
+                <span class="text-gray-600"><code>discussion_exists</code> - Discussion already exists for URL</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rate Limits -->
+    <section>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Rate Limits</h2>
+      <div class="bg-white border border-gray-200 rounded-lg p-4">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b">
+              <th class="py-2 text-left font-semibold text-gray-900">Endpoint</th>
+              <th class="py-2 text-left font-semibold text-gray-900">Limit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b">
+              <td class="py-3 text-gray-600">Lookup by article URL</td>
+              <td class="py-3 font-mono text-gray-900">60 requests / minute / IP</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 text-gray-600">Get snapshot</td>
+              <td class="py-3 font-mono text-gray-900">120 requests / minute / IP</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 text-gray-600">Vote submission</td>
+              <td class="py-3 font-mono text-gray-900">30 requests / minute / IP</td>
+            </tr>
+            <tr>
+              <td class="py-3 text-gray-600">Create discussion</td>
+              <td class="py-3 font-mono text-gray-900">30 requests / hour / API key</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="text-sm text-gray-500 mt-4">
+          Responses include a <code>429 Too Many Requests</code> with <code>rate_limited</code> error when limits are exceeded.
+        </p>
+      </div>
+    </section>
+
+    <!-- Error Format -->
+    <section>
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Error Format</h2>
+      <p class="text-gray-600 mb-4">All errors return JSON with a consistent format.</p>
+      <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">{
+  "error": "error_code",
+  "message": "Human-readable description of the error"
+}</pre>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <div class="mt-12 pt-8 border-t border-gray-200">
+    <p class="text-gray-500 text-sm">
+      Questions? <a href="mailto:partners@societyspeaks.io" class="text-blue-600 hover:underline">Contact us</a>
+      or visit the <a href="{{ url_for('partner.hub') }}" class="text-blue-600 hover:underline">Partner Hub</a>.
+    </p>
+  </div>
+</div>
+{% endblock %}

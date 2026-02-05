@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Embed Unavailable - Society Speaks</title>
+  <meta name="robots" content="noindex">
+
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #4b5563;
+      background-color: #f9fafb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+    }
+
+    .unavailable-container {
+      text-align: center;
+      max-width: 400px;
+    }
+
+    .unavailable-icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto 16px;
+      opacity: 0.5;
+    }
+
+    .unavailable-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 8px 0;
+    }
+
+    .unavailable-message {
+      margin: 0 0 16px 0;
+      font-size: 0.875rem;
+    }
+
+    .unavailable-link {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #1e40af;
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.875rem;
+      border-radius: 6px;
+      transition: background-color 0.15s;
+    }
+
+    .unavailable-link:hover {
+      background-color: #1e3a8a;
+    }
+  </style>
+</head>
+<body>
+  <div class="unavailable-container">
+    <svg class="unavailable-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+    </svg>
+    <h1 class="unavailable-title">Embed Temporarily Unavailable</h1>
+    <p class="unavailable-message">
+      The voting widget is currently unavailable. Please visit Society Speaks directly to participate.
+    </p>
+    <a href="https://societyspeaks.io" class="unavailable-link" target="_blank" rel="noopener">
+      Visit Society Speaks
+    </a>
+  </div>
+</body>
+</html>

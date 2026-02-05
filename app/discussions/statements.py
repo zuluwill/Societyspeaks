@@ -14,6 +14,7 @@ from sqlalchemy import func, desc, or_
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 import hashlib
+import re
 import secrets
 try:
     import posthog
@@ -202,7 +203,8 @@ def create_statement(discussion_id):
             user_id=identifier['user_id'],
             session_fingerprint=identifier['session_fingerprint'],
             content=form.content.data.strip(),
-            statement_type=form.statement_type.data
+            statement_type=form.statement_type.data,
+            source='user_submitted'  # Track origin for §13 AI Attribution
         )
         
         db.session.add(statement)
@@ -295,8 +297,49 @@ def after_request_set_statement_cookie(response):
     return response
 
 
+def get_vote_rate_limit():
+    """Default rate limit for the vote endpoint (30/min per IP).
+    Stricter per-discussion limits for integrity_mode are enforced in check_integrity_rate_limit()."""
+    return "30 per minute"
+
+
+def check_integrity_rate_limit(discussion, user_identifier):
+    """
+    Check stricter rate limits for discussions with integrity_mode enabled.
+
+    Returns: (allowed: bool, message: str or None)
+    """
+    if not discussion.integrity_mode:
+        return True, None
+
+    # Stricter limits for integrity mode: 10 votes per minute per discussion
+    one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
+
+    if user_identifier['user_id']:
+        recent_votes = StatementVote.query.filter(
+            StatementVote.user_id == user_identifier['user_id'],
+            StatementVote.discussion_id == discussion.id,
+            StatementVote.created_at > one_minute_ago
+        ).count()
+    else:
+        recent_votes = StatementVote.query.filter(
+            StatementVote.session_fingerprint == user_identifier['session_fingerprint'],
+            StatementVote.discussion_id == discussion.id,
+            StatementVote.created_at > one_minute_ago
+        ).count()
+
+    if recent_votes >= 10:
+        current_app.logger.warning(
+            f"Integrity rate limit triggered: discussion={discussion.id}, "
+            f"user_id={user_identifier['user_id']}, fingerprint={user_identifier['session_fingerprint'][:8] if user_identifier['session_fingerprint'] else None}"
+        )
+        return False, "Rate limit exceeded for this discussion. Please slow down."
+
+    return True, None
+
+
 @statements_bp.route('/statements/<int:statement_id>/vote', methods=['POST'])
-@limiter.limit("30 per minute")
+@limiter.limit(get_vote_rate_limit)
 def vote_statement(statement_id):
     """
     Vote on a statement (agree/disagree/unsure)
@@ -304,6 +347,8 @@ def vote_statement(statement_id):
     Supports both authenticated and anonymous voting (like pol.is):
     - Authenticated users: votes stored in DB with user_id
     - Anonymous users: votes stored in DB with session_fingerprint (can be merged to account later)
+
+    Includes integrity controls for sensitive discussions (stricter rate limits).
     """
     is_form_post = not request.is_json and request.headers.get('X-Requested-With') != 'XMLHttpRequest'
 
@@ -316,6 +361,19 @@ def vote_statement(statement_id):
         return jsonify({'error': 'Automated requests not allowed'}), 403
 
     statement = Statement.query.get_or_404(statement_id)
+
+    # Check integrity mode rate limits
+    user_identifier = get_user_identifier()
+    discussion = statement.discussion
+    allowed, rate_message = check_integrity_rate_limit(discussion, user_identifier)
+    if not allowed:
+        if is_form_post:
+            flash(rate_message, 'error')
+            return redirect(url_for('statements.view_statement', statement_id=statement_id))
+        return jsonify({'error': rate_message}), 429
+
+    # Partner ref for attribution (from embed or query param)
+    partner_ref = request.args.get('ref', '')
 
     if request.is_json:
         data = request.get_json()
@@ -338,6 +396,9 @@ def vote_statement(statement_id):
                 confidence = 3
         except (ValueError, TypeError):
             confidence = 3
+        # Override ref from JSON body if provided
+        if data.get('ref'):
+            partner_ref = data.get('ref')
     else:
         vote_raw = request.form.get('vote')
         if vote_raw is None or vote_raw == '':
@@ -359,6 +420,13 @@ def vote_statement(statement_id):
                 confidence = 3
         except (ValueError, TypeError):
             confidence = 3
+        # Check form for ref if not in query params
+        if not partner_ref and request.form.get('ref'):
+            partner_ref = request.form.get('ref')
+
+    # Sanitize partner_ref (shared rule: see app.api.utils.sanitize_partner_ref)
+    from app.api.utils import sanitize_partner_ref
+    partner_ref = sanitize_partner_ref(partner_ref)
 
     if vote_value not in [-1, 0, 1]:
         if is_form_post:
@@ -391,7 +459,8 @@ def vote_statement(statement_id):
                     user_id=current_user.id,
                     discussion_id=statement.discussion_id,
                     vote=vote_value,
-                    confidence=confidence
+                    confidence=confidence,
+                    partner_ref=partner_ref
                 )
                 db.session.add(existing_vote)
 
@@ -431,7 +500,8 @@ def vote_statement(statement_id):
                     session_fingerprint=fingerprint,
                     discussion_id=statement.discussion_id,
                     vote=vote_value,
-                    confidence=confidence
+                    confidence=confidence,
+                    partner_ref=partner_ref
                 )
                 db.session.add(existing_vote)
 

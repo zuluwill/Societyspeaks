@@ -1,5 +1,18 @@
-{% extends 'layout.html' %} {% block title %}Consensus Analysis - {{
-discussion.title }}{% endblock %} {% block content %}
+{% extends 'layout.html' %}
+
+{% block title %}Consensus Analysis - {{ discussion.title }}{% endblock %}
+
+{% block head %}
+<!-- oEmbed discovery link for auto-embedding -->
+<link
+  rel="alternate"
+  type="application/json+oembed"
+  href="{{ url_for('partner_api.oembed', url=url_for('consensus.consensus_results', discussion_id=discussion.id, slug=discussion.slug, _external=True), _external=True) }}"
+  title="{{ discussion.title }}"
+/>
+{% endblock %}
+
+{% block content %}
 <div class="container mx-auto px-4 py-8">
   <div class="mb-6">
     <h1 class="text-3xl font-bold mb-2">Consensus Analysis</h1>

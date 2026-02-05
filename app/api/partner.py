@@ -1,0 +1,666 @@
+"""
+Partner API Endpoints
+
+Provides lookup, snapshot, and create APIs for partner embed integration.
+All endpoints return JSON and use standardized error responses.
+"""
+import re
+import html
+from flask import Blueprint, request, jsonify, current_app
+from app import db, limiter, cache
+from flask_login import current_user
+
+from app.models import (
+    Discussion, NewsArticle, DiscussionSourceArticle, ConsensusAnalysis, Statement,
+    StatementFlag,
+)
+from app.discussions.statements import get_statement_vote_fingerprint
+from app.api.errors import api_error
+from app.api.utils import (
+    get_rate_limit_key, get_partner_ref, build_discussion_urls,
+    get_discussion_participant_count, get_discussion_statement_count,
+    sanitize_partner_ref, track_partner_event
+)
+
+
+partner_bp = Blueprint('partner_api', __name__)
+
+
+@partner_bp.route('/discussions/by-article-url', methods=['GET'])
+@limiter.limit("60 per minute", key_func=get_rate_limit_key)
+def lookup_by_article_url():
+    """
+    Look up a discussion by article URL.
+
+    Query Parameters:
+        url (required): The article URL to look up
+        ref (optional): Partner reference for analytics
+
+    Returns:
+        200: Discussion found with embed/snapshot/consensus URLs
+        400: Invalid or missing URL
+        404: No discussion found for this URL
+
+    Example:
+        GET /api/discussions/by-article-url?url=https://example.com/article&ref=observer
+    """
+    from app.lib.url_normalizer import normalize_url
+
+    # Get and validate URL parameter
+    url = request.args.get('url')
+    if not url:
+        return api_error('missing_url', 'The url parameter is required.', 400)
+
+    # Normalize the URL
+    normalized = normalize_url(url)
+    if not normalized:
+        return api_error('invalid_url', 'The provided URL is not valid or could not be parsed.', 400)
+
+    # Try cache first
+    cache_key = f"lookup:{normalized}"
+    cached = cache.get(cache_key)
+    if cached:
+        return jsonify(cached)
+
+    # Look up NewsArticle by normalized_url
+    article = NewsArticle.query.filter_by(normalized_url=normalized).first()
+
+    discussion = None
+    source = 'rss'
+
+    if article:
+        # Find discussion via DiscussionSourceArticle
+        link = DiscussionSourceArticle.query.filter_by(article_id=article.id).first()
+        if link:
+            discussion = Discussion.query.get(link.discussion_id)
+
+    # Phase 2: Check partner_article_url if no match (column added in Phase 2 migration)
+    if not discussion and hasattr(Discussion, 'partner_article_url'):
+        discussion = Discussion.query.filter_by(partner_article_url=normalized).first()
+        if discussion:
+            source = 'partner'
+
+    if not discussion:
+        return api_error('no_discussion', 'No discussion found for this article URL.', 404)
+
+    # Note: Discussions don't have is_deleted flag; they are hard-deleted
+    # If we need soft-delete in future, add is_deleted column to Discussion model
+
+    # Build response
+    urls = build_discussion_urls(discussion)
+    response_data = {
+        'discussion_id': discussion.id,
+        'slug': discussion.slug,
+        'title': discussion.title,
+        'embed_url': urls['embed_url'],
+        'consensus_url': urls['consensus_url'],
+        'snapshot_url': urls['snapshot_url'],
+        'source': source
+    }
+
+    # Cache for 5 minutes
+    cache.set(cache_key, response_data, timeout=300)
+
+    # Track API lookup event
+    track_partner_event('partner_api_lookup', {
+        'discussion_id': discussion.id,
+        'source': source,
+        'cache_hit': False
+    })
+
+    return jsonify(response_data)
+
+
+@partner_bp.route('/discussions/<int:discussion_id>/snapshot', methods=['GET'])
+@limiter.limit("120 per minute", key_func=get_rate_limit_key)
+def get_snapshot(discussion_id):
+    """
+    Get a snapshot of discussion participation (counts and link only).
+
+    This endpoint returns teaser information for display on partner sites.
+    It does NOT return analysis content, statement text, or consensus details.
+
+    Path Parameters:
+        discussion_id: The discussion ID
+
+    Query Parameters:
+        ref (optional): Partner reference for analytics
+
+    Returns:
+        200: Snapshot with participant/statement counts and consensus URL
+        404: Discussion not found
+
+    Example:
+        GET /api/discussions/123/snapshot?ref=observer
+    """
+    # Try cache first
+    cache_key = f"snapshot:{discussion_id}"
+    cached = cache.get(cache_key)
+    if cached:
+        return jsonify(cached)
+
+    # Load discussion
+    discussion = Discussion.query.get(discussion_id)
+    if not discussion:
+        return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
+
+    # Get counts
+    participant_count = get_discussion_participant_count(discussion)
+    statement_count = get_discussion_statement_count(discussion)
+
+    # Get latest consensus analysis
+    analysis = ConsensusAnalysis.query.filter_by(
+        discussion_id=discussion_id
+    ).order_by(ConsensusAnalysis.created_at.desc()).first()
+
+    # Build response
+    urls = build_discussion_urls(discussion)
+
+    response_data = {
+        'discussion_id': discussion.id,
+        'discussion_title': discussion.title,
+        'participant_count': participant_count,
+        'statement_count': statement_count,
+        'has_analysis': analysis is not None,
+        'consensus_url': urls['consensus_url']
+    }
+
+    # Add analysis metadata if available (but NOT content)
+    if analysis:
+        response_data['opinion_groups'] = analysis.num_clusters
+        response_data['analyzed_at'] = analysis.created_at.isoformat() if analysis.created_at else None
+
+        # Optional teaser text from AI summary (one line only)
+        if analysis.cluster_data and isinstance(analysis.cluster_data, dict):
+            ai_summary = analysis.cluster_data.get('ai_summary')
+            if ai_summary and isinstance(ai_summary, str):
+                # Truncate to first sentence or 150 chars
+                teaser = ai_summary.split('.')[0]
+                if len(teaser) > 150:
+                    teaser = teaser[:147] + '...'
+                response_data['teaser_text'] = teaser
+
+    # Cache for 10 minutes (invalidated when new analysis is created)
+    cache.set(cache_key, response_data, timeout=600)
+
+    # Track snapshot API event
+    track_partner_event('partner_api_snapshot', {
+        'discussion_id': discussion.id,
+        'has_analysis': response_data['has_analysis'],
+        'participant_count': participant_count,
+        'cache_hit': False
+    })
+
+    return jsonify(response_data)
+
+
+def _get_api_key_rate_limit_key():
+    """Rate limit key by API key for create endpoint."""
+    api_key = request.headers.get('X-API-Key', 'unknown')
+    return f"create:{api_key[:16]}"  # Use prefix of key for privacy
+
+
+def _validate_api_key():
+    """
+    Validate partner API key from request header.
+
+    Returns:
+        tuple: (is_valid, partner_id) - partner_id is the validated partner identifier
+    """
+    api_key = request.headers.get('X-API-Key')
+    if not api_key:
+        return False, None
+
+    # Get configured API keys from config
+    # Format in config: {'key': 'partner_id', ...}
+    api_keys = current_app.config.get('PARTNER_API_KEYS', {})
+
+    if api_key in api_keys:
+        return True, api_keys[api_key]
+
+    return False, None
+
+
+@partner_bp.route('/partner/discussions', methods=['POST'])
+@limiter.limit("30 per hour", key_func=_get_api_key_rate_limit_key)
+def create_discussion():
+    """
+    Create a new discussion for a partner article.
+
+    This endpoint allows partners to create discussions for articles
+    that are not ingested via RSS. Requires API key authentication.
+
+    Headers:
+        X-API-Key (required): Partner API key
+        Content-Type: application/json
+
+    Request Body:
+        article_url (required): The article URL (will be normalized)
+        title (required): Discussion title
+        excerpt (optional): Article excerpt for seed statement generation
+        source_name (optional): Partner/source name for attribution
+        seed_statements (optional): Array of {content, position} statements
+
+    Note: Either excerpt or seed_statements must be provided.
+
+    Returns:
+        201: Discussion created with embed/snapshot/consensus URLs
+        400: Invalid request (missing fields, validation errors)
+        401: Invalid or missing API key
+        409: Discussion already exists for this URL
+        429: Rate limit exceeded
+
+    Example:
+        POST /api/partner/discussions
+        {
+            "article_url": "https://example.com/article",
+            "title": "Should cities ban cars?",
+            "excerpt": "A new study shows...",
+            "source_name": "Example News"
+        }
+    """
+    from app.lib.url_normalizer import normalize_url
+    from app.trending.seed_generator import generate_seed_statements_from_content
+    from app.models import generate_slug
+
+    # Validate API key
+    is_valid, partner_id = _validate_api_key()
+    if not is_valid:
+        return api_error(
+            'invalid_api_key',
+            'A valid X-API-Key header is required.',
+            401
+        )
+
+    # Parse JSON body
+    data = request.get_json()
+    if not data:
+        return api_error(
+            'invalid_request',
+            'Request body must be valid JSON.',
+            400
+        )
+
+    # Validate required fields
+    article_url = data.get('article_url')
+    title = data.get('title')
+
+    if not article_url:
+        return api_error('missing_article_url', 'The article_url field is required.', 400)
+
+    if not title:
+        return api_error('missing_title', 'The title field is required.', 400)
+
+    # Validate: need either excerpt or seed_statements
+    excerpt = data.get('excerpt')
+    seed_statements = data.get('seed_statements')
+    source_name = data.get('source_name')
+
+    if not excerpt and not seed_statements:
+        return api_error(
+            'missing_content',
+            'Either excerpt or seed_statements must be provided.',
+            400
+        )
+
+    # Normalize URL
+    normalized_url = normalize_url(article_url)
+    if not normalized_url:
+        return api_error(
+            'invalid_url',
+            'The provided article_url is not valid or could not be parsed.',
+            400
+        )
+
+    # Check if discussion already exists for this URL
+    existing = Discussion.query.filter_by(partner_article_url=normalized_url).first()
+    if existing:
+        return api_error(
+            'discussion_exists',
+            f'A discussion already exists for this URL (id: {existing.id}).',
+            409
+        )
+
+    # Also check NewsArticle path
+    article = NewsArticle.query.filter_by(normalized_url=normalized_url).first()
+    if article:
+        link = DiscussionSourceArticle.query.filter_by(article_id=article.id).first()
+        if link:
+            return api_error(
+                'discussion_exists',
+                f'A discussion already exists for this URL via RSS (id: {link.discussion_id}).',
+                409
+            )
+
+    # Generate seed statements if not provided
+    statements_to_create = []
+    if seed_statements:
+        # Validate provided statements
+        valid_positions = ['pro', 'con', 'neutral']
+        for i, stmt in enumerate(seed_statements):
+            if not isinstance(stmt, dict) or 'content' not in stmt:
+                return api_error(
+                    'invalid_statement',
+                    f'Statement at index {i} must have a content field.',
+                    400
+                )
+            content = stmt.get('content', '').strip()
+            if not content or len(content) < 10:
+                return api_error(
+                    'invalid_statement',
+                    f'Statement at index {i} content must be at least 10 characters.',
+                    400
+                )
+            position = stmt.get('position', 'neutral').lower()
+            if position not in valid_positions:
+                position = 'neutral'
+            statements_to_create.append({
+                'content': content[:500],  # Max 500 chars
+                'position': position
+            })
+    else:
+        # Generate from excerpt using AI
+        try:
+            statements_to_create = generate_seed_statements_from_content(
+                title=title,
+                excerpt=excerpt,
+                source_name=source_name,
+                count=5
+            )
+        except Exception as e:
+            current_app.logger.error(f"Seed generation failed for partner {partner_id}: {e}")
+            return api_error(
+                'generation_failed',
+                'Failed to generate seed statements. Please try again or provide seed_statements.',
+                500
+            )
+
+        if not statements_to_create:
+            return api_error(
+                'generation_failed',
+                'Could not generate seed statements from the provided content. Please provide seed_statements.',
+                500
+            )
+
+    # Create discussion
+    try:
+        discussion = Discussion(
+            title=title[:200],  # Max 200 chars per model
+            description=excerpt[:500] if excerpt else None,
+            slug=generate_slug(title),
+            has_native_statements=True,
+            geographic_scope='global',
+            partner_article_url=normalized_url,
+            partner_id=partner_id
+        )
+        db.session.add(discussion)
+        db.session.flush()  # Get the discussion ID
+
+        # Create seed statements with source tracking
+        # Determine source: partner_provided if statements came from API, ai_generated if from LLM
+        statement_source = 'partner_provided' if seed_statements else 'ai_generated'
+        for stmt_data in statements_to_create:
+            statement = Statement(
+                discussion_id=discussion.id,
+                content=stmt_data['content'],
+                statement_type='claim',
+                is_seed=True,
+                mod_status=1,  # Seed statements are pre-approved
+                source=statement_source,
+            )
+            db.session.add(statement)
+
+        db.session.commit()
+
+        current_app.logger.info(
+            f"Partner {partner_id} created discussion {discussion.id} for {normalized_url}"
+        )
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Failed to create partner discussion: {e}")
+        return api_error(
+            'creation_failed',
+            'Failed to create discussion. Please try again.',
+            500
+        )
+
+    # Build response (same shape as lookup)
+    urls = build_discussion_urls(discussion, include_ref=False)
+    response_data = {
+        'discussion_id': discussion.id,
+        'slug': discussion.slug,
+        'title': discussion.title,
+        'embed_url': urls['embed_url'],
+        'consensus_url': urls['consensus_url'],
+        'snapshot_url': urls['snapshot_url'],
+        'source': 'partner',
+        'statement_count': len(statements_to_create)
+    }
+
+    # Track create API event
+    track_partner_event('partner_api_create', {
+        'discussion_id': discussion.id,
+        'partner_id': partner_id,
+        'statement_count': len(statements_to_create),
+        'used_ai_generation': not bool(seed_statements)
+    })
+
+    return jsonify(response_data), 201
+
+
+@partner_bp.route('/oembed', methods=['GET'])
+@limiter.limit("120 per minute", key_func=get_rate_limit_key)
+def oembed():
+    """
+    oEmbed provider endpoint.
+
+    Returns oEmbed JSON response for Society Speaks discussion URLs.
+    Supports both discussion pages and consensus pages.
+
+    Query Parameters:
+        url (required): The Society Speaks discussion URL
+        maxwidth (optional): Maximum width for the embed
+        maxheight (optional): Maximum height for the embed
+        format (optional): Response format (only 'json' supported)
+
+    Returns:
+        200: oEmbed response with iframe HTML
+        400: Invalid or missing URL
+        404: Discussion not found
+        501: Unsupported format (if not 'json')
+
+    Example:
+        GET /api/oembed?url=https://societyspeaks.io/discussions/123/my-discussion/consensus
+    """
+    url = request.args.get('url')
+    if not url:
+        return api_error('missing_url', 'The url parameter is required.', 400)
+
+    # Check format parameter (only json supported)
+    format_param = request.args.get('format', 'json').lower()
+    if format_param != 'json':
+        return api_error('unsupported_format', 'Only JSON format is supported.', 501)
+
+    base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+
+    # Parse the URL to extract discussion ID
+    # Supported patterns:
+    # - /discussions/{id}/embed
+    # - /discussions/{id}/{slug}
+    # - /discussions/{id}/{slug}/consensus
+    patterns = [
+        rf'^{re.escape(base_url)}/discussions/(\d+)/embed',
+        rf'^{re.escape(base_url)}/discussions/(\d+)/[^/]+/consensus',
+        rf'^{re.escape(base_url)}/discussions/(\d+)/[^/]+$',
+        rf'^{re.escape(base_url)}/discussions/(\d+)$',
+    ]
+
+    discussion_id = None
+    for pattern in patterns:
+        match = re.match(pattern, url)
+        if match:
+            discussion_id = int(match.group(1))
+            break
+
+    if not discussion_id:
+        return api_error(
+            'invalid_url',
+            'The URL does not match a Society Speaks discussion format.',
+            400
+        )
+
+    # Look up the discussion
+    discussion = Discussion.query.get(discussion_id)
+    if not discussion:
+        return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
+
+    # Get optional size constraints
+    max_width = request.args.get('maxwidth', type=int)
+    max_height = request.args.get('maxheight', type=int)
+
+    # Default dimensions
+    width = 600
+    height = 400
+
+    # Apply constraints
+    if max_width and max_width < width:
+        width = max_width
+    if max_height and max_height < height:
+        height = max_height
+
+    # Build embed URL
+    embed_url = f"{base_url}/discussions/{discussion.id}/embed"
+
+    # Build iframe HTML (escape title to prevent XSS in oEmbed consumer)
+    safe_title = html.escape(discussion.title, quote=True)
+
+    iframe_html = (
+        f'<iframe src="{embed_url}" '
+        f'width="{width}" height="{height}" '
+        f'frameborder="0" '
+        f'title="Society Speaks: {safe_title}" '
+        f'loading="lazy" '
+        f'allow="clipboard-write">'
+        f'</iframe>'
+    )
+
+    # Build oEmbed response
+    response_data = {
+        'type': 'rich',
+        'version': '1.0',
+        'title': safe_title,
+        'provider_name': 'Society Speaks',
+        'provider_url': base_url,
+        'html': iframe_html,
+        'width': width,
+        'height': height,
+        'thumbnail_url': None,  # Could add discussion thumbnail in future
+        'cache_age': 3600  # Cache for 1 hour
+    }
+
+    return jsonify(response_data)
+
+
+@partner_bp.route('/embed/flag', methods=['POST'])
+@limiter.limit("10 per minute", key_func=get_rate_limit_key)
+def flag_statement_from_embed():
+    """
+    Flag a statement from the embed widget.
+
+    This endpoint allows users to report problematic statements directly
+    from embedded discussions on partner sites.
+
+    Request Body:
+        statement_id (required): ID of the statement to flag
+        flag_reason (required): Reason for flagging (spam, harassment, misinformation, off_topic)
+        ref (optional): Partner reference for tracking
+
+    Returns:
+        201: Flag recorded successfully
+        400: Invalid request
+        404: Statement not found
+        409: Already flagged (from same session)
+
+    Example:
+        POST /api/embed/flag
+        {"statement_id": 123, "flag_reason": "spam"}
+    """
+    data = request.get_json()
+    if not data:
+        return api_error('invalid_request', 'Request body must be valid JSON.', 400)
+
+    statement_id = data.get('statement_id')
+    flag_reason = data.get('flag_reason')
+    partner_ref = data.get('ref', '')
+
+    if not statement_id:
+        return api_error('missing_statement_id', 'The statement_id field is required.', 400)
+
+    valid_reasons = ['spam', 'harassment', 'misinformation', 'off_topic']
+    if not flag_reason or flag_reason not in valid_reasons:
+        return api_error('invalid_reason', f'flag_reason must be one of: {", ".join(valid_reasons)}', 400)
+
+    # Find the statement
+    statement = Statement.query.get(statement_id)
+    if not statement:
+        return api_error('statement_not_found', 'The requested statement does not exist.', 404)
+
+    # Get user identifier (required: at least one of user_id or session_fingerprint)
+    user_id = current_user.id if current_user.is_authenticated else None
+    session_fingerprint = get_statement_vote_fingerprint() if not user_id else None
+    if not user_id and not session_fingerprint:
+        return api_error(
+            'identifier_required',
+            'Unable to identify your session. Please ensure cookies are enabled and try again.',
+            400,
+        )
+
+    # Check for existing flag from same user/session
+    existing_flag = None
+    if user_id:
+        existing_flag = StatementFlag.query.filter_by(
+            statement_id=statement_id,
+            flagger_user_id=user_id
+        ).first()
+    elif session_fingerprint:
+        existing_flag = StatementFlag.query.filter_by(
+            statement_id=statement_id,
+            session_fingerprint=session_fingerprint
+        ).first()
+
+    if existing_flag:
+        return api_error('already_flagged', 'You have already flagged this statement.', 409)
+
+    # Create the flag
+    try:
+        flag = StatementFlag(
+            statement_id=statement_id,
+            flagger_user_id=user_id,
+            session_fingerprint=session_fingerprint,
+            flag_reason=flag_reason,
+            additional_context=f"Reported from embed (ref: {partner_ref})" if partner_ref else "Reported from embed"
+        )
+        db.session.add(flag)
+        db.session.commit()
+
+        # Log for monitoring
+        current_app.logger.info(
+            f"Embed flag: statement={statement_id}, reason={flag_reason}, "
+            f"user_id={user_id}, fingerprint={session_fingerprint[:8] if session_fingerprint else None}"
+        )
+
+        # Track flag event
+        track_partner_event('embed_statement_flagged', {
+            'statement_id': statement_id,
+            'discussion_id': statement.discussion_id,
+            'flag_reason': flag_reason,
+            'partner_ref': partner_ref
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Failed to create flag: {e}")
+        return api_error('flag_failed', 'Failed to record flag. Please try again.', 500)
+
+    return jsonify({'success': True, 'message': 'Flag recorded successfully'}), 201

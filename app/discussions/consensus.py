@@ -251,7 +251,22 @@ def view_results(discussion_id):
                     'participant_count': participant_count,
                     'statements': group_stmts
                 })
-    
+
+    # Track consensus view from partner context
+    ref = request.args.get('ref')
+    if ref:
+        try:
+            from app.api.utils import track_partner_event
+            track_partner_event('partner_consensus_view', {
+                'discussion_id': discussion.id,
+                'discussion_title': discussion.title,
+                'has_analysis': True,
+                'num_clusters': analysis.num_clusters if analysis else 0,
+                'participants_count': analysis.participants_count if analysis else 0
+            })
+        except Exception as e:
+            current_app.logger.debug(f"Consensus tracking error: {e}")
+
     return render_template('discussions/consensus_results.html',
                          discussion=discussion,
                          analysis=analysis,

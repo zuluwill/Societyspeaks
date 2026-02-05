@@ -459,6 +459,16 @@ def create_app():
     app.register_blueprint(billing_bp)
     app.logger.debug("Billing blueprint registered")
 
+    # Register Partner API blueprint (embed integration)
+    from app.api import init_api
+    init_api(app)
+    app.logger.debug("Partner API blueprint registered")
+
+    # Register Partner Hub blueprint (publisher-facing pages)
+    from app.partner import partner_bp
+    app.register_blueprint(partner_bp)
+    app.logger.debug("Partner hub blueprint registered")
+
     app.logger.debug("All registered routes:")
     app.logger.debug(app.url_map)
 

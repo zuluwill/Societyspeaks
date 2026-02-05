@@ -1,0 +1,230 @@
+"""
+Shared utilities for Partner API.
+
+Contains rate limiting helpers, request parsing, analytics, and common functions.
+"""
+import re
+import logging
+from typing import Optional
+
+from flask import request, current_app, url_for
+from flask_limiter.util import get_remote_address
+
+logger = logging.getLogger(__name__)
+
+# Partner ref: max length stored in DB (StatementVote.partner_ref)
+PARTNER_REF_MAX_LENGTH = 50
+PARTNER_REF_PATTERN = re.compile(r'[^a-z0-9-]')
+
+
+def sanitize_partner_ref(value: Optional[str]) -> Optional[str]:
+    """
+    Sanitize partner reference for storage and analytics.
+
+    Rules: lowercase, alphanumeric and hyphen only, max 50 chars.
+    Used by vote endpoint and anywhere we store partner_ref.
+    """
+    if not value or not isinstance(value, str):
+        return None
+    cleaned = PARTNER_REF_PATTERN.sub('', value.lower().strip()[:PARTNER_REF_MAX_LENGTH])
+    return cleaned or None
+
+
+def get_rate_limit_key():
+    """
+    Generate rate limit key using IP and partner ref.
+
+    Key format: "ip:ref" so that:
+    - One abusive visitor doesn't exhaust limits for all visitors from that IP
+    - Partners can have per-partner rate limit tiers in future
+
+    Returns:
+        str: Rate limit key in format "ip_address:partner_ref"
+    """
+    ip = get_remote_address()
+    ref = request.args.get('ref', 'unknown')
+    return f"{ip}:{ref}"
+
+
+def get_partner_ref():
+    """
+    Extract partner reference from request.
+
+    Checks query params and headers for partner identification.
+
+    Returns:
+        str or None: Partner reference slug if found
+    """
+    # Check query param first (e.g., ?ref=observer)
+    ref = request.args.get('ref')
+    if ref:
+        return ref
+
+    # Check header (e.g., X-Partner-Ref: observer)
+    ref = request.headers.get('X-Partner-Ref')
+    if ref:
+        return ref
+
+    return None
+
+
+def build_discussion_urls(discussion, include_ref=True):
+    """
+    Build standard URLs for a discussion (embed, consensus, snapshot).
+
+    Args:
+        discussion: Discussion model instance
+        include_ref: Whether to include ref param if partner is known
+
+    Returns:
+        dict: Dictionary with embed_url, consensus_url, snapshot_url
+    """
+    ref = get_partner_ref() if include_ref else None
+    base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+
+    # Build URLs
+    embed_url = f"{base_url}/discussions/{discussion.id}/embed"
+    consensus_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}/consensus"
+    snapshot_url = f"{base_url}/api/discussions/{discussion.id}/snapshot"
+
+    # Add ref parameter if we have partner context
+    if ref:
+        embed_url = f"{embed_url}?ref={ref}"
+        consensus_url = f"{consensus_url}?ref={ref}"
+        snapshot_url = f"{snapshot_url}?ref={ref}"
+
+    return {
+        'embed_url': embed_url,
+        'consensus_url': consensus_url,
+        'snapshot_url': snapshot_url
+    }
+
+
+def is_partner_origin_allowed(origin):
+    """
+    Check if the request origin is in the partner allowlist.
+
+    Args:
+        origin: The Origin header from the request
+
+    Returns:
+        bool: True if origin is allowed, False otherwise
+    """
+    if not origin:
+        return False
+
+    allowed_origins = current_app.config.get('PARTNER_ORIGINS', [])
+
+    # Handle case where config is a comma-separated string
+    if isinstance(allowed_origins, str):
+        allowed_origins = [o.strip() for o in allowed_origins.split(',') if o.strip()]
+
+    return origin in allowed_origins
+
+
+def get_discussion_participant_count(discussion):
+    """
+    Get the number of unique participants in a discussion.
+
+    Counts both authenticated users and anonymous participants (by fingerprint).
+
+    Args:
+        discussion: Discussion model instance
+
+    Returns:
+        int: Number of unique participants
+    """
+    from sqlalchemy import func, distinct
+    from app import db
+    from app.models import StatementVote
+
+    # Count authenticated users
+    user_count = db.session.query(
+        func.count(distinct(StatementVote.user_id))
+    ).filter(
+        StatementVote.discussion_id == discussion.id,
+        StatementVote.user_id.isnot(None)
+    ).scalar() or 0
+
+    # Count anonymous participants by fingerprint
+    anon_count = db.session.query(
+        func.count(distinct(StatementVote.session_fingerprint))
+    ).filter(
+        StatementVote.discussion_id == discussion.id,
+        StatementVote.user_id.is_(None),
+        StatementVote.session_fingerprint.isnot(None)
+    ).scalar() or 0
+
+    return user_count + anon_count
+
+
+def get_discussion_statement_count(discussion):
+    """
+    Get the number of active (non-deleted) statements in a discussion.
+
+    Args:
+        discussion: Discussion model instance
+
+    Returns:
+        int: Number of active statements
+    """
+    from app.models import Statement
+
+    return Statement.query.filter(
+        Statement.discussion_id == discussion.id,
+        Statement.is_deleted == False
+    ).count()
+
+
+def track_partner_event(event_name: str, properties: dict = None):
+    """
+    Track a partner-related analytics event via PostHog.
+
+    Automatically includes partner_ref and request context.
+
+    Args:
+        event_name: The event name (e.g., 'partner_embed_loaded', 'partner_api_lookup')
+        properties: Additional event properties
+
+    Common events:
+        - partner_embed_loaded: When an embed is loaded on a partner site
+        - partner_api_lookup: When lookup API is called
+        - partner_api_snapshot: When snapshot API is called
+        - partner_api_create: When create API is called
+        - partner_consensus_view: When consensus page is viewed from partner context
+    """
+    try:
+        import posthog
+    except ImportError:
+        return
+
+    if not current_app.config.get('POSTHOG_API_KEY'):
+        return
+
+    partner_ref = get_partner_ref() or 'unknown'
+
+    # Build base properties
+    event_properties = {
+        'partner_ref': partner_ref,
+        'ip_address': get_remote_address(),
+        'user_agent': request.headers.get('User-Agent', ''),
+        'referer': request.headers.get('Referer', ''),
+    }
+
+    # Add origin if available (for embed tracking)
+    origin = request.headers.get('Origin')
+    if origin:
+        event_properties['origin'] = origin
+
+    # Merge with custom properties
+    if properties:
+        event_properties.update(properties)
+
+    try:
+        posthog.capture(
+            distinct_id=f"partner:{partner_ref}",
+            event=event_name,
+            properties=event_properties
+        )
+    except Exception as e:
+        logger.warning(f"PostHog tracking error for {event_name}: {e}")

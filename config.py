@@ -15,6 +15,16 @@ class Config:
     
     # Application base URL
     APP_BASE_URL = os.getenv('APP_BASE_URL', 'https://societyspeaks.io')
+    BASE_URL = APP_BASE_URL  # Alias for Partner API
+
+    # Partner Embed Configuration
+    # Comma-separated list of allowed partner origins for CORS and frame-ancestors
+    # Example: PARTNER_ORIGINS=https://www.theguardian.com,https://observer.com,https://staging.theguardian.com
+    _partner_origins_str = os.getenv('PARTNER_ORIGINS', '')
+    PARTNER_ORIGINS = [o.strip() for o in _partner_origins_str.split(',') if o.strip()]
+
+    # Feature flag to enable/disable embed functionality
+    EMBED_ENABLED = os.getenv('EMBED_ENABLED', 'true').lower() == 'true'
 
     # At start of Config class
     if not SQLALCHEMY_DATABASE_URI:

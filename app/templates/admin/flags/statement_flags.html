@@ -74,7 +74,7 @@
                             {% endif %}
                             <td class="px-6 py-4">
                                 <div class="text-sm text-gray-900 max-w-md">
-                                    <p class="line-clamp-2">{{ flag.statement.text[:100] }}{% if flag.statement.text|length > 100 %}...{% endif %}</p>
+                                    <p class="line-clamp-2">{{ flag.statement.content[:100] }}{% if flag.statement.content|length > 100 %}...{% endif %}</p>
                                     {% if flag.additional_context %}
                                     <p class="text-xs text-gray-500 mt-1">Context: {{ flag.additional_context[:80] }}...</p>
                                     {% endif %}

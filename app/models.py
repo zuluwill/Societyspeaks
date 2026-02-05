@@ -427,6 +427,15 @@ class Discussion(db.Model):
     x_posted_at = db.Column(db.DateTime, nullable=True)  # When actually posted
     x_post_id = db.Column(db.String(100), nullable=True)  # X tweet ID after posting
 
+    # Partner embed integration (Phase 2)
+    # For discussions created by partners whose content is not ingested via RSS
+    partner_article_url = db.Column(db.String(1000), nullable=True, index=True)  # Normalized URL
+    partner_id = db.Column(db.String(50), nullable=True, index=True)  # Partner identifier (e.g., 'observer', 'time')
+
+    # Integrity controls (§8)
+    # Enable stricter rate limits and monitoring for high-profile or sensitive discussions
+    integrity_mode = db.Column(db.Boolean, default=False, nullable=False)
+
     # Constants for geographic scope
     SCOPE_GLOBAL = 'global'
     SCOPE_COUNTRY = 'country'
@@ -644,7 +653,11 @@ class Statement(db.Model):
     mod_status = db.Column(db.Integer, default=0)  # -1=reject, 0=no action, 1=accept
     is_deleted = db.Column(db.Boolean, default=False)
     is_seed = db.Column(db.Boolean, default=False)  # Moderator-created seed statement
-    
+
+    # Source tracking for seed statements (§13 AI Attribution)
+    # Values: 'ai_generated', 'partner_provided', 'user_submitted'
+    source = db.Column(db.String(20), nullable=True, index=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -700,6 +713,8 @@ class Statement(db.Model):
             'total_votes': self.total_votes,
             'agreement_rate': self.agreement_rate,
             'controversy_score': self.controversy_score,
+            'is_seed': self.is_seed,
+            'source': self.source,  # ai_generated, partner_provided, user_submitted
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
@@ -733,9 +748,12 @@ class StatementVote(db.Model):
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
     
     vote = db.Column(db.SmallInteger, nullable=False)
-    
+
     confidence = db.Column(db.SmallInteger, nullable=True)
-    
+
+    # Partner attribution for embed votes (e.g., 'observer', 'time', 'ted')
+    partner_ref = db.Column(db.String(50), nullable=True, index=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -887,26 +905,29 @@ class ConsensusAnalysis(db.Model):
 class StatementFlag(db.Model):
     """
     Moderation flags for statements (our enhancement)
+    Supports both authenticated and anonymous flagging (from embed)
     """
     __tablename__ = 'statement_flag'
     __table_args__ = (
         db.Index('idx_flag_statement', 'statement_id'),
         db.Index('idx_flag_status', 'status'),
+        db.Index('idx_flag_fingerprint', 'session_fingerprint'),
     )
-    
+
     id = db.Column(db.Integer, primary_key=True)
     statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=False)
-    flagger_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    
-    flag_reason = db.Column(db.String(50))  # 'spam', 'offensive', 'off_topic', 'duplicate'
+    flagger_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Nullable for anonymous
+    session_fingerprint = db.Column(db.String(64), nullable=True)  # For anonymous flagging
+
+    flag_reason = db.Column(db.String(50))  # 'spam', 'harassment', 'misinformation', 'off_topic'
     additional_context = db.Column(db.Text)
     status = db.Column(db.String(20), default='pending')  # 'pending', 'reviewed', 'dismissed'
-    
+
     reviewed_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     reviewed_at = db.Column(db.DateTime)
-    
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # Relationships
     statement = db.relationship('Statement', backref='flags')
     flagger = db.relationship('User', foreign_keys=[flagger_user_id], backref='flags_created')
@@ -1061,22 +1082,36 @@ class NewsArticle(db.Model):
     """
     Individual news articles fetched from sources.
     Stored separately for querying, deduplication, and auditing.
+
+    URL Fields:
+    - url: Raw URL from feed (preserved for audit/fallback)
+    - normalized_url: Canonical form for partner API lookup (stripped tracking params, forced https, etc.)
+    - url_hash: SHA-256 hash of normalized_url for fast indexing (first 32 chars)
+
+    Lookup by article URL should use normalized_url, not url.
+    See app/lib/url_normalizer.py for normalization rules.
     """
     __tablename__ = 'news_article'
     __table_args__ = (
         db.Index('idx_article_source', 'source_id'),
         db.Index('idx_article_fetched', 'fetched_at'),
         db.Index('idx_article_external_id', 'external_id'),
+        db.Index('idx_article_normalized_url', 'normalized_url'),
+        db.Index('idx_article_url_hash', 'url_hash'),
         db.UniqueConstraint('source_id', 'external_id', name='uq_source_article'),
     )
-    
+
     id = db.Column(db.Integer, primary_key=True)
     source_id = db.Column(db.Integer, db.ForeignKey('news_source.id'), nullable=False)
-    
+
     external_id = db.Column(db.String(500))  # Source's unique ID for deduplication
     title = db.Column(db.String(500), nullable=False)
     summary = db.Column(db.Text)
     url = db.Column(db.String(1000), nullable=False)
+
+    # Partner API lookup fields (see docstring above)
+    normalized_url = db.Column(db.String(1000), nullable=True)  # Canonical URL for lookup
+    url_hash = db.Column(db.String(32), nullable=True)  # SHA-256 hash for fast indexing
     
     published_at = db.Column(db.DateTime)
     fetched_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -1094,9 +1129,36 @@ class NewsArticle(db.Model):
     title_embedding = db.Column(db.JSON)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     def __repr__(self):
         return f'<NewsArticle {self.title[:50]}...>'
+
+    def set_normalized_url(self):
+        """
+        Set normalized_url and url_hash from the raw url.
+        Called automatically on before_insert and before_update events.
+        """
+        if self.url:
+            from app.lib.url_normalizer import normalize_url, url_hash
+            self.normalized_url = normalize_url(self.url)
+            self.url_hash = url_hash(self.url) if self.normalized_url else None
+
+
+@event.listens_for(NewsArticle, 'before_insert')
+def news_article_before_insert(mapper, connection, target):
+    """Automatically set normalized_url on insert."""
+    target.set_normalized_url()
+
+
+@event.listens_for(NewsArticle, 'before_update')
+def news_article_before_update(mapper, connection, target):
+    """Automatically update normalized_url if url changed."""
+    # Only recalculate if url has changed
+    from sqlalchemy.orm import object_session
+    from sqlalchemy import inspect
+    state = inspect(target)
+    if state.attrs.url.history.has_changes():
+        target.set_normalized_url()
 
 
 class TrendingTopic(db.Model):
