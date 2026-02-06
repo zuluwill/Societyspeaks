@@ -10,8 +10,6 @@ import logging
 import numpy as np
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Tuple
-from sklearn.cluster import AgglomerativeClustering
-from sklearn.metrics.pairwise import cosine_similarity
 
 from collections import Counter
 
@@ -111,6 +109,8 @@ def cluster_articles(articles: List[NewsArticle], threshold: float = 0.7) -> Lis
     
     embeddings_array = np.array(embeddings)
     
+    from sklearn.metrics.pairwise import cosine_similarity
+    from sklearn.cluster import AgglomerativeClustering
     distance_matrix = 1 - cosine_similarity(embeddings_array)
     
     clustering = AgglomerativeClustering(
