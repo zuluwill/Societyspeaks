@@ -565,20 +565,19 @@ def create_app():
     # IMPORTANT: Scheduler startup is deferred to avoid blocking gunicorn port binding
     if not app.config.get('TESTING') and not app.config.get('SQLALCHEMY_MIGRATE'):
         import threading
-        from app.scheduler import init_scheduler, start_scheduler
         
         def _deferred_scheduler_start():
             """Start scheduler after a short delay to allow gunicorn to bind port first."""
             import time
-            time.sleep(5)  # Wait 5 seconds for gunicorn to be fully ready
+            time.sleep(3)
             try:
+                from app.scheduler import init_scheduler, start_scheduler
                 init_scheduler(app)
                 start_scheduler()
                 app.logger.info("Background scheduler started successfully (deferred)")
             except Exception as e:
                 app.logger.error(f"Failed to start scheduler: {e}")
         
-        # Start scheduler in background thread to avoid blocking
         scheduler_thread = threading.Thread(target=_deferred_scheduler_start, daemon=True)
         scheduler_thread.start()
         app.logger.info("Scheduler startup deferred to background thread")
