@@ -1,7 +1,7 @@
 # Society Speaks Platform
 
 ## Overview
-Society Speaks is an AGPL-3.0 licensed public discussion platform built with Flask and PostgreSQL, leveraging Pol.is technology. Its core purpose is to facilitate structured dialogue, build consensus on social, political, and community topics, and inform policy. Key capabilities include user profiles, discussion management, geographic filtering, and a "News-to-Deliberation Compiler" that surfaces trending news for public deliberation. The platform also features a "Daily Civic Question" for regular engagement, sophisticated consensus clustering to identify diverse opinion groups, and a customizable briefing system with a template marketplace. The long-term vision is to foster nuanced debate and enhance civic engagement.
+Society Speaks is an AGPL-3.0 licensed public discussion platform built with Flask and PostgreSQL. It aims to facilitate structured dialogue, build consensus on social, political, and community topics, and inform policy. Key capabilities include user profiles, discussion management, geographic filtering, a "News-to-Deliberation Compiler" for trending news, a "Daily Civic Question" for engagement, sophisticated consensus clustering, and a customizable briefing system with a template marketplace. The platform's vision is to foster nuanced debate and enhance civic engagement by leveraging Pol.is technology.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -9,36 +9,25 @@ Preferred communication style: Simple, everyday language.
 ## System Architecture
 
 ### UI/UX Decisions
-The platform features a consistent, mobile-first UI with reusable components and enhanced accessibility (ARIA labels). Tailwind CSS is used for utility-first styling with custom typography. Key elements include `discussion_card` components, toast notifications, empty states, and loading spinners. The homepage highlights "Today's Question" and "From the News" to emphasize a "sense-making system."
+The platform prioritizes a consistent, mobile-first UI with reusable components and enhanced accessibility (ARIA labels), using Tailwind CSS for styling. It features `discussion_card` components, toast notifications, empty states, and loading spinners. The homepage emphasizes a "sense-making system" by highlighting "Today's Question" and "From the News."
 
 ### Open Access Model
-The platform operates on a "reading is open, delivery is opt-in" model:
-- **Daily Brief**: Full content viewable by anyone without login - email capture prompts for delivery subscription
-- **News Dashboard**: All 60+ sources and political balance data visible to public - optional email signup for daily delivery
-- **Email Capture Component**: Reusable inline/compact variants with AJAX subscription handling (`/brief/subscribe/inline`)
-- **Cross-sell Strategy**: Free users see paid custom brief options for upselling
+Society Speaks employs a "reading is open, delivery is opt-in" model. This includes a daily brief with full content viewable without login, a news dashboard showing all sources and political balance, and email capture components for subscription. A cross-sell strategy is implemented to upsell free users to custom brief options.
 
 ### Technical Implementations
-The backend uses Flask with a modular, blueprint-based architecture, SQLAlchemy for PostgreSQL interactions, Flask-Login for authentication, and Redis for session management, caching, and performance. The "News-to-Deliberation Compiler" identifies trending news, scores articles using LLMs, clusters them into discussions, and generates balanced seed statements via hourly background jobs. The "Daily Civic Question" promotes daily participation with voting, streaks, email subscriptions, and one-click voting from emails. AI is used for automatic detection of geographic scope and categories in articles and daily questions. A community moderation system allows users to flag inappropriate daily question responses, which are auto-hidden after multiple flags and subject to admin review. The platform also includes a "Lens Check Optimization" for parallel LLM calls in perspective analysis and enhanced comment UX with representative sampling and quality scoring. A single-source-to-discussion pipeline automatically creates discussions from various content types (podcasts, newsletters) by generating AI seed statements. A political leaning system categorizes sources based on AllSides.com ratings to track and manage political diversity. A multi-tenant briefing system allows users and organizations to create customizable, branded briefings with AI settings, source management, and output enhancements including AI-generated insights, key takeaways, and source attribution. The briefing customization system includes topic preferences with weights (Low/Medium/High), include/exclude keyword filters, source priority controls, and custom AI prompts. The content selection algorithm uses global scoring: items are scored based on topic preference matches (+1-3), include keyword matches (+5), source priority (+1-3), then sorted globally before fair source distribution selection.
+The backend is built with Flask, utilizing a modular, blueprint-based architecture, SQLAlchemy for PostgreSQL, Flask-Login for authentication, and Redis for session management and caching. The "News-to-Deliberation Compiler" uses LLMs to identify trending news, score articles, cluster them into discussions, and generate balanced seed statements via hourly background jobs. The "Daily Civic Question" promotes participation with voting, streaks, and one-click email voting. AI automatically detects geographic scope and categories in articles and daily questions. A community moderation system allows flagging of inappropriate content. AI is used for "Lens Check Optimization" and enhanced comment UX. A single-source-to-discussion pipeline automatically creates discussions from various content types. A political leaning system categorizes sources based on AllSides.com data. A multi-tenant briefing system enables customizable, branded briefings with AI settings, source management, and output enhancements. The content selection algorithm uses global scoring based on topic preferences, keyword matches, and source priority, followed by fair source distribution.
 
 ### Unified Ingestion Architecture
-The platform uses a unified content ingestion system through the `InputSource` and `IngestedItem` models:
-- **InputSource** stores all content sources with provenance tracking (`origin_type`: admin/template/user), content domain classification (`content_domain`: news/sport/tech/finance/politics/science/crypto), and channel permissions (`allowed_channels`: daily_brief/trending/user_briefings)
-- **ItemFeedService** provides filtered access to ingested content, ensuring editorial control. The Daily Brief only uses admin-verified sources excluding sport/crypto/entertainment/gaming domains, while user briefings have unrestricted access to their selected sources
-- **Source Credibility Scoring** uses `is_verified` flag (1.3x boost) and `political_leaning` data (1.2x boost) to prioritize trusted sources
-- This architecture maintains editorial integrity while sharing a single ingestion pipeline across all features
+A unified content ingestion system uses `InputSource` (tracking provenance, domain, channel permissions) and `IngestedItem` models. An `ItemFeedService` provides filtered access to content, ensuring editorial control and source credibility scoring (using `is_verified` and `political_leaning` data) for different features like the Daily Brief and user briefings.
 
 ### Feature Specifications
-The platform integrates Pol.is for discussion dynamics, supports topic categorization, and geographic filtering. A dedicated News feed page displays discussions from trending topics with source transparency. Security measures include Flask-Talisman (CSP), Flask-Limiter (rate limiting), Flask-SeaSurf (CSRF protection), and Werkzeug for password hashing. Replit Object Storage handles user-uploaded images. The platform supports dual individual and company profiles. Daily question emails include one-click voting with privacy-controlled comment sharing and syncing to linked discussion statements for authenticated users. Source pages provide comprehensive metadata and an "Engagement Score." A political diversity system monitors and ensures balanced representation of political leanings across content.
+The platform integrates Pol.is for discussion dynamics, supports topic categorization, and geographic filtering. A dedicated News feed page displays trending discussions with source transparency. Security is handled by Flask-Talisman (CSP), Flask-Limiter (rate limiting), Flask-SeaSurf (CSRF protection), and Werkzeug for password hashing. Replit Object Storage manages user-uploaded images. The platform supports dual individual and company profiles. Daily question emails include one-click voting with privacy-controlled comment sharing. Source pages provide metadata and "Engagement Scores." A political diversity system monitors and balances political leanings across content.
 
 ### Deployment Architecture
-The application uses gunicorn with a single worker for Replit VM deployments. Key deployment considerations:
-- **Health Check Endpoint**: `/health` returns `{"status": "healthy"}` immediately, allowing deployment health checks to pass before background tasks initialize
-- **Deferred Scheduler Startup**: APScheduler background jobs are initialized in a separate thread after a 5-second delay, preventing the scheduler from blocking gunicorn's port binding during startup
-- **Production Detection**: The `REPLIT_DEPLOYMENT=1` environment variable is the only reliable indicator of production deployment (NOT `FLASK_ENV`)
+The application uses gunicorn with a single worker for Replit VM deployments. It includes a health check endpoint (`/health`) and defers APScheduler startup to prevent blocking gunicorn's port binding. Production detection relies on the `REPLIT_DEPLOYMENT=1` environment variable.
 
 ### System Design Choices
-PostgreSQL is the primary database, optimized with connection pooling, health checks, pagination, eager loading, and indexing. Redis caching further enhances performance. Logging is centralized, and configuration uses `config.py` with environment variables. A `SparsityAwareScaler` is used in consensus clustering to identify diverse opinion groups. A "Participation Gate" requires users to vote on statements before viewing consensus analysis to prevent anchoring bias. Briefing templates are available via a marketplace, enforcing guardrails upon cloning. Briefing output includes structured HTML with branding, email analytics (open/click tracking), and Slack integration.
+PostgreSQL is the primary database, optimized with connection pooling, pagination, eager loading, and indexing. Redis caching enhances performance. Logging is centralized, and configuration uses `config.py` with environment variables. A `SparsityAwareScaler` is used in consensus clustering. A "Participation Gate" requires users to vote before viewing consensus analysis. Briefing templates are available via a marketplace. Briefing output includes structured HTML, email analytics, and Slack integration.
 
 ## External Dependencies
 
@@ -63,12 +52,7 @@ PostgreSQL is the primary database, optimized with connection pooling, health ch
 - **X/Twitter**: For automatic posting of news discussions.
 
 ### Billing & Subscriptions
-- **Stripe**: For subscription billing and payment processing.
-  - Pricing tiers: Starter (£12/mo), Professional (£25/mo or £250/yr), Team (£300/mo), Enterprise (£2,000/mo)
-  - 30-day free trial for all plans
-  - Webhook handling for subscription lifecycle events
-  - Customer portal for self-service billing management
-  - Tier enforcement: brief limits, source limits, feature gating
+- **Stripe**: For subscription billing and payment processing, including pricing tiers, free trials, webhooks, and a customer portal.
 
 ### Development & Security Tools
 - **Flask Extensions**: For security, forms, and database management.
@@ -76,88 +60,8 @@ PostgreSQL is the primary database, optimized with connection pooling, health ch
 - **Node.js**: For frontend asset management.
 
 ### Audio Generation (TTS)
-- **Coqui XTTS v2**: Open-source text-to-speech for generating audio versions of brief items
-  - CPU-friendly, runs without GPU
-  - Model caching for memory efficiency on Replit
-  - Voice presets: professional, warm, authoritative, calm, friendly
-  - Batch audio generation with job tracking
-- **Audio Storage**: Uses Replit Object Storage for persistence
-  - Automatic fallback chain: S3 → Replit → Filesystem
-  - Path traversal prevention and file validation
-  - LRU cache strategy for storage management
+- **Coqui XTTS v2**: Open-source text-to-speech for generating audio versions of brief items.
+- **Audio Storage**: Uses Replit Object Storage for persistence.
 
 ### Geographic Data
 - **Static JSON files**: For country/city data.
-
-## Recent Changes (February 2026)
-
-### Partner Embed System & Portal (Feb 6)
-- Full partner/publisher integration allowing news sites to embed Society Speaks voting widgets
-- Partner model with auth (signup, login, password reset via Resend), session-based lockout (5 failures = 5min lockout)
-- Lockout keys use `_lockout_` prefix to prevent bypass via logout session clearing
-- API key management: generate, rotate, revoke with SHA-256 hashing (PARTNER_KEY_SECRET config, falls back to SECRET_KEY)
-- Domain verification via DNS TXT records with cooldown between checks
-- Stripe billing integration for partners (PARTNER_STRIPE_PRICE_ID env var)
-- Partner API: lookup by article URL, create discussion, snapshot, oEmbed
-- Usage tracking (PartnerUsageEvent) with CSV export and 14-day sparkline dashboard
-- Rate limiting on all partner endpoints, test env capped at 25 discussions
-- Database tables: partner, partner_domain, partner_api_key, partner_usage_event
-- Discussion model extended with partner_env and partner_fk_id columns
-- Webhook handling for partner subscriptions with `_is_partner_subscription` routing
-- Scheduled job: reconcile_partner_billing (daily at 4am UTC)
-
-### Static Asset Object Storage Migration (Feb 1)
-- Moved hero and speaker images from filesystem to Replit Object Storage to prevent OSError [Errno 5] I/O errors
-- New route `/assets/<path:filename>` serves images from object storage with 1-hour cache headers
-- Upload script `scripts/upload_static_assets.py` manages asset synchronization
-- Templates updated to use object storage route instead of static file references
-- This architectural change makes the app stateless for these assets and eliminates disk I/O failure modes
-
-## Recent Changes (January 2026)
-
-### Duplicate Email Prevention & Retry System (Jan 31)
-- Implemented comprehensive multi-layer duplicate email prevention for briefing emails:
-  - **Brief-level atomic claim**: BriefRun status='approved'→'sending' with `claimed_at` timestamp and `send_attempts` counter
-  - **Per-recipient tracking**: BriefEmailSend table with claim-before-send pattern prevents duplicates even on process crashes
-  - **Stale claim recovery**: Dynamic timeout (15 min + 1 min per 100 recipients), stale claims marked 'failed' for retry
-  - **Completion gating**: Brief only marked as 'sent' when all recipients resolved (no active claims in progress)
-- **Retry limiting**: MAX_SEND_ATTEMPTS=3 with `attempt_count` and `failure_reason` tracking
-  - Failed records kept for audit trail, reset to 'pending' for retry (preserves attempt_count)
-  - Records exceeding max attempts marked 'permanently_failed' and excluded from future retries
-  - UPSERT claim mechanism: INSERT new or UPDATE pending→claimed while preserving attempt_count
-- Individual sends used instead of batch API for reliable per-recipient status tracking
-
-### Email Analytics Tracking Fix (Jan 27)
-- Fixed missing email analytics: "sent" events were not being recorded since Jan 19
-- Added `EmailAnalytics.record_send()` calls to all email senders:
-  - Daily Brief emails (`app/brief/email_client.py`)
-  - BriefRun emails (`app/briefing/email_client.py`)
-  - Daily Question emails (`app/resend_client.py`)
-  - Weekly/Monthly Question Digest emails (`app/resend_client.py`)
-  - Batch email sending (`app/resend_client.py`)
-- Fixed engagement_tracker.py SyntaxError: removed duplicate `global _x_rate_limited_until` declaration
-
-### Weekly Batch Template Fix (Jan 27)
-- Fixed critical bug: `weekly_batch.html` was extending `base.html` (non-existent) instead of `layout.html`
-- This caused a `TemplateNotFound` 500 error when accessing `/daily/weekly` with question parameters
-- Added missing CSRF token to AJAX vote requests (`X-CSRFToken` header)
-- All daily templates now correctly extend `layout.html`
-
-### Mobile Touch Event Fixes (Jan 26)
-- Fixed unclickable elements on mobile caused by invisible overlay divs
-- Removed duplicate toast container from layout.html that was blocking touch events
-- Added `pointer-events-none` to toast containers in both toast.js and toast.html
-- Added `pointer-events-auto` to individual toast notifications so they remain clickable
-- Added `pointer-events-none` to decorative hero section overlay in index.html
-
-### Audio Feature Controls
-- Added `AUDIO_ENABLED` environment variable to control audio UI visibility
-- Audio generation section in Daily Brief and Briefing Run views now conditionally renders based on config
-- Set to `false` by default since TTS (XTTS v2) is not currently installed
-
-### Audio Generation Feature
-- Added batch audio generation for Daily Briefs and Paid Briefing Runs using XTTS v2
-- Database migrations: `deeper_context` field, `audio_url`, `audio_voice_id`, `audio_generated_at` on brief items
-- AudioGenerationJob model for tracking generation progress with failed item tracking
-- Memory-optimized processing with temp file cleanup
-- Background scheduler job processes audio queue every 10 seconds
