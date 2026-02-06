@@ -445,9 +445,11 @@ def create_discussion():
             409
         )
 
-    # Also check NewsArticle path
+    # Also check NewsArticle path (normalized_url + raw url fallback)
     if key_env == 'live':
         article = NewsArticle.query.filter_by(normalized_url=normalized_url).first()
+        if not article:
+            article = NewsArticle.query.filter_by(url=article_url).first()
         if article:
             link = DiscussionSourceArticle.query.filter_by(article_id=article.id).first()
             if link:
