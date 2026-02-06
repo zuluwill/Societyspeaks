@@ -172,22 +172,35 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
 
     <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-6">
       <h2 class="text-xl font-semibold text-gray-900 mb-2">Step 5: Go live</h2>
-      <p class="text-sm text-gray-600 mb-4">Activate billing to create live keys and verify production domains.</p>
-      <div class="flex flex-wrap gap-2">
-        {% if partner.billing_status != 'active' %}
+      <p class="text-sm text-gray-600 mb-4">Choose a plan to create live keys and verify production domains.</p>
+      {% if partner.billing_status != 'active' %}
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-            Start subscription
+          <input type="hidden" name="tier" value="starter">
+          <button type="submit" class="w-full text-left rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:bg-blue-50 transition-colors">
+            <div class="text-sm font-semibold text-gray-900">Starter &mdash; &pound;49/mo</div>
+            <div class="text-xs text-gray-500 mt-1">Up to 100 live discussions per month</div>
           </button>
         </form>
-        {% endif %}
-        {% if partner.stripe_customer_id %}
+        <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="tier" value="professional">
+          <button type="submit" class="w-full text-left rounded-lg border-2 border-blue-600 p-4 hover:bg-blue-50 transition-colors">
+            <div class="text-sm font-semibold text-gray-900">Professional &mdash; &pound;249/mo</div>
+            <div class="text-xs text-gray-500 mt-1">Up to 500 live discussions per month</div>
+          </button>
+        </form>
+      </div>
+      <p class="text-xs text-gray-400">Need more? <a href="mailto:partners@societyspeaks.io" class="text-blue-600 hover:underline">Contact us</a> for Enterprise pricing.</p>
+      {% endif %}
+      {% if partner.stripe_customer_id %}
+      <div class="flex flex-wrap gap-2 mt-3">
         <a href="{{ url_for('partner.portal_billing_portal') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
           Manage billing
         </a>
-        {% endif %}
       </div>
+      {% endif %}
     </div>
   </div>
 </div>

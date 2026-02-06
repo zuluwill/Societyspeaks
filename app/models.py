@@ -111,6 +111,7 @@ class Partner(db.Model):
     stripe_customer_id = db.Column(db.String(255), nullable=True, unique=True, index=True)
     stripe_subscription_id = db.Column(db.String(255), nullable=True, unique=True, index=True)
     billing_status = db.Column(db.String(30), default='inactive', nullable=False)
+    tier = db.Column(db.String(30), default='free', nullable=False)  # free | starter | professional | enterprise
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

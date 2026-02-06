@@ -175,6 +175,11 @@ def _validate_env(raw_env):
     return raw_env if raw_env in ('test', 'live') else 'test'
 
 
+def _validate_tier(raw_tier):
+    """Normalize and validate a pricing tier. Returns 'starter' or 'professional'."""
+    return raw_tier if raw_tier in ('starter', 'professional') else 'starter'
+
+
 def _create_api_key_for_partner(partner, env):
     """Generate an API key, persist it, and return the full plaintext key."""
     full_key, key_hash, key_last4 = generate_partner_api_key(env)
@@ -719,8 +724,12 @@ def portal_rotate_key(key_id):
 @partner_login_required
 def portal_start_billing():
     partner = _current_partner()
+    if partner.billing_status == 'active':
+        flash('You already have an active subscription. Use Manage Billing to change plans.', 'info')
+        return redirect(url_for('partner.portal_dashboard'))
+    tier = _validate_tier(request.form.get('tier', 'starter'))
     try:
-        checkout_session = create_partner_checkout_session(partner)
+        checkout_session = create_partner_checkout_session(partner, tier=tier)
         if not checkout_session.url:
             flash('Payment session error. Please try again.', 'danger')
             return redirect(url_for('partner.portal_dashboard'))
@@ -769,6 +778,15 @@ def portal_billing_success():
             status = stripe_sub.get('status') if isinstance(stripe_sub, dict) else stripe_sub.status
             partner.stripe_subscription_id = stripe_sub.get('id') if isinstance(stripe_sub, dict) else stripe_sub.id
             partner.billing_status = 'active' if status in ['active', 'trialing'] else 'inactive'
+
+            # Sync tier from checkout metadata to close the webhook race window
+            metadata = checkout_session.get('metadata', {}) if isinstance(checkout_session, dict) else (checkout_session.metadata or {})
+            tier_from_meta = metadata.get('partner_tier')
+            if tier_from_meta in ('starter', 'professional', 'enterprise'):
+                partner.tier = tier_from_meta
+            elif partner.billing_status == 'active' and partner.tier == 'free':
+                partner.tier = 'starter'  # legacy fallback
+
             db.session.commit()
             flash('Subscription active. You can now create live keys.', 'success')
         else:

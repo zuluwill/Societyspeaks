@@ -50,7 +50,7 @@
             Read the Docs
           </a>
         </div>
-        <p class="text-xs text-gray-500">Free test environment. No credit card required. Live keys from {{ partner_price|default('$49') }}/mo.</p>
+        <p class="text-xs text-gray-500">Free test environment. No credit card required. Live keys from &pound;49/mo.</p>
       </div>
       <div class="lg:col-span-6">
         <div class="bg-gradient-to-br from-blue-100 to-white rounded-2xl p-4 shadow-xl">
@@ -402,48 +402,43 @@
 
 <!-- Pricing -->
 <div class="bg-gray-50 border-b" id="pricing">
-  <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
     <div class="text-center mb-10">
       <div class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700 mb-4">
         Pricing
       </div>
       <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-        Simple, transparent pricing
+        Plans that scale with your audience
       </h2>
       <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-        Start free with test keys. Pay only when you go live.
+        Start free. Pay only when you go live. Every plan includes the full API, embed generator, and zero moderation overhead.
       </p>
     </div>
-    <div class="grid gap-6 md:grid-cols-2 max-w-3xl mx-auto">
-      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900">Test</h3>
+
+    <!-- Tier cards -->
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto">
+      <!-- Free -->
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col">
+        <h3 class="text-lg font-semibold text-gray-900">Free</h3>
         <div class="mt-2 flex items-baseline">
-          <span class="text-4xl font-bold text-gray-900">Free</span>
+          <span class="text-4xl font-bold text-gray-900">&pound;0</span>
         </div>
-        <p class="mt-3 text-sm text-gray-600">Everything you need to evaluate and prototype.</p>
-        <ul class="mt-6 space-y-3 text-sm text-gray-700">
+        <p class="mt-3 text-sm text-gray-600">Evaluate and prototype with no commitment.</p>
+        <ul class="mt-6 space-y-3 text-sm text-gray-700 flex-1">
           <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Up to 25 test discussions
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            25 test discussions
           </li>
           <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Full API access (test environment)
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Full API access (test)
           </li>
           <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Embed generator and playground
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Embed generator &amp; playground
           </li>
           <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
             No credit card required
           </li>
         </ul>
@@ -453,49 +448,335 @@
           </a>
         </div>
       </div>
-      <div class="rounded-xl border-2 border-blue-600 bg-white p-6 shadow-sm relative">
-        <div class="absolute -top-3 right-6 inline-flex rounded-full bg-blue-600 px-3 py-0.5 text-xs font-semibold text-white">Production</div>
-        <h3 class="text-lg font-semibold text-gray-900">Live</h3>
+
+      <!-- Starter -->
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col">
+        <h3 class="text-lg font-semibold text-gray-900">Starter</h3>
         <div class="mt-2 flex items-baseline">
-          <span class="text-4xl font-bold text-gray-900">{{ partner_price|default('$49') }}</span>
-          <span class="text-gray-500 ml-1">/month</span>
+          <span class="text-4xl font-bold text-gray-900">&pound;49</span>
+          <span class="text-gray-500 ml-1">/mo</span>
         </div>
-        <p class="mt-3 text-sm text-gray-600">Everything in Test, plus production access.</p>
-        <ul class="mt-6 space-y-3 text-sm text-gray-700">
+        <p class="mt-3 text-sm text-gray-600">For independent publishers, blogs, and niche sites.</p>
+        <ul class="mt-6 space-y-3 text-sm text-gray-700 flex-1">
           <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Unlimited live discussions
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Up to 100 live discussions/mo
           </li>
           <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Live API keys and production domains
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Live API keys &amp; domains
           </li>
           <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Usage dashboard and CSV export
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Usage dashboard &amp; CSV export
           </li>
           <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
-            Priority support
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Email support
           </li>
         </ul>
         <div class="mt-6">
           <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
-            Get started &mdash; upgrade when ready
+            Get started
+          </a>
+        </div>
+      </div>
+
+      <!-- Professional (highlighted) -->
+      <div class="rounded-xl border-2 border-blue-600 bg-white p-6 shadow-sm flex flex-col relative">
+        <div class="absolute -top-3 right-6 inline-flex rounded-full bg-blue-600 px-3 py-0.5 text-xs font-semibold text-white">Most popular</div>
+        <h3 class="text-lg font-semibold text-gray-900">Professional</h3>
+        <div class="mt-2 flex items-baseline">
+          <span class="text-4xl font-bold text-gray-900">&pound;249</span>
+          <span class="text-gray-500 ml-1">/mo</span>
+        </div>
+        <p class="mt-3 text-sm text-gray-600">For regional publishers and growing newsrooms.</p>
+        <ul class="mt-6 space-y-3 text-sm text-gray-700 flex-1">
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Up to 500 live discussions/mo
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Everything in Starter
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Custom embed themes &amp; branding
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Priority email support
+          </li>
+        </ul>
+        <div class="mt-6">
+          <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
+            Get started
+          </a>
+        </div>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="rounded-xl border border-gray-200 bg-gray-900 p-6 shadow-sm flex flex-col text-white">
+        <h3 class="text-lg font-semibold text-white">Enterprise</h3>
+        <div class="mt-2 flex items-baseline">
+          <span class="text-4xl font-bold text-white">Custom</span>
+        </div>
+        <p class="mt-1 text-xs text-gray-400">From &pound;2,000/mo</p>
+        <p class="mt-3 text-sm text-gray-300">For national publishers, media groups, and high-traffic networks.</p>
+        <ul class="mt-6 space-y-3 text-sm text-gray-300 flex-1">
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-400 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Unlimited discussions
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-400 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Dedicated account manager
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-400 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            SLA &amp; uptime guarantees
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-400 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+            Custom integrations &amp; onboarding
+          </li>
+        </ul>
+        <div class="mt-6">
+          <a href="mailto:partners@societyspeaks.io" class="inline-flex w-full items-center justify-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 transition-colors">
+            Talk to us
           </a>
         </div>
       </div>
     </div>
+
     <p class="text-center text-sm text-gray-500 mt-6">
-      Need a custom plan for high-volume publishing? <a href="mailto:partners@societyspeaks.io" class="text-blue-600 hover:underline">Contact us</a>.
+      All paid plans include a 14-day free trial. Prices exclude VAT.
+    </p>
+
+    <!-- ROI Calculator -->
+    <div class="mt-12 rounded-2xl border border-gray-200 bg-white p-6 sm:p-8 shadow-sm max-w-4xl mx-auto" id="roi">
+      <div class="text-center mb-6">
+        <h3 class="text-xl font-bold text-gray-900">What's the ROI for your publication?</h3>
+        <p class="text-sm text-gray-600 mt-1">See how reader engagement translates to incremental ad revenue.</p>
+      </div>
+      <div class="grid gap-6 sm:grid-cols-3 mb-6">
+        <div>
+          <label for="roiPageviews" class="block text-sm font-medium text-gray-700 mb-1">Monthly pageviews</label>
+          <select id="roiPageviews" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="calcROI()">
+            <option value="500000">500K (niche / local)</option>
+            <option value="2000000">2M (regional)</option>
+            <option value="10000000">10M (mid-market)</option>
+            <option value="50000000" selected>50M (national)</option>
+            <option value="150000000">150M (major national)</option>
+          </select>
+        </div>
+        <div>
+          <label for="roiCPM" class="block text-sm font-medium text-gray-700 mb-1">Average display CPM</label>
+          <div class="relative">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">&pound;</span>
+            <input id="roiCPM" type="number" value="30" min="1" max="200" step="1" class="w-full rounded-lg border border-gray-300 pl-7 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="calcROI()" oninput="calcROI()">
+          </div>
+        </div>
+        <div>
+          <label for="roiLift" class="block text-sm font-medium text-gray-700 mb-1">Engagement lift</label>
+          <select id="roiLift" class="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" onchange="calcROI()">
+            <option value="0.05">5% (conservative)</option>
+            <option value="0.10" selected>10% (typical)</option>
+            <option value="0.15">15% (strong)</option>
+            <option value="0.20">20% (exceptional)</option>
+          </select>
+        </div>
+      </div>
+      <div class="text-sm text-gray-500 mb-4 text-center">
+        Assumes Society Speaks embeds appear on <strong>5%</strong> of articles. Lift applies to time-on-page and scroll depth, which correlate with higher programmatic CPMs.
+      </div>
+      <div class="grid gap-4 sm:grid-cols-3 text-center">
+        <div class="rounded-xl bg-gray-50 border border-gray-200 p-4">
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Embedded pageviews</div>
+          <div class="text-2xl font-bold text-gray-900 mt-1" id="roiEmbedViews">&mdash;</div>
+          <div class="text-xs text-gray-500">per month</div>
+        </div>
+        <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
+          <div class="text-xs font-semibold text-emerald-700 uppercase tracking-wide">Incremental ad revenue</div>
+          <div class="text-2xl font-bold text-emerald-700 mt-1" id="roiRevenue">&mdash;</div>
+          <div class="text-xs text-emerald-600">additional per month</div>
+        </div>
+        <div class="rounded-xl bg-blue-50 border border-blue-200 p-4">
+          <div class="text-xs font-semibold text-blue-700 uppercase tracking-wide">ROI multiple</div>
+          <div class="text-2xl font-bold text-blue-700 mt-1" id="roiMultiple">&mdash;</div>
+          <div class="text-xs text-blue-600">return on spend</div>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400 mt-4 text-center">
+        This is an illustrative model. Actual impact depends on content mix, audience demographics, and ad stack configuration.
+        <a href="mailto:partners@societyspeaks.io" class="text-blue-600 hover:underline">Talk to us</a> for a tailored analysis.
+      </p>
+    </div>
+
+    <!-- Concrete ROI examples -->
+    <div class="mt-10 max-w-4xl mx-auto">
+      <h3 class="text-lg font-bold text-gray-900 text-center mb-6">Real-world examples at &pound;50 CPM and 10% engagement lift</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border border-gray-200 rounded-lg overflow-hidden">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold text-gray-700">Publisher type</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700">Monthly pageviews</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700">Embed impressions</th>
+              <th class="px-4 py-3 text-right font-semibold text-emerald-700">Incremental revenue</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700">Plan cost</th>
+              <th class="px-4 py-3 text-right font-semibold text-blue-700">ROI</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr>
+              <td class="px-4 py-3 text-gray-900">Niche / local blog</td>
+              <td class="px-4 py-3 text-right text-gray-600">500K</td>
+              <td class="px-4 py-3 text-right text-gray-600">25K</td>
+              <td class="px-4 py-3 text-right font-semibold text-emerald-700">&pound;125/mo</td>
+              <td class="px-4 py-3 text-right text-gray-600">&pound;49</td>
+              <td class="px-4 py-3 text-right font-bold text-blue-700">2.6x</td>
+            </tr>
+            <tr class="bg-gray-50">
+              <td class="px-4 py-3 text-gray-900">Regional newspaper</td>
+              <td class="px-4 py-3 text-right text-gray-600">5M</td>
+              <td class="px-4 py-3 text-right text-gray-600">250K</td>
+              <td class="px-4 py-3 text-right font-semibold text-emerald-700">&pound;1,250/mo</td>
+              <td class="px-4 py-3 text-right text-gray-600">&pound;249</td>
+              <td class="px-4 py-3 text-right font-bold text-blue-700">5x</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 text-gray-900">Mid-market publisher</td>
+              <td class="px-4 py-3 text-right text-gray-600">20M</td>
+              <td class="px-4 py-3 text-right text-gray-600">1M</td>
+              <td class="px-4 py-3 text-right font-semibold text-emerald-700">&pound;5,000/mo</td>
+              <td class="px-4 py-3 text-right text-gray-600">&pound;2,000</td>
+              <td class="px-4 py-3 text-right font-bold text-blue-700">2.5x</td>
+            </tr>
+            <tr class="bg-gray-50">
+              <td class="px-4 py-3 text-gray-900">National publisher</td>
+              <td class="px-4 py-3 text-right text-gray-600">50M</td>
+              <td class="px-4 py-3 text-right text-gray-600">2.5M</td>
+              <td class="px-4 py-3 text-right font-semibold text-emerald-700">&pound;12,500/mo</td>
+              <td class="px-4 py-3 text-right text-gray-600">&pound;2,000+</td>
+              <td class="px-4 py-3 text-right font-bold text-blue-700">6x+</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 text-gray-900">Large national publisher</td>
+              <td class="px-4 py-3 text-right text-gray-600">150M</td>
+              <td class="px-4 py-3 text-right text-gray-600">7.5M</td>
+              <td class="px-4 py-3 text-right font-semibold text-emerald-700">&pound;37,500/mo</td>
+              <td class="px-4 py-3 text-right text-gray-600">Custom</td>
+              <td class="px-4 py-3 text-right font-bold text-blue-700">10x+</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-gray-400 mt-3 text-center">
+        Based on 5% embed penetration across articles, &pound;50 display CPM, and a conservative 10% engagement lift.
+        Higher CPMs (premium inventory, &pound;60&ndash;&pound;80) or deeper penetration significantly increase returns.
+      </p>
+    </div>
+  </div>
+</div>
+<script>
+function calcROI() {
+  var pv = parseInt(document.getElementById('roiPageviews').value);
+  var rawCpm = parseFloat(document.getElementById('roiCPM').value);
+  var cpm = (isNaN(rawCpm) || rawCpm <= 0) ? 30 : rawCpm;
+  var lift = parseFloat(document.getElementById('roiLift').value);
+
+  var embedShare = 0.05; // 5% of pages carry an embed
+  var embedViews = pv * embedShare;
+  var incrementalRevenue = (embedViews / 1000) * cpm * lift;
+
+  // Suggest the right tier cost for comparison
+  var cost;
+  if (pv <= 1000000) cost = 49;
+  else if (pv <= 5000000) cost = 249;
+  else cost = 2000;
+
+  var multiple = incrementalRevenue > 0 ? (incrementalRevenue / cost) : 0;
+
+  document.getElementById('roiEmbedViews').textContent = embedViews >= 1000000
+    ? (embedViews / 1000000).toFixed(1) + 'M'
+    : (embedViews / 1000).toFixed(0) + 'K';
+  var revenue = isNaN(incrementalRevenue) ? 0 : Math.round(incrementalRevenue);
+  document.getElementById('roiRevenue').textContent = '\u00A3' + formatNum(revenue);
+  document.getElementById('roiMultiple').textContent = multiple >= 1 ? multiple.toFixed(0) + 'x' : '<1x';
+}
+function formatNum(n) {
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+calcROI();
+</script>
+
+<!-- Mission -->
+<div class="bg-white border-b">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <div class="text-center mb-8">
+      <div class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700 mb-4">
+        Your subscription funds the mission
+      </div>
+      <h2 class="text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">
+        More than engagement &mdash; you're investing in public discourse
+      </h2>
+      <p class="mt-4 text-base text-gray-600 max-w-2xl mx-auto">
+        Society Speaks is built on the belief that structured, respectful public opinion matters.
+        Every partner subscription directly funds the work that makes this possible.
+      </p>
+    </div>
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 mb-3">
+          <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+          </svg>
+        </div>
+        <h3 class="text-sm font-semibold text-gray-900 mb-1">Open-source tools</h3>
+        <p class="text-sm text-gray-600">
+          Revenue funds our open-source opinion infrastructure &mdash; free for researchers, civic tech projects, and non-profits.
+        </p>
+      </div>
+      <div class="text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 mb-3">
+          <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+        </div>
+        <h3 class="text-sm font-semibold text-gray-900 mb-1">Longitudinal studies</h3>
+        <p class="text-sm text-gray-600">
+          Aggregated, anonymised data powers long-term research into how public opinion evolves on the issues that matter.
+        </p>
+      </div>
+      <div class="text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-purple-100 mb-3">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </div>
+        <h3 class="text-sm font-semibold text-gray-900 mb-1">Broader participation</h3>
+        <p class="text-sm text-gray-600">
+          More embeds across more publications means more voices are heard &mdash; not just the loudest ones in a comment section.
+        </p>
+      </div>
+      <div class="text-center">
+        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 mb-3">
+          <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+          </svg>
+        </div>
+        <h3 class="text-sm font-semibold text-gray-900 mb-1">Better policy evidence</h3>
+        <p class="text-sm text-gray-600">
+          Structured opinion data gives policymakers genuine public sentiment &mdash; a credible alternative to social media noise.
+        </p>
+      </div>
+    </div>
+    <p class="text-center text-sm text-gray-500 mt-8 max-w-2xl mx-auto">
+      When your readers engage with a Society Speaks embed, they aren't just boosting your metrics.
+      They're contributing to a growing, independent record of what the public actually thinks &mdash;
+      and your subscription makes that possible.
     </p>
   </div>
 </div>

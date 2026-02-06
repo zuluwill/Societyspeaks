@@ -60,16 +60,41 @@
         </div>
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Billing</h3>
-        <p class="text-sm text-gray-700 mb-3">Status: <strong>{{ partner.billing_status }}</strong></p>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Plan &amp; Billing</h3>
+        <div class="flex items-center gap-2 mb-3">
+          <span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold
+            {% if partner.tier == 'enterprise' %}bg-gray-900 text-white
+            {% elif partner.tier == 'professional' %}bg-blue-100 text-blue-700
+            {% elif partner.tier == 'starter' %}bg-emerald-100 text-emerald-700
+            {% else %}bg-gray-100 text-gray-600{% endif %}">
+            {{ partner.tier|default('free')|title }}
+          </span>
+          <span class="text-sm text-gray-500">&middot; Billing: <strong>{{ partner.billing_status|default('inactive') }}</strong></span>
+        </div>
         <div class="flex flex-wrap gap-2">
           {% if partner.billing_status != 'active' %}
-          <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-              Start subscription
-            </button>
-          </form>
+          <div class="w-full mb-2">
+            <p class="text-xs text-gray-500 mb-2">Choose a plan to go live:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="tier" value="starter">
+                <button type="submit" class="w-full text-left rounded-lg border border-gray-200 p-3 hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                  <div class="text-sm font-semibold text-gray-900">Starter</div>
+                  <div class="text-xs text-gray-500">&pound;49/mo &middot; 100 discussions</div>
+                </button>
+              </form>
+              <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="tier" value="professional">
+                <button type="submit" class="w-full text-left rounded-lg border-2 border-blue-600 p-3 hover:bg-blue-50 transition-colors">
+                  <div class="text-sm font-semibold text-gray-900">Professional</div>
+                  <div class="text-xs text-gray-500">&pound;249/mo &middot; 500 discussions</div>
+                </button>
+              </form>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">Need more? <a href="mailto:partners@societyspeaks.io" class="text-blue-600 hover:underline">Contact us</a> for Enterprise.</p>
+          </div>
           {% endif %}
           {% if partner.stripe_customer_id %}
           <a href="{{ url_for('partner.portal_billing_portal') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
@@ -252,7 +277,7 @@
             <button class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">New live key</button>
           </form>
           {% else %}
-          <div class="text-xs text-gray-500 flex items-center">Live keys unlock after billing</div>
+          <div class="text-xs text-gray-500 flex items-center">Live keys unlock with a paid plan</div>
           {% endif %}
         </div>
         <div class="space-y-3">

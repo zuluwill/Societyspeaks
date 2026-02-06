@@ -359,17 +359,36 @@ def create_discussion():
             403
         )
 
-    # Cap test discussion creation to limit unbilled AI generation costs
-    if key_env == 'test' and partner:
-        test_count = Discussion.query.filter_by(
-            partner_fk_id=partner.id, partner_env='test'
-        ).count()
-        if test_count >= 25:
-            return api_error(
-                'test_limit_reached',
-                'Test environment is limited to 25 discussions. Subscribe to create live discussions.',
-                429
-            )
+    # Enforce discussion creation limits per tier
+    if partner:
+        tier_limits = current_app.config.get('PARTNER_TIER_LIMITS', {})
+        partner_tier = getattr(partner, 'tier', 'free') or 'free'
+        tier_limit = tier_limits.get(partner_tier, 25)  # default conservative
+
+        if tier_limit is not None:  # None = unlimited (enterprise)
+            from datetime import datetime, timedelta
+            if key_env == 'test':
+                # Test: lifetime cap
+                env_count = Discussion.query.filter_by(
+                    partner_fk_id=partner.id, partner_env='test'
+                ).count()
+            else:
+                # Live: calendar-month cap
+                month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                env_count = Discussion.query.filter(
+                    Discussion.partner_fk_id == partner.id,
+                    Discussion.partner_env == 'live',
+                    Discussion.created_at >= month_start
+                ).count()
+
+            if env_count >= tier_limit:
+                limit_label = f"{tier_limit} discussions" + (" this month" if key_env == 'live' else "")
+                return api_error(
+                    f'{key_env}_limit_reached',
+                    f'Your {partner_tier.title()} plan is limited to {limit_label}. '
+                    f'Upgrade your plan for higher limits.',
+                    429
+                )
 
     # Parse JSON body
     data = request.get_json()

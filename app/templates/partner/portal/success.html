@@ -41,12 +41,29 @@
           Review setup steps
         </a>
         {% if partner.billing_status != 'active' %}
-        <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-            Activate live access
-          </button>
-        </form>
+        <div class="w-full mt-4 rounded-xl border border-blue-200 bg-blue-50 p-5">
+          <h3 class="text-sm font-semibold text-gray-900 mb-2">Activate live access</h3>
+          <p class="text-xs text-gray-600 mb-3">Choose a plan to unlock live API keys and production domains.</p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="tier" value="starter">
+              <button type="submit" class="w-full text-left rounded-lg border border-gray-200 bg-white p-3 hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                <div class="text-sm font-semibold text-gray-900">Starter &mdash; &pound;49/mo</div>
+                <div class="text-xs text-gray-500 mt-0.5">Up to 100 live discussions</div>
+              </button>
+            </form>
+            <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="tier" value="professional">
+              <button type="submit" class="w-full text-left rounded-lg border-2 border-blue-600 bg-white p-3 hover:bg-blue-50 transition-colors">
+                <div class="text-sm font-semibold text-gray-900">Professional &mdash; &pound;249/mo</div>
+                <div class="text-xs text-gray-500 mt-0.5">Up to 500 live discussions</div>
+              </button>
+            </form>
+          </div>
+          <p class="text-xs text-gray-400 mt-2">Need more? <a href="mailto:partners@societyspeaks.io" class="text-blue-600 hover:underline">Contact us</a> for Enterprise.</p>
+        </div>
         {% endif %}
       </div>
     </div>

@@ -159,11 +159,29 @@ def get_or_create_partner_customer(partner):
     return customer
 
 
-def create_partner_checkout_session(partner, success_url=None, cancel_url=None):
+def create_partner_checkout_session(partner, tier=None, success_url=None, cancel_url=None):
+    """Create a Stripe Checkout session for a partner subscription.
+
+    Args:
+        partner: Partner model instance.
+        tier: 'starter' or 'professional'. Enterprise is handled via manual invoicing.
+        success_url / cancel_url: optional overrides.
+    """
     s = get_stripe()
-    price_id = current_app.config.get('PARTNER_STRIPE_PRICE_ID')
+
+    # Resolve the Stripe Price ID for the requested tier
+    tier = tier or 'starter'
+    if tier not in ('starter', 'professional'):
+        raise ValueError(f"Unsupported self-serve tier: {tier}")
+
+    prices = current_app.config.get('PARTNER_STRIPE_PRICES') or {}
+    price_id = prices.get(tier)
+
+    # Fallback to legacy single-price config
     if not price_id:
-        raise ValueError("PARTNER_STRIPE_PRICE_ID not configured")
+        price_id = current_app.config.get('PARTNER_STRIPE_PRICE_ID')
+    if not price_id:
+        raise ValueError(f"No Stripe Price ID configured for tier '{tier}'")
 
     customer = get_or_create_partner_customer(partner)
     base_url = current_app.config.get('APP_BASE_URL', 'https://societyspeaks.io')
@@ -181,12 +199,14 @@ def create_partner_checkout_session(partner, success_url=None, cancel_url=None):
         metadata={
             'partner_id': str(partner.id),
             'partner_slug': partner.slug,
+            'partner_tier': tier,
             'purpose': 'partner_subscription'
         },
         subscription_data={
             'metadata': {
                 'partner_id': str(partner.id),
                 'partner_slug': partner.slug,
+                'partner_tier': tier,
                 'purpose': 'partner_subscription'
             }
         }

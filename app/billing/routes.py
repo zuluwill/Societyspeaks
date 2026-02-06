@@ -381,10 +381,23 @@ def _handle_partner_subscription(subscription_data):
     status = stripe_sub.get('status') if isinstance(stripe_sub, dict) else stripe_sub.status
     partner.stripe_subscription_id = stripe_sub.get('id') if isinstance(stripe_sub, dict) else stripe_sub.id
     partner.billing_status = 'active' if status in ['active', 'trialing'] else 'inactive'
+
+    # Persist the tier from checkout metadata (starter / professional)
+    tier_from_meta = metadata.get('partner_tier')
+    if tier_from_meta in ('starter', 'professional', 'enterprise'):
+        partner.tier = tier_from_meta
+    elif partner.billing_status == 'active' and partner.tier == 'free':
+        # Legacy fallback: if somehow no tier in metadata, default to starter
+        partner.tier = 'starter'
+
+    # When subscription is canceled/unpaid, revert to free tier
+    if status in ('canceled', 'unpaid'):
+        partner.tier = 'free'
+
     db.session.commit()
 
     if partner.billing_status == 'active':
-        current_app.logger.info(f"Partner subscription active for {partner.slug}")
+        current_app.logger.info(f"Partner subscription active for {partner.slug} (tier={partner.tier})")
 
 
 def handle_subscription_deleted(subscription_data):

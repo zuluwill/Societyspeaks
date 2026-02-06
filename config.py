@@ -54,8 +54,21 @@ class Config:
             "Set PARTNER_KEY_SECRET explicitly to avoid invalidating partner API keys when SECRET_KEY rotates."
         )
 
-    # Partner billing (flat monthly)
-    PARTNER_STRIPE_PRICE_ID = os.getenv('PARTNER_STRIPE_PRICE_ID')
+    # Partner billing – per-tier Stripe Price IDs (GBP monthly recurring)
+    PARTNER_STRIPE_PRICE_ID = os.getenv('PARTNER_STRIPE_PRICE_ID')  # legacy fallback
+    PARTNER_STRIPE_PRICES = {
+        'starter':      os.getenv('PARTNER_STRIPE_PRICE_STARTER'),       # £49/mo
+        'professional': os.getenv('PARTNER_STRIPE_PRICE_PROFESSIONAL'),  # £249/mo
+        # Enterprise is "contact us" / manual invoicing — no self-serve checkout
+    }
+
+    # Discussion limits per tier (per calendar month)
+    PARTNER_TIER_LIMITS = {
+        'free':         25,    # test only
+        'starter':      100,
+        'professional': 500,
+        'enterprise':   None,  # unlimited
+    }
 
     # At start of Config class
     if not SQLALCHEMY_DATABASE_URI:
