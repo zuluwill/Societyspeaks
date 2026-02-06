@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
+from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db, limiter
 from app.discussions.forms import CreateDiscussionForm
@@ -8,6 +8,7 @@ from app.middleware import track_discussion_view
 from app.email_utils import create_discussion_notification
 from app.webhook_security import webhook_required, webhook_with_timestamp
 from app.discussions.consensus import get_user_vote_count, PARTICIPATION_THRESHOLD
+from app.api.utils import is_partner_origin_allowed, get_partner_allowed_origins
 from app.trending.conversion_tracking import track_social_click
 from sqlalchemy.orm import joinedload, selectinload
 import json
@@ -20,6 +21,10 @@ except ImportError:
 
 
 discussions_bp = Blueprint('discussions', __name__)
+
+
+def _exclude_test_discussions(query):
+    return query.filter(Discussion.partner_env != 'test')
 
 
 @discussions_bp.route('/news')
@@ -50,14 +55,15 @@ def news_feed():
         # Optimized: Fetch news discussions in a single query and group by topic in Python
         # This eliminates N+1 queries (one per topic)
         # Limit to 150 total to prevent unbounded loading (6 per topic * ~15 active topics = 90)
-        all_news_discussions = Discussion.query.options(
+        all_news_discussions = _exclude_test_discussions(
+            Discussion.query.options(
             load_only(
                 Discussion.id, Discussion.title, Discussion.description,
                 Discussion.topic, Discussion.slug, Discussion.created_at,
                 Discussion.participant_count, Discussion.has_native_statements,
                 Discussion.is_featured, Discussion.geographic_scope, Discussion.country
             )
-        ).filter(
+        )).filter(
             Discussion.id.in_(news_discussion_ids)
         ).order_by(Discussion.created_at.desc()).limit(150).all()
         
@@ -83,14 +89,15 @@ def news_feed():
     else:
         # Flat paginated view for single topic or 'all' view
         # Use load_only to avoid loading unnecessary columns (only load what templates need)
-        query = Discussion.query.options(
+        query = _exclude_test_discussions(
+            Discussion.query.options(
             load_only(
                 Discussion.id, Discussion.title, Discussion.description,
                 Discussion.topic, Discussion.slug, Discussion.created_at,
                 Discussion.participant_count, Discussion.has_native_statements,
                 Discussion.is_featured, Discussion.geographic_scope, Discussion.country
             )
-        ).filter(
+        )).filter(
             Discussion.id.in_(news_discussion_ids)
         )
         
@@ -203,6 +210,8 @@ def view_discussion_redirect(discussion_id):
             unavailable_reason='deleted',
             base_url=base_url
         ), 410
+    if discussion.partner_env == 'test':
+        abort(404)
     return redirect(url_for('discussions.view_discussion',
                           discussion_id=discussion.id,
                           slug=discussion.slug), code=301)
@@ -254,6 +263,16 @@ def embed_discussion(discussion_id):
         ), 403
 
     discussion = Discussion.query.get_or_404(discussion_id)
+
+    # Restrict test embeds to verified test domains
+    origin = request.headers.get('Origin')
+    if origin and not is_partner_origin_allowed(origin, env=discussion.partner_env):
+        base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+        return render_template(
+            'discussions/embed_unavailable.html',
+            unavailable_reason='domain_not_allowed',
+            base_url=base_url
+        ), 403
 
     # Get theme parameters
     theme = request.args.get('theme', 'default')
@@ -319,11 +338,10 @@ def embed_discussion(discussion_id):
     ))
 
     # Set CSP frame-ancestors header for partner allowlist
-    partner_origins = current_app.config.get('PARTNER_ORIGINS', [])
+    partner_origins = get_partner_allowed_origins(env=discussion.partner_env)
     if partner_origins:
         frame_ancestors = "'self' " + " ".join(partner_origins)
     else:
-        # In development, allow any origin for testing
         frame_ancestors = "'self' *" if current_app.config.get('ENV') == 'development' else "'self'"
 
     response.headers['Content-Security-Policy'] = f"frame-ancestors {frame_ancestors}"
@@ -352,6 +370,9 @@ def view_discussion(discussion_id, slug):
         .joinedload(DiscussionSourceArticle.article)
         .joinedload(NewsArticle.source)
     ).filter_by(id=discussion_id).first_or_404()
+    # Block test discussions from public access
+    if discussion.partner_env == 'test':
+        abort(404)
     # Redirect if the slug in the URL doesn't match the discussion's slug
     if discussion.slug != slug:
         return redirect(url_for('discussions.view_discussion', 
@@ -433,7 +454,7 @@ def view_discussion(discussion_id, slug):
 
 def fetch_discussions(search, country, city, topic, keywords, page, per_page=9, sort='recent'):
     from sqlalchemy import or_
-    query = Discussion.query
+    query = _exclude_test_discussions(Discussion.query)
 
     # Apply filters if provided - search both title and description
     if search:

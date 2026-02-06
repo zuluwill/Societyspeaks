@@ -49,7 +49,7 @@ Key Points:
 Why This Matters: {{ item.personal_impact }}
 {% endif %}
 {% if item.so_what %}
-So What: {{ item.so_what }}
+So What: {{ item.so_what|strip_so_what }}
 {% endif %}
 {% if item.content_markdown %}
 Content: {{ item.content_markdown[:500] }}

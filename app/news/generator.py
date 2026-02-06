@@ -182,13 +182,14 @@ Generate perspective analysis with:
    ✓ "For Ukrainians: 1.5 million face weeks without heating. Globally: this escalation could push European gas prices up 10-15% and tests NATO's resolve."
    ✓ "For UK residents: council tax bills may rise £200/year. Internationally: this signals how wealthy nations are funding climate transition costs."
 
-2. SO WHAT: One paragraph (2-3 sentences) explaining concrete, real-world impact.
+2. SO WHAT (Why It Matters): One paragraph (2-3 sentences) explaining concrete, real-world impact.
+   - Do NOT start with "So what?" - the section is already labeled "Why It Matters". Write the analysis directly.
    - BE SPECIFIC: Include numbers, dates, affected groups
    - Show second-order effects
    - Make it personal and concrete
 
    Example:
-   ✓ "So what? 17 million Americans in red states will lose Medicaid expansion by March if governors don't reverse course. Last time federal funding changed (2017), 8 states took 2+ years to respond."
+   ✓ "17 million Americans in red states will lose Medicaid expansion by March if governors don't reverse course. Last time federal funding changed (2017), 8 states took 2+ years to respond."
 
 3. PERSPECTIVES: How different outlets are framing this story (one sentence each):
    - Left-leaning view: How left/lean-left sources frame it
@@ -211,7 +212,7 @@ Guidelines:
 Return JSON:
 {{
   "personal_impact": "Two-part explanation (micro + macro)...",
-  "so_what": "So what? [Specific, concrete analysis]...",
+  "so_what": "[Specific, concrete analysis - do not start with 'So what?']",
   "perspectives": {{
     "left": "Left-leaning outlets emphasise...",
     "center": "Centre outlets focus on...",

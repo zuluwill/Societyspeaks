@@ -19,8 +19,9 @@ from app.api.errors import api_error
 from app.api.utils import (
     get_rate_limit_key, get_partner_ref, build_discussion_urls, append_ref_param,
     get_discussion_participant_count, get_discussion_statement_count,
-    sanitize_partner_ref, track_partner_event
+    sanitize_partner_ref, track_partner_event, record_partner_usage
 )
+from app.partner.keys import find_partner_api_key
 
 
 partner_bp = Blueprint('partner_api', __name__)
@@ -55,6 +56,16 @@ def lookup_by_article_url():
     if ref_normalized and ref_normalized in disabled_refs:
         return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
 
+    # Optional API key context (test/live)
+    api_key = request.headers.get('X-API-Key')
+    if api_key:
+        is_valid, partner_id, key_env, partner = _validate_api_key()
+        if not is_valid:
+            return api_error('invalid_api_key', 'Invalid X-API-Key.', 401)
+    else:
+        partner_id = None
+        key_env = 'live'
+
     # Get and validate URL parameter
     url = request.args.get('url')
     if not url:
@@ -66,7 +77,7 @@ def lookup_by_article_url():
         return api_error('invalid_url', 'The provided URL is not valid or could not be parsed.', 400)
 
     # Try cache first
-    cache_key = f"lookup:{normalized}"
+    cache_key = f"lookup:{key_env}:{partner_id or 'public'}:{normalized}"
     cached = cache.get(cache_key)
     if cached:
         response_data = cached
@@ -77,23 +88,32 @@ def lookup_by_article_url():
             response_data['snapshot_url'] = append_ref_param(response_data['snapshot_url'], ref_normalized)
         return jsonify(response_data)
 
-    # Look up NewsArticle by normalized_url
-    article = NewsArticle.query.filter_by(normalized_url=normalized).first()
-
     discussion = None
     source = 'rss'
 
-    if article:
-        # Find discussion via DiscussionSourceArticle
-        link = DiscussionSourceArticle.query.filter_by(article_id=article.id).first()
-        if link:
-            discussion = Discussion.query.get(link.discussion_id)
+    if key_env == 'test' and partner_id:
+        discussion = Discussion.query.filter_by(
+            partner_article_url=normalized,
+            partner_id=partner_id,
+            partner_env='test'
+        ).first()
+        source = 'partner'
+    else:
+        # Look up NewsArticle by normalized_url
+        article = NewsArticle.query.filter_by(normalized_url=normalized).first()
+        if article:
+            link = DiscussionSourceArticle.query.filter_by(article_id=article.id).first()
+            if link:
+                discussion = Discussion.query.get(link.discussion_id)
 
-    # Phase 2: Check partner_article_url if no match (column added in Phase 2 migration)
-    if not discussion and hasattr(Discussion, 'partner_article_url'):
-        discussion = Discussion.query.filter_by(partner_article_url=normalized).first()
-        if discussion:
-            source = 'partner'
+        # Phase 2: Check partner_article_url for live partner discussions
+        if not discussion and hasattr(Discussion, 'partner_article_url'):
+            query = Discussion.query.filter_by(partner_article_url=normalized, partner_env='live')
+            if partner_id:
+                query = query.filter_by(partner_id=partner_id)
+            discussion = query.first()
+            if discussion:
+                source = 'partner'
 
     if not discussion:
         return api_error('no_discussion', 'No discussion found for this article URL.', 404)
@@ -110,7 +130,8 @@ def lookup_by_article_url():
         'embed_url': urls['embed_url'],
         'consensus_url': urls['consensus_url'],
         'snapshot_url': urls['snapshot_url'],
-        'source': source
+        'source': source,
+        'env': discussion.partner_env
     }
 
     # Cache base response (without ref) for 5 minutes
@@ -129,6 +150,8 @@ def lookup_by_article_url():
         'source': source,
         'cache_hit': False
     })
+    if partner_id:
+        record_partner_usage(partner_id, key_env, 'lookup')
 
     return jsonify(response_data)
 
@@ -179,6 +202,12 @@ def get_snapshot(discussion_id):
     if not discussion:
         return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
 
+    # Restrict test discussions to valid test keys for the owning partner
+    if discussion.partner_env == 'test':
+        is_valid, partner_id, key_env, _partner = _validate_api_key()
+        if not is_valid or key_env != 'test' or partner_id != discussion.partner_id:
+            return api_error('forbidden', 'A valid test API key is required for this discussion.', 403)
+
     # Get counts
     participant_count = get_discussion_participant_count(discussion)
     statement_count = get_discussion_statement_count(discussion)
@@ -197,7 +226,8 @@ def get_snapshot(discussion_id):
         'participant_count': participant_count,
         'statement_count': statement_count,
         'has_analysis': analysis is not None,
-        'consensus_url': urls['consensus_url']
+        'consensus_url': urls['consensus_url'],
+        'env': discussion.partner_env
     }
 
     # Add analysis metadata if available (but NOT content)
@@ -230,6 +260,8 @@ def get_snapshot(discussion_id):
         'participant_count': participant_count,
         'cache_hit': False
     })
+    if discussion.partner_id:
+        record_partner_usage(discussion.partner_id, discussion.partner_env, 'snapshot')
 
     return jsonify(response_data)
 
@@ -245,20 +277,22 @@ def _validate_api_key():
     Validate partner API key from request header.
 
     Returns:
-        tuple: (is_valid, partner_id) - partner_id is the validated partner identifier
+        tuple: (is_valid, partner_id, env, partner)
     """
     api_key = request.headers.get('X-API-Key')
     if not api_key:
-        return False, None
+        return False, None, None, None
 
-    # Get configured API keys from config
-    # Format in config: {'key': 'partner_id', ...}
+    record, partner, env = find_partner_api_key(api_key)
+    if record and partner:
+        return True, partner.slug, env, partner
+
+    # Legacy config keys (default to live)
     api_keys = current_app.config.get('PARTNER_API_KEYS', {})
-
     if api_key in api_keys:
-        return True, api_keys[api_key]
+        return True, api_keys[api_key], 'live', None
 
-    return False, None
+    return False, None, None, None
 
 
 @partner_bp.route('/partner/discussions', methods=['POST'])
@@ -304,13 +338,38 @@ def create_discussion():
     from app.models import generate_slug
 
     # Validate API key
-    is_valid, partner_id = _validate_api_key()
+    is_valid, partner_id, key_env, partner = _validate_api_key()
     if not is_valid:
         return api_error(
             'invalid_api_key',
             'A valid X-API-Key header is required.',
             401
         )
+
+    if key_env == 'live' and partner and partner.billing_status != 'active':
+        return api_error(
+            'billing_inactive',
+            'Live API access requires an active subscription.',
+            402
+        )
+    if partner and partner.status != 'active':
+        return api_error(
+            'partner_inactive',
+            'Partner account is not active.',
+            403
+        )
+
+    # Cap test discussion creation to limit unbilled AI generation costs
+    if key_env == 'test' and partner:
+        test_count = Discussion.query.filter_by(
+            partner_fk_id=partner.id, partner_env='test'
+        ).count()
+        if test_count >= 25:
+            return api_error(
+                'test_limit_reached',
+                'Test environment is limited to 25 discussions. Subscribe to create live discussions.',
+                429
+            )
 
     # Parse JSON body
     data = request.get_json()
@@ -353,7 +412,11 @@ def create_discussion():
         )
 
     # Check if discussion already exists for this URL
-    existing = Discussion.query.filter_by(partner_article_url=normalized_url).first()
+    existing = Discussion.query.filter_by(
+        partner_article_url=normalized_url,
+        partner_id=partner_id,
+        partner_env=key_env
+    ).first()
     if existing:
         return api_error(
             'discussion_exists',
@@ -362,15 +425,16 @@ def create_discussion():
         )
 
     # Also check NewsArticle path
-    article = NewsArticle.query.filter_by(normalized_url=normalized_url).first()
-    if article:
-        link = DiscussionSourceArticle.query.filter_by(article_id=article.id).first()
-        if link:
-            return api_error(
-                'discussion_exists',
-                f'A discussion already exists for this URL via RSS (id: {link.discussion_id}).',
-                409
-            )
+    if key_env == 'live':
+        article = NewsArticle.query.filter_by(normalized_url=normalized_url).first()
+        if article:
+            link = DiscussionSourceArticle.query.filter_by(article_id=article.id).first()
+            if link:
+                return api_error(
+                    'discussion_exists',
+                    f'A discussion already exists for this URL via RSS (id: {link.discussion_id}).',
+                    409
+                )
 
     # Generate seed statements if not provided
     statements_to_create = []
@@ -431,7 +495,9 @@ def create_discussion():
             has_native_statements=True,
             geographic_scope='global',
             partner_article_url=normalized_url,
-            partner_id=partner_id
+            partner_id=partner_id,
+            partner_fk_id=partner.id if partner else None,
+            partner_env=key_env
         )
         db.session.add(discussion)
         db.session.flush()  # Get the discussion ID
@@ -475,6 +541,7 @@ def create_discussion():
         'consensus_url': urls['consensus_url'],
         'snapshot_url': urls['snapshot_url'],
         'source': 'partner',
+        'env': discussion.partner_env,
         'statement_count': len(statements_to_create)
     }
 
@@ -485,6 +552,7 @@ def create_discussion():
         'statement_count': len(statements_to_create),
         'used_ai_generation': not bool(seed_statements)
     })
+    record_partner_usage(partner_id, key_env, 'create')
 
     return jsonify(response_data), 201
 

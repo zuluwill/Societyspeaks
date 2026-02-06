@@ -27,7 +27,8 @@ def get_source_discussions(source_id, page=1, per_page=12):
         NewsArticle,
         DiscussionSourceArticle.article_id == NewsArticle.id
     ).filter(
-        NewsArticle.source_id == source_id
+        NewsArticle.source_id == source_id,
+        Discussion.partner_env != 'test'
     ).distinct().order_by(
         Discussion.created_at.desc()
     ).paginate(page=page, per_page=per_page, error_out=False)
@@ -136,7 +137,8 @@ def get_source_stats(source_id):
             NewsArticle,
             DiscussionSourceArticle.article_id == NewsArticle.id
         ).filter(
-            NewsArticle.source_id == source_id
+            NewsArticle.source_id == source_id,
+            Discussion.partner_env != 'test'
         ).order_by(Discussion.created_at.asc()).first()
         
         if oldest_discussion:

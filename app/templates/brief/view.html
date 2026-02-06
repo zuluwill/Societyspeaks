@@ -223,7 +223,7 @@
                     {% if item.so_what %}
                     <div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-5 mb-6">
                         <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">Why It Matters</p>
-                        <p class="text-amber-900 leading-relaxed">{{ item.so_what }}</p>
+                        <p class="text-amber-900 leading-relaxed">{{ item.so_what|strip_so_what }}</p>
                     </div>
                     {% endif %}
 

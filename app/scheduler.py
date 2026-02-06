@@ -355,6 +355,16 @@ def init_scheduler(app):
                 db.session.rollback()
 
             logger.info("Cleanup task complete")
+
+    @scheduler.scheduled_job('cron', hour=4, id='reconcile_partner_billing')
+    def reconcile_partner_billing():
+        """
+        Reconcile partner billing status with Stripe daily.
+        """
+        with app.app_context():
+            from app.billing.service import reconcile_partner_subscriptions
+            updated = reconcile_partner_subscriptions()
+            logger.info(f"Partner billing reconciliation complete (updated={updated})")
     
     
     @scheduler.scheduled_job('cron', hour='7,12,18,22', id='trending_topics_pipeline')

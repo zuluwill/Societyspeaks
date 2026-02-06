@@ -2,142 +2,341 @@
 
 {% block title %}For Publishers - Society Speaks{% endblock %}
 
-{% block meta_description %}Embed Society Speaks on your articles. Let readers vote on key statements and see where public opinion actually stands. Distributed participation, centralised truth.{% endblock %}
+{% block meta_description %}Embed Society Speaks on your articles so readers can vote on key statements and discover where public opinion converges. A clean, moderated alternative to comments with clear, structured insight.{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 py-12">
-  <!-- Hero Section -->
-  <header class="text-center mb-16">
-    <h1 class="text-4xl font-bold text-gray-900 mb-4">
-      The Public Reasoning Layer
-    </h1>
-    <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-      Society Speaks is infrastructure for understanding public opinion with nuance intact.
-      Embed participation on your articles. Full consensus and methodology live here.
-    </p>
-    <p class="text-lg text-blue-600 font-medium mt-4">
-      Distributed participation, centralised truth.
-    </p>
-  </header>
+<div class="bg-gradient-to-b from-blue-50 to-white">
+  <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+    <div class="grid gap-10 lg:grid-cols-12 lg:items-center">
+      <div class="lg:col-span-6 space-y-6">
+        <div class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
+          For Publishers
+        </div>
+        <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+          Replace comment sections with structured public opinion
+        </h1>
+        <p class="text-lg text-gray-600">
+          Add a voting widget to any article in minutes. Readers vote on balanced statements, and you
+          get a clear, data-driven picture of consensus, division, and common ground &mdash; no moderation required.
+        </p>
+        <div class="space-y-3 text-sm text-gray-700">
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span><strong>5-minute integration.</strong> One iframe. Readers vote without leaving your site.</span>
+          </div>
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span><strong>Zero moderation.</strong> We generate balanced statements and handle all reporting.</span>
+          </div>
+          <div class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span><strong>Citable data.</strong> Structured opinion data you can reference, track, and compare over time.</span>
+          </div>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
+            Get Started Free
+            <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+          <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center justify-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+            Read the Docs
+          </a>
+        </div>
+        <p class="text-xs text-gray-500">Free test environment. No credit card required. Live keys from {{ partner_price|default('$49') }}/mo.</p>
+      </div>
+      <div class="lg:col-span-6">
+        <div class="bg-gradient-to-br from-blue-100 to-white rounded-2xl p-4 shadow-xl">
+          <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <div class="text-sm font-semibold text-gray-900">Example: Reader embed</div>
+              <span class="text-xs text-gray-500">Inline on your article</span>
+            </div>
+            <div class="p-4">
+              {% if demo_discussion_id %}
+              <iframe
+                title="Society Speaks demo embed"
+                src="{{ base_url }}/discussions/{{ demo_discussion_id }}/embed"
+                class="w-full h-[420px] rounded-lg border border-gray-200"
+                loading="lazy"
+              ></iframe>
+              {% else %}
+              <!-- Animated demo: cycles through vote → results -->
+              <div class="rounded-lg border border-gray-200 bg-gray-50 p-4" id="heroDemo">
+                <!-- Phase 1: Voting (visible by default) -->
+                <div id="demoVote" class="transition-opacity duration-500">
+                  <p class="text-sm font-semibold text-gray-900 mb-2">Do you agree with the following statement?</p>
+                  <p class="text-sm text-gray-700 mb-4">
+                    &ldquo;Local governments should publish plain-language summaries for every major policy decision.&rdquo;
+                  </p>
+                  <div class="grid grid-cols-3 gap-3 mb-4">
+                    <button id="btnAgree" class="demo-vote-btn flex flex-col items-center justify-center rounded-lg border-2 border-blue-200 bg-blue-50 p-3 hover:border-blue-400 transition-all cursor-pointer">
+                      <span class="text-xs font-semibold text-blue-700">Agree</span>
+                    </button>
+                    <button id="btnDisagree" class="demo-vote-btn flex flex-col items-center justify-center rounded-lg border-2 border-red-200 bg-red-50 p-3 hover:border-red-400 transition-all cursor-pointer">
+                      <span class="text-xs font-semibold text-red-700">Disagree</span>
+                    </button>
+                    <button id="btnUnsure" class="demo-vote-btn flex flex-col items-center justify-center rounded-lg border-2 border-amber-200 bg-amber-50 p-3 hover:border-amber-400 transition-all cursor-pointer">
+                      <span class="text-xs font-semibold text-amber-700">Unsure</span>
+                    </button>
+                  </div>
+                  <div class="flex items-center justify-between text-xs text-gray-500">
+                    <span id="demoCount">1,284 votes</span>
+                    <span class="text-blue-600 font-medium">Tap to vote</span>
+                  </div>
+                </div>
 
-  <!-- Three Primitives -->
-  <section class="mb-16">
-    <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">Three Primitives</h2>
-    <div class="grid md:grid-cols-3 gap-8">
-      <!-- Judgment Prompt -->
-      <div class="bg-white border border-gray-200 rounded-lg p-6 text-center">
-        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <!-- Phase 2: Results (hidden by default) -->
+                <div id="demoResults" class="hidden transition-opacity duration-500 opacity-0">
+                  <p class="text-sm font-semibold text-gray-900 mb-3">Results</p>
+                  <div class="space-y-3 mb-4">
+                    <div>
+                      <div class="flex justify-between text-xs mb-1">
+                        <span class="font-medium text-blue-700">Agree</span>
+                        <span class="text-gray-500" id="resAgree">68%</span>
+                      </div>
+                      <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="barAgree" class="h-2 bg-blue-500 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="flex justify-between text-xs mb-1">
+                        <span class="font-medium text-red-700">Disagree</span>
+                        <span class="text-gray-500" id="resDisagree">18%</span>
+                      </div>
+                      <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="barDisagree" class="h-2 bg-red-500 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="flex justify-between text-xs mb-1">
+                        <span class="font-medium text-amber-700">Unsure</span>
+                        <span class="text-gray-500" id="resUnsure">14%</span>
+                      </div>
+                      <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="barUnsure" class="h-2 bg-amber-500 rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between text-xs text-gray-500">
+                    <span>1,285 votes</span>
+                    <a href="#" class="text-blue-600 font-medium hover:underline" onclick="resetDemo(); return false;">Vote again</a>
+                  </div>
+                </div>
+              </div>
+              <script>
+              (function() {
+                var voted = false;
+                var autoTimer;
+                function showResults(choice) {
+                  if (voted) return;
+                  voted = true;
+                  clearTimeout(autoTimer);
+                  // Highlight the chosen button
+                  var btn = document.getElementById('btn' + choice);
+                  if (btn) {
+                    btn.classList.add('ring-2', 'ring-offset-1', 'scale-105');
+                    if (choice === 'Agree') btn.classList.add('ring-blue-500');
+                    else if (choice === 'Disagree') btn.classList.add('ring-red-500');
+                    else btn.classList.add('ring-amber-500');
+                  }
+                  // After brief delay, transition to results
+                  setTimeout(function() {
+                    document.getElementById('demoVote').classList.add('opacity-0');
+                    setTimeout(function() {
+                      document.getElementById('demoVote').classList.add('hidden');
+                      var res = document.getElementById('demoResults');
+                      res.classList.remove('hidden');
+                      // Trigger reflow then animate bars
+                      requestAnimationFrame(function() {
+                        res.classList.remove('opacity-0');
+                        document.getElementById('barAgree').style.width = '68%';
+                        document.getElementById('barDisagree').style.width = '18%';
+                        document.getElementById('barUnsure').style.width = '14%';
+                      });
+                    }, 300);
+                  }, 400);
+                }
+                window.resetDemo = function() {
+                  voted = false;
+                  document.getElementById('barAgree').style.width = '0%';
+                  document.getElementById('barDisagree').style.width = '0%';
+                  document.getElementById('barUnsure').style.width = '0%';
+                  var res = document.getElementById('demoResults');
+                  res.classList.add('opacity-0');
+                  setTimeout(function() {
+                    res.classList.add('hidden');
+                    var vote = document.getElementById('demoVote');
+                    vote.classList.remove('hidden', 'opacity-0');
+                    // Remove highlight classes from buttons
+                    document.querySelectorAll('.demo-vote-btn').forEach(function(b) {
+                      b.classList.remove('ring-2', 'ring-offset-1', 'scale-105', 'ring-blue-500', 'ring-red-500', 'ring-amber-500');
+                    });
+                    scheduleAuto();
+                  }, 300);
+                };
+                function scheduleAuto() {
+                  autoTimer = setTimeout(function() { showResults('Agree'); }, 4000);
+                }
+                document.getElementById('btnAgree').addEventListener('click', function() { showResults('Agree'); });
+                document.getElementById('btnDisagree').addEventListener('click', function() { showResults('Disagree'); });
+                document.getElementById('btnUnsure').addEventListener('click', function() { showResults('Unsure'); });
+                scheduleAuto();
+              })();
+              </script>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-3 text-center">
+          Readers vote on balanced statements without leaving your site.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white border-b">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <div class="text-center mb-10">
+      <div class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700 mb-4">
+        How it works
+      </div>
+      <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+        Three layers, one integration
+      </h2>
+      <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+        Add a single iframe to your article. We handle the rest &mdash; from statement generation to consensus analysis.
+      </p>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-3">
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm relative">
+        <div class="absolute -top-3 left-6 inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold">1</div>
+        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4 mt-2">
           <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
           </svg>
         </div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Judgment Prompt</h3>
-        <p class="text-gray-600 text-sm">
-          Vote on key statements. Agree, disagree, or unsure. Your readers participate directly on your site.
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Readers vote inline</h3>
+        <p class="text-sm text-gray-600">
+          A clean embed appears on your article. Readers agree, disagree, or mark unsure on balanced statements &mdash; without leaving your page.
         </p>
-        <p class="text-xs text-gray-400 mt-3">Lives on: Your site (embed)</p>
       </div>
-
-      <!-- Audience Snapshot -->
-      <div class="bg-white border border-gray-200 rounded-lg p-6 text-center">
-        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
-          </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Audience Snapshot</h3>
-        <p class="text-gray-600 text-sm">
-          Show participation counts and a link to the full analysis. Teaser data only, no spoilers.
-        </p>
-        <p class="text-xs text-gray-400 mt-3">Lives on: Your site (API)</p>
-      </div>
-
-      <!-- Understanding Link -->
-      <div class="bg-white border border-gray-200 rounded-lg p-6 text-center">
-        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm relative">
+        <div class="absolute -top-3 left-6 inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold">2</div>
+        <div class="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mb-4 mt-2">
+          <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
           </svg>
         </div>
-        <h3 class="text-lg font-semibold text-gray-900 mb-2">Understanding Link</h3>
-        <p class="text-gray-600 text-sm">
-          The canonical consensus analysis. Opinion clusters, bridge statements, areas of agreement.
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">You show the snapshot</h3>
+        <p class="text-sm text-gray-600">
+          Display participation counts and a teaser via the snapshot API. Use it in sidebars, newsletters, or social cards &mdash; without exposing raw results.
         </p>
-        <p class="text-xs text-gray-400 mt-3">Lives on: Society Speaks</p>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm relative">
+        <div class="absolute -top-3 left-6 inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold">3</div>
+        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-4 mt-2">
+          <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">We reveal the consensus</h3>
+        <p class="text-sm text-gray-600">
+          The canonical analysis lives on Society Speaks &mdash; opinion clusters, bridge statements, and full methodology. Link to it or quote short excerpts.
+        </p>
       </div>
     </div>
-  </section>
+  </div>
+</div>
 
-  <!-- How It Works -->
-  <section class="mb-16 bg-gray-50 rounded-xl p-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">How It Works</h2>
-    <ol class="space-y-4">
-      <li class="flex items-start">
-        <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-4">1</span>
-        <div>
-          <h3 class="font-semibold text-gray-900">We generate balanced statements from your article</h3>
-          <p class="text-gray-600 text-sm">Our AI creates pro, con, and neutral statements representing different perspectives on the topic.</p>
-        </div>
-      </li>
-      <li class="flex items-start">
-        <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-4">2</span>
-        <div>
-          <h3 class="font-semibold text-gray-900">You embed the voting widget on your article page</h3>
-          <p class="text-gray-600 text-sm">Paste our iframe code into your CMS. Readers vote without leaving your site.</p>
-        </div>
-      </li>
-      <li class="flex items-start">
-        <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-4">3</span>
-        <div>
-          <h3 class="font-semibold text-gray-900">We cluster responses and reveal consensus</h3>
-          <p class="text-gray-600 text-sm">Machine learning identifies opinion groups, areas of agreement, and bridge ideas that unite different perspectives.</p>
-        </div>
-      </li>
-      <li class="flex items-start">
-        <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold mr-4">4</span>
-        <div>
-          <h3 class="font-semibold text-gray-900">Readers click through to the full analysis</h3>
-          <p class="text-gray-600 text-sm">The canonical record lives on Society Speaks with full methodology and nuanced results.</p>
-        </div>
-      </li>
-    </ol>
-  </section>
-
-  <!-- CTAs -->
-  <section class="mb-16">
-    <div class="grid md:grid-cols-2 gap-6">
-      <a href="{{ url_for('partner.embed_generator') }}" class="block bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-6 text-center transition-colors">
-        <svg class="w-10 h-10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
-        </svg>
-        <h3 class="text-xl font-bold mb-2">Get Embed Code</h3>
-        <p class="text-blue-100 text-sm">Enter your article URL, pick a theme, and get a ready-to-paste iframe.</p>
-      </a>
-
-      <a href="{{ url_for('partner.api_docs') }}" class="block bg-gray-900 hover:bg-gray-800 text-white rounded-xl p-6 text-center transition-colors">
-        <svg class="w-10 h-10 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-        </svg>
-        <h3 class="text-xl font-bold mb-2">API Documentation</h3>
-        <p class="text-gray-300 text-sm">Lookup by article URL, get snapshots, and build dynamic integrations.</p>
-      </a>
-
-      {% if demo_discussion_id %}
-      <a href="{{ base_url }}/discussions/{{ demo_discussion_id }}/embed" target="_blank" rel="noopener" class="block bg-white border-2 border-gray-200 hover:border-blue-500 text-gray-900 rounded-xl p-6 text-center transition-colors md:col-span-2">
-        <svg class="w-10 h-10 mx-auto mb-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-        </svg>
-        <h3 class="text-xl font-bold mb-2">See Example Embed</h3>
-        <p class="text-gray-600 text-sm">View a live embed in a new tab. Try voting and clicking through to the full consensus.</p>
-      </a>
-      {% endif %}
+<div class="bg-gray-50">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <div class="text-center mb-10">
+      <div class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700 mb-4">
+        Two ways to embed
+      </div>
+      <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+        Pilot manually or integrate at scale
+      </h2>
+      <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
+        Use the embed generator for quick starts and one-off embeds. For production, create discussions via API and
+        render embeds automatically from your CMS.
+      </p>
     </div>
-  </section>
+    <div class="grid gap-6 lg:grid-cols-2 mb-12">
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Embed generator (manual)</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          Look up an article URL or paste a discussion ID, then copy the iframe.
+        </p>
+        <ol class="space-y-2 text-sm text-gray-700">
+          <li>1) Find your discussion</li>
+          <li>2) Generate embed code</li>
+          <li>3) Paste into your CMS</li>
+        </ol>
+        <div class="mt-4">
+          <a href="{{ url_for('partner.embed_generator') }}" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+            Open embed generator
+          </a>
+        </div>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">At scale (programmatic)</h3>
+        <p class="text-sm text-gray-600 mb-4">
+          Best for large publishers. Your CMS requests a discussion ID once, then reuses it forever.
+        </p>
+        <ol class="space-y-2 text-sm text-gray-700">
+          <li>1) Lookup by article URL</li>
+          <li>2) If not found, create discussion via API</li>
+          <li>3) Store the returned discussion ID and embed URL</li>
+        </ol>
+        <div class="mt-4 flex flex-wrap gap-3">
+          <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+            Read API docs
+          </a>
+          <a href="{{ url_for('partner.api_playground') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+            Try API playground
+          </a>
+        </div>
+      </div>
+    </div>
+    <!-- Quick-start code example -->
+    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-8">
+      <h3 class="text-lg font-semibold text-gray-900 mb-3">Integration in 3 lines</h3>
+      <p class="text-sm text-gray-600 mb-4">Look up a discussion, get the embed URL, and paste this iframe into your template.</p>
+      <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">&lt;iframe
+  src="{{ base_url }}/discussions/{id}/embed"
+  width="100%" height="600"
+  frameborder="0" loading="lazy"
+  title="Society Speaks discussion"
+&gt;&lt;/iframe&gt;</pre>
+      <p class="text-xs text-gray-500 mt-3">
+        Get <code>{id}</code> from the
+        <a href="{{ url_for('partner.api_docs') }}" class="text-blue-600 hover:underline">Lookup API</a> or the
+        <a href="{{ url_for('partner.embed_generator') }}" class="text-blue-600 hover:underline">embed generator</a>.
+      </p>
+    </div>
+  </div>
+</div>
 
-  <!-- Why Not Comments -->
-  <section class="mb-16">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">Why Not Comments?</h2>
+<div class="bg-white">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <div class="text-center mb-10">
+      <h2 class="text-2xl font-bold text-gray-900">Comments are broken. This is the fix.</h2>
+      <p class="mt-3 text-gray-600 max-w-2xl mx-auto">
+        Comment sections amplify the loudest voices. Society Speaks gives every reader an equal voice
+        and gives you data you can actually use.
+      </p>
+    </div>
     <div class="grid md:grid-cols-2 gap-8">
       <div class="bg-red-50 border border-red-200 rounded-lg p-6">
         <h3 class="font-semibold text-red-900 mb-3">Traditional Comments</h3>
@@ -152,92 +351,212 @@
             <svg class="w-5 h-5 mr-2 flex-shrink-0 text-red-500" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
             </svg>
-            No way to see where people agree
+            No structured signal &mdash; just noise
           </li>
           <li class="flex items-start">
             <svg class="w-5 h-5 mr-2 flex-shrink-0 text-red-500" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
             </svg>
-            Heavy moderation burden
+            Full-time moderation required
           </li>
           <li class="flex items-start">
             <svg class="w-5 h-5 mr-2 flex-shrink-0 text-red-500" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
             </svg>
-            Unstructured; no usable signal
+            Nothing citable for follow-up reporting
           </li>
         </ul>
       </div>
-      <div class="bg-green-50 border border-green-200 rounded-lg p-6">
-        <h3 class="font-semibold text-green-900 mb-3">Society Speaks</h3>
-        <ul class="space-y-2 text-green-800 text-sm">
+      <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-6">
+        <h3 class="font-semibold text-emerald-900 mb-3">Society Speaks</h3>
+        <ul class="space-y-2 text-emerald-800 text-sm">
           <li class="flex items-start">
-            <svg class="w-5 h-5 mr-2 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="w-5 h-5 mr-2 flex-shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            Every vote counts equally
+            Every reader's vote counts equally
           </li>
           <li class="flex items-start">
-            <svg class="w-5 h-5 mr-2 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="w-5 h-5 mr-2 flex-shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            Reveals consensus and division
+            Consensus, division, and bridge ideas &mdash; quantified
           </li>
           <li class="flex items-start">
-            <svg class="w-5 h-5 mr-2 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="w-5 h-5 mr-2 flex-shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            Moderation handled by us
+            Zero moderation &mdash; we generate and manage all statements
           </li>
           <li class="flex items-start">
-            <svg class="w-5 h-5 mr-2 flex-shrink-0 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+            <svg class="w-5 h-5 mr-2 flex-shrink-0 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
             </svg>
-            Structured data, actionable insights
+            Structured data you can cite: "Society Speaks analysis shows..."
           </li>
         </ul>
       </div>
     </div>
-  </section>
+  </div>
+</div>
 
-  <!-- For Partners: Allowlist, Pilot, Uptime, Vote-only -->
-  <section class="mb-16 bg-gray-50 rounded-xl p-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">For Partners</h2>
-
-    <div class="space-y-6 text-gray-700">
-      <div>
-        <h3 class="font-semibold text-gray-900 mb-2">Allowlist &amp; access</h3>
-        <p class="text-sm">Your domain must be allowlisted for embedding and API access. Request access via <a href="mailto:partners@societyspeaks.io" class="text-blue-600 hover:underline">partners@societyspeaks.io</a>; we add your production and staging/preview origins (e.g. <code class="bg-gray-200 px-1 rounded">staging.yoursite.com</code>) within <strong>1 business day</strong>. Include any staging domains when you request so you can test before go-live.</p>
+<!-- Pricing -->
+<div class="bg-gray-50 border-b" id="pricing">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <div class="text-center mb-10">
+      <div class="inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700 mb-4">
+        Pricing
       </div>
-      <div>
-        <h3 class="font-semibold text-gray-900 mb-2">Pilot success</h3>
-        <p class="text-sm">We measure pilot success by: (1) partner can embed in under 30 minutes, (2) no critical (P0) bugs in the first week, (3) partner would recommend. We review after each pilot and refine copy and process; we do not change the embed contract or API without notice.</p>
+      <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+        Simple, transparent pricing
+      </h2>
+      <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+        Start free with test keys. Pay only when you go live.
+      </p>
+    </div>
+    <div class="grid gap-6 md:grid-cols-2 max-w-3xl mx-auto">
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900">Test</h3>
+        <div class="mt-2 flex items-baseline">
+          <span class="text-4xl font-bold text-gray-900">Free</span>
+        </div>
+        <p class="mt-3 text-sm text-gray-600">Everything you need to evaluate and prototype.</p>
+        <ul class="mt-6 space-y-3 text-sm text-gray-700">
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Up to 25 test discussions
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Full API access (test environment)
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Embed generator and playground
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            No credit card required
+          </li>
+        </ul>
+        <div class="mt-6">
+          <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex w-full items-center justify-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+            Create free account
+          </a>
+        </div>
       </div>
-      <div>
-        <h3 class="font-semibold text-gray-900 mb-2">Uptime</h3>
-        <p class="text-sm">We operate the service on a best-effort basis. We do not offer a formal SLA unless agreed in writing. An optional status page may be published later; for incidents we will notify affected partners when appropriate.</p>
-      </div>
-      <div>
-        <h3 class="font-semibold text-gray-900 mb-2">Vote-only embed</h3>
-        <p class="text-sm">The embed is vote-only: readers vote on statements and can report; they cannot submit new statements from the embed. Full details in the <a href="{{ url_for('partner.rules_of_record') }}" class="text-blue-600 hover:underline">Rules of the Record</a>.</p>
+      <div class="rounded-xl border-2 border-blue-600 bg-white p-6 shadow-sm relative">
+        <div class="absolute -top-3 right-6 inline-flex rounded-full bg-blue-600 px-3 py-0.5 text-xs font-semibold text-white">Production</div>
+        <h3 class="text-lg font-semibold text-gray-900">Live</h3>
+        <div class="mt-2 flex items-baseline">
+          <span class="text-4xl font-bold text-gray-900">{{ partner_price|default('$49') }}</span>
+          <span class="text-gray-500 ml-1">/month</span>
+        </div>
+        <p class="mt-3 text-sm text-gray-600">Everything in Test, plus production access.</p>
+        <ul class="mt-6 space-y-3 text-sm text-gray-700">
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Unlimited live discussions
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Live API keys and production domains
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Usage dashboard and CSV export
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            Priority support
+          </li>
+        </ul>
+        <div class="mt-6">
+          <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
+            Get started &mdash; upgrade when ready
+          </a>
+        </div>
       </div>
     </div>
-  </section>
-
-  <!-- Footer Links -->
-  <section class="border-t border-gray-200 pt-8">
-    <div class="flex flex-wrap justify-center gap-6 text-sm">
-      <a href="{{ url_for('partner.rules_of_record') }}" class="text-gray-600 hover:text-blue-600">Rules of the Record</a>
-      <a href="{{ url_for('main.content_policy') }}" class="text-gray-600 hover:text-blue-600">Content Policy</a>
-      <a href="{{ url_for('main.privacy_policy') }}" class="text-gray-600 hover:text-blue-600">Privacy Policy</a>
-      <a href="{{ url_for('partner.api_docs') }}" class="text-gray-600 hover:text-blue-600">API Reference</a>
-      <a href="{{ url_for('partner.api_playground') }}" class="text-gray-600 hover:text-blue-600">API Playground</a>
-      <a href="{{ url_for('partner.embed_generator') }}" class="text-gray-600 hover:text-blue-600">Embed Generator</a>
-      <a href="mailto:partners@societyspeaks.io" class="text-gray-600 hover:text-blue-600">Contact Us</a>
-    </div>
-    <p class="text-center text-gray-400 text-sm mt-6">
-      Ready to pilot? <a href="mailto:partners@societyspeaks.io" class="text-blue-600 hover:underline">Get in touch</a> and we'll add your domain within 1 business day.
+    <p class="text-center text-sm text-gray-500 mt-6">
+      Need a custom plan for high-volume publishing? <a href="mailto:partners@societyspeaks.io" class="text-blue-600 hover:underline">Contact us</a>.
     </p>
-  </section>
+  </div>
+</div>
+
+<div class="bg-gray-50">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+    <div class="text-center mb-8">
+      <h2 class="text-2xl font-bold text-gray-900">Frequently asked questions</h2>
+    </div>
+    <div class="grid gap-4 md:grid-cols-2">
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="font-semibold text-gray-900 mb-2">What can readers do in the embed?</h3>
+        <p class="text-sm text-gray-600">
+          Vote (agree, disagree, unsure) and report statements. They cannot submit new statements from the embed &mdash;
+          that happens on the full Society Speaks site only.
+          See the <a href="{{ url_for('partner.rules_of_record') }}" class="text-blue-600 hover:underline">Rules of the Record</a>.
+        </p>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="font-semibold text-gray-900 mb-2">How long does onboarding take?</h3>
+        <p class="text-sm text-gray-600">
+          Most partners go from signup to first embed in under 30 minutes. Domain DNS verification is the
+          only step that depends on your DNS provider's propagation speed.
+        </p>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="font-semibold text-gray-900 mb-2">What about uptime and SLAs?</h3>
+        <p class="text-sm text-gray-600">
+          Best-effort service for all partners. Enterprise SLAs are available by agreement.
+          <a href="mailto:partners@societyspeaks.io" class="text-blue-600 hover:underline">Contact us</a> to discuss.
+        </p>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="font-semibold text-gray-900 mb-2">Can I customize the embed appearance?</h3>
+        <p class="text-sm text-gray-600">
+          Yes. Choose from preset themes or set custom primary/background colors and fonts.
+          See <a href="{{ url_for('partner.api_docs') }}#embed-url-parameters" class="text-blue-600 hover:underline">embed parameters</a> in the API docs.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="bg-blue-600">
+  <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-12 text-center text-white">
+    <h2 class="text-2xl font-bold sm:text-3xl">Your first embed can be live in 5 minutes</h2>
+    <p class="mt-3 text-blue-100 max-w-2xl mx-auto">
+      Create a free account, generate your test key, and paste one iframe into your CMS.
+      No credit card. No sales call. No approval wait.
+    </p>
+    <div class="mt-6 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
+      <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex items-center justify-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-blue-700 shadow-sm hover:bg-blue-50 transition-colors">
+        Create Free Account
+        <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+        </svg>
+      </a>
+      <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center justify-center rounded-md bg-blue-500 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-400 transition-colors">
+        Read the Docs
+      </a>
+    </div>
+  </div>
 </div>
 {% endblock %}

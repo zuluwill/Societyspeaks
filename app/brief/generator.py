@@ -606,18 +606,19 @@ Generate a comprehensive news item with:
    ✗ BAD: "Residents in affected areas may face disruptions." (obvious, no global context)
    ✗ BAD: "This could affect many people." (vague, no specifics)
 
-4. SO WHAT: One paragraph (2-3 sentences) explaining concrete, real-world impact.
+4. SO WHAT (Why It Matters): One paragraph (2-3 sentences) explaining concrete, real-world impact.
+   - Do NOT start with "So what?" - the section is already labeled "Why It Matters". Write the analysis directly.
    - BE SPECIFIC: Include numbers, dates, affected groups, or measurable outcomes
    - Show second-order effects: "If this continues, watch for..."
    - Make it personal: "You'll notice this when..." or "This affects [group] by..."
    - Add historical context when relevant: "Last time this happened (year), the result was..."
 
    Examples:
-   ✓ GOOD: "So what? 17 million Americans in red states will lose Medicaid expansion by March if governors don't reverse course. Last time federal funding changed (2017), 8 states took 2+ years to respond, leaving 3 million temporarily uninsured."
-   ✗ BAD: "So what? This decision could impact healthcare access and affect millions of people across the country." (vague, no specifics)
+   ✓ GOOD: "17 million Americans in red states will lose Medicaid expansion by March if governors don't reverse course. Last time federal funding changed (2017), 8 states took 2+ years to respond, leaving 3 million temporarily uninsured."
+   ✗ BAD: "This decision could impact healthcare access and affect millions of people across the country." (vague, no specifics)
 
-   ✓ GOOD: "So what? If you have student loans, this changes your repayment timeline by 6-18 months depending on your balance. The new rules take effect in August 2026, with applications opening in June."
-   ✗ BAD: "So what? This policy will have implications for people with student debt." (generic, no actionable info)
+   ✓ GOOD: "If you have student loans, this changes your repayment timeline by 6-18 months depending on your balance. The new rules take effect in August 2026, with applications opening in June."
+   ✗ BAD: "This policy will have implications for people with student debt." (generic, no actionable info)
 
 5. PERSPECTIVES: How different outlets are framing this story:
    - Left-leaning view (if available): One sentence summary
@@ -631,14 +632,14 @@ Guidelines:
 - Focus on facts and analysis, not opinion
 - Avoid vague language (could, might, some say, appears to)
 - Every claim should have a number, date, or named source
-- Make the "So what?" genuinely insightful and concrete, not generic
+- Make the "Why it matters" analysis genuinely insightful and concrete, not generic
 
 Return JSON:
 {{
   "headline": "...",
   "bullets": ["bullet 1", "bullet 2", "bullet 3", "bullet 4"],
   "personal_impact": "One sentence personal relevance (max 25 words)",
-  "so_what": "So what? [Your specific, concrete analysis here]",
+  "so_what": "[Your specific, concrete analysis - do not start with 'So what?']",
   "perspectives": {{
     "left": "Left-leaning outlets emphasise...",
     "center": "Centrist outlets focus on...",

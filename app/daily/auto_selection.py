@@ -328,7 +328,8 @@ def get_eligible_discussions(days_to_avoid=AVOID_REPEAT_DAYS):
     ).scalar_subquery()
     
     discussions = Discussion.query.filter(
-        Discussion.id.notin_(recently_used_ids)
+        Discussion.id.notin_(recently_used_ids),
+        Discussion.partner_env != 'test'
     ).order_by(Discussion.created_at.desc()).limit(50).all()
     
     return discussions

@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block title %}Partners - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">Partners</h1>
+
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <h2 class="text-xl font-semibold mb-4">Organizations</h2>
+    <div class="space-y-3">
+      {% for partner in partners %}
+      <div class="border rounded-lg p-4 flex items-center justify-between">
+        <div>
+          <div class="font-semibold text-gray-900">{{ partner.name }}</div>
+          <div class="text-sm text-gray-600">{{ partner.contact_email }} · {{ partner.slug }}</div>
+        </div>
+        <div class="text-sm text-gray-600">
+          Billing: <strong>{{ partner.billing_status }}</strong>
+        </div>
+      </div>
+      {% else %}
+      <p class="text-sm text-gray-500">No partners yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="grid gap-6 md:grid-cols-2">
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-xl font-semibold mb-4">Domains</h2>
+      <div class="space-y-2">
+        {% for domain in domains %}
+        <div class="border rounded-lg p-3">
+          <div class="font-semibold text-gray-900">{{ domain.domain }}</div>
+          <div class="text-sm text-gray-600">{{ domain.env|upper }} · {{ 'Verified' if domain.is_verified() else 'Unverified' }}</div>
+        </div>
+        {% else %}
+        <p class="text-sm text-gray-500">No domains yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-xl font-semibold mb-4">API Keys</h2>
+      <div class="space-y-2">
+        {% for key in keys %}
+        <div class="border rounded-lg p-3">
+          <div class="font-mono text-sm text-gray-900">{{ key.key_prefix }}••••{{ key.key_last4 }}</div>
+          <div class="text-sm text-gray-600">{{ key.env|upper }} · {{ key.status|upper }}</div>
+        </div>
+        {% else %}
+        <p class="text-sm text-gray-500">No keys yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

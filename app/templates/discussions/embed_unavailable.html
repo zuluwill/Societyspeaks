@@ -75,6 +75,8 @@
     <p class="unavailable-message">
       {% if unavailable_reason == 'disabled' %}
         Embed access has been revoked for this partner.
+      {% elif unavailable_reason == 'domain_not_allowed' %}
+        This domain is not verified for embeds. Please verify your domain in the Partner Portal.
       {% elif unavailable_reason == 'deleted' %}
         This discussion is no longer available.
       {% else %}

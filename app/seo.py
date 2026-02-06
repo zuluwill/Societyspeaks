@@ -189,7 +189,7 @@ def generate_sitemap():
 
     # Add dynamic discussions if they exist
     try:
-        discussions = Discussion.query.all()
+        discussions = Discussion.query.filter(Discussion.partner_env != 'test').all()
         if discussions:
             xml_content.append('  <!-- Dynamic Discussions -->')
             for discussion in discussions:

@@ -220,7 +220,7 @@
             {% if item.so_what %}
             <div class="callout callout-why">
                 <p class="callout-label">Why It Matters</p>
-                <p>{{ item.so_what }}</p>
+                <p>{{ item.so_what|strip_so_what }}</p>
             </div>
             {% endif %}
 

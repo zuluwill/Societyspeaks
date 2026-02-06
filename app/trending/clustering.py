@@ -171,7 +171,8 @@ def find_similar_discussion(topic_embedding: List[float], days: int = 30) -> Opt
     
     recent_discussions = Discussion.query.filter(
         Discussion.created_at >= cutoff,
-        Discussion.has_native_statements == True
+        Discussion.has_native_statements == True,
+        Discussion.partner_env != 'test'
     ).all()
     
     if not recent_discussions:

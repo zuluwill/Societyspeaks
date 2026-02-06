@@ -34,6 +34,12 @@ paths:
           description: Partner reference for analytics
           schema:
             type: string
+        - name: X-API-Key
+          in: header
+          required: false
+          description: Partner test/live API key (required for test environment access)
+          schema:
+            type: string
       responses:
         '200':
           description: Discussion found
@@ -60,6 +66,9 @@ paths:
                   source:
                     type: string
                     enum: [rss, partner]
+                  env:
+                    type: string
+                    enum: [test, live]
         '400':
           description: Invalid or missing URL
         '404':
@@ -79,6 +88,12 @@ paths:
         - name: ref
           in: query
           required: false
+          schema:
+            type: string
+        - name: X-API-Key
+          in: header
+          required: false
+          description: Partner test/live API key (required for test environment access)
           schema:
             type: string
       responses:
@@ -102,6 +117,9 @@ paths:
                   consensus_url:
                     type: string
                     format: uri
+                  env:
+                    type: string
+                    enum: [test, live]
                   opinion_groups:
                     type: integer
                     description: Present when has_analysis is true
@@ -163,10 +181,56 @@ paths:
                     type: integer
                   height:
                     type: integer
+                  cache_age:
+                    type: integer
+                    description: Recommended cache duration in seconds
+                    example: 3600
         '400':
           description: Invalid URL
         '404':
           description: Discussion not found
+
+  /api/embed/flag:
+    post:
+      summary: Flag statement from embed
+      description: Report a problematic statement from an embedded discussion.
+      operationId: flagStatementFromEmbed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - statement_id
+                - flag_reason
+              properties:
+                statement_id:
+                  type: integer
+                flag_reason:
+                  type: string
+                  enum: [spam, harassment, misinformation, off_topic]
+                ref:
+                  type: string
+                  description: Partner reference for tracking
+      responses:
+        '201':
+          description: Flag recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          description: Invalid request
+        '404':
+          description: Statement not found
+        '409':
+          description: Already flagged from this session
 
   /api/partner/discussions:
     post:
@@ -229,6 +293,9 @@ paths:
                   source:
                     type: string
                     example: partner
+                  env:
+                    type: string
+                    enum: [test, live]
                   statement_count:
                     type: integer
         '400':

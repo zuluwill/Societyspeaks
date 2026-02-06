@@ -1,0 +1,194 @@
+{% extends "layout.html" %}
+
+{% block title %}Partner Guided Setup - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50">
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Guided setup</h1>
+        <p class="text-gray-600">Follow the steps below to launch on your site.</p>
+      </div>
+      <a href="{{ url_for('partner.portal_dashboard') }}" class="text-sm text-gray-600 hover:text-gray-900">Back to dashboard</a>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-3 mb-8">
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Status</h3>
+        <ol class="text-sm text-gray-700 space-y-2">
+          <li>1) Domain verified
+            {% if has_verified_test_domain %}<span class="ml-2 text-emerald-600 font-semibold">Done</span>{% else %}<span class="ml-2 text-gray-400">Pending</span>{% endif %}
+          </li>
+          <li>2) Test key active
+            {% if has_test_key %}<span class="ml-2 text-emerald-600 font-semibold">Ready</span>{% else %}<span class="ml-2 text-gray-400">Pending</span>{% endif %}
+          </li>
+          <li>3) Live key active
+            {% if has_live_key %}<span class="ml-2 text-emerald-600 font-semibold">Active</span>{% else %}<span class="ml-2 text-gray-400">Pending</span>{% endif %}
+          </li>
+        </ol>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Docs</h3>
+        <p class="text-sm text-gray-700 mb-3">Everything you need to build quickly.</p>
+        <div class="flex flex-wrap gap-2">
+          <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">API reference</a>
+          <a href="{{ url_for('partner.embed_generator') }}" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Embed generator</a>
+        </div>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Support</h3>
+        <p class="text-sm text-gray-700 mb-3">Need help? We can assist with rollout.</p>
+        <a href="https://forms.gle/g3BQVhJgFLiGjmSP6" target="_blank" class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+          Contact partnerships
+        </a>
+      </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Step 1: Add and verify a test domain</h2>
+        <p class="text-sm text-gray-600 mb-4">Embeds only load on verified domains.</p>
+        <form method="POST" action="{{ url_for('partner.portal_add_domain') }}" class="grid gap-3 sm:grid-cols-3 mb-4">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input name="domain" type="text" placeholder="staging.example.com" class="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm">
+          <select name="env" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+            <option value="test">Test</option>
+            <option value="live">Live</option>
+          </select>
+          <button type="submit" class="sm:col-span-3 inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+            Add domain
+          </button>
+        </form>
+        <div class="space-y-3">
+          {% for domain in domains %}
+          <div class="rounded-lg border border-gray-100 bg-gray-50 p-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-semibold text-gray-900">{{ domain.domain }}</div>
+                <div class="text-xs text-gray-500">{{ domain.env|upper }} · {{ domain.verification_method|upper }}</div>
+              </div>
+              {% if domain.is_verified() %}
+              <span class="text-xs font-semibold text-emerald-700">Verified</span>
+              {% else %}
+              <form method="POST" action="{{ url_for('partner.portal_verify_domain', domain_id=domain.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="text-xs font-semibold text-blue-600 hover:underline">Verify now</button>
+              </form>
+              {% endif %}
+            </div>
+            {% if not domain.is_verified() %}
+            <div class="text-xs text-gray-600 mt-2">
+              Add TXT record: <code class="bg-white px-1 rounded">societyspeaks-verify={{ domain.verification_token }}</code>
+            </div>
+            {% endif %}
+          </div>
+          {% else %}
+          <p class="text-sm text-gray-500">No domains yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Step 2: Create a test API key</h2>
+        <p class="text-sm text-gray-600 mb-4">Use test keys on staging before going live.</p>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <form method="POST" action="{{ url_for('partner.portal_create_key') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="env" value="test">
+            <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">New test key</button>
+          </form>
+          {% if partner.billing_status == 'active' %}
+          <form method="POST" action="{{ url_for('partner.portal_create_key') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="env" value="live">
+            <button class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">New live key</button>
+          </form>
+          {% endif %}
+        </div>
+        <div class="space-y-3">
+          {% for key in keys %}
+          <div class="rounded-lg border border-gray-100 bg-gray-50 p-3">
+            <div class="font-mono text-sm text-gray-900">{{ key.key_prefix }}••••{{ key.key_last4 }}</div>
+            <div class="text-xs text-gray-500">{{ key.env|upper }} · {{ key.status|upper }}</div>
+          </div>
+          {% else %}
+          <p class="text-sm text-gray-500">No API keys yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2 mt-6">
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Step 3: Create or lookup a discussion</h2>
+        <p class="text-sm text-gray-600 mb-4">Store the discussion ID in your CMS for consistent embeds.</p>
+        <pre class="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article" \
+  -H "X-API-Key: sspk_test_..."
+
+curl -X POST "{{ base_url }}/api/partner/discussions" \
+  -H "X-API-Key: sspk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{"article_url":"https://example.com/article","title":"Example title","excerpt":"..."}'</pre>
+        <div class="grid gap-3 mt-4">
+          <div>
+            <div class="text-xs text-gray-500 mb-1">Example lookup response</div>
+            <pre class="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">{
+  "discussion_id": 42,
+  "slug": "example-discussion",
+  "title": "Example discussion",
+  "embed_url": "{{ base_url }}/discussions/42/embed",
+  "consensus_url": "{{ base_url }}/discussions/42/example-discussion/consensus",
+  "snapshot_url": "{{ base_url }}/api/discussions/42/snapshot",
+  "source": "partner",
+  "env": "test"
+}</pre>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500 mb-1">Example create response (201)</div>
+            <pre class="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">{
+  "discussion_id": 43,
+  "slug": "should-cities-ban-cars",
+  "title": "Should cities ban cars?",
+  "embed_url": "{{ base_url }}/discussions/43/embed",
+  "consensus_url": "{{ base_url }}/discussions/43/should-cities-ban-cars/consensus",
+  "snapshot_url": "{{ base_url }}/api/discussions/43/snapshot",
+  "source": "partner",
+  "env": "test",
+  "statement_count": 5
+}</pre>
+          </div>
+        </div>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-900 mb-2">Step 4: Embed on your page</h2>
+        <p class="text-sm text-gray-600 mb-4">Use the returned <code>embed_url</code> or build the iframe below.</p>
+        <pre class="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">&lt;iframe src="{{ base_url }}/discussions/{id}/embed" width="100%" height="600" frameborder="0" loading="lazy"&gt;&lt;/iframe&gt;</pre>
+        <a href="{{ url_for('partner.portal_getting_started_success') }}" class="inline-flex items-center mt-4 text-sm font-semibold text-blue-600 hover:underline">
+          I embedded it successfully →
+        </a>
+      </div>
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-2">Step 5: Go live</h2>
+      <p class="text-sm text-gray-600 mb-4">Activate billing to create live keys and verify production domains.</p>
+      <div class="flex flex-wrap gap-2">
+        {% if partner.billing_status != 'active' %}
+        <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+            Start subscription
+          </button>
+        </form>
+        {% endif %}
+        {% if partner.stripe_customer_id %}
+        <a href="{{ url_for('partner.portal_billing_portal') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+          Manage billing
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -129,7 +129,7 @@ def append_ref_param(url: str, ref: str) -> str:
     return urlunparse(parsed._replace(query=new_query))
 
 
-def is_partner_origin_allowed(origin):
+def is_partner_origin_allowed(origin, env: Optional[str] = None):
     """
     Check if the request origin is in the partner allowlist.
 
@@ -141,14 +141,42 @@ def is_partner_origin_allowed(origin):
     """
     if not origin:
         return False
-
-    allowed_origins = current_app.config.get('PARTNER_ORIGINS', [])
-
-    # Handle case where config is a comma-separated string
-    if isinstance(allowed_origins, str):
-        allowed_origins = [o.strip() for o in allowed_origins.split(',') if o.strip()]
-
+    allowed_origins = get_partner_allowed_origins(env=env)
     return origin in allowed_origins
+
+
+def get_partner_allowed_origins(env: Optional[str] = None):
+    """
+    Return allowed origins for partner embeds/API, including verified partner domains.
+    """
+    allowed = set()
+
+    # Add configured origins (backwards compatibility / manual overrides)
+    config_origins = current_app.config.get('PARTNER_ORIGINS', [])
+    if isinstance(config_origins, str):
+        config_origins = [o.strip() for o in config_origins.split(',') if o.strip()]
+    for origin in config_origins or []:
+        allowed.add(origin)
+
+    try:
+        from app.models import PartnerDomain
+        query = PartnerDomain.query.filter(PartnerDomain.verified_at.isnot(None))
+        if env:
+            query = query.filter(PartnerDomain.env == env)
+        for row in query.all():
+            domain = (row.domain or '').strip().lower()
+            if not domain:
+                continue
+            if domain.startswith('http://') or domain.startswith('https://'):
+                allowed.add(domain)
+            else:
+                allowed.add(f"https://{domain}")
+                if domain.startswith('localhost') or domain.startswith('127.0.0.1'):
+                    allowed.add(f"http://{domain}")
+    except Exception as e:
+        logger.warning(f"Partner origin lookup failed: {e}")
+
+    return list(allowed)
 
 
 def get_discussion_participant_count(discussion):
@@ -257,3 +285,42 @@ def track_partner_event(event_name: str, properties: dict = None):
         )
     except Exception as e:
         logger.warning(f"PostHog tracking error for {event_name}: {e}")
+
+
+def record_partner_usage(partner_id: str, env: str, event_type: str, quantity: int = 1):
+    """
+    Record partner usage events for internal reporting.
+
+    Uses after_this_request to commit usage events after the main response
+    is sent, avoiding mid-request commits that could interfere with the
+    caller's transaction.
+    """
+    try:
+        from flask import after_this_request
+        from app.models import Partner, PartnerUsageEvent
+        from app import db
+
+        partner = Partner.query.filter_by(slug=partner_id).first()
+        if not partner:
+            return
+
+        event = PartnerUsageEvent(
+            partner_id=partner.id,
+            env=env,
+            event_type=event_type,
+            quantity=quantity
+        )
+        db.session.add(event)
+
+        # The event will be committed when the main route handler commits,
+        # or via after_this_request as a safety net.
+        @after_this_request
+        def _commit_usage(response):
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+            return response
+
+    except Exception as e:
+        logger.warning(f"Partner usage recording error: {e}")

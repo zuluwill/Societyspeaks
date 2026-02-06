@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan, StatementVote
+from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan, StatementVote, Partner, PartnerDomain, PartnerApiKey
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from app.admin.forms import UserAssignmentForm
 from datetime import date, datetime, timedelta
@@ -466,6 +466,21 @@ def list_discussions():
     discussions = query.order_by(Discussion.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
     
     return render_template('admin/discussions/list.html', discussions=discussions, status_filter=status_filter)
+
+
+@admin_bp.route('/partners')
+@login_required
+@admin_required
+def list_partners():
+    partners = Partner.query.order_by(Partner.created_at.desc()).all()
+    domains = PartnerDomain.query.order_by(PartnerDomain.created_at.desc()).all()
+    keys = PartnerApiKey.query.order_by(PartnerApiKey.created_at.desc()).all()
+    return render_template(
+        'admin/partners/index.html',
+        partners=partners,
+        domains=domains,
+        keys=keys
+    )
 
 
 @admin_bp.route('/partners/metrics')
@@ -965,7 +980,7 @@ def create_daily_question():
             current_app.logger.error(f"Error creating daily question: {e}")
             flash('Error creating daily question. Please try again.', 'error')
     
-    discussions = Discussion.query.order_by(Discussion.created_at.desc()).limit(50).all()
+    discussions = Discussion.query.filter(Discussion.partner_env != 'test').order_by(Discussion.created_at.desc()).limit(50).all()
     trending_topics = TrendingTopic.query.filter_by(status='published').order_by(TrendingTopic.created_at.desc()).limit(20).all()
     topics = Discussion.TOPICS
     

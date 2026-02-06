@@ -2,39 +2,172 @@
 
 {% block title %}API Reference - Society Speaks{% endblock %}
 
-{% block meta_description %}API documentation for Society Speaks partner integration. Lookup discussions by article URL, get participation snapshots, and embed voting widgets.{% endblock %}
+{% block meta_description %}API documentation for Society Speaks partner integration. Lookup discussions by article URL, show participation snapshots, and embed voting widgets with developer-friendly endpoints and clear governance for publishers.{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 py-12">
-  <header class="mb-8">
-    <nav class="text-sm text-gray-500 mb-4">
-      <a href="{{ url_for('partner.hub') }}" class="hover:text-blue-600">For Publishers</a>
-      <span class="mx-2">/</span>
-      <span class="text-gray-900">API Reference</span>
+<div class="bg-gradient-to-b from-blue-50 to-white">
+  <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+    <header class="space-y-4">
+      <nav class="text-sm text-gray-500">
+        <a href="{{ url_for('partner.hub') }}" class="hover:text-blue-600">For Publishers</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">API Reference</span>
+      </nav>
+      <div class="grid gap-6 lg:grid-cols-12 lg:items-center">
+        <div class="lg:col-span-8 space-y-4">
+          <h1 class="text-3xl font-bold text-gray-900 sm:text-4xl">Partner API Reference</h1>
+          <p class="text-lg text-gray-600">
+            Integrate Society Speaks programmatically. Power your embeds, snapshots, and editorial insights
+            with JSON APIs built for newsroom workflows and developer velocity.
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <a href="{{ url_for('partner.api_playground') }}" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+              Open API Playground
+            </a>
+            <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+              Partner Portal
+            </a>
+            <a href="{{ url_for('partner.embed_generator') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+              Embed Generator
+            </a>
+            <a href="mailto:partners@societyspeaks.io" class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+              Contact
+            </a>
+          </div>
+        </div>
+        <div class="lg:col-span-4">
+          <div class="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
+            <p class="text-xs font-semibold uppercase tracking-wide text-blue-600">Quick start</p>
+            <pre class="mt-3 bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article"</pre>
+            <p class="text-xs text-gray-500 mt-2">Then embed with the returned <code>embed_url</code>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-6 lg:grid-cols-3 pt-4">
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">For developers</h3>
+          <p class="text-sm text-gray-600">Predictable endpoints, clear error codes, and copy/paste examples.</p>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">For editorial leaders</h3>
+          <p class="text-sm text-gray-600">Reliable participation signals and a transparent, auditable methodology.</p>
+        </div>
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">For governance</h3>
+          <p class="text-sm text-gray-600">Rate limits, attribution requirements, and a clear source of truth.</p>
+        </div>
+      </div>
+
+      <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h3 class="font-semibold text-blue-900 mb-2">Testing the API</h3>
+        <ul class="text-blue-800 text-sm space-y-1">
+          <li><strong>Partner Portal:</strong> <a href="{{ url_for('partner.portal_signup') }}" class="underline font-medium">Create a portal</a> to get your test API key and DNS verification token.</li>
+          <li><strong>Interactive playground:</strong> <a href="{{ url_for('partner.api_playground') }}" class="underline font-medium">Open API Playground</a> to try lookup, snapshot, and oEmbed from your browser (Swagger UI). Requests run against this site.</li>
+          <li><strong>Create Discussion</strong> requires an API key; add it in the playground using the Authorize button (X-API-Key).</li>
+          <li><strong>From the command line:</strong> use the <code class="bg-blue-100 px-1 rounded">curl</code> examples in each section below, replacing the base URL and parameters as needed.</li>
+        </ul>
+      </div>
+    </header>
+  </div>
+</div>
+
+<div class="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
+  <div class="lg:grid lg:grid-cols-12 lg:gap-10">
+    <!-- Sidebar navigation (desktop: sticky, mobile: horizontal scroll) -->
+    <nav id="docsSidebar" class="hidden lg:block lg:col-span-3">
+      <div class="sticky top-6 space-y-1 text-sm">
+        <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">On this page</p>
+        <a href="#auth" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Authentication</a>
+        <a href="#base-url" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Base URL</a>
+        <a href="#workflows" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Common Workflows</a>
+        <a href="#lookup" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Lookup by Article URL</a>
+        <a href="#snapshot" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Discussion Snapshot</a>
+        <a href="#embed-url-parameters" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Embed URL Parameters</a>
+        <a href="#postmessage" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">PostMessage Events</a>
+        <a href="#oembed" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">oEmbed Provider</a>
+        <a href="#create-discussion" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Create Discussion</a>
+        <a href="#cost-protection" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Cost &amp; Abuse Protection</a>
+        <a href="#rate-limits" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Rate Limits</a>
+        <a href="#error-format" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Error Format</a>
+      </div>
     </nav>
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">API Reference</h1>
-    <p class="text-gray-600">Integrate Society Speaks programmatically. All endpoints return JSON.</p>
-
-    <!-- Testing the API -->
-    <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-      <h3 class="font-semibold text-blue-900 mb-2">Testing the API</h3>
-      <ul class="text-blue-800 text-sm space-y-1">
-        <li><strong>Interactive playground:</strong> <a href="{{ url_for('partner.api_playground') }}" class="underline font-medium">Open API Playground</a> to try lookup, snapshot, and oEmbed from your browser (Swagger UI). Requests run against this site.</li>
-        <li><strong>Create Discussion</strong> requires an API key; add it in the playground using the Authorize button (X-API-Key).</li>
-        <li><strong>From the command line:</strong> use the <code class="bg-blue-100 px-1 rounded">curl</code> examples in each section below, replacing the base URL and parameters as needed.</li>
-      </ul>
+    <!-- Mobile jump-to nav -->
+    <div class="lg:hidden mb-6 -mx-4 px-4 overflow-x-auto">
+      <div class="flex gap-2 text-xs whitespace-nowrap pb-2">
+        <a href="#auth" class="rounded-full bg-gray-100 px-3 py-1.5 text-gray-700 hover:bg-gray-200">Auth</a>
+        <a href="#lookup" class="rounded-full bg-gray-100 px-3 py-1.5 text-gray-700 hover:bg-gray-200">Lookup</a>
+        <a href="#snapshot" class="rounded-full bg-gray-100 px-3 py-1.5 text-gray-700 hover:bg-gray-200">Snapshot</a>
+        <a href="#embed-url-parameters" class="rounded-full bg-gray-100 px-3 py-1.5 text-gray-700 hover:bg-gray-200">Embed Params</a>
+        <a href="#create-discussion" class="rounded-full bg-gray-100 px-3 py-1.5 text-gray-700 hover:bg-gray-200">Create</a>
+        <a href="#rate-limits" class="rounded-full bg-gray-100 px-3 py-1.5 text-gray-700 hover:bg-gray-200">Rate Limits</a>
+      </div>
     </div>
-  </header>
-
-  <div class="space-y-12">
+    <div class="lg:col-span-9 space-y-12">
+    <section id="auth">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Authentication & Environments</h2>
+      <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+        <p class="text-sm text-gray-700 mb-3">
+          Use test keys for staging and live keys for production. Both run on the same base URL and are
+          isolated by key type. Keys are issued in the Partner Portal.
+        </p>
+        <div class="grid gap-3 md:grid-cols-2 text-sm text-gray-700">
+          <div class="bg-gray-50 rounded-lg p-3">
+            <strong>Test key:</strong> <code>sspk_test_...</code>
+          </div>
+          <div class="bg-gray-50 rounded-lg p-3">
+            <strong>Live key:</strong> <code>sspk_live_...</code> (activated after billing)
+          </div>
+        </div>
+        <p class="text-sm text-gray-600 mt-3">
+          Domains must be verified via DNS TXT to allow embeds.
+        </p>
+      </div>
+    </section>
     <!-- Base URL -->
-    <section>
+    <section id="base-url">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Base URL</h2>
       <code class="block bg-gray-900 text-green-400 px-4 py-3 rounded-lg">{{ base_url }}/api</code>
     </section>
 
+    <!-- Common Workflows -->
+    <section id="workflows">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Common Workflows</h2>
+      <div class="grid gap-6 lg:grid-cols-2">
+        <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+          <h3 class="font-semibold text-gray-900 mb-2">Programmatic embed (recommended)</h3>
+          <ol class="text-sm text-gray-700 space-y-2">
+            <li>1) Lookup discussion by article URL</li>
+            <li>2) If none exists, create discussion</li>
+            <li>3) Store <code>discussion_id</code> and use <code>embed_url</code></li>
+          </ol>
+          <pre class="mt-4 bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto"># 1) Lookup
+curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article" \
+  -H "X-API-Key: sspk_test_..."
+
+# 2) If 404, create
+curl -X POST "{{ base_url }}/api/partner/discussions" \
+  -H "X-API-Key: sspk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{"article_url":"https://example.com/article","title":"Example title","excerpt":"..."}'</pre>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
+          <h3 class="font-semibold text-gray-900 mb-2">Manual embed (quick start)</h3>
+          <p class="text-sm text-gray-700">
+            Use the Embed Generator to create one-off iframes. It relies on the same
+            APIs and returns the same <code>discussion_id</code> and <code>embed_url</code>.
+          </p>
+          <div class="mt-4">
+            <a href="{{ url_for('partner.embed_generator') }}" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+              Open embed generator
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Lookup API -->
-    <section>
+    <section id="lookup">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Lookup by Article URL</h2>
       <p class="text-gray-600 mb-4">Find a discussion by the URL of your article.</p>
 
@@ -48,7 +181,8 @@
         <div class="p-4 space-y-4">
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">Query Parameters</h4>
-            <table class="w-full text-sm">
+            <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <table class="w-full text-sm min-w-[400px]">
               <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">url</td>
                 <td class="py-2 text-gray-500">required</td>
@@ -60,11 +194,33 @@
                 <td class="py-2 text-gray-600">Partner reference for analytics</td>
               </tr>
             </table>
+            </div>
           </div>
 
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
-            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article"</pre>
+            <div class="rounded-lg border border-gray-700 overflow-hidden ss-code-tabs">
+              <div class="flex bg-gray-800 border-b border-gray-700 text-xs" role="tablist">
+                <button role="tab" aria-selected="true" data-lang="curl" class="ss-tab px-3 py-2 font-medium transition-colors text-white bg-gray-900">curl</button>
+                <button role="tab" aria-selected="false" data-lang="python" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Python</button>
+                <button role="tab" aria-selected="false" data-lang="node" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Node.js</button>
+              </div>
+              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="curl">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article"</pre>
+              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="python" hidden>import requests
+
+resp = requests.get(
+    "{{ base_url }}/api/discussions/by-article-url",
+    params={"url": "https://example.com/article"}
+)
+data = resp.json()
+embed_url = data["embed_url"]</pre>
+              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="node" hidden>const resp = await fetch(
+  `{{ base_url }}/api/discussions/by-article-url?` +
+  new URLSearchParams({ url: "https://example.com/article" })
+);
+const data = await resp.json();
+const embedUrl = data.embed_url;</pre>
+            </div>
           </div>
 
           <div>
@@ -76,7 +232,8 @@
   "embed_url": "{{ base_url }}/discussions/123/embed",
   "consensus_url": "{{ base_url }}/discussions/123/should-we.../consensus",
   "snapshot_url": "{{ base_url }}/api/discussions/123/snapshot",
-  "source": "rss"
+  "source": "rss",
+  "env": "live"
 }</pre>
           </div>
 
@@ -102,7 +259,7 @@
     </section>
 
     <!-- Snapshot API -->
-    <section>
+    <section id="snapshot">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Get Discussion Snapshot</h2>
       <p class="text-gray-600 mb-4">Get participation counts and metadata. Does not include analysis content.</p>
 
@@ -161,7 +318,7 @@
     </section>
 
     <!-- Embed URL -->
-    <section>
+    <section id="embed-url-parameters">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Embed URL Parameters</h2>
       <p class="text-gray-600 mb-2">Customize the embed appearance with URL parameters.</p>
       <p class="text-sm text-gray-500 mb-4">Embeds are available for Society Speaks native discussions.</p>
@@ -171,7 +328,8 @@
           <code class="text-sm text-gray-900">{{ base_url }}/discussions/{discussion_id}/embed</code>
         </div>
         <div class="p-4">
-          <table class="w-full text-sm">
+          <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <table class="w-full text-sm min-w-[500px]">
             <thead>
               <tr class="border-b">
                 <th class="py-2 text-left font-semibold text-gray-900">Parameter</th>
@@ -207,6 +365,7 @@
               </tr>
             </tbody>
           </table>
+          </div>
 
           <div class="mt-4 p-3 bg-blue-50 rounded-lg">
             <p class="text-sm text-blue-800">
@@ -218,7 +377,7 @@
     </section>
 
     <!-- PostMessage Events -->
-    <section>
+    <section id="postmessage">
       <h2 class="text-xl font-bold text-gray-900 mb-4">PostMessage Events</h2>
       <p class="text-gray-600 mb-4">The embed communicates with the parent frame via postMessage.</p>
 
@@ -256,7 +415,7 @@
     </section>
 
     <!-- oEmbed -->
-    <section>
+    <section id="oembed">
       <h2 class="text-xl font-bold text-gray-900 mb-4">oEmbed Provider</h2>
       <p class="text-gray-600 mb-4">Enable automatic embedding of Society Speaks discussions in platforms that support oEmbed.</p>
 
@@ -324,7 +483,7 @@
     </section>
 
     <!-- Create Discussion API -->
-    <section>
+    <section id="create-discussion">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Create Discussion (Authenticated)</h2>
       <p class="text-gray-600 mb-4">Create a discussion for an article not ingested via RSS. Requires API key.</p>
 
@@ -386,7 +545,13 @@
 
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
-            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">curl -X POST "{{ base_url }}/api/partner/discussions" \
+            <div class="rounded-lg border border-gray-700 overflow-hidden ss-code-tabs">
+              <div class="flex bg-gray-800 border-b border-gray-700 text-xs" role="tablist">
+                <button role="tab" aria-selected="true" data-lang="curl" class="ss-tab px-3 py-2 font-medium transition-colors text-white bg-gray-900">curl</button>
+                <button role="tab" aria-selected="false" data-lang="python" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Python</button>
+                <button role="tab" aria-selected="false" data-lang="node" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Node.js</button>
+              </div>
+              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="curl">curl -X POST "{{ base_url }}/api/partner/discussions" \
   -H "X-API-Key: your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -395,6 +560,40 @@
     "excerpt": "A new study shows that car-free zones improve air quality...",
     "source_name": "Example News"
   }'</pre>
+              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="python" hidden>import requests
+
+resp = requests.post(
+    "{{ base_url }}/api/partner/discussions",
+    headers={
+        "X-API-Key": "your_api_key",
+        "Content-Type": "application/json",
+    },
+    json={
+        "article_url": "https://example.com/article/urban-cars",
+        "title": "Should cities ban cars from downtown areas?",
+        "excerpt": "A new study shows that car-free zones improve air quality...",
+        "source_name": "Example News",
+    },
+)
+data = resp.json()
+discussion_id = data["discussion_id"]
+embed_url = data["embed_url"]</pre>
+              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="node" hidden>const resp = await fetch("{{ base_url }}/api/partner/discussions", {
+  method: "POST",
+  headers: {
+    "X-API-Key": "your_api_key",
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    article_url: "https://example.com/article/urban-cars",
+    title: "Should cities ban cars from downtown areas?",
+    excerpt: "A new study shows that car-free zones improve air quality...",
+    source_name: "Example News",
+  }),
+});
+const data = await resp.json();
+const { discussion_id, embed_url } = data;</pre>
+            </div>
           </div>
 
           <div>
@@ -407,6 +606,7 @@
   "consensus_url": "{{ base_url }}/discussions/456/.../consensus",
   "snapshot_url": "{{ base_url }}/api/discussions/456/snapshot",
   "source": "partner",
+  "env": "live",
   "statement_count": 5
 }</pre>
           </div>
@@ -433,7 +633,7 @@
     </section>
 
     <!-- Cost and abuse protection -->
-    <section>
+    <section id="cost-protection">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Cost and Abuse Protection</h2>
       <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
         <p class="text-amber-900 text-sm mb-3">
@@ -449,10 +649,11 @@
     </section>
 
     <!-- Rate Limits -->
-    <section>
+    <section id="rate-limits">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Rate Limits</h2>
       <div class="bg-white border border-gray-200 rounded-lg p-4">
-        <table class="w-full text-sm">
+        <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <table class="w-full text-sm min-w-[400px]">
           <thead>
             <tr class="border-b">
               <th class="py-2 text-left font-semibold text-gray-900">Endpoint</th>
@@ -462,22 +663,23 @@
           <tbody>
             <tr class="border-b">
               <td class="py-3 text-gray-600">Lookup by article URL</td>
-              <td class="py-3 font-mono text-gray-900">60 requests / minute / IP</td>
+              <td class="py-3 font-mono text-gray-900">60 req / min / IP</td>
             </tr>
             <tr class="border-b">
               <td class="py-3 text-gray-600">Get snapshot</td>
-              <td class="py-3 font-mono text-gray-900">120 requests / minute / IP</td>
+              <td class="py-3 font-mono text-gray-900">120 req / min / IP</td>
             </tr>
             <tr class="border-b">
               <td class="py-3 text-gray-600">Vote submission</td>
-              <td class="py-3 font-mono text-gray-900">30 requests / minute / IP</td>
+              <td class="py-3 font-mono text-gray-900">30 req / min / IP</td>
             </tr>
             <tr>
               <td class="py-3 text-gray-600">Create discussion</td>
-              <td class="py-3 font-mono text-gray-900">30 requests / hour / API key</td>
+              <td class="py-3 font-mono text-gray-900">30 req / hr / key</td>
             </tr>
           </tbody>
         </table>
+        </div>
         <p class="text-sm text-gray-500 mt-4">
           Responses include a <code>429 Too Many Requests</code> with <code>rate_limited</code> error when limits are exceeded.
         </p>
@@ -485,7 +687,7 @@
     </section>
 
     <!-- Error Format -->
-    <section>
+    <section id="error-format">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Error Format</h2>
       <p class="text-gray-600 mb-4">All errors return JSON with a consistent format.</p>
       <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">{
@@ -493,7 +695,8 @@
   "message": "Human-readable description of the error"
 }</pre>
     </section>
-  </div>
+    </div><!-- /lg:col-span-9 -->
+  </div><!-- /lg:grid -->
 
   <!-- Footer -->
   <div class="mt-12 pt-8 border-t border-gray-200">
@@ -503,4 +706,89 @@
     </p>
   </div>
 </div>
+
+<script>
+  // Language tab switching for code examples
+  // Remembers the selected language across all tab groups on the page
+  (function() {
+    let currentLang = localStorage.getItem('ss_api_lang') || 'curl';
+
+    function activateTab(container, lang) {
+      container.querySelectorAll('.ss-tab').forEach(function(btn) {
+        const isActive = btn.dataset.lang === lang;
+        btn.setAttribute('aria-selected', isActive);
+        btn.classList.toggle('text-white', isActive);
+        btn.classList.toggle('bg-gray-900', isActive);
+        btn.classList.toggle('text-gray-400', !isActive);
+      });
+      container.querySelectorAll('.ss-panel').forEach(function(panel) {
+        panel.hidden = panel.dataset.lang !== lang;
+      });
+    }
+
+    // Initialize all tab groups
+    document.querySelectorAll('.ss-code-tabs').forEach(function(container) {
+      activateTab(container, currentLang);
+
+      container.querySelectorAll('.ss-tab').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          currentLang = btn.dataset.lang;
+          localStorage.setItem('ss_api_lang', currentLang);
+          // Sync all tab groups on the page
+          document.querySelectorAll('.ss-code-tabs').forEach(function(c) {
+            activateTab(c, currentLang);
+          });
+        });
+      });
+    });
+  })();
+
+  // Scroll-spy: highlight current section in sidebar
+  (function() {
+    var links = document.querySelectorAll('.docs-nav-link');
+    if (!links.length) return;
+
+    var sections = [];
+    links.forEach(function(link) {
+      var id = link.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (el) sections.push({ id: id, el: el, link: link });
+    });
+
+    var activeClass = ['bg-blue-50', 'text-blue-700', 'font-semibold'];
+    var inactiveClass = ['text-gray-600'];
+
+    function highlight(activeId) {
+      sections.forEach(function(s) {
+        if (s.id === activeId) {
+          inactiveClass.forEach(function(c) { s.link.classList.remove(c); });
+          activeClass.forEach(function(c) { s.link.classList.add(c); });
+        } else {
+          activeClass.forEach(function(c) { s.link.classList.remove(c); });
+          inactiveClass.forEach(function(c) { s.link.classList.add(c); });
+        }
+      });
+    }
+
+    var ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function() {
+        var scrollY = window.scrollY + 100;
+        var current = sections[0] ? sections[0].id : '';
+        for (var i = sections.length - 1; i >= 0; i--) {
+          if (sections[i].el.offsetTop <= scrollY) {
+            current = sections[i].id;
+            break;
+          }
+        }
+        highlight(current);
+        ticking = false;
+      });
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
 {% endblock %}

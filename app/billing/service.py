@@ -2,7 +2,7 @@ import stripe
 from datetime import datetime, timedelta
 from flask import current_app
 from app import db
-from app.models import User, CompanyProfile, PricingPlan, Subscription, OrganizationMember, generate_slug
+from app.models import User, CompanyProfile, PricingPlan, Subscription, OrganizationMember, generate_slug, Partner
 
 
 def get_stripe():
@@ -137,6 +137,103 @@ def resolve_plan_from_stripe_subscription(stripe_subscription):
         raise ValueError(f"Could not resolve plan for subscription {sub_id}")
 
     return plan
+
+
+def get_or_create_partner_customer(partner):
+    s = get_stripe()
+    if partner.stripe_customer_id:
+        try:
+            customer = s.Customer.retrieve(partner.stripe_customer_id)
+            if not customer.get('deleted'):
+                return customer
+        except s.error.InvalidRequestError:
+            pass
+
+    customer = s.Customer.create(
+        email=partner.contact_email,
+        name=partner.name,
+        metadata={'partner_id': str(partner.id), 'partner_slug': partner.slug}
+    )
+    partner.stripe_customer_id = customer.id
+    db.session.commit()
+    return customer
+
+
+def create_partner_checkout_session(partner, success_url=None, cancel_url=None):
+    s = get_stripe()
+    price_id = current_app.config.get('PARTNER_STRIPE_PRICE_ID')
+    if not price_id:
+        raise ValueError("PARTNER_STRIPE_PRICE_ID not configured")
+
+    customer = get_or_create_partner_customer(partner)
+    base_url = current_app.config.get('APP_BASE_URL', 'https://societyspeaks.io')
+
+    session = s.checkout.Session.create(
+        customer=customer.id,
+        payment_method_types=['card'],
+        mode='subscription',
+        line_items=[{
+            'price': price_id,
+            'quantity': 1,
+        }],
+        success_url=success_url or f"{base_url}/for-publishers/portal/billing/success?session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=cancel_url or f"{base_url}/for-publishers/portal/dashboard",
+        metadata={
+            'partner_id': str(partner.id),
+            'partner_slug': partner.slug,
+            'purpose': 'partner_subscription'
+        },
+        subscription_data={
+            'metadata': {
+                'partner_id': str(partner.id),
+                'partner_slug': partner.slug,
+                'purpose': 'partner_subscription'
+            }
+        }
+    )
+    return session
+
+
+def create_partner_portal_session(partner, return_url=None):
+    s = get_stripe()
+    if not partner.stripe_customer_id:
+        raise ValueError("Partner has no Stripe customer ID")
+    base_url = current_app.config.get('APP_BASE_URL', 'https://societyspeaks.io')
+    session = s.billing_portal.Session.create(
+        customer=partner.stripe_customer_id,
+        return_url=return_url or f"{base_url}/for-publishers/portal/dashboard"
+    )
+    return session
+
+
+def reconcile_partner_subscriptions():
+    """
+    Reconcile partner billing status with Stripe.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    s = get_stripe()
+    if not s:
+        return 0
+
+    updated = 0
+    partners = Partner.query.filter(Partner.stripe_subscription_id.isnot(None)).all()
+    for partner in partners:
+        try:
+            subscription = s.Subscription.retrieve(partner.stripe_subscription_id)
+        except Exception as e:
+            logger.warning(f"Partner reconciliation: failed to retrieve subscription {partner.stripe_subscription_id} for {partner.slug}: {e}")
+            continue
+        status = subscription.get('status') if isinstance(subscription, dict) else getattr(subscription, 'status', '')
+        new_status = 'active' if status in ('active', 'trialing') else 'inactive'
+        if partner.billing_status != new_status:
+            logger.info(f"Partner reconciliation: {partner.slug} billing status {partner.billing_status} -> {new_status}")
+            partner.billing_status = new_status
+            updated += 1
+    if updated:
+        db.session.commit()
+    return updated
 
 
 def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None):

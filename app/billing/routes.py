@@ -11,7 +11,7 @@ from app.billing.service import (
     get_stripe,
     resolve_plan_from_stripe_subscription,
 )
-from app.models import User, PricingPlan, Subscription
+from app.models import User, PricingPlan, Subscription, Partner
 from app import db, csrf
 
 
@@ -245,11 +245,20 @@ def webhook():
     try:
         # Subscription events (require action)
         if event_type == 'customer.subscription.created':
-            handle_subscription_created(data)
+            if _is_partner_subscription(data):
+                _handle_partner_subscription(data)
+            else:
+                handle_subscription_created(data)
         elif event_type == 'customer.subscription.updated':
-            handle_subscription_updated(data)
+            if _is_partner_subscription(data):
+                _handle_partner_subscription(data)
+            else:
+                handle_subscription_updated(data)
         elif event_type == 'customer.subscription.deleted':
-            handle_subscription_deleted(data)
+            if _is_partner_subscription(data):
+                _handle_partner_subscription(data)
+            else:
+                handle_subscription_deleted(data)
         elif event_type == 'customer.subscription.trial_will_end':
             handle_trial_ending(data)
         elif event_type == 'customer.subscription.paused':
@@ -336,6 +345,46 @@ def handle_subscription_updated(subscription_data):
             current_app.logger.info(f"Updated subscription {sub.id}")
         except ValueError as e:
             current_app.logger.error(f"Failed to update subscription {sub.id}: {e}")
+
+
+def _is_partner_subscription(subscription_data):
+    try:
+        metadata = subscription_data.get('metadata', {}) if isinstance(subscription_data, dict) else (subscription_data.metadata or {})
+    except Exception:
+        metadata = {}
+    if metadata.get('purpose') == 'partner_subscription':
+        return True
+    if metadata.get('partner_id'):
+        return True
+    return False
+
+
+def _handle_partner_subscription(subscription_data):
+    s = get_stripe()
+    stripe_sub = s.Subscription.retrieve(subscription_data['id'])
+    metadata = stripe_sub.get('metadata', {}) if isinstance(stripe_sub, dict) else (stripe_sub.metadata or {})
+    partner_id = metadata.get('partner_id')
+    partner = None
+    if partner_id:
+        partner = Partner.query.get(int(partner_id))
+    if not partner:
+        customer_id = subscription_data.get('customer')
+        partner = Partner.query.filter_by(stripe_customer_id=customer_id).first()
+    if not partner:
+        current_app.logger.warning("Partner subscription received but partner not found")
+        return
+
+    customer_id = stripe_sub.get('customer') if isinstance(stripe_sub, dict) else getattr(stripe_sub, 'customer', None)
+    if not partner.stripe_customer_id and customer_id:
+        partner.stripe_customer_id = customer_id
+
+    status = stripe_sub.get('status') if isinstance(stripe_sub, dict) else stripe_sub.status
+    partner.stripe_subscription_id = stripe_sub.get('id') if isinstance(stripe_sub, dict) else stripe_sub.id
+    partner.billing_status = 'active' if status in ['active', 'trialing'] else 'inactive'
+    db.session.commit()
+
+    if partner.billing_status == 'active':
+        current_app.logger.info(f"Partner subscription active for {partner.slug}")
 
 
 def handle_subscription_deleted(subscription_data):

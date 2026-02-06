@@ -97,6 +97,98 @@ class User(UserMixin, db.Model):
         return str(self.id)
 
 
+class Partner(db.Model):
+    __table_args__ = (
+        db.Index('idx_partner_status', 'status'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    slug = db.Column(db.String(80), unique=True, nullable=False, index=True)
+    contact_email = db.Column(db.String(150), nullable=False, unique=True)
+    password_hash = db.Column(db.String(200), nullable=False)
+    status = db.Column(db.String(30), default='pending', nullable=False)
+    stripe_customer_id = db.Column(db.String(255), nullable=True, unique=True, index=True)
+    stripe_subscription_id = db.Column(db.String(255), nullable=True, unique=True, index=True)
+    billing_status = db.Column(db.String(30), default='inactive', nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    domains = db.relationship('PartnerDomain', backref='partner', lazy='dynamic')
+    api_keys = db.relationship('PartnerApiKey', backref='partner', lazy='dynamic')
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def get_reset_token(self, expires_sec=1800):
+        """Generate a password-reset token valid for expires_sec seconds (default 30 min)."""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'partner_id': self.id}, salt='partner-password-reset')
+
+    @staticmethod
+    def verify_reset_token(token, expiration=1800):
+        """Verify a partner password-reset token. Returns Partner or None."""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token, salt='partner-password-reset', max_age=expiration)
+        except Exception:
+            return None
+        return Partner.query.get(data.get('partner_id'))
+
+
+class PartnerDomain(db.Model):
+    __table_args__ = (
+        db.Index('idx_partner_domain', 'domain'),
+        db.Index('idx_partner_domain_env', 'env'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    partner_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=False)
+    domain = db.Column(db.String(255), nullable=False)
+    env = db.Column(db.String(10), default='test', nullable=False)  # test | live
+    verification_method = db.Column(db.String(30), default='dns_txt', nullable=False)
+    verification_token = db.Column(db.String(200), nullable=False)
+    verified_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def is_verified(self):
+        return self.verified_at is not None
+
+
+class PartnerApiKey(db.Model):
+    __table_args__ = (
+        db.Index('idx_partner_key_prefix', 'key_prefix'),
+        db.Index('idx_partner_key_hash', 'key_hash'),
+        db.Index('idx_partner_key_env', 'env'),
+        db.Index('idx_partner_key_status', 'status'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    partner_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=False)
+    key_prefix = db.Column(db.String(32), nullable=False)
+    key_hash = db.Column(db.String(128), nullable=False)
+    key_last4 = db.Column(db.String(4), nullable=False)
+    env = db.Column(db.String(10), default='test', nullable=False)  # test | live
+    status = db.Column(db.String(20), default='active', nullable=False)  # active | revoked
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_used_at = db.Column(db.DateTime, nullable=True)
+
+
+class PartnerUsageEvent(db.Model):
+    __table_args__ = (
+        db.Index('idx_partner_usage_event', 'partner_id', 'env', 'event_type'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    partner_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=False)
+    env = db.Column(db.String(10), default='test', nullable=False)
+    event_type = db.Column(db.String(50), nullable=False)
+    quantity = db.Column(db.Integer, default=1)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 class ProfileView(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -430,7 +522,9 @@ class Discussion(db.Model):
     # Partner embed integration (Phase 2)
     # For discussions created by partners whose content is not ingested via RSS
     partner_article_url = db.Column(db.String(1000), nullable=True, index=True)  # Normalized URL
-    partner_id = db.Column(db.String(50), nullable=True, index=True)  # Partner identifier (e.g., 'observer', 'time')
+    partner_id = db.Column(db.String(50), nullable=True, index=True)  # Partner slug (legacy identifier)
+    partner_fk_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=True, index=True)
+    partner_env = db.Column(db.String(10), default='live', nullable=False, index=True)  # test | live
 
     # Integrity controls (§8)
     # Enable stricter rate limits and monitoring for high-profile or sensitive discussions
@@ -503,6 +597,7 @@ class Discussion(db.Model):
         # First get discussions marked as featured, excluding test discussions
         featured = Discussion.query\
             .filter_by(is_featured=True)\
+            .filter(Discussion.partner_env != 'test')\
             .filter(~Discussion.title.ilike('%test%'))\
             .filter(~Discussion.description.ilike('%test%'))\
             .order_by(Discussion.created_at.desc())\
@@ -513,6 +608,7 @@ class Discussion(db.Model):
             featured_ids = [d.id for d in featured]
             additional = Discussion.query\
                 .filter(Discussion.id.notin_(featured_ids))\
+                .filter(Discussion.partner_env != 'test')\
                 .filter(~Discussion.title.ilike('%test%'))\
                 .filter(~Discussion.description.ilike('%test%'))\
                 .order_by(Discussion.created_at.desc())\
@@ -587,7 +683,7 @@ class Discussion(db.Model):
     
     @staticmethod
     def search_discussions(search=None, country=None, city=None, topic=None, scope=None, keywords=None, page=1, per_page=9):
-        query = Discussion.query.options(db.joinedload(Discussion.creator))
+        query = Discussion.query.options(db.joinedload(Discussion.creator)).filter(Discussion.partner_env != 'test')
 
         if search:
             search_term = f"%{search}%"

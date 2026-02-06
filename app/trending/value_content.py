@@ -31,7 +31,8 @@ def generate_weekly_insights_post(platform: str = 'x') -> Optional[str]:
     # Get discussions from last week
     recent_discussions = Discussion.query.filter(
         Discussion.created_at >= week_ago,
-        Discussion.has_native_statements == True
+        Discussion.has_native_statements == True,
+        Discussion.partner_env != 'test'
     ).limit(10).all()
     
     if not recent_discussions:

@@ -1,0 +1,295 @@
+{% extends "layout.html" %}
+
+{% block title %}Partner Portal - Society Speaks{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50">
+  <div class="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">Partner Portal</h1>
+        <p class="text-gray-600">Welcome, {{ partner.name }}.</p>
+      </div>
+      <a href="{{ url_for('partner.portal_logout') }}" class="text-sm text-gray-600 hover:text-gray-900">Sign out</a>
+    </div>
+
+    {% if new_key %}
+    <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5 mb-6">
+      <p class="font-semibold text-emerald-900 mb-2">Your new API key (shown once)</p>
+      <div class="bg-white border border-emerald-200 rounded-lg p-3 font-mono text-sm break-all">{{ new_key }}</div>
+    </div>
+    {% endif %}
+
+    <div class="grid gap-6 lg:grid-cols-3 mb-8">
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Getting started checklist</h3>
+        <ol class="text-sm text-gray-700 space-y-2">
+          <li>
+            1) Verify your test domain
+            {% if has_verified_test_domain %}
+              <span class="ml-2 text-emerald-600 font-semibold">Done</span>
+            {% else %}
+              <span class="ml-2 text-gray-400">Pending</span>
+            {% endif %}
+          </li>
+          <li>
+            2) Create discussions with the API
+            {% if has_test_key %}
+              <span class="ml-2 text-emerald-600 font-semibold">Ready</span>
+            {% else %}
+              <span class="ml-2 text-gray-400">Pending</span>
+            {% endif %}
+          </li>
+          <li>
+            3) Embed with the returned URL
+            <span class="ml-2 text-gray-400">Next</span>
+          </li>
+          <li>
+            4) Activate live keys
+            {% if partner.billing_status == 'active' %}
+              <span class="ml-2 text-emerald-600 font-semibold">Active</span>
+            {% else %}
+              <span class="ml-2 text-gray-400">Pending</span>
+            {% endif %}
+          </li>
+        </ol>
+        <div class="mt-4">
+          <a href="{{ url_for('partner.portal_getting_started') }}" class="text-sm font-semibold text-blue-600 hover:underline">
+            Open guided setup →
+          </a>
+        </div>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Billing</h3>
+        <p class="text-sm text-gray-700 mb-3">Status: <strong>{{ partner.billing_status }}</strong></p>
+        <div class="flex flex-wrap gap-2">
+          {% if partner.billing_status != 'active' %}
+          <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+              Start subscription
+            </button>
+          </form>
+          {% endif %}
+          {% if partner.stripe_customer_id %}
+          <a href="{{ url_for('partner.portal_billing_portal') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+            Manage billing
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <h3 class="text-lg font-semibold text-gray-900 mb-2">Environments</h3>
+        <p class="text-sm text-gray-700">Use test keys for staging. Live keys activate after billing.</p>
+      </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2 mb-8">
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Quickstart (test)</h2>
+        <p class="text-sm text-gray-600 mb-3">Lookup by URL, create if missing, then embed. Copy and run these commands directly.</p>
+        {# Use the real full key if just created, otherwise show a masked hint #}
+        {% set ns = namespace(api_key='sspk_test_...', is_real=false) %}
+        {% if new_key and new_key.startswith('sspk_test_') %}
+          {% set ns.api_key = new_key %}
+          {% set ns.is_real = true %}
+        {% else %}
+          {% for key in keys if key.env == 'test' and key.status == 'active' %}
+            {% if loop.first %}
+              {% set ns.api_key = key.key_prefix ~ '••••' ~ key.key_last4 %}
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+        {% if ns.is_real %}
+        <div class="mb-3 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2">
+          <p class="text-xs text-emerald-800"><strong>Your real test key is pre-filled below.</strong> Copy and run these commands now — the key won't be shown again after you navigate away.</p>
+        </div>
+        {% endif %}
+        <div class="mb-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">1. Look up a discussion</span>
+          </div>
+          <pre class="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article" \
+  -H "X-API-Key: {{ ns.api_key }}"</pre>
+        </div>
+        <div class="mb-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">2. Create if not found</span>
+          </div>
+          <pre class="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">curl -X POST "{{ base_url }}/api/partner/discussions" \
+  -H "X-API-Key: {{ ns.api_key }}" \
+  -H "Content-Type: application/json" \
+  -d '{"article_url":"https://example.com/article","title":"Example title","excerpt":"..."}'</pre>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">3. Embed on your page</span>
+          </div>
+          <pre class="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">&lt;iframe src="{{ base_url }}/discussions/{id}/embed" width="100%" height="600" frameborder="0" loading="lazy"&gt;&lt;/iframe&gt;</pre>
+        </div>
+        <p class="text-xs text-gray-500 mt-3">
+          {% if ns.api_key == 'sspk_test_...' %}
+          <strong>Tip:</strong> Create a test API key first, then this section will pre-fill your real key.
+          {% elif not ns.is_real %}
+          Replace the masked key above with your full key (shown once at creation).
+          See <a href="{{ url_for('partner.api_docs') }}" class="text-blue-600 hover:underline">API docs</a> for full reference.
+          {% else %}
+          See <a href="{{ url_for('partner.api_docs') }}" class="text-blue-600 hover:underline">API docs</a> for full reference.
+          {% endif %}
+        </p>
+      </div>
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-gray-900">Usage (last 30 days)</h2>
+          <a href="{{ url_for('partner.portal_usage_csv') }}" class="text-xs font-semibold text-blue-600 hover:underline">Download CSV</a>
+        </div>
+        <div class="grid gap-3 sm:grid-cols-3 text-sm text-gray-700">
+          <div class="rounded-lg bg-gray-50 p-3">
+            <div class="text-xs text-gray-500">Creates</div>
+            <div class="text-lg font-semibold">{{ usage.get('create', 0) }}</div>
+          </div>
+          <div class="rounded-lg bg-gray-50 p-3">
+            <div class="text-xs text-gray-500">Lookups</div>
+            <div class="text-lg font-semibold">{{ usage.get('lookup', 0) }}</div>
+          </div>
+          <div class="rounded-lg bg-gray-50 p-3">
+            <div class="text-xs text-gray-500">Snapshots</div>
+            <div class="text-lg font-semibold">{{ usage.get('snapshot', 0) }}</div>
+          </div>
+        </div>
+        <div class="mt-4 space-y-2">
+          {% for day in usage_daily %}
+          <div class="flex items-center gap-3 text-xs text-gray-600">
+            <div class="w-16">{{ day.label }}</div>
+            <div class="flex-1 bg-gray-100 rounded h-2">
+              <div class="bg-blue-600 h-2 rounded" style="width: {{ (day.count / usage_max * 100) if usage_max else 0 }}%"></div>
+            </div>
+            <div class="w-6 text-right text-gray-500">{{ day.count }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Domains</h2>
+        <form method="POST" action="{{ url_for('partner.portal_add_domain') }}" class="grid gap-3 sm:grid-cols-3 mb-4">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input name="domain" type="text" placeholder="example.com" class="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm">
+          <select name="env" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+            <option value="test">Test</option>
+            <option value="live">Live</option>
+          </select>
+          <button type="submit" class="sm:col-span-3 inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+            Add domain
+          </button>
+        </form>
+        <div class="space-y-3">
+          {% for domain in domains %}
+          <div class="rounded-lg border border-gray-100 bg-gray-50 p-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="font-semibold text-gray-900">{{ domain.domain }}</div>
+                <div class="text-xs text-gray-500">{{ domain.env|upper }} · {{ domain.verification_method|upper }}</div>
+              </div>
+              {% if domain.is_verified() %}
+              <span class="text-xs font-semibold text-emerald-700">Verified</span>
+              {% else %}
+              <form method="POST" action="{{ url_for('partner.portal_verify_domain', domain_id=domain.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="text-xs font-semibold text-blue-600 hover:underline">Verify</button>
+              </form>
+              {% endif %}
+            </div>
+            {% if not domain.is_verified() %}
+            <div class="text-xs text-gray-600 mt-2">
+              Add TXT record: <code class="bg-white px-1 rounded">societyspeaks-verify={{ domain.verification_token }}</code>
+              <div class="mt-2 text-gray-500">
+                DNS can take time to propagate. If verification fails, wait 5-10 minutes and try again.
+                For subdomains, ensure the TXT record is on the exact subdomain.
+              </div>
+              {% set check = dns_checks.get(domain.id|string) %}
+              {% if check %}
+              <div class="mt-2 text-gray-500">
+                Last check: {{ check.checked_at[:19].replace('T', ' ') }} UTC
+                {% if check.error %}
+                  · Error: {{ check.error }}
+                {% else %}
+                  · Expected: <code class="bg-white px-1 rounded">{{ check.expected }}</code>
+                  · Found: {{ check.records[:3]|join(', ') if check.records else 'No TXT records returned' }}
+                  {% if check.records and check.records|length > 3 %}…{% endif %}
+                {% endif %}
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-center">
+            <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/>
+            </svg>
+            <p class="text-sm font-medium text-gray-700 mb-1">Add your first domain</p>
+            <p class="text-xs text-gray-500">Embeds only load on verified domains. Add your staging domain above to get started.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">API keys</h2>
+        <div class="flex flex-wrap gap-2 mb-4">
+          <form method="POST" action="{{ url_for('partner.portal_create_key') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="env" value="test">
+            <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">New test key</button>
+          </form>
+          {% if partner.billing_status == 'active' %}
+          <form method="POST" action="{{ url_for('partner.portal_create_key') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="env" value="live">
+            <button class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">New live key</button>
+          </form>
+          {% else %}
+          <div class="text-xs text-gray-500 flex items-center">Live keys unlock after billing</div>
+          {% endif %}
+        </div>
+        <div class="space-y-3">
+          {% for key in keys %}
+          <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 flex items-center justify-between">
+            <div>
+              <div class="font-mono text-sm text-gray-900">{{ key.key_prefix }}••••{{ key.key_last4 }}</div>
+              <div class="text-xs text-gray-500">
+                {{ key.env|upper }} · {{ key.status|upper }}
+                {% if key.last_used_at %} · Last used {{ key.last_used_at.strftime('%b %d, %Y') }}{% endif %}
+              </div>
+            </div>
+            {% if key.status == 'active' %}
+            <div class="flex items-center gap-3">
+              <form method="POST" action="{{ url_for('partner.portal_rotate_key', key_id=key.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="text-xs text-blue-600 hover:underline">Rotate</button>
+              </form>
+              <form method="POST" action="{{ url_for('partner.portal_revoke_key', key_id=key.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="text-xs text-red-600 hover:underline">Revoke</button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-4 text-center">
+            <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+            </svg>
+            <p class="text-sm font-medium text-gray-700 mb-1">Create your first API key</p>
+            <p class="text-xs text-gray-500">Click "New test key" above. You'll use it to create discussions and embed them on your site.</p>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

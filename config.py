@@ -14,9 +14,9 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev')
     SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
     
-    # Application base URL
-    APP_BASE_URL = os.getenv('APP_BASE_URL', 'https://societyspeaks.io')
-    BASE_URL = APP_BASE_URL  # Alias for Partner API
+    # Application base URL (APP_BASE_URL takes priority, falls back to BASE_URL env var)
+    APP_BASE_URL = os.getenv('APP_BASE_URL') or os.getenv('BASE_URL', 'https://societyspeaks.io')
+    BASE_URL = APP_BASE_URL
 
     # Partner Embed Configuration
     # Comma-separated list of allowed partner origins for CORS and frame-ancestors
@@ -44,6 +44,18 @@ class Config:
         PARTNER_API_KEYS = json.loads(_partner_keys_str) if isinstance(_partner_keys_str, str) else _partner_keys_str
     except (ValueError, TypeError):
         PARTNER_API_KEYS = {}
+
+    # Secret for hashing partner API keys (defaults to SECRET_KEY if not set)
+    # WARNING: If SECRET_KEY rotates, all partner API keys become invalid unless PARTNER_KEY_SECRET is set separately
+    PARTNER_KEY_SECRET = os.getenv('PARTNER_KEY_SECRET', SECRET_KEY)
+    if not os.getenv('PARTNER_KEY_SECRET') and os.getenv('FLASK_ENV') == 'production':
+        logging.warning(
+            "PARTNER_KEY_SECRET not set - falling back to SECRET_KEY. "
+            "Set PARTNER_KEY_SECRET explicitly to avoid invalidating partner API keys when SECRET_KEY rotates."
+        )
+
+    # Partner billing (flat monthly)
+    PARTNER_STRIPE_PRICE_ID = os.getenv('PARTNER_STRIPE_PRICE_ID')
 
     # At start of Config class
     if not SQLALCHEMY_DATABASE_URI:
@@ -174,7 +186,6 @@ class Config:
     RESEND_API_KEY = os.getenv('RESEND_API_KEY')
     RESEND_FROM_EMAIL = os.getenv('RESEND_FROM_EMAIL', 'Society Speaks <hello@societyspeaks.io>')
     RESEND_DAILY_FROM_EMAIL = os.getenv('RESEND_DAILY_FROM_EMAIL', 'Daily Questions <daily@societyspeaks.io>')
-    BASE_URL = os.getenv('BASE_URL', 'https://societyspeaks.io')
     
     # Validate Resend API key in production
     if not RESEND_API_KEY and os.getenv('FLASK_ENV') == 'production':
@@ -259,7 +270,9 @@ class ProductionConfig(Config):
     PREFERRED_URL_SCHEME = 'https'
     REMEMBER_COOKIE_SECURE = True
     REMEMBER_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Strict'
+    # Lax (not Strict) is required because partners redirect back from Stripe Checkout
+    # and need their session cookie sent on the redirect. Strict would drop the session.
+    SESSION_COOKIE_SAMESITE = 'Lax'
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)  # Shorter session timeout for production
     SENTRY_DSN = os.getenv('SENTRY_DSN')
     CACHE_DEFAULT_TIMEOUT = 300  # 5 minutes

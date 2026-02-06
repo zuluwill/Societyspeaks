@@ -290,9 +290,17 @@ def create_app():
         import markdown as md
         return Markup(md.markdown(text, extensions=['extra', 'nl2br']))
     
+    def strip_so_what(text):
+        """Remove leading 'So what?' (and variants) from Why It Matters text for display."""
+        if not text or not isinstance(text, str):
+            return text or ''
+        stripped = re.sub(r'^\s*So\s+what\s*[?:\-]\s*', '', text, flags=re.IGNORECASE, count=1)
+        return stripped.strip() if stripped != text else text
+
     app.jinja_env.filters['render_markdown'] = render_markdown_links
     app.jinja_env.filters['strip_markdown'] = strip_markdown
     app.jinja_env.filters['markdown'] = convert_markdown
+    app.jinja_env.filters['strip_so_what'] = strip_so_what
     
     # Initialize rate limiter with improved Redis handling
     try:
