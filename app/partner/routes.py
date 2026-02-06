@@ -304,7 +304,8 @@ def portal_login():
         partner = Partner.query.filter_by(contact_email=email).first()
 
         # Temporary lockout after repeated failures (stored in session to keep it simple)
-        lockout_key = f'partner_login_fails:{email}'
+        # Uses '_lockout_' prefix (not 'partner_') so _clear_partner_session() won't wipe it
+        lockout_key = f'_lockout_partner:{email}'
         fail_count = session.get(lockout_key, 0)
         lockout_until = session.get(f'{lockout_key}:until')
 
