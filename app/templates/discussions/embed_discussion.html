@@ -13,43 +13,38 @@
   <link rel="prefetch" href="{{ consensus_url }}">
 
   <style>
-    /* CSS Custom Properties for theming */
+    /* CSS Custom Properties for theming — values resolved server-side from theme preset + URL overrides */
     :root {
-      --embed-primary: {% if primary_color %}#{{ primary_color }}{% else %}#1e40af{% endif %};
-      --embed-primary-hover: {% if primary_color %}#{{ primary_color }}dd{% else %}#1e3a8a{% endif %};
-      --embed-bg: {% if bg_color %}#{{ bg_color }}{% else %}#ffffff{% endif %};
-      --embed-text: #1f2937;
-      --embed-text-light: #6b7280;
-      --embed-border: #e5e7eb;
+      --embed-primary: #{{ primary_color|default('1e40af') }};
+      --embed-primary-hover: #{{ primary_color|default('1e40af') }}dd;
+      --embed-bg: #{{ bg_color|default('ffffff') }};
+      --embed-font: {% if font %}"{{ font }}", {% endif %}system-ui, -apple-system, sans-serif;
       --embed-agree: #22c55e;
       --embed-agree-hover: #16a34a;
       --embed-disagree: #ef4444;
       --embed-disagree-hover: #dc2626;
       --embed-unsure: #6b7280;
       --embed-unsure-hover: #4b5563;
-      --embed-font: {% if font %}"{{ font }}", {% endif %}system-ui, -apple-system, sans-serif;
+      --embed-border: #e5e7eb;
+      /* Dark theme detection: if bg brightness < 50%, flip to light text */
+      {% set bg_hex = bg_color|default('ffffff') %}
+      {% set r = bg_hex[:2]|int(base=16) if bg_hex|length >= 6 else 255 %}
+      {% set g = bg_hex[2:4]|int(base=16) if bg_hex|length >= 6 else 255 %}
+      {% set b_val = bg_hex[4:6]|int(base=16) if bg_hex|length >= 6 else 255 %}
+      {% set brightness = (r * 299 + g * 587 + b_val * 114) / 1000 %}
+      {% if brightness < 128 %}
+      --embed-text: #e5e7eb;
+      --embed-text-light: #9ca3af;
+      --embed-border: #374151;
+      --embed-surface: #2a2a3e;
+      --embed-surface-hover: #353548;
+      {% else %}
+      --embed-text: #1f2937;
+      --embed-text-light: #6b7280;
+      --embed-surface: #f3f4f6;
+      --embed-surface-hover: #f9fafb;
+      {% endif %}
     }
-
-    /* Theme presets */
-    {% if theme == 'observer' %}
-    :root {
-      --embed-primary: #000000;
-      --embed-primary-hover: #333333;
-      --embed-font: Georgia, "Times New Roman", serif;
-    }
-    {% elif theme == 'time' %}
-    :root {
-      --embed-primary: #e90606;
-      --embed-primary-hover: #c40505;
-      --embed-font: "Source Serif Pro", Georgia, serif;
-    }
-    {% elif theme == 'ted' %}
-    :root {
-      --embed-primary: #e62b1e;
-      --embed-primary-hover: #c42419;
-      --embed-font: Inter, system-ui, sans-serif;
-    }
-    {% endif %}
 
     /* Base styles */
     *, *::before, *::after {
@@ -92,7 +87,7 @@
 
     /* Vote progress bar */
     .vote-progress {
-      background: #f3f4f6;
+      background: var(--embed-surface);
       border-radius: 8px;
       padding: 12px 16px;
       margin-bottom: 16px;
@@ -164,7 +159,7 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
       padding: 2px 6px;
-      background: #f3f4f6;
+      background: var(--embed-surface);
       color: var(--embed-text-light);
       border-radius: 4px;
       margin-bottom: 8px;
@@ -548,7 +543,7 @@
 
     .flag-modal__option:hover {
       border-color: var(--embed-primary);
-      background: #f9fafb;
+      background: var(--embed-surface-hover);
     }
 
     .flag-modal__option input {
@@ -581,7 +576,7 @@
     }
 
     .flag-modal__btn--cancel:hover {
-      background: #f3f4f6;
+      background: var(--embed-surface);
     }
 
     .flag-modal__btn--submit {

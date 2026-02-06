@@ -246,10 +246,26 @@ def reconcile_partner_subscriptions():
             logger.warning(f"Partner reconciliation: failed to retrieve subscription {partner.stripe_subscription_id} for {partner.slug}: {e}")
             continue
         status = subscription.get('status') if isinstance(subscription, dict) else getattr(subscription, 'status', '')
-        new_status = 'active' if status in ('active', 'trialing') else 'inactive'
+        # past_due = grace period, keep active; only revoke on terminal states
+        active_statuses = ('active', 'trialing', 'past_due')
+        new_status = 'active' if status in active_statuses else 'inactive'
         if partner.billing_status != new_status:
             logger.info(f"Partner reconciliation: {partner.slug} billing status {partner.billing_status} -> {new_status}")
             partner.billing_status = new_status
+            updated += 1
+
+        # Sync tier from subscription metadata
+        metadata = subscription.get('metadata', {}) if isinstance(subscription, dict) else (subscription.metadata or {})
+        tier_from_meta = metadata.get('partner_tier')
+        if tier_from_meta in ('starter', 'professional', 'enterprise') and partner.tier != tier_from_meta:
+            logger.info(f"Partner reconciliation: {partner.slug} tier {partner.tier} -> {tier_from_meta}")
+            partner.tier = tier_from_meta
+            updated += 1
+
+        # Revert to free on terminal states
+        if status in ('canceled', 'unpaid', 'incomplete_expired') and partner.tier != 'free':
+            logger.info(f"Partner reconciliation: {partner.slug} subscription {status}, reverting tier to free")
+            partner.tier = 'free'
             updated += 1
     if updated:
         db.session.commit()

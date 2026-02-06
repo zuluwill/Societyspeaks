@@ -284,15 +284,25 @@ def embed_discussion(discussion_id):
     from app.partner.constants import EMBED_ALLOWED_FONTS, EMBED_THEMES
     if font and font not in EMBED_ALLOWED_FONTS:
         font = ''
-    if theme not in EMBED_THEMES:
+    theme_map = {t['id']: t for t in EMBED_THEMES}
+    if theme not in theme_map:
         theme = 'default'
+
+    # Apply theme preset defaults — explicit URL params always override
+    theme_preset = theme_map[theme]
+    if not primary_color:
+        primary_color = theme_preset.get('primary', '1e40af')
+    if not bg_color:
+        bg_color = theme_preset.get('bg', 'ffffff')
+    if not font:
+        font = theme_preset.get('font', '')
 
     # Validate hex colors to avoid CSS injection
     hex_pattern = re.compile(r'^[0-9a-fA-F]{3,6}$')
     if primary_color and not hex_pattern.match(primary_color):
-        primary_color = ''
+        primary_color = '1e40af'
     if bg_color and not hex_pattern.match(bg_color):
-        bg_color = ''
+        bg_color = 'ffffff'
 
     # Build consensus URL
     base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
@@ -344,7 +354,18 @@ def embed_discussion(discussion_id):
     else:
         frame_ancestors = "'self' *" if current_app.config.get('ENV') == 'development' else "'self'"
 
-    response.headers['Content-Security-Policy'] = f"frame-ancestors {frame_ancestors}"
+    # Build a complete CSP that includes frame-ancestors + essential XSS protections.
+    # We must override Talisman's CSP (which blocks framing) but keep other protections.
+    response.headers['Content-Security-Policy'] = (
+        f"frame-ancestors {frame_ancestors}; "
+        f"default-src 'self'; "
+        f"script-src 'self' 'unsafe-inline'; "
+        f"style-src 'self' 'unsafe-inline'; "
+        f"img-src 'self' data: https:; "
+        f"connect-src 'self'; "
+        f"object-src 'none'; "
+        f"base-uri 'self'"
+    )
 
     # Remove X-Frame-Options to allow framing (CSP frame-ancestors takes precedence)
     response.headers.pop('X-Frame-Options', None)

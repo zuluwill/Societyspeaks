@@ -260,11 +260,18 @@ def webhook():
             else:
                 handle_subscription_deleted(data)
         elif event_type == 'customer.subscription.trial_will_end':
-            handle_trial_ending(data)
+            if not _is_partner_subscription(data):
+                handle_trial_ending(data)
         elif event_type == 'customer.subscription.paused':
-            handle_subscription_paused(data)
+            if _is_partner_subscription(data):
+                _handle_partner_subscription(data)
+            else:
+                handle_subscription_paused(data)
         elif event_type == 'customer.subscription.resumed':
-            handle_subscription_resumed(data)
+            if _is_partner_subscription(data):
+                _handle_partner_subscription(data)
+            else:
+                handle_subscription_resumed(data)
         elif event_type == 'customer.subscription.pending_update_applied':
             current_app.logger.info(f"Subscription pending update applied: {data.get('id')}")
         elif event_type == 'customer.subscription.pending_update_expired':
@@ -366,7 +373,10 @@ def _handle_partner_subscription(subscription_data):
     partner_id = metadata.get('partner_id')
     partner = None
     if partner_id:
-        partner = Partner.query.get(int(partner_id))
+        try:
+            partner = Partner.query.get(int(partner_id))
+        except (ValueError, TypeError):
+            current_app.logger.warning(f"Non-numeric partner_id in subscription metadata: {partner_id}")
     if not partner:
         customer_id = subscription_data.get('customer')
         partner = Partner.query.filter_by(stripe_customer_id=customer_id).first()
@@ -380,7 +390,13 @@ def _handle_partner_subscription(subscription_data):
 
     status = stripe_sub.get('status') if isinstance(stripe_sub, dict) else stripe_sub.status
     partner.stripe_subscription_id = stripe_sub.get('id') if isinstance(stripe_sub, dict) else stripe_sub.id
-    partner.billing_status = 'active' if status in ['active', 'trialing'] else 'inactive'
+    # past_due = Stripe is still retrying payment; keep access active as a grace period.
+    # Only revoke on terminal states (canceled, unpaid, incomplete_expired).
+    active_statuses = ('active', 'trialing', 'past_due')
+    partner.billing_status = 'active' if status in active_statuses else 'inactive'
+
+    if status == 'past_due':
+        current_app.logger.warning(f"Partner {partner.slug} subscription is past_due — grace period active")
 
     # Persist the tier from checkout metadata (starter / professional)
     tier_from_meta = metadata.get('partner_tier')
@@ -390,8 +406,8 @@ def _handle_partner_subscription(subscription_data):
         # Legacy fallback: if somehow no tier in metadata, default to starter
         partner.tier = 'starter'
 
-    # When subscription is canceled/unpaid, revert to free tier
-    if status in ('canceled', 'unpaid'):
+    # When subscription reaches a terminal state, revert to free tier
+    if status in ('canceled', 'unpaid', 'incomplete_expired'):
         partner.tier = 'free'
 
     db.session.commit()

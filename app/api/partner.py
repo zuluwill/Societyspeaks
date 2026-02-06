@@ -368,7 +368,7 @@ def create_discussion():
         tier_limit = tier_limits.get(partner_tier, 25)  # default conservative
 
         if tier_limit is not None:  # None = unlimited (enterprise)
-            from datetime import datetime, timedelta
+            from datetime import datetime
             if key_env == 'test':
                 # Test: lifetime cap
                 env_count = Discussion.query.filter_by(

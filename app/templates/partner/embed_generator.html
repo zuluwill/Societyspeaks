@@ -162,22 +162,30 @@
       <div class="bg-white border border-gray-200 rounded-lg p-6">
         <h2 class="font-semibold text-gray-900 mb-4">2. Choose a Theme</h2>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
           {% for theme in themes %}
           <label class="relative cursor-pointer">
             <input
               type="radio"
               name="theme"
               value="{{ theme.id }}"
+              data-primary="{{ theme.primary }}"
+              data-bg="{{ theme.bg }}"
+              data-font="{{ theme.font }}"
               class="peer sr-only"
               {% if loop.first %}checked{% endif %}
-              onchange="updatePreview()"
+              onchange="applyThemePreset(this); updatePreview()"
             >
             <div class="p-3 border-2 border-gray-200 rounded-lg peer-checked:border-blue-600 peer-checked:bg-blue-50 transition-colors">
-              <div class="flex items-center gap-2">
-                <span class="w-4 h-4 rounded-full" style="background-color: #{{ theme.primary }}"></span>
-                <span class="font-medium text-gray-900">{{ theme.name }}</span>
+              <div class="flex items-center gap-2 mb-1.5">
+                <span class="w-5 h-5 rounded-full border border-gray-200 flex-shrink-0" style="background-color: #{{ theme.bg }};">
+                  <span class="block w-2.5 h-2.5 rounded-full mx-auto mt-[5px]" style="background-color: #{{ theme.primary }};"></span>
+                </span>
+                <span class="font-medium text-gray-900 text-sm">{{ theme.name }}</span>
               </div>
+              {% if theme.font %}
+              <span class="text-[10px] text-gray-400">{{ theme.font }}</span>
+              {% endif %}
             </div>
           </label>
           {% endfor %}
@@ -387,8 +395,23 @@ window.addEventListener('message', (event) =&gt; {
     );
   }
 
+  function applyThemePreset(radio) {
+    // Sync custom colour pickers and font selector with the selected preset
+    var primary = radio.dataset.primary || '1e40af';
+    var bg = radio.dataset.bg || 'ffffff';
+    var font = radio.dataset.font || '';
+    document.getElementById('primaryColor').value = '#' + primary;
+    document.getElementById('bgColor').value = '#' + bg;
+    var fontSelect = document.getElementById('fontSelect');
+    if (font) {
+      fontSelect.value = font;
+    } else {
+      fontSelect.selectedIndex = 0; // system-ui
+    }
+  }
+
   function selectCustomTheme() {
-    // Deselect preset themes
+    // Deselect preset themes when user edits custom colours
     document.querySelectorAll('input[name="theme"]').forEach(el => el.checked = false);
     updatePreview();
   }
