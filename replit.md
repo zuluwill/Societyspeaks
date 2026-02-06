@@ -91,6 +91,21 @@ PostgreSQL is the primary database, optimized with connection pooling, health ch
 
 ## Recent Changes (February 2026)
 
+### Partner Embed System & Portal (Feb 6)
+- Full partner/publisher integration allowing news sites to embed Society Speaks voting widgets
+- Partner model with auth (signup, login, password reset via Resend), session-based lockout (5 failures = 5min lockout)
+- Lockout keys use `_lockout_` prefix to prevent bypass via logout session clearing
+- API key management: generate, rotate, revoke with SHA-256 hashing (PARTNER_KEY_SECRET config, falls back to SECRET_KEY)
+- Domain verification via DNS TXT records with cooldown between checks
+- Stripe billing integration for partners (PARTNER_STRIPE_PRICE_ID env var)
+- Partner API: lookup by article URL, create discussion, snapshot, oEmbed
+- Usage tracking (PartnerUsageEvent) with CSV export and 14-day sparkline dashboard
+- Rate limiting on all partner endpoints, test env capped at 25 discussions
+- Database tables: partner, partner_domain, partner_api_key, partner_usage_event
+- Discussion model extended with partner_env and partner_fk_id columns
+- Webhook handling for partner subscriptions with `_is_partner_subscription` routing
+- Scheduled job: reconcile_partner_billing (daily at 4am UTC)
+
 ### Static Asset Object Storage Migration (Feb 1)
 - Moved hero and speaker images from filesystem to Replit Object Storage to prevent OSError [Errno 5] I/O errors
 - New route `/assets/<path:filename>` serves images from object storage with 1-hour cache headers

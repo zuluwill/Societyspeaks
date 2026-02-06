@@ -3,7 +3,7 @@ import logging
 import secrets
 from typing import Optional, Tuple
 
-from flask import current_app
+from flask import current_app, after_this_request
 from app import db
 from app.models import PartnerApiKey, Partner
 
@@ -55,8 +55,9 @@ def find_partner_api_key(api_key: str):
     Returns:
         tuple: (PartnerApiKey record, Partner, env) or (None, None, None)
 
-    Note: Updates last_used_at on the key record and commits the change.
-    This uses a separate try/except to avoid breaking the caller's transaction.
+    Note: Schedules a deferred update to last_used_at via after_this_request,
+    so the timestamp is persisted after the response without interfering with
+    the caller's transaction.
     """
     if not api_key:
         return None, None, None
@@ -71,12 +72,19 @@ def find_partner_api_key(api_key: str):
     if not partner:
         return None, None, None
 
-    # Update last_used_at timestamp (best-effort, won't break caller on failure)
-    try:
-        record.last_used_at = db.func.now()
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-        logger.debug("Could not update last_used_at for partner API key")
+    # Defer last_used_at update to after the response is sent, avoiding
+    # mid-request commits that could interfere with the caller's transaction.
+    key_id = record.id
+    @after_this_request
+    def _update_last_used(response):
+        try:
+            key_record = db.session.get(PartnerApiKey, key_id)
+            if key_record:
+                key_record.last_used_at = db.func.now()
+                db.session.commit()
+        except Exception:
+            db.session.rollback()
+            logger.debug("Could not update last_used_at for partner API key")
+        return response
 
     return record, partner, env
