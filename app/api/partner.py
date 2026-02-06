@@ -99,8 +99,10 @@ def lookup_by_article_url():
         ).first()
         source = 'partner'
     else:
-        # Look up NewsArticle by normalized_url
+        # Look up NewsArticle by normalized_url, then fall back to raw url
         article = NewsArticle.query.filter_by(normalized_url=normalized).first()
+        if not article:
+            article = NewsArticle.query.filter_by(url=url).first()
         if article:
             link = DiscussionSourceArticle.query.filter_by(article_id=article.id).first()
             if link:

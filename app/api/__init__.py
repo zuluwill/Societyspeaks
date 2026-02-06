@@ -27,15 +27,9 @@ def init_api(app):
     Args:
         app: Flask application instance
     """
-    def _origin_checker(origin):
-        if app.config.get('ENV') == 'development' and origin in ['http://localhost:3000', 'http://127.0.0.1:3000']:
-            return True
-        return is_partner_origin_allowed(origin)
-
-    # Configure CORS for the partner API blueprint
     CORS(
         partner_bp,
-        origins=_origin_checker,
+        origins="*",
         methods=['GET', 'POST', 'OPTIONS'],
         allow_headers=['Content-Type', 'X-Requested-With', 'X-Partner-Ref', 'X-API-Key'],
         max_age=86400,
