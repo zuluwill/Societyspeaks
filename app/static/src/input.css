@@ -97,7 +97,7 @@
 
 /* Vote label (text above count) */
 .vote-label {
-    font-size: 11px;
+    font-size: 14px;
     margin-bottom: 4px;
     letter-spacing: 0.5px;
     text-align: center;
@@ -144,7 +144,7 @@
     }
     
     .vote-label {
-        font-size: 10px !important;
+        font-size: 12px !important;
     }
     
     .vote-count {
