@@ -479,8 +479,13 @@
                   href="{{ url_for('partner.hub') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >For Publishers</a
                 >
+                  For Publishers
+                  <span
+                    class="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800"
+                    >Pro</span
+                  >
+                </a>
               </div>
             </div>
 
@@ -779,6 +784,16 @@
                   >Pro</span
                 >
               </a>
+              <a
+                href="{{ url_for('partner.hub') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+              >
+                For Publishers
+                <span
+                  class="ml-2 inline-flex items-center rounded-full bg-blue-400/30 px-2 py-0.5 text-xs font-medium text-white"
+                  >Pro</span
+                >
+              </a>
             </div>
 
             <!-- Explore Section -->
@@ -1007,6 +1022,14 @@
               </li>
               <li>
                 <a
+                  href="{{ url_for('partner.hub') }}"
+                  class="text-gray-400 hover:text-white transition"
+                  >For Publishers
+                  <span class="text-xs text-blue-400">Pro</span></a
+                >
+              </li>
+              <li>
+                <a
                   href="/about"
                   class="text-gray-400 hover:text-white transition"
                   >About Us</a
@@ -1038,13 +1061,6 @@
                   href="mailto:info@societyspeaks.io?subject=SocietySpeaks%20Inquiry"
                   class="text-gray-400 hover:text-white transition"
                   >Contact</a
-                >
-              </li>
-              <li>
-                <a
-                  href="{{ url_for('partner.hub') }}"
-                  class="text-gray-400 hover:text-white transition"
-                  >For Publishers</a
                 >
               </li>
             </ul>
