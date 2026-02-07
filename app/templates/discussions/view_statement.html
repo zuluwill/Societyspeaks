@@ -66,14 +66,11 @@
     </div>
 
     <!-- Voting Buttons - Mobile First Design (authenticated and anonymous) -->
-    {% set vote_btn_base = "w-full px-4 py-4 rounded-lg font-bold
-    transition-colors flex flex-col items-center justify-center gap-1" %} {% set
-    vote_btn_anon = " opacity-75 hover:opacity-100" if not
-    current_user.is_authenticated else "" %} {% set vote_btn_title = '
-    title="Vote without an account"' if not current_user.is_authenticated else
-    "" %}
+    {% set vote_btn_base = "w-full px-4 py-4 rounded-lg font-bold transition-colors duration-150 flex flex-col items-center justify-center gap-1 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500" %}
+    {% set vote_btn_anon = " opacity-75 hover:opacity-100" if not current_user.is_authenticated else "" %}
+    {% set vote_btn_title = ' title="Vote without an account"' if not current_user.is_authenticated else "" %}
     <div class="border-t border-gray-200 pt-4">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3" role="group" aria-label="Vote options for this statement">
         <form
           method="POST"
           action="{{ url_for('statements.vote_statement', statement_id=statement.id) }}"
@@ -82,15 +79,12 @@
           <input type="hidden" name="vote" value="1" />
           <button
             type="submit"
-            class="{{ vote_btn_base }} bg-green-500 hover:bg-green-600 text-white{{ vote_btn_anon }}"
-            {{
-            vote_btn_title|safe
-            }}
+            class="{{ vote_btn_base }} bg-blue-600 hover:bg-blue-700 text-white{{ vote_btn_anon }}"
+            aria-label="Agree with this statement"
+            {{ vote_btn_title|safe }}
           >
-            <div class="text-sm uppercase tracking-wide">✓ Agree</div>
-            <div class="text-2xl font-bold">
-              {{ statement.vote_count_agree }}
-            </div>
+            <div class="text-sm tracking-wide">&#10003; Agree</div>
+            <div class="text-2xl font-bold">{{ statement.vote_count_agree }}</div>
           </button>
         </form>
         <form
@@ -101,15 +95,12 @@
           <input type="hidden" name="vote" value="-1" />
           <button
             type="submit"
-            class="{{ vote_btn_base }} bg-red-500 hover:bg-red-600 text-white{{ vote_btn_anon }}"
-            {{
-            vote_btn_title|safe
-            }}
+            class="{{ vote_btn_base }} bg-red-600 hover:bg-red-700 text-white{{ vote_btn_anon }}"
+            aria-label="Disagree with this statement"
+            {{ vote_btn_title|safe }}
           >
-            <div class="text-sm uppercase tracking-wide">✗ Disagree</div>
-            <div class="text-2xl font-bold">
-              {{ statement.vote_count_disagree }}
-            </div>
+            <div class="text-sm tracking-wide">&#10007; Disagree</div>
+            <div class="text-2xl font-bold">{{ statement.vote_count_disagree }}</div>
           </button>
         </form>
         <form
@@ -120,15 +111,12 @@
           <input type="hidden" name="vote" value="0" />
           <button
             type="submit"
-            class="{{ vote_btn_base }} bg-gray-400 hover:bg-gray-500 text-white{{ vote_btn_anon }}"
-            {{
-            vote_btn_title|safe
-            }}
+            class="{{ vote_btn_base }} bg-gray-500 hover:bg-gray-600 text-white{{ vote_btn_anon }}"
+            aria-label="Unsure about this statement"
+            {{ vote_btn_title|safe }}
           >
-            <div class="text-sm uppercase tracking-wide">? Unsure</div>
-            <div class="text-2xl font-bold">
-              {{ statement.vote_count_unsure }}
-            </div>
+            <div class="text-sm tracking-wide">? Unsure</div>
+            <div class="text-2xl font-bold">{{ statement.vote_count_unsure }}</div>
           </button>
         </form>
       </div>

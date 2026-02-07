@@ -164,33 +164,16 @@
                                 "{{ daily_question.question_text }}"
                             </h3>
 
-                            <!-- Voting buttons preview -->
+                            <!-- Voting buttons preview — matches actual voting UI -->
                             <div class="grid grid-cols-3 gap-3">
-                                <div class="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-blue-200 bg-blue-50/50">
-                                    <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-2">
-                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    <span class="text-sm font-semibold text-gray-900">Agree</span>
+                                <div class="flex items-center justify-center py-3 px-4 rounded-lg bg-blue-600 text-white font-semibold text-sm">
+                                    &#10003; Agree
                                 </div>
-
-                                <div class="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-red-200 bg-red-50/50">
-                                    <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mb-2">
-                                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </div>
-                                    <span class="text-sm font-semibold text-gray-900">Disagree</span>
+                                <div class="flex items-center justify-center py-3 px-4 rounded-lg bg-red-600 text-white font-semibold text-sm">
+                                    &#10007; Disagree
                                 </div>
-
-                                <div class="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-yellow-200 bg-yellow-50/50">
-                                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mb-2">
-                                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    <span class="text-sm font-semibold text-gray-900">Unsure</span>
+                                <div class="flex items-center justify-center py-3 px-4 rounded-lg bg-gray-500 text-white font-semibold text-sm">
+                                    ? Unsure
                                 </div>
                             </div>
                         </div>

@@ -85,35 +85,23 @@
 
             <form id="voteForm" action="{{ url_for('daily.vote') }}" method="POST" class="space-y-6">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <button type="button" value="agree" 
-                            class="vote-btn flex flex-col items-center justify-center p-6 rounded-xl border-2 border-blue-200 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 group">
-                        <div class="w-16 h-16 rounded-full bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center mb-3 transition-colors">
-                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                        <span class="text-lg font-semibold text-gray-900">Agree</span>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" role="group" aria-label="Vote options">
+                    <button type="button" value="agree"
+                            aria-label="Agree with this statement"
+                            class="vote-btn py-4 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
+                        &#10003; Agree
                     </button>
 
                     <button type="button" value="disagree"
-                            class="vote-btn flex flex-col items-center justify-center p-6 rounded-xl border-2 border-red-200 hover:border-red-500 hover:bg-red-50 transition-all duration-200 group">
-                        <div class="w-16 h-16 rounded-full bg-red-100 group-hover:bg-red-200 flex items-center justify-center mb-3 transition-colors">
-                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </div>
-                        <span class="text-lg font-semibold text-gray-900">Disagree</span>
+                            aria-label="Disagree with this statement"
+                            class="vote-btn py-4 px-6 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-lg transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500">
+                        &#10007; Disagree
                     </button>
 
                     <button type="button" value="unsure"
-                            class="vote-btn flex flex-col items-center justify-center p-6 rounded-xl border-2 border-yellow-200 hover:border-yellow-500 hover:bg-yellow-50 transition-all duration-200 group">
-                        <div class="w-16 h-16 rounded-full bg-yellow-100 group-hover:bg-yellow-200 flex items-center justify-center mb-3 transition-colors">
-                            <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <span class="text-lg font-semibold text-gray-900">Unsure</span>
+                            aria-label="Unsure about this statement"
+                            class="vote-btn py-4 px-6 rounded-lg bg-gray-500 hover:bg-gray-600 text-white font-semibold text-lg transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-500">
+                        ? Unsure
                     </button>
                 </div>
 
@@ -169,22 +157,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submitVoteBtn');
     let selectedVote = null;
 
+    // Ring color map — matches canonical vote button colors
+    const ringColors = { agree: 'ring-blue-500', disagree: 'ring-red-500', unsure: 'ring-gray-500' };
+
     voteBtns.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             selectedVote = this.value;
             
+            // Clear all selection rings
             voteBtns.forEach(b => {
                 b.classList.remove('ring-2', 'ring-offset-2');
-                if (b.value === 'agree') b.classList.remove('ring-blue-500');
-                if (b.value === 'disagree') b.classList.remove('ring-red-500');
-                if (b.value === 'unsure') b.classList.remove('ring-yellow-500');
+                b.classList.remove(ringColors[b.value]);
+                b.setAttribute('aria-pressed', 'false');
             });
             
-            this.classList.add('ring-2', 'ring-offset-2');
-            if (this.value === 'agree') this.classList.add('ring-blue-500');
-            if (this.value === 'disagree') this.classList.add('ring-red-500');
-            if (this.value === 'unsure') this.classList.add('ring-yellow-500');
+            // Apply selection ring to clicked button
+            this.classList.add('ring-2', 'ring-offset-2', ringColors[this.value]);
+            this.setAttribute('aria-pressed', 'true');
             
             reasonSection.classList.remove('hidden');
             reasonTextarea.focus();

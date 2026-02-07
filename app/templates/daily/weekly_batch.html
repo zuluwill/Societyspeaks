@@ -115,7 +115,7 @@
                     <div class="vote-results">
                         <p class="text-sm text-gray-500 mb-3">
                             You voted:
-                            <span class="font-medium {% if q_data.user_vote == 1 %}text-blue-600{% elif q_data.user_vote == -1 %}text-red-600{% else %}text-amber-600{% endif %}">
+                            <span class="font-medium {% if q_data.user_vote == 1 %}text-blue-600{% elif q_data.user_vote == -1 %}text-red-600{% else %}text-gray-500{% endif %}">
                                 {% if q_data.user_vote == 1 %}Agree{% elif q_data.user_vote == -1 %}Disagree{% else %}Unsure{% endif %}
                             </span>
                         </p>
@@ -123,33 +123,36 @@
                         <!-- Results Bar -->
                         <div class="results-bar mb-2">
                             <div class="flex h-full">
-                                <div class="results-segment bg-blue-500" style="width: {{ q_data.vote_results.agree_pct }}%"></div>
-                                <div class="results-segment bg-red-500" style="width: {{ q_data.vote_results.disagree_pct }}%"></div>
-                                <div class="results-segment bg-amber-500" style="width: {{ q_data.vote_results.unsure_pct }}%"></div>
+                                <div class="results-segment bg-blue-600" style="width: {{ q_data.vote_results.agree_pct }}%"></div>
+                                <div class="results-segment bg-red-600" style="width: {{ q_data.vote_results.disagree_pct }}%"></div>
+                                <div class="results-segment bg-gray-500" style="width: {{ q_data.vote_results.unsure_pct }}%"></div>
                             </div>
                         </div>
 
                         <!-- Results Legend -->
                         <div class="flex justify-between text-xs text-gray-600">
-                            <span><span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Agree {{ q_data.vote_results.agree_pct }}%</span>
-                            <span><span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>Disagree {{ q_data.vote_results.disagree_pct }}%</span>
-                            <span><span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1"></span>Unsure {{ q_data.vote_results.unsure_pct }}%</span>
+                            <span><span class="inline-block w-2 h-2 rounded-full bg-blue-600 mr-1"></span>Agree {{ q_data.vote_results.agree_pct }}%</span>
+                            <span><span class="inline-block w-2 h-2 rounded-full bg-red-600 mr-1"></span>Disagree {{ q_data.vote_results.disagree_pct }}%</span>
+                            <span><span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unsure {{ q_data.vote_results.unsure_pct }}%</span>
                         </div>
                         <p class="text-xs text-gray-400 mt-1">{{ q_data.vote_results.total }} votes</p>
                     </div>
                     {% else %}
                     <!-- Vote Buttons -->
-                    <div class="vote-buttons flex gap-3 justify-center">
-                        <button type="button" class="vote-btn flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg"
-                                data-vote="agree" data-question="{{ q_data.question.id }}">
+                    <div class="vote-buttons grid grid-cols-1 sm:grid-cols-3 gap-3" role="group" aria-label="Vote options">
+                        <button type="button" class="vote-btn py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                                data-vote="agree" data-question="{{ q_data.question.id }}"
+                                aria-label="Agree with this statement">
                             &#10003; Agree
                         </button>
-                        <button type="button" class="vote-btn flex-1 py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg"
-                                data-vote="disagree" data-question="{{ q_data.question.id }}">
+                        <button type="button" class="vote-btn py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
+                                data-vote="disagree" data-question="{{ q_data.question.id }}"
+                                aria-label="Disagree with this statement">
                             &#10007; Disagree
                         </button>
-                        <button type="button" class="vote-btn flex-1 py-3 px-4 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg"
-                                data-vote="unsure" data-question="{{ q_data.question.id }}">
+                        <button type="button" class="vote-btn py-3 px-4 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-500"
+                                data-vote="unsure" data-question="{{ q_data.question.id }}"
+                                aria-label="Unsure about this statement">
                             ? Unsure
                         </button>
                     </div>
@@ -234,7 +237,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!buttonsContainer) return;
 
         const voteLabels = {agree: 'Agree', disagree: 'Disagree', unsure: 'Unsure'};
-        const voteColors = {agree: 'text-blue-600', disagree: 'text-red-600', unsure: 'text-amber-600'};
+        const voteColors = {agree: 'text-blue-600', disagree: 'text-red-600', unsure: 'text-gray-500'};
         const voteEmojis = {agree: '✓', disagree: '✗', unsure: '?'};
 
         // Build source articles HTML
@@ -294,16 +297,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 <div class="results-bar mb-2">
                     <div class="flex h-full">
-                        <div class="results-segment bg-blue-500" style="width: ${results.agree_pct}%"></div>
-                        <div class="results-segment bg-red-500" style="width: ${results.disagree_pct}%"></div>
-                        <div class="results-segment bg-amber-500" style="width: ${results.unsure_pct}%"></div>
+                        <div class="results-segment bg-blue-600" style="width: ${results.agree_pct}%"></div>
+                        <div class="results-segment bg-red-600" style="width: ${results.disagree_pct}%"></div>
+                        <div class="results-segment bg-gray-500" style="width: ${results.unsure_pct}%"></div>
                     </div>
                 </div>
 
                 <div class="flex justify-between text-xs text-gray-600 mb-2">
-                    <span><span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Agree ${results.agree_pct}%</span>
-                    <span><span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1"></span>Disagree ${results.disagree_pct}%</span>
-                    <span><span class="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1"></span>Unsure ${results.unsure_pct}%</span>
+                    <span><span class="inline-block w-2 h-2 rounded-full bg-blue-600 mr-1"></span>Agree ${results.agree_pct}%</span>
+                    <span><span class="inline-block w-2 h-2 rounded-full bg-red-600 mr-1"></span>Disagree ${results.disagree_pct}%</span>
+                    <span><span class="inline-block w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unsure ${results.unsure_pct}%</span>
                 </div>
                 <p class="text-xs text-gray-400 mb-3">${results.total} votes</p>
 

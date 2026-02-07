@@ -203,7 +203,7 @@
           "
         >
           <div
-            style="background: linear-gradient(to right, #22c55e, #3b82f6); height: 100%; width: {{ [((statements|length) / 7 * 100), 100]|min }}%; transition: width 0.3s;"
+            style="background: linear-gradient(to right, #60a5fa, #2563eb); height: 100%; width: {{ [((statements|length) / 7 * 100), 100]|min }}%; transition: width 0.3s;"
           ></div>
         </div>
       </div>
@@ -222,7 +222,7 @@
           "
         >
           <div
-            style="background: linear-gradient(to right, #22c55e, #3b82f6); height: 100%; width: {{ [(total_votes / 50 * 100), 100]|min }}%; transition: width 0.3s;"
+            style="background: linear-gradient(to right, #60a5fa, #2563eb); height: 100%; width: {{ [(total_votes / 50 * 100), 100]|min }}%; transition: width 0.3s;"
           ></div>
         </div>
       </div>
@@ -308,44 +308,24 @@
         class="mb-4"
         style="background: #f8f9fa; padding: 16px; border-radius: 8px"
       >
-        <div class="vote-buttons-grid" data-statement-id="{{ statement.id }}" data-quick-response-url="{{ url_for('statements.quick_response', statement_id=statement.id) }}">
+        <div class="vote-buttons-grid" role="group" aria-label="Vote options for this statement" data-statement-id="{{ statement.id }}" data-quick-response-url="{{ url_for('statements.quick_response', statement_id=statement.id) }}">
           <!-- Agree Button -->
           <button
             type="button"
             onclick="voteOnStatement({{ statement.id }}, 1)"
             class="vote-btn vote-btn-agree"
             data-vote="1"
+            aria-label="Agree with this statement"
           >
             <span class="vote-loading">
-              <svg
-                style="
-                  animation: spin 1s linear infinite;
-                  height: 20px;
-                  width: 20px;
-                "
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  style="opacity: 0.25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  style="opacity: 0.75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
+              <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
+                <circle style="opacity: 0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path style="opacity: 0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
             <span class="vote-content">
-              <div class="vote-label">&#10003; AGREE</div>
-              <div class="vote-count" data-count-type="agree">
-                {{ statement.vote_count_agree }}
-              </div>
+              <div class="vote-label">&#10003; Agree</div>
+              <div class="vote-count" data-count-type="agree">{{ statement.vote_count_agree }}</div>
             </span>
           </button>
 
@@ -355,37 +335,17 @@
             onclick="voteOnStatement({{ statement.id }}, -1)"
             class="vote-btn vote-btn-disagree"
             data-vote="-1"
+            aria-label="Disagree with this statement"
           >
             <span class="vote-loading">
-              <svg
-                style="
-                  animation: spin 1s linear infinite;
-                  height: 20px;
-                  width: 20px;
-                "
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  style="opacity: 0.25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  style="opacity: 0.75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
+              <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
+                <circle style="opacity: 0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path style="opacity: 0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
             <span class="vote-content">
-              <div class="vote-label">&#10007; DISAGREE</div>
-              <div class="vote-count" data-count-type="disagree">
-                {{ statement.vote_count_disagree }}
-              </div>
+              <div class="vote-label">&#10007; Disagree</div>
+              <div class="vote-count" data-count-type="disagree">{{ statement.vote_count_disagree }}</div>
             </span>
           </button>
 
@@ -395,37 +355,17 @@
             onclick="voteOnStatement({{ statement.id }}, 0)"
             class="vote-btn vote-btn-unsure"
             data-vote="0"
+            aria-label="Unsure about this statement"
           >
             <span class="vote-loading">
-              <svg
-                style="
-                  animation: spin 1s linear infinite;
-                  height: 20px;
-                  width: 20px;
-                "
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  style="opacity: 0.25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  stroke-width="4"
-                ></circle>
-                <path
-                  style="opacity: 0.75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
+              <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
+                <circle style="opacity: 0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path style="opacity: 0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </span>
             <span class="vote-content">
-              <div class="vote-label">? UNSURE</div>
-              <div class="vote-count" data-count-type="unsure">
-                {{ statement.vote_count_unsure }}
-              </div>
+              <div class="vote-label">? Unsure</div>
+              <div class="vote-count" data-count-type="unsure">{{ statement.vote_count_unsure }}</div>
             </span>
           </button>
         </div>
@@ -616,61 +556,12 @@
     animation: fadeIn 0.3s ease-out;
   }
 
-  /* Vote button styles - using !important to override any conflicting styles */
-  .vote-btn-agree {
-    background-color: #22c55e !important;
-    color: white !important;
-    padding: 16px 12px !important;
-    min-height: 80px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: none !important;
-    border-radius: 8px !important;
-    cursor: pointer !important;
-    font-weight: bold !important;
-    transition: all 0.2s !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    appearance: none !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
+  /* Vote button styles — canonical colors: Blue/Red/Gray (WCAG AA compliant)
+     Matches input.css global styles; inline here to ensure specificity in this partial */
 
-  .vote-btn-agree:hover,
-  .vote-btn-agree:active {
-    background-color: #16a34a !important;
-  }
-
-  .vote-btn-disagree {
-    background-color: #ef4444 !important;
-    color: white !important;
-    padding: 16px 12px !important;
-    min-height: 80px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: none !important;
-    border-radius: 8px !important;
-    cursor: pointer !important;
-    font-weight: bold !important;
-    transition: all 0.2s !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    appearance: none !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .vote-btn-disagree:hover,
-  .vote-btn-disagree:active {
-    background-color: #dc2626 !important;
-  }
-
+  .vote-btn-agree,
+  .vote-btn-disagree,
   .vote-btn-unsure {
-    background-color: #6b7280 !important;
     color: white !important;
     padding: 16px 12px !important;
     min-height: 80px !important;
@@ -682,7 +573,7 @@
     border-radius: 8px !important;
     cursor: pointer !important;
     font-weight: bold !important;
-    transition: all 0.2s !important;
+    transition: background-color 0.15s, transform 0.1s !important;
     -webkit-appearance: none !important;
     -moz-appearance: none !important;
     appearance: none !important;
@@ -690,9 +581,40 @@
     box-sizing: border-box !important;
   }
 
-  .vote-btn-unsure:hover,
-  .vote-btn-unsure:active {
-    background-color: #4b5563 !important;
+  .vote-btn-agree { background-color: #2563eb !important; }
+  .vote-btn-agree:hover:not(:disabled),
+  .vote-btn-agree:active { background-color: #1d4ed8 !important; }
+
+  .vote-btn-disagree { background-color: #dc2626 !important; }
+  .vote-btn-disagree:hover:not(:disabled),
+  .vote-btn-disagree:active { background-color: #b91c1c !important; }
+
+  .vote-btn-unsure { background-color: #6b7280 !important; }
+  .vote-btn-unsure:hover:not(:disabled),
+  .vote-btn-unsure:active { background-color: #4b5563 !important; }
+
+  /* Focus-visible for keyboard accessibility */
+  .vote-btn-agree:focus-visible,
+  .vote-btn-disagree:focus-visible,
+  .vote-btn-unsure:focus-visible {
+    outline: 3px solid #2563eb !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Hover scale */
+  .vote-btn-agree:hover:not(:disabled),
+  .vote-btn-disagree:hover:not(:disabled),
+  .vote-btn-unsure:hover:not(:disabled) {
+    transform: scale(1.02) !important;
+  }
+
+  /* Disabled state */
+  .vote-btn-agree:disabled,
+  .vote-btn-disagree:disabled,
+  .vote-btn-unsure:disabled {
+    opacity: 0.7 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
   }
 
   .vote-buttons-grid {
@@ -702,9 +624,7 @@
   }
 
   @media (max-width: 480px) {
-    .vote-buttons-grid {
-      gap: 8px !important;
-    }
+    .vote-buttons-grid { gap: 8px !important; }
 
     .vote-btn-agree,
     .vote-btn-disagree,
@@ -713,13 +633,14 @@
       min-height: 70px !important;
     }
 
-    .vote-label {
-      font-size: 10px !important;
-    }
+    .vote-label { font-size: 10px !important; }
+    .vote-count { font-size: 24px !important; }
+  }
 
-    .vote-count {
-      font-size: 24px !important;
-    }
+  @media (prefers-reduced-motion: reduce) {
+    .vote-btn-agree,
+    .vote-btn-disagree,
+    .vote-btn-unsure { transition: none !important; }
   }
 
   .vote-label {
@@ -735,9 +656,7 @@
     text-align: center;
   }
 
-  .vote-loading {
-    display: none;
-  }
+  .vote-loading { display: none; }
 
   .vote-loading.is-loading {
     display: flex !important;
@@ -974,11 +893,11 @@
               <div style="space-y: 8px;">
                   <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
                       <span style="font-weight: 600;">1</span>
-                      <span style="color: #22c55e;">Vote Agree</span>
+                      <span style="color: #2563eb;">Vote Agree</span>
                   </div>
                   <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
                       <span style="font-weight: 600;">2</span>
-                      <span style="color: #ef4444;">Vote Disagree</span>
+                      <span style="color: #dc2626;">Vote Disagree</span>
                   </div>
                   <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
                       <span style="font-weight: 600;">3</span>
