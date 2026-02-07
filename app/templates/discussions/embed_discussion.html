@@ -168,8 +168,14 @@
     /* Vote buttons grid */
     .vote-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr;
       gap: 8px;
+    }
+
+    @media (min-width: 640px) {
+      .vote-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
 
     .vote-btn {

@@ -530,17 +530,8 @@
 </div>
 {% endif %}
 
-<!-- Loading Spinner Animation and Vote Button Styles -->
+<!-- Animation styles (vote button styles loaded from output.css via input.css @layer) -->
 <style>
-  @keyframes spin {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-
   @keyframes fadeIn {
     from {
       opacity: 0;
@@ -556,118 +547,10 @@
     animation: fadeIn 0.3s ease-out;
   }
 
-  /* Vote button styles — canonical colors: Blue/Red/Gray (WCAG AA compliant)
-     Matches input.css global styles; inline here to ensure specificity in this partial */
-
-  .vote-btn-agree,
-  .vote-btn-disagree,
-  .vote-btn-unsure {
-    color: white !important;
-    padding: 16px 12px !important;
-    min-height: 80px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: none !important;
-    border-radius: 8px !important;
-    cursor: pointer !important;
-    font-weight: bold !important;
-    transition: background-color 0.15s, transform 0.1s !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    appearance: none !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  .vote-btn-agree { background-color: #2563eb !important; }
-  .vote-btn-agree:hover:not(:disabled),
-  .vote-btn-agree:active { background-color: #1d4ed8 !important; }
-
-  .vote-btn-disagree { background-color: #dc2626 !important; }
-  .vote-btn-disagree:hover:not(:disabled),
-  .vote-btn-disagree:active { background-color: #b91c1c !important; }
-
-  .vote-btn-unsure { background-color: #6b7280 !important; }
-  .vote-btn-unsure:hover:not(:disabled),
-  .vote-btn-unsure:active { background-color: #4b5563 !important; }
-
-  /* Focus-visible for keyboard accessibility */
-  .vote-btn-agree:focus-visible,
-  .vote-btn-disagree:focus-visible,
-  .vote-btn-unsure:focus-visible {
-    outline: 3px solid #2563eb !important;
-    outline-offset: 2px !important;
-  }
-
-  /* Hover scale */
-  .vote-btn-agree:hover:not(:disabled),
-  .vote-btn-disagree:hover:not(:disabled),
-  .vote-btn-unsure:hover:not(:disabled) {
-    transform: scale(1.02) !important;
-  }
-
-  /* Disabled state */
-  .vote-btn-agree:disabled,
-  .vote-btn-disagree:disabled,
-  .vote-btn-unsure:disabled {
-    opacity: 0.7 !important;
-    cursor: not-allowed !important;
-    transform: none !important;
-  }
-
-  .vote-buttons-grid {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 12px !important;
-  }
-
-  @media (max-width: 480px) {
-    .vote-buttons-grid { gap: 8px !important; }
-
-    .vote-btn-agree,
-    .vote-btn-disagree,
-    .vote-btn-unsure {
-      padding: 12px 8px !important;
-      min-height: 70px !important;
-    }
-
-    .vote-label { font-size: 12px !important; }
-    .vote-count { font-size: 24px !important; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .vote-btn-agree,
-    .vote-btn-disagree,
-    .vote-btn-unsure { transition: none !important; }
-  }
-
-  .vote-label {
-    font-size: 14px;
-    margin-bottom: 4px;
-    letter-spacing: 0.5px;
-    text-align: center;
-  }
-
-  .vote-count {
-    font-size: 28px;
-    font-weight: bold;
-    text-align: center;
-  }
-
-  .vote-loading { display: none; }
-
   .vote-loading.is-loading {
     display: flex !important;
     align-items: center;
     justify-content: center;
-  }
-
-  .vote-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
   }
 </style>
 

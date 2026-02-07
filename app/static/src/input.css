@@ -2,152 +2,115 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ==========================================================================
-   Vote Button Styles — Canonical Design System
-   Colors: Agree=#2563eb (blue-600), Disagree=#dc2626 (red-600), Unsure=#6b7280 (gray-500)
-   All pass WCAG AA contrast with white text (6.2:1, 6.6:1, 4.6:1 respectively)
-   ========================================================================== */
+@layer components {
+    /* ==========================================================================
+       Vote Button Styles — Canonical Design System
+       Colors: Agree=#2563eb (blue-600), Disagree=#dc2626 (red-600), Unsure=#6b7280 (gray-500)
+       All pass WCAG AA contrast with white text (6.2:1, 6.6:1, 4.6:1 respectively)
+       ========================================================================== */
 
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .vote-buttons-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    @screen sm {
+        .vote-buttons-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+    }
+
+    .vote-btn-agree,
+    .vote-btn-disagree,
+    .vote-btn-unsure {
+        @apply text-white font-bold rounded-lg cursor-pointer w-full;
+        padding: 16px 12px;
+        min-height: 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: background-color 0.15s, transform 0.1s;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        box-sizing: border-box;
+    }
+
+    .vote-btn-agree {
+        @apply bg-blue-600;
+    }
+    .vote-btn-agree:hover:not(:disabled),
+    .vote-btn-agree:active {
+        @apply bg-blue-700;
+    }
+
+    .vote-btn-disagree {
+        @apply bg-red-600;
+    }
+    .vote-btn-disagree:hover:not(:disabled),
+    .vote-btn-disagree:active {
+        @apply bg-red-700;
+    }
+
+    .vote-btn-unsure {
+        @apply bg-gray-500;
+    }
+    .vote-btn-unsure:hover:not(:disabled),
+    .vote-btn-unsure:active {
+        @apply bg-gray-600;
+    }
+
+    .vote-btn-agree:focus-visible,
+    .vote-btn-disagree:focus-visible,
+    .vote-btn-unsure:focus-visible {
+        @apply outline-none ring-2 ring-offset-2 ring-blue-500;
+    }
+
+    .vote-btn-agree:hover:not(:disabled),
+    .vote-btn-disagree:hover:not(:disabled),
+    .vote-btn-unsure:hover:not(:disabled) {
+        transform: scale(1.02);
+    }
+
+    .vote-btn-agree:disabled,
+    .vote-btn-disagree:disabled,
+    .vote-btn-unsure:disabled {
+        @apply opacity-70 cursor-not-allowed;
+        transform: none;
+    }
+
+    .vote-label {
+        @apply text-sm sm:text-base tracking-wide text-center;
+        margin-bottom: 4px;
+    }
+
+    .vote-count {
+        @apply text-2xl sm:text-3xl font-bold text-center;
+    }
+
+    .vote-loading {
+        display: none;
+    }
+
+    .vote-content {
+        @apply flex flex-col items-center;
+    }
+
 }
 
-/* Grid layout for vote buttons with counts (discussions, embeds, statement pages) */
-.vote-buttons-grid {
-    display: grid !important;
-    grid-template-columns: repeat(3, 1fr) !important;
-    gap: 12px !important;
-}
-
-/* Shared base properties — DRY via comma-separated selectors */
-.vote-btn-agree,
-.vote-btn-disagree,
-.vote-btn-unsure {
-    color: white !important;
-    padding: 16px 12px !important;
-    min-height: 80px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
-    border: none !important;
-    border-radius: 8px !important;
-    cursor: pointer !important;
-    font-weight: bold !important;
-    transition: background-color 0.15s, transform 0.1s !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    appearance: none !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-}
-
-/* Focus-visible for keyboard accessibility */
-.vote-btn-agree:focus-visible,
-.vote-btn-disagree:focus-visible,
-.vote-btn-unsure:focus-visible {
-    outline: 3px solid #2563eb !important;
-    outline-offset: 2px !important;
-}
-
-/* Hover scale for interactive feel */
-.vote-btn-agree:hover:not(:disabled),
-.vote-btn-disagree:hover:not(:disabled),
-.vote-btn-unsure:hover:not(:disabled) {
-    transform: scale(1.02) !important;
-}
-
-/* Disabled state */
-.vote-btn-agree:disabled,
-.vote-btn-disagree:disabled,
-.vote-btn-unsure:disabled {
-    opacity: 0.7 !important;
-    cursor: not-allowed !important;
-    transform: none !important;
-}
-
-/* Individual button colors */
-.vote-btn-agree {
-    background-color: #2563eb !important;
-}
-
-.vote-btn-agree:hover:not(:disabled),
-.vote-btn-agree:active {
-    background-color: #1d4ed8 !important;
-}
-
-.vote-btn-disagree {
-    background-color: #dc2626 !important;
-}
-
-.vote-btn-disagree:hover:not(:disabled),
-.vote-btn-disagree:active {
-    background-color: #b91c1c !important;
-}
-
-.vote-btn-unsure {
-    background-color: #6b7280 !important;
-}
-
-.vote-btn-unsure:hover:not(:disabled),
-.vote-btn-unsure:active {
-    background-color: #4b5563 !important;
-}
-
-/* Vote label (text above count) */
-.vote-label {
-    font-size: 14px;
-    margin-bottom: 4px;
-    letter-spacing: 0.5px;
-    text-align: center;
-}
-
-/* Vote count (number below label) */
-.vote-count {
-    font-size: 28px;
-    font-weight: bold;
-    text-align: center;
-}
-
-/* Loading state */
-.vote-loading {
-    display: none;
-}
-
-.vote-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
     .vote-btn-agree,
     .vote-btn-disagree,
     .vote-btn-unsure {
         transition: none !important;
-    }
-}
-
-/* Mobile adjustments for vote-with-counts buttons */
-@media (max-width: 480px) {
-    .vote-buttons-grid {
-        gap: 8px !important;
-    }
-    
-    .vote-btn-agree,
-    .vote-btn-disagree,
-    .vote-btn-unsure {
-        padding: 12px 8px !important;
-        min-height: 70px !important;
-    }
-    
-    .vote-label {
-        font-size: 12px !important;
-    }
-    
-    .vote-count {
-        font-size: 24px !important;
     }
 }
