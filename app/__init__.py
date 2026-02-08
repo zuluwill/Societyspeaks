@@ -208,43 +208,39 @@ def create_app():
         app.config['SESSION_TYPE'] = 'filesystem'
         sess.init_app(app)
 
-    # Initialize cache with Redis URL instead of client to avoid connection issues
+    # Initialize cache — set config on app.config so flask-caching reads it reliably
     try:
         redis_url = os.getenv('REDIS_URL')
         if redis_url and redis_url.strip():
             try:
-                # Use CACHE_REDIS_URL which is more reliable than CACHE_REDIS_CLIENT
-                cache.init_app(app, config={
-                    'CACHE_TYPE': 'RedisCache',
-                    'CACHE_REDIS_URL': redis_url,  # Use URL instead of client
-                    'CACHE_DEFAULT_TIMEOUT': 300,
-                    'CACHE_THRESHOLD': 500,
-                    'CACHE_KEY_PREFIX': 'flask_cache_',
-                    'CACHE_OPTIONS': {
-                        'socket_timeout': 5,
-                        'socket_connect_timeout': 5
-                    }
-                })
-                app.logger.info("Cache initialized with Redis URL")
+                app.config['CACHE_TYPE'] = 'RedisCache'
+                app.config['CACHE_REDIS_URL'] = redis_url
+                app.config['CACHE_DEFAULT_TIMEOUT'] = 300
+                app.config['CACHE_THRESHOLD'] = 500
+                app.config['CACHE_KEY_PREFIX'] = 'flask_cache_'
+                app.config['CACHE_OPTIONS'] = {
+                    'socket_timeout': 5,
+                    'socket_connect_timeout': 5
+                }
+                cache.init_app(app)
+                cache.set('_health_check', '1', timeout=10)
+                app.logger.info("Cache initialized with Redis successfully")
             except Exception as e:
                 app.logger.warning(f"Redis cache initialization failed: {e}, falling back to simple cache")
-                cache.init_app(app, config={'CACHE_TYPE': 'SimpleCache'})
+                app.config['CACHE_TYPE'] = 'SimpleCache'
+                cache.init_app(app)
         else:
-            # Fallback to simple cache if no Redis available
             app.logger.warning("No REDIS_URL available, using simple cache")
-            cache.init_app(app, config={'CACHE_TYPE': 'SimpleCache'})
+            app.config['CACHE_TYPE'] = 'SimpleCache'
+            cache.init_app(app)
     except Exception as e:
         app.logger.error(f"Cache initialization error: {e}")
-        cache.init_app(app, config={'CACHE_TYPE': 'SimpleCache'})
+        app.config['CACHE_TYPE'] = 'SimpleCache'
+        cache.init_app(app)
 
     # Verify Redis-backed cache in production when REDIS_URL is set
     if os.getenv("FLASK_ENV") == "production" and os.getenv('REDIS_URL'):
-        cache_type = None
-        try:
-            cache_type = cache.config.get('CACHE_TYPE')
-        except Exception:
-            cache_type = app.config.get('CACHE_TYPE')
-        if cache_type != 'RedisCache':
+        if app.config.get('CACHE_TYPE') != 'RedisCache':
             app.logger.error("CRITICAL: Cache is not using Redis in production despite REDIS_URL being set.")
 
     db.init_app(app)
