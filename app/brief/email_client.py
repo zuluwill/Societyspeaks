@@ -416,6 +416,8 @@ class BriefEmailScheduler:
         }
 
         for subscriber in subscribers:
+            old_token = subscriber.magic_token
+            old_expires = subscriber.magic_token_expires
             try:
                 subscriber.generate_magic_token(expires_hours=48)
                 db.session.commit()
@@ -424,6 +426,13 @@ class BriefEmailScheduler:
                 if success:
                     results['sent'] += 1
                 else:
+                    try:
+                        subscriber.magic_token = old_token
+                        subscriber.magic_token_expires = old_expires
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+                        logger.warning(f"Could not restore old token for {subscriber.email}")
                     results['failed'] += 1
                     results['errors'].append(f"Failed to send to {subscriber.email}")
 

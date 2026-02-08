@@ -144,9 +144,15 @@ class BriefingEmailClient:
         Returns:
             bool: True if sent successfully
         """
+        old_token = recipient.magic_token
+        old_expires = recipient.magic_token_expires_at
         try:
             # Get briefing for configuration
             briefing = brief_run.briefing
+            
+            # Refresh magic token so email links are always valid
+            recipient.generate_magic_token(expires_hours=48)
+            db.session.commit()
             
             # Determine from_email (custom domain or default)
             from_email = self._get_from_email(briefing)
@@ -187,10 +193,19 @@ class BriefingEmailClient:
                     )
                 except Exception as analytics_error:
                     logger.warning(f"Failed to record analytics for {recipient.email}: {analytics_error}")
+            else:
+                try:
+                    recipient.magic_token = old_token
+                    recipient.magic_token_expires_at = old_expires
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+                    logger.warning(f"Could not restore old token for {recipient.email}")
             
             return success
             
         except Exception as e:
+            db.session.rollback()
             logger.error(f"Failed to send BriefRun {brief_run.id} to {recipient.email}: {e}", exc_info=True)
             return False
     
@@ -748,6 +763,7 @@ class BriefingEmailClient:
 
             for recipient in claimed_recipients:
                 try:
+                    recipient.generate_magic_token(expires_hours=48)
                     html_content = self._render_brief_run_email(brief_run, recipient, briefing)
                     unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.magic_token or ''}"
 
@@ -771,6 +787,19 @@ class BriefingEmailClient:
                         reason=f"Error preparing email: {str(e)}"
                     )
                     total_failed += 1
+
+            try:
+                db.session.commit()
+            except Exception as e:
+                logger.error(f"Failed to persist refreshed magic tokens for batch: {e}")
+                db.session.rollback()
+                total_failed += len(batch_emails)
+                for recipient in email_to_recipient:
+                    self._mark_recipient_failed(
+                        brief_run.id, recipient.id,
+                        reason="Failed to persist refreshed tokens"
+                    )
+                continue
 
             if batch_emails:
                 try:
