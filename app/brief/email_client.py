@@ -417,6 +417,9 @@ class BriefEmailScheduler:
 
         for subscriber in subscribers:
             try:
+                subscriber.generate_magic_token(expires_hours=48)
+                db.session.commit()
+
                 success = self.client.send_brief(subscriber, brief)
                 if success:
                     results['sent'] += 1
@@ -425,6 +428,7 @@ class BriefEmailScheduler:
                     results['errors'].append(f"Failed to send to {subscriber.email}")
 
             except Exception as e:
+                db.session.rollback()
                 results['failed'] += 1
                 error_msg = f"Error sending to {subscriber.email}: {str(e)}"
                 results['errors'].append(error_msg)
