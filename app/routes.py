@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for, abort, send_file, make_response
+from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for, abort, send_file, make_response, send_from_directory
 from flask_login import login_required, current_user
 from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestion, DailyBrief
 from app import db
@@ -122,6 +122,16 @@ def _serve_object_storage_asset(filename):
     )
     response.headers['Cache-Control'] = 'public, max-age=3600'
     return response
+
+
+@main_bp.route('/favicon.ico')
+def favicon():
+    """Serve favicon from static files."""
+    return send_from_directory(
+        os.path.join(current_app.root_path, 'static'),
+        'favicon.svg',
+        mimetype='image/svg+xml'
+    )
 
 
 @main_bp.route('/assets/<path:filename>')
