@@ -129,8 +129,8 @@ def favicon():
     """Serve favicon from static files."""
     return send_from_directory(
         os.path.join(current_app.root_path, 'static'),
-        'favicon.svg',
-        mimetype='image/svg+xml'
+        'favicon.png',
+        mimetype='image/png'
     )
 
 
