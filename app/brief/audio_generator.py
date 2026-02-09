@@ -370,7 +370,10 @@ class AudioGenerator:
                         )
 
                         if not audio_path:
-                            logger.error(f"Failed to generate audio for item {item_id}")
+                            logger.warning(
+                                f"Failed to generate audio for item {item_id} (XTTS returned None; "
+                                "check logs for 'XTTS audio generation failed' for details)"
+                            )
                             failed += 1
                             job = AudioGenerationJob.query.get(job_id)
                             job.completed_items = completed

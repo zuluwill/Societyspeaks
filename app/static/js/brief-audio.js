@@ -134,7 +134,18 @@
             });
             
             const data = await response.json();
-            
+
+            // Feature disabled (410 Gone)
+            if (response.status === 410 || data.code === 'AUDIO_DISABLED') {
+                if (window.showInfo) {
+                    window.showInfo(data.error || 'Audio generation is disabled.');
+                }
+                button.disabled = false;
+                if (span) span.textContent = 'Generate All Audio';
+                if (statusDiv) statusDiv.classList.add('hidden');
+                return;
+            }
+
             if (data.success) {
                 if (window.showInfo) {
                     window.showInfo('Audio generation started. This may take 15-20 minutes.');
@@ -191,7 +202,18 @@
             });
             
             const data = await response.json();
-            
+
+            // Feature disabled (410 Gone)
+            if (response.status === 410 || data.code === 'AUDIO_DISABLED') {
+                if (window.showInfo) {
+                    window.showInfo(data.error || 'Audio generation is disabled.');
+                }
+                button.disabled = false;
+                if (span) span.textContent = 'Generate All Audio';
+                if (statusDiv) statusDiv.classList.add('hidden');
+                return;
+            }
+
             if (data.success) {
                 if (window.showInfo) {
                     window.showInfo('Audio generation started. This may take 15-20 minutes.');

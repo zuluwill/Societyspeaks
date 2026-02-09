@@ -83,30 +83,48 @@ def create_app():
     # Check for production environment and initialize Sentry only in production
     if os.getenv("FLASK_ENV") == "production":
         def _sentry_before_send(event, hint):
-            """Drop known-harmless or expected errors (shutdown, migration heads)."""
+            """Drop known-harmless or expected errors (shutdown, migration heads, scanners, transient).
+            PendingRollbackError: dropped after fixing scheduler session cleanup; may also drop
+            non-scheduler occurrences (acceptable to reduce noise; fix session handling if seen elsewhere).
+            """
             def drop_if(msg, *phrases):
                 if not msg:
                     return False
                 return any(p in msg for p in phrases)
 
+            msg = ""
             if "log_record" in hint:
                 record = hint["log_record"]
                 msg = (record.getMessage() or "") if hasattr(record, "getMessage") else str(record.msg or "")
                 if drop_if(msg, "cannot schedule new futures after shutdown", "multiple head revisions"):
                     return None
+                if drop_if(msg, "Failed to generate audio for item"):
+                    return None
+                if "Error fetching asset" in msg and (".php" in msg or "filemanager" in msg.lower() or "server/php" in msg.lower()):
+                    return None
             exc_info = hint.get("exc_info")
             if exc_info:
                 exc_msg = str(exc_info[1] or "")
-                if exc_info[0] is RuntimeError and drop_if(exc_msg, "cannot schedule new futures after shutdown"):
+                exc_type = exc_info[0]
+                if exc_type is RuntimeError and drop_if(exc_msg, "cannot schedule new futures after shutdown"):
                     return None
                 if drop_if(exc_msg, "multiple head revisions"):
+                    return None
+                if exc_type is OSError and drop_if(exc_msg, "errno 5", "input/output error"):
+                    return None
+                if "PendingRollbackError" in (getattr(exc_type, "__name__", "") or ""):
                     return None
             # Event may have exception in payload (e.g. from logging integration)
             for exc in (event.get("exception") or {}).get("values") or []:
                 val = exc.get("value") or ""
-                if exc.get("type") == "RuntimeError" and drop_if(val, "cannot schedule new futures after shutdown"):
+                typ = exc.get("type") or ""
+                if typ == "RuntimeError" and drop_if(val, "cannot schedule new futures after shutdown"):
                     return None
                 if drop_if(val, "multiple head revisions"):
+                    return None
+                if typ == "OSError" and drop_if(val, "errno 5", "input/output error"):
+                    return None
+                if "PendingRollbackError" in typ:
                     return None
             return event
 

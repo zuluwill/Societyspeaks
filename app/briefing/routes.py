@@ -2057,43 +2057,22 @@ def unsubscribe(briefing_id, token):
 @limiter.limit("5 per minute")
 def generate_brief_run_audio(briefing_id, run_id):
     """
-    Create batch audio generation job for BriefRun.
-    
-    Requires admin authentication - audio generation is resource-intensive.
+    Audio generation has been disabled (feature deprecated as not worthwhile).
     """
-    from app.brief.audio_generator import audio_generator
     from app.models import BriefRun
-    
-    # Require admin authentication
+
     if not current_user.is_authenticated or not current_user.is_admin:
         return jsonify({'error': 'Admin access required for audio generation'}), 403
-    
-    brief_run = BriefRun.query.filter_by(
+
+    BriefRun.query.filter_by(
         id=run_id,
         briefing_id=briefing_id
     ).first_or_404()
-    
-    # Get voice ID from request (optional)
-    data = request.get_json() or {}
-    voice_id = data.get('voice_id')
-    
-    # Create generation job
-    job = audio_generator.create_generation_job(
-        brief_id=None,  # Not used for brief_run
-        voice_id=voice_id,
-        brief_type='brief_run',
-        brief_run_id=brief_run.id
-    )
-    
-    if not job:
-        return jsonify({'error': 'Failed to create audio generation job'}), 500
-    
+
     return jsonify({
-        'success': True,
-        'job_id': job.id,
-        'status': job.status,
-        'total_items': job.total_items
-    })
+        'error': 'Audio generation is disabled',
+        'code': 'AUDIO_DISABLED'
+    }), 410
 
 
 @briefing_bp.route('/<int:briefing_id>/runs/<int:run_id>', methods=['GET', 'POST'])

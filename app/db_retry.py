@@ -19,10 +19,14 @@ T = TypeVar('T')
 
 
 def is_connection_error(exc: Exception) -> bool:
-    """Check if exception is a transient connection error worth retrying."""
+    """Check if exception is a transient connection error worth retrying.
+    Only connection/network-style errors are retried; 404, IntegrityError, etc. are not.
+    """
     error_msg = str(exc).lower()
     connection_indicators = [
         'ssl connection has been closed',
+        'ssl syscall',
+        'eof detected',
         'connection reset',
         'connection refused',
         'connection timed out',

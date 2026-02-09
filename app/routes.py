@@ -90,10 +90,29 @@ def about():
     return render_template('about.html')
 
 
+def _is_scanner_or_bogus_asset_path(filename: str) -> bool:
+    """
+    Return True if the path looks like a vulnerability scanner (e.g. .php probes), not a real asset.
+    Avoids blocking legitimate filenames that contain 'php' (e.g. php-tutorial.pdf).
+    """
+    lower = filename.lower()
+    # Block path segments ending in .php (e.g. m.php, c99.php), not names that merely contain 'php'
+    if lower.endswith('.php') or '/.php' in lower or '.php/' in lower:
+        return True
+    if any(x in lower for x in ('/filemanager/', '/server/php/', '/c99.php', '/fk2e3')):
+        return True
+    if filename.endswith('/') or '//' in filename:
+        return True
+    return False
+
+
 def _serve_object_storage_asset(filename):
     """Serve static assets from object storage to avoid disk I/O."""
     if '..' in filename or filename.startswith('/'):
         current_app.logger.warning(f"Blocked path traversal attempt for asset: {filename}")
+        abort(404)
+
+    if _is_scanner_or_bogus_asset_path(filename):
         abort(404)
 
     storage_path = f"static_assets/{filename}"

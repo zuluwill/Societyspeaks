@@ -149,17 +149,7 @@ class BriefGenerator:
 
         logger.info(f"Brief generated successfully: {brief.title} ({brief.item_count} items)")
 
-        # Queue audio generation immediately so it's ready before publishing
-        # Audio takes ~15-20 min for 4 items, so starting now gives time before 6pm publish
-        try:
-            from app.brief.audio_generator import AudioGenerator
-            audio_gen = AudioGenerator()
-            job = audio_gen.create_generation_job(brief_id=brief.id, voice_id='professional')
-            if job:
-                logger.info(f"Audio generation job {job.id} queued for brief {brief.id}")
-        except Exception as e:
-            logger.error(f"Failed to queue audio generation for brief {brief.id}: {e}")
-            # Non-critical - continue without audio
+        # Audio generation disabled - feature was deprecated as not worthwhile
 
         return brief
 

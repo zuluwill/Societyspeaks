@@ -712,31 +712,13 @@ def methodology():
 @admin_required
 def generate_brief_audio(brief_id):
     """
-    Create batch audio generation job for entire brief.
-
-    Requires admin authentication - audio generation is resource-intensive
-    and should be protected from abuse.
+    Audio generation has been disabled (feature deprecated as not worthwhile).
     """
-    from app.brief.audio_generator import audio_generator
-
-    brief = DailyBrief.query.get_or_404(brief_id)
-
-    # Get voice ID from request (optional)
-    data = request.get_json() or {}
-    voice_id = data.get('voice_id')
-
-    # Create generation job
-    job = audio_generator.create_generation_job(brief_id, voice_id=voice_id)
-
-    if not job:
-        return jsonify({'error': 'Failed to create audio generation job'}), 500
-
+    DailyBrief.query.get_or_404(brief_id)
     return jsonify({
-        'success': True,
-        'job_id': job.id,
-        'status': job.status,
-        'total_items': job.total_items
-    })
+        'error': 'Audio generation is disabled',
+        'code': 'AUDIO_DISABLED'
+    }), 410
 
 
 @brief_bp.route('/api/brief/audio/job/<int:job_id>/status')

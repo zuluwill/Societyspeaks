@@ -7,6 +7,7 @@ Adapted from pol.is patterns with Society Speaks enhancements
 from flask import render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app, session
 from flask_login import login_required, current_user
 from app import db, limiter, csrf
+from app.db_retry import with_db_retry
 from app.discussions.statement_forms import StatementForm, VoteForm, ResponseForm, FlagStatementForm
 from app.models import Discussion, Statement, StatementVote, Response, StatementFlag, DiscussionParticipant
 from app.email_utils import create_discussion_notification
@@ -732,6 +733,7 @@ def vote_statement(statement_id):
 
 
 @statements_bp.route('/statements/<int:statement_id>')
+@with_db_retry()
 def view_statement(statement_id):
     """View a single statement with its responses and votes"""
     statement = Statement.query.get_or_404(statement_id)

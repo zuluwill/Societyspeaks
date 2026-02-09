@@ -1261,37 +1261,10 @@ def init_scheduler(app):
     @scheduler.scheduled_job('interval', seconds=10, id='process_audio_generation_queue')
     def process_audio_generation_queue_job():
         """
-        Process pending audio generation jobs.
-        Runs every 10 seconds to process batch audio generation for briefs.
-
-        Also recovers stale jobs that got stuck in processing state.
-        Optimized interval for Replit's resource constraints.
+        Audio generation is disabled (feature was deprecated as not worthwhile).
+        Job is kept as a no-op so scheduler config is unchanged; no processing runs.
         """
-        with app.app_context():
-            from app.brief.audio_generator import audio_generator
-            from app.models import AudioGenerationJob
-
-            try:
-                from app import db
-                
-                # First, recover any stale jobs (stuck in processing > 30 min)
-                recovered = audio_generator.recover_stale_jobs()
-                if recovered > 0:
-                    logger.info(f"Recovered {recovered} stale audio generation jobs")
-
-                # Get next queued job with row-level locking
-                # This prevents multiple schedulers from picking the same job
-                # Note: process_job() also does locking, so this is defense in depth
-                job = AudioGenerationJob.query.filter_by(status='queued').with_for_update().first()
-
-                if job:
-                    logger.info(f"Processing audio generation job {job.id} for brief {job.brief_id}")
-                    # Release the lock before processing (process_job will acquire its own)
-                    db.session.commit()
-                    audio_generator.process_job(job.id)
-
-            except Exception as e:
-                logger.error(f"Audio generation queue processing failed: {e}", exc_info=True)
+        return
 
     @scheduler.scheduled_job('interval', minutes=15, id='process_briefing_runs')
     def process_briefing_runs_job():
