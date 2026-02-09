@@ -1,13 +1,15 @@
 {% extends "layout.html" %}
 
-{% block title %}Manage Preferences - Daily Brief{% endblock %}
+{% set cadence_label = 'Weekly Brief' if subscriber.cadence == 'weekly' else 'Daily Brief' %}
+
+{% block title %}Manage Preferences - {{ cadence_label }}{% endblock %}
 
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-amber-50 to-white py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-lg mx-auto">
         <div class="text-center mb-8">
             <h1 class="text-2xl font-bold text-gray-900">Brief Preferences</h1>
-            <p class="text-gray-600 mt-2">Manage your Daily Brief subscription</p>
+            <p class="text-gray-600 mt-2">Manage your {{ cadence_label }} subscription</p>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -70,6 +72,45 @@
                     <p class="mt-1 text-sm text-gray-500">We'll send your brief at the right time for your location.</p>
                 </div>
 
+                {# Cadence Selection #}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        How Often?
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-amber-500 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 transition-all">
+                            <input type="radio" name="cadence" value="daily" class="sr-only"
+                                   {% if not subscriber.cadence or subscriber.cadence == 'daily' %}checked{% endif %}
+                                   onchange="document.getElementById('weekly-day-options').classList.add('hidden')">
+                            <span class="text-2xl mb-1">📰</span>
+                            <span class="text-sm font-semibold text-gray-900">Daily</span>
+                            <span class="text-xs text-gray-500 text-center mt-1">Every day</span>
+                        </label>
+                        <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-amber-500 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 transition-all">
+                            <input type="radio" name="cadence" value="weekly" class="sr-only"
+                                   {% if subscriber.cadence == 'weekly' %}checked{% endif %}
+                                   onchange="document.getElementById('weekly-day-options').classList.remove('hidden')">
+                            <span class="text-2xl mb-1">📬</span>
+                            <span class="text-sm font-semibold text-gray-900">Weekly</span>
+                            <span class="text-xs text-gray-500 text-center mt-1">Once a week</span>
+                        </label>
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">Weekly briefs summarise the top stories of the week in a single digest.</p>
+                </div>
+
+                {# Weekly Day Selection (shown when weekly is selected) #}
+                <div id="weekly-day-options" class="{% if not subscriber.cadence or subscriber.cadence != 'weekly' %}hidden{% endif %}">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Weekly Delivery Day
+                    </label>
+                    <select name="preferred_weekly_day" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500">
+                        <option value="6" {% if (subscriber.preferred_weekly_day or 6) == 6 %}selected{% endif %}>Sunday</option>
+                        <option value="0" {% if subscriber.preferred_weekly_day == 0 %}selected{% endif %}>Monday</option>
+                        <option value="5" {% if subscriber.preferred_weekly_day == 5 %}selected{% endif %}>Saturday</option>
+                    </select>
+                </div>
+
                 {# Send Hour Selection #}
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -120,7 +161,7 @@
                 {% if subscriber.status == 'unsubscribed' %}
                 <div class="pt-6 border-t border-gray-200">
                     <div class="bg-blue-50 rounded-lg p-4">
-                        <h3 class="font-medium text-blue-900 mb-2">Miss the Daily Brief?</h3>
+                        <h3 class="font-medium text-blue-900 mb-2">Miss the {{ cadence_label }}?</h3>
                         <p class="text-sm text-blue-700 mb-3">You previously unsubscribed. Click below to start receiving briefs again.</p>
                         <button type="submit" name="resubscribe" value="1"
                                 class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
@@ -135,10 +176,10 @@
             {% if subscriber.status == 'active' %}
             <div class="px-6 pb-6">
                 <div class="pt-6 border-t border-gray-200">
-                    <p class="text-sm text-gray-500 mb-3">Don't want to receive the Daily Brief anymore?</p>
+                    <p class="text-sm text-gray-500 mb-3">Don't want to receive the {{ cadence_label }} anymore?</p>
                     <a href="{{ url_for('brief.unsubscribe', token=token) }}" 
                        class="text-sm text-red-600 hover:text-red-800 hover:underline">
-                        Unsubscribe from Daily Brief
+                        Unsubscribe from {{ cadence_label }}
                     </a>
                 </div>
             </div>

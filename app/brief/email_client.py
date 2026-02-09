@@ -43,12 +43,20 @@ class ResendClient:
 
         self.rate_limiter = RateLimiter(self.RATE_LIMIT)
         # Get email address from env and format with name
-        from_email_addr = os.environ.get('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
+        self._from_email_addr = os.environ.get('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
         # Handle case where env var might already include name (for backwards compat)
-        if '<' in from_email_addr and '>' in from_email_addr:
-            self.from_email = from_email_addr
+        if '<' in self._from_email_addr and '>' in self._from_email_addr:
+            self.from_email = self._from_email_addr
         else:
-            self.from_email = f'Daily Brief <{from_email_addr}>'
+            self.from_email = f'Daily Brief <{self._from_email_addr}>'
+
+    def _from_for_brief(self, brief: DailyBrief = None) -> str:
+        """Return from address with cadence-appropriate display name."""
+        if '<' in self._from_email_addr and '>' in self._from_email_addr:
+            return self._from_email_addr
+        if brief and getattr(brief, 'brief_type', 'daily') == 'weekly':
+            return f'Weekly Brief <{self._from_email_addr}>'
+        return self.from_email
 
     def send_brief(
         self,
@@ -75,7 +83,7 @@ class ResendClient:
 
             # Prepare email data with List-Unsubscribe headers for compliance
             email_data = {
-                'from': self.from_email,
+                'from': self._from_for_brief(brief),
                 'to': [subscriber.email],
                 'subject': brief.title,
                 'html': html_content,
@@ -315,11 +323,12 @@ class ResendClient:
                 is_free_tier=is_free_tier
             )
 
-            # Customize subject based on tier
+            # Customize subject based on tier and cadence
+            cadence_label = 'Weekly Brief' if subscriber.cadence == 'weekly' else 'Daily Brief'
             if is_free_tier:
-                subject = 'Welcome to the Daily Brief - Your Free Access is Active!'
+                subject = f'Welcome to the {cadence_label} - Your Free Access is Active!'
             else:
-                subject = 'Welcome to the Daily Brief - Your Trial Has Started!'
+                subject = f'Welcome to the {cadence_label} - Your Trial Has Started!'
 
             email_data = {
                 'from': self.from_email,
@@ -356,19 +365,34 @@ class BriefEmailScheduler:
     def __init__(self):
         self.client = ResendClient()
 
-    def get_subscribers_for_hour(self, utc_hour: int) -> List[DailyBriefSubscriber]:
+    def get_subscribers_for_hour(self, utc_hour: int, cadence: str = 'daily') -> List[DailyBriefSubscriber]:
         """
         Get subscribers who should receive email at this UTC hour.
 
         Args:
             utc_hour: Current UTC hour (0-23)
+            cadence: 'daily' or 'weekly' — filters by subscriber preference
 
         Returns:
             List of DailyBriefSubscriber instances
         """
-        all_subscribers = DailyBriefSubscriber.query.filter(
+        query = DailyBriefSubscriber.query.filter(
             DailyBriefSubscriber.status == 'active'
-        ).all()
+        )
+
+        # Filter by cadence preference
+        if cadence == 'weekly':
+            query = query.filter(DailyBriefSubscriber.cadence == 'weekly')
+        else:
+            # Daily subscribers: include those without cadence set (backward compat)
+            query = query.filter(
+                db.or_(
+                    DailyBriefSubscriber.cadence == 'daily',
+                    DailyBriefSubscriber.cadence == None
+                )
+            )
+
+        all_subscribers = query.all()
 
         subscribers_to_send = []
 
@@ -376,6 +400,19 @@ class BriefEmailScheduler:
             # Check eligibility AND duplicate prevention
             if not subscriber.can_receive_brief():
                 continue
+
+            # For weekly: also check it's their preferred day
+            if cadence == 'weekly':
+                now_utc = datetime.utcnow().replace(tzinfo=pytz.utc)
+                try:
+                    local_tz = pytz.timezone(subscriber.timezone)
+                    now_local = now_utc.astimezone(local_tz)
+                    preferred_day = getattr(subscriber, 'preferred_weekly_day', 6) or 6
+                    if now_local.weekday() != preferred_day:
+                        continue
+                except Exception as e:
+                    logger.error(f"Timezone error for {subscriber.email}: {e}")
+                    continue
 
             # Convert subscriber's preferred time to UTC
             try:
@@ -391,7 +428,7 @@ class BriefEmailScheduler:
                 logger.error(f"Timezone error for {subscriber.email}: {e}")
                 continue
 
-        logger.info(f"Found {len(subscribers_to_send)} subscribers for hour {utc_hour}")
+        logger.info(f"Found {len(subscribers_to_send)} {cadence} subscribers for hour {utc_hour}")
         return subscribers_to_send
 
     def send_to_subscribers(
@@ -448,7 +485,7 @@ class BriefEmailScheduler:
 
     def send_todays_brief_hourly(self) -> Optional[dict]:
         """
-        Send the latest brief to subscribers at current UTC hour.
+        Send the latest daily brief to daily subscribers at current UTC hour.
 
         Called every hour by scheduler.
         
@@ -464,38 +501,64 @@ class BriefEmailScheduler:
         current_hour = datetime.utcnow().hour
         today = date.today()
         
-        # Brief is published at 6pm UTC (18:00)
-        # Before that, morning subscribers should get yesterday's brief
         BRIEF_PUBLISH_HOUR = 18
         
         if current_hour < BRIEF_PUBLISH_HOUR:
-            # Morning hours - send yesterday's brief
             brief_date = today - timedelta(days=1)
-            brief = DailyBrief.get_by_date(brief_date)
+            brief = DailyBrief.get_by_date(brief_date, brief_type='daily')
             if not brief:
-                # Fallback to today's if yesterday's doesn't exist
-                brief = DailyBrief.get_today()
+                brief = DailyBrief.get_today(brief_type='daily')
             else:
                 logger.info(f"Morning send: using yesterday's brief ({brief_date})")
         else:
-            # Evening hours - send today's brief
-            brief = DailyBrief.get_today()
+            brief = DailyBrief.get_today(brief_type='daily')
 
         if not brief:
-            logger.info("No published brief available, skipping send")
+            logger.info("No published daily brief available, skipping send")
             return None
 
-        # Get subscribers for this hour
-        current_hour = datetime.utcnow().hour
-        subscribers = self.get_subscribers_for_hour(current_hour)
+        # Get daily subscribers for this hour
+        subscribers = self.get_subscribers_for_hour(current_hour, cadence='daily')
 
         if not subscribers:
-            logger.info(f"No subscribers for hour {current_hour}")
+            logger.info(f"No daily subscribers for hour {current_hour}")
             return {'sent': 0, 'failed': 0, 'errors': []}
 
-        # Send
         results = self.send_to_subscribers(subscribers, brief)
+        return results
 
+    def send_weekly_brief_hourly(self) -> Optional[dict]:
+        """
+        Send the latest weekly brief to weekly subscribers at current UTC hour.
+
+        Called every hour by scheduler. Only delivers on the subscriber's
+        preferred weekly day.
+
+        Returns:
+            dict: Send results, or None if no weekly brief available
+        """
+        from datetime import date, timedelta
+
+        current_hour = datetime.utcnow().hour
+
+        # Find the most recent weekly brief
+        brief = DailyBrief.query.filter(
+            DailyBrief.brief_type == 'weekly',
+            DailyBrief.status.in_(['ready', 'published'])
+        ).order_by(DailyBrief.date.desc()).first()
+
+        if not brief:
+            logger.debug("No published weekly brief available")
+            return None
+
+        # Get weekly subscribers for this hour (also checks preferred_weekly_day)
+        subscribers = self.get_subscribers_for_hour(current_hour, cadence='weekly')
+
+        if not subscribers:
+            return {'sent': 0, 'failed': 0, 'errors': []}
+
+        logger.info(f"Sending weekly brief to {len(subscribers)} subscribers")
+        results = self.send_to_subscribers(subscribers, brief)
         return results
 
 

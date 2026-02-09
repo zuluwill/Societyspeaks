@@ -76,6 +76,9 @@
           font-size: 22px !important;
           line-height: 1.25 !important;
         }
+        .mobile-quick-headline {
+          font-size: 15px !important;
+        }
       }
     </style>
   </head>
@@ -199,7 +202,7 @@
                         padding-bottom: 8px;
                       "
                     >
-                      The Daily Brief
+                      {% if brief.brief_type == 'weekly' %}The Weekly Brief{% else %}The Daily Brief{% endif %}
                     </td>
                   </tr>
                   <tr>
@@ -214,7 +217,7 @@
                         color: #bfdbfe;
                       "
                     >
-                      {{ brief.date.strftime('%A, %d %B %Y') }}
+                      {{ brief.date.strftime('%A, %d %B %Y') }}{% if brief.reading_time %} &middot; ~{{ brief.reading_time }} min read{% endif %}
                     </td>
                   </tr>
                 </table>
@@ -251,16 +254,162 @@
                         font-weight: 500;
                       "
                     >
-                      {{ brief.intro_text }}
+                      {{ brief.intro_text or '' }}
                     </td>
                   </tr>
                 </table>
               </td>
             </tr>
 
-            <!-- Stories -->
-            {% for item in brief.items|sort(attribute='position') %}
+            <!-- Headline Index -->
+            {% set sorted_items = brief.items|sort(attribute='position') %}
+            {% if sorted_items|length > 1 %}
             <tr>
+              <td
+                class="mobile-padding"
+                style="
+                  padding: 24px 32px 20px;
+                  border-bottom: 1px solid #e2e8f0;
+                "
+              >
+                <table
+                  role="presentation"
+                  cellpadding="0"
+                  cellspacing="0"
+                  border="0"
+                  width="100%"
+                >
+                  <tr>
+                    <td
+                      style="
+                        font-family:
+                          -apple-system, BlinkMacSystemFont,
+                          &quot;Segoe UI&quot;, Roboto,
+                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                        font-size: 11px;
+                        font-weight: 700;
+                        letter-spacing: 0.5px;
+                        color: #64748b;
+                        text-transform: uppercase;
+                        padding-bottom: 12px;
+                      "
+                    >
+                      {% if brief.brief_type == 'weekly' %}This Week's Headlines{% else %}Today's Headlines{% endif %}
+                    </td>
+                  </tr>
+                  {% for item in sorted_items %}
+                  <tr>
+                    <td
+                      style="
+                        font-family:
+                          -apple-system, BlinkMacSystemFont,
+                          &quot;Segoe UI&quot;, Roboto,
+                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                        padding-bottom: 8px;
+                      "
+                    >
+                      <a
+                        href="#item-{{ item.id }}"
+                        style="
+                          color: #1e40af;
+                          text-decoration: none;
+                          font-size: 14px;
+                          line-height: 1.5;
+                        "
+                      >
+                        <span style="color: #94a3b8; font-weight: 600; font-size: 13px;">{{ loop.index }}.</span>
+                        {{ item.headline }}
+                        {% if item.is_underreported %}<span style="color: #d97706; font-size: 11px; font-weight: 600;"> UNDER THE RADAR</span>{% endif %}
+                      </a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% if brief.reading_time %}
+                  <tr>
+                    <td
+                      style="
+                        font-family:
+                          -apple-system, BlinkMacSystemFont,
+                          &quot;Segoe UI&quot;, Roboto,
+                          &quot;Helvetica Neue&quot;, Arial, sans-serif;
+                        font-size: 12px;
+                        color: #94a3b8;
+                        padding-top: 8px;
+                      "
+                    >
+                      ~{{ brief.reading_time }} min read
+                    </td>
+                  </tr>
+                  {% endif %}
+                </table>
+              </td>
+            </tr>
+            {% endif %}
+
+            <!-- Stories -->
+            {% set current_section = namespace(key='') %}
+            {% for item in sorted_items %}
+            {# --- Determine depth: sectioned items use their depth, legacy items default to full --- #}
+            {% set depth = (item.effective_depth if item.effective_depth is defined else (item.depth or 'full')) if brief.is_sectioned else 'full' %}
+
+            {# --- Section Headers (sectioned briefs only, from SECTIONS config) --- #}
+            {% if brief.is_sectioned %}
+            {% set item_section = item.section or '_unsectioned' %}
+            {% if item_section != current_section.key and item_section not in ['_unsectioned', 'lead'] %}
+            {% set current_section.key = item_section %}
+            {% set sec_cfg = SECTIONS.get(item_section, {}) %}
+            {% set sec_name = sec_cfg.get('display_name', item_section|replace('_', ' ')|title) %}
+            {% set sec_color = sec_cfg.get('email_color', '#64748b') %}
+            {% set sec_desc = sec_cfg.get('description', '') %}
+            {% if item_section == 'global_roundup' %}{% set sec_name = '🌍 ' ~ sec_name %}{% endif %}
+            {% if item_section == 'underreported' %}{% set sec_name = '📭 ' ~ sec_name %}{% endif %}
+            <tr>
+              <td class="mobile-padding" style="padding: 28px 28px 0; border-top: 3px solid {{ sec_color }};">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: {{ sec_color }}; padding-bottom: 4px;">
+                      {{ sec_name }}
+                    </td>
+                  </tr>
+                  {% if sec_desc %}
+                  <tr>
+                    <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #64748b; padding-bottom: 8px;">
+                      {{ sec_desc }}
+                    </td>
+                  </tr>
+                  {% endif %}
+                </table>
+              </td>
+            </tr>
+            {% elif item_section != current_section.key %}
+            {% set current_section.key = item_section %}
+            {% endif %}
+            {% endif %}{# end is_sectioned section headers #}
+
+            {# --- Quick depth: compact one-line row (sectioned briefs only) --- #}
+            {% if depth == 'quick' %}
+            <tr id="item-{{ item.id }}">
+              <td class="mobile-padding" style="padding: 12px 28px; border-bottom: 1px solid #f1f5f9;">
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td class="mobile-quick-headline" style="font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.4; padding-bottom: 2px;">
+                      {{ item.headline }}
+                    </td>
+                  </tr>
+                  {% if item.quick_summary %}
+                  <tr>
+                    <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #64748b; line-height: 1.5;">
+                      {{ item.quick_summary }}
+                    </td>
+                  </tr>
+                  {% endif %}
+                </table>
+              </td>
+            </tr>
+
+            {% else %}
+            {# --- Standard / Full depth item --- #}
+            <tr id="item-{{ item.id }}">
               <td
                 class="mobile-padding"
                 style="padding: 32px 28px; border-bottom: 1px solid #e2e8f0; {% if item.is_underreported %}background-color: #fef3c7;{% endif %}"
@@ -272,9 +421,8 @@
                   border="0"
                   width="100%"
                 >
-                  <!-- Thematic Section Heading -->
-                  {% if item.trending_topic and
-                  item.trending_topic.primary_topic %}
+                  <!-- Thematic Section Heading (legacy non-sectioned briefs only) -->
+                  {% if not brief.is_sectioned and item.trending_topic and item.trending_topic.primary_topic %}
                   <tr>
                     <td style="padding-bottom: 10px">
                       <table
@@ -577,8 +725,8 @@
                     </td>
                   </tr>
 
-                  <!-- Why This Matters To You -->
-                  {% if item.personal_impact %}
+                  <!-- Why This Matters To You (full depth only) -->
+                  {% if depth == 'full' and item.personal_impact %}
                   <tr>
                     <td style="padding-bottom: 20px">
                       <table
@@ -714,8 +862,8 @@
                   </tr>
                   {% endif %}
 
-                  <!-- Perspectives -->
-                  {% if item.perspectives %}
+                  <!-- Perspectives (full depth only) -->
+                  {% if depth == 'full' and item.perspectives and (item.perspectives.get('left') or item.perspectives.get('center') or item.perspectives.get('right')) %}
                   <tr>
                     <td style="padding-bottom: 20px">
                       <table
@@ -827,8 +975,8 @@
                   </tr>
                   {% endif %}
 
-                  <!-- Market Signal Section -->
-                  {% if item.market_signal %}
+                  <!-- Market Signal Section (full depth only) -->
+                  {% if depth == 'full' and item.market_signal %}
                   <tr>
                     <td style="padding: 20px 0">
                       <table
@@ -966,8 +1114,8 @@
                   </tr>
                   {% endif %}
 
-                  <!-- Blindspot Explanation -->
-                  {% if item.blindspot_explanation %}
+                  <!-- Blindspot Explanation (full depth only) -->
+                  {% if depth == 'full' and item.blindspot_explanation %}
                   <tr>
                     <td style="padding-bottom: 20px">
                       <table
@@ -1035,8 +1183,8 @@
                   </tr>
                   {% endif %}
 
-                  <!-- Original News Sources -->
-                  {% if item.trending_topic and item.trending_topic.articles %}
+                  <!-- Original News Sources (full depth only) -->
+                  {% if depth == 'full' and item.trending_topic and item.trending_topic.articles %}
                   {% set topic_articles = item.trending_topic.articles.all()[:5]
                   %} {% if topic_articles %}
                   <tr>
@@ -1136,8 +1284,8 @@
                   </tr>
                   {% endif %} {% endif %}
 
-                  <!-- Verification Links (if different from source articles) -->
-                  {% if item.verification_links %}
+                  <!-- Verification Links (full depth only) -->
+                  {% if depth == 'full' and item.verification_links %}
                   <tr>
                     <td style="padding-bottom: 16px">
                       <table
@@ -1281,8 +1429,8 @@
                   </tr>
                   {% endif %}
 
-                  <!-- Audio Link -->
-                  {% if item.audio_url %}
+                  <!-- Audio Link (full depth only) -->
+                  {% if depth == 'full' and item.audio_url %}
                   <tr>
                     <td style="padding-top: 16px; padding-bottom: 16px">
                       <table
@@ -1341,8 +1489,8 @@
                   </tr>
                   {% endif %}
 
-                  <!-- CTA Button -->
-                  {% if item.discussion_id %}
+                  <!-- CTA Button (standard and full depth) -->
+                  {% if depth != 'quick' and item.discussion_id %}
                   <tr>
                     <td style="padding-top: 20px">
                       <table
@@ -1386,7 +1534,155 @@
                 </table>
               </td>
             </tr>
-            {% endfor %}
+            {% endif %}{# end depth quick/else #}
+            {% endfor %}{# end items loop #}
+
+            <!-- Week Ahead Section -->
+            {% if brief.week_ahead %}
+            <tr>
+              <td
+                class="mobile-padding"
+                style="
+                  padding: 32px 28px;
+                  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+                  border-bottom: 1px solid #e2e8f0;
+                "
+              >
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td style="padding-bottom: 16px">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td width="40" height="40" align="center" valign="middle"
+                              style="background-color: #7c3aed; border-radius: 50%;">
+                            <span style="font-size: 18px; color: #ffffff;">📅</span>
+                          </td>
+                          <td style="padding-left: 12px">
+                            <p style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">
+                              The Week Ahead
+                            </p>
+                            <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #6d28d9; margin: 4px 0 0 0;">
+                              Key dates and events to watch
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  {% for event in brief.week_ahead %}
+                  <tr>
+                    <td style="padding-bottom: 10px">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                             style="background-color: #ffffff; border-radius: 6px; border: 1px solid #e9d5ff;">
+                        <tr>
+                          <td style="padding: 14px 16px">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                              <tr>
+                                <td width="80" valign="top"
+                                    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; color: #7c3aed; text-transform: uppercase;">
+                                  {{ event.date.split(',')[0] if ',' in event.date else event.date }}
+                                </td>
+                                <td style="padding-left: 12px">
+                                  <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 600; color: #1f2937; margin: 0; line-height: 1.4;">
+                                    {{ event.title }}
+                                  </p>
+                                  {% if event.description %}
+                                  <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #6b7280; margin: 4px 0 0 0; line-height: 1.4;">
+                                    {{ event.description }}
+                                  </p>
+                                  {% endif %}
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </table>
+              </td>
+            </tr>
+            {% endif %}
+
+            <!-- Market Pulse Section -->
+            {% if brief.market_pulse %}
+            <tr>
+              <td
+                class="mobile-padding"
+                style="
+                  padding: 32px 28px;
+                  background-color: #f8fafc;
+                  border-bottom: 1px solid #e2e8f0;
+                "
+              >
+                <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td style="padding-bottom: 16px">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td width="40" height="40" align="center" valign="middle"
+                              style="background-color: #6366f1; border-radius: 50%;">
+                            <span style="font-size: 18px; color: #ffffff;">📊</span>
+                          </td>
+                          <td style="padding-left: 12px">
+                            <p style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">
+                              Market Pulse
+                            </p>
+                            <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #6366f1; margin: 4px 0 0 0;">
+                              What prediction markets are pricing in
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  {% for market in brief.market_pulse %}
+                  <tr>
+                    <td style="padding-bottom: 14px">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+                             style="background-color: #ffffff; border-radius: 6px; border: 1px solid #e0e7ff;">
+                        <tr>
+                          <td style="padding: 16px">
+                            <!-- Market Question -->
+                            <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 500; color: #1e293b; margin: 0 0 12px 0; line-height: 1.4;">
+                              "{{ market.question }}"
+                            </p>
+                            <!-- Probability Bar -->
+                            <div style="background: #e2e8f0; height: 24px; border-radius: 4px; overflow: hidden; margin-bottom: 10px;">
+                              <div style="background: linear-gradient(90deg, #6366f1, #818cf8); height: 100%; width: {{ (market.probability * 100)|round }}%; min-width: 36px; display: flex; align-items: center; justify-content: flex-end;">
+                                <span style="color: white; font-weight: 600; font-size: 13px; padding-right: 6px;">
+                                  {{ (market.probability * 100)|round }}%
+                                </span>
+                              </div>
+                            </div>
+                            <!-- Stats -->
+                            <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; color: #64748b; margin: 0;">
+                              {% if market.change_24h_formatted and market.change_24h_formatted != '—' %}
+                              <span style="{% if market.change_24h > 0 %}color: #16a34a;{% elif market.change_24h < 0 %}color: #dc2626;{% endif %}">
+                                {{ market.change_24h_formatted }}
+                              </span> today &bull;
+                              {% endif %}
+                              ${{ "{:,.0f}".format(market.volume_24h or 0) }} volume &bull;
+                              <a href="{{ market.url }}" style="color: #6366f1; text-decoration: none;">View market &rarr;</a>
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  <tr>
+                    <td align="center" style="padding-top: 4px">
+                      <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #94a3b8; font-style: italic; margin: 0;">
+                        Markets reflect collective expectations, not certainty.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            {% endif %}
 
             <!-- Same Story, Different Lens Section -->
             {% if brief.lens_check %}

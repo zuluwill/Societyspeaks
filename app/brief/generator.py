@@ -3,15 +3,25 @@ Brief Generator
 
 Generates daily briefs from selected topics using LLM.
 Creates concise headlines, bullet summaries, and extracts verification links.
+
+Supports two generation modes:
+1. Legacy flat: generate_brief() — 3-5 items in a flat list (backward compatible)
+2. Sectioned: generate_sectioned_brief() — items grouped by section at variable depth
+
+The sectioned mode is the new default, invoked by generate_daily_brief().
 """
 
 import os
 import logging
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import List, Dict, Optional, Tuple, Any
-from app.models import DailyBrief, BriefItem, TrendingTopic, NewsArticle, db
+from app.models import DailyBrief, BriefItem, TrendingTopic, NewsArticle, UpcomingEvent, db
 from app.brief.coverage_analyzer import CoverageAnalyzer
+from app.brief.sections import (
+    SECTIONS, DEPTH_FULL, DEPTH_STANDARD, DEPTH_QUICK, DEPTH_CONFIG,
+    get_section_for_category, get_topic_display_label,
+)
 from app.trending.scorer import extract_json, get_system_api_key
 import re
 
@@ -183,25 +193,64 @@ class BriefGenerator:
 
     def _generate_intro_text(self, topics: List[TrendingTopic]) -> str:
         """
-        Generate calm, neutral intro text.
+        Generate an LLM-written editorial intro that previews what's in the brief.
 
-        Example:
-        "Today's brief covers 4 stories that matter for sense-making.
-        Not comprehensive news—just what's worth understanding today."
+        Falls back to a generic template if the LLM call fails.
         """
         count = len(topics)
 
-        intros = [
+        if not topics:
+            return "Today's brief is being prepared. Check back shortly for the latest stories that matter."
+
+        # Fallback intros (used if LLM unavailable or fails)
+        fallback_intros = [
             f"Today's brief covers {count} stories that matter for sense-making. Not comprehensive news—just what's worth understanding today.",
             f"{count} stories from today's news, with context for sense-making. Coverage analysis and primary sources included.",
             f"Your evening brief: {count} stories worth understanding. We show which outlets covered each story and link to primary sources.",
             f"{count} topics from today, selected for civic importance and coverage across perspectives. This isn't all the news—it's what matters."
         ]
 
-        # Simple selection based on day
+        if not self.llm_available:
+            import random
+            random.seed(datetime.now().day)
+            return random.choice(fallback_intros)
+
+        # Build headline list for the LLM
+        headlines = []
+        for topic in topics[:8]:  # Cap to avoid overly long prompts
+            headlines.append(f"- {topic.title[:100]}")
+        headline_text = "\n".join(headlines)
+
+        prompt = f"""Write a brief editorial introduction (2-3 sentences, max 60 words) for today's news brief.
+
+The brief covers {count} stories:
+{headline_text}
+
+Guidelines:
+- British English, calm and authoritative tone
+- Reference 1-2 specific themes or stories by name to give a preview
+- End with a phrase that frames why these stories matter together
+- Do NOT use clickbait, exclamation marks, or hype
+- Do NOT start with "Today's brief covers..." — be more editorial
+- Write in second person ("you") sparingly
+
+Return ONLY the intro text, no JSON, no quotes, no label."""
+
+        try:
+            response = self._call_llm(prompt)
+            intro = response.strip().strip('"').strip("'")
+            # Basic validation: must be reasonable length and not empty
+            if intro and 20 < len(intro) < 500:
+                return intro
+            else:
+                logger.warning(f"LLM intro text too short/long ({len(intro)} chars), using fallback")
+        except Exception as e:
+            logger.warning(f"Failed to generate LLM intro text: {e}")
+
+        # Fallback
         import random
-        random.seed(datetime.now().day)  # Same intro all day
-        return random.choice(intros)
+        random.seed(datetime.now().day)
+        return random.choice(fallback_intros)
 
     def _generate_brief_item(
         self,
@@ -964,6 +1013,484 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
         # Fallback CTA
         return "Share your view on this topic"
 
+    # =========================================================================
+    # SECTIONED BRIEF GENERATION (New)
+    # =========================================================================
+
+    def generate_sectioned_brief(
+        self,
+        brief_date: date,
+        topics_by_section: Dict[str, List[Tuple[TrendingTopic, str]]],
+        auto_publish: bool = True
+    ) -> DailyBrief:
+        """
+        Generate a sectioned daily brief with variable depth content.
+
+        This is the new generation path. Topics are pre-selected by section
+        with assigned depth levels from the TopicSelector.
+
+        Args:
+            brief_date: Date of the brief
+            topics_by_section: Dict from TopicSelector.select_topics_by_section()
+            auto_publish: If True, set status to 'ready'
+
+        Returns:
+            DailyBrief instance (saved to database)
+        """
+        if not topics_by_section:
+            raise ValueError("Cannot generate brief with no topics")
+
+        logger.info(f"Generating sectioned brief for {brief_date}")
+
+        # Check/create brief record (same idempotency as legacy)
+        try:
+            existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').with_for_update().first()
+            if existing:
+                if existing.status in ('ready', 'published'):
+                    logger.info(f"Brief for {brief_date} already {existing.status}, skipping")
+                    return existing
+                logger.warning(f"Brief exists for {brief_date} with status '{existing.status}', updating...")
+                brief = existing
+                # Clear old items for regeneration
+                BriefItem.query.filter_by(brief_id=existing.id).delete()
+                db.session.flush()
+            else:
+                brief = DailyBrief(
+                    date=brief_date,
+                    brief_type='daily',
+                    status='draft',
+                    auto_selected=True
+                )
+                db.session.add(brief)
+                db.session.flush()
+        except Exception as e:
+            db.session.rollback()
+            existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').first()
+            if existing:
+                return existing
+            raise e
+
+        # Collect all topics for title generation
+        all_topics = []
+        for section_items in topics_by_section.values():
+            all_topics.extend([t for t, _ in section_items])
+
+        brief.title = self._generate_brief_title(all_topics)
+        brief.intro_text = self._generate_intro_text(all_topics)
+
+        # Generate items section by section
+        position = 1
+        items_created = 0
+
+        for section_key, topic_depth_list in topics_by_section.items():
+            for topic, depth in topic_depth_list:
+                try:
+                    item = self._generate_sectioned_item(
+                        brief, topic, position, section_key, depth
+                    )
+                    db.session.add(item)
+                    position += 1
+                    items_created += 1
+                    logger.info(
+                        f"Generated [{section_key}/{depth}] item {position-1}: {item.headline}"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"Failed to generate {section_key} item for topic {topic.id}: {e}"
+                    )
+                    continue
+
+        # Add underreported "Under the Radar" bonus item
+        if items_created > 0:
+            try:
+                exclude_topics = all_topics
+                underreported_item = self._generate_underreported_item(brief, position, exclude_topics)
+                if underreported_item:
+                    underreported_item.section = 'underreported'
+                    underreported_item.depth = DEPTH_STANDARD
+                    db.session.add(underreported_item)
+                    position += 1
+                    logger.info(f"Generated Under the Radar item: {underreported_item.headline}")
+            except Exception as e:
+                logger.warning(f"Failed to generate underreported item: {e}")
+
+        # Generate "Same Story, Different Lens"
+        try:
+            from app.brief.lens_check import generate_lens_check
+            lens_check_data = generate_lens_check(brief_date)
+            if lens_check_data:
+                brief.lens_check = lens_check_data
+                logger.info(f"Generated lens check for topic: {lens_check_data.get('topic_title', 'unknown')[:50]}")
+        except Exception as e:
+            logger.warning(f"Failed to generate lens check: {e}")
+
+        # Generate "The Week Ahead" section
+        try:
+            week_ahead_data = self._generate_week_ahead(brief_date)
+            if week_ahead_data:
+                brief.week_ahead = week_ahead_data
+                logger.info(f"Generated Week Ahead with {len(week_ahead_data)} events")
+        except Exception as e:
+            logger.warning(f"Failed to generate Week Ahead: {e}")
+
+        # Generate "Market Pulse" section
+        try:
+            market_pulse_data = self._generate_market_pulse(all_topics)
+            if market_pulse_data:
+                brief.market_pulse = market_pulse_data
+                logger.info(f"Generated Market Pulse with {len(market_pulse_data)} markets")
+        except Exception as e:
+            logger.warning(f"Failed to generate Market Pulse: {e}")
+
+        # Finalize
+        brief.status = 'ready' if auto_publish else 'draft'
+        brief.created_at = datetime.utcnow()
+        db.session.commit()
+
+        logger.info(f"Sectioned brief generated: {brief.title} ({items_created} items)")
+        return brief
+
+    def _generate_sectioned_item(
+        self,
+        brief: DailyBrief,
+        topic: TrendingTopic,
+        position: int,
+        section: str,
+        depth: str
+    ) -> BriefItem:
+        """
+        Generate a brief item at the specified depth level.
+
+        - full: headline, 4 bullets, personal impact, so what, perspectives,
+                deeper context, verification links, blindspot, coverage bar
+        - standard: headline, 2 bullets, so what, coverage bar, verification links
+        - quick: headline + one-sentence summary only
+
+        Args:
+            brief: Parent DailyBrief
+            topic: TrendingTopic to generate from
+            position: Overall position in brief
+            section: Section key (lead, politics, economy, etc.)
+            depth: Depth level (full, standard, quick)
+
+        Returns:
+            BriefItem instance (not yet saved)
+        """
+        depth_config = DEPTH_CONFIG.get(depth, DEPTH_CONFIG[DEPTH_FULL])
+
+        # Get articles
+        article_links = topic.articles.all() if hasattr(topic, 'articles') else []
+        articles = [link.article for link in article_links if link.article]
+
+        # Coverage analysis (needed at all depths for data)
+        analyzer = CoverageAnalyzer(topic)
+        coverage_data = analyzer.calculate_distribution()
+
+        # Generate content based on depth
+        if depth == DEPTH_QUICK:
+            llm_content = self._generate_quick_content(topic, articles)
+        elif depth == DEPTH_STANDARD:
+            llm_content = self._generate_standard_content(topic, articles)
+        else:
+            llm_content = self._generate_item_content(topic, articles)
+
+        # Deeper context (full depth only)
+        deeper_context = None
+        if depth_config.get('deeper_context') and depth == DEPTH_FULL:
+            deeper_context = self._generate_deeper_context(topic, articles, llm_content)
+
+        # Verification links (full and standard)
+        verification_links = None
+        if depth_config.get('verification_links'):
+            verification_links = self._extract_verification_links(articles)
+
+        # Sensationalism
+        sensationalism_scores = [a.sensationalism_score for a in articles if a.sensationalism_score is not None]
+        avg_sensationalism = sum(sensationalism_scores) / len(sensationalism_scores) if sensationalism_scores else None
+
+        # Blindspot (full depth only)
+        blindspot_explanation = None
+        if depth_config.get('blindspot') and coverage_data['distribution']:
+            left_pct = coverage_data['distribution'].get('left', 0)
+            right_pct = coverage_data['distribution'].get('right', 0)
+            if left_pct < 0.15 and right_pct > 0.30:
+                blindspot_explanation = analyzer.analyze_coverage_gap('left')
+            elif right_pct < 0.15 and left_pct > 0.30:
+                blindspot_explanation = analyzer.analyze_coverage_gap('right')
+
+        # CTA (full depth only)
+        cta_text = self._generate_cta_text(topic) if depth_config.get('discussion_cta') else None
+
+        item = BriefItem(
+            brief_id=brief.id,
+            position=position,
+            section=section,
+            depth=depth,
+            trending_topic_id=topic.id,
+            headline=llm_content.get('headline', topic.title[:100]),
+            quick_summary=llm_content.get('quick_summary'),
+            summary_bullets=llm_content.get('bullets'),
+            personal_impact=llm_content.get('personal_impact'),
+            so_what=llm_content.get('so_what'),
+            perspectives=llm_content.get('perspectives'),
+            deeper_context=deeper_context,
+            coverage_distribution=coverage_data['distribution'] if depth_config.get('coverage_bar') else None,
+            coverage_imbalance=coverage_data['imbalance_score'] if depth_config.get('coverage_bar') else None,
+            source_count=coverage_data['source_count'],
+            sources_by_leaning=coverage_data['sources_by_leaning'] if depth_config.get('coverage_bar') else None,
+            blindspot_explanation=blindspot_explanation,
+            sensationalism_score=avg_sensationalism,
+            sensationalism_label=analyzer.get_sensationalism_label(avg_sensationalism),
+            verification_links=verification_links,
+            discussion_id=topic.discussion_id,
+            cta_text=cta_text,
+        )
+
+        # Polymarket signal on individual items (full depth only)
+        if depth == DEPTH_FULL:
+            try:
+                from app.polymarket.matcher import market_matcher
+                market_signal = market_matcher.get_market_signal_for_topic(topic.id)
+                if market_signal:
+                    item.market_signal = market_signal
+                    logger.info(f"Attached market signal to topic {topic.id}")
+            except Exception as e:
+                logger.warning(f"Market signal enrichment failed for topic {topic.id}: {e}")
+
+        return item
+
+    def _generate_quick_content(
+        self,
+        topic: TrendingTopic,
+        articles: List[NewsArticle]
+    ) -> Dict[str, Any]:
+        """
+        Generate minimal content for quick-depth items (global roundup).
+
+        Returns headline + one-sentence summary. Minimal LLM cost.
+        """
+        if not self.llm_available:
+            return {
+                'headline': topic.title[:100],
+                'quick_summary': topic.description[:200] if topic.description else None,
+            }
+
+        # Build minimal context
+        article_context = []
+        for article in articles[:3]:
+            summary = article.summary[:200] if article.summary else article.title
+            source_name = article.source.name if article.source else 'Unknown'
+            article_context.append(f"[{source_name}] {article.title}: {summary}")
+
+        article_text = '\n'.join(article_context) if article_context else topic.title
+
+        prompt = f"""Write a concise news headline and one-sentence summary.
+
+TOPIC: {topic.title}
+ARTICLES:
+{article_text}
+
+Return JSON:
+{{
+  "headline": "Active, specific headline (6-10 words)",
+  "quick_summary": "One sentence (max 25 words) with a concrete detail"
+}}
+
+Guidelines: British English, neutral tone, no clickbait, include at least one specific detail."""
+
+        try:
+            response = self._call_llm(prompt)
+            data = extract_json(response)
+            return {
+                'headline': data.get('headline', topic.title[:100]),
+                'quick_summary': data.get('quick_summary'),
+            }
+        except Exception as e:
+            logger.warning(f"Quick content generation failed for topic {topic.id}: {e}")
+            return {
+                'headline': topic.title[:100],
+                'quick_summary': topic.description[:200] if topic.description else None,
+            }
+
+    def _generate_standard_content(
+        self,
+        topic: TrendingTopic,
+        articles: List[NewsArticle]
+    ) -> Dict[str, Any]:
+        """
+        Generate standard-depth content (themed section items).
+
+        Returns headline, 2 bullets, and so-what analysis. No perspectives
+        or personal impact (saves LLM tokens).
+        """
+        if not self.llm_available:
+            return {
+                'headline': topic.title[:100],
+                'bullets': [
+                    topic.description[:150] if topic.description else "Details unavailable",
+                    f"Covered by {len(articles)} sources",
+                ],
+                'so_what': None,
+            }
+
+        # Prepare context (fewer articles than full depth)
+        current_date = datetime.now()
+        article_context = []
+        for article in articles[:5]:
+            summary = article.summary[:250] if article.summary else article.title
+            source_name = article.source.name if article.source else 'Unknown'
+            article_context.append(f"[{source_name}] {article.title}\n   {summary}")
+
+        article_text = '\n'.join(article_context)
+
+        prompt = f"""Generate a news briefing item with headline, 2 key points, and analysis.
+
+TODAY'S DATE: {current_date.strftime('%d %B %Y')}
+
+ARTICLES:
+{article_text}
+
+Return JSON:
+{{
+  "headline": "Active, specific headline (6-10 words)",
+  "bullets": ["Key fact with concrete detail", "Second key point with specific data"],
+  "so_what": "2 sentences: why this matters, with specific impact"
+}}
+
+Guidelines:
+- British English, neutral tone
+- No clickbait, vague language, or em dashes
+- Every claim needs a number, date, or named source
+- So-what should be concrete and actionable"""
+
+        try:
+            response = self._call_llm(prompt)
+            data = extract_json(response)
+
+            if 'headline' not in data or 'bullets' not in data:
+                raise ValueError("Missing headline or bullets")
+
+            data['bullets'] = data['bullets'][:2]  # Cap at 2
+
+            return {
+                'headline': data.get('headline', topic.title[:100]),
+                'bullets': data.get('bullets', []),
+                'so_what': data.get('so_what'),
+            }
+        except Exception as e:
+            logger.warning(f"Standard content generation failed for topic {topic.id}: {e}")
+            return {
+                'headline': topic.title[:100],
+                'bullets': [
+                    topic.description[:150] if topic.description else "Details unavailable",
+                    f"Covered by {len(articles)} sources",
+                ],
+                'so_what': None,
+            }
+
+    def _generate_week_ahead(self, brief_date: date) -> Optional[List[Dict]]:
+        """
+        Generate "The Week Ahead" section from UpcomingEvent records.
+
+        Pulls events from the database for the next 7 days and formats them
+        for the brief. If no events exist, returns None (section omitted).
+
+        Returns:
+            List of event dicts, or None if no events
+        """
+        try:
+            events = UpcomingEvent.get_upcoming(days_ahead=7, limit=5)
+
+            if not events:
+                logger.info("No upcoming events found for Week Ahead section")
+                return None
+
+            week_ahead = []
+            for event in events:
+                week_ahead.append({
+                    'title': event.title,
+                    'date': event.event_date.strftime('%A, %d %B'),
+                    'date_iso': event.event_date.isoformat(),
+                    'description': event.description,
+                    'category': event.category,
+                    'region': event.region,
+                    'importance': event.importance,
+                    'source_url': event.source_url,
+                })
+
+                # Mark as used
+                event.status = 'used'
+
+            return week_ahead
+
+        except Exception as e:
+            logger.warning(f"Week Ahead generation failed: {e}")
+            return None
+
+    def _generate_market_pulse(
+        self,
+        topics: List[TrendingTopic],
+        max_markets: int = 3
+    ) -> Optional[List[Dict]]:
+        """
+        Generate "Market Pulse" section with prediction market data.
+
+        Strategy:
+        1. Try to match markets to today's topics (lower threshold)
+        2. Fall back to trending/interesting markets if no matches
+
+        Returns:
+            List of market signal dicts, or None
+        """
+        try:
+            from app.polymarket.matcher import market_matcher
+            from app.models import PolymarketMarket
+
+            signals = []
+            seen_market_ids = set()
+
+            # Strategy 1: Match to today's topics (with lower threshold)
+            for topic in topics[:8]:
+                if len(signals) >= max_markets:
+                    break
+
+                market = market_matcher.get_best_match_for_topic(topic.id)
+                if market and market.id not in seen_market_ids:
+                    signal = market.to_signal_dict()
+                    signal['matched_topic'] = topic.title[:80]
+                    signals.append(signal)
+                    seen_market_ids.add(market.id)
+                    logger.info(f"Market Pulse: matched market '{market.question[:50]}' to topic '{topic.title[:40]}'")
+
+            # Strategy 2: Fall back to trending markets (high volume, recent movement)
+            if len(signals) < max_markets:
+                trending_markets = PolymarketMarket.query.filter(
+                    PolymarketMarket.is_active == True,
+                    PolymarketMarket.volume_24h >= 5000,  # Meaningful volume
+                    PolymarketMarket.id.notin_(seen_market_ids) if seen_market_ids else True
+                ).order_by(
+                    PolymarketMarket.volume_24h.desc()
+                ).limit(max_markets - len(signals)).all()
+
+                for market in trending_markets:
+                    # Only include markets with interesting movement
+                    if market.change_24h and abs(market.change_24h) >= 0.02:  # 2%+ movement
+                        signal = market.to_signal_dict()
+                        signal['matched_topic'] = None  # Not matched to a specific topic
+                        signals.append(signal)
+                        seen_market_ids.add(market.id)
+                        logger.info(f"Market Pulse (trending): '{market.question[:50]}' (vol=${market.volume_24h:,.0f})")
+
+            if not signals:
+                logger.info("No market signals found for Market Pulse section")
+                return None
+
+            return signals
+
+        except Exception as e:
+            logger.warning(f"Market Pulse generation failed: {e}")
+            return None
+
     def _call_llm(self, prompt: str) -> str:
         """
         Call LLM API (OpenAI or Anthropic).
@@ -1048,12 +1575,17 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
 
 def generate_daily_brief(brief_date: Optional[date] = None, auto_publish: bool = True) -> Optional[DailyBrief]:
     """
-    Convenience function to generate today's brief.
-    
+    Generate today's daily brief using the sectioned format.
+
+    Uses section-based topic selection (lead, politics, economy, society, science,
+    global roundup) with variable depth content generation. Falls back to legacy
+    flat mode if sectioned selection produces no results.
+
     This function is designed to be robust and not crash the scheduler:
     - Returns None if no topics available (not an error)
     - Catches and logs all exceptions
     - Provides detailed logging for debugging
+    - Falls back to legacy mode gracefully
 
     Args:
         brief_date: Date to generate for (default: today)
@@ -1062,59 +1594,51 @@ def generate_daily_brief(brief_date: Optional[date] = None, auto_publish: bool =
     Returns:
         DailyBrief instance, or None if generation fails or no topics available
     """
-    from app.brief.topic_selector import select_topics_for_date, TopicSelector
+    from app.brief.topic_selector import (
+        select_topics_for_date, select_sectioned_topics_for_date, TopicSelector
+    )
 
     if brief_date is None:
         brief_date = date.today()
 
     logger.info(f"Starting daily brief generation for {brief_date}")
 
-    # Select topics with detailed logging
+    # Try sectioned selection first (new mode)
+    try:
+        topics_by_section = select_sectioned_topics_for_date(brief_date)
+    except Exception as e:
+        logger.error(f"Sectioned topic selection failed for {brief_date}: {e}", exc_info=True)
+        topics_by_section = {}
+
+    if topics_by_section:
+        total_topics = sum(len(items) for items in topics_by_section.values())
+        sections = list(topics_by_section.keys())
+        logger.info(f"Sectioned selection: {total_topics} topics across {sections}")
+
+        # Generate sectioned brief
+        try:
+            generator = BriefGenerator()
+            brief = generator.generate_sectioned_brief(brief_date, topics_by_section, auto_publish)
+            logger.info(f"Sectioned brief generated: {brief.title} ({brief.item_count} items)")
+            return brief
+        except Exception as e:
+            logger.error(f"Sectioned brief generation failed: {e}", exc_info=True)
+            logger.info("Falling back to legacy flat brief generation...")
+
+    # Fallback to legacy flat mode
+    logger.info("Using legacy flat topic selection")
     try:
         topics = select_topics_for_date(brief_date, limit=5)
     except Exception as e:
-        logger.error(f"Topic selection failed for {brief_date}: {e}", exc_info=True)
+        logger.error(f"Legacy topic selection failed for {brief_date}: {e}", exc_info=True)
         return None
 
     if not topics:
-        # Log diagnostic info to help debug why no topics
-        try:
-            from app.models import TrendingTopic
-            from datetime import datetime, timedelta
-            
-            cutoff_24h = datetime.utcnow() - timedelta(hours=24)
-            cutoff_48h = datetime.utcnow() - timedelta(hours=48)
-            cutoff_72h = datetime.utcnow() - timedelta(hours=72)
-            
-            published_24h = TrendingTopic.query.filter(
-                TrendingTopic.status == 'published',
-                TrendingTopic.published_at >= cutoff_24h
-            ).count()
-            
-            published_48h = TrendingTopic.query.filter(
-                TrendingTopic.status == 'published',
-                TrendingTopic.published_at >= cutoff_48h
-            ).count()
-            
-            published_72h = TrendingTopic.query.filter(
-                TrendingTopic.status == 'published',
-                TrendingTopic.published_at >= cutoff_72h
-            ).count()
-            
-            total_published = TrendingTopic.query.filter_by(status='published').count()
-            
-            logger.warning(
-                f"No topics available for brief on {brief_date}. "
-                f"Diagnostic: {published_24h} topics in 24h, {published_48h} in 48h, "
-                f"{published_72h} in 72h, {total_published} total published. "
-                f"Check if trending pipeline is running and publishing topics."
-            )
-        except Exception as diag_e:
-            logger.warning(f"No topics available for brief on {brief_date} (diagnostic failed: {diag_e})")
-        
+        # Log diagnostic info
+        _log_topic_diagnostic(brief_date)
         return None
 
-    logger.info(f"Selected {len(topics)} topics for brief generation")
+    logger.info(f"Selected {len(topics)} topics for legacy brief generation")
 
     # Validate selection
     try:
@@ -1126,12 +1650,48 @@ def generate_daily_brief(brief_date: Optional[date] = None, auto_publish: bool =
     except Exception as val_e:
         logger.warning(f"Topic validation failed (continuing anyway): {val_e}")
 
-    # Generate brief
+    # Generate legacy brief
     try:
         generator = BriefGenerator()
         brief = generator.generate_brief(brief_date, topics, auto_publish)
-        logger.info(f"Brief generated successfully: {brief.title} ({brief.item_count} items)")
+        logger.info(f"Legacy brief generated: {brief.title} ({brief.item_count} items)")
         return brief
     except Exception as e:
         logger.error(f"Brief generation failed for {brief_date}: {e}", exc_info=True)
         return None
+
+
+def _log_topic_diagnostic(brief_date: date):
+    """Log diagnostic info when no topics are found."""
+    try:
+        from app.models import TrendingTopic
+
+        cutoff_24h = datetime.utcnow() - timedelta(hours=24)
+        cutoff_48h = datetime.utcnow() - timedelta(hours=48)
+        cutoff_72h = datetime.utcnow() - timedelta(hours=72)
+
+        published_24h = TrendingTopic.query.filter(
+            TrendingTopic.status == 'published',
+            TrendingTopic.published_at >= cutoff_24h
+        ).count()
+
+        published_48h = TrendingTopic.query.filter(
+            TrendingTopic.status == 'published',
+            TrendingTopic.published_at >= cutoff_48h
+        ).count()
+
+        published_72h = TrendingTopic.query.filter(
+            TrendingTopic.status == 'published',
+            TrendingTopic.published_at >= cutoff_72h
+        ).count()
+
+        total_published = TrendingTopic.query.filter_by(status='published').count()
+
+        logger.warning(
+            f"No topics available for brief on {brief_date}. "
+            f"Diagnostic: {published_24h} topics in 24h, {published_48h} in 48h, "
+            f"{published_72h} in 72h, {total_published} total published. "
+            f"Check if trending pipeline is running and publishing topics."
+        )
+    except Exception as diag_e:
+        logger.warning(f"No topics available for brief on {brief_date} (diagnostic failed: {diag_e})")

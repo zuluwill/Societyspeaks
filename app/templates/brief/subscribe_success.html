@@ -1,5 +1,8 @@
 {% extends "layout.html" %}
 
+{% set cadence = cadence|default('daily') %}
+{% set cadence_label = 'Weekly Brief' if cadence == 'weekly' else 'Daily Brief' %}
+
 {% block title %}Subscription Confirmed - Society Speaks{% endblock %}
 
 {% block content %}
@@ -12,7 +15,7 @@
         </div>
         
         <h1 class="text-2xl font-bold text-gray-900 mb-4">You're Subscribed!</h1>
-        <p class="text-gray-600 mb-8">Welcome to the Daily Brief. You'll receive your first email at your preferred time.</p>
+        <p class="text-gray-600 mb-8">Welcome to the {{ cadence_label }}. You'll receive your first email at your preferred time.</p>
         
         <div class="bg-white rounded-xl shadow-md p-6 mb-6">
             <h3 class="font-semibold text-gray-900 mb-3">What happens next?</h3>
@@ -27,7 +30,7 @@
                 </li>
                 <li class="flex items-start">
                     <span class="flex-shrink-0 w-6 h-6 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-xs font-bold mr-3">3</span>
-                    <span>Receive daily briefs at your preferred time</span>
+                    <span>Receive {% if cadence == 'weekly' %}weekly digests every Sunday{% else %}daily briefs{% endif %} at your preferred time</span>
                 </li>
             </ul>
         </div>

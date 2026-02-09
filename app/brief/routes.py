@@ -129,6 +129,8 @@ def _process_subscription(
     email: str,
     timezone: str = 'UTC',
     preferred_hour: int = DEFAULT_SEND_HOUR,
+    cadence: str = 'daily',
+    preferred_weekly_day: int = 6,
     update_preferences_on_reactivate: bool = True,
     set_session: bool = False,
     track_posthog: bool = False,
@@ -143,6 +145,8 @@ def _process_subscription(
         email: Subscriber email address
         timezone: Timezone for email delivery (default UTC)
         preferred_hour: Preferred send hour (default DEFAULT_SEND_HOUR)
+        cadence: 'daily' or 'weekly' (default 'daily')
+        preferred_weekly_day: Day of week for weekly delivery (0=Mon, 6=Sun, default 6)
         update_preferences_on_reactivate: Whether to update tz/hour on reactivation
         set_session: Whether to set session['brief_subscriber_id']
         track_posthog: Whether to track with PostHog
@@ -155,6 +159,14 @@ def _process_subscription(
             - 'message': Human-readable message
             - 'error': Error message (only if status == 'error')
     """
+    # Validate cadence
+    if cadence not in ('daily', 'weekly'):
+        cadence = 'daily'
+
+    # Validate preferred_weekly_day
+    if preferred_weekly_day not in (0, 5, 6):
+        preferred_weekly_day = 6
+
     # Check if already subscribed
     existing = DailyBriefSubscriber.query.filter_by(email=email).first()
 
@@ -171,6 +183,8 @@ def _process_subscription(
             if update_preferences_on_reactivate:
                 existing.timezone = timezone
                 existing.preferred_send_hour = preferred_hour
+                existing.cadence = cadence
+                existing.preferred_weekly_day = preferred_weekly_day
             existing.generate_magic_token()
             existing.grant_free_access()  # Daily brief is free; no trial
             existing.welcome_email_sent_at = None
@@ -202,7 +216,9 @@ def _process_subscription(
             email=email,
             user_id=user.id if user else None,
             timezone=timezone,
-            preferred_send_hour=preferred_hour
+            preferred_send_hour=preferred_hour,
+            cadence=cadence,
+            preferred_weekly_day=preferred_weekly_day
         )
         subscriber.generate_magic_token()
         subscriber.grant_free_access()  # Daily brief is free; no trial
@@ -412,21 +428,92 @@ def reader_today():
     return redirect(url_for('brief.reader_view', date_str=brief.date.strftime('%Y-%m-%d')))
 
 
+@brief_bp.route('/brief/weekly')
+@limiter.limit("60/minute")
+def weekly_latest():
+    """Show the latest weekly brief"""
+    subscriber, is_subscriber = get_subscriber_status()
+
+    # Find the most recent published weekly brief
+    brief = DailyBrief.query.filter_by(
+        brief_type='weekly',
+        status='published'
+    ).order_by(DailyBrief.date.desc()).first()
+
+    if not brief:
+        flash('No weekly brief available yet. Check back on Sunday!', 'info')
+        return redirect(url_for('brief.today'))
+
+    items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
+
+    return render_template(
+        'brief/view.html',
+        brief=brief,
+        items=items,
+        topic_articles_by_topic_id=topic_articles_by_topic_id,
+        subscriber=subscriber,
+        is_subscriber=is_subscriber,
+        is_today=False,
+        show_email_capture=(not is_subscriber),
+        tts_available=is_tts_available()
+    )
+
+
+@brief_bp.route('/brief/weekly/<date_str>')
+@limiter.limit("60/minute")
+def weekly_by_date(date_str):
+    """View weekly brief for a specific week (date is the Sunday/generation date)"""
+    try:
+        brief_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash('Invalid date format. Use YYYY-MM-DD.', 'error')
+        return redirect(url_for('brief.weekly_latest'))
+
+    subscriber, is_subscriber = get_subscriber_status()
+
+    brief = DailyBrief.query.filter_by(
+        date=brief_date,
+        brief_type='weekly',
+        status='published'
+    ).first()
+
+    if not brief:
+        flash(f'No weekly brief available for the week of {brief_date.strftime("%B %d, %Y")}', 'info')
+        return redirect(url_for('brief.weekly_latest'))
+
+    items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
+
+    return render_template(
+        'brief/view.html',
+        brief=brief,
+        items=items,
+        topic_articles_by_topic_id=topic_articles_by_topic_id,
+        subscriber=subscriber,
+        is_subscriber=is_subscriber,
+        is_today=False,
+        show_email_capture=(not is_subscriber),
+        tts_available=is_tts_available()
+    )
+
+
 @brief_bp.route('/brief/archive')
 @limiter.limit("60/minute")
 def archive():
-    """Browse brief archive"""
+    """Browse brief archive — supports ?type=daily|weekly filter"""
     page = request.args.get('page', 1, type=int)
+    brief_type = request.args.get('type', None)  # None = show all, 'daily'/'weekly' = filter
 
     # Check if user is subscriber
     subscriber = None
     if 'brief_subscriber_id' in session:
         subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
 
-    # Get published briefs, newest first
-    pagination = DailyBrief.query.filter_by(
-        status='published'
-    ).order_by(
+    # Build query — filter by type if specified
+    query = DailyBrief.query.filter_by(status='published')
+    if brief_type in ('daily', 'weekly'):
+        query = query.filter_by(brief_type=brief_type)
+
+    pagination = query.order_by(
         DailyBrief.date.desc()
     ).paginate(
         page=page,
@@ -454,7 +541,8 @@ def archive():
         'brief/archive.html',
         briefs=briefs,
         pagination=pagination,
-        subscriber=subscriber
+        subscriber=subscriber,
+        brief_type_filter=brief_type
     )
 
 
@@ -466,6 +554,8 @@ def subscribe():
         email = request.form.get('email', '').strip().lower()
         timezone = request.form.get('timezone', 'UTC')
         preferred_hour = request.form.get('preferred_hour', DEFAULT_SEND_HOUR, type=int)
+        cadence = request.form.get('cadence', 'daily')
+        preferred_weekly_day = request.form.get('preferred_weekly_day', 6, type=int)
 
         # Validate email
         if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
@@ -487,6 +577,8 @@ def subscribe():
             email=email,
             timezone=timezone,
             preferred_hour=preferred_hour,
+            cadence=cadence,
+            preferred_weekly_day=preferred_weekly_day,
             update_preferences_on_reactivate=True,
             set_session=False,
             track_posthog=True
@@ -495,13 +587,13 @@ def subscribe():
         # Handle result
         if result['status'] == 'already_active':
             flash(result['message'], 'info')
-            return redirect(url_for('brief.subscribe_success'))
+            return redirect(url_for('brief.subscribe_success', cadence=cadence))
         elif result['status'] == 'reactivated':
             flash(result['message'], 'success')
-            return redirect(url_for('brief.subscribe_success'))
+            return redirect(url_for('brief.subscribe_success', cadence=cadence))
         elif result['status'] == 'created':
             flash(result['message'], 'success')
-            return redirect(url_for('brief.subscribe_success'))
+            return redirect(url_for('brief.subscribe_success', cadence=cadence))
         else:  # error
             flash(result['message'], 'error')
             return redirect(url_for('brief.subscribe'))
@@ -511,9 +603,13 @@ def subscribe():
 
 
 @brief_bp.route('/brief/subscribe/success')
+@limiter.limit("60 per minute")
 def subscribe_success():
     """Subscription confirmation page"""
-    return render_template('brief/subscribe_success.html')
+    cadence = request.args.get('cadence', 'daily')
+    if cadence not in ('daily', 'weekly'):
+        cadence = 'daily'
+    return render_template('brief/subscribe_success.html', cadence=cadence)
 
 
 @brief_bp.route('/brief/subscribe/inline', methods=['POST'])
@@ -578,6 +674,9 @@ def unsubscribe(token):
         flash('Invalid unsubscribe link.', 'error')
         return redirect(url_for('brief.today'))
 
+    # Track whether they were on daily (to offer weekly as alternative)
+    was_daily = (not subscriber.cadence or subscriber.cadence == 'daily')
+
     # Update database
     subscriber.status = 'unsubscribed'
     subscriber.unsubscribed_at = datetime.utcnow()
@@ -592,6 +691,7 @@ def unsubscribe(token):
                 event='daily_brief_unsubscribed',
                 properties={
                     'email': subscriber.email,
+                    'was_cadence': 'daily' if was_daily else 'weekly',
                 }
             )
             posthog.flush()  # Ensure event is sent immediately
@@ -602,7 +702,55 @@ def unsubscribe(token):
     logger.info(f"Brief unsubscribe: {subscriber.email}")
 
     flash('You have been unsubscribed from the daily brief.', 'success')
-    return render_template('brief/unsubscribed.html', email=subscriber.email)
+    return render_template(
+        'brief/unsubscribed.html',
+        email=subscriber.email,
+        show_weekly_option=was_daily,
+        token=token
+    )
+
+
+@brief_bp.route('/brief/switch-to-weekly/<token>', methods=['POST'])
+@limiter.limit("5 per minute")
+def switch_to_weekly(token):
+    """Switch an unsubscribed daily subscriber to weekly cadence instead"""
+    subscriber = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
+
+    if not subscriber:
+        flash('Invalid link.', 'error')
+        return redirect(url_for('brief.today'))
+
+    # Guard: only allow switching from unsubscribed state
+    if subscriber.status == 'active':
+        flash("You're already subscribed!", 'info')
+        return redirect(url_for('brief.today'))
+
+    if subscriber.status != 'unsubscribed':
+        flash('Invalid request.', 'error')
+        return redirect(url_for('brief.today'))
+
+    # Reactivate with weekly cadence
+    subscriber.status = 'active'
+    subscriber.cadence = 'weekly'
+    subscriber.preferred_weekly_day = 6  # Sunday default
+    subscriber.unsubscribed_at = None
+    db.session.commit()
+
+    try:
+        import posthog
+        if posthog and getattr(posthog, 'project_api_key', None):
+            distinct_id = str(subscriber.user_id) if subscriber.user_id else subscriber.email
+            posthog.capture(
+                distinct_id=distinct_id,
+                event='daily_brief_switched_to_weekly',
+                properties={'email': subscriber.email}
+            )
+    except Exception as e:
+        logger.warning(f"PostHog tracking error: {e}")
+
+    logger.info(f"Brief switched to weekly: {subscriber.email}")
+    flash('You\'ve switched to the Weekly Brief! You\'ll receive a digest every Sunday.', 'success')
+    return redirect(url_for('brief.today'))
 
 
 @brief_bp.route('/brief/m/<token>')
@@ -657,6 +805,23 @@ def manage_preferences(token):
         except Exception:
             subscriber.timezone = 'UTC'
 
+        # Update cadence (daily/weekly)
+        new_cadence = request.form.get('cadence', subscriber.cadence or 'daily')
+        if new_cadence in ('daily', 'weekly'):
+            subscriber.cadence = new_cadence
+
+        # Update weekly day preference (always set a valid default)
+        if subscriber.cadence == 'weekly':
+            new_weekly_day = request.form.get('preferred_weekly_day', '6')
+            try:
+                weekly_day = int(new_weekly_day)
+                if weekly_day in (0, 5, 6):
+                    subscriber.preferred_weekly_day = weekly_day
+                else:
+                    subscriber.preferred_weekly_day = 6  # Default to Sunday
+            except (ValueError, TypeError):
+                subscriber.preferred_weekly_day = 6  # Default to Sunday
+
         # Update send hour
         new_hour = request.form.get('preferred_send_hour', str(DEFAULT_SEND_HOUR))
         try:
@@ -670,7 +835,8 @@ def manage_preferences(token):
         if request.form.get('resubscribe') and subscriber.status == 'unsubscribed':
             subscriber.status = 'active'
             subscriber.unsubscribed_at = None
-            flash('Welcome back! You have been resubscribed to the Daily Brief.', 'success')
+            cadence_label = 'Weekly' if subscriber.cadence == 'weekly' else 'Daily'
+            flash(f'Welcome back! You have been resubscribed to the {cadence_label} Brief.', 'success')
         
         db.session.commit()
         flash('Your preferences have been updated.', 'success')

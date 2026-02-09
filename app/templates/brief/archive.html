@@ -7,18 +7,51 @@
     <div class="max-w-3xl mx-auto">
         <div class="text-center mb-8">
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Brief Archive</h1>
-            <p class="text-gray-600">Browse past daily sense-making briefs</p>
+            <p class="text-gray-600">Browse past sense-making briefs</p>
+        </div>
+
+        {# Type filter tabs #}
+        <div class="flex justify-center mb-6">
+            <div class="inline-flex bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+                <a href="{{ url_for('brief.archive') }}"
+                   class="px-4 py-2 rounded-md text-sm font-medium transition-colors
+                          {% if not brief_type_filter %}bg-amber-100 text-amber-800{% else %}text-gray-600 hover:text-gray-900{% endif %}">
+                    All
+                </a>
+                <a href="{{ url_for('brief.archive', type='daily') }}"
+                   class="px-4 py-2 rounded-md text-sm font-medium transition-colors
+                          {% if brief_type_filter == 'daily' %}bg-amber-100 text-amber-800{% else %}text-gray-600 hover:text-gray-900{% endif %}">
+                    Daily
+                </a>
+                <a href="{{ url_for('brief.archive', type='weekly') }}"
+                   class="px-4 py-2 rounded-md text-sm font-medium transition-colors
+                          {% if brief_type_filter == 'weekly' %}bg-amber-100 text-amber-800{% else %}text-gray-600 hover:text-gray-900{% endif %}">
+                    Weekly
+                </a>
+            </div>
         </div>
 
         {% if briefs %}
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
             <div class="divide-y divide-gray-100">
                 {% for brief in briefs %}
-                <a href="{{ url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d')) }}" 
+                {% if brief.brief_type == 'weekly' %}
+                {% set brief_url = url_for('brief.weekly_by_date', date_str=brief.date.strftime('%Y-%m-%d')) %}
+                {% else %}
+                {% set brief_url = url_for('brief.view_date', date_str=brief.date.strftime('%Y-%m-%d')) %}
+                {% endif %}
+                <a href="{{ brief_url }}" 
                    class="block p-6 hover:bg-gray-50 transition-colors">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 mb-1">{{ brief.date.strftime('%A, %B %d, %Y') }}</p>
+                            <div class="flex items-center gap-2 mb-1">
+                                <p class="text-sm text-gray-500">{{ brief.date.strftime('%A, %B %d, %Y') }}</p>
+                                {% if brief.brief_type == 'weekly' %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700">
+                                    Weekly
+                                </span>
+                                {% endif %}
+                            </div>
                             <h2 class="font-semibold text-gray-900">{{ brief.title }}</h2>
                             <p class="text-sm text-gray-600 mt-1">{{ brief.item_count }} stories</p>
                         </div>
@@ -35,7 +68,7 @@
         <div class="mt-6 flex justify-center">
             <nav class="flex items-center space-x-2">
                 {% if pagination.has_prev %}
-                <a href="{{ url_for('brief.archive', page=pagination.prev_num) }}" 
+                <a href="{{ url_for('brief.archive', page=pagination.prev_num, type=brief_type_filter if brief_type_filter else '') }}" 
                    class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
                     Previous
                 </a>
@@ -46,7 +79,7 @@
                 </span>
                 
                 {% if pagination.has_next %}
-                <a href="{{ url_for('brief.archive', page=pagination.next_num) }}" 
+                <a href="{{ url_for('brief.archive', page=pagination.next_num, type=brief_type_filter if brief_type_filter else '') }}" 
                    class="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
                     Next
                 </a>

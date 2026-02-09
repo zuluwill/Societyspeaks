@@ -14,9 +14,20 @@
     <header class="bg-blue-800 py-10 px-4 sm:px-6 lg:px-8">
         <div class="max-w-3xl mx-auto text-center">
             <p class="text-blue-300 text-xs font-semibold tracking-widest uppercase mb-3">Society Speaks</p>
-            <h1 class="text-white text-3xl sm:text-4xl font-bold mb-3" style="font-family: Georgia, 'Times New Roman', Times, serif;">The Daily Brief</h1>
-            <p class="text-blue-200 text-sm">{{ brief.date.strftime('%A, %d %B %Y') }} Edition</p>
+            <h1 class="text-white text-3xl sm:text-4xl font-bold mb-3" style="font-family: Georgia, 'Times New Roman', Times, serif;">
+                {% if brief.brief_type == 'weekly' %}The Weekly Brief{% else %}The Daily Brief{% endif %}
+            </h1>
+            <p class="text-blue-200 text-sm">
+                {% if brief.brief_type == 'weekly' and brief.week_start_date and brief.week_end_date %}
+                Week of {{ brief.week_start_date.strftime('%d %B') }} – {{ brief.week_end_date.strftime('%d %B %Y') }}
+                {% else %}
+                {{ brief.date.strftime('%A, %d %B %Y') }} Edition
+                {% endif %}
+                {% if brief.reading_time %}<span class="mx-1">&middot;</span> ~{{ brief.reading_time }} min read{% endif %}
+            </p>
+            {% if brief.brief_type != 'weekly' %}
             <p class="text-blue-100 text-xs mt-2">Updated daily at 6pm UTC — today's edition publishes this evening</p>
+            {% endif %}
         </div>
     </header>
 
@@ -78,8 +89,76 @@
         {% endif %}
 
         <div class="space-y-8">
+            {# ============================================================ #}
+            {# SECTIONED LAYOUT (new briefs with section assignments)       #}
+            {# ============================================================ #}
+            {% if brief.is_sectioned %}
+            {% set sections_data = brief.items_by_section %}
+
+            {% for section_key, section_items in sections_data.items() %}
+            {# Section Header — uses centralized SECTIONS config #}
+            {% if section_key != '_unsectioned' and section_key != 'lead' %}
+            {% set sec = SECTIONS.get(section_key, {}) %}
+            <div class="pt-6 pb-2 border-t-2 border-gray-200">
+                <h2 class="text-sm font-bold tracking-widest uppercase {{ sec.get('web_color_class', 'text-slate-500') }}">
+                    {% if section_key == 'global_roundup' %}🌍 {% endif %}{% if section_key == 'underreported' %}📭 {% endif %}{{ sec.get('display_name', section_key|replace('_', ' ')|title) }}
+                </h2>
+                {% if sec.get('description') %}
+                <p class="text-xs text-gray-500 mt-1">{{ sec.description }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {# Quick-hit items (global roundup) — compact layout #}
+            {% if section_key == 'global_roundup' %}
+            <div class="space-y-3">
+                {% for item in section_items %}
+                <article id="item-{{ item.id }}" class="rounded-xl border border-gray-100 bg-white p-4 sm:p-5 shadow-sm">
+                    <div class="flex items-start gap-3">
+                        {% if item.trending_topic and item.trending_topic.geographic_countries %}
+                        <span class="flex-shrink-0 text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                            {{ item.trending_topic.geographic_countries.split(',')[0]|trim }}
+                        </span>
+                        {% endif %}
+                        <div class="flex-1">
+                            <h3 class="font-serif text-lg font-bold text-gray-900 leading-snug">{{ item.headline }}</h3>
+                            {% if item.quick_summary %}
+                            <p class="text-gray-600 text-sm mt-1.5 leading-relaxed">{{ item.quick_summary }}</p>
+                            {% endif %}
+                            {% if item.source_count %}
+                            <span class="text-xs text-gray-400 mt-1 inline-block">{{ item.source_count }} sources</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            {# Standard and full depth items — rendered as article cards #}
+            {% for item in section_items %}
+            <article id="item-{{ item.id }}" class="rounded-2xl shadow-lg border overflow-hidden {% if item.is_underreported %}bg-amber-50 border-amber-300{% else %}bg-white border-gray-100{% endif %}">
+                <div class="p-6 sm:p-8">
+                    {# Lead story label #}
+                    {% if item.trending_topic and item.trending_topic.primary_topic and section_key == 'lead' %}
+                    <div class="mb-3">
+                        <span class="text-xs font-bold tracking-widest uppercase text-blue-800">LEAD STORY</span>
+                    </div>
+                    {% endif %}
+
+                    {# Include shared item content partial #}
+                    {% include "brief/_item_content.html" %}
+                </div>
+            </article>
+            {% endfor %}
+            {% endif %}
+            {% endfor %}{# end sections loop #}
+
+            {% else %}
+            {# ============================================================ #}
+            {# LEGACY FLAT LAYOUT (backward compatible for old briefs)      #}
+            {# ============================================================ #}
             {% for item in items %}
-            <article class="rounded-2xl shadow-lg border overflow-hidden {% if item.is_underreported %}bg-amber-50 border-amber-300{% else %}bg-white border-gray-100{% endif %}">
+            <article id="item-{{ item.id }}" class="rounded-2xl shadow-lg border overflow-hidden {% if item.is_underreported %}bg-amber-50 border-amber-300{% else %}bg-white border-gray-100{% endif %}">
                 <div class="p-6 sm:p-8">
                     <!-- Thematic Section Heading -->
                     {% if item.trending_topic and item.trending_topic.primary_topic %}
@@ -227,7 +306,7 @@
                     </div>
                     {% endif %}
 
-                    {% if item.perspectives %}
+                    {% if item.perspectives and (item.perspectives.get('left') or item.perspectives.get('center') or item.perspectives.get('right')) %}
                     <div class="bg-slate-50 rounded-xl p-5 mb-6">
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">How It's Being Framed</p>
                         <div class="space-y-3">
@@ -469,7 +548,91 @@
                 </div>
             </article>
             {% endfor %}
+            {% endif %}{# end is_sectioned check #}
         </div>
+
+        <!-- Week Ahead Section -->
+        {% if brief.week_ahead %}
+        <div class="rounded-2xl shadow-lg border border-violet-200 overflow-hidden bg-gradient-to-br from-violet-50 to-indigo-50 mt-8">
+            <div class="p-6 sm:p-8">
+                <div class="flex items-center gap-3 mb-5">
+                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-violet-600 text-white text-lg">📅</span>
+                    <div>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">The Week Ahead</h2>
+                        <p class="text-sm text-violet-700">Key dates and events to watch</p>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    {% for event in brief.week_ahead %}
+                    <div class="bg-white rounded-xl p-4 border border-violet-100 flex items-start gap-4">
+                        <div class="flex-shrink-0 text-center min-w-[60px]">
+                            <p class="text-xs font-bold text-violet-600 uppercase">{{ event.date.split(',')[0] if ',' in event.date else event.date }}</p>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-semibold text-gray-900 text-sm">{{ event.title }}</p>
+                            {% if event.description %}
+                            <p class="text-gray-600 text-xs mt-1">{{ event.description }}</p>
+                            {% endif %}
+                            {% if event.source_url %}
+                            <a href="{{ event.source_url }}" target="_blank" rel="noopener" class="text-xs text-violet-600 hover:underline mt-1 inline-block">More info &rarr;</a>
+                            {% endif %}
+                        </div>
+                        {% if event.category %}
+                        <span class="flex-shrink-0 text-xs font-medium text-violet-600 bg-violet-100 px-2 py-0.5 rounded">{{ event.category|title }}</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Market Pulse Section -->
+        {% if brief.market_pulse %}
+        <div class="rounded-2xl shadow-lg border border-indigo-200 overflow-hidden bg-gradient-to-br from-slate-50 to-indigo-50 mt-8">
+            <div class="p-6 sm:p-8">
+                <div class="flex items-center gap-3 mb-5">
+                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-indigo-600 text-white text-lg">📊</span>
+                    <div>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">Market Pulse</h2>
+                        <p class="text-sm text-indigo-700">What prediction markets are pricing in</p>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    {% for market in brief.market_pulse %}
+                    <div class="bg-white rounded-xl p-5 border border-indigo-100">
+                        <p class="text-base font-medium text-slate-800 mb-3">"{{ market.question }}"</p>
+                        <div class="mb-3">
+                            <div class="h-7 bg-slate-200 rounded overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 flex items-center justify-end pr-2"
+                                     style="width: {{ (market.probability * 100)|round }}%; min-width: 50px;">
+                                    <span class="text-white font-semibold text-sm">{{ (market.probability * 100)|round }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 text-sm text-slate-500">
+                            {% if market.change_24h_formatted and market.change_24h_formatted != '—' %}
+                            <span class="{% if market.change_24h > 0 %}text-green-600{% elif market.change_24h < 0 %}text-red-600{% endif %}">
+                                {{ market.change_24h_formatted }} today
+                            </span>
+                            <span>&middot;</span>
+                            {% endif %}
+                            <span>${{ "{:,.0f}".format(market.volume_24h or 0) }} volume</span>
+                            <span>&middot;</span>
+                            <a href="{{ market.url }}" target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-700">View market &rarr;</a>
+                        </div>
+                        {% if market.matched_topic %}
+                        <p class="text-xs text-gray-400 mt-2">Related to: {{ market.matched_topic }}</p>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <p class="text-xs text-gray-400 italic mt-4 text-center">
+                    Markets reflect collective expectations, not certainty. Prices move on new information, rumours, and sentiment.
+                </p>
+            </div>
+        </div>
+        {% endif %}
 
         <!-- Same Story, Different Lens Section -->
         {% if brief.lens_check %}

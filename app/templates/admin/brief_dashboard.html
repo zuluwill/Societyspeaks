@@ -6,7 +6,7 @@
 <div class="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-6xl mx-auto">
         <div class="flex items-center justify-between mb-8">
-            <h1 class="text-2xl font-bold text-gray-900">Daily Brief Admin</h1>
+            <h1 class="text-2xl font-bold text-gray-900">Brief Admin</h1>
             <div class="flex items-center space-x-3">
                 <a href="{{ url_for('brief.admin_analytics') }}" 
                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
@@ -90,6 +90,42 @@
             </div>
         </div>
 
+        {# Cadence breakdown #}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Daily Subscribers</p>
+                    <p class="text-xl font-bold text-gray-900">{{ daily_subscribers }}</p>
+                </div>
+                <span class="text-2xl">📰</span>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Weekly Subscribers</p>
+                    <p class="text-xl font-bold text-gray-900">{{ weekly_subscribers }}</p>
+                </div>
+                <span class="text-2xl">📬</span>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex items-center justify-between">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Latest Weekly Brief</p>
+                    {% if latest_weekly %}
+                    <p class="text-sm font-medium text-gray-900">{{ latest_weekly.date.strftime('%d %b %Y') }}
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium 
+                            {% if latest_weekly.status == 'published' %}bg-green-100 text-green-800
+                            {% elif latest_weekly.status == 'ready' %}bg-blue-100 text-blue-800
+                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {{ latest_weekly.status }}
+                        </span>
+                    </p>
+                    {% else %}
+                    <p class="text-sm text-gray-400">None yet</p>
+                    {% endif %}
+                </div>
+                <span class="text-2xl">📅</span>
+            </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div class="bg-white rounded-xl shadow-md overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200">
@@ -169,6 +205,7 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -180,6 +217,13 @@
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ brief.date.strftime('%Y-%m-%d') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if brief.brief_type == 'weekly' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Weekly</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Daily</span>
+                            {% endif %}
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-900">
                             {{ brief.title[:40] }}...
@@ -203,7 +247,7 @@
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">No briefs yet</td>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">No briefs yet</td>
                     </tr>
                     {% endfor %}
                 </tbody>

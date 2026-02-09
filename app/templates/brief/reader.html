@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ brief.title }} - Society Speaks Daily Brief</title>
+    <title>{{ brief.title }} - Society Speaks {% if brief.brief_type == 'weekly' %}Weekly{% else %}Daily{% endif %} Brief</title>
     <meta name="description" content="{{ (brief.intro_text or '')[:160] }}">
 
     <!-- Open Graph for reader apps -->
@@ -182,9 +182,9 @@
 </head>
 <body>
     <header>
-        <p class="publication">Society Speaks Daily Brief</p>
+        <p class="publication">Society Speaks {% if brief.brief_type == 'weekly' %}Weekly{% else %}Daily{% endif %} Brief</p>
         <h1>{{ brief.title }}</h1>
-        <p class="date">{{ brief.date.strftime('%A, %d %B %Y') }}</p>
+        <p class="date">{{ brief.date.strftime('%A, %d %B %Y') }}{% if brief.reading_time %} &middot; ~{{ brief.reading_time }} min read{% endif %}</p>
     </header>
 
     {% if brief.intro_text %}

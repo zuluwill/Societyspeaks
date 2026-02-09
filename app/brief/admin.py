@@ -68,6 +68,23 @@ def dashboard():
         DailyBriefSubscriber.status == 'active'
     ).count()
 
+    # Cadence breakdown
+    daily_subscribers = DailyBriefSubscriber.query.filter(
+        DailyBriefSubscriber.status == 'active',
+        db.or_(
+            DailyBriefSubscriber.cadence == 'daily',
+            DailyBriefSubscriber.cadence.is_(None)
+        )
+    ).count()
+    weekly_subscribers = DailyBriefSubscriber.query.filter_by(
+        cadence='weekly', status='active'
+    ).count()
+
+    # Latest weekly brief
+    latest_weekly = DailyBrief.query.filter_by(
+        brief_type='weekly'
+    ).order_by(DailyBrief.date.desc()).first()
+
     return render_template(
         'admin/brief_dashboard.html',
         today_brief=today_brief,
@@ -76,7 +93,10 @@ def dashboard():
         total_subscribers=total_subscribers,
         trial_subscribers=trial_subscribers,
         free_subscribers=free_subscribers,
-        paid_subscribers=paid_subscribers
+        paid_subscribers=paid_subscribers,
+        daily_subscribers=daily_subscribers,
+        weekly_subscribers=weekly_subscribers,
+        latest_weekly=latest_weekly
     )
 
 
@@ -285,13 +305,48 @@ def remove_item(item_id):
 @brief_admin_bp.route('/subscribers')
 @admin_required
 def subscribers():
-    """View subscriber list"""
+    """View subscriber list with search, status, and cadence filters."""
     page = request.args.get('page', 1, type=int)
     per_page = 50
 
+    # Search and filter params (follows same pattern as admin.list_users)
+    search_query = request.args.get('q', '').strip()[:255]  # Length limit
+    status_filter = request.args.get('status', '')
+    cadence_filter = request.args.get('cadence', '')
+    tier_filter = request.args.get('tier', '')
+
     from app.models import DailyBriefSubscriber
 
-    pagination = DailyBriefSubscriber.query.order_by(
+    # Build query with filters
+    query = DailyBriefSubscriber.query
+
+    # Search by email (case-insensitive, same pattern as admin users list)
+    if search_query:
+        # Escape SQL LIKE wildcards to prevent unintended matching
+        escaped = search_query.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+        search_term = f'%{escaped}%'
+        query = query.filter(DailyBriefSubscriber.email.ilike(search_term))
+
+    # Filter by status
+    if status_filter:
+        query = query.filter(DailyBriefSubscriber.status == status_filter)
+
+    # Filter by cadence
+    if cadence_filter == 'daily':
+        query = query.filter(
+            db.or_(
+                DailyBriefSubscriber.cadence == 'daily',
+                DailyBriefSubscriber.cadence.is_(None)
+            )
+        )
+    elif cadence_filter == 'weekly':
+        query = query.filter(DailyBriefSubscriber.cadence == 'weekly')
+
+    # Filter by tier
+    if tier_filter:
+        query = query.filter(DailyBriefSubscriber.tier == tier_filter)
+
+    pagination = query.order_by(
         DailyBriefSubscriber.created_at.desc()
     ).paginate(
         page=page,
@@ -301,7 +356,7 @@ def subscribers():
 
     subscribers = pagination.items
 
-    # Calculate stats
+    # Calculate stats (always unfiltered for the overview cards)
     stats = {
         'total': DailyBriefSubscriber.query.count(),
         'active': DailyBriefSubscriber.query.filter_by(status='active').count(),
@@ -316,7 +371,11 @@ def subscribers():
         'admin/brief_subscribers.html',
         subscribers=subscribers,
         pagination=pagination,
-        stats=stats
+        stats=stats,
+        search_query=search_query,
+        status_filter=status_filter,
+        cadence_filter=cadence_filter,
+        tier_filter=tier_filter
     )
 
 

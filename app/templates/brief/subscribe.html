@@ -62,8 +62,40 @@
                         </select>
                     </div>
 
+                    {# Cadence selection #}
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">When should we deliver?</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">How often?</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
+                                <input type="radio" name="cadence" value="daily" class="sr-only" checked
+                                       onchange="document.getElementById('signup-weekly-day').classList.add('hidden'); document.getElementById('signup-delivery-label').textContent = 'When should we deliver?';">
+                                <span class="text-2xl mb-1">📰</span>
+                                <span class="text-sm font-bold text-gray-900">Daily</span>
+                                <span class="text-xs text-gray-500 text-center">Every day</span>
+                            </label>
+                            <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
+                                <input type="radio" name="cadence" value="weekly" class="sr-only"
+                                       onchange="document.getElementById('signup-weekly-day').classList.remove('hidden'); document.getElementById('signup-delivery-label').textContent = 'What time on delivery day?';">
+                                <span class="text-2xl mb-1">📬</span>
+                                <span class="text-sm font-bold text-gray-900">Weekly</span>
+                                <span class="text-xs text-gray-500 text-center">Sunday digest</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    {# Weekly day selection (hidden by default) #}
+                    <div id="signup-weekly-day" class="hidden">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Delivery day</label>
+                        <select name="preferred_weekly_day" 
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="6" selected>Sunday</option>
+                            <option value="0">Monday</option>
+                            <option value="5">Saturday</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label id="signup-delivery-label" class="block text-sm font-medium text-gray-700 mb-2">When should we deliver?</label>
                         <div class="grid grid-cols-3 gap-2 sm:gap-3">
                             <label class="relative flex flex-col items-center p-3 sm:p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
                                 <input type="radio" name="preferred_hour" value="6" class="sr-only">

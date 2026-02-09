@@ -1458,23 +1458,37 @@ class DiscussionSourceArticle(db.Model):
 class DailyBrief(db.Model):
     """
     Daily Sense-Making Brief - Evening news summary (6pm).
-    Aggregates 3-5 curated topics with coverage analysis.
+    Aggregates curated topics with coverage analysis, organised into sections.
     Separate from Daily Question (morning participation prompt).
+
+    Supports two formats:
+    - Legacy flat: 3-5 items ordered by position (backward compatible)
+    - Sectioned: Items grouped by section (lead, politics, economy, etc.) at variable depth
+
+    Also supports weekly briefs via brief_type='weekly'.
     """
     __tablename__ = 'daily_brief'
     __table_args__ = (
         db.Index('idx_brief_date', 'date'),
         db.Index('idx_brief_status', 'status'),
-        db.UniqueConstraint('date', name='uq_daily_brief_date'),
+        db.Index('idx_brief_type_date', 'brief_type', 'date'),
+        db.UniqueConstraint('date', 'brief_type', name='uq_daily_brief_date_type'),
     )
 
     id = db.Column(db.Integer, primary_key=True)
 
-    date = db.Column(db.Date, nullable=False, unique=True)
+    date = db.Column(db.Date, nullable=False)  # Unique per brief_type (see composite constraint)
     title = db.Column(db.String(200))  # e.g., "Tuesday's Brief: Climate, Tech, Healthcare"
     intro_text = db.Column(db.Text)  # 2-3 sentence calm framing
 
     status = db.Column(db.String(20), default='draft')  # draft|ready|published|skipped
+
+    # Brief type: daily (default) or weekly
+    brief_type = db.Column(db.String(10), default='daily')  # daily|weekly
+
+    # For weekly briefs: which week does this cover?
+    week_start_date = db.Column(db.Date, nullable=True)  # Monday of the week
+    week_end_date = db.Column(db.Date, nullable=True)    # Sunday of the week
 
     # Admin override tracking
     auto_selected = db.Column(db.Boolean, default=True)  # False if admin edited
@@ -1488,6 +1502,14 @@ class DailyBrief(db.Model):
     # Shows how left/centre/right outlets frame the same story differently
     # Generated automatically during brief creation - see app/brief/lens_check.py
     lens_check = db.Column(db.JSON)
+
+    # "The Week Ahead" events data
+    # Generated during brief creation - see app/brief/generator.py
+    week_ahead = db.Column(db.JSON)  # [{'title': '...', 'date': '...', 'description': '...', 'category': '...'}]
+
+    # "Market Pulse" section data (aggregated from Polymarket)
+    # Stored at brief level so it's not tied to individual items
+    market_pulse = db.Column(db.JSON)  # [{'question': '...', 'probability': 0.65, ...}]
 
     # Relationships
     items = db.relationship('BriefItem', backref='brief', lazy='dynamic',
@@ -1514,16 +1536,62 @@ class DailyBrief(db.Model):
             return BriefItem.query.filter_by(brief_id=self.id).count()
 
     @classmethod
-    def get_today(cls):
-        """Get today's brief"""
+    def get_today(cls, brief_type='daily'):
+        """Get today's brief (optionally by type)"""
         from datetime import date
         today = date.today()
-        return cls.query.filter_by(date=today, status='published').first()
+        return cls.query.filter_by(date=today, status='published', brief_type=brief_type).first() or \
+               cls.query.filter_by(date=today, status='ready', brief_type=brief_type).first()
 
     @classmethod
-    def get_by_date(cls, brief_date):
-        """Get brief for a specific date"""
-        return cls.query.filter_by(date=brief_date, status='published').first()
+    def get_by_date(cls, brief_date, brief_type='daily'):
+        """Get brief for a specific date (optionally by type)"""
+        return cls.query.filter_by(date=brief_date, status='published', brief_type=brief_type).first() or \
+               cls.query.filter_by(date=brief_date, status='ready', brief_type=brief_type).first()
+
+    @property
+    def is_sectioned(self):
+        """Check if this brief uses the sectioned format (vs legacy flat)."""
+        from app.brief.sections import is_sectioned_brief
+        items = self.items.all() if hasattr(self.items, 'all') else list(self.items)
+        return is_sectioned_brief(items)
+
+    @property
+    def items_by_section(self):
+        """Get items grouped by section for template rendering."""
+        from app.brief.sections import group_items_by_section
+        items = self.items.order_by(BriefItem.position).all() if hasattr(self.items, 'all') else list(self.items)
+        return group_items_by_section(items)
+
+    @property
+    def reading_time(self):
+        """Estimate reading time in minutes based on word count (~200 WPM).
+
+        Returns 0 for empty briefs, otherwise at least 1 minute.
+        """
+        word_count = 0
+        try:
+            items = self.items.all() if hasattr(self.items, 'all') else list(self.items)
+        except Exception:
+            return 0
+        if not items:
+            return 0
+        for item in items:
+            if item.headline:
+                word_count += len(item.headline.split())
+            if item.summary_bullets:
+                for bullet in (item.summary_bullets or []):
+                    if bullet:
+                        word_count += len(str(bullet).split())
+            if item.so_what:
+                word_count += len(item.so_what.split())
+            if item.personal_impact:
+                word_count += len(item.personal_impact.split())
+            if item.quick_summary:
+                word_count += len(item.quick_summary.split())
+        if word_count == 0:
+            return 0
+        return max(1, round(word_count / 200))
 
     def to_dict(self):
         return {
@@ -1532,36 +1600,59 @@ class DailyBrief(db.Model):
             'title': self.title,
             'intro_text': self.intro_text,
             'status': self.status,
+            'brief_type': self.brief_type,
             'item_count': self.item_count,
+            'reading_time': self.reading_time,
             'items': [item.to_dict() for item in self.items.order_by(BriefItem.position)],
             'lens_check': self.lens_check,
+            'week_ahead': self.week_ahead,
+            'market_pulse': self.market_pulse,
             'published_at': self.published_at.isoformat() if self.published_at else None,
             'created_at': self.created_at.isoformat()
         }
 
     def __repr__(self):
-        return f'<DailyBrief {self.date} ({self.status})>'
+        return f'<DailyBrief {self.date} {self.brief_type} ({self.status})>'
 
 
 class BriefItem(db.Model):
     """
-    Individual story in a daily brief (3-5 per brief).
+    Individual story in a daily brief.
     References TrendingTopic for DRY principle.
+
+    Items are grouped by section and rendered at different depth levels:
+    - full: headline, 4 bullets, personal impact, so what, perspectives, deeper context
+    - standard: headline, 2 bullets, so what, coverage bar
+    - quick: headline + one-sentence summary (used for global roundup, week ahead)
+
+    For backward compatibility, items without section/depth are treated as
+    legacy flat items rendered with full depth.
     """
     __tablename__ = 'brief_item'
     __table_args__ = (
         db.Index('idx_brief_item_brief', 'brief_id'),
         db.Index('idx_brief_item_topic', 'trending_topic_id'),
+        db.Index('idx_brief_item_section', 'brief_id', 'section'),
         db.UniqueConstraint('brief_id', 'position', name='uq_brief_position'),
     )
 
     id = db.Column(db.Integer, primary_key=True)
     brief_id = db.Column(db.Integer, db.ForeignKey('daily_brief.id', ondelete='CASCADE'), nullable=False)
-    position = db.Column(db.Integer, nullable=False)  # Display order 1-5
+    position = db.Column(db.Integer, nullable=False)  # Overall display order (1-based)
+
+    # Section and depth (new — nullable for backward compatibility with legacy briefs)
+    # Section: which part of the brief this item belongs to (lead, politics, economy, etc.)
+    # Depth: how much content to generate (full, standard, quick)
+    section = db.Column(db.String(30), nullable=True)   # See app/brief/sections.VALID_SECTIONS
+    depth = db.Column(db.String(15), nullable=True)      # 'full', 'standard', 'quick'
+
+    # One-sentence summary for quick-depth items (replaces bullets)
+    quick_summary = db.Column(db.Text, nullable=True)
 
     # Source (DRY - reference existing TrendingTopic)
     # RESTRICT prevents deleting topics that are used in briefs
-    trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id', ondelete='RESTRICT'), nullable=False)
+    # Nullable for items that don't reference topics (e.g., week_ahead, market_pulse)
+    trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id', ondelete='RESTRICT'), nullable=True)
 
     # Generated content (LLM-created for brief context)
     headline = db.Column(db.String(200))  # Shorter, punchier than TrendingTopic title
@@ -1610,10 +1701,26 @@ class BriefItem(db.Model):
     trending_topic = db.relationship('TrendingTopic', backref='brief_items')
     discussion = db.relationship('Discussion', backref='brief_items')
 
+    @property
+    def effective_depth(self):
+        """Get the rendering depth, defaulting to 'full' for legacy items."""
+        return self.depth or 'full'
+
+    @property
+    def section_display_name(self):
+        """Get the display name for this item's section."""
+        from app.brief.sections import SECTIONS
+        if self.section and self.section in SECTIONS:
+            return SECTIONS[self.section]['display_name']
+        return None
+
     def to_dict(self):
         return {
             'id': self.id,
             'position': self.position,
+            'section': self.section,
+            'depth': self.depth,
+            'quick_summary': self.quick_summary,
             'headline': self.headline,
             'summary_bullets': self.summary_bullets,
             'personal_impact': self.personal_impact,
@@ -1638,7 +1745,8 @@ class BriefItem(db.Model):
         }
 
     def __repr__(self):
-        return f'<BriefItem {self.position}. {self.headline}>'
+        section_str = f' [{self.section}]' if self.section else ''
+        return f'<BriefItem {self.position}.{section_str} {self.headline}>'
 
 
 class NewsPerspectiveCache(db.Model):
@@ -1838,6 +1946,10 @@ class DailyBriefSubscriber(db.Model):
     # Preferences
     timezone = db.Column(db.String(50), default='UTC')  # e.g., 'Europe/London', 'America/New_York'
     preferred_send_hour = db.Column(db.Integer, default=18)  # 6pm in their timezone (options: 6, 8, 18)
+
+    # Brief cadence: daily (default) or weekly
+    cadence = db.Column(db.String(10), default='daily')  # daily|weekly
+    preferred_weekly_day = db.Column(db.Integer, default=6)  # Day for weekly delivery (0=Mon, 6=Sun)
 
     # Status
     status = db.Column(db.String(20), default='active')  # active|unsubscribed|bounced|payment_failed
@@ -2084,6 +2196,79 @@ class BriefTeam(db.Model):
 
     def __repr__(self):
         return f'<BriefTeam {self.name} ({self.current_seat_count}/{self.seat_limit} seats)>'
+
+
+class UpcomingEvent(db.Model):
+    """
+    Upcoming events for the "Week Ahead" brief section.
+
+    Events can be:
+    - Auto-extracted from news articles (source='article')
+    - Admin-curated via the admin panel (source='admin')
+    - Imported from external calendars (source='api')
+
+    Events are surfaced in the brief's "The Week Ahead" section,
+    showing readers what's coming up in the next 7 days.
+    """
+    __tablename__ = 'upcoming_event'
+    __table_args__ = (
+        db.Index('idx_upcoming_event_date', 'event_date'),
+        db.Index('idx_upcoming_event_status', 'status'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(300), nullable=False)
+    description = db.Column(db.Text)  # One-sentence context
+    event_date = db.Column(db.Date, nullable=False)
+    event_time = db.Column(db.String(50))  # Optional: "14:00 UTC" or "All day"
+    category = db.Column(db.String(50))  # politics, economy, science, society, etc.
+    region = db.Column(db.String(50))  # asia_pacific, europe, americas, middle_east_africa, global
+    importance = db.Column(db.String(10), default='medium')  # high, medium, low
+
+    # Source tracking
+    source = db.Column(db.String(20), default='admin')  # admin, article, api
+    source_url = db.Column(db.String(500))  # Link to official page/announcement
+    source_article_id = db.Column(db.Integer, db.ForeignKey('news_article.id'), nullable=True)
+
+    # Status
+    status = db.Column(db.String(20), default='active')  # active, used, cancelled, past
+
+    # Tracking
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+
+    # Relationships
+    source_article = db.relationship('NewsArticle', backref='upcoming_events')
+    creator = db.relationship('User', backref='created_events')
+
+    @classmethod
+    def get_upcoming(cls, days_ahead=7, limit=10):
+        """Get upcoming events within the next N days."""
+        from datetime import date as date_type
+        today = date_type.today()
+        cutoff = today + timedelta(days=days_ahead)
+        return cls.query.filter(
+            cls.event_date >= today,
+            cls.event_date <= cutoff,
+            cls.status == 'active'
+        ).order_by(cls.event_date.asc(), cls.importance.desc()).limit(limit).all()
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description,
+            'event_date': self.event_date.isoformat(),
+            'event_time': self.event_time,
+            'category': self.category,
+            'region': self.region,
+            'importance': self.importance,
+            'source': self.source,
+            'source_url': self.source_url,
+        }
+
+    def __repr__(self):
+        return f'<UpcomingEvent {self.event_date}: {self.title[:50]}>'
 
 
 class EmailEvent(db.Model):

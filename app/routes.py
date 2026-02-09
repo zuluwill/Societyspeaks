@@ -19,10 +19,12 @@ def init_routes(app):
 
     @app.context_processor
     def inject_globals():
+        from app.brief.sections import SECTIONS
         return {
             'year': datetime.utcnow().year,
             'topics': Discussion.TOPICS,
-            'now': datetime.utcnow
+            'now': datetime.utcnow,
+            'SECTIONS': SECTIONS
         }
 
 

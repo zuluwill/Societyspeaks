@@ -1,0 +1,350 @@
+{# 
+  Shared brief item content partial.
+  Used by the SECTIONED layout in view.html.
+  
+  Renders at the correct depth level:
+  - full: all sections (same as legacy)
+  - standard: bullets, so-what, coverage bar, verification links
+  - quick: headline + quick summary only
+
+  Expected variables in scope:
+  - item: BriefItem instance
+  - topic_articles_by_topic_id (optional): Pre-loaded articles dict
+#}
+
+{# Underreported badge #}
+{% if item.is_underreported %}
+<div class="mb-5">
+    <span class="inline-flex items-center px-3 py-1.5 rounded-md bg-amber-500 text-white text-xs font-bold uppercase tracking-wider">
+        📭 Under the Radar
+    </span>
+    <p class="text-amber-800 text-xs mt-2 font-medium">High civic importance, low media coverage</p>
+</div>
+{% endif %}
+
+{# Position number + Headline #}
+<div class="flex items-start gap-4 mb-5">
+    {% if not item.is_underreported and not item.section %}
+    <div class="flex-shrink-0 w-9 h-9 rounded-full bg-blue-800 text-white flex items-center justify-center font-bold text-base">
+        {{ item.position }}
+    </div>
+    {% endif %}
+    <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900 leading-snug flex-1">
+        {{ item.headline }}
+    </h2>
+</div>
+
+{# Quick summary for quick-depth items #}
+{% if item.quick_summary and item.depth == 'quick' %}
+<p class="text-gray-700 text-base leading-relaxed mb-4">{{ item.quick_summary }}</p>
+{% endif %}
+
+{# Source count + sensationalism + blindspot badges #}
+<div class="flex flex-wrap items-center gap-2 mb-5">
+    {% if item.source_count and item.source_count > 0 %}
+    <span class="inline-flex items-center px-3 py-1 rounded-md bg-blue-800 text-white text-xs font-semibold">
+        <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+        </svg>
+        {{ item.source_count }} sources
+    </span>
+    {% endif %}
+
+    {% if item.sensationalism_label and item.depth != 'quick' %}
+    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-md text-xs font-semibold whitespace-nowrap
+        {% if item.sensationalism_label == 'low' %}bg-green-100 text-green-800
+        {% elif item.sensationalism_label == 'medium' %}bg-yellow-100 text-yellow-800
+        {% else %}bg-red-100 text-red-800{% endif %}">
+        {% if item.sensationalism_label == 'low' %}
+        <svg class="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+        </svg>
+        {% endif %}
+        <span>{{ item.sensationalism_label|capitalize }} sensationalism</span>
+    </span>
+    {% endif %}
+
+    {# Blindspot callout badge #}
+    {% if item.coverage_distribution and item.depth != 'quick' %}
+    {% set left_pct = (item.coverage_distribution.get('left', 0) * 100)|int %}
+    {% set center_pct = (item.coverage_distribution.get('center', 0) * 100)|int %}
+    {% set right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
+    {% set has_coverage = (left_pct + center_pct + right_pct) > 0 %}
+    {% if has_coverage and left_pct < 15 and right_pct > 30 %}
+    <span class="inline-flex items-center px-3 py-1 rounded-md bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+        <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        Blindspot: {{ left_pct }}% left coverage
+    </span>
+    {% elif has_coverage and right_pct < 15 and left_pct > 30 %}
+    <span class="inline-flex items-center px-3 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold">
+        <svg class="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        Blindspot: {{ right_pct }}% right coverage
+    </span>
+    {% endif %}
+    {% endif %}
+</div>
+
+{# Summary bullets (full and standard depth) #}
+{% if item.summary_bullets and item.depth != 'quick' %}
+<ul class="space-y-3 mb-6">
+    {% for bullet in item.summary_bullets %}
+    <li class="flex items-start">
+        <span class="text-blue-600 mr-3 mt-1 text-lg leading-none">&bull;</span>
+        <span class="text-gray-700 leading-relaxed">{{ bullet }}</span>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{# Audio Player (full depth — only available in web view, not email) #}
+{% if item.depth != 'quick' and item.depth != 'standard' %}
+{% if audio_player is defined %}{{ audio_player(item) }}{% endif %}
+{% if dive_deeper_links is defined %}{{ dive_deeper_links(item) }}{% endif %}
+{% endif %}
+
+{# Deeper context (full depth only) #}
+{% if item.deeper_context and item.depth != 'quick' and item.depth != 'standard' %}
+<div class="mb-6">
+    <button data-item-id="{{ item.id }}"
+            class="toggle-deeper-context-btn inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+            aria-expanded="false"
+            aria-controls="deeper-context-{{ item.id }}">
+        <svg data-icon-id="{{ item.id }}" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+        <span>Want a bit more detail?</span>
+    </button>
+    <div id="deeper-context-{{ item.id }}" 
+         class="hidden mt-4 p-5 bg-slate-50 border-l-4 border-slate-400 rounded-r-lg">
+        <div class="prose prose-sm max-w-none text-gray-700 leading-relaxed whitespace-pre-line">
+            {{ item.deeper_context }}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# Personal impact (full depth only) #}
+{% if item.personal_impact and item.depth != 'quick' and item.depth != 'standard' %}
+<div class="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-5 mb-6">
+    <p class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">💡 Why This Matters To You</p>
+    <p class="text-blue-900 leading-relaxed font-medium">{{ item.personal_impact }}</p>
+</div>
+{% endif %}
+
+{# So What analysis (full and standard depth) #}
+{% if item.so_what and item.depth != 'quick' %}
+<div class="bg-amber-50 border-l-4 border-amber-400 rounded-r-lg p-5 mb-6">
+    <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">Why It Matters</p>
+    <p class="text-amber-900 leading-relaxed">{{ item.so_what|strip_so_what }}</p>
+</div>
+{% endif %}
+
+{# Perspectives (full depth only — only render if at least one perspective has content) #}
+{% if item.perspectives and (item.perspectives.get('left') or item.perspectives.get('center') or item.perspectives.get('right')) and item.depth != 'quick' and item.depth != 'standard' %}
+<div class="bg-slate-50 rounded-xl p-5 mb-6">
+    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-4">How It's Being Framed</p>
+    <div class="space-y-3">
+        {% if item.perspectives.get('left') %}
+        <div class="flex items-start gap-3">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs font-bold flex-shrink-0">L</span>
+            <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-blue-600">Left:</span> {{ item.perspectives.get('left') }}</p>
+        </div>
+        {% endif %}
+        {% if item.perspectives.get('center') %}
+        <div class="flex items-start gap-3">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-xs font-bold flex-shrink-0">C</span>
+            <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-purple-600">Centre:</span> {{ item.perspectives.get('center') }}</p>
+        </div>
+        {% endif %}
+        {% if item.perspectives.get('right') %}
+        <div class="flex items-start gap-3">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 text-red-600 text-xs font-bold flex-shrink-0">R</span>
+            <p class="text-gray-700 text-sm leading-relaxed"><span class="font-semibold text-red-600">Right:</span> {{ item.perspectives.get('right') }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+{# Market Signal (full depth items only) #}
+{% if item.market_signal and item.depth != 'quick' and item.depth != 'standard' %}
+<div class="mt-4 bg-slate-50 border-l-4 border-indigo-500 rounded-r-lg p-4">
+    <div class="flex items-center gap-2 mb-3">
+        <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wide">📊 Market Signal</span>
+        {% if item.market_signal.quality_tier == 'high' %}
+        <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">High Volume</span>
+        {% endif %}
+    </div>
+    <p class="text-base font-medium text-slate-800 mb-3">"{{ item.market_signal.question }}"</p>
+    <div class="mb-3">
+        <div class="h-7 bg-slate-200 rounded overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 flex items-center justify-end pr-2"
+                 style="width: {{ (item.market_signal.probability * 100)|round }}%; min-width: 50px;">
+                <span class="text-white font-semibold text-sm">{{ (item.market_signal.probability * 100)|round }}%</span>
+            </div>
+        </div>
+    </div>
+    <div class="flex items-center gap-3 text-sm text-slate-500 mb-3">
+        {% if item.market_signal.change_24h_formatted and item.market_signal.change_24h_formatted != '—' %}
+        <span class="{% if item.market_signal.change_24h > 0 %}text-green-600{% elif item.market_signal.change_24h < 0 %}text-red-600{% endif %}">
+            {{ item.market_signal.change_24h_formatted }} today
+        </span>
+        <span>&middot;</span>
+        {% endif %}
+        <span>${{ "{:,.0f}".format(item.market_signal.volume_24h or 0) }} volume</span>
+        <span>&middot;</span>
+        <a href="{{ item.market_signal.url }}" target="_blank" rel="noopener" class="text-indigo-600 hover:text-indigo-700">View market &rarr;</a>
+    </div>
+    <p class="text-xs text-slate-400 italic border-t border-slate-200 pt-3">Markets reflect collective expectations, not certainty. Prices move on new information, rumours, and sentiment.</p>
+</div>
+{% endif %}
+
+{# Blindspot explanation (full depth only) #}
+{% if item.blindspot_explanation and item.depth != 'quick' and item.depth != 'standard' %}
+<div class="bg-amber-50 border-l-4 border-amber-500 rounded-r-lg p-5 mb-6">
+    <p class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">🔍 Coverage Gap Analysis</p>
+    <p class="text-amber-900 leading-relaxed italic">{{ item.blindspot_explanation }}</p>
+</div>
+{% endif %}
+
+{# Coverage bar with source names (full and standard depth) #}
+{% if item.coverage_distribution and item.depth != 'quick' %}
+{% set cov_left_pct = (item.coverage_distribution.get('left', 0) * 100)|int %}
+{% set cov_center_pct = (item.coverage_distribution.get('center', 0) * 100)|int %}
+{% set cov_right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
+{% set cov_total = cov_left_pct + cov_center_pct + cov_right_pct %}
+{% set sources_dict = item.sources_by_leaning if item.sources_by_leaning is mapping else {} %}
+{% set left_sources = sources_dict.get('left', []) or [] %}
+{% set center_sources = sources_dict.get('center', []) or [] %}
+{% set right_sources = sources_dict.get('right', []) or [] %}
+{% set has_any_sources = left_sources|length > 0 or center_sources|length > 0 or right_sources|length > 0 %}
+
+{% if cov_total > 0 and has_any_sources %}
+<div class="mb-6">
+    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">Coverage Balance</p>
+    <div class="w-full h-3 rounded-full overflow-hidden mb-3" style="display: flex; background-color: #e5e7eb;">
+        {% if cov_left_pct > 0 %}<div style="width: {{ cov_left_pct }}%; background-color: #3b82f6; height: 100%;"></div>{% endif %}
+        {% if cov_center_pct > 0 %}<div style="width: {{ cov_center_pct }}%; background-color: #a855f7; height: 100%;"></div>{% endif %}
+        {% if cov_right_pct > 0 %}<div style="width: {{ cov_right_pct }}%; background-color: #ef4444; height: 100%;"></div>{% endif %}
+    </div>
+    <div class="flex justify-between text-xs">
+        <span class="text-blue-600 font-medium">{% if left_sources|length > 0 %}{{ cov_left_pct }}% Left ({{ left_sources|length }}){% else %}<span class="text-gray-400">No left coverage</span>{% endif %}</span>
+        <span class="text-purple-600 font-medium">{% if center_sources|length > 0 %}{{ cov_center_pct }}% Centre ({{ center_sources|length }}){% else %}<span class="text-gray-400">No centre coverage</span>{% endif %}</span>
+        <span class="text-red-600 font-medium">{% if right_sources|length > 0 %}{{ cov_right_pct }}% Right ({{ right_sources|length }}){% else %}<span class="text-gray-400">No right coverage</span>{% endif %}</span>
+    </div>
+
+    {# Source names list #}
+    {% if has_any_sources %}
+    <div class="mt-3 pt-3 border-t border-gray-100">
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+            {% if left_sources|length > 0 %}
+            <span><span class="text-blue-600 font-medium">Left:</span> {{ left_sources|join(', ') }}</span>
+            {% endif %}
+            {% if center_sources|length > 0 %}
+            <span><span class="text-purple-600 font-medium">Centre:</span> {{ center_sources|join(', ') }}</span>
+            {% endif %}
+            {% if right_sources|length > 0 %}
+            <span><span class="text-red-600 font-medium">Right:</span> {{ right_sources|join(', ') }}</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# Transparency notes #}
+    {% if left_sources|length == 0 or right_sources|length == 0 %}
+    <p class="text-xs text-gray-400 mt-2 italic">
+        {% if left_sources|length == 0 and right_sources|length == 0 %}
+        Only centre sources covered this story.
+        {% elif left_sources|length == 0 %}
+        Left-leaning outlets did not cover this story in our source roster.
+        {% elif right_sources|length == 0 %}
+        Right-leaning outlets did not cover this story in our source roster.
+        {% endif %}
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+{% endif %}
+
+{# Original News Sources (full and standard depth) #}
+{% if item.trending_topic and item.depth != 'quick' %}
+{% set topic_articles = (topic_articles_by_topic_id.get(item.trending_topic.id, [])[:5] if topic_articles_by_topic_id is defined and topic_articles_by_topic_id else item.trending_topic.articles.all()[:5]) %}
+{% if topic_articles %}
+<div class="mb-6">
+    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">📰 Read the Original Sources</p>
+    <div class="space-y-2">
+        {% for topic_article in topic_articles %}
+        {% if topic_article.article and topic_article.article.url %}
+        <a href="{{ topic_article.article.url }}" target="_blank" rel="noopener" 
+           class="block p-3 rounded-lg border-l-3 border-l-blue-500 bg-slate-50 hover:bg-blue-50 transition-colors group">
+            <p class="text-sm font-medium text-gray-800 group-hover:text-blue-700 leading-snug">
+                {{ topic_article.article.title[:90] }}{% if topic_article.article.title|length > 90 %}...{% endif %}
+            </p>
+            <p class="text-xs text-gray-500 mt-1">
+                {{ topic_article.article.source_name }}{% if topic_article.article.published_at %} &bull; {{ topic_article.article.published_at.strftime('%d %b %Y') }}{% endif %}
+            </p>
+        </a>
+        {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+{# Verification links (full and standard depth) #}
+{% if item.verification_links and item.depth != 'quick' %}
+<div class="mb-6">
+    <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">🔗 Verify It Yourself</p>
+    <div class="space-y-2">
+        {% for link in item.verification_links %}
+        <a href="{{ link.url }}" target="_blank" rel="noopener" 
+           class="flex items-center justify-between p-3 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors group">
+            <div class="flex items-center gap-2">
+                {% if link.tier == 'primary' %}
+                <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-green-100 text-green-600">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                </span>
+                {% else %}
+                <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-gray-100 text-gray-500">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                </span>
+                {% endif %}
+                <span class="text-sm text-gray-700 group-hover:text-blue-700">{{ link.description }}</span>
+                {% if link.is_paywalled %}
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-500">
+                    <svg class="w-3 h-3 mr-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                    </svg>
+                    Paywall
+                </span>
+                {% endif %}
+            </div>
+            <svg class="w-4 h-4 text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{# Discussion CTA (standard and full depth) #}
+{% if item.discussion and item.discussion.slug and item.depth != 'quick' %}
+<div class="pt-4 border-t border-gray-100">
+    <a href="{{ url_for('discussions.view_discussion', discussion_id=item.discussion.id, slug=item.discussion.slug) }}" 
+       class="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 bg-blue-800 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+        </svg>
+        {{ item.cta_text or 'Join the Discussion' }}
+    </a>
+</div>
+{% endif %}

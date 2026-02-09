@@ -1,10 +1,12 @@
 {% extends "emails/base_email.html" %}
 
-{% block title %}Welcome to the Daily Brief - Society Speaks{% endblock %}
+{% set cadence_label = 'Weekly Brief' if (subscriber.cadence == 'weekly') else 'Daily Brief' %}
+
+{% block title %}Welcome to the {{ cadence_label }} - Society Speaks{% endblock %}
 
 {% block preheader %}Your free access is now active! Here's your magic link to access briefs anytime.{% endblock %}
 
-{% block header_title %}Daily Brief{% endblock %}
+{% block header_title %}{{ cadence_label }}{% endblock %}
 
 {% block header_subtitle %}
 <tr>
@@ -18,7 +20,7 @@
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6; color: #374151; padding-bottom: 24px;">
-            Thanks for subscribing to the Daily Brief! We curate the most important news and provide AI-powered analysis to help you stay informed.
+            Thanks for subscribing to the {{ cadence_label }}! We curate the most important news and provide AI-powered analysis to help you stay informed.
         </td>
     </tr>
     <tr>
@@ -31,6 +33,7 @@
                 </tr>
                 <tr>
                     <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.8; color: #374151;">
+                        <strong>Cadence:</strong> {% if subscriber.cadence == 'weekly' %}Weekly (every {{ ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][subscriber.preferred_weekly_day or 6] }}){% else %}Daily{% endif %}<br>
                         <strong>Delivery time:</strong> {{ preferred_hour }}:00 ({{ timezone }})<br>
                         <strong>Status:</strong> Free access (no expiration)
                     </td>
@@ -64,7 +67,11 @@
     </tr>
     <tr>
         <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #6b7280; padding-bottom: 16px;">
+            {% if subscriber.cadence == 'weekly' %}
+            <strong>Note:</strong> The weekly brief is delivered via email every {{ ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][subscriber.preferred_weekly_day or 6] }}. You can also view briefs on the website using the magic link above.
+            {% else %}
             <strong>Note:</strong> The daily brief is delivered via email. Your first brief will arrive at your selected time. You can also view briefs on the website using the magic link above.
+            {% endif %}
         </td>
     </tr>
     <tr>

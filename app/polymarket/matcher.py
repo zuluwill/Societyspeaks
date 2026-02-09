@@ -51,7 +51,11 @@ class MarketMatcher:
     }
 
     # Similarity thresholds
-    EMBEDDING_THRESHOLD = 0.75  # Minimum cosine similarity for embedding match
+    # Lowered from 0.75 to 0.60 (Feb 2026) — the old threshold was too strict
+    # and resulted in almost no matches appearing in briefs. A 0.60 threshold
+    # still ensures topical relevance while allowing "related market" matches
+    # (e.g., topic about UK climate policy matching "Will UK pass net zero legislation?")
+    EMBEDDING_THRESHOLD = 0.60  # Minimum cosine similarity for embedding match
     KEYWORD_MIN_OVERLAP = 2  # Minimum keyword overlap for fallback
 
     def __init__(self, embedding_service=None):
@@ -185,7 +189,9 @@ class MarketMatcher:
         Get the best matching market for a topic.
         Returns None if no match exists or market is inactive.
 
-        This is the main method called by brief generator.
+        Uses the matcher's EMBEDDING_THRESHOLD rather than the model's
+        SIMILARITY_THRESHOLD to ensure the matcher config is the single
+        source of truth for match quality.
         """
         match = TopicMarketMatch.query.filter_by(
             trending_topic_id=topic_id
@@ -195,7 +201,7 @@ class MarketMatcher:
             TopicMarketMatch.similarity_score.desc()
         ).first()
 
-        if match and match.similarity_score >= TopicMarketMatch.SIMILARITY_THRESHOLD:
+        if match and match.similarity_score >= self.EMBEDDING_THRESHOLD:
             return match.market
         return None
 
@@ -208,9 +214,16 @@ class MarketMatcher:
         """
         market = self.get_best_match_for_topic(topic_id)
         if not market:
+            logger.debug(f"No market match for topic {topic_id}")
             return None
 
-        return market.to_signal_dict()
+        signal = market.to_signal_dict()
+        logger.info(
+            f"Market signal matched: topic={topic_id} -> "
+            f"market='{market.question[:50]}...' "
+            f"(prob={market.probability:.0%}, vol=${market.volume_24h:,.0f})"
+        )
+        return signal
 
     # =========================================================================
     # PRIVATE METHODS

@@ -1190,46 +1190,95 @@ def init_scheduler(app):
     # DAILY BRIEF JOBS
     # ==============================================================================
 
+    @scheduler.scheduled_job('cron', hour=16, minute=30, id='pre_brief_polymarket_matching')
+    def pre_brief_polymarket_matching():
+        """
+        Run Polymarket matching 30 minutes before brief generation (4:30pm UTC).
+        Ensures fresh matches are available when the brief generates at 5pm.
+        """
+        with app.app_context():
+            from app.polymarket.matcher import market_matcher
+
+            logger.info("Pre-brief Polymarket matching (runs 30min before brief generation)")
+            try:
+                stats = market_matcher.run_batch_matching(days_back=3, reprocess_existing=False)
+                logger.info(f"Pre-brief matching complete: {stats}")
+            except Exception as e:
+                logger.error(f"Pre-brief Polymarket matching failed: {e}", exc_info=True)
+
     @scheduler.scheduled_job('cron', hour=17, minute=0, id='generate_daily_brief')
     def generate_daily_brief_job():
         """
-        Generate daily brief at 5:00pm UTC
-        Auto-selects topics and creates draft brief
-        Admin has 45-60 min to review before auto-publish
+        Generate daily brief at 5:00pm UTC.
+
+        Uses the new sectioned format (lead, politics, economy, society, science,
+        global roundup, week ahead, market pulse) with automatic fallback to
+        legacy flat format if sectioned selection fails.
         
-        Idempotency: Checks if brief already exists with ready/published status
+        Idempotency: Checks if brief already exists with ready/published status.
         """
         with app.app_context():
             from app.brief.generator import generate_daily_brief
             from app.models import DailyBrief
             from datetime import date
 
-            logger.info("Starting daily brief generation")
+            logger.info("Starting daily brief generation (sectioned mode)")
 
             try:
-                # Idempotency check - skip if brief already exists
-                existing = DailyBrief.query.filter_by(date=date.today()).first()
+                # Idempotency check
+                existing = DailyBrief.query.filter_by(
+                    date=date.today(), brief_type='daily'
+                ).first()
                 if existing and existing.status in ('ready', 'published'):
-                    logger.info(f"Brief already exists with status '{existing.status}', skipping generation")
+                    logger.info(f"Brief already exists with status '{existing.status}', skipping")
                     return
                 
                 brief = generate_daily_brief(
                     brief_date=date.today(),
-                    auto_publish=True  # Sets status to 'ready' not 'published'
+                    auto_publish=True
                 )
 
                 if brief is None:
-                    logger.warning("No topics available for today's brief - skipping generation")
+                    logger.warning("No topics available for today's brief - skipping")
                     return
 
                 logger.info(f"Daily brief generated: {brief.title} ({brief.item_count} items)")
 
-                # Log for admin notification (could trigger Slack webhook here)
                 if brief.item_count < 3:
                     logger.warning(f"Brief only has {brief.item_count} items, below minimum!")
 
             except Exception as e:
                 logger.error(f"Daily brief generation failed: {e}", exc_info=True)
+
+    @scheduler.scheduled_job('cron', day_of_week='sat', hour=17, minute=0, id='generate_weekly_brief')
+    def generate_weekly_brief_job():
+        """
+        Generate weekly brief every Saturday at 5:00pm UTC.
+        Summarises the past week's daily briefs into a curated digest.
+        Delivered to weekly subscribers on their preferred day (default Sunday).
+        """
+        with app.app_context():
+            from app.brief.weekly_generator import generate_weekly_brief
+            from datetime import date, timedelta
+
+            logger.info("Starting weekly brief generation")
+
+            try:
+                # Generate for the week ending tomorrow (Sunday)
+                tomorrow = date.today() + timedelta(days=1)
+                brief = generate_weekly_brief(
+                    week_end_date=tomorrow,
+                    auto_publish=True
+                )
+
+                if brief is None:
+                    logger.warning("Weekly brief generation returned None")
+                    return
+
+                logger.info(f"Weekly brief generated: {brief.title} ({brief.item_count} items)")
+
+            except Exception as e:
+                logger.error(f"Weekly brief generation failed: {e}", exc_info=True)
 
 
     @scheduler.scheduled_job('interval', seconds=10, id='process_extraction_queue')
@@ -1569,37 +1618,36 @@ def init_scheduler(app):
     @scheduler.scheduled_job('cron', hour=18, minute=0, id='auto_publish_brief')
     def auto_publish_daily_brief():
         """
-        Auto-publish today's brief at 6:00pm UTC if still in 'ready' status
-        This gives admin 1 hour review window (5pm-6pm)
-        If admin already published/skipped, this does nothing
+        Auto-publish today's briefs at 6:00pm UTC if still in 'ready' status.
+        Handles both daily and weekly briefs. Gives admin 1 hour review window (5pm-6pm).
         """
         with app.app_context():
             from app import db
             from app.models import DailyBrief
             from datetime import date
 
-            logger.info("Checking if brief should auto-publish")
+            logger.info("Checking if briefs should auto-publish")
 
             try:
-                brief = DailyBrief.query.filter_by(
+                # Auto-publish any 'ready' briefs for today (daily or weekly)
+                ready_briefs = DailyBrief.query.filter_by(
                     date=date.today(),
                     status='ready'
-                ).first()
+                ).all()
 
-                if brief:
-                    # Auto-publish (audio already generated when brief was created at 5pm)
-                    brief.status = 'published'
-                    brief.published_at = datetime.utcnow()
+                if ready_briefs:
+                    for brief in ready_briefs:
+                        brief.status = 'published'
+                        brief.published_at = datetime.utcnow()
+                        logger.info(f"Auto-published {brief.brief_type} brief: {brief.title}")
+
                     db.session.commit()
-
-                    logger.info(f"Auto-published brief: {brief.title}")
                 else:
-                    # Either already published, skipped, or doesn't exist
-                    existing = DailyBrief.query.filter_by(date=date.today()).first()
-                    if existing:
-                        logger.info(f"Brief status is '{existing.status}', not auto-publishing")
-                    else:
-                        logger.warning("No brief exists for today!")
+                    existing = DailyBrief.query.filter_by(date=date.today()).all()
+                    for b in existing:
+                        logger.info(f"Brief ({b.brief_type}) status is '{b.status}', not auto-publishing")
+                    if not existing:
+                        logger.warning("No briefs exist for today!")
 
             except Exception as e:
                 db.session.rollback()
@@ -1632,16 +1680,21 @@ def init_scheduler(app):
 
             try:
                 scheduler_obj = BriefEmailScheduler()
-                results = scheduler_obj.send_todays_brief_hourly()
 
-                if results:
-                    logger.info(f"Brief emails sent: {results['sent']} successful, {results['failed']} failed")
-
-                    if results['errors']:
-                        for error in results['errors'][:5]:  # Log first 5 errors
+                # Send daily briefs to daily subscribers
+                daily_results = scheduler_obj.send_todays_brief_hourly()
+                if daily_results:
+                    logger.info(f"Daily brief emails: {daily_results['sent']} sent, {daily_results['failed']} failed")
+                    if daily_results['errors']:
+                        for error in daily_results['errors'][:5]:
                             logger.error(error)
                 else:
-                    logger.info("No brief to send or no subscribers at this hour")
+                    logger.info("No daily brief to send or no daily subscribers at this hour")
+
+                # Send weekly briefs to weekly subscribers (checks preferred day internally)
+                weekly_results = scheduler_obj.send_weekly_brief_hourly()
+                if weekly_results and weekly_results['sent'] > 0:
+                    logger.info(f"Weekly brief emails: {weekly_results['sent']} sent, {weekly_results['failed']} failed")
 
             except Exception as e:
                 logger.error(f"Brief email sending failed: {e}", exc_info=True)

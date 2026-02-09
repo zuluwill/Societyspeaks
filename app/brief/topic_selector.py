@@ -1,14 +1,24 @@
 """
 Automated Topic Selection for Daily Brief
 
-Selects 3-5 high-quality, diverse topics for the evening brief.
+Selects topics for the evening brief, supporting two modes:
+1. Legacy flat: 3-5 high-quality topics ordered by priority score
+2. Sectioned: Topics selected per section (lead, politics, economy, etc.)
+   with geographic gap-fill for the "Around the World" section
+
 Criteria: civic importance, source diversity, topical diversity, recency.
 """
 
 from datetime import datetime, timedelta, date
-from typing import List, Optional
+from typing import List, Dict, Optional, Tuple
+from collections import OrderedDict
 from app.models import TrendingTopic, DailyBrief, BriefItem
 from app.brief.coverage_analyzer import CoverageAnalyzer
+from app.brief.sections import (
+    SECTIONS, CATEGORY_TO_SECTION, REGIONS,
+    DEPTH_FULL, DEPTH_STANDARD, DEPTH_QUICK,
+    get_section_for_category, get_region_for_countries, get_covered_regions,
+)
 from app import db
 import logging
 
@@ -361,9 +371,270 @@ class TopicSelector:
         }
 
 
+    # =========================================================================
+    # SECTION-BASED SELECTION (New)
+    # =========================================================================
+
+    def select_topics_by_section(self) -> Dict[str, List[Tuple[TrendingTopic, str]]]:
+        """
+        Select topics organized by brief section with assigned depth levels.
+
+        This is the new entry point for sectioned briefs. Returns topics grouped
+        by section, each with an assigned depth level.
+
+        Returns:
+            Dict mapping section keys to lists of (TrendingTopic, depth) tuples.
+            Example:
+            {
+                'lead': [(topic, 'full')],
+                'politics': [(topic, 'standard')],
+                'economy': [(topic, 'standard')],
+                'society': [(topic, 'standard')],
+                'science': [(topic, 'standard')],
+                'global_roundup': [(topic, 'quick'), (topic, 'quick'), ...],
+            }
+        """
+        # Get all candidates (reuse existing filtering logic)
+        candidates = self._get_candidate_topics()
+
+        if not candidates:
+            logger.warning(f"No candidate topics for sectioned brief on {self.brief_date}")
+            return {}
+
+        # Score all candidates
+        scored = [(topic, self._calculate_brief_score(topic)) for topic in candidates]
+        scored.sort(key=lambda x: x[1], reverse=True)
+
+        logger.info(f"Sectioned selection: {len(scored)} scored candidates")
+
+        # Phase 1: Select lead story (highest score overall)
+        result = OrderedDict()
+        used_topic_ids = set()
+
+        if scored:
+            lead_topic, lead_score = scored[0]
+            result['lead'] = [(lead_topic, DEPTH_FULL)]
+            used_topic_ids.add(lead_topic.id)
+            logger.info(f"Lead story: '{lead_topic.title[:50]}...' (score={lead_score:.2f})")
+
+        # Phase 2: Fill themed sections (politics, economy, society, science)
+        themed_sections = ['politics', 'economy', 'society', 'science']
+        for section_key in themed_sections:
+            section_config = SECTIONS[section_key]
+            max_items = section_config['max_items']
+
+            # Find best topics for this section
+            section_topics = self._select_for_section(
+                scored, section_key, max_items, used_topic_ids
+            )
+
+            if section_topics:
+                result[section_key] = [(t, DEPTH_STANDARD) for t in section_topics]
+                used_topic_ids.update(t.id for t in section_topics)
+
+        # Phase 3: Fill global roundup (geographic gap-fill)
+        all_selected_topics = []
+        for section_items in result.values():
+            all_selected_topics.extend([t for t, _ in section_items])
+
+        global_topics = self._select_global_roundup(
+            scored, all_selected_topics, used_topic_ids
+        )
+        if global_topics:
+            result['global_roundup'] = [(t, DEPTH_QUICK) for t in global_topics]
+            used_topic_ids.update(t.id for t in global_topics)
+
+        # Ensure minimum item count (same guarantee as legacy selector)
+        total = sum(len(items) for items in result.values())
+        if total < self.MIN_ITEMS and len(scored) >= self.MIN_ITEMS:
+            logger.warning(
+                f"Sectioned selection only found {total} topics, below minimum "
+                f"of {self.MIN_ITEMS}. Backfilling from top-scored candidates."
+            )
+            # Backfill from highest-scored unused candidates into the lead section
+            for topic, score in scored:
+                if topic.id in used_topic_ids:
+                    continue
+                if total >= self.MIN_ITEMS:
+                    break
+                # Add as full-depth to lead section (or create one)
+                if 'lead' not in result:
+                    result['lead'] = []
+                result['lead'].append((topic, DEPTH_FULL))
+                used_topic_ids.add(topic.id)
+                total += 1
+                logger.info(
+                    f"Backfill: '{topic.title[:50]}...' (score={score:.2f})"
+                )
+
+        # Log summary
+        total = sum(len(items) for items in result.values())
+        sections_filled = [k for k in result if result[k]]
+        logger.info(
+            f"Sectioned selection complete: {total} topics across "
+            f"{len(sections_filled)} sections ({', '.join(sections_filled)})"
+        )
+
+        # Return empty if still below minimum (let caller fall back to legacy)
+        if total < self.MIN_ITEMS:
+            logger.warning(
+                f"Still only {total} topics after backfill — returning empty "
+                f"to trigger legacy fallback"
+            )
+            return {}
+
+        return result
+
+    def _select_for_section(
+        self,
+        scored_topics: List[Tuple[TrendingTopic, float]],
+        section_key: str,
+        max_items: int,
+        exclude_ids: set
+    ) -> List[TrendingTopic]:
+        """
+        Select the best topics for a specific section.
+
+        Args:
+            scored_topics: All scored candidates (sorted by score desc)
+            section_key: Section to fill (e.g., 'politics')
+            max_items: Maximum items for this section
+            exclude_ids: Topic IDs already used in other sections
+
+        Returns:
+            List of selected TrendingTopic instances
+        """
+        selected = []
+        used_categories = set()  # Prevent category duplication within section
+
+        for topic, score in scored_topics:
+            if len(selected) >= max_items:
+                break
+
+            if topic.id in exclude_ids:
+                continue
+
+            # Check if this topic belongs in this section
+            topic_section = get_section_for_category(topic.primary_topic)
+            if topic_section != section_key:
+                continue
+
+            # Prevent duplicate categories within section
+            if topic.primary_topic and topic.primary_topic in used_categories:
+                continue
+
+            selected.append(topic)
+            if topic.primary_topic:
+                used_categories.add(topic.primary_topic)
+
+            logger.debug(f"Section '{section_key}': selected '{topic.title[:40]}...' (score={score:.2f})")
+
+        return selected
+
+    def _select_global_roundup(
+        self,
+        scored_topics: List[Tuple[TrendingTopic, float]],
+        already_selected: List[TrendingTopic],
+        exclude_ids: set,
+        max_items: int = 5
+    ) -> List[TrendingTopic]:
+        """
+        Select topics for the "Around the World" global roundup section.
+
+        Fills geographic gaps by identifying which regions are not covered
+        by the main sections, then selecting stories from those regions.
+
+        Uses a lower civic score threshold (0.5) since these are quick-hit items.
+
+        Args:
+            scored_topics: All scored candidates
+            already_selected: Topics already selected for other sections
+            exclude_ids: Topic IDs to exclude
+            max_items: Max items for global roundup
+
+        Returns:
+            List of selected TrendingTopic instances
+        """
+        # Identify which regions are already covered
+        covered_regions = get_covered_regions(already_selected)
+        uncovered_regions = set(REGIONS.keys()) - covered_regions
+
+        logger.info(
+            f"Global roundup: covered regions={covered_regions}, "
+            f"uncovered={uncovered_regions}"
+        )
+
+        selected = []
+        used_regions = set()
+
+        # First pass: prioritize uncovered regions
+        for topic, score in scored_topics:
+            if len(selected) >= max_items:
+                break
+
+            if topic.id in exclude_ids:
+                continue
+
+            # Lower threshold for global roundup (these get quick-hit treatment)
+            if topic.civic_score and topic.civic_score < 0.5:
+                continue
+
+            geo_countries = getattr(topic, 'geographic_countries', None)
+            if not geo_countries:
+                continue
+
+            region = get_region_for_countries(geo_countries)
+            if region == 'global':
+                continue  # Skip global-scope stories (not region-specific)
+
+            # Prioritize uncovered regions first
+            if region in uncovered_regions and region not in used_regions:
+                selected.append(topic)
+                used_regions.add(region)
+                exclude_ids.add(topic.id)
+                logger.info(f"Global roundup (gap-fill): '{topic.title[:40]}...' [{region}]")
+
+        # Second pass: fill remaining slots with any region-specific stories
+        if len(selected) < max_items:
+            for topic, score in scored_topics:
+                if len(selected) >= max_items:
+                    break
+
+                if topic.id in exclude_ids:
+                    continue
+
+                if topic.civic_score and topic.civic_score < 0.5:
+                    continue
+
+                geo_countries = getattr(topic, 'geographic_countries', None)
+                if not geo_countries:
+                    continue
+
+                region = get_region_for_countries(geo_countries)
+                if region == 'global':
+                    continue
+
+                # Allow max 2 from same region
+                region_count = sum(
+                    1 for t in selected
+                    if get_region_for_countries(
+                        getattr(t, 'geographic_countries', '') or ''
+                    ) == region
+                )
+                if region_count >= 2:
+                    continue
+
+                selected.append(topic)
+                exclude_ids.add(topic.id)
+                logger.debug(f"Global roundup (fill): '{topic.title[:40]}...' [{region}]")
+
+        logger.info(f"Global roundup: selected {len(selected)} topics")
+        return selected
+
+
 def select_todays_topics(limit: int = 5) -> List[TrendingTopic]:
     """
-    Convenience function to select topics for today's brief.
+    Convenience function to select topics for today's brief (legacy flat mode).
 
     Args:
         limit: Maximum topics to select (default 5)
@@ -377,7 +648,7 @@ def select_todays_topics(limit: int = 5) -> List[TrendingTopic]:
 
 def select_topics_for_date(brief_date: date, limit: int = 5) -> List[TrendingTopic]:
     """
-    Select topics for a specific date.
+    Select topics for a specific date (legacy flat mode).
 
     Args:
         brief_date: Date to generate brief for
@@ -388,3 +659,17 @@ def select_topics_for_date(brief_date: date, limit: int = 5) -> List[TrendingTop
     """
     selector = TopicSelector(brief_date)
     return selector.select_topics(limit)
+
+
+def select_sectioned_topics_for_date(brief_date: date) -> Dict[str, List[Tuple[TrendingTopic, str]]]:
+    """
+    Select topics organized by section for a specific date (new sectioned mode).
+
+    Args:
+        brief_date: Date to generate brief for
+
+    Returns:
+        Dict mapping section keys to lists of (TrendingTopic, depth) tuples
+    """
+    selector = TopicSelector(brief_date)
+    return selector.select_topics_by_section()
