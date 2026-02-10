@@ -19,6 +19,8 @@ logger = logging.getLogger(__name__)
 # Minimum votes required to unlock consensus analysis
 PARTICIPATION_THRESHOLD = 5
 
+DEMO_DISCUSSION_IDS = {25}
+
 
 def get_user_vote_count(discussion_id):
     """
@@ -144,11 +146,12 @@ def view_results(discussion_id):
     """
     discussion = Discussion.query.get_or_404(discussion_id)
     
-    # Check participation gate (unless user is creator or admin)
+    # Check participation gate (unless user is creator, admin, or demo discussion)
     is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
     is_admin = current_user.is_authenticated and getattr(current_user, 'is_admin', False)
+    is_demo = discussion_id in DEMO_DISCUSSION_IDS
     
-    if not is_creator and not is_admin:
+    if not is_creator and not is_admin and not is_demo:
         vote_count, identifier_type = get_user_vote_count(discussion_id)
         votes_needed = max(0, PARTICIPATION_THRESHOLD - vote_count)
         
@@ -369,8 +372,9 @@ def generate_report(discussion_id):
     # Check participation gate (same as view_results)
     is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
     is_admin = current_user.is_authenticated and getattr(current_user, 'is_admin', False)
+    is_demo = discussion_id in DEMO_DISCUSSION_IDS
     
-    if not is_creator and not is_admin:
+    if not is_creator and not is_admin and not is_demo:
         vote_count, identifier_type = get_user_vote_count(discussion_id)
         votes_needed = max(0, PARTICIPATION_THRESHOLD - vote_count)
         
