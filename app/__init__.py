@@ -624,16 +624,19 @@ def create_app():
                 def _heartbeat():
                     """Refresh scheduler lock every 30s, only if we still own it."""
                     import redis as redis_lib
+                    r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
                     while True:
                         time.sleep(30)
                         try:
-                            r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
                             result = r.eval(_RENEW_SCRIPT, 1, _SCHEDULER_LOCK_KEY, str(pid), str(_SCHEDULER_LOCK_TTL))
                             if result is None:
                                 app.logger.warning(f"Scheduler lock lost by pid={pid}, stopping heartbeat")
                                 return
                         except Exception:
-                            pass
+                            try:
+                                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                            except Exception:
+                                pass
                 
                 hb = threading.Thread(target=_heartbeat, daemon=True)
                 hb.start()

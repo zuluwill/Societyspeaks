@@ -773,17 +773,23 @@ def magic_link(token):
 
     if not subscriber:
         expired_sub = DailyBriefSubscriber.query.filter_by(magic_token=token).first()
+        # Only auto-renew if token expired recently (within 30 days) to limit security risk
         if expired_sub and expired_sub.status == 'active':
-            expired_sub.generate_magic_token(expires_hours=168)
-            db.session.commit()
-            session['brief_subscriber_id'] = expired_sub.id
-            session['brief_subscriber_token'] = expired_sub.magic_token
-            session.modified = True
-            if expired_sub.user:
-                from flask_login import login_user
-                login_user(expired_sub.user)
-            flash(f'Welcome back! Signed in as {expired_sub.email}', 'success')
-            return redirect(url_for('brief.today'))
+            max_renew_age_days = 30
+            allow_renew = True
+            if expired_sub.magic_token_expires:
+                allow_renew = (datetime.utcnow() - expired_sub.magic_token_expires) <= timedelta(days=max_renew_age_days)
+            if allow_renew:
+                expired_sub.generate_magic_token(expires_hours=168)
+                db.session.commit()
+                session['brief_subscriber_id'] = expired_sub.id
+                session['brief_subscriber_token'] = expired_sub.magic_token
+                session.modified = True
+                if expired_sub.user:
+                    from flask_login import login_user
+                    login_user(expired_sub.user)
+                flash(f'Welcome back! Signed in as {expired_sub.email}', 'success')
+                return redirect(url_for('brief.today'))
 
         flash('This link has expired or is invalid. Please subscribe again.', 'warning')
         return redirect(url_for('brief.subscribe'))

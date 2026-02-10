@@ -2143,7 +2143,7 @@ class DailyBriefSubscriber(db.Model):
         if not self.is_subscribed_eligible():
             return False
 
-        if brief_id and self.has_received_this_brief(brief_id):
+        if brief_id is not None and self.has_received_this_brief(brief_id):
             return False
 
         if self.has_received_brief_today(brief_date):
