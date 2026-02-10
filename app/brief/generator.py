@@ -1607,11 +1607,13 @@ Guidelines:
                 signal['category'] = market.category or 'world'
                 signal['matched_topic'] = None
 
-                event_url = self._get_polymarket_event_url(market.slug)
-                if event_url:
-                    signal['url'] = event_url
-                else:
-                    signal['url'] = f"https://polymarket.com/market/{market.slug}"
+                if market.slug:
+                    event_url = self._get_polymarket_event_url(market.slug)
+                    if event_url:
+                        signal['url'] = event_url
+                    else:
+                        signal['url'] = f"https://polymarket.com/market/{market.slug}"
+                # else: keep the url from to_signal_dict() (condition_id-based fallback)
 
                 world_events.append(signal)
                 logger.info(
