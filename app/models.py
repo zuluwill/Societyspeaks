@@ -497,6 +497,7 @@ class Discussion(db.Model):
         db.Index('idx_discussion_topic', 'topic'),
         db.Index('idx_discussion_partner_article_url', 'partner_article_url'),
         db.Index('idx_discussion_partner_id', 'partner_id'),
+        db.Index('idx_discussion_partner_env_created', 'partner_env', 'created_at'),
     )
     
     id = db.Column(db.Integer, primary_key=True)
@@ -3462,7 +3463,7 @@ class InputSource(db.Model):
 
     # Relationships
     ingested_items = db.relationship('IngestedItem', backref='source', lazy='dynamic', cascade='all, delete-orphan')
-    briefing_sources = db.relationship('BriefingSource', backref='input_source', lazy='dynamic')
+    briefing_sources = db.relationship('BriefingSource', backref=db.backref('input_source', overlaps='source,briefing_associations'), lazy='dynamic', overlaps='source,briefing_associations')
 
     def to_dict(self):
         return {
@@ -3668,7 +3669,7 @@ class BriefingSource(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationship to access source details
-    source = db.relationship('InputSource', backref='briefing_associations')
+    source = db.relationship('InputSource', backref=db.backref('briefing_associations', overlaps='briefing_sources,input_source'), overlaps='briefing_sources,input_source')
 
     def __repr__(self):
         return f'<BriefingSource briefing:{self.briefing_id} source:{self.source_id} priority:{self.priority}>'
