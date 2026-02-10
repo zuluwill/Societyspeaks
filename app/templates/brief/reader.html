@@ -124,6 +124,88 @@
         .sources a { color: var(--accent-color); text-decoration: none; }
         .sources a:hover { text-decoration: underline; }
 
+        /* World Events Section */
+        .world-events {
+            margin-top: 3rem;
+            padding: 1.5rem;
+            background: #f0f9ff;
+            border-radius: 8px;
+        }
+
+        .world-events h2 {
+            color: #0ea5e9;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .world-events-grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .world-event-card {
+            padding: 1rem;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #bae6fd;
+        }
+
+        .world-event-question {
+            font-weight: 500;
+            margin-bottom: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .world-event-bar-bg {
+            height: 1.5rem;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .world-event-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+            border-radius: 4px;
+            min-width: 36px;
+            text-align: right;
+            padding-right: 6px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            line-height: 1.5rem;
+        }
+
+        .world-event-stats {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 0.8125rem;
+            color: var(--muted-color);
+        }
+
+        .world-event-stats .change-up { color: #16a34a; font-weight: 600; }
+        .world-event-stats .change-down { color: #dc2626; font-weight: 600; }
+        .world-event-stats a { color: #0ea5e9; text-decoration: none; }
+        .world-event-stats a:hover { text-decoration: underline; }
+
+        .world-event-category {
+            display: inline-block;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: #0369a1;
+            background: #e0f2fe;
+            padding: 0.125rem 0.5rem;
+            border-radius: 3px;
+        }
+
+        .world-events-disclaimer {
+            font-size: 0.75rem;
+            color: var(--muted-color);
+            font-style: italic;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
         /* Lens Check Section */
         .lens-check {
             margin-top: 3rem;
@@ -274,6 +356,38 @@
             {% endif %}
         </article>
         {% endfor %}
+
+        {% if brief.world_events %}
+        <section class="world-events">
+            <h2>What the World is Watching</h2>
+            <div class="world-events-grid">
+                {% for market in brief.world_events %}
+                <div class="world-event-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                        <p class="world-event-question">"{{ market.question }}"</p>
+                        {% if market.category %}
+                        <span class="world-event-category">{{ market.category|title }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="world-event-bar-bg">
+                        <div class="world-event-bar-fill" style="width: {{ (market.probability * 100)|round }}%;">
+                            {{ (market.probability * 100)|round }}%
+                        </div>
+                    </div>
+                    <p class="world-event-stats">
+                        {% if market.change_24h_formatted and market.change_24h_formatted != '—' %}
+                        <span class="{% if market.change_24h > 0 %}change-up{% elif market.change_24h < 0 %}change-down{% endif %}">{{ market.change_24h_formatted }}</span> today &middot;
+                        {% endif %}
+                        ${{ "{:,.0f}".format(market.volume_24h or 0) }} volume
+                        {% if market.trader_count %}&middot; {{ "{:,.0f}".format(market.trader_count) }} traders{% endif %}
+                        &middot; <a href="{{ market.url }}" rel="noopener">View market &rarr;</a>
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+            <p class="world-events-disclaimer">Prediction market probabilities reflect collective expectations. Prices move on news, rumours, and sentiment — they are not forecasts.</p>
+        </section>
+        {% endif %}
 
         {% if brief.lens_check %}
         <section class="lens-check">

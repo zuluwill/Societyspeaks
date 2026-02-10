@@ -633,6 +633,59 @@
         </div>
         {% endif %}
 
+        <!-- What the World is Watching Section -->
+        {% if brief.world_events %}
+        <div class="rounded-2xl shadow-lg border border-sky-200 overflow-hidden bg-gradient-to-br from-slate-50 to-sky-50 mt-8">
+            <div class="p-6 sm:p-8">
+                <div class="flex items-center gap-3 mb-5">
+                    <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-sky-500 text-white text-lg">🌍</span>
+                    <div>
+                        <h2 class="font-serif text-xl sm:text-2xl font-bold text-gray-900">What the World is Watching</h2>
+                        <p class="text-sm text-sky-700">Where prediction markets see the biggest stakes</p>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    {% for market in brief.world_events %}
+                    <div class="bg-white rounded-xl p-5 border border-sky-100">
+                        <div class="flex items-start justify-between gap-3 mb-3">
+                            <p class="text-base font-medium text-slate-800">"{{ market.question }}"</p>
+                            {% if market.category %}
+                            <span class="flex-shrink-0 text-xs font-medium text-sky-700 bg-sky-100 px-2 py-0.5 rounded whitespace-nowrap">{{ market.category|title }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="mb-3">
+                            <div class="h-7 bg-slate-200 rounded overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-sky-500 to-sky-400 flex items-center justify-end pr-2"
+                                     style="width: {{ (market.probability * 100)|round }}%; min-width: 50px;">
+                                    <span class="text-white font-semibold text-sm">{{ (market.probability * 100)|round }}%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                            {% if market.change_24h_formatted and market.change_24h_formatted != '—' %}
+                            <span class="font-semibold {% if market.change_24h > 0 %}text-green-600{% elif market.change_24h < 0 %}text-red-600{% endif %}">
+                                {{ market.change_24h_formatted }} today
+                            </span>
+                            <span>&middot;</span>
+                            {% endif %}
+                            <span>${{ "{:,.0f}".format(market.volume_24h or 0) }} volume</span>
+                            {% if market.trader_count %}
+                            <span>&middot;</span>
+                            <span>{{ "{:,.0f}".format(market.trader_count) }} traders</span>
+                            {% endif %}
+                            <span>&middot;</span>
+                            <a href="{{ market.url }}" target="_blank" rel="noopener" class="text-sky-600 hover:text-sky-700 font-medium">View market &rarr;</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p class="text-xs text-gray-400 italic mt-4 text-center">
+                    Prediction market probabilities reflect collective expectations. Prices move on news, rumours, and sentiment — they are not forecasts.
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
         <!-- Market Pulse Section -->
         {% if brief.market_pulse %}
         <div class="rounded-2xl shadow-lg border border-indigo-200 overflow-hidden bg-gradient-to-br from-slate-50 to-indigo-50 mt-8">

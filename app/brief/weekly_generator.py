@@ -154,6 +154,21 @@ class WeeklyBriefGenerator:
         except Exception as e:
             logger.warning(f"Failed to get Week Ahead for weekly brief: {e}")
 
+        # "What the World is Watching" — reuse the daily generator's method
+        try:
+            from app.brief.generator import BriefGenerator
+            gen = BriefGenerator()
+            # Collect market IDs already used in market_pulse to avoid duplicates
+            market_pulse_ids = set()
+            if brief.market_pulse:
+                market_pulse_ids = {m['market_id'] for m in brief.market_pulse if 'market_id' in m}
+            world_events_data = gen._generate_world_events(seen_market_ids=market_pulse_ids)
+            if world_events_data:
+                brief.world_events = world_events_data
+                logger.info(f"Generated World Events for weekly brief with {len(world_events_data)} markets")
+        except Exception as e:
+            logger.warning(f"Failed to generate World Events for weekly brief: {e}")
+
         # Finalize
         brief.status = 'ready' if auto_publish else 'draft'
         brief.created_at = datetime.utcnow()

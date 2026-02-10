@@ -1511,6 +1511,10 @@ class DailyBrief(db.Model):
     # Stored at brief level so it's not tied to individual items
     market_pulse = db.Column(db.JSON)  # [{'question': '...', 'probability': 0.65, ...}]
 
+    # "What the World is Watching" section data (curated geopolitical prediction markets)
+    # Same schema as market_pulse but filtered by world events categories + high volume
+    world_events = db.Column(db.JSON)  # [{'question': '...', 'probability': 0.65, 'category': '...', ...}]
+
     # Relationships
     items = db.relationship('BriefItem', backref='brief', lazy='dynamic',
                            cascade='all, delete-orphan', order_by='BriefItem.position')
@@ -1607,6 +1611,7 @@ class DailyBrief(db.Model):
             'lens_check': self.lens_check,
             'week_ahead': self.week_ahead,
             'market_pulse': self.market_pulse,
+            'world_events': self.world_events,
             'published_at': self.published_at.isoformat() if self.published_at else None,
             'created_at': self.created_at.isoformat()
         }

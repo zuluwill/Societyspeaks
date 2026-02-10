@@ -1134,13 +1134,24 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
             logger.warning(f"Failed to generate Week Ahead: {e}")
 
         # Generate "Market Pulse" section
+        market_pulse_market_ids = set()
         try:
             market_pulse_data = self._generate_market_pulse(all_topics)
             if market_pulse_data:
                 brief.market_pulse = market_pulse_data
+                market_pulse_market_ids = {m['market_id'] for m in market_pulse_data if 'market_id' in m}
                 logger.info(f"Generated Market Pulse with {len(market_pulse_data)} markets")
         except Exception as e:
             logger.warning(f"Failed to generate Market Pulse: {e}")
+
+        # Generate "What the World is Watching" section
+        try:
+            world_events_data = self._generate_world_events(seen_market_ids=market_pulse_market_ids)
+            if world_events_data:
+                brief.world_events = world_events_data
+                logger.info(f"Generated World Events with {len(world_events_data)} markets")
+        except Exception as e:
+            logger.warning(f"Failed to generate World Events: {e}")
 
         # Finalize
         brief.status = 'ready' if auto_publish else 'draft'
@@ -1489,6 +1500,137 @@ Guidelines:
 
         except Exception as e:
             logger.warning(f"Market Pulse generation failed: {e}")
+            return None
+
+    def _generate_world_events(
+        self,
+        seen_market_ids: set = None,
+        min_markets: int = 3,
+        max_markets: int = 5
+    ) -> Optional[List[Dict]]:
+        """
+        Generate "What the World is Watching" section with curated geopolitical
+        prediction markets from Polymarket.
+
+        Selection criteria:
+        1. Geopolitically relevant categories (politics, geopolitics, elections, economics)
+        2. High trading volume (>= $10,000 24h volume)
+        3. Significant probability movement (>= 1% change in 24h)
+        4. Excludes markets already shown in Market Pulse
+
+        Ranking uses a composite score:
+            abs(change_24h) * 0.4 + log(volume_24h) * 0.3 + log(trader_count) * 0.3
+
+        Returns:
+            List of market signal dicts with category, or None if fewer than
+            min_markets qualify.
+        """
+        import math
+
+        if seen_market_ids is None:
+            seen_market_ids = set()
+
+        try:
+            from app.models import PolymarketMarket
+
+            # Geopolitical categories that qualify for this section (lowercase)
+            WORLD_EVENT_CATEGORIES = [
+                'politics', 'geopolitics', 'elections', 'economics',
+                'world', 'global', 'government', 'international',
+            ]
+
+            # Geopolitical keywords to match in tags
+            WORLD_EVENT_TAG_KEYWORDS = [
+                'election', 'war', 'conflict', 'sanctions', 'trade',
+                'nato', 'treaty', 'summit', 'diplomacy', 'government',
+                'president', 'prime minister', 'parliament', 'referendum',
+                'geopolitics', 'military', 'nuclear', 'climate',
+            ]
+
+            # Query active markets with high volume in relevant categories
+            # Use func.lower for case-insensitive matching (API categories may vary)
+            from sqlalchemy import func
+            category_markets = PolymarketMarket.query.filter(
+                PolymarketMarket.is_active == True,
+                PolymarketMarket.volume_24h >= 10000,  # Higher bar than Market Pulse ($5k)
+                func.lower(PolymarketMarket.category).in_(WORLD_EVENT_CATEGORIES),
+            ).all()
+
+            # Also query markets that may not have a matching category but have
+            # relevant tags (tags is a JSON array, so we do a broader text search)
+            tag_market_ids = {m.id for m in category_markets}
+            all_high_volume = PolymarketMarket.query.filter(
+                PolymarketMarket.is_active == True,
+                PolymarketMarket.volume_24h >= 10000,
+                PolymarketMarket.id.notin_(tag_market_ids) if tag_market_ids else True,
+            ).all()
+
+            tag_matched = []
+            for market in all_high_volume:
+                if market.tags and isinstance(market.tags, list):
+                    lower_tags = [t.lower() for t in market.tags if isinstance(t, str)]
+                    if any(kw in tag for kw in WORLD_EVENT_TAG_KEYWORDS for tag in lower_tags):
+                        tag_matched.append(market)
+
+            # Combine candidates and deduplicate
+            candidates = category_markets + tag_matched
+
+            # Filter: exclude markets already in Market Pulse + require movement + valid probability
+            scored_markets = []
+            seen_ids_local = set()  # Prevent duplicates between category + tag queries
+            for market in candidates:
+                if market.id in seen_market_ids or market.id in seen_ids_local:
+                    continue
+                seen_ids_local.add(market.id)
+
+                # Must have a valid probability for display
+                if market.probability is None:
+                    continue
+
+                change = market.change_24h
+                if change is None or abs(change) < 0.01:  # 1%+ movement required
+                    continue
+
+                # Composite score: movement matters most, volume and traders add confidence
+                volume_score = math.log(max(market.volume_24h or 1, 1))
+                trader_score = math.log(max(market.trader_count or 1, 1))
+                movement_score = abs(change)
+
+                composite = (movement_score * 0.4) + (volume_score * 0.3) + (trader_score * 0.3)
+                scored_markets.append((composite, market))
+
+            # Sort by composite score descending
+            scored_markets.sort(key=lambda x: x[0], reverse=True)
+
+            # Take top max_markets
+            top_markets = scored_markets[:max_markets]
+
+            # Enforce minimum threshold
+            if len(top_markets) < min_markets:
+                logger.info(
+                    f"World Events: only {len(top_markets)} qualifying markets "
+                    f"(minimum {min_markets}), skipping section"
+                )
+                return None
+
+            # Build result list
+            world_events = []
+            for _, market in top_markets:
+                signal = market.to_signal_dict()
+                signal['category'] = market.category or 'world'
+                signal['matched_topic'] = None  # Not topic-matched
+                world_events.append(signal)
+                logger.info(
+                    f"World Events: '{market.question[:60]}' "
+                    f"(change={market.change_24h_formatted}, "
+                    f"vol=${market.volume_24h:,.0f}, "
+                    f"cat={market.category})"
+                )
+
+            return world_events
+
+        except Exception as e:
+            logger.warning(f"World Events generation failed: {e}")
             return None
 
     def _call_llm(self, prompt: str) -> str:

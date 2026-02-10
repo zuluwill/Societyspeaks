@@ -79,6 +79,16 @@ SECTIONS = OrderedDict([
         'default_depth': 'quick',
         'sort_order': 5,
     }),
+    ('world_events', {
+        'display_name': 'What the World is Watching',
+        'description': 'Where prediction markets see the biggest stakes',
+        'email_color': '#0ea5e9',   # Sky-500
+        'web_color_class': 'text-sky-600',
+        'icon': '',
+        'max_items': 5,
+        'default_depth': 'quick',
+        'sort_order': 6,
+    }),
     ('week_ahead', {
         'display_name': 'The Week Ahead',
         'description': 'Key dates and events to watch',
@@ -87,7 +97,7 @@ SECTIONS = OrderedDict([
         'icon': '',
         'max_items': 5,
         'default_depth': 'quick',
-        'sort_order': 6,
+        'sort_order': 7,
     }),
     ('market_pulse', {
         'display_name': 'Market Pulse',
@@ -97,7 +107,7 @@ SECTIONS = OrderedDict([
         'icon': '',
         'max_items': 3,
         'default_depth': 'quick',
-        'sort_order': 7,
+        'sort_order': 8,
     }),
     ('underreported', {
         'display_name': 'Under the Radar',
@@ -107,7 +117,7 @@ SECTIONS = OrderedDict([
         'icon': '',
         'max_items': 1,
         'default_depth': 'standard',
-        'sort_order': 8,
+        'sort_order': 9,
     }),
     ('lens_check', {
         'display_name': 'Same Story, Different Lens',
@@ -117,7 +127,7 @@ SECTIONS = OrderedDict([
         'icon': '',
         'max_items': 1,
         'default_depth': 'full',
-        'sort_order': 9,
+        'sort_order': 10,
     }),
 ])
 
