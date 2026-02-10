@@ -502,6 +502,18 @@ class BriefEmailScheduler:
 
         current_hour = datetime.utcnow().hour
         today = date.today()
+
+        lock_key = f"brief_send_lock:daily:{today.isoformat()}:{current_hour}"
+        redis_url = os.environ.get('REDIS_URL')
+        if redis_url:
+            try:
+                import redis as redis_lib
+                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                if not r.set(lock_key, os.getpid(), nx=True, ex=3500):
+                    logger.info(f"Daily brief send already in progress for hour {current_hour} (lock held), skipping")
+                    return {'sent': 0, 'failed': 0, 'errors': []}
+            except Exception as e:
+                logger.warning(f"Could not acquire Redis send lock: {e}, proceeding with send")
         
         BRIEF_PUBLISH_HOUR = 18
         
@@ -519,7 +531,6 @@ class BriefEmailScheduler:
             logger.info("No published daily brief available, skipping send")
             return None
 
-        # Get daily subscribers for this hour
         subscribers = self.get_subscribers_for_hour(current_hour, cadence='daily')
 
         if not subscribers:
@@ -543,6 +554,19 @@ class BriefEmailScheduler:
         from datetime import date, timedelta
 
         current_hour = datetime.utcnow().hour
+        today = date.today()
+
+        lock_key = f"brief_send_lock:weekly:{today.isoformat()}:{current_hour}"
+        redis_url = os.environ.get('REDIS_URL')
+        if redis_url:
+            try:
+                import redis as redis_lib
+                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                if not r.set(lock_key, os.getpid(), nx=True, ex=3500):
+                    logger.info(f"Weekly brief send already in progress for hour {current_hour} (lock held), skipping")
+                    return {'sent': 0, 'failed': 0, 'errors': []}
+            except Exception as e:
+                logger.warning(f"Could not acquire Redis send lock: {e}, proceeding with send")
 
         # Find the most recent weekly brief
         brief = DailyBrief.query.filter(

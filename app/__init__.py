@@ -573,20 +573,70 @@ def create_app():
     # Initialize and start background scheduler (Phase 3.3)
     # Only runs in production, not during migrations or tests
     # IMPORTANT: Scheduler startup is deferred to avoid blocking gunicorn port binding
+    # With multiple gunicorn workers, only ONE worker should run the scheduler.
+    # We use a Redis lock with a heartbeat to ensure exactly one scheduler instance.
     if not app.config.get('TESTING') and not os.environ.get('SQLALCHEMY_MIGRATE'):
         import threading
+        
+        _SCHEDULER_LOCK_KEY = 'scheduler_lock'
+        _SCHEDULER_LOCK_TTL = 60
         
         def _deferred_scheduler_start():
             """Start scheduler after a delay to allow gunicorn to bind port and pass health checks first."""
             import time
             time.sleep(15)
+            
+            pid = os.getpid()
+            redis_url = os.getenv('REDIS_URL')
+            
+            if redis_url:
+                try:
+                    import redis as redis_lib
+                    r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                    acquired = r.set(_SCHEDULER_LOCK_KEY, str(pid), nx=True, ex=_SCHEDULER_LOCK_TTL)
+                    if not acquired:
+                        app.logger.info(f"Scheduler lock held by another worker, skipping (pid={pid})")
+                        return
+                except Exception as e:
+                    app.logger.warning(f"Could not acquire scheduler lock: {e}, skipping scheduler for this worker")
+                    return
+            else:
+                app.logger.info("No Redis available, starting scheduler (single-worker assumed)")
+            
             try:
                 from app.scheduler import init_scheduler, start_scheduler
                 init_scheduler(app)
                 start_scheduler()
-                app.logger.info("Background scheduler started successfully (deferred)")
+                app.logger.info(f"Background scheduler started (pid={pid})")
             except Exception as e:
                 app.logger.error(f"Failed to start scheduler: {e}")
+                return
+            
+            if redis_url:
+                _RENEW_SCRIPT = """
+                if redis.call('get', KEYS[1]) == ARGV[1] then
+                    return redis.call('set', KEYS[1], ARGV[1], 'EX', ARGV[2])
+                else
+                    return nil
+                end
+                """
+                
+                def _heartbeat():
+                    """Refresh scheduler lock every 30s, only if we still own it."""
+                    import redis as redis_lib
+                    while True:
+                        time.sleep(30)
+                        try:
+                            r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                            result = r.eval(_RENEW_SCRIPT, 1, _SCHEDULER_LOCK_KEY, str(pid), str(_SCHEDULER_LOCK_TTL))
+                            if result is None:
+                                app.logger.warning(f"Scheduler lock lost by pid={pid}, stopping heartbeat")
+                                return
+                        except Exception:
+                            pass
+                
+                hb = threading.Thread(target=_heartbeat, daemon=True)
+                hb.start()
         
         scheduler_thread = threading.Thread(target=_deferred_scheduler_start, daemon=True)
         scheduler_thread.start()
