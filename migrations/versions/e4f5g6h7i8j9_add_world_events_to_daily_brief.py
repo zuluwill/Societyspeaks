@@ -10,9 +10,9 @@ Create Date: 2026-02-10
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 
-# revision identifiers, used by Alembic.
 revision = 'e4f5g6h7i8j9'
 down_revision = 'd3e4f5g6h7i8'
 branch_labels = None
@@ -20,8 +20,16 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('daily_brief', sa.Column('world_events', sa.JSON(), nullable=True))
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('daily_brief')]
+    if 'world_events' not in columns:
+        op.add_column('daily_brief', sa.Column('world_events', sa.JSON(), nullable=True))
 
 
 def downgrade():
-    op.drop_column('daily_brief', 'world_events')
+    conn = op.get_bind()
+    inspector = inspect(conn)
+    columns = [col['name'] for col in inspector.get_columns('daily_brief')]
+    if 'world_events' in columns:
+        op.drop_column('daily_brief', 'world_events')
