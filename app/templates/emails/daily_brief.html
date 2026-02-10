@@ -79,6 +79,18 @@
         .mobile-quick-headline {
           font-size: 15px !important;
         }
+        .mobile-section-header {
+          font-size: 18px !important;
+        }
+        .mobile-full-width {
+          width: 100% !important;
+        }
+        .mobile-card {
+          padding: 12px !important;
+        }
+        .mobile-text-sm {
+          font-size: 13px !important;
+        }
       }
     </style>
   </head>
@@ -392,7 +404,7 @@
               <td class="mobile-padding" style="padding: 12px 28px; border-bottom: 1px solid #f1f5f9;">
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                   <tr>
-                    <td class="mobile-quick-headline" style="font-family: Georgia, 'Times New Roman', serif; font-size: 16px; font-weight: 700; color: #0f172a; line-height: 1.4; padding-bottom: 2px;">
+                    <td class="mobile-quick-headline" style="font-family: Georgia, 'Times New Roman', serif; font-size: 18px; font-weight: 700; color: #0f172a; line-height: 1.35; padding-bottom: 4px;">
                       {{ item.headline }}
                     </td>
                   </tr>
@@ -400,6 +412,87 @@
                   <tr>
                     <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #64748b; line-height: 1.5;">
                       {{ item.quick_summary }}
+                    </td>
+                  </tr>
+                  {% endif %}
+                  {% if item.trending_topic and item.trending_topic.articles %}
+                  <tr>
+                    <td style="padding-top: 8px;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tr>
+                          <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #64748b; text-transform: uppercase; padding-bottom: 4px;">
+                            📰 Sources
+                          </td>
+                        </tr>
+                        {% for article in item.trending_topic.articles[:2] %}
+                        <tr>
+                          <td style="padding-bottom: 2px;">
+                            <a href="{{ article.url }}" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #1e40af; text-decoration: none;">
+                              {{ article.source_name or article.title[:40] }} &rarr;
+                            </a>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </table>
+                    </td>
+                  </tr>
+                  {% endif %}
+                  {% if item.verification_links %}
+                  <tr>
+                    <td style="padding-top: 8px;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tr>
+                          <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #64748b; text-transform: uppercase; padding-bottom: 4px;">
+                            🔗 Verify
+                          </td>
+                        </tr>
+                        {% for link in item.verification_links[:2] %}
+                        <tr>
+                          <td style="padding-bottom: 2px;">
+                            <a href="{{ link.url }}" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #1e40af; text-decoration: none;">
+                              {{ link.description }} &rarr;
+                            </a>
+                          </td>
+                        </tr>
+                        {% endfor %}
+                      </table>
+                    </td>
+                  </tr>
+                  {% endif %}
+                  {% if item.coverage_distribution %}
+                  <tr>
+                    <td style="padding-top: 6px;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                        <tr>
+                          <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #64748b;">
+                            {% set left_pct = (item.coverage_distribution.get('left', 0) * 100)|int %}
+                            {% set center_pct = (item.coverage_distribution.get('center', 0) * 100)|int %}
+                            {% set right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
+                            <span style="color: #2563eb">{{ left_pct }}% Left</span>
+                            &nbsp;&bull;&nbsp;
+                            <span style="color: #7c3aed">{{ center_pct }}% Centre</span>
+                            &nbsp;&bull;&nbsp;
+                            <span style="color: #dc2626">{{ right_pct }}% Right</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding-top: 4px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                              <tr>
+                                {% if left_pct > 0 %}
+                                <td width="{{ left_pct }}%" height="4" style="background-color: #3b82f6; border-radius: 2px 0 0 2px;"></td>
+                                {% endif %}
+                                {% if center_pct > 0 %}
+                                <td width="{{ center_pct }}%" height="4" style="background-color: #a855f7;"></td>
+                                {% endif %}
+                                {% if right_pct > 0 %}
+                                <td width="{{ right_pct }}%" height="4" style="background-color: #ef4444; border-radius: 0 2px 2px 0;"></td>
+                                {% endif %}
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                   {% endif %}
@@ -412,7 +505,7 @@
             <tr id="item-{{ item.id }}">
               <td
                 class="mobile-padding"
-                style="padding: 32px 28px; border-bottom: 1px solid #e2e8f0; {% if item.is_underreported %}background-color: #fef3c7;{% endif %}"
+                style="padding: 32px 28px; border-bottom: 1px solid #e2e8f0; {% if item.is_underreported and not brief.is_sectioned %}background-color: #fef3c7;{% endif %}"
               >
                 <table
                   role="presentation"
@@ -468,7 +561,7 @@
                   <!-- Story Number / Under the Radar Badge -->
                   <tr>
                     <td style="padding-bottom: 8px">
-                      {% if item.is_underreported %}
+                      {% if item.is_underreported and not brief.is_sectioned %}
                       <table
                         role="presentation"
                         cellpadding="0"
@@ -1164,7 +1257,7 @@
                   {% endif %}
 
                   <!-- Original News Sources (full depth only) — deduplicated -->
-                  {% if depth == 'full' and item.trending_topic and item.trending_topic.articles %}
+                  {% if item.trending_topic and item.trending_topic.articles %}
                   {% set topic_articles = item.trending_topic.articles.all()[:5] %}
                   {% set verify_urls = item.verification_links | map(attribute='url') | list if item.verification_links else [] %}
                   {% set ns = namespace(seen_urls=[]) %}
@@ -1276,7 +1369,7 @@
                   {% endif %} {% endif %}
 
                   <!-- Verification Links (full depth only) -->
-                  {% if depth == 'full' and item.verification_links %}
+                  {% if item.verification_links %}
                   <tr>
                     <td style="padding-bottom: 16px">
                       <table
@@ -1549,7 +1642,7 @@
                             <span style="font-size: 18px; color: #ffffff;">📅</span>
                           </td>
                           <td style="padding-left: 12px">
-                            <p style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">
+                            <p class="mobile-section-header" style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">
                               The Week Ahead
                             </p>
                             <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #6d28d9; margin: 4px 0 0 0;">
@@ -1566,7 +1659,7 @@
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
                              style="background-color: #ffffff; border-radius: 6px; border: 1px solid #e9d5ff;">
                         <tr>
-                          <td style="padding: 14px 16px">
+                          <td class="mobile-card" style="padding: 14px 16px">
                             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                               <tr>
                                 <td width="80" valign="top"
@@ -1617,7 +1710,7 @@
                             <span style="font-size: 18px; color: #ffffff;">🌍</span>
                           </td>
                           <td style="padding-left: 12px">
-                            <p style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">
+                            <p class="mobile-section-header" style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">
                               What the World is Watching
                             </p>
                             <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #0ea5e9; margin: 4px 0 0 0;">
@@ -1634,7 +1727,7 @@
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
                              style="background-color: #ffffff; border-radius: 6px; border: 1px solid #bae6fd;">
                         <tr>
-                          <td style="padding: 16px">
+                          <td class="mobile-card" style="padding: 16px">
                             <!-- Market Question + Category -->
                             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                               <tr>
@@ -1718,7 +1811,7 @@
                             <span style="font-size: 18px; color: #ffffff;">📊</span>
                           </td>
                           <td style="padding-left: 12px">
-                            <p style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">
+                            <p class="mobile-section-header" style="font-family: Georgia, 'Times New Roman', serif; font-size: 22px; font-weight: 700; color: #1f2937; margin: 0;">
                               Market Pulse
                             </p>
                             <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #6366f1; margin: 4px 0 0 0;">
@@ -1735,7 +1828,7 @@
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
                              style="background-color: #ffffff; border-radius: 6px; border: 1px solid #e0e7ff;">
                         <tr>
-                          <td style="padding: 16px">
+                          <td class="mobile-card" style="padding: 16px">
                             <!-- Market Question -->
                             <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; font-weight: 500; color: #1e293b; margin: 0 0 12px 0; line-height: 1.4;">
                               "{{ market.question }}"
@@ -1823,6 +1916,7 @@
                           </td>
                           <td style="padding-left: 12px">
                             <p
+                              class="mobile-section-header"
                               style="
                                 font-family:
                                   Georgia, &quot;Times New Roman&quot;, serif;
