@@ -577,7 +577,7 @@ def create_app():
     # Initialize and start background scheduler (Phase 3.3)
     # Only runs in production, not during migrations or tests
     # IMPORTANT: Scheduler startup is deferred to avoid blocking gunicorn port binding
-    if not app.config.get('TESTING') and not app.config.get('SQLALCHEMY_MIGRATE'):
+    if not app.config.get('TESTING') and not os.environ.get('SQLALCHEMY_MIGRATE'):
         import threading
         
         def _deferred_scheduler_start():

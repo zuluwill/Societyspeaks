@@ -2,10 +2,10 @@
 set -e
 
 echo "Installing Python dependencies..."
-pip install -r requirements.txt
+pip install --quiet --disable-pip-version-check -r requirements.txt
 
 echo "Running database migrations..."
-flask db upgrade
+SQLALCHEMY_MIGRATE=1 flask db upgrade
 
 echo "Building Tailwind CSS..."
 npx tailwindcss -i ./app/static/src/input.css -o ./app/static/css/output.css --minify
