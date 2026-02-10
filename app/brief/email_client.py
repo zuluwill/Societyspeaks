@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import List, Optional
 from flask import render_template, current_app
 from app.models import DailyBrief, DailyBriefSubscriber, BriefItem, db
+from app.brief.sections import SECTIONS
 from app.email_utils import RateLimiter
 from app.storage_utils import get_base_url
 
@@ -211,7 +212,8 @@ class ResendClient:
                 magic_link_url=magic_link_url,
                 unsubscribe_url=unsubscribe_url,
                 preferences_url=preferences_url,
-                base_url=base_url
+                base_url=base_url,
+                SECTIONS=SECTIONS
             )
             return html
         except Exception as e:

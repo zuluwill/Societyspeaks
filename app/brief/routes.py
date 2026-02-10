@@ -293,15 +293,17 @@ def today():
     # Check subscriber status for personalization (not access control)
     subscriber, is_subscriber = get_subscriber_status()
 
-    # No brief available for today - show most recent brief instead
+    # No brief available for today - show most recent daily brief instead
     if not brief:
-        # Find the most recent published brief
         latest_brief = DailyBrief.query.filter_by(
-            status='published'
+            status='published', brief_type='daily'
         ).order_by(DailyBrief.date.desc()).first()
         
         if latest_brief:
             items, topic_articles_by_topic_id = _items_with_topic_articles(latest_brief)
+            latest_weekly = DailyBrief.query.filter_by(
+                status='published', brief_type='weekly'
+            ).order_by(DailyBrief.date.desc()).first()
             return render_template(
                 'brief/view.html',
                 brief=latest_brief,
@@ -312,13 +314,18 @@ def today():
                 is_today=False,
                 waiting_for_today=True,
                 show_email_capture=(not is_subscriber),
-                tts_available=is_tts_available()
+                tts_available=is_tts_available(),
+                latest_weekly=latest_weekly
             )
         else:
             return render_template('brief/no_brief.html')
 
     # Get items with topic and article data eager-loaded (avoids N+1)
     items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
+
+    latest_weekly = DailyBrief.query.filter_by(
+        status='published', brief_type='weekly'
+    ).order_by(DailyBrief.date.desc()).first()
 
     return render_template(
         'brief/view.html',
@@ -329,7 +336,8 @@ def today():
         is_subscriber=is_subscriber,
         is_today=True,
         show_email_capture=(not is_subscriber),
-        tts_available=is_tts_available()
+        tts_available=is_tts_available(),
+        latest_weekly=latest_weekly
     )
 
 
@@ -354,6 +362,10 @@ def view_date(date_str):
 
     items, topic_articles_by_topic_id = _items_with_topic_articles(brief)
 
+    latest_weekly = DailyBrief.query.filter_by(
+        status='published', brief_type='weekly'
+    ).order_by(DailyBrief.date.desc()).first()
+
     return render_template(
         'brief/view.html',
         brief=brief,
@@ -363,7 +375,8 @@ def view_date(date_str):
         is_subscriber=is_subscriber,
         is_today=(brief_date == date.today()),
         show_email_capture=(not is_subscriber),
-        tts_available=is_tts_available()
+        tts_available=is_tts_available(),
+        latest_weekly=latest_weekly
     )
 
 

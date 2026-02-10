@@ -32,6 +32,28 @@
     </header>
 
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+        {% if latest_weekly is defined and latest_weekly and brief.brief_type != 'weekly' %}
+        <a href="{{ url_for('brief.weekly_latest') }}" class="block mb-4 bg-indigo-50 rounded-xl border border-indigo-200 p-4 shadow-sm hover:bg-indigo-100 transition-colors group">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-xl">📋</span>
+                    <div>
+                        <p class="text-indigo-800 font-semibold text-sm">Weekly Brief Available</p>
+                        <p class="text-indigo-600 text-xs">
+                            {% if latest_weekly.week_start_date and latest_weekly.week_end_date %}
+                            {{ latest_weekly.week_start_date.strftime('%d %b') }} – {{ latest_weekly.week_end_date.strftime('%d %b %Y') }}
+                            {% else %}
+                            {{ latest_weekly.date.strftime('%d %B %Y') }}
+                            {% endif %}
+                            &middot; ~{{ latest_weekly.reading_time or 6 }} min read
+                        </p>
+                    </div>
+                </div>
+                <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-sm font-medium">Read &rarr;</span>
+            </div>
+        </a>
+        {% endif %}
+
         <div class="bg-blue-50 rounded-xl border border-blue-200 p-5 sm:p-6 mb-8 shadow-sm">
             <p class="text-blue-800 text-base leading-relaxed">{{ brief.intro_text }}</p>
         </div>
