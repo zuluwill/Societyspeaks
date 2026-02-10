@@ -7,6 +7,7 @@ from flask_wtf.csrf import CSRFProtect
 from config import Config, config_dict
 from datetime import timedelta
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 import json
 import time
@@ -142,6 +143,8 @@ def create_app():
     app = Flask(__name__, 
         static_url_path='',
         static_folder='static')
+
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
     dictConfig(Config.LOGGING_CONFIG)
 
