@@ -33,23 +33,32 @@
 
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
         {% if latest_weekly is defined and latest_weekly and brief.brief_type != 'weekly' %}
-        <a href="{{ url_for('brief.weekly_latest') }}" class="block mb-4 bg-indigo-50 rounded-xl border border-indigo-200 p-4 shadow-sm hover:bg-indigo-100 transition-colors group">
-            <div class="flex items-center justify-between">
+        <a href="{{ url_for('brief.weekly_latest') }}" class="block mb-6 rounded-xl border border-indigo-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+            <div class="bg-indigo-600 px-4 py-2">
+                <p class="text-white font-semibold text-sm tracking-wide">📋 Weekly Brief Available</p>
+            </div>
+            <div class="px-4 py-3 flex items-center justify-between">
+                <p class="text-slate-600 text-sm">
+                    {% if latest_weekly.week_start_date and latest_weekly.week_end_date %}
+                    Week of {{ latest_weekly.week_start_date.strftime('%d %b') }} – {{ latest_weekly.week_end_date.strftime('%d %b %Y') }}
+                    {% else %}
+                    {{ latest_weekly.date.strftime('%d %B %Y') }}
+                    {% endif %}
+                    <span class="text-slate-400 mx-1">&middot;</span> ~{{ latest_weekly.reading_time or 6 }} min read
+                </p>
+                <span class="text-indigo-500 group-hover:text-indigo-700 transition-colors text-sm font-semibold whitespace-nowrap ml-4">Read &rarr;</span>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if brief.brief_type == 'weekly' %}
+        <a href="{{ url_for('brief.today') }}" class="block mb-6 rounded-xl border border-blue-200 bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow group">
+            <div class="px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <span class="text-xl">📋</span>
-                    <div>
-                        <p class="text-indigo-800 font-semibold text-sm">Weekly Brief Available</p>
-                        <p class="text-indigo-600 text-xs">
-                            {% if latest_weekly.week_start_date and latest_weekly.week_end_date %}
-                            {{ latest_weekly.week_start_date.strftime('%d %b') }} – {{ latest_weekly.week_end_date.strftime('%d %b %Y') }}
-                            {% else %}
-                            {{ latest_weekly.date.strftime('%d %B %Y') }}
-                            {% endif %}
-                            &middot; ~{{ latest_weekly.reading_time or 6 }} min read
-                        </p>
-                    </div>
+                    <span class="text-lg">📰</span>
+                    <p class="text-slate-600 text-sm font-medium">Back to today's Daily Brief</p>
                 </div>
-                <span class="text-indigo-400 group-hover:text-indigo-600 transition-colors text-sm font-medium">Read &rarr;</span>
+                <span class="text-blue-500 group-hover:text-blue-700 transition-colors text-sm font-semibold whitespace-nowrap ml-4">&larr; Daily Brief</span>
             </div>
         </a>
         {% endif %}
