@@ -26,8 +26,8 @@ def dashboard():
     """Admin dashboard for briefs"""
     from sqlalchemy import func
     
-    # Get today's brief
-    today_brief = DailyBrief.query.filter_by(date=date.today()).first()
+    # Get today's daily brief (explicit type to avoid ambiguity with weekly)
+    today_brief = DailyBrief.query.filter_by(date=date.today(), brief_type='daily').first()
 
     # Get recent briefs
     recent_briefs = DailyBrief.query.order_by(
@@ -114,8 +114,13 @@ def preview(date_str=None):
     else:
         brief_date = date.today()
 
-    # Get or generate brief
-    brief = DailyBrief.query.filter_by(date=brief_date).first()
+    # Get brief - prefer daily, fall back to any type for this date
+    brief_type = request.args.get('type', 'daily')
+    if brief_type not in ('daily', 'weekly'):
+        brief_type = 'daily'
+    brief = DailyBrief.query.filter_by(date=brief_date, brief_type=brief_type).first()
+    if not brief:
+        brief = DailyBrief.query.filter_by(date=brief_date).first()
 
     if not brief:
         flash(f'No brief exists for {brief_date}. Generate one below.', 'info')
@@ -149,10 +154,10 @@ def generate(date_str=None):
         return redirect(url_for('brief_admin.dashboard'))
 
     try:
-        # Check if already exists
-        existing = DailyBrief.query.filter_by(date=brief_date).first()
+        # Check if daily brief already exists for this date
+        existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').first()
         if existing and existing.status != 'draft':
-            flash(f'Brief already exists for {brief_date} with status: {existing.status}', 'warning')
+            flash(f'Daily brief already exists for {brief_date} with status: {existing.status}', 'warning')
             return redirect(url_for('brief_admin.preview', date_str=date_str))
 
         # Generate
@@ -449,13 +454,14 @@ def send_to_subscriber():
             flash(f'Subscriber is not active: {email} (status: {subscriber.status})', 'error')
             return redirect(url_for('brief_admin.dashboard'))
         
-        brief = DailyBrief.query.filter_by(date=datetime.strptime(brief_date_str, '%Y-%m-%d').date()).first()
+        brief_date_obj = datetime.strptime(brief_date_str, '%Y-%m-%d').date()
+        brief = DailyBrief.query.filter_by(
+            date=brief_date_obj, brief_type='daily', status='published'
+        ).first() or DailyBrief.query.filter_by(
+            date=brief_date_obj, status='published'
+        ).first()
         if not brief:
-            flash(f'No brief found for {brief_date_str}', 'error')
-            return redirect(url_for('brief_admin.dashboard'))
-        
-        if brief.status != 'published':
-            flash(f'Brief is not published (status: {brief.status})', 'error')
+            flash(f'No published brief found for {brief_date_str}', 'error')
             return redirect(url_for('brief_admin.dashboard'))
         
         success = send_brief_to_subscriber(email, brief_date_str)

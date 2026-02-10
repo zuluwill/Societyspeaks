@@ -85,7 +85,7 @@ class BriefGenerator:
 
         # Check if brief already exists with row-level locking to prevent race conditions
         try:
-            existing = DailyBrief.query.filter_by(date=brief_date).with_for_update().first()
+            existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').with_for_update().first()
             if existing:
                 if existing.status in ('ready', 'published'):
                     logger.info(f"Brief for {brief_date} already {existing.status}, skipping generation")
@@ -103,9 +103,9 @@ class BriefGenerator:
         except Exception as e:
             # Handle race condition - another process may have created the brief
             db.session.rollback()
-            existing = DailyBrief.query.filter_by(date=brief_date).first()
+            existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').first()
             if existing:
-                logger.info(f"Brief for {brief_date} was created by another process, returning existing")
+                logger.info(f"Daily brief for {brief_date} was created by another process, returning existing")
                 return existing
             raise e
 

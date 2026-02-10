@@ -532,7 +532,8 @@ class BriefEmailScheduler:
         Send the latest weekly brief to weekly subscribers at current UTC hour.
 
         Called every hour by scheduler. Only delivers on the subscriber's
-        preferred weekly day.
+        preferred weekly day. Prevents re-sending the same weekly brief
+        by checking if the brief was created within the last 7 days.
 
         Returns:
             dict: Send results, or None if no weekly brief available
@@ -551,13 +552,18 @@ class BriefEmailScheduler:
             logger.debug("No published weekly brief available")
             return None
 
+        # Prevent re-sending old weekly briefs: only send if created within last 7 days
+        if brief.date <= date.today() - timedelta(days=7):
+            logger.debug(f"Weekly brief ({brief.date}) is older than 7 days, skipping")
+            return None
+
         # Get weekly subscribers for this hour (also checks preferred_weekly_day)
         subscribers = self.get_subscribers_for_hour(current_hour, cadence='weekly')
 
         if not subscribers:
             return {'sent': 0, 'failed': 0, 'errors': []}
 
-        logger.info(f"Sending weekly brief to {len(subscribers)} subscribers")
+        logger.info(f"Sending weekly brief ({brief.date}) to {len(subscribers)} subscribers")
         results = self.send_to_subscribers(subscribers, brief)
         return results
 
