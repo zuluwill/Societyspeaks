@@ -5,19 +5,41 @@ Pytest configuration and shared fixtures.
 import pytest
 import os
 import sys
+from unittest.mock import MagicMock
 
 # Add the app directory to the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Set DATABASE_URL before Config class is imported (it validates at class-definition time)
+os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
+
+# Mock deployment-specific modules that are not available in the test environment
+# (replit.object_storage is only available on Replit's platform)
+_replit_mock = MagicMock()
+sys.modules.setdefault('replit', _replit_mock)
+sys.modules.setdefault('replit.object_storage', _replit_mock)
 
 
 @pytest.fixture
 def app():
     """Create application for testing."""
-    from app import create_app
+    from config import Config
 
+    # Override Config attributes BEFORE create_app() so the app is built with
+    # SQLite-compatible settings (SQLite does not support pool_size, etc.)
+    _orig_uri = Config.SQLALCHEMY_DATABASE_URI
+    _orig_engine = Config.SQLALCHEMY_ENGINE_OPTIONS
+    Config.SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
+    Config.SQLALCHEMY_ENGINE_OPTIONS = {'pool_pre_ping': True}
+
+    from app import create_app
     app = create_app()
     app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['WTF_CSRF_ENABLED'] = False
+
+    # Restore Config for isolation
+    Config.SQLALCHEMY_DATABASE_URI = _orig_uri
+    Config.SQLALCHEMY_ENGINE_OPTIONS = _orig_engine
 
     return app
 

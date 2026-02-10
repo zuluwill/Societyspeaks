@@ -19,7 +19,8 @@ from app.api.errors import api_error
 from app.api.utils import (
     get_rate_limit_key, get_partner_ref, build_discussion_urls, append_ref_param,
     get_discussion_participant_count, get_discussion_statement_count,
-    sanitize_partner_ref, track_partner_event, record_partner_usage
+    sanitize_partner_ref, track_partner_event, record_partner_usage,
+    is_partner_origin_allowed
 )
 from app.partner.keys import find_partner_api_key
 
@@ -718,6 +719,12 @@ def flag_statement_from_embed():
         POST /api/embed/flag
         {"statement_id": 123, "flag_reason": "spam"}
     """
+    # Validate request origin against partner allowlist
+    origin = request.headers.get('Origin')
+    if origin and not is_partner_origin_allowed(origin):
+        current_app.logger.warning(f"Embed flag rejected: origin {origin} not in allowlist")
+        return api_error('origin_not_allowed', 'Origin not allowed.', 403)
+
     data = request.get_json()
     if not data:
         return api_error('invalid_request', 'Request body must be valid JSON.', 400)

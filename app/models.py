@@ -144,6 +144,7 @@ class PartnerDomain(db.Model):
     __table_args__ = (
         db.Index('idx_partner_domain', 'domain'),
         db.Index('idx_partner_domain_env', 'env'),
+        db.Index('idx_partner_domain_domain_env', 'domain', 'env'),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -165,6 +166,7 @@ class PartnerApiKey(db.Model):
         db.Index('idx_partner_key_hash', 'key_hash'),
         db.Index('idx_partner_key_env', 'env'),
         db.Index('idx_partner_key_status', 'status'),
+        db.Index('idx_partner_key_hash_status', 'key_hash', 'status'),
     )
 
     id = db.Column(db.Integer, primary_key=True)

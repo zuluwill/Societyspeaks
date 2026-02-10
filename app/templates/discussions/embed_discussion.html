@@ -863,6 +863,28 @@
     // ===========================================
     // UI Updates
     // ===========================================
+
+    /**
+     * Safely set hint element content with an optional link, avoiding innerHTML.
+     * @param {HTMLElement} el - The hint element to update
+     * @param {string} text - Plain text before the link
+     * @param {string} [linkText] - Link label (omit to set text only)
+     * @param {string} [linkUrl] - Link href
+     */
+    function setHintWithLink(el, text, linkText, linkUrl) {
+      el.textContent = '';
+      el.appendChild(document.createTextNode(text));
+      if (linkText && linkUrl) {
+        const a = document.createElement('a');
+        a.href = linkUrl;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = linkText;
+        el.appendChild(document.createTextNode(' '));
+        el.appendChild(a);
+      }
+    }
+
     function updateVoteProgress() {
       const count = getVoteCount();
       const threshold = config.voteGateThreshold;
@@ -877,7 +899,7 @@
         progressEl.classList.add('vote-progress--complete');
         countEl.textContent = `${count} / ${threshold} votes`;
         fillEl.style.width = `${Math.min((count / threshold) * 100, 100)}%`;
-        hintEl.innerHTML = `This discussion is closed. <a href="${config.consensusUrl}" target="_blank" rel="noopener">View full record</a>`;
+        setHintWithLink(hintEl, 'This discussion is closed.', 'View full record', config.consensusUrl);
         return;
       }
 
@@ -899,14 +921,14 @@
 
     function applyAnalysisHint(hintEl) {
       if (!analysisSnapshot) {
-        hintEl.innerHTML = `Thanks for participating! <a href="${config.consensusUrl}" target="_blank" rel="noopener">View full analysis</a>`;
+        setHintWithLink(hintEl, 'Thanks for participating!', 'View full analysis', config.consensusUrl);
         return;
       }
       if (analysisSnapshot.has_analysis) {
-        hintEl.innerHTML = `Thanks for participating! <a href="${config.consensusUrl}" target="_blank" rel="noopener">View full analysis</a>`;
+        setHintWithLink(hintEl, 'Thanks for participating!', 'View full analysis', config.consensusUrl);
       } else {
         const count = analysisSnapshot.participant_count || 0;
-        hintEl.innerHTML = `Analysis is not ready yet (${count} participants so far). <a href="${config.consensusUrl}" target="_blank" rel="noopener">View the record</a>`;
+        setHintWithLink(hintEl, `Analysis is not ready yet (${count} participants so far).`, 'View the record', config.consensusUrl);
       }
     }
 
@@ -972,7 +994,7 @@
     // ===========================================
     function showToast(message, type = 'info', showRetry = false, retryFn = null) {
       const toast = document.getElementById('toast');
-      toast.innerHTML = message;
+      toast.textContent = message;
 
       if (showRetry && retryFn) {
         const retryBtn = document.createElement('button');
@@ -1122,12 +1144,24 @@
             card.querySelector('[data-count="disagree"]').textContent = data.vote_count_disagree;
             card.querySelector('[data-count="unsure"]').textContent = data.vote_count_unsure;
 
-            // Update stats
+            // Update stats safely (avoid innerHTML)
             const statsEl = card.querySelector('.vote-stats');
             const total = data.total_votes;
             const agreePct = Math.round(data.agreement_rate * 100);
-            statsEl.innerHTML = `<span class="total-votes">${total}</span> total votes` +
-              (total > 0 ? ` &middot; <span class="agreement-rate">${agreePct}%</span> agreement` : '');
+            statsEl.textContent = '';
+            const totalSpan = document.createElement('span');
+            totalSpan.className = 'total-votes';
+            totalSpan.textContent = total;
+            statsEl.appendChild(totalSpan);
+            statsEl.appendChild(document.createTextNode(' total votes'));
+            if (total > 0) {
+              statsEl.appendChild(document.createTextNode(' \u00B7 '));
+              const pctSpan = document.createElement('span');
+              pctSpan.className = 'agreement-rate';
+              pctSpan.textContent = agreePct + '%';
+              statsEl.appendChild(pctSpan);
+              statsEl.appendChild(document.createTextNode(' agreement'));
+            }
 
             showToast('Vote recorded!', 'success');
           } else {
