@@ -8,6 +8,7 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import validates
 from sqlalchemy import event
+from sqlalchemy.dialects.postgresql import JSONB
 from typing import Optional
 
 import re
@@ -36,6 +37,10 @@ def generate_slug(name):
 
 
 class User(UserMixin, db.Model):
+    __table_args__ = (
+        db.Index('idx_user_stripe_customer_id', 'stripe_customer_id'),
+    )
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), nullable=False, unique=True)
     email = db.Column(db.String(150), nullable=False, unique=True)
@@ -53,7 +58,7 @@ class User(UserMixin, db.Model):
     weekly_digest_enabled = db.Column(db.Boolean, default=True)  # Weekly digest emails
 
     # Stripe billing
-    stripe_customer_id = db.Column(db.String(255), nullable=True, unique=True, index=True)
+    stripe_customer_id = db.Column(db.String(255), nullable=True, unique=True)
 
     # Relationships to profiles
     individual_profile = db.relationship('IndividualProfile', backref='user', uselist=False)
@@ -100,16 +105,20 @@ class User(UserMixin, db.Model):
 class Partner(db.Model):
     __table_args__ = (
         db.Index('idx_partner_status', 'status'),
+        db.Index('ix_partner_slug', 'slug', unique=True),
+        db.Index('ix_partner_contact_email', 'contact_email', unique=True),
+        db.Index('ix_partner_stripe_customer_id', 'stripe_customer_id', unique=True),
+        db.Index('ix_partner_stripe_subscription_id', 'stripe_subscription_id', unique=True),
     )
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
-    slug = db.Column(db.String(80), unique=True, nullable=False, index=True)
-    contact_email = db.Column(db.String(150), nullable=False, unique=True)
+    slug = db.Column(db.String(80), nullable=False)
+    contact_email = db.Column(db.String(150), nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(30), default='pending', nullable=False)
-    stripe_customer_id = db.Column(db.String(255), nullable=True, unique=True, index=True)
-    stripe_subscription_id = db.Column(db.String(255), nullable=True, unique=True, index=True)
+    stripe_customer_id = db.Column(db.String(255), nullable=True)
+    stripe_subscription_id = db.Column(db.String(255), nullable=True)
     billing_status = db.Column(db.String(30), default='inactive', nullable=False)
     tier = db.Column(db.String(30), default='free', nullable=False)  # free | starter | professional | enterprise
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -189,7 +198,7 @@ class PartnerUsageEvent(db.Model):
     partner_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=False)
     env = db.Column(db.String(10), default='test', nullable=False)
     event_type = db.Column(db.String(50), nullable=False)
-    quantity = db.Column(db.Integer, default=1)
+    quantity = db.Column(db.Integer, default=1, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -486,6 +495,8 @@ class Discussion(db.Model):
         db.Index('idx_discussion_creator_id', 'creator_id'),
         db.Index('idx_discussion_is_featured', 'is_featured'),
         db.Index('idx_discussion_topic', 'topic'),
+        db.Index('idx_discussion_partner_article_url', 'partner_article_url'),
+        db.Index('idx_discussion_partner_id', 'partner_id'),
     )
     
     id = db.Column(db.Integer, primary_key=True)
@@ -524,8 +535,8 @@ class Discussion(db.Model):
 
     # Partner embed integration (Phase 2)
     # For discussions created by partners whose content is not ingested via RSS
-    partner_article_url = db.Column(db.String(1000), nullable=True, index=True)  # Normalized URL
-    partner_id = db.Column(db.String(50), nullable=True, index=True)  # Partner slug (legacy identifier)
+    partner_article_url = db.Column(db.String(1000), nullable=True)  # Normalized URL
+    partner_id = db.Column(db.String(50), nullable=True)  # Partner slug (legacy identifier)
     partner_fk_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=True, index=True)
     partner_env = db.Column(db.String(10), default='live', nullable=False, index=True)  # test | live
 
@@ -736,6 +747,7 @@ class Statement(db.Model):
         db.Index('idx_statement_discussion', 'discussion_id'),
         db.Index('idx_statement_user', 'user_id'),
         db.Index('idx_statement_session', 'session_fingerprint'),
+        db.Index('idx_statement_source', 'source'),
         db.UniqueConstraint('discussion_id', 'content', name='uq_discussion_statement'),
     )
     
@@ -759,7 +771,7 @@ class Statement(db.Model):
 
     # Source tracking for seed statements (§13 AI Attribution)
     # Values: 'ai_generated', 'partner_provided', 'user_submitted'
-    source = db.Column(db.String(20), nullable=True, index=True)
+    source = db.Column(db.String(20), nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -842,6 +854,7 @@ class StatementVote(db.Model):
         db.Index('idx_vote_discussion_user', 'discussion_id', 'user_id'),
         db.Index('idx_vote_discussion_statement', 'discussion_id', 'statement_id'),
         db.Index('idx_vote_session_fingerprint', 'session_fingerprint'),
+        db.Index('idx_vote_partner_ref', 'partner_ref'),
     )
     
     id = db.Column(db.Integer, primary_key=True)
@@ -855,7 +868,7 @@ class StatementVote(db.Model):
     confidence = db.Column(db.SmallInteger, nullable=True)
 
     # Partner attribution for embed votes (e.g., 'observer', 'time', 'ted')
-    partner_ref = db.Column(db.String(50), nullable=True, index=True)
+    partner_ref = db.Column(db.String(50), nullable=True)
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -1070,6 +1083,7 @@ class NewsSource(db.Model):
     __tablename__ = 'news_source'
     __table_args__ = (
         db.Index('idx_news_source_active', 'is_active'),
+        db.Index('idx_news_source_slug', 'slug', unique=True),
     )
     
     id = db.Column(db.Integer, primary_key=True)
@@ -1093,7 +1107,7 @@ class NewsSource(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Source profile fields
-    slug = db.Column(db.String(200), unique=True, nullable=True)
+    slug = db.Column(db.String(200), nullable=True)
     source_category = db.Column(db.String(50), default='newspaper')  # 'podcast', 'newspaper', 'magazine', 'broadcaster'
 
     # Basic branding (for unclaimed sources)
@@ -2825,6 +2839,8 @@ class DailyQuestionSubscriber(db.Model):
     __table_args__ = (
         db.Index('idx_dqs_email', 'email'),
         db.Index('idx_dqs_token', 'magic_token'),
+        db.Index('idx_dqs_frequency', 'email_frequency', 'is_active'),
+        db.Index('idx_dqs_send_day', 'preferred_send_day', 'is_active'),
     )
     
     id = db.Column(db.Integer, primary_key=True)
@@ -2850,10 +2866,10 @@ class DailyQuestionSubscriber(db.Model):
     unsubscribed_at = db.Column(db.DateTime, nullable=True)
 
     # Weekly digest email preferences
-    email_frequency = db.Column(db.String(20), default='weekly')  # 'daily'|'weekly'|'monthly'
+    email_frequency = db.Column(db.String(20), default='weekly', nullable=False)  # 'daily'|'weekly'|'monthly'
     last_weekly_email_sent = db.Column(db.DateTime, nullable=True)
-    preferred_send_day = db.Column(db.Integer, default=1)  # 0=Mon, 1=Tue (default), ..., 6=Sun
-    preferred_send_hour = db.Column(db.Integer, default=9)  # 0-23, default 9am
+    preferred_send_day = db.Column(db.Integer, default=1, nullable=False)  # 0=Mon, 1=Tue (default), ..., 6=Sun
+    preferred_send_hour = db.Column(db.Integer, default=9, nullable=False)  # 0-23, default 9am
     timezone = db.Column(db.String(50), nullable=True)  # e.g., 'Europe/London', 'America/New_York'
 
     user = db.relationship('User', backref='daily_subscription')
@@ -3289,9 +3305,9 @@ class BriefTemplate(db.Model):
     slug = db.Column(db.String(100), unique=True)  # URL-friendly identifier
 
     # Marketplace categorization
-    category = db.Column(db.String(50), nullable=False, default='core_insight')
+    category = db.Column(db.String(50), default='core_insight')
     # Categories: 'core_insight', 'organizational', 'personal_interest', 'lifestyle'
-    audience_type = db.Column(db.String(30), nullable=False, default='all')
+    audience_type = db.Column(db.String(30), default='all')
     # Audience: 'individual', 'organization', 'all'
 
     # Display metadata
@@ -3312,7 +3328,7 @@ class BriefTemplate(db.Model):
     default_accent_color = db.Column(db.String(20), default='#3B82F6')  # Topic-specific accent color
 
     # Configurable bounds (JSON) - what users CAN change
-    configurable_options = db.Column(db.JSON, default=lambda: {
+    configurable_options = db.Column(JSONB, default=lambda: {
         'geography': True,  # Can user change geographic scope?
         'sources': True,  # Can user add/remove sources?
         'cadence': True,  # Can user change cadence?
@@ -3323,7 +3339,7 @@ class BriefTemplate(db.Model):
     })
 
     # Fixed guardrails (JSON) - what is ALWAYS enforced
-    guardrails = db.Column(db.JSON, default=lambda: {
+    guardrails = db.Column(JSONB, default=lambda: {
         'max_items': 10,  # Maximum stories per brief
         'require_attribution': True,  # Always show sources
         'no_predictions': False,  # Disable speculative content (for crypto/markets)
@@ -3333,8 +3349,8 @@ class BriefTemplate(db.Model):
 
     # AI generation hints
     custom_prompt_prefix = db.Column(db.Text)  # Added to AI prompt for this template
-    focus_keywords = db.Column(db.JSON)  # Keywords to prioritize
-    exclude_keywords = db.Column(db.JSON)  # Keywords to filter out
+    focus_keywords = db.Column(JSONB)  # Keywords to prioritize
+    exclude_keywords = db.Column(JSONB)  # Keywords to filter out
 
     # Customization
     allow_customization = db.Column(db.Boolean, default=True)  # Can user modify at all?
@@ -3437,7 +3453,7 @@ class InputSource(db.Model):
     # Provenance & Editorial Control (unified ingestion architecture)
     origin_type = db.Column(db.String(20), default='user')  # 'admin' | 'template' | 'user'
     content_domain = db.Column(db.String(50), nullable=True)  # 'news' | 'sport' | 'tech' | 'finance' | 'culture' | 'science' | 'politics'
-    allowed_channels = db.Column(db.JSON, default=lambda: ['user_briefings'])  # ['daily_brief', 'trending', 'user_briefings']
+    allowed_channels = db.Column(JSONB, default=lambda: ['user_briefings'])  # ['daily_brief', 'trending', 'user_briefings']
     political_leaning = db.Column(db.Float, nullable=True)  # -1.0 (left) to 1.0 (right), null = unknown
     is_verified = db.Column(db.Boolean, default=False)  # Admin-verified quality source
 
@@ -3553,7 +3569,7 @@ class Briefing(db.Model):
     cadence = db.Column(db.String(20), default='daily')  # 'daily' | 'weekly'
     timezone = db.Column(db.String(50), default='UTC')  # e.g., 'Europe/London', 'America/New_York'
     preferred_send_hour = db.Column(db.Integer, default=18)  # 0-23 (hour of day)
-    preferred_send_minute = db.Column(db.Integer, default=0)  # 0-59 (minute of hour)
+    preferred_send_minute = db.Column(db.Integer, default=0, nullable=False)  # 0-59 (minute of hour)
 
     # Workflow
     mode = db.Column(db.String(20), default='auto_send')  # 'auto_send' | 'approval_required'
@@ -3573,13 +3589,13 @@ class Briefing(db.Model):
     # Guardrails (inherited from template, if any)
     # JSON with keys: no_outrage_framing, no_predictions, require_attribution, 
     # perspective_balance, structure_template, visibility_locked
-    guardrails = db.Column(db.JSON, nullable=True)
+    guardrails = db.Column(JSONB, nullable=True)
     
     # User customization settings
     # Topic preferences: {"football": 3, "cricket": 1, "tennis": 2} - higher = more priority
-    topic_preferences = db.Column(db.JSON, nullable=True)
+    topic_preferences = db.Column(JSONB, nullable=True)
     # Content filters: {"include_keywords": ["premier league"], "exclude_keywords": ["betting"]}
-    filters_json = db.Column(db.JSON, nullable=True)
+    filters_json = db.Column(JSONB, nullable=True)
 
     # Visual Branding
     logo_url = db.Column(db.String(500), nullable=True)  # Logo image URL
@@ -3645,9 +3661,6 @@ class BriefingSource(db.Model):
     Many-to-many relationship between Briefings and InputSources.
     """
     __tablename__ = 'briefing_source'
-    __table_args__ = (
-        db.UniqueConstraint('briefing_id', 'source_id', name='uq_briefing_source'),
-    )
 
     briefing_id = db.Column(db.Integer, db.ForeignKey('briefing.id', ondelete='CASCADE'), primary_key=True)
     source_id = db.Column(db.Integer, db.ForeignKey('input_source.id', ondelete='CASCADE'), primary_key=True)
@@ -3671,6 +3684,7 @@ class BriefRun(db.Model):
         db.Index('idx_brief_run_briefing', 'briefing_id'),
         db.Index('idx_brief_run_status', 'status'),
         db.Index('idx_brief_run_scheduled', 'scheduled_at'),
+        db.Index('idx_brief_run_status_claimed', 'status', 'claimed_at'),
         # Prevent duplicate runs for same briefing at same time (race condition protection)
         db.UniqueConstraint('briefing_id', 'scheduled_at', name='uq_brief_run_briefing_scheduled'),
     )
@@ -3854,7 +3868,7 @@ class BriefEmailSend(db.Model):
     claimed_at = db.Column(db.DateTime, default=datetime.utcnow)  # When claim was created
     sent_at = db.Column(db.DateTime, nullable=True)  # When email was actually sent
     resend_id = db.Column(db.String(100), nullable=True)  # Resend message ID for tracking
-    attempt_count = db.Column(db.Integer, default=1, nullable=False)  # Number of send attempts
+    attempt_count = db.Column(db.Integer, default=1)  # Number of send attempts
     failure_reason = db.Column(db.String(500), nullable=True)  # Why the send failed (for debugging)
 
     # Relationships
@@ -4235,6 +4249,7 @@ class PolymarketMarket(db.Model):
         db.Index('idx_pm_market_condition', 'condition_id'),
         db.Index('idx_pm_market_category', 'category'),
         db.Index('idx_pm_market_active', 'is_active'),
+        db.Index('idx_pm_market_slug', 'slug'),
         db.Index('idx_pm_market_quality', 'is_active', 'volume_24h', 'liquidity'),
     )
 
@@ -4242,13 +4257,13 @@ class PolymarketMarket(db.Model):
 
     # Polymarket Identifiers
     condition_id = db.Column(db.String(100), unique=True, nullable=False)
-    slug = db.Column(db.String(200), index=True)
+    slug = db.Column(db.String(200))
     clob_token_ids = db.Column(db.JSON)  # For CLOB API price fetching
 
     # Content
     question = db.Column(db.String(500), nullable=False)
     description = db.Column(db.Text)
-    category = db.Column(db.String(100), index=True)  # politics, economics, tech...
+    category = db.Column(db.String(100))  # politics, economics, tech...
     tags = db.Column(db.JSON)  # ['uk', 'election', 'labour'] - for keyword matching
 
     # Automated Matching
@@ -4266,7 +4281,7 @@ class PolymarketMarket(db.Model):
     trader_count = db.Column(db.Integer, default=0)
 
     # Lifecycle
-    is_active = db.Column(db.Boolean, default=True, index=True)
+    is_active = db.Column(db.Boolean, default=True)
     end_date = db.Column(db.DateTime)  # When market resolves
     resolution = db.Column(db.String(50))  # null until resolved, then 'Yes'/'No'/etc
     resolved_at = db.Column(db.DateTime)
