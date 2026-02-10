@@ -265,7 +265,7 @@ def create_app():
     migrate.init_app(app, db)
     csrf.init_app(app)
     login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'
+    login_manager.login_view = 'auth.login'  # type: ignore[assignment]
     login_manager.login_message_category = "info"
     app.jinja_env.globals.update(current_user=current_user)
 

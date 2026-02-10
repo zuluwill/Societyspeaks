@@ -1504,7 +1504,7 @@ Guidelines:
 
     def _generate_world_events(
         self,
-        seen_market_ids: set = None,
+        seen_market_ids: Optional[set] = None,
         min_markets: int = 3,
         max_markets: int = 5
     ) -> Optional[List[Dict]]:

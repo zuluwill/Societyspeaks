@@ -233,7 +233,7 @@ def get_discussion_statement_count(discussion):
     ).count()
 
 
-def track_partner_event(event_name: str, properties: dict = None):
+def track_partner_event(event_name: str, properties: Optional[dict] = None):
     """
     Track a partner-related analytics event via PostHog.
 
