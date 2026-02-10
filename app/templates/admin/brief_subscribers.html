@@ -493,10 +493,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Close dropdowns when clicking outside
-    document.addEventListener('click', function() {
-        document.querySelectorAll('.tier-menu').forEach(function(menu) {
-            menu.classList.add('hidden');
+    // Close dropdowns when clicking outside (but not when clicking inside the menu)
+    document.addEventListener('click', function(e) {
+        document.querySelectorAll('.tier-dropdown').forEach(function(dropdown) {
+            var menu = dropdown.querySelector('.tier-menu');
+            if (menu && !dropdown.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
         });
     });
 });
