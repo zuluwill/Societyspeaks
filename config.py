@@ -168,8 +168,8 @@ class Config:
                 connection_pool=redis_pool,
                 retry=Retry(ExponentialBackoff(0.1), 3),  # Simpler backoff, fewer retries
                 retry_on_error=[TimeoutError, ConnectionError],  # Retry on these errors
-                socket_timeout=10.0,
-                socket_connect_timeout=5.0
+                socket_timeout=5.0,
+                socket_connect_timeout=3.0
             )
             
             # Test connection with timeout

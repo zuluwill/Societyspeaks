@@ -213,11 +213,10 @@ def create_app():
     try:
         if hasattr(Config, 'SESSION_REDIS') and Config.SESSION_REDIS:
             try:
-                # Test connection again right before initialization
                 Config.SESSION_REDIS.ping()
                 app.config['SESSION_REDIS'] = Config.SESSION_REDIS
             except Exception as e:
-                app.logger.warning(f"Redis connection test failed: {e}, falling back to filesystem")
+                app.logger.warning(f"Redis session ping failed ({type(e).__name__}): {e}, falling back to filesystem")
                 app.config['SESSION_TYPE'] = 'filesystem'
         
         sess.init_app(app)
@@ -237,11 +236,10 @@ def create_app():
                 app.config['CACHE_THRESHOLD'] = 500
                 app.config['CACHE_KEY_PREFIX'] = 'flask_cache_'
                 app.config['CACHE_OPTIONS'] = {
-                    'socket_timeout': 5,
-                    'socket_connect_timeout': 5
+                    'socket_timeout': 3,
+                    'socket_connect_timeout': 3
                 }
                 cache.init_app(app)
-                cache.set('_health_check', '1', timeout=10)
                 app.logger.info("Cache initialized with Redis successfully")
             except Exception as e:
                 app.logger.warning(f"Redis cache initialization failed: {e}, falling back to simple cache")
@@ -339,23 +337,21 @@ def create_app():
             if redis_url and not redis_url.startswith('memory://'):
                 try:
                     import redis
-                    r = redis.from_url(redis_url)
+                    r = redis.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
                     r.ping()
-                    # Set both config keys to ensure compatibility across Flask-Limiter versions
                     app.config['RATELIMIT_STORAGE_URI'] = redis_url
                     app.config['RATELIMIT_STORAGE_URL'] = redis_url
                     app.logger.info("Rate limiter configured with Redis (production)")
                 except Exception as redis_error:
                     app.logger.error(f"Redis connection failed in production: {redis_error}")
                     app.logger.error("Falling back to memory-based rate limiting - this is not ideal for production.")
-                    # Don't raise exception, allow graceful degradation
                     app.config['RATELIMIT_STORAGE_URL'] = 'memory://'
         
         # Development mode - allow memory fallback but warn
         elif redis_url and not redis_url.startswith('memory://'):
             try:
                 import redis
-                r = redis.from_url(redis_url)
+                r = redis.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
                 r.ping()
                 app.config['RATELIMIT_STORAGE_URI'] = redis_url
                 app.config['RATELIMIT_STORAGE_URL'] = redis_url
@@ -581,9 +577,9 @@ def create_app():
         import threading
         
         def _deferred_scheduler_start():
-            """Start scheduler after a short delay to allow gunicorn to bind port first."""
+            """Start scheduler after a delay to allow gunicorn to bind port and pass health checks first."""
             import time
-            time.sleep(3)
+            time.sleep(15)
             try:
                 from app.scheduler import init_scheduler, start_scheduler
                 init_scheduler(app)

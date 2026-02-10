@@ -9,7 +9,7 @@ channel = "stable-24_05"
 packages = ["cargo", "glibcLocales", "libiconv", "libxcrypt", "openssl", "pkg-config", "rustc"]
 
 [deployment]
-run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--timeout=120", "--workers=1", "run:app"]
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--timeout=120", "--workers=2", "run:app"]
 deploymentTarget = "vm"
 build = ["bash", "scripts/build.sh"]
 
