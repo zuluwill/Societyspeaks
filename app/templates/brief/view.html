@@ -127,52 +127,57 @@
             {% set sections_data = brief.items_by_section %}
 
             {% for section_key, section_items in sections_data.items() %}
-            {# Section Header — uses centralized SECTIONS config #}
-            {% if section_key != '_unsectioned' and section_key != 'lead' %}
-            {% set sec = SECTIONS.get(section_key, {}) %}
-            <div class="pt-6 pb-2 border-t-2 border-gray-200">
-                <h2 class="text-sm font-bold tracking-widest uppercase {{ sec.get('web_color_class', 'text-slate-500') }}">
-                    {% if section_key == 'global_roundup' %}🌍 {% endif %}{% if section_key == 'underreported' %}📭 {% endif %}{{ sec.get('display_name', section_key|replace('_', ' ')|title) }}
-                </h2>
-                {% if sec.get('description') %}
-                <p class="text-xs text-gray-500 mt-1">{{ sec.description }}</p>
-                {% endif %}
-            </div>
-            {% endif %}
 
-            {# Quick-hit items (global roundup) — compact layout #}
+            {# Quick-hit items (global roundup) — compact layout with header inside #}
             {% if section_key == 'global_roundup' %}
-            <div class="space-y-3">
-                {% for item in section_items %}
-                <article id="item-{{ item.id }}" class="rounded-xl border border-gray-100 bg-white p-4 sm:p-5 shadow-sm">
-                    <div class="flex items-start gap-3">
-                        {% if item.trending_topic and item.trending_topic.geographic_countries %}
-                        <span class="flex-shrink-0 text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                            {{ item.trending_topic.geographic_countries.split(',')[0]|trim }}
-                        </span>
-                        {% endif %}
-                        <div class="flex-1">
-                            <h3 class="font-serif text-lg font-bold text-gray-900 leading-snug">{{ item.headline }}</h3>
-                            {% if item.quick_summary %}
-                            <p class="text-gray-600 text-sm mt-1.5 leading-relaxed">{{ item.quick_summary }}</p>
+            <div class="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                {% set sec = SECTIONS.get(section_key, {}) %}
+                <div class="px-6 pt-5 pb-3 border-b border-gray-100">
+                    <h2 class="text-sm font-bold tracking-widest uppercase {{ sec.get('web_color_class', 'text-slate-500') }}">
+                        🌍 {{ sec.get('display_name', 'Around the World') }}
+                    </h2>
+                    {% if sec.get('description') %}
+                    <p class="text-xs text-gray-500 mt-1">{{ sec.description }}</p>
+                    {% endif %}
+                </div>
+                <div class="divide-y divide-gray-100">
+                    {% for item in section_items %}
+                    <div id="item-{{ item.id }}" class="px-6 py-4">
+                        <div class="flex items-start gap-3">
+                            {% if item.trending_topic and item.trending_topic.geographic_countries %}
+                            <span class="flex-shrink-0 text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded mt-0.5">
+                                {{ item.trending_topic.geographic_countries.split(',')[0]|trim }}
+                            </span>
                             {% endif %}
-                            {% if item.source_count %}
-                            <span class="text-xs text-gray-400 mt-1 inline-block">{{ item.source_count }} sources</span>
-                            {% endif %}
+                            <div class="flex-1">
+                                <h3 class="font-serif text-lg font-bold text-gray-900 leading-snug">{{ item.headline }}</h3>
+                                {% if item.quick_summary %}
+                                <p class="text-gray-600 text-sm mt-1.5 leading-relaxed">{{ item.quick_summary }}</p>
+                                {% endif %}
+                                {% if item.source_count %}
+                                <span class="text-xs text-gray-400 mt-1 inline-block">{{ item.source_count }} sources</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                </article>
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
             {% else %}
             {# Standard and full depth items — rendered as article cards #}
             {% for item in section_items %}
             <article id="item-{{ item.id }}" class="rounded-2xl shadow-lg border overflow-hidden {% if item.is_underreported %}bg-amber-50 border-amber-300{% else %}bg-white border-gray-100{% endif %}">
                 <div class="p-6 sm:p-8">
-                    {# Lead story label #}
-                    {% if item.trending_topic and item.trending_topic.primary_topic and section_key == 'lead' %}
-                    <div class="mb-3">
-                        <span class="text-xs font-bold tracking-widest uppercase text-blue-800">LEAD STORY</span>
+                    {# Section header inside the first card of each section #}
+                    {% if loop.first and section_key != '_unsectioned' %}
+                    {% set sec = SECTIONS.get(section_key, {}) %}
+                    <div class="mb-4 pb-3 border-b border-gray-100">
+                        <h2 class="text-xs font-bold tracking-widest uppercase {{ sec.get('web_color_class', 'text-slate-500') }}">
+                            {% if section_key == 'underreported' %}📭 {% endif %}{{ sec.get('display_name', section_key|replace('_', ' ')|title) }}
+                        </h2>
+                        {% if sec.get('description') and section_key != 'lead' %}
+                        <p class="text-xs text-gray-500 mt-1">{{ sec.description }}</p>
+                        {% endif %}
                     </div>
                     {% endif %}
 
