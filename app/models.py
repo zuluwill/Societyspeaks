@@ -4328,7 +4328,7 @@ class PolymarketMarket(db.Model):
     def polymarket_url(self) -> str:
         """Direct link to market on Polymarket."""
         if self.slug:
-            return f"https://polymarket.com/event/{self.slug}"
+            return f"https://polymarket.com/market/{self.slug}"
         return f"https://polymarket.com/markets/{self.condition_id}"
 
     def to_signal_dict(self) -> dict:

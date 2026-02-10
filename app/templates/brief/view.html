@@ -654,11 +654,12 @@
                             {% endif %}
                         </div>
                         <div class="mb-3">
-                            <div class="h-7 bg-slate-200 rounded overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-sky-500 to-sky-400 flex items-center justify-end pr-2"
-                                     style="width: {{ (market.probability * 100)|round }}%; min-width: 50px;">
-                                    <span class="text-white font-semibold text-sm">{{ (market.probability * 100)|round }}%</span>
-                                </div>
+                            <div class="relative h-7 bg-slate-200 rounded overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-sky-500 to-sky-400 rounded"
+                                     style="width: {{ (market.probability * 100)|round }}%;"></div>
+                                <span class="absolute inset-0 flex items-center px-3 text-sm font-semibold {% if (market.probability * 100)|round > 40 %}text-white{% else %}text-slate-700{% endif %}">
+                                    {{ (market.probability * 100)|round }}%
+                                </span>
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-3 text-sm text-slate-500">
@@ -702,11 +703,12 @@
                     <div class="bg-white rounded-xl p-5 border border-indigo-100">
                         <p class="text-base font-medium text-slate-800 mb-3">"{{ market.question }}"</p>
                         <div class="mb-3">
-                            <div class="h-7 bg-slate-200 rounded overflow-hidden">
-                                <div class="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 flex items-center justify-end pr-2"
-                                     style="width: {{ (market.probability * 100)|round }}%; min-width: 50px;">
-                                    <span class="text-white font-semibold text-sm">{{ (market.probability * 100)|round }}%</span>
-                                </div>
+                            <div class="relative h-7 bg-slate-200 rounded overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded"
+                                     style="width: {{ (market.probability * 100)|round }}%;"></div>
+                                <span class="absolute inset-0 flex items-center px-3 text-sm font-semibold {% if (market.probability * 100)|round > 40 %}text-white{% else %}text-slate-700{% endif %}">
+                                    {{ (market.probability * 100)|round }}%
+                                </span>
                             </div>
                         </div>
                         <div class="flex items-center gap-3 text-sm text-slate-500">

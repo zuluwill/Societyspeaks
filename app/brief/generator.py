@@ -1528,20 +1528,34 @@ Guidelines:
             from app.models import PolymarketMarket
 
             WORLD_EVENT_KEYWORDS = [
-                'trump', 'biden', 'president', 'election', 'vote',
-                'war', 'conflict', 'military', 'strike', 'invasion',
-                'sanctions', 'trade', 'tariff', 'nato', 'treaty',
+                'trump', 'biden', 'president', 'election',
+                'war', 'conflict', 'military', 'invasion',
+                'sanctions', 'tariff', 'nato', 'treaty',
                 'summit', 'diplomacy', 'nuclear', 'ceasefire',
                 'parliament', 'congress', 'senate', 'government',
-                'prime minister', 'chancellor', 'leader',
+                'prime minister', 'chancellor',
                 'russia', 'ukraine', 'china', 'iran', 'israel',
                 'gaza', 'palestine', 'north korea', 'venezuela',
-                'eu ', 'european union', 'united nations', 'un ',
+                'european union', 'united nations',
                 'deport', 'immigration', 'refugee',
-                'fed chair', 'fed ', 'interest rate',
+                'interest rate', 'recession',
                 'climate', 'paris agreement',
                 'coup', 'regime', 'rebel',
             ]
+
+            EXCLUDE_KEYWORDS = [
+                'nba', 'nfl', 'mlb', 'nhl', 'mls', 'ufc', 'wwe',
+                'mvp', 'super bowl', 'world series', 'stanley cup',
+                'champion', 'playoff', 'draft pick', 'touchdown',
+                'home run', 'slam dunk', 'grand slam',
+                'oscar', 'grammy', 'emmy', 'golden globe',
+                'bachelor', 'bachelorette', 'reality tv',
+            ]
+
+            exclude_pattern = re.compile(
+                '|'.join(re.escape(kw) for kw in EXCLUDE_KEYWORDS),
+                re.IGNORECASE
+            )
 
             keyword_pattern = re.compile(
                 '|'.join(re.escape(kw) for kw in WORLD_EVENT_KEYWORDS),
@@ -1561,6 +1575,8 @@ Guidelines:
 
                 question_text = (market.question or '') + ' ' + (market.description or '')[:200]
                 if not keyword_pattern.search(question_text):
+                    continue
+                if exclude_pattern.search(question_text):
                     continue
 
                 change = market.change_24h
@@ -1590,6 +1606,13 @@ Guidelines:
                 signal = market.to_signal_dict()
                 signal['category'] = market.category or 'world'
                 signal['matched_topic'] = None
+
+                event_url = self._get_polymarket_event_url(market.slug)
+                if event_url:
+                    signal['url'] = event_url
+                else:
+                    signal['url'] = f"https://polymarket.com/market/{market.slug}"
+
                 world_events.append(signal)
                 logger.info(
                     f"World Events: '{market.question[:60]}' "
@@ -1602,6 +1625,31 @@ Guidelines:
         except Exception as e:
             logger.warning(f"World Events generation failed: {e}")
             return None
+
+    def _get_polymarket_event_url(self, market_slug: str) -> Optional[str]:
+        """Look up the parent event slug from Gamma API for a correct Polymarket URL."""
+        import requests
+        try:
+            resp = requests.get(
+                f"https://gamma-api.polymarket.com/markets?slug={market_slug}",
+                timeout=5
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if isinstance(data, list) and data:
+                    market_data = data[0]
+                elif isinstance(data, dict):
+                    market_data = data
+                else:
+                    return None
+                events = market_data.get('events', [])
+                if events and isinstance(events, list):
+                    event_slug = events[0].get('slug')
+                    if event_slug:
+                        return f"https://polymarket.com/event/{event_slug}"
+        except Exception as e:
+            logger.debug(f"Failed to fetch event slug for {market_slug}: {e}")
+        return None
 
     def _call_llm(self, prompt: str) -> str:
         """
