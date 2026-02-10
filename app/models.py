@@ -1992,6 +1992,7 @@ class DailyBriefSubscriber(db.Model):
     # Tracking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_sent_at = db.Column(db.DateTime)
+    last_brief_id_sent = db.Column(db.Integer, db.ForeignKey('daily_brief.id'), nullable=True)
     total_briefs_received = db.Column(db.Integer, default=0)
     welcome_email_sent_at = db.Column(db.DateTime)  # Prevents duplicate welcome emails
 
@@ -2133,9 +2134,16 @@ class DailyBriefSubscriber(db.Model):
 
         return self.last_sent_at.date() == brief_date
 
-    def can_receive_brief(self, brief_date=None):
+    def has_received_this_brief(self, brief_id):
+        """DB-level idempotency: check if this specific brief was already sent"""
+        return self.last_brief_id_sent == brief_id
+
+    def can_receive_brief(self, brief_date=None, brief_id=None):
         """Full eligibility check including duplicate prevention"""
         if not self.is_subscribed_eligible():
+            return False
+
+        if brief_id and self.has_received_this_brief(brief_id):
             return False
 
         if self.has_received_brief_today(brief_date):

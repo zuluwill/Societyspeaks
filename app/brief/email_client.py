@@ -100,8 +100,8 @@ class ResendClient:
             success = self._send_with_retry(email_data)
 
             if success:
-                # Update tracking
                 subscriber.last_sent_at = datetime.utcnow()
+                subscriber.last_brief_id_sent = brief.id
                 subscriber.total_briefs_received += 1
                 db.session.commit()
                 logger.info(f"Sent brief to {subscriber.email}")
@@ -367,13 +367,14 @@ class BriefEmailScheduler:
     def __init__(self):
         self.client = ResendClient()
 
-    def get_subscribers_for_hour(self, utc_hour: int, cadence: str = 'daily') -> List[DailyBriefSubscriber]:
+    def get_subscribers_for_hour(self, utc_hour: int, cadence: str = 'daily', brief_id: int = None) -> List[DailyBriefSubscriber]:
         """
         Get subscribers who should receive email at this UTC hour.
 
         Args:
             utc_hour: Current UTC hour (0-23)
             cadence: 'daily' or 'weekly' — filters by subscriber preference
+            brief_id: Optional brief ID for DB-level idempotency check
 
         Returns:
             List of DailyBriefSubscriber instances
@@ -399,8 +400,7 @@ class BriefEmailScheduler:
         subscribers_to_send = []
 
         for subscriber in all_subscribers:
-            # Check eligibility AND duplicate prevention
-            if not subscriber.can_receive_brief():
+            if not subscriber.can_receive_brief(brief_id=brief_id):
                 continue
 
             # For weekly: also check it's their preferred day
@@ -455,23 +455,17 @@ class BriefEmailScheduler:
         }
 
         for subscriber in subscribers:
-            old_token = subscriber.magic_token
-            old_expires = subscriber.magic_token_expires
             try:
-                subscriber.generate_magic_token(expires_hours=48)
-                db.session.commit()
+                if not subscriber.magic_token or (
+                    subscriber.magic_token_expires and subscriber.magic_token_expires < datetime.utcnow()
+                ):
+                    subscriber.generate_magic_token(expires_hours=168)
+                    db.session.commit()
 
                 success = self.client.send_brief(subscriber, brief)
                 if success:
                     results['sent'] += 1
                 else:
-                    try:
-                        subscriber.magic_token = old_token
-                        subscriber.magic_token_expires = old_expires
-                        db.session.commit()
-                    except Exception:
-                        db.session.rollback()
-                        logger.warning(f"Could not restore old token for {subscriber.email}")
                     results['failed'] += 1
                     results['errors'].append(f"Failed to send to {subscriber.email}")
 
@@ -531,7 +525,7 @@ class BriefEmailScheduler:
             logger.info("No published daily brief available, skipping send")
             return None
 
-        subscribers = self.get_subscribers_for_hour(current_hour, cadence='daily')
+        subscribers = self.get_subscribers_for_hour(current_hour, cadence='daily', brief_id=brief.id)
 
         if not subscribers:
             logger.info(f"No daily subscribers for hour {current_hour}")
@@ -583,8 +577,7 @@ class BriefEmailScheduler:
             logger.debug(f"Weekly brief ({brief.date}) is older than 7 days, skipping")
             return None
 
-        # Get weekly subscribers for this hour (also checks preferred_weekly_day)
-        subscribers = self.get_subscribers_for_hour(current_hour, cadence='weekly')
+        subscribers = self.get_subscribers_for_hour(current_hour, cadence='weekly', brief_id=brief.id)
 
         if not subscribers:
             return {'sent': 0, 'failed': 0, 'errors': []}
