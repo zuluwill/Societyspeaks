@@ -469,15 +469,26 @@
                     {% endif %}
                     {% endif %}
 
-                    <!-- Original News Sources (topic_articles_by_topic_id avoids N+1 when provided by view) -->
+                    <!-- Original News Sources — deduplicated by URL -->
                     {% if item.trending_topic %}
                     {% set topic_articles = (topic_articles_by_topic_id.get(item.trending_topic.id, [])[:5] if topic_articles_by_topic_id is defined else item.trending_topic.articles.all()[:5]) %}
-                    {% if topic_articles %}
+                    {% set verify_urls = item.verification_links | map(attribute='url') | list if item.verification_links else [] %}
+                    {% set ns = namespace(seen_urls=[]) %}
+                    {% set unique_sources = [] %}
+                    {% for topic_article in topic_articles %}
+                    {% if topic_article.article and topic_article.article.url %}
+                    {% set art_url = topic_article.article.url %}
+                    {% if art_url not in ns.seen_urls and art_url not in verify_urls %}
+                    {% set ns.seen_urls = ns.seen_urls + [art_url] %}
+                    {% set _ = unique_sources.append(topic_article) %}
+                    {% endif %}
+                    {% endif %}
+                    {% endfor %}
+                    {% if unique_sources %}
                     <div class="mb-6">
                         <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">📰 Read the Original Sources</p>
                         <div class="space-y-2">
-                            {% for topic_article in topic_articles %}
-                            {% if topic_article.article and topic_article.article.url %}
+                            {% for topic_article in unique_sources %}
                             <a href="{{ topic_article.article.url }}" target="_blank" rel="noopener" 
                                class="block p-3 rounded-lg border-l-3 border-l-blue-500 bg-slate-50 hover:bg-blue-50 transition-colors group">
                                 <p class="text-sm font-medium text-gray-800 group-hover:text-blue-700 leading-snug">
@@ -487,7 +498,6 @@
                                     {{ topic_article.article.source_name }}{% if topic_article.article.published_at %} &bull; {{ topic_article.article.published_at.strftime('%d %b %Y') }}{% endif %}
                                 </p>
                             </a>
-                            {% endif %}
                             {% endfor %}
                         </div>
                     </div>

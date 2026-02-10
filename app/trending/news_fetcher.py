@@ -413,6 +413,10 @@ class NewsFetcher:
                     
                     if existing:
                         continue
+                    
+                    url = entry.get('link', '')
+                    if url and NewsArticle.query.filter_by(url=url[:1000]).first():
+                        continue
                 except Exception as db_err:
                     logger.warning(f"DB error checking existing article: {db_err}")
                     db.session.rollback()

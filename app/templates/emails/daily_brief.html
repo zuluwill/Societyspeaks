@@ -1183,10 +1183,22 @@
                   </tr>
                   {% endif %}
 
-                  <!-- Original News Sources (full depth only) -->
+                  <!-- Original News Sources (full depth only) — deduplicated -->
                   {% if depth == 'full' and item.trending_topic and item.trending_topic.articles %}
-                  {% set topic_articles = item.trending_topic.articles.all()[:5]
-                  %} {% if topic_articles %}
+                  {% set topic_articles = item.trending_topic.articles.all()[:5] %}
+                  {% set verify_urls = item.verification_links | map(attribute='url') | list if item.verification_links else [] %}
+                  {% set ns = namespace(seen_urls=[]) %}
+                  {% set unique_sources = [] %}
+                  {% for topic_article in topic_articles %}
+                  {% if topic_article.article and topic_article.article.url %}
+                  {% set art_url = topic_article.article.url %}
+                  {% if art_url not in ns.seen_urls and art_url not in verify_urls %}
+                  {% set ns.seen_urls = ns.seen_urls + [art_url] %}
+                  {% set _ = unique_sources.append(topic_article) %}
+                  {% endif %}
+                  {% endif %}
+                  {% endfor %}
+                  {% if unique_sources %}
                   <tr>
                     <td style="padding-bottom: 18px">
                       <table
@@ -1214,8 +1226,7 @@
                             📰 Read the Original Sources
                           </td>
                         </tr>
-                        {% for topic_article in topic_articles %} {% if
-                        topic_article.article and topic_article.article.url %}
+                        {% for topic_article in unique_sources %}
                         <tr>
                           <td
                             style="
@@ -1278,7 +1289,7 @@
                             </table>
                           </td>
                         </tr>
-                        {% endif %} {% endfor %}
+                        {% endfor %}
                       </table>
                     </td>
                   </tr>
