@@ -736,3 +736,40 @@ def extend_subscriber_trial(subscriber_id):
     flash(f'Extended {subscriber.email} trial by {additional_days} days. New expiration: {subscriber.trial_ends_at.strftime("%b %d, %Y")}', 'success')
     
     return redirect(url_for('brief_admin.subscribers'))
+
+
+@brief_admin_bp.route('/subscribers/<int:subscriber_id>/set-cadence', methods=['POST'])
+@admin_required
+def set_subscriber_cadence(subscriber_id):
+    """Update a subscriber's brief frequency (daily/weekly) and preferred weekly day"""
+    from app.models import DailyBriefSubscriber
+    
+    subscriber = DailyBriefSubscriber.query.get_or_404(subscriber_id)
+    new_cadence = request.form.get('cadence', 'daily')
+    preferred_day = request.form.get('preferred_weekly_day', type=int)
+    
+    if new_cadence not in ('daily', 'weekly'):
+        flash('Cadence must be daily or weekly.', 'error')
+        return redirect(url_for('brief_admin.subscribers'))
+    
+    old_cadence = subscriber.cadence or 'daily'
+    subscriber.cadence = new_cadence
+    
+    if new_cadence == 'weekly' and preferred_day is not None:
+        if preferred_day in (0, 5, 6):
+            subscriber.preferred_weekly_day = preferred_day
+        else:
+            subscriber.preferred_weekly_day = 6
+    
+    db.session.commit()
+    
+    day_names = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday', 5: 'Saturday', 6: 'Sunday'}
+    if new_cadence == 'weekly':
+        day_name = day_names.get(subscriber.preferred_weekly_day, 'Sunday')
+        flash(f'{subscriber.email} switched to weekly ({day_name}).', 'success')
+    else:
+        flash(f'{subscriber.email} switched to daily.', 'success')
+    
+    logger.info(f"Subscriber {subscriber.email} cadence changed from {old_cadence} to {new_cadence} by {current_user.email}")
+    
+    return redirect(url_for('brief_admin.subscribers'))

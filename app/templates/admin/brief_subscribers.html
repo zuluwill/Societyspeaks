@@ -302,6 +302,36 @@
                                     </button>
                                     <div class="tier-menu hidden absolute right-0 z-50 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                                         <div class="py-1">
+                                            <div class="px-4 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Frequency</div>
+                                            {% set current_cadence = subscriber.cadence or 'daily' %}
+                                            {% if current_cadence != 'daily' %}
+                                            <button type="button" onclick="setSubscriberCadence({{ subscriber.id }}, 'daily')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                                Switch to Daily
+                                            </button>
+                                            {% else %}
+                                            <div class="px-4 py-2 text-sm text-gray-400 flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                                Daily (current)
+                                            </div>
+                                            {% endif %}
+                                            <div class="px-4 py-2 flex items-center gap-2">
+                                                <select id="weekly-day-{{ subscriber.id }}" class="w-24 px-1.5 py-1 text-xs border border-gray-300 rounded">
+                                                    {% set wd = subscriber.preferred_weekly_day if subscriber.preferred_weekly_day is not none else 6 %}
+                                                    <option value="0" {% if wd == 0 %}selected{% endif %}>Mon</option>
+                                                    <option value="5" {% if wd == 5 %}selected{% endif %}>Fri</option>
+                                                    <option value="6" {% if wd == 6 or (wd not in [0, 5, 6]) %}selected{% endif %}>Sun</option>
+                                                </select>
+                                                <button type="button" onclick="setSubscriberCadence({{ subscriber.id }}, 'weekly')" class="text-sm text-blue-700 hover:text-blue-900 whitespace-nowrap">
+                                                    {% if current_cadence == 'weekly' %}Update{% else %}Set Weekly{% endif %}
+                                                </button>
+                                            </div>
+                                            {% if current_cadence == 'weekly' %}
+                                            <div class="px-4 pb-1 text-xs text-gray-400">
+                                                Currently: {{ ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][subscriber.preferred_weekly_day or 6] }}
+                                            </div>
+                                            {% endif %}
+                                            <div class="border-t border-gray-100 my-1"></div>
+                                            <div class="px-4 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Subscription</div>
                                             {% if subscriber.tier != 'free' %}
                                             <button type="button" onclick="setSubscriberTier({{ subscriber.id }}, 'free')" class="w-full text-left px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50">
                                                 Grant Free Access
@@ -554,6 +584,33 @@ function setSubscriberTier(subscriberId, tier) {
     }).catch(function(error) {
         console.error('Error:', error);
         alert('Failed to update tier');
+    });
+}
+
+function setSubscriberCadence(subscriberId, cadence) {
+    var body = 'csrf_token=' + encodeURIComponent(csrfToken) + '&cadence=' + encodeURIComponent(cadence);
+    if (cadence === 'weekly') {
+        var daySelect = document.getElementById('weekly-day-' + subscriberId);
+        if (daySelect) {
+            body += '&preferred_weekly_day=' + encodeURIComponent(daySelect.value);
+        }
+    }
+    fetch('/admin/brief/subscribers/' + subscriberId + '/set-cadence', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: body
+    }).then(function(response) {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            alert('Failed to update frequency');
+        }
+    }).catch(function(error) {
+        console.error('Error:', error);
+        alert('Failed to update frequency');
     });
 }
 
