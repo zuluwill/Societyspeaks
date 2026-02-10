@@ -544,11 +544,41 @@ class PolymarketService:
         volume_24h = data.get('volume24hr') or data.get('volume_24h') or 0
         volume_total = data.get('volumeNum') or data.get('volume_total') or 0
         liquidity = data.get('liquidityNum') or data.get('liquidity') or 0
-        
+
+        probability = None
+        outcome_prices = data.get('outcomePrices')
+        if outcome_prices:
+            if isinstance(outcome_prices, str):
+                try:
+                    outcome_prices = json.loads(outcome_prices)
+                except (json.JSONDecodeError, TypeError):
+                    outcome_prices = []
+            if isinstance(outcome_prices, list) and len(outcome_prices) > 0:
+                try:
+                    prob_val = float(outcome_prices[0])
+                    if 0.0 <= prob_val <= 1.0:
+                        probability = prob_val
+                except (ValueError, TypeError):
+                    pass
+
+        one_day_change = None
+        raw_change = data.get('oneDayPriceChange')
+        if raw_change is not None:
+            try:
+                change_val = float(raw_change)
+                if -1.0 <= change_val <= 1.0:
+                    one_day_change = change_val
+            except (ValueError, TypeError):
+                pass
+
+        probability_24h_ago = None
+        if probability is not None and one_day_change is not None:
+            prob_24h = probability - one_day_change
+            probability_24h_ago = max(0.0, min(1.0, prob_24h))
+
         market = PolymarketMarket.query.filter_by(condition_id=condition_id).first()
 
         if market:
-            # Update existing
             market.slug = data.get('slug')
             market.question = data.get('question', market.question)
             market.description = data.get('description')
@@ -565,9 +595,15 @@ class PolymarketService:
             market.is_active = data.get('active', True)
             market.last_synced_at = datetime.utcnow()
             market.sync_failures = 0
+            if probability is not None:
+                if market.probability is not None:
+                    market.probability_24h_ago = market.probability
+                elif probability_24h_ago is not None:
+                    market.probability_24h_ago = probability_24h_ago
+                market.probability = probability
+                market.last_price_update_at = datetime.utcnow()
             return ('updated', market)
         else:
-            # Create new
             market = PolymarketMarket(
                 condition_id=condition_id,
                 slug=data.get('slug'),
@@ -583,7 +619,10 @@ class PolymarketService:
                 trader_count=data.get('trader_count', 0),
                 end_date=self._parse_date(data.get('endDate') or data.get('end_date')),
                 is_active=data.get('active', True),
-                last_synced_at=datetime.utcnow()
+                last_synced_at=datetime.utcnow(),
+                probability=probability,
+                probability_24h_ago=probability_24h_ago,
+                last_price_update_at=datetime.utcnow() if probability is not None else None
             )
             db.session.add(market)
             return ('created', market)

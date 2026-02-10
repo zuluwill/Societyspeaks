@@ -5,7 +5,7 @@ curated geopolitical prediction market data ("What the World is Watching").
 Nullable - no impact on existing briefs.
 
 Revision ID: e4f5g6h7i8j9
-Revises: d3e4f5g6h7i8
+Revises: z3a4b5c6d7e8
 Create Date: 2026-02-10
 """
 from alembic import op
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'e4f5g6h7i8j9'
-down_revision = 'd3e4f5g6h7i8'
+down_revision = 'z3a4b5c6d7e8'
 branch_labels = None
 depends_on = None
 
