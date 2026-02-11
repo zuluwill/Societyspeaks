@@ -235,7 +235,7 @@ class ResendClient:
         """
         items_html = ""
         for item in brief.items.order_by(BriefItem.position.asc()):
-            bullets_html = "".join([f"<li>{bullet}</li>" for bullet in item.summary_bullets])
+            bullets_html = "".join([f"<li>{bullet}</li>" for bullet in (item.summary_bullets or [])])
             items_html += f"""
             <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-left: 4px solid #333;">
                 <h2 style="margin: 0 0 10px 0; font-size: 18px;">{item.position}. {item.headline}</h2>
