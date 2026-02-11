@@ -48,11 +48,19 @@
   <div id="swagger-ui" class="rounded-lg border border-gray-200 overflow-hidden bg-white"></div>
 </div>
 
-<script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js" crossorigin></script>
 <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui.css">
+<script src="https://unpkg.com/swagger-ui-dist@5.9.0/swagger-ui-bundle.js" crossorigin></script>
 
 <script>
   window.onload = function() {
+    if (typeof SwaggerUIBundle === 'undefined') {
+      document.getElementById('swagger-ui').innerHTML =
+        '<div class="p-8 text-center text-gray-500">' +
+        '<p class="text-lg font-semibold mb-2">Failed to load API Playground</p>' +
+        '<p>The Swagger UI library could not be loaded. Please refresh the page or try again later.</p>' +
+        '</div>';
+      return;
+    }
     window.ui = SwaggerUIBundle({
       url: "{{ url_for('partner.openapi_spec') }}",
       dom_id: '#swagger-ui',

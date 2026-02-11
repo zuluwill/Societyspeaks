@@ -290,7 +290,10 @@
               stack.includes("chrome-extension") ||
               stack.includes("moz-extension") ||
               msg.includes("Script error") ||
-              msg.includes("ResizeObserver loop")
+              msg.includes("ResizeObserver loop") ||
+              msg.includes("Object Not Found Matching Id") ||
+              msg.includes("MethodName:update, ParamCount:4") ||
+              (type === "UnhandledRejection" && msg.includes("Object Not Found"))
             ) {
               return null;
             }

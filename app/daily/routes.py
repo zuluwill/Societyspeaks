@@ -774,6 +774,7 @@ def subscribe():
                             'referrer': request.referrer,
                         }
                     )
+                    posthog.flush()
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
             

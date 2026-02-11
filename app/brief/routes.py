@@ -259,6 +259,7 @@ def _process_subscription(
                             'subscription_type': 'daily_brief',
                         }
                     )
+                    posthog.flush()
             except Exception as e:
                 logger.warning(f"PostHog tracking error: {e}")
 
