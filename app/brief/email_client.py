@@ -21,6 +21,13 @@ from app.storage_utils import get_base_url
 logger = logging.getLogger(__name__)
 
 
+def _daily_brief_email_allowed() -> bool:
+    """Allow sending only in deployed production unless explicitly overridden."""
+    if os.environ.get('ALLOW_EMAIL_IN_NON_PROD') == '1':
+        return True
+    return os.environ.get('REPLIT_DEPLOYMENT') == '1'
+
+
 class ResendClient:
     """
     Resend API client for sending daily brief emails.
@@ -38,9 +45,20 @@ class ResendClient:
     RETRY_DELAY = 2  # seconds
 
     def __init__(self):
+        self._disabled = False
+        if not _daily_brief_email_allowed():
+            logger.warning(
+                "Daily brief outbound email disabled outside deployed production. "
+                "Set ALLOW_EMAIL_IN_NON_PROD=1 only for intentional testing."
+            )
+            self._disabled = True
+
         self.api_key = os.environ.get('RESEND_API_KEY')
         if not self.api_key:
-            raise ValueError("RESEND_API_KEY environment variable not set")
+            if self._disabled:
+                logger.warning("RESEND_API_KEY not set - daily brief email disabled in non-production.")
+            else:
+                raise ValueError("RESEND_API_KEY environment variable not set")
 
         self.rate_limiter = RateLimiter(self.RATE_LIMIT)
         # Get email address from env and format with name
@@ -139,6 +157,11 @@ class ResendClient:
             'Authorization': f'Bearer {self.api_key}',
             'Content-Type': 'application/json'
         }
+
+        if self._disabled:
+            recipient = (email_data.get('to') or ['unknown'])[0]
+            logger.info(f"Daily brief email skipped (non-production guard): {recipient}")
+            return True
 
         for attempt in range(self.MAX_RETRIES):
             try:

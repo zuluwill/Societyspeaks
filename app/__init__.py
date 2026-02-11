@@ -575,148 +575,190 @@ def create_app():
         return render_template('errors/429.html', error_code=429, 
                error_message="Too many requests. Please try again later."), 429
 
+    _is_deployed = os.environ.get('REPLIT_DEPLOYMENT') == '1'
+    _skip_scheduler = app.config.get('TESTING') or os.environ.get('SQLALCHEMY_MIGRATE')
+    _scheduler_state = {
+        'enabled': bool(_is_deployed and not _skip_scheduler),
+        'running': False,
+        'lock_acquired': False,
+        'last_heartbeat_at': None,
+        'last_error': None,
+    }
+    app.config['SCHEDULER_RUNTIME'] = _scheduler_state
+
     # Health check endpoint - must respond immediately for deployment health checks
     @app.route('/health')
     def health_check():
-        """Simple health check endpoint that responds immediately."""
-        return {'status': 'healthy'}, 200
-
-    # Initialize and start background scheduler
-    # ONLY runs in production deployments (REPLIT_DEPLOYMENT=1) to prevent
-    # dev and production from competing for the same Redis lock.
-    # With multiple gunicorn workers, only ONE worker should run the scheduler.
-    # We use a Redis lock with a heartbeat to ensure exactly one scheduler instance.
-    _is_deployed = os.environ.get('REPLIT_DEPLOYMENT') == '1'
-    _skip_scheduler = app.config.get('TESTING') or os.environ.get('SQLALCHEMY_MIGRATE')
+        """Health check endpoint with lightweight scheduler visibility."""
+        scheduler_snapshot = {
+            'enabled': _scheduler_state.get('enabled', False),
+            'running': _scheduler_state.get('running', False),
+            'lock_acquired': _scheduler_state.get('lock_acquired', False),
+            'last_heartbeat_at': _scheduler_state.get('last_heartbeat_at'),
+        }
+        return {'status': 'healthy', 'scheduler': scheduler_snapshot}, 200
     
     if _is_deployed and not _skip_scheduler:
         import threading
         
         _SCHEDULER_LOCK_KEY = 'scheduler_lock'
-        _SCHEDULER_LOCK_TTL = 60
-        
-        def _deferred_scheduler_start():
-            """Start scheduler after a delay to allow gunicorn to bind port and pass health checks first."""
-            import time
-            time.sleep(15)
-            
-            pid = os.getpid()
-            redis_url = os.getenv('REDIS_URL')
-            
-            if not redis_url:
-                app.logger.error("REDIS_URL is required for scheduler lock in deployed environment; scheduler start aborted")
-                return
-            
+        _SCHEDULER_LOCK_TTL = 120
+        _SCHEDULER_HEARTBEAT_SECONDS = 20
+        _SCHEDULER_RETRY_DELAY_SECONDS = 15
+        _SCHEDULER_MAX_LOCK_ATTEMPTS = 8
+
+        def _release_scheduler_lock(redis_client, owner_pid):
+            """Release scheduler lock only if owned by this process."""
             try:
-                import redis as redis_lib
-                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-            except Exception as e:
-                app.logger.error(f"Could not connect to Redis for scheduler lock: {e}")
-                return
-            
+                release_script = """
+                if redis.call('get', KEYS[1]) == ARGV[1] then
+                    return redis.call('del', KEYS[1])
+                else
+                    return 0
+                end
+                """
+                redis_client.eval(release_script, 1, _SCHEDULER_LOCK_KEY, str(owner_pid))
+            except Exception as release_error:
+                app.logger.warning(f"Failed to release scheduler lock: {release_error}")
+
+        def _acquire_scheduler_lock(redis_client, owner_pid, attempts=_SCHEDULER_MAX_LOCK_ATTEMPTS):
+            """Try to acquire scheduler lock with bounded retries and jitter."""
             acquired = False
-            max_attempts = 8
-            for attempt in range(1, max_attempts + 1):
+            for attempt in range(1, attempts + 1):
                 try:
-                    r.ping()
-                    acquired = r.set(_SCHEDULER_LOCK_KEY, str(pid), nx=True, ex=_SCHEDULER_LOCK_TTL)
+                    redis_client.ping()
+                    acquired = redis_client.set(_SCHEDULER_LOCK_KEY, str(owner_pid), nx=True, ex=_SCHEDULER_LOCK_TTL)
                     if acquired:
-                        app.logger.info(f"Scheduler lock acquired on attempt {attempt} (pid={pid})")
-                        break
-                    existing = r.get(_SCHEDULER_LOCK_KEY)
-                    existing_ttl = r.ttl(_SCHEDULER_LOCK_KEY)
+                        app.logger.info(f"Scheduler lock acquired on attempt {attempt} (pid={owner_pid})")
+                        _scheduler_state['lock_acquired'] = True
+                        return True
+                    existing = redis_client.get(_SCHEDULER_LOCK_KEY)
+                    existing_ttl = redis_client.ttl(_SCHEDULER_LOCK_KEY)
                     app.logger.info(
                         f"Scheduler lock held by pid={existing}, ttl={existing_ttl}s, "
-                        f"retrying ({attempt}/{max_attempts})..."
+                        f"retrying ({attempt}/{attempts})..."
                     )
-                except Exception as e:
-                    app.logger.warning(f"Redis error during lock attempt {attempt}: {e}, reconnecting...")
-                    try:
-                        r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                    except Exception:
-                        pass
-                if attempt < max_attempts:
-                    time.sleep(10)
-            
-            if not acquired:
-                app.logger.error(f"Failed to acquire scheduler lock after {max_attempts} attempts (pid={pid})")
-                return
-            
+                except Exception as acquire_error:
+                    app.logger.warning(f"Redis error during lock attempt {attempt}: {acquire_error}")
+
+                if attempt < attempts:
+                    # Small jitter helps avoid lock-step retries across workers.
+                    sleep_seconds = _SCHEDULER_RETRY_DELAY_SECONDS + (attempt % 3)
+                    time.sleep(sleep_seconds)
+
+            _scheduler_state['lock_acquired'] = False
+            return False
+
+        def _run_scheduler_cycle():
+            """Acquire lock, run scheduler, and maintain lock heartbeat until loss/failure."""
+            pid = os.getpid()
+            redis_url = os.getenv('REDIS_URL')
+            _scheduler_state['running'] = False
+
+            if not redis_url:
+                _scheduler_state['last_error'] = "REDIS_URL missing for scheduler lock"
+                app.logger.error("REDIS_URL is required for scheduler lock in deployed environment; scheduler start aborted")
+                return False
+
+            try:
+                import redis as redis_lib
+                redis_client = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+            except Exception as connect_error:
+                _scheduler_state['last_error'] = f"Redis connect failed: {connect_error}"
+                app.logger.error(f"Could not connect to Redis for scheduler lock: {connect_error}")
+                return False
+
+            if not _acquire_scheduler_lock(redis_client, pid):
+                _scheduler_state['last_error'] = "Unable to acquire scheduler lock"
+                app.logger.error(f"Failed to acquire scheduler lock after retries (pid={pid})")
+                return False
+
             try:
                 from app.scheduler import init_scheduler, start_scheduler
                 init_scheduler(app)
                 start_scheduler()
+                _scheduler_state['running'] = True
+                _scheduler_state['last_error'] = None
                 app.logger.info(f"Background scheduler started (pid={pid})")
-            except Exception as e:
-                app.logger.error(f"Failed to start scheduler: {e}")
-                try:
-                    _RELEASE_SCRIPT = """
-                    if redis.call('get', KEYS[1]) == ARGV[1] then
-                        return redis.call('del', KEYS[1])
-                    else
-                        return 0
-                    end
-                    """
-                    r.eval(_RELEASE_SCRIPT, 1, _SCHEDULER_LOCK_KEY, str(pid))
-                    app.logger.info("Released scheduler lock after failed start")
-                except Exception:
-                    pass
-                return
-            
-            _RENEW_SCRIPT = """
+            except Exception as start_error:
+                _scheduler_state['running'] = False
+                _scheduler_state['lock_acquired'] = False
+                _scheduler_state['last_error'] = f"Scheduler start failed: {start_error}"
+                app.logger.error(f"Failed to start scheduler: {start_error}")
+                _release_scheduler_lock(redis_client, pid)
+                return False
+
+            renew_script = """
             if redis.call('get', KEYS[1]) == ARGV[1] then
                 return redis.call('set', KEYS[1], ARGV[1], 'EX', ARGV[2])
             else
                 return nil
             end
             """
-            
-            def _heartbeat():
-                """Refresh scheduler lock every 30s, only if we still own it.
-                If the lock is lost (e.g. Redis blip), attempt to re-acquire
-                before shutting down, so the scheduler can self-heal."""
-                import redis as redis_lib
-                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                consecutive_failures = 0
-                while True:
-                    time.sleep(30)
-                    try:
-                        result = r.eval(_RENEW_SCRIPT, 1, _SCHEDULER_LOCK_KEY, str(pid), str(_SCHEDULER_LOCK_TTL))
-                        if result is None:
-                            app.logger.warning(f"Scheduler lock lost by pid={pid}, attempting to re-acquire...")
-                            reacquired = r.set(_SCHEDULER_LOCK_KEY, str(pid), nx=True, ex=_SCHEDULER_LOCK_TTL)
-                            if reacquired:
-                                app.logger.info(f"Scheduler lock re-acquired after loss (pid={pid})")
-                                consecutive_failures = 0
-                                continue
-                            app.logger.error(f"Scheduler lock taken by another worker; shutting down scheduler (pid={pid})")
-                            try:
-                                from app.scheduler import shutdown_scheduler
-                                shutdown_scheduler(wait=False)
-                            except Exception as shutdown_error:
-                                app.logger.warning(f"Failed to shutdown scheduler after lock loss: {shutdown_error}")
-                            return
-                        consecutive_failures = 0
-                    except Exception as e:
-                        consecutive_failures += 1
-                        app.logger.warning(f"Heartbeat error ({consecutive_failures}/5): {e}")
-                        if consecutive_failures >= 5:
-                            app.logger.error(f"Heartbeat failed 5 times in a row; shutting down scheduler (pid={pid})")
-                            try:
-                                from app.scheduler import shutdown_scheduler
-                                shutdown_scheduler(wait=False)
-                            except Exception:
-                                pass
-                            return
+
+            consecutive_failures = 0
+            while True:
+                time.sleep(_SCHEDULER_HEARTBEAT_SECONDS)
+                try:
+                    result = redis_client.eval(renew_script, 1, _SCHEDULER_LOCK_KEY, str(pid), str(_SCHEDULER_LOCK_TTL))
+                    if result is None:
+                        app.logger.warning(f"Scheduler lock lost by pid={pid}, attempting re-acquire...")
+                        _scheduler_state['lock_acquired'] = False
+                        reacquired = _acquire_scheduler_lock(redis_client, pid, attempts=3)
+                        if reacquired:
+                            consecutive_failures = 0
+                            continue
+
+                        app.logger.error(f"Scheduler lock taken by another worker; shutting down scheduler (pid={pid})")
                         try:
-                            r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                            from app.scheduler import shutdown_scheduler
+                            shutdown_scheduler(wait=False)
+                        except Exception as shutdown_error:
+                            app.logger.warning(f"Failed to shutdown scheduler after lock loss: {shutdown_error}")
+                        _scheduler_state['running'] = False
+                        _scheduler_state['lock_acquired'] = False
+                        return False
+
+                    _scheduler_state['last_heartbeat_at'] = int(time.time())
+                    _scheduler_state['lock_acquired'] = True
+                    consecutive_failures = 0
+                except Exception as heartbeat_error:
+                    consecutive_failures += 1
+                    _scheduler_state['last_error'] = f"Heartbeat error: {heartbeat_error}"
+                    app.logger.warning(f"Heartbeat error ({consecutive_failures}/5): {heartbeat_error}")
+                    if consecutive_failures >= 5:
+                        app.logger.error(f"Heartbeat failed repeatedly; shutting down scheduler (pid={pid})")
+                        try:
+                            from app.scheduler import shutdown_scheduler
+                            shutdown_scheduler(wait=False)
                         except Exception:
                             pass
-            
-            hb = threading.Thread(target=_heartbeat, daemon=True)
-            hb.start()
-        
-        scheduler_thread = threading.Thread(target=_deferred_scheduler_start, daemon=True)
+                        _release_scheduler_lock(redis_client, pid)
+                        _scheduler_state['running'] = False
+                        _scheduler_state['lock_acquired'] = False
+                        return False
+                    try:
+                        import redis as redis_lib
+                        redis_client = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                    except Exception:
+                        pass
+
+        def _scheduler_supervisor():
+            """Continuously supervise scheduler startup/recovery in deployed production."""
+            time.sleep(15)  # Allow app to bind port before attempting scheduler work.
+            while True:
+                try:
+                    _run_scheduler_cycle()
+                except Exception as supervisor_error:
+                    _scheduler_state['running'] = False
+                    _scheduler_state['lock_acquired'] = False
+                    _scheduler_state['last_error'] = f"Supervisor error: {supervisor_error}"
+                    app.logger.error(f"Scheduler supervisor error: {supervisor_error}", exc_info=True)
+
+                # Self-heal: retry after a short delay if scheduler cycle exits.
+                time.sleep(_SCHEDULER_RETRY_DELAY_SECONDS)
+
+        scheduler_thread = threading.Thread(target=_scheduler_supervisor, daemon=True)
         scheduler_thread.start()
         app.logger.info("Scheduler startup deferred to background thread")
     elif not _skip_scheduler:
