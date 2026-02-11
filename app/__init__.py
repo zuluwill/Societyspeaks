@@ -607,15 +607,6 @@ def create_app():
                 try:
                     import redis as redis_lib
                     r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                    
-                    existing_pid = r.get(_SCHEDULER_LOCK_KEY)
-                    existing_ttl = r.ttl(_SCHEDULER_LOCK_KEY)
-                    if existing_pid and existing_ttl > _SCHEDULER_LOCK_TTL:
-                        app.logger.warning(
-                            f"Clearing stale scheduler lock (pid={existing_pid}, ttl={existing_ttl}s > {_SCHEDULER_LOCK_TTL}s)"
-                        )
-                        r.delete(_SCHEDULER_LOCK_KEY)
-                    
                     acquired = r.set(_SCHEDULER_LOCK_KEY, str(pid), nx=True, ex=_SCHEDULER_LOCK_TTL)
                     if not acquired:
                         app.logger.info(f"Scheduler lock held by another worker, skipping (pid={pid})")

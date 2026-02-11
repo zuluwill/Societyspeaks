@@ -1351,7 +1351,13 @@ def init_scheduler(app):
         2. Check if a run already exists for this period (daily/weekly)
         3. Ingest content from configured sources
         4. Generate the brief run content
+        
+        IMPORTANT: Only runs in production to prevent duplicate generation from dev environment.
         """
+        if not _is_production_environment():
+            logger.debug("Skipping briefing runs processing - development environment")
+            return
+            
         with app.app_context():
             from app.briefing.generator import generate_brief_run_for_briefing
             from app.briefing.ingestion.source_ingester import SourceIngester
@@ -1416,11 +1422,29 @@ def init_scheduler(app):
                             if existing_run:
                                 continue
 
-                            scheduled_utc = get_next_scheduled_time(
-                                timezone_str=briefing.timezone,
-                                preferred_hour=briefing.preferred_send_hour,
-                                preferred_minute=getattr(briefing, 'preferred_send_minute', 0)
-                            )
+                            preferred_minute = getattr(briefing, 'preferred_send_minute', 0)
+                            
+                            today_target_naive = local_now.replace(
+                                hour=briefing.preferred_send_hour,
+                                minute=preferred_minute,
+                                second=0, microsecond=0
+                            ).replace(tzinfo=None)
+                            from app.briefing.timezone_utils import safe_localize
+                            today_target_local = safe_localize(tz, today_target_naive)
+                            
+                            if local_now > today_target_local:
+                                scheduled_utc = today_target_local.astimezone(pytz.UTC).replace(tzinfo=None)
+                                logger.info(
+                                    f"Briefing {briefing.id}: preferred time {briefing.preferred_send_hour}:{preferred_minute:02d} "
+                                    f"already passed in {briefing.timezone}, generating catch-up run "
+                                    f"(scheduled_at={scheduled_utc})"
+                                )
+                            else:
+                                scheduled_utc = get_next_scheduled_time(
+                                    timezone_str=briefing.timezone,
+                                    preferred_hour=briefing.preferred_send_hour,
+                                    preferred_minute=preferred_minute
+                                )
 
                         elif briefing.cadence == 'weekly':
                             try:
