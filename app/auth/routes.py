@@ -224,6 +224,7 @@ def register():
 
 # User login: New Users without a profile are sent to select_profile_type to create their profile. Returning Users with a profile are redirected to the dashboard.
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10/minute")
 def login():
     if request.method == 'POST':
         email = request.form.get('email')

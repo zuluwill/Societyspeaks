@@ -68,10 +68,9 @@ def webhook_required(f):
             else:
                 abort(500)  # Internal Server Error in development
         
-        # For development, allow bypassing signature verification
-        if current_app.config.get('DEBUG') and not signature:
-            current_app.logger.warning("Webhook signature verification bypassed in development mode")
-            return f(*args, **kwargs)
+        if not signature:
+            current_app.logger.warning(f"Missing webhook signature from {request.remote_addr}")
+            abort(401)
         
         # Verify signature
         if not verify_webhook_signature(payload, signature, webhook_secret):
@@ -136,10 +135,9 @@ def webhook_with_timestamp(timestamp_header='X-Timestamp', tolerance=300):
                 else:
                     abort(500)  # Internal Server Error in development
             
-            # For development, allow bypassing if no headers provided
-            if current_app.config.get('DEBUG') and not (signature and timestamp):
-                current_app.logger.warning("Webhook security bypassed in development mode")
-                return f(*args, **kwargs)
+            if not signature:
+                current_app.logger.warning(f"Missing webhook signature from {request.remote_addr}")
+                abort(401)
             
             # Validate timestamp
             if not timestamp:

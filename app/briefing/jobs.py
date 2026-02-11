@@ -35,6 +35,11 @@ MAX_QUEUE_SIZE = 1000  # Maximum pending jobs in queue
 DEAD_LETTER_QUEUE = 'briefing:dead_letter_queue'
 RETRY_QUEUE = 'briefing:retry_queue'
 
+# In-process fallback store used when Redis is unavailable.
+# This preserves user-facing job tracking semantics in single-process environments.
+_IN_MEMORY_JOBS: Dict[str, Dict[str, Any]] = {}
+_IN_MEMORY_JOBS_LOCK = threading.Lock()
+
 
 def get_redis_client():
     """Get Redis client connection."""
@@ -163,11 +168,18 @@ class GenerationJob:
     def save(self) -> bool:
         """Save job to Redis."""
         client = get_redis_client()
+        self.updated_at = datetime.utcnow().isoformat()
+
         if not client:
-            return False
-        
+            try:
+                with _IN_MEMORY_JOBS_LOCK:
+                    _IN_MEMORY_JOBS[self.job_id] = self.to_dict()
+                return True
+            except Exception as e:
+                logger.error(f"Failed to save in-memory job {self.job_id}: {e}")
+                return False
+
         try:
-            self.updated_at = datetime.utcnow().isoformat()
             key = f"{JOB_PREFIX}{self.job_id}"
             client.setex(key, JOB_EXPIRY, json.dumps(self.to_dict()))
             return True
@@ -180,8 +192,28 @@ class GenerationJob:
         """Get job from Redis."""
         client = get_redis_client()
         if not client:
-            return None
-        
+            try:
+                with _IN_MEMORY_JOBS_LOCK:
+                    data = _IN_MEMORY_JOBS.get(job_id)
+                if not data:
+                    return None
+
+                updated_at_raw = data.get('updated_at')
+                if updated_at_raw:
+                    try:
+                        updated_at = datetime.fromisoformat(updated_at_raw)
+                        if (datetime.utcnow() - updated_at).total_seconds() > JOB_EXPIRY:
+                            with _IN_MEMORY_JOBS_LOCK:
+                                _IN_MEMORY_JOBS.pop(job_id, None)
+                            return None
+                    except Exception:
+                        pass
+
+                return cls.from_dict(data)
+            except Exception as e:
+                logger.error(f"Failed to get in-memory job {job_id}: {e}")
+                return None
+
         try:
             key = f"{JOB_PREFIX}{job_id}"
             data = client.get(key)
@@ -219,8 +251,25 @@ def queue_brief_generation(briefing_id: int, user_id: int) -> Optional[str]:
 
     client = get_redis_client()
     if not client:
-        logger.warning("Redis not available - cannot queue async job")
-        return None
+        job_id = str(uuid.uuid4())
+        job = GenerationJob(job_id, briefing_id, user_id)
+        if not job.save():
+            logger.error(f"Failed to create in-memory fallback job for briefing {briefing_id}")
+            return None
+
+        logger.warning(
+            f"Redis unavailable; using in-memory fallback for briefing generation job {job_id}"
+        )
+        _log_metrics('job_queued_in_memory', {'job_id': job_id, 'briefing_id': briefing_id})
+
+        worker = threading.Thread(
+            target=process_generation_job,
+            args=(job_id,),
+            daemon=True,
+            name=f"briefing-fallback-{job_id[:8]}"
+        )
+        worker.start()
+        return job_id
 
     # Check queue size limit to prevent runaway growth
     try:
