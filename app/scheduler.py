@@ -1320,39 +1320,42 @@ def init_scheduler(app):
         """
         Process scheduled briefings and generate runs.
         Runs every 15 minutes to check for briefings that need generation.
+        
+        For each active briefing:
+        1. Verify owner has active subscription (admin or paid)
+        2. Check if a run already exists for this period (daily/weekly)
+        3. Ingest content from configured sources
+        4. Generate the brief run content
         """
         with app.app_context():
             from app.briefing.generator import generate_brief_run_for_briefing
             from app.briefing.ingestion.source_ingester import SourceIngester
             from app.models import Briefing, BriefRun, InputSource
+            from app import db
             from datetime import datetime, timedelta
             import pytz
             
             logger.info("Processing briefing runs")
             
             try:
-                # Get all active briefings
                 active_briefings = Briefing.query.filter_by(status='active').all()
                 
                 for briefing in active_briefings:
                     try:
-                        # Check owner's subscription before generating (prevent generating for expired subscriptions)
                         from app.billing.service import get_active_subscription
                         from app.models import User, Subscription
                         
                         has_active_subscription = False
                         
                         if briefing.owner_type == 'user':
-                            user = User.query.get(briefing.owner_id)
+                            user = db.session.get(User, briefing.owner_id)
                             if user:
-                                # Admin users always have access
                                 if user.is_admin:
                                     has_active_subscription = True
                                 else:
                                     sub = get_active_subscription(user)
                                     has_active_subscription = sub is not None
                         elif briefing.owner_type == 'org':
-                            # Check if organization has active subscription
                             sub = Subscription.query.filter(
                                 Subscription.org_id == briefing.owner_id,
                                 Subscription.status.in_(['trialing', 'active'])
@@ -1365,15 +1368,14 @@ def init_scheduler(app):
                                 f"(owner_type={briefing.owner_type}, owner_id={briefing.owner_id})"
                             )
                             continue
-                        # Import DST-safe timezone utilities
+
                         from app.briefing.timezone_utils import get_next_scheduled_time, get_weekly_scheduled_time
 
-                        # Check if briefing needs a new run
                         if briefing.cadence == 'daily':
-                            # Check if run exists for today (in briefing's timezone)
                             try:
                                 tz = pytz.timezone(briefing.timezone)
                             except pytz.UnknownTimeZoneError:
+                                logger.warning(f"Unknown timezone '{briefing.timezone}' for briefing {briefing.id}, using UTC")
                                 tz = pytz.UTC
 
                             local_now = datetime.now(tz)
@@ -1389,7 +1391,6 @@ def init_scheduler(app):
                             if existing_run:
                                 continue
 
-                            # Calculate scheduled time with proper DST handling
                             scheduled_utc = get_next_scheduled_time(
                                 timezone_str=briefing.timezone,
                                 preferred_hour=briefing.preferred_send_hour,
@@ -1397,14 +1398,13 @@ def init_scheduler(app):
                             )
 
                         elif briefing.cadence == 'weekly':
-                            # Check if run exists this week (in briefing's timezone)
                             try:
                                 tz = pytz.timezone(briefing.timezone)
                             except pytz.UnknownTimeZoneError:
+                                logger.warning(f"Unknown timezone '{briefing.timezone}' for briefing {briefing.id}, using UTC")
                                 tz = pytz.UTC
 
                             local_now = datetime.now(tz)
-                            # Get start of week in local timezone (Monday)
                             days_since_monday = local_now.weekday()
                             week_start_local = (local_now - timedelta(days=days_since_monday)).replace(
                                 hour=0, minute=0, second=0, microsecond=0
@@ -1420,38 +1420,46 @@ def init_scheduler(app):
                             if existing_run:
                                 continue
 
-                            # Calculate scheduled time with proper DST handling
-                            # Default to Monday (weekday=0)
                             scheduled_utc = get_weekly_scheduled_time(
                                 timezone_str=briefing.timezone,
                                 preferred_hour=briefing.preferred_send_hour,
-                                preferred_weekday=0,  # Monday
+                                preferred_weekday=0,
                                 preferred_minute=getattr(briefing, 'preferred_send_minute', 0)
                             )
                         else:
+                            logger.warning(f"Unknown cadence '{briefing.cadence}' for briefing {briefing.id}, skipping")
                             continue
                         
-                        # Ingest from sources first
                         ingester = SourceIngester()
+                        ingestion_errors = 0
                         for source_link in briefing.sources:
                             source = source_link.input_source
                             if source and source.enabled:
                                 try:
                                     ingester.ingest_source(source)
                                 except Exception as e:
-                                    logger.error(f"Error ingesting source {source.id}: {e}")
+                                    ingestion_errors += 1
+                                    logger.error(f"Error ingesting source {source.id} for briefing {briefing.id}: {e}")
                         
-                        # Generate brief run
+                        if ingestion_errors > 0:
+                            logger.warning(
+                                f"Briefing {briefing.id}: {ingestion_errors} source ingestion errors, "
+                                f"proceeding with available content"
+                            )
+                        
                         brief_run = generate_brief_run_for_briefing(
                             briefing.id,
                             scheduled_at=scheduled_utc
                         )
                         
                         if brief_run:
-                            logger.info(f"Generated BriefRun {brief_run.id} for briefing {briefing.id}")
+                            logger.info(f"Generated BriefRun {brief_run.id} for briefing {briefing.id} (scheduled: {scheduled_utc})")
+                        else:
+                            logger.warning(f"No BriefRun generated for briefing {briefing.id} - generator returned None")
                         
                     except Exception as e:
                         logger.error(f"Error processing briefing {briefing.id}: {e}", exc_info=True)
+                        db.session.rollback()
                         continue
                         
             except Exception as e:
@@ -1463,131 +1471,199 @@ def init_scheduler(app):
         Send approved BriefRuns that are ready to send.
         Runs every 5 minutes to send briefs promptly after approval.
         
+        Pipeline:
+        1. Expire stale runs (too old to send)
+        2. Clear unsendable runs (inactive briefings, no recipients)
+        3. Fail runs that exceeded max send attempts
+        4. Send eligible approved runs
+        5. Recover stuck 'sending' runs
+        6. Clean up stale email claims
+        
         IMPORTANT: Only sends in production to prevent duplicate emails from dev environment.
         """
-        # Skip email sending in development environment to prevent duplicates
         if not _is_production_environment():
             logger.info("Skipping briefing sends - development environment")
             return
             
         with app.app_context():
             from app.briefing.email_client import send_brief_run_emails
-            from app.models import BriefRun
+            from app.models import BriefRun, BriefRecipient, Briefing, BriefEmailSend
             from app import db
+            from sqlalchemy import update, or_
             from datetime import datetime, timedelta
             
-            logger.info("Checking for approved BriefRuns to send")
+            now = datetime.utcnow()
+            MAX_BRIEFRUN_SEND_ATTEMPTS = 5
+            STALE_DAILY_HOURS = 20
+            STALE_WEEKLY_HOURS = 48
+            STUCK_SENDING_MINUTES = 15
             
+            # === Phase 1: Expire stale runs ===
+            # Runs older than their staleness window should not be sent (confusing for users)
             try:
-                from app.models import BriefRecipient, Briefing
+                daily_cutoff = now - timedelta(hours=STALE_DAILY_HOURS)
+                weekly_cutoff = now - timedelta(hours=STALE_WEEKLY_HOURS)
                 
-                now = datetime.utcnow()
-                
-                # First pass: bulk-clear due but unsendable runs (inactive briefings, no recipients)
-                # Only clear runs that are already due (scheduled_at <= now)
-                try:
-                    inactive_cleared = db.session.execute(
-                        db.text("""
-                            UPDATE brief_run SET status = 'failed', sent_at = :now
-                            WHERE status = 'approved' AND sent_at IS NULL
-                            AND scheduled_at <= :now
-                            AND briefing_id IN (
-                                SELECT id FROM briefing WHERE status != 'active'
-                            )
-                        """),
-                        {'now': now}
+                stale_expired = db.session.execute(
+                    db.text("""
+                        UPDATE brief_run br SET status = 'failed', sent_at = :now
+                        WHERE br.status = 'approved' AND br.sent_at IS NULL
+                        AND br.scheduled_at <= :now
+                        AND (
+                            (EXISTS (SELECT 1 FROM briefing b WHERE b.id = br.briefing_id AND b.cadence = 'daily')
+                             AND br.scheduled_at < :daily_cutoff)
+                            OR
+                            (EXISTS (SELECT 1 FROM briefing b WHERE b.id = br.briefing_id AND b.cadence = 'weekly')
+                             AND br.scheduled_at < :weekly_cutoff)
+                        )
+                    """),
+                    {'now': now, 'daily_cutoff': daily_cutoff, 'weekly_cutoff': weekly_cutoff}
+                )
+                db.session.commit()
+                if stale_expired.rowcount > 0:
+                    logger.warning(
+                        f"Expired {stale_expired.rowcount} stale BriefRuns "
+                        f"(daily>{STALE_DAILY_HOURS}h, weekly>{STALE_WEEKLY_HOURS}h)"
                     )
-                    if inactive_cleared.rowcount > 0:
-                        logger.info(f"Cleared {inactive_cleared.rowcount} runs for inactive briefings")
-                    
-                    no_recipient_cleared = db.session.execute(
-                        db.text("""
-                            UPDATE brief_run SET status = 'sent', sent_at = :now
-                            WHERE status = 'approved' AND sent_at IS NULL
-                            AND scheduled_at <= :now
-                            AND briefing_id NOT IN (
-                                SELECT DISTINCT briefing_id FROM brief_recipient WHERE status = 'active'
-                            )
-                        """),
-                        {'now': now}
-                    )
-                    if no_recipient_cleared.rowcount > 0:
-                        logger.info(f"Cleared {no_recipient_cleared.rowcount} runs for briefings with no active recipients")
-                    
-                    db.session.commit()
-                except Exception as bulk_err:
-                    logger.error(f"Error clearing unsendable runs: {bulk_err}", exc_info=True)
-                    db.session.rollback()
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Error expiring stale runs: {e}", exc_info=True)
+            
+            # === Phase 2: Clear unsendable runs ===
+            # Runs for inactive briefings or briefings with no active recipients
+            try:
+                inactive_cleared = db.session.execute(
+                    db.text("""
+                        UPDATE brief_run SET status = 'failed', sent_at = :now
+                        WHERE status = 'approved' AND sent_at IS NULL
+                        AND scheduled_at <= :now
+                        AND briefing_id IN (
+                            SELECT id FROM briefing WHERE status != 'active'
+                        )
+                    """),
+                    {'now': now}
+                )
+                if inactive_cleared.rowcount > 0:
+                    logger.info(f"Cleared {inactive_cleared.rowcount} runs for inactive briefings")
                 
-                # Second pass: find sendable runs (active briefings with recipients)
+                no_recipient_cleared = db.session.execute(
+                    db.text("""
+                        UPDATE brief_run SET status = 'sent', sent_at = :now
+                        WHERE status = 'approved' AND sent_at IS NULL
+                        AND scheduled_at <= :now
+                        AND briefing_id NOT IN (
+                            SELECT DISTINCT briefing_id FROM brief_recipient WHERE status = 'active'
+                        )
+                    """),
+                    {'now': now}
+                )
+                if no_recipient_cleared.rowcount > 0:
+                    logger.info(f"Cleared {no_recipient_cleared.rowcount} runs for briefings with no active recipients")
+                
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Error clearing unsendable runs: {e}", exc_info=True)
+            
+            # === Phase 3: Fail runs that exceeded max send attempts ===
+            try:
+                max_attempt_failed = db.session.execute(
+                    db.text("""
+                        UPDATE brief_run SET status = 'failed', sent_at = :now
+                        WHERE status = 'approved' AND sent_at IS NULL
+                        AND send_attempts >= :max_attempts
+                    """),
+                    {'now': now, 'max_attempts': MAX_BRIEFRUN_SEND_ATTEMPTS}
+                )
+                db.session.commit()
+                if max_attempt_failed.rowcount > 0:
+                    logger.error(
+                        f"ALERT: Failed {max_attempt_failed.rowcount} BriefRuns that exceeded "
+                        f"{MAX_BRIEFRUN_SEND_ATTEMPTS} send attempts. Manual investigation required."
+                    )
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Error failing max-attempt runs: {e}", exc_info=True)
+            
+            # === Phase 4: Send eligible approved runs ===
+            try:
                 approved_runs = BriefRun.query.filter(
                     BriefRun.status == 'approved',
                     BriefRun.sent_at.is_(None),
-                    BriefRun.scheduled_at <= now
+                    BriefRun.scheduled_at <= now,
+                    BriefRun.send_attempts < MAX_BRIEFRUN_SEND_ATTEMPTS
                 ).order_by(BriefRun.scheduled_at.asc()).limit(20).all()
                 
-                if not approved_runs:
-                    return
-                
-                logger.info(f"Found {len(approved_runs)} approved BriefRuns to send")
-                
-                for brief_run in approved_runs:
-                    try:
-                        # Send emails
-                        result = send_brief_run_emails(brief_run.id)
-                        logger.info(f"Sent BriefRun {brief_run.id}: {result['sent']} sent, {result['failed']} failed")
-                        
-                    except Exception as e:
-                        logger.error(f"Error sending BriefRun {brief_run.id}: {e}", exc_info=True)
-                        db.session.rollback()
-                        continue
+                if approved_runs:
+                    logger.info(f"Found {len(approved_runs)} approved BriefRuns to send")
+                    
+                    for brief_run in approved_runs:
+                        try:
+                            result = send_brief_run_emails(brief_run.id)
+                            logger.info(
+                                f"BriefRun {brief_run.id}: sent={result.get('sent', 0)}, "
+                                f"failed={result.get('failed', 0)}, "
+                                f"method={result.get('method', 'unknown')}"
+                            )
+                        except Exception as e:
+                            logger.error(f"Error sending BriefRun {brief_run.id}: {e}", exc_info=True)
+                            db.session.rollback()
+                            continue
                         
             except Exception as e:
                 logger.error(f"Error in approved BriefRuns sender: {e}", exc_info=True)
             
-            # Recovery: Reset any runs stuck in 'sending' status for too long (>15 minutes)
-            # This handles cases where a process crashed mid-send
-            # Using claimed_at (when the send was claimed) instead of scheduled_at for accuracy
-            from app import db
-            from sqlalchemy import update, or_
-            from app.models import BriefEmailSend
-            
+            # === Phase 5: Recover stuck 'sending' runs ===
+            # Reset runs stuck in 'sending' for too long back to 'approved' for retry
+            # (only if under max attempts - otherwise fail them)
             try:
-                stuck_cutoff = datetime.utcnow() - timedelta(minutes=15)
+                stuck_cutoff = now - timedelta(minutes=STUCK_SENDING_MINUTES)
                 
-                # Find runs that are stuck in 'sending' status
-                # Check claimed_at to determine how long they've been in 'sending' state
-                # Also handle legacy runs without claimed_at (fall back to scheduled_at)
-                result = db.session.execute(
+                stuck_retry = db.session.execute(
                     update(BriefRun)
                     .where(BriefRun.status == 'sending')
                     .where(BriefRun.sent_at == None)
+                    .where(BriefRun.send_attempts < MAX_BRIEFRUN_SEND_ATTEMPTS)
                     .where(
                         or_(
-                            # Primary: check claimed_at if available
                             BriefRun.claimed_at < stuck_cutoff,
-                            # Fallback for legacy runs without claimed_at
                             (BriefRun.claimed_at == None) & (BriefRun.scheduled_at < stuck_cutoff)
                         )
                     )
-                    .values(status='approved', claimed_at=None)  # Clear claimed_at for retry
+                    .values(status='approved', claimed_at=None)
                 )
                 db.session.commit()
+                if stuck_retry.rowcount > 0:
+                    logger.warning(f"Reset {stuck_retry.rowcount} stuck 'sending' BriefRuns back to 'approved' for retry")
                 
-                rows_affected = result.rowcount if hasattr(result, 'rowcount') else 0
-                if rows_affected > 0:
-                    logger.warning(f"Reset {rows_affected} stuck 'sending' BriefRuns back to 'approved'")
+                stuck_failed = db.session.execute(
+                    update(BriefRun)
+                    .where(BriefRun.status == 'sending')
+                    .where(BriefRun.sent_at == None)
+                    .where(BriefRun.send_attempts >= MAX_BRIEFRUN_SEND_ATTEMPTS)
+                    .where(
+                        or_(
+                            BriefRun.claimed_at < stuck_cutoff,
+                            (BriefRun.claimed_at == None) & (BriefRun.scheduled_at < stuck_cutoff)
+                        )
+                    )
+                    .values(status='failed', sent_at=now)
+                )
+                db.session.commit()
+                if stuck_failed.rowcount > 0:
+                    logger.error(
+                        f"ALERT: Failed {stuck_failed.rowcount} stuck 'sending' BriefRuns "
+                        f"that exceeded {MAX_BRIEFRUN_SEND_ATTEMPTS} attempts"
+                    )
                     
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error recovering stuck sends: {e}", exc_info=True)
             
-            # Cleanup stale email claims (recipients stuck in 'claimed' status > 15 minutes)
-            # This is a safety net for crashes between send and mark_sent
+            # === Phase 6: Clean up stale email claims ===
             try:
-                stale_claim_cutoff = datetime.utcnow() - timedelta(minutes=15)
+                stale_claim_cutoff = now - timedelta(minutes=STUCK_SENDING_MINUTES)
 
-                # Mark stale claims as failed with reason and increment attempt_count
                 stale_result = db.session.execute(
                     db.text("""
                         UPDATE brief_email_send
@@ -1599,15 +1675,7 @@ def init_scheduler(app):
                     """),
                     {'stale_cutoff': stale_claim_cutoff}
                 )
-                db.session.commit()
-
-                stale_rows = stale_result.rowcount if hasattr(stale_result, 'rowcount') else 0
-                if stale_rows > 0:
-                    logger.warning(
-                        f"Marked {stale_rows} stale email claims as failed for retry"
-                    )
-
-                # Mark records that exceeded max attempts as permanently_failed
+                
                 max_attempts = BriefEmailSend.MAX_SEND_ATTEMPTS
                 permanent_result = db.session.execute(
                     db.text("""
@@ -1620,20 +1688,18 @@ def init_scheduler(app):
                 )
                 db.session.commit()
 
-                permanent_rows = permanent_result.rowcount if hasattr(permanent_result, 'rowcount') else 0
-                if permanent_rows > 0:
+                if stale_result.rowcount > 0:
+                    logger.warning(f"Marked {stale_result.rowcount} stale email claims as failed for retry")
+                if permanent_result.rowcount > 0:
                     logger.warning(
-                        f"Marked {permanent_rows} email sends as permanently_failed "
+                        f"Marked {permanent_result.rowcount} email sends as permanently_failed "
                         f"(exceeded {max_attempts} attempts)"
                     )
 
-                # Alert on permanently failed emails in the last 24 hours
-                # This helps with operational visibility
                 permanent_failures_24h = BriefEmailSend.query.filter(
                     BriefEmailSend.status == 'permanently_failed',
-                    BriefEmailSend.claimed_at > datetime.utcnow() - timedelta(hours=24)
+                    BriefEmailSend.claimed_at > now - timedelta(hours=24)
                 ).count()
-
                 if permanent_failures_24h > 0:
                     logger.error(
                         f"ALERT: {permanent_failures_24h} emails permanently failed in last 24h. "

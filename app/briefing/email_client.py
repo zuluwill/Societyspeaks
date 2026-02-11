@@ -856,60 +856,81 @@ class BriefingEmailClient:
         return {'sent': total_sent, 'failed': total_failed, 'skipped': total_skipped, 'method': 'batch'}
 
 
+def _reset_brief_run_to_approved(brief_run_id: int) -> bool:
+    """
+    Safely reset a BriefRun from 'sending' back to 'approved' for retry.
+    Uses atomic update to prevent race conditions.
+    """
+    try:
+        result = db.session.execute(
+            update(BriefRun)
+            .where(BriefRun.id == brief_run_id)
+            .where(BriefRun.status == 'sending')
+            .values(status='approved', claimed_at=None)
+        )
+        db.session.commit()
+        return result.rowcount > 0
+    except Exception as e:
+        logger.error(f"Failed to reset BriefRun {brief_run_id} to approved: {e}")
+        db.session.rollback()
+        return False
+
+
 def send_brief_run_emails(brief_run_id: int, skip_subscription_check: bool = False) -> dict:
     """
-    Convenience function to send BriefRun emails.
+    Send BriefRun emails with full safety checks.
     
     Uses atomic claim mechanism to prevent duplicate sends from concurrent processes.
+    Includes subscription validation, status checks, and safe error recovery.
     
     Args:
         brief_run_id: BriefRun ID
         skip_subscription_check: Skip subscription validation (for admin/testing only)
     
     Returns:
-        dict: {'sent': count, 'failed': count}
+        dict: {'sent': count, 'failed': count, ...}
     """
     from app.billing.service import get_active_subscription
     from app.models import User, CompanyProfile
     
-    brief_run = BriefRun.query.get(brief_run_id)
+    brief_run = db.session.get(BriefRun, brief_run_id)
     if not brief_run:
         logger.error(f"BriefRun {brief_run_id} not found")
-        return {'sent': 0, 'failed': 0}
+        return {'sent': 0, 'failed': 0, 'skipped_reason': 'not_found'}
     
-    # Check status - must be 'approved' to send
-    # 'sending' means another process already claimed it (treat as already in progress)
-    # 'sent' means it's already been sent
     if brief_run.status == 'sending':
         logger.info(f"BriefRun {brief_run_id} is already being sent by another process, skipping")
         return {'sent': 0, 'failed': 0, 'skipped_reason': 'already_sending'}
     
+    if brief_run.status == 'sent':
+        logger.info(f"BriefRun {brief_run_id} already sent at {brief_run.sent_at}, skipping")
+        return {'sent': 0, 'failed': 0, 'skipped_reason': 'already_sent'}
+    
+    if brief_run.status == 'failed':
+        logger.warning(f"BriefRun {brief_run_id} is in failed status, skipping")
+        return {'sent': 0, 'failed': 0, 'skipped_reason': 'failed'}
+    
     if brief_run.status != 'approved':
         logger.warning(f"BriefRun {brief_run_id} is not approved (status: {brief_run.status}), skipping")
-        return {'sent': 0, 'failed': 0}
+        return {'sent': 0, 'failed': 0, 'skipped_reason': 'not_approved'}
     
-    # Atomically claim the brief_run for sending BEFORE we start
-    # This prevents race conditions where multiple scheduler jobs try to send
     if not _claim_brief_run_for_sending(brief_run):
         logger.info(f"BriefRun {brief_run_id} already claimed by another process, skipping")
         return {'sent': 0, 'failed': 0, 'skipped_reason': 'already_claimed'}
     
-    # Check subscription status before sending (unless explicitly skipped for admin)
     if not skip_subscription_check:
         briefing = brief_run.briefing
         has_active_subscription = False
         
         if briefing.owner_type == 'user':
-            user = User.query.get(briefing.owner_id)
+            user = db.session.get(User, briefing.owner_id)
             if user:
-                # Admin users always have access
                 if user.is_admin:
                     has_active_subscription = True
                 else:
                     sub = get_active_subscription(user)
                     has_active_subscription = sub is not None
         elif briefing.owner_type == 'org':
-            # Check if organization has active subscription
             from app.models import Subscription
             sub = Subscription.query.filter(
                 Subscription.org_id == briefing.owner_id,
@@ -922,27 +943,13 @@ def send_brief_run_emails(brief_run_id: int, skip_subscription_check: bool = Fal
                 f"Skipping send for BriefRun {brief_run_id} - owner has no active subscription "
                 f"(owner_type={briefing.owner_type}, owner_id={briefing.owner_id})"
             )
-            # Reset status back to approved so it doesn't get stuck in 'sending'
-            db.session.execute(
-                update(BriefRun)
-                .where(BriefRun.id == brief_run_id)
-                .where(BriefRun.status == 'sending')
-                .values(status='approved')
-            )
-            db.session.commit()
+            _reset_brief_run_to_approved(brief_run_id)
             return {'sent': 0, 'failed': 0, 'skipped_reason': 'no_active_subscription'}
     
     try:
         client = BriefingEmailClient()
         return client.send_brief_run_to_all_recipients(brief_run)
     except Exception as e:
-        # If sending fails completely, reset status to approved for retry
         logger.error(f"Error sending BriefRun {brief_run_id}: {e}", exc_info=True)
-        db.session.execute(
-            update(BriefRun)
-            .where(BriefRun.id == brief_run_id)
-            .where(BriefRun.status == 'sending')
-            .values(status='approved')
-        )
-        db.session.commit()
+        _reset_brief_run_to_approved(brief_run_id)
         raise
