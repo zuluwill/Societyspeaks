@@ -21,6 +21,18 @@ import requests
 logger = logging.getLogger(__name__)
 
 
+def _email_sending_allowed_for_environment() -> bool:
+    """
+    Allow outbound email only in deployed production by default.
+
+    Override for intentional non-production testing with:
+    ALLOW_EMAIL_IN_NON_PROD=1
+    """
+    if os.environ.get('ALLOW_EMAIL_IN_NON_PROD') == '1':
+        return True
+    return os.environ.get('REPLIT_DEPLOYMENT') == '1'
+
+
 class RateLimiter:
     """Thread-safe rate limiter for API calls"""
     def __init__(self, rate_per_second: float):
@@ -62,11 +74,19 @@ class ResendEmailClient:
         self.api_key = os.environ.get('RESEND_API_KEY')
         self._disabled = False
         self.last_message_id: Optional[str] = None
+        self._email_allowed = _email_sending_allowed_for_environment()
+
+        if not self._email_allowed:
+            logger.warning(
+                "Outbound email disabled outside deployed production. "
+                "Set ALLOW_EMAIL_IN_NON_PROD=1 only for intentional testing."
+            )
+            self._disabled = True
         
         if not self.api_key:
-            # Graceful degradation in development
+            # Graceful degradation in non-production or when email sending is intentionally disabled.
             flask_env = os.environ.get('FLASK_ENV', 'production')
-            if flask_env in ('development', 'testing'):
+            if (not self._email_allowed) or flask_env in ('development', 'testing'):
                 logger.warning(
                     "RESEND_API_KEY not set - email sending disabled. "
                     "Set RESEND_API_KEY in your .env file to enable emails."

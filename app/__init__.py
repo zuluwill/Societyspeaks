@@ -612,10 +612,12 @@ def create_app():
                         app.logger.info(f"Scheduler lock held by another worker, skipping (pid={pid})")
                         return
                 except Exception as e:
-                    app.logger.warning(f"Could not acquire scheduler lock: {e}, skipping scheduler for this worker")
+                    app.logger.error(f"Could not acquire scheduler lock: {e}; scheduler will not start for this worker")
                     return
             else:
-                app.logger.info("No Redis available, starting scheduler (single-worker assumed)")
+                # Fail closed in deployed environments to prevent duplicate jobs across workers.
+                app.logger.error("REDIS_URL is required for scheduler lock in deployed environment; scheduler start aborted")
+                return
             
             try:
                 from app.scheduler import init_scheduler, start_scheduler
@@ -644,7 +646,12 @@ def create_app():
                         try:
                             result = r.eval(_RENEW_SCRIPT, 1, _SCHEDULER_LOCK_KEY, str(pid), str(_SCHEDULER_LOCK_TTL))
                             if result is None:
-                                app.logger.warning(f"Scheduler lock lost by pid={pid}, stopping heartbeat")
+                                app.logger.error(f"Scheduler lock lost by pid={pid}; shutting down scheduler to prevent duplicate jobs")
+                                try:
+                                    from app.scheduler import shutdown_scheduler
+                                    shutdown_scheduler(wait=False)
+                                except Exception as shutdown_error:
+                                    app.logger.warning(f"Failed to shutdown scheduler after lock loss: {shutdown_error}")
                                 return
                         except Exception:
                             try:

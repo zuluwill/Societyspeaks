@@ -2010,6 +2010,10 @@ def start_scheduler():
     """
     global scheduler
     
+    if not _is_production_environment():
+        logger.info("Scheduler start skipped outside deployed production environment")
+        return
+    
     if scheduler is None:
         logger.error("Scheduler not initialized. Call init_scheduler() first.")
         return
