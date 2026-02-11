@@ -18,14 +18,21 @@ localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 5001
-externalPort = 3000
 
 [objectStorage]
 defaultBucketID = "replit-objstore-14f1b847-9243-4a51-b979-b86c328f7947"
 
 [workflows]
 runButton = "Project"
+
+[[workflows.workflow]]
+name = "Run Flask"
+author = 21777039
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python run.py"
 
 [[workflows.workflow]]
 name = "Project"
