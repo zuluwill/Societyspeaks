@@ -581,12 +581,15 @@ def create_app():
         """Simple health check endpoint that responds immediately."""
         return {'status': 'healthy'}, 200
 
-    # Initialize and start background scheduler (Phase 3.3)
-    # Only runs in production, not during migrations or tests
-    # IMPORTANT: Scheduler startup is deferred to avoid blocking gunicorn port binding
+    # Initialize and start background scheduler
+    # ONLY runs in production deployments (REPLIT_DEPLOYMENT=1) to prevent
+    # dev and production from competing for the same Redis lock.
     # With multiple gunicorn workers, only ONE worker should run the scheduler.
     # We use a Redis lock with a heartbeat to ensure exactly one scheduler instance.
-    if not app.config.get('TESTING') and not os.environ.get('SQLALCHEMY_MIGRATE'):
+    _is_deployed = os.environ.get('REPLIT_DEPLOYMENT') == '1'
+    _skip_scheduler = app.config.get('TESTING') or os.environ.get('SQLALCHEMY_MIGRATE')
+    
+    if _is_deployed and not _skip_scheduler:
         import threading
         
         _SCHEDULER_LOCK_KEY = 'scheduler_lock'
@@ -604,6 +607,15 @@ def create_app():
                 try:
                     import redis as redis_lib
                     r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                    
+                    existing_pid = r.get(_SCHEDULER_LOCK_KEY)
+                    existing_ttl = r.ttl(_SCHEDULER_LOCK_KEY)
+                    if existing_pid and existing_ttl > _SCHEDULER_LOCK_TTL:
+                        app.logger.warning(
+                            f"Clearing stale scheduler lock (pid={existing_pid}, ttl={existing_ttl}s > {_SCHEDULER_LOCK_TTL}s)"
+                        )
+                        r.delete(_SCHEDULER_LOCK_KEY)
+                    
                     acquired = r.set(_SCHEDULER_LOCK_KEY, str(pid), nx=True, ex=_SCHEDULER_LOCK_TTL)
                     if not acquired:
                         app.logger.info(f"Scheduler lock held by another worker, skipping (pid={pid})")
@@ -655,6 +667,8 @@ def create_app():
         scheduler_thread = threading.Thread(target=_deferred_scheduler_start, daemon=True)
         scheduler_thread.start()
         app.logger.info("Scheduler startup deferred to background thread")
+    elif not _skip_scheduler:
+        app.logger.info("Scheduler disabled in development (only runs in production deployments)")
 
 
     return app
