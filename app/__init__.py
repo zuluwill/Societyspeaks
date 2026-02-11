@@ -577,6 +577,8 @@ def create_app():
 
     _is_deployed = os.environ.get('REPLIT_DEPLOYMENT') == '1'
     _skip_scheduler = app.config.get('TESTING') or os.environ.get('SQLALCHEMY_MIGRATE')
+    _scheduler_lock_key = 'scheduler_lock'
+    _scheduler_heartbeat_key = 'scheduler:last_heartbeat_at'
     _scheduler_state = {
         'enabled': bool(_is_deployed and not _skip_scheduler),
         'running': False,
@@ -589,23 +591,57 @@ def create_app():
     # Health check endpoint - must respond immediately for deployment health checks
     @app.route('/health')
     def health_check():
-        """Health check endpoint with lightweight scheduler visibility."""
+        """Health check endpoint with cross-worker scheduler visibility."""
         scheduler_snapshot = {
             'enabled': _scheduler_state.get('enabled', False),
             'running': _scheduler_state.get('running', False),
             'lock_acquired': _scheduler_state.get('lock_acquired', False),
             'last_heartbeat_at': _scheduler_state.get('last_heartbeat_at'),
+            'owner_pid': None,
+            'lock_ttl_seconds': None,
+            'source': 'local_memory',
         }
+        if _is_deployed:
+            redis_url = os.getenv('REDIS_URL')
+            if redis_url:
+                try:
+                    import redis as redis_lib
+                    health_redis = redis_lib.from_url(redis_url, socket_timeout=1, socket_connect_timeout=1)
+                    owner_pid = health_redis.get(_scheduler_lock_key)
+                    lock_ttl = health_redis.ttl(_scheduler_lock_key)
+                    shared_heartbeat = health_redis.get(_scheduler_heartbeat_key)
+
+                    has_owner = bool(owner_pid) and (lock_ttl is None or lock_ttl > 0)
+                    scheduler_snapshot['running'] = has_owner
+                    scheduler_snapshot['lock_acquired'] = has_owner
+                    scheduler_snapshot['owner_pid'] = owner_pid
+                    scheduler_snapshot['lock_ttl_seconds'] = lock_ttl
+                    scheduler_snapshot['last_heartbeat_at'] = (
+                        int(shared_heartbeat) if shared_heartbeat and str(shared_heartbeat).isdigit() else shared_heartbeat
+                    )
+                    scheduler_snapshot['source'] = 'redis'
+                except Exception as health_error:
+                    scheduler_snapshot['source'] = f"local_memory (redis_error: {type(health_error).__name__})"
         return {'status': 'healthy', 'scheduler': scheduler_snapshot}, 200
     
     if _is_deployed and not _skip_scheduler:
         import threading
         
-        _SCHEDULER_LOCK_KEY = 'scheduler_lock'
+        _SCHEDULER_LOCK_KEY = _scheduler_lock_key
         _SCHEDULER_LOCK_TTL = 120
         _SCHEDULER_HEARTBEAT_SECONDS = 20
         _SCHEDULER_RETRY_DELAY_SECONDS = 15
         _SCHEDULER_MAX_LOCK_ATTEMPTS = 8
+
+        def _update_shared_scheduler_heartbeat(redis_client):
+            """Publish scheduler heartbeat in Redis so /health is worker-agnostic."""
+            try:
+                heartbeat_value = int(time.time())
+                heartbeat_ttl = max(_SCHEDULER_LOCK_TTL * 2, 180)
+                redis_client.setex(_scheduler_heartbeat_key, heartbeat_ttl, str(heartbeat_value))
+                _scheduler_state['last_heartbeat_at'] = heartbeat_value
+            except Exception as heartbeat_update_error:
+                app.logger.debug(f"Could not update shared scheduler heartbeat: {heartbeat_update_error}")
 
         def _release_scheduler_lock(redis_client, owner_pid):
             """Release scheduler lock only if owned by this process."""
@@ -631,6 +667,7 @@ def create_app():
                     if acquired:
                         app.logger.info(f"Scheduler lock acquired on attempt {attempt} (pid={owner_pid})")
                         _scheduler_state['lock_acquired'] = True
+                        _update_shared_scheduler_heartbeat(redis_client)
                         return True
                     existing = redis_client.get(_SCHEDULER_LOCK_KEY)
                     existing_ttl = redis_client.ttl(_SCHEDULER_LOCK_KEY)
@@ -721,6 +758,7 @@ def create_app():
 
                     _scheduler_state['last_heartbeat_at'] = int(time.time())
                     _scheduler_state['lock_acquired'] = True
+                    _update_shared_scheduler_heartbeat(redis_client)
                     consecutive_failures = 0
                 except Exception as heartbeat_error:
                     consecutive_failures += 1
