@@ -649,41 +649,72 @@ def create_app():
                 app.logger.info(f"Background scheduler started (pid={pid})")
             except Exception as e:
                 app.logger.error(f"Failed to start scheduler: {e}")
+                try:
+                    _RELEASE_SCRIPT = """
+                    if redis.call('get', KEYS[1]) == ARGV[1] then
+                        return redis.call('del', KEYS[1])
+                    else
+                        return 0
+                    end
+                    """
+                    r.eval(_RELEASE_SCRIPT, 1, _SCHEDULER_LOCK_KEY, str(pid))
+                    app.logger.info("Released scheduler lock after failed start")
+                except Exception:
+                    pass
                 return
             
-            if redis_url:
-                _RENEW_SCRIPT = """
-                if redis.call('get', KEYS[1]) == ARGV[1] then
-                    return redis.call('set', KEYS[1], ARGV[1], 'EX', ARGV[2])
-                else
-                    return nil
-                end
-                """
-                
-                def _heartbeat():
-                    """Refresh scheduler lock every 30s, only if we still own it."""
-                    import redis as redis_lib
-                    r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                    while True:
-                        time.sleep(30)
-                        try:
-                            result = r.eval(_RENEW_SCRIPT, 1, _SCHEDULER_LOCK_KEY, str(pid), str(_SCHEDULER_LOCK_TTL))
-                            if result is None:
-                                app.logger.error(f"Scheduler lock lost by pid={pid}; shutting down scheduler to prevent duplicate jobs")
-                                try:
-                                    from app.scheduler import shutdown_scheduler
-                                    shutdown_scheduler(wait=False)
-                                except Exception as shutdown_error:
-                                    app.logger.warning(f"Failed to shutdown scheduler after lock loss: {shutdown_error}")
-                                return
-                        except Exception:
+            _RENEW_SCRIPT = """
+            if redis.call('get', KEYS[1]) == ARGV[1] then
+                return redis.call('set', KEYS[1], ARGV[1], 'EX', ARGV[2])
+            else
+                return nil
+            end
+            """
+            
+            def _heartbeat():
+                """Refresh scheduler lock every 30s, only if we still own it.
+                If the lock is lost (e.g. Redis blip), attempt to re-acquire
+                before shutting down, so the scheduler can self-heal."""
+                import redis as redis_lib
+                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                consecutive_failures = 0
+                while True:
+                    time.sleep(30)
+                    try:
+                        result = r.eval(_RENEW_SCRIPT, 1, _SCHEDULER_LOCK_KEY, str(pid), str(_SCHEDULER_LOCK_TTL))
+                        if result is None:
+                            app.logger.warning(f"Scheduler lock lost by pid={pid}, attempting to re-acquire...")
+                            reacquired = r.set(_SCHEDULER_LOCK_KEY, str(pid), nx=True, ex=_SCHEDULER_LOCK_TTL)
+                            if reacquired:
+                                app.logger.info(f"Scheduler lock re-acquired after loss (pid={pid})")
+                                consecutive_failures = 0
+                                continue
+                            app.logger.error(f"Scheduler lock taken by another worker; shutting down scheduler (pid={pid})")
                             try:
-                                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                                from app.scheduler import shutdown_scheduler
+                                shutdown_scheduler(wait=False)
+                            except Exception as shutdown_error:
+                                app.logger.warning(f"Failed to shutdown scheduler after lock loss: {shutdown_error}")
+                            return
+                        consecutive_failures = 0
+                    except Exception as e:
+                        consecutive_failures += 1
+                        app.logger.warning(f"Heartbeat error ({consecutive_failures}/5): {e}")
+                        if consecutive_failures >= 5:
+                            app.logger.error(f"Heartbeat failed 5 times in a row; shutting down scheduler (pid={pid})")
+                            try:
+                                from app.scheduler import shutdown_scheduler
+                                shutdown_scheduler(wait=False)
                             except Exception:
                                 pass
-                
-                hb = threading.Thread(target=_heartbeat, daemon=True)
-                hb.start()
+                            return
+                        try:
+                            r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                        except Exception:
+                            pass
+            
+            hb = threading.Thread(target=_heartbeat, daemon=True)
+            hb.start()
         
         scheduler_thread = threading.Thread(target=_deferred_scheduler_start, daemon=True)
         scheduler_thread.start()
