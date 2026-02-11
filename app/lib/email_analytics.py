@@ -29,7 +29,7 @@ from flask import current_app
 from app import db
 from app.models import (
     EmailEvent, User, DailyBriefSubscriber, 
-    DailyQuestionSubscriber, DailyBrief, DailyQuestion
+    DailyQuestionSubscriber, DailyBrief, DailyQuestion, BriefRecipient
 )
 
 logger = logging.getLogger(__name__)
@@ -122,6 +122,22 @@ class EmailAnalytics:
             
             # Normalize event type (remove 'email.' prefix)
             normalized_type = event_type.replace('email.', '')
+
+            # Durable idempotency: ignore duplicate webhook events for same
+            # resend_email_id + event_type + recipient combination.
+            resend_email_id = data.get('email_id')
+            if resend_email_id:
+                duplicate = EmailEvent.query.filter_by(
+                    resend_email_id=resend_email_id,
+                    event_type=normalized_type,
+                    recipient_email=recipient_email
+                ).first()
+                if duplicate:
+                    logger.info(
+                        f"Duplicate webhook event ignored: {normalized_type} "
+                        f"for {recipient_email} ({resend_email_id})"
+                    )
+                    return duplicate
             
             # Determine email category and find related records
             category, context = cls._identify_email_context(recipient_email, data)
@@ -146,7 +162,7 @@ class EmailAnalytics:
                 recipient_email=recipient_email,
                 event_type=normalized_type,
                 email_category=category,
-                resend_email_id=data.get('email_id'),
+                resend_email_id=resend_email_id,
                 email_subject=data.get('subject'),
                 user_id=context.get('user_id'),
                 brief_subscriber_id=context.get('brief_subscriber_id'),
@@ -194,6 +210,11 @@ class EmailAnalytics:
             subject = data.get('subject', '').lower()
             if 'brief' in subject or 'news' in subject:
                 category = cls.CATEGORY_DAILY_BRIEF
+
+        # Check if it's a briefing recipient (briefing system)
+        briefing_recipient = BriefRecipient.query.filter_by(email=email).first()
+        if briefing_recipient:
+            category = cls.CATEGORY_DAILY_BRIEF
         
         # Check if it's a question subscriber
         question_subscriber = DailyQuestionSubscriber.query.filter_by(email=email).first()
@@ -244,6 +265,18 @@ class EmailAnalytics:
                 elif event_type == cls.EVENT_COMPLAINED:
                     question_sub.is_active = False
                     logger.info(f"Deactivated question subscriber {email} due to complaint")
+
+            # Update briefing recipients (briefing pipeline)
+            briefing_recipient = BriefRecipient.query.filter_by(email=email).first()
+            if briefing_recipient:
+                if event_type == cls.EVENT_BOUNCED and bounce_type == 'hard':
+                    briefing_recipient.status = 'unsubscribed'
+                    briefing_recipient.unsubscribed_at = datetime.utcnow()
+                    logger.info(f"Unsubscribed briefing recipient {email} due to hard bounce")
+                elif event_type == cls.EVENT_COMPLAINED:
+                    briefing_recipient.status = 'unsubscribed'
+                    briefing_recipient.unsubscribed_at = datetime.utcnow()
+                    logger.info(f"Unsubscribed briefing recipient {email} due to complaint")
                     
         except Exception as e:
             logger.error(f"Failed to handle deliverability issue: {e}")
@@ -283,7 +316,12 @@ class EmailAnalytics:
         }
 
     @classmethod
-    def get_recent_events(cls, category: Optional[str] = None, limit: int = 50) -> List[EmailEvent]:
+    def get_recent_events(
+        cls,
+        category: Optional[str] = None,
+        limit: int = 50,
+        days: Optional[int] = None
+    ) -> List[EmailEvent]:
         """
         Get recent email events for display.
         
@@ -294,7 +332,13 @@ class EmailAnalytics:
         Returns:
             List of EmailEvent objects
         """
-        return EmailEvent.get_recent_events(email_category=category, limit=limit)
+        query = EmailEvent.query.order_by(EmailEvent.created_at.desc())
+        if category:
+            query = query.filter(EmailEvent.email_category == category)
+        if days and days > 0:
+            cutoff = datetime.utcnow() - timedelta(days=days)
+            query = query.filter(EmailEvent.created_at >= cutoff)
+        return query.limit(limit).all()
 
     @classmethod
     def get_email_performance(cls, email: str, days: int = 30) -> Dict[str, Any]:
@@ -317,11 +361,12 @@ class EmailAnalytics:
         }
         
         for event in events:
-            if event.event_type == cls.EVENT_SENT:
+            normalized_type = EmailEvent.normalize_event_type(event.event_type)
+            if normalized_type == cls.EVENT_SENT:
                 stats['total_sent'] += 1
-            elif event.event_type == cls.EVENT_OPENED:
+            elif normalized_type == cls.EVENT_OPENED:
                 stats['total_opened'] += 1
-            elif event.event_type == cls.EVENT_CLICKED:
+            elif normalized_type == cls.EVENT_CLICKED:
                 stats['total_clicked'] += 1
             
             # Track by category

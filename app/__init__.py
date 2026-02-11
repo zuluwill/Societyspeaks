@@ -144,7 +144,15 @@ def create_app():
         static_url_path='',
         static_folder='static')
 
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+    # Trust X-Forwarded-For / Proto from exactly one reverse proxy.
+    # Keep forwarded host trust opt-in to reduce host header spoofing risk.
+    trust_proxy_host = os.getenv("TRUST_PROXY_HOST_HEADER", "false").lower() == "true"
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=1,
+        x_proto=1,
+        x_host=1 if trust_proxy_host else 0,
+    )
 
     dictConfig(Config.LOGGING_CONFIG)
 

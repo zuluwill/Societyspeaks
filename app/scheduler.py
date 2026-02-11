@@ -17,6 +17,8 @@ import logging
 import threading
 import atexit
 import signal
+import os
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +74,29 @@ def _is_production_environment() -> bool:
     #
     # REPLIT_DEPLOYMENT=1 is set ONLY by Replit when app is deployed
     return os.environ.get('REPLIT_DEPLOYMENT') == '1'
+
+
+def _send_ops_alert(message: str) -> None:
+    """
+    Send critical scheduler alerts to Slack when configured.
+    Falls back to logs if webhook is missing/invalid.
+    """
+    webhook_url = os.environ.get('SLACK_WEBHOOK_URL')
+    if not webhook_url:
+        return
+
+    if not webhook_url.startswith(("https://hooks.slack.com/", "https://hooks.slack-gov.com/")):
+        logger.warning("Invalid SLACK_WEBHOOK_URL format; skipping alert delivery")
+        return
+
+    try:
+        requests.post(
+            webhook_url,
+            json={"text": f":warning: {message}"},
+            timeout=8
+        )
+    except requests.RequestException as e:
+        logger.warning(f"Failed to send scheduler alert to Slack: {e}")
 
 
 def init_scheduler(app):
@@ -1489,7 +1514,7 @@ def init_scheduler(app):
             from app.briefing.email_client import send_brief_run_emails
             from app.models import BriefRun, BriefRecipient, Briefing, BriefEmailSend
             from app import db
-            from sqlalchemy import update, or_
+            from sqlalchemy import update, or_, func
             from datetime import datetime, timedelta
             
             now = datetime.utcnow()
@@ -1571,16 +1596,18 @@ def init_scheduler(app):
                     db.text("""
                         UPDATE brief_run SET status = 'failed', sent_at = :now
                         WHERE status = 'approved' AND sent_at IS NULL
-                        AND send_attempts >= :max_attempts
+                        AND COALESCE(send_attempts, 0) >= :max_attempts
                     """),
                     {'now': now, 'max_attempts': MAX_BRIEFRUN_SEND_ATTEMPTS}
                 )
                 db.session.commit()
                 if max_attempt_failed.rowcount > 0:
-                    logger.error(
+                    alert_message = (
                         f"ALERT: Failed {max_attempt_failed.rowcount} BriefRuns that exceeded "
                         f"{MAX_BRIEFRUN_SEND_ATTEMPTS} send attempts. Manual investigation required."
                     )
+                    logger.error(alert_message)
+                    _send_ops_alert(alert_message)
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error failing max-attempt runs: {e}", exc_info=True)
@@ -1591,7 +1618,7 @@ def init_scheduler(app):
                     BriefRun.status == 'approved',
                     BriefRun.sent_at.is_(None),
                     BriefRun.scheduled_at <= now,
-                    BriefRun.send_attempts < MAX_BRIEFRUN_SEND_ATTEMPTS
+                    func.coalesce(BriefRun.send_attempts, 0) < MAX_BRIEFRUN_SEND_ATTEMPTS
                 ).order_by(BriefRun.scheduled_at.asc()).limit(20).all()
                 
                 if approved_runs:
@@ -1623,7 +1650,7 @@ def init_scheduler(app):
                     update(BriefRun)
                     .where(BriefRun.status == 'sending')
                     .where(BriefRun.sent_at == None)
-                    .where(BriefRun.send_attempts < MAX_BRIEFRUN_SEND_ATTEMPTS)
+                    .where(func.coalesce(BriefRun.send_attempts, 0) < MAX_BRIEFRUN_SEND_ATTEMPTS)
                     .where(
                         or_(
                             BriefRun.claimed_at < stuck_cutoff,
@@ -1640,7 +1667,7 @@ def init_scheduler(app):
                     update(BriefRun)
                     .where(BriefRun.status == 'sending')
                     .where(BriefRun.sent_at == None)
-                    .where(BriefRun.send_attempts >= MAX_BRIEFRUN_SEND_ATTEMPTS)
+                    .where(func.coalesce(BriefRun.send_attempts, 0) >= MAX_BRIEFRUN_SEND_ATTEMPTS)
                     .where(
                         or_(
                             BriefRun.claimed_at < stuck_cutoff,
@@ -1651,10 +1678,12 @@ def init_scheduler(app):
                 )
                 db.session.commit()
                 if stuck_failed.rowcount > 0:
-                    logger.error(
+                    alert_message = (
                         f"ALERT: Failed {stuck_failed.rowcount} stuck 'sending' BriefRuns "
                         f"that exceeded {MAX_BRIEFRUN_SEND_ATTEMPTS} attempts"
                     )
+                    logger.error(alert_message)
+                    _send_ops_alert(alert_message)
                     
             except Exception as e:
                 db.session.rollback()
@@ -1701,10 +1730,12 @@ def init_scheduler(app):
                     BriefEmailSend.claimed_at > now - timedelta(hours=24)
                 ).count()
                 if permanent_failures_24h > 0:
-                    logger.error(
+                    alert_message = (
                         f"ALERT: {permanent_failures_24h} emails permanently failed in last 24h. "
                         f"Manual investigation required. Check brief_email_send table for details."
                     )
+                    logger.error(alert_message)
+                    _send_ops_alert(alert_message)
 
             except Exception as e:
                 db.session.rollback()

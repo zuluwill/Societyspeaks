@@ -168,21 +168,22 @@
             </div>
             <div class="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
                 {% for event in recent_events %}
+                {% set normalized_type = event.event_type | lower | replace('email.', '') %}
                 <div class="px-6 py-3 hover:bg-gray-50">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
                             {# Event type indicator #}
-                            {% if event.event_type == 'sent' %}
+                            {% if normalized_type == 'sent' %}
                             <span class="w-2.5 h-2.5 bg-gray-400 rounded-full"></span>
-                            {% elif event.event_type == 'delivered' %}
+                            {% elif normalized_type == 'delivered' %}
                             <span class="w-2.5 h-2.5 bg-blue-400 rounded-full"></span>
-                            {% elif event.event_type == 'opened' %}
+                            {% elif normalized_type == 'opened' %}
                             <span class="w-2.5 h-2.5 bg-green-400 rounded-full"></span>
-                            {% elif event.event_type == 'clicked' %}
+                            {% elif normalized_type == 'clicked' %}
                             <span class="w-2.5 h-2.5 bg-purple-400 rounded-full"></span>
-                            {% elif event.event_type == 'bounced' %}
+                            {% elif normalized_type == 'bounced' %}
                             <span class="w-2.5 h-2.5 bg-red-400 rounded-full"></span>
-                            {% elif event.event_type == 'complained' %}
+                            {% elif normalized_type == 'complained' %}
                             <span class="w-2.5 h-2.5 bg-orange-400 rounded-full"></span>
                             {% else %}
                             <span class="w-2.5 h-2.5 bg-gray-300 rounded-full"></span>
@@ -190,12 +191,12 @@
                             
                             <div>
                                 <span class="text-sm font-medium 
-                                    {% if event.event_type == 'opened' %}text-green-600
-                                    {% elif event.event_type == 'clicked' %}text-purple-600
-                                    {% elif event.event_type == 'bounced' %}text-red-600
-                                    {% elif event.event_type == 'complained' %}text-orange-600
+                                    {% if normalized_type == 'opened' %}text-green-600
+                                    {% elif normalized_type == 'clicked' %}text-purple-600
+                                    {% elif normalized_type == 'bounced' %}text-red-600
+                                    {% elif normalized_type == 'complained' %}text-orange-600
                                     {% else %}text-gray-600{% endif %}">
-                                    {{ event.event_type | title }}
+                                    {{ normalized_type | title }}
                                 </span>
                                 <span class="text-sm text-gray-500 ml-2">{{ event.recipient_email }}</span>
                             </div>

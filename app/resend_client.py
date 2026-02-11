@@ -61,6 +61,7 @@ class ResendEmailClient:
     def __init__(self):
         self.api_key = os.environ.get('RESEND_API_KEY')
         self._disabled = False
+        self.last_message_id: Optional[str] = None
         
         if not self.api_key:
             # Graceful degradation in development
@@ -104,8 +105,11 @@ class ResendEmailClient:
         # Skip sending if disabled (dev mode without API key)
         if self._disabled:
             logger.info(f"Email skipped (RESEND_API_KEY not set): {email_data.get('to', ['unknown'])[0]}")
+            self.last_message_id = None
             return True  # Return True to not break flows
         
+        self.last_message_id = None
+
         for attempt in range(self.MAX_RETRIES):
             try:
                 if use_rate_limit:
@@ -119,11 +123,15 @@ class ResendEmailClient:
                 )
 
                 if response.status_code == 200:
+                    try:
+                        self.last_message_id = response.json().get('id')
+                    except Exception:
+                        self.last_message_id = None
                     return True
                 elif response.status_code == 429:
                     # Rate limited - wait and retry
                     if attempt < self.MAX_RETRIES - 1:
-                        wait_time = self.RETRY_DELAY * (attempt + 2)
+                        wait_time = self.RETRY_DELAY * (2 ** attempt)
                         logger.warning(f"Rate limited, waiting {wait_time}s...")
                         time.sleep(wait_time)
                         continue
@@ -137,7 +145,7 @@ class ResendEmailClient:
             except requests.exceptions.Timeout:
                 if attempt < self.MAX_RETRIES - 1:
                     logger.warning(f"Timeout (attempt {attempt + 1}/{self.MAX_RETRIES}), retrying...")
-                    time.sleep(self.RETRY_DELAY * (attempt + 1))
+                    time.sleep(self.RETRY_DELAY * (2 ** attempt))
                 else:
                     logger.error(f"Timeout after {self.MAX_RETRIES} attempts")
                     return False
@@ -191,7 +199,7 @@ class ResendEmailClient:
                     return results
                 elif response.status_code == 429:
                     if attempt < self.MAX_RETRIES - 1:
-                        wait_time = self.RETRY_DELAY * (attempt + 2)
+                        wait_time = self.RETRY_DELAY * (2 ** attempt)
                         logger.warning(f"Batch rate limited, waiting {wait_time}s...")
                         time.sleep(wait_time)
                         continue
@@ -207,7 +215,7 @@ class ResendEmailClient:
             except requests.exceptions.Timeout:
                 if attempt < self.MAX_RETRIES - 1:
                     logger.warning(f"Batch timeout (attempt {attempt + 1}/{self.MAX_RETRIES})")
-                    time.sleep(self.RETRY_DELAY * (attempt + 1))
+                    time.sleep(self.RETRY_DELAY * (2 ** attempt))
                 else:
                     results['failed'] = len(emails)
                     results['errors'].append("Timeout after retries")

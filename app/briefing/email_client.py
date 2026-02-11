@@ -10,7 +10,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from flask import render_template, current_app
-from sqlalchemy import update
+from sqlalchemy import update, func
 from app import db
 from app.models import BriefRun, BriefRecipient, Briefing, SendingDomain, BriefEmailSend
 from app.resend_client import ResendEmailClient as BaseResendClient
@@ -49,7 +49,7 @@ def _claim_brief_run_for_sending(brief_run: BriefRun) -> bool:
             .values(
                 status='sending',
                 claimed_at=datetime.utcnow(),
-                send_attempts=BriefRun.send_attempts + 1
+                send_attempts=func.coalesce(BriefRun.send_attempts, 0) + 1
             )
         )
         db.session.commit()
@@ -64,9 +64,10 @@ def _claim_brief_run_for_sending(brief_run: BriefRun) -> bool:
             )
             return False
 
+        db.session.refresh(brief_run)
         logger.info(
             f"Claimed BriefRun {brief_run.id} for sending "
-            f"(status -> 'sending', attempt #{brief_run.send_attempts + 1})"
+            f"(status -> 'sending', attempt #{brief_run.send_attempts})"
         )
         return True
 
@@ -127,6 +128,7 @@ class BriefingEmailClient:
     
     def __init__(self):
         self.base_client = BaseResendClient()
+        self._last_send_resend_id: Optional[str] = None
         # Rate limiting is handled by base_client
     
     def send_brief_run(
@@ -146,6 +148,7 @@ class BriefingEmailClient:
         """
         old_token = recipient.magic_token
         old_expires = recipient.magic_token_expires_at
+        self._last_send_resend_id = None
         try:
             # Get briefing for configuration
             briefing = brief_run.briefing
@@ -179,6 +182,8 @@ class BriefingEmailClient:
             
             # Send via base client (handles rate limiting internally)
             success = self.base_client._send_with_retry(email_data)
+            resend_id = getattr(self.base_client, 'last_message_id', None)
+            self._last_send_resend_id = resend_id
             
             if success:
                 logger.info(f"Sent BriefRun {brief_run.id} to {recipient.email}")
@@ -189,6 +194,7 @@ class BriefingEmailClient:
                     EmailAnalytics.record_send(
                         email=recipient.email,
                         category=EmailAnalytics.CATEGORY_DAILY_BRIEF,
+                        resend_id=resend_id,
                         subject=self._generate_subject(brief_run, briefing)
                     )
                 except Exception as analytics_error:
@@ -564,7 +570,11 @@ class BriefingEmailClient:
                 # Step 2: Send email
                 if self.send_brief_run(brief_run, recipient):
                     # Step 3a: Mark as sent
-                    self._mark_recipient_sent(brief_run.id, recipient.id)
+                    self._mark_recipient_sent(
+                        brief_run.id,
+                        recipient.id,
+                        resend_id=self._last_send_resend_id
+                    )
                     sent += 1
                 else:
                     # Step 3b: Send failed, mark with reason for retry
@@ -891,7 +901,7 @@ def send_brief_run_emails(brief_run_id: int, skip_subscription_check: bool = Fal
         dict: {'sent': count, 'failed': count, ...}
     """
     from app.billing.service import get_active_subscription
-    from app.models import User, CompanyProfile
+    from app.models import User
     
     brief_run = db.session.get(BriefRun, brief_run_id)
     if not brief_run:

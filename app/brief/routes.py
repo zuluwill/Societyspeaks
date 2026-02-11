@@ -20,7 +20,7 @@ from datetime import date, datetime, timedelta
 from sqlalchemy.orm import joinedload
 
 from app.brief import brief_bp
-from app import db, limiter, csrf
+from app import db, limiter, csrf, cache
 from app.models import (
     DailyBrief,
     BriefItem,
@@ -1167,13 +1167,23 @@ def resend_webhook():
     from app.lib.email_analytics import EmailAnalytics
     
     try:
+        svix_id = request.headers.get('svix-id')
+        dedupe_key = f"resend_webhook:{svix_id}" if svix_id else None
+
+        # Fast idempotency guard for webhook retries/replays.
+        if dedupe_key:
+            try:
+                if cache.get(dedupe_key):
+                    return jsonify({'status': 'already_processed'}), 200
+            except Exception as cache_error:
+                logger.warning(f"Webhook dedupe cache read failed: {cache_error}")
+
         # Verify webhook signature (Resend uses svix for webhooks)
         webhook_secret = os.environ.get('RESEND_WEBHOOK_SECRET')
 
         # Check for both None and empty string
         if webhook_secret and webhook_secret.strip():
             # Get signature headers from Resend/Svix
-            svix_id = request.headers.get('svix-id')
             svix_timestamp = request.headers.get('svix-timestamp')
             svix_signature = request.headers.get('svix-signature')
 
@@ -1233,6 +1243,13 @@ def resend_webhook():
         
         # Use unified EmailAnalytics service (DRY)
         event = EmailAnalytics.record_from_webhook(payload)
+
+        if dedupe_key:
+            try:
+                # Keep replay protection for 24h to cover retries.
+                cache.set(dedupe_key, 1, timeout=86400)
+            except Exception as cache_error:
+                logger.warning(f"Webhook dedupe cache write failed: {cache_error}")
         
         # Update subscriber metrics in a separate transaction for isolation
         try:
@@ -1280,7 +1297,11 @@ def admin_analytics():
     dashboard_stats = EmailAnalytics.get_dashboard_stats(days=days)
     
     # Get recent events (optionally filtered - pass None explicitly if no filter)
-    recent_events = EmailAnalytics.get_recent_events(category=category_filter if category_filter else None, limit=50)
+    recent_events = EmailAnalytics.get_recent_events(
+        category=category_filter if category_filter else None,
+        limit=50,
+        days=days
+    )
     
     # Get stats for selected category or overall
     if category_filter:

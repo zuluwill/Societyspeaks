@@ -2373,6 +2373,16 @@ class EmailEvent(db.Model):
     EVENT_BOUNCED = 'bounced'
     EVENT_COMPLAINED = 'complained'
 
+    @staticmethod
+    def normalize_event_type(event_type: Optional[str]) -> str:
+        """Normalize event types across legacy and current formats."""
+        if not event_type:
+            return ''
+        normalized = str(event_type).strip().lower()
+        if normalized.startswith('email.'):
+            normalized = normalized[6:]
+        return normalized
+
     @classmethod
     def record_event(cls, recipient_email: str, event_type: str, email_category: str,
                      resend_email_id: Optional[str] = None, email_subject: Optional[str] = None,
@@ -2401,9 +2411,8 @@ class EmailEvent(db.Model):
             )
             return None
         
-        # Normalize event_type (remove 'email.' prefix if present)
-        if event_type.startswith('email.'):
-            event_type = event_type[6:]
+        # Normalize event_type (supports legacy 'email.*' values)
+        event_type = cls.normalize_event_type(event_type)
         
         event = cls(
             recipient_email=recipient_email,
@@ -2449,14 +2458,20 @@ class EmailEvent(db.Model):
         if email_category:
             event_counts = event_counts.filter(cls.email_category == email_category)
         
-        event_counts = dict(event_counts.group_by(cls.event_type).all())
-        
-        total_sent = event_counts.get('sent', 0)
-        total_delivered = event_counts.get('delivered', 0)
-        total_opened = event_counts.get('opened', 0)
-        total_clicked = event_counts.get('clicked', 0)
-        total_bounced = event_counts.get('bounced', 0)
-        total_complained = event_counts.get('complained', 0)
+        raw_event_counts = dict(event_counts.group_by(cls.event_type).all())
+
+        # Normalize legacy and current event type formats into one rollup.
+        event_counts = {}
+        for event_type, count in raw_event_counts.items():
+            normalized_type = cls.normalize_event_type(event_type)
+            event_counts[normalized_type] = event_counts.get(normalized_type, 0) + count
+
+        total_sent = event_counts.get(cls.EVENT_SENT, 0)
+        total_delivered = event_counts.get(cls.EVENT_DELIVERED, 0)
+        total_opened = event_counts.get(cls.EVENT_OPENED, 0)
+        total_clicked = event_counts.get(cls.EVENT_CLICKED, 0)
+        total_bounced = event_counts.get(cls.EVENT_BOUNCED, 0)
+        total_complained = event_counts.get(cls.EVENT_COMPLAINED, 0)
         
         return {
             'total_sent': total_sent,
