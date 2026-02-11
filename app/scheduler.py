@@ -1473,20 +1473,58 @@ def init_scheduler(app):
         with app.app_context():
             from app.briefing.email_client import send_brief_run_emails
             from app.models import BriefRun
+            from app import db
             from datetime import datetime, timedelta
             
             logger.info("Checking for approved BriefRuns to send")
             
             try:
-                # Find approved BriefRuns that haven't been sent yet
-                # Only check runs scheduled for today or earlier
-                cutoff = datetime.utcnow() - timedelta(hours=1)  # Allow 1 hour buffer
+                from app.models import BriefRecipient, Briefing
                 
+                now = datetime.utcnow()
+                
+                # First pass: bulk-clear due but unsendable runs (inactive briefings, no recipients)
+                # Only clear runs that are already due (scheduled_at <= now)
+                try:
+                    inactive_cleared = db.session.execute(
+                        db.text("""
+                            UPDATE brief_run SET status = 'failed', sent_at = :now
+                            WHERE status = 'approved' AND sent_at IS NULL
+                            AND scheduled_at <= :now
+                            AND briefing_id IN (
+                                SELECT id FROM briefing WHERE status != 'active'
+                            )
+                        """),
+                        {'now': now}
+                    )
+                    if inactive_cleared.rowcount > 0:
+                        logger.info(f"Cleared {inactive_cleared.rowcount} runs for inactive briefings")
+                    
+                    no_recipient_cleared = db.session.execute(
+                        db.text("""
+                            UPDATE brief_run SET status = 'sent', sent_at = :now
+                            WHERE status = 'approved' AND sent_at IS NULL
+                            AND scheduled_at <= :now
+                            AND briefing_id NOT IN (
+                                SELECT DISTINCT briefing_id FROM brief_recipient WHERE status = 'active'
+                            )
+                        """),
+                        {'now': now}
+                    )
+                    if no_recipient_cleared.rowcount > 0:
+                        logger.info(f"Cleared {no_recipient_cleared.rowcount} runs for briefings with no active recipients")
+                    
+                    db.session.commit()
+                except Exception as bulk_err:
+                    logger.error(f"Error clearing unsendable runs: {bulk_err}", exc_info=True)
+                    db.session.rollback()
+                
+                # Second pass: find sendable runs (active briefings with recipients)
                 approved_runs = BriefRun.query.filter(
                     BriefRun.status == 'approved',
                     BriefRun.sent_at.is_(None),
-                    BriefRun.scheduled_at <= datetime.utcnow()
-                ).limit(10).all()  # Process 10 at a time
+                    BriefRun.scheduled_at <= now
+                ).order_by(BriefRun.scheduled_at.asc()).limit(20).all()
                 
                 if not approved_runs:
                     return
@@ -1495,22 +1533,13 @@ def init_scheduler(app):
                 
                 for brief_run in approved_runs:
                     try:
-                        # Check if briefing is still active
-                        if brief_run.briefing.status != 'active':
-                            logger.info(f"Briefing {brief_run.briefing_id} is not active, skipping send")
-                            continue
-                        
-                        # Check if briefing has recipients
-                        if brief_run.briefing.recipient_count == 0:
-                            logger.info(f"Briefing {brief_run.briefing_id} has no recipients, skipping send")
-                            continue
-                        
                         # Send emails
                         result = send_brief_run_emails(brief_run.id)
                         logger.info(f"Sent BriefRun {brief_run.id}: {result['sent']} sent, {result['failed']} failed")
                         
                     except Exception as e:
                         logger.error(f"Error sending BriefRun {brief_run.id}: {e}", exc_info=True)
+                        db.session.rollback()
                         continue
                         
             except Exception as e:
