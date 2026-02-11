@@ -17,6 +17,10 @@ build = ["bash", "scripts/build.sh"]
 localPort = 5000
 externalPort = 80
 
+[[ports]]
+localPort = 5001
+externalPort = 3000
+
 [objectStorage]
 defaultBucketID = "replit-objstore-14f1b847-9243-4a51-b979-b86c328f7947"
 
