@@ -603,20 +603,43 @@ def create_app():
             pid = os.getpid()
             redis_url = os.getenv('REDIS_URL')
             
-            if redis_url:
-                try:
-                    import redis as redis_lib
-                    r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                    acquired = r.set(_SCHEDULER_LOCK_KEY, str(pid), nx=True, ex=_SCHEDULER_LOCK_TTL)
-                    if not acquired:
-                        app.logger.info(f"Scheduler lock held by another worker, skipping (pid={pid})")
-                        return
-                except Exception as e:
-                    app.logger.error(f"Could not acquire scheduler lock: {e}; scheduler will not start for this worker")
-                    return
-            else:
-                # Fail closed in deployed environments to prevent duplicate jobs across workers.
+            if not redis_url:
                 app.logger.error("REDIS_URL is required for scheduler lock in deployed environment; scheduler start aborted")
+                return
+            
+            try:
+                import redis as redis_lib
+                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+            except Exception as e:
+                app.logger.error(f"Could not connect to Redis for scheduler lock: {e}")
+                return
+            
+            acquired = False
+            max_attempts = 8
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    r.ping()
+                    acquired = r.set(_SCHEDULER_LOCK_KEY, str(pid), nx=True, ex=_SCHEDULER_LOCK_TTL)
+                    if acquired:
+                        app.logger.info(f"Scheduler lock acquired on attempt {attempt} (pid={pid})")
+                        break
+                    existing = r.get(_SCHEDULER_LOCK_KEY)
+                    existing_ttl = r.ttl(_SCHEDULER_LOCK_KEY)
+                    app.logger.info(
+                        f"Scheduler lock held by pid={existing}, ttl={existing_ttl}s, "
+                        f"retrying ({attempt}/{max_attempts})..."
+                    )
+                except Exception as e:
+                    app.logger.warning(f"Redis error during lock attempt {attempt}: {e}, reconnecting...")
+                    try:
+                        r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                    except Exception:
+                        pass
+                if attempt < max_attempts:
+                    time.sleep(10)
+            
+            if not acquired:
+                app.logger.error(f"Failed to acquire scheduler lock after {max_attempts} attempts (pid={pid})")
                 return
             
             try:
