@@ -17,9 +17,6 @@ from flask_cors import CORS
 
 from app.api.errors import register_error_handlers
 from app.api.partner import partner_bp
-from app.api.utils import is_partner_origin_allowed
-
-
 def init_api(app):
     """
     Initialize the Partner API blueprint with CORS and error handlers.
@@ -27,11 +24,14 @@ def init_api(app):
     Args:
         app: Flask application instance
     """
+    # Public partner APIs are intentionally cross-origin for easy self-serve embeds.
+    # Do not allow X-API-Key in browser CORS preflight; key-protected writes must be
+    # server-to-server (enforced in endpoint handlers).
     CORS(
         partner_bp,
         origins="*",
         methods=['GET', 'POST', 'OPTIONS'],
-        allow_headers=['Content-Type', 'X-Requested-With', 'X-Partner-Ref', 'X-API-Key'],
+        allow_headers=['Content-Type', 'X-Requested-With', 'X-Partner-Ref', 'Idempotency-Key'],
         max_age=86400,
         supports_credentials=False
     )

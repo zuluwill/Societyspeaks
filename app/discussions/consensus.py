@@ -22,6 +22,14 @@ PARTICIPATION_THRESHOLD = 5
 DEMO_DISCUSSION_IDS = {25}
 
 
+def _invalidate_snapshot_cache(discussion_id):
+    try:
+        from app.api.utils import invalidate_partner_snapshot_cache
+        invalidate_partner_snapshot_cache(discussion_id)
+    except Exception:
+        pass
+
+
 def get_user_vote_count(discussion_id):
     """
     Get the number of statements a user has voted on in this discussion.
@@ -514,6 +522,7 @@ def generate_summary(discussion_id):
             analysis.cluster_data['summary_generated_at'] = datetime.utcnow().isoformat()
             analysis.cluster_data['summary_generated_by'] = current_user.id
             db.session.commit()
+            _invalidate_snapshot_cache(discussion_id)
             
             flash("AI summary generated successfully!", "success")
         else:
@@ -607,6 +616,7 @@ def generate_cluster_labels_route(discussion_id):
             analysis.cluster_data['cluster_labels'] = labels
             analysis.cluster_data['labels_generated_at'] = datetime.utcnow().isoformat()
             db.session.commit()
+            _invalidate_snapshot_cache(discussion_id)
             
             flash("Cluster labels generated successfully!", "success")
         else:

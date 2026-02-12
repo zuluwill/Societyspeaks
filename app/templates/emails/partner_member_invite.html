@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+<body style="font-family: Arial, sans-serif; color: #111827; line-height: 1.5;">
+  <h2 style="margin: 0 0 12px;">You're invited to {{ partner.name }}</h2>
+  <p style="margin: 0 0 12px;">
+    {{ inviter_name }} invited you to access the Society Speaks Partner Portal.
+  </p>
+  <p style="margin: 0 0 16px;">
+    <a href="{{ invite_url }}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;padding:10px 14px;border-radius:6px;">Accept invite</a>
+  </p>
+  <p style="margin: 0 0 8px; font-size: 12px; color: #6b7280;">
+    If the button does not work, copy this link:
+  </p>
+  <p style="margin: 0; font-size: 12px; color: #6b7280; word-break: break-all;">
+    {{ invite_url }}
+  </p>
+</body>
+</html>

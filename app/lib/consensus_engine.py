@@ -647,6 +647,11 @@ def save_consensus_analysis(discussion_id, results, db):
     
     db.session.add(analysis)
     db.session.commit()
+    try:
+        from app.api.utils import invalidate_partner_snapshot_cache
+        invalidate_partner_snapshot_cache(discussion_id)
+    except Exception:
+        pass
     
     logger.info(f"Saved consensus analysis for discussion {discussion_id}")
     return analysis

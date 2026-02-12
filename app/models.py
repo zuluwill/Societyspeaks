@@ -126,6 +126,7 @@ class Partner(db.Model):
 
     domains = db.relationship('PartnerDomain', backref='partner', lazy='dynamic')
     api_keys = db.relationship('PartnerApiKey', backref='partner', lazy='dynamic')
+    members = db.relationship('PartnerMember', backref='partner', lazy='dynamic')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -163,6 +164,7 @@ class PartnerDomain(db.Model):
     verification_method = db.Column(db.String(30), default='dns_txt', nullable=False)
     verification_token = db.Column(db.String(200), nullable=False)
     verified_at = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def is_verified(self):
@@ -189,6 +191,42 @@ class PartnerApiKey(db.Model):
     last_used_at = db.Column(db.DateTime, nullable=True)
 
 
+class PartnerMember(db.Model):
+    __table_args__ = (
+        db.Index('ix_partner_member_partner_id', 'partner_id'),
+        db.Index('ix_partner_member_email', 'email', unique=True),
+        db.Index('ix_partner_member_invite_token', 'invite_token', unique=True),
+        db.Index('ix_partner_member_status', 'status'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    partner_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=False)
+    email = db.Column(db.String(150), nullable=False)
+    full_name = db.Column(db.String(150), nullable=True)
+    password_hash = db.Column(db.String(200), nullable=True)
+    role = db.Column(db.String(20), nullable=False, default='member')  # owner | admin | member
+    status = db.Column(db.String(20), nullable=False, default='pending')  # pending | active | disabled
+    invite_token = db.Column(db.String(255), nullable=True)
+    invited_at = db.Column(db.DateTime, nullable=True)
+    accepted_at = db.Column(db.DateTime, nullable=True)
+    last_login_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, password)
+
+    @staticmethod
+    def generate_invite_token():
+        import secrets
+        return secrets.token_urlsafe(32)
+
+
 class PartnerUsageEvent(db.Model):
     __table_args__ = (
         db.Index('idx_partner_usage_event', 'partner_id', 'env', 'event_type'),
@@ -200,6 +238,23 @@ class PartnerUsageEvent(db.Model):
     event_type = db.Column(db.String(50), nullable=False)
     quantity = db.Column(db.Integer, default=1, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class AdminAuditEvent(db.Model):
+    __table_args__ = (
+        db.Index('ix_admin_audit_event_created_at', 'created_at'),
+        db.Index('ix_admin_audit_event_admin_user_id', 'admin_user_id'),
+        db.Index('ix_admin_audit_event_action', 'action'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    admin_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    action = db.Column(db.String(100), nullable=False)
+    target_type = db.Column(db.String(50), nullable=True)
+    target_id = db.Column(db.Integer, nullable=True)
+    request_ip = db.Column(db.String(64), nullable=True)
+    metadata_json = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
 class ProfileView(db.Model):

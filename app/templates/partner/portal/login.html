@@ -12,6 +12,9 @@
     <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
       <form method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if next_url %}
+        <input type="hidden" name="next" value="{{ next_url }}">
+        {% endif %}
         <div class="grid gap-5">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>

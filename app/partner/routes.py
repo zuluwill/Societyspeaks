@@ -12,10 +12,13 @@ Routes for the partner-facing pages:
 import os
 import re
 import secrets
+import json
 from functools import wraps
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
+from sqlalchemy.exc import IntegrityError
 from flask import render_template, request, current_app, send_from_directory, redirect, url_for, flash, session, Response
+from flask_login import current_user
 from app import db, limiter
 from app.partner import partner_bp
 from app.partner.constants import EMBED_THEMES, EMBED_ALLOWED_FONTS
@@ -27,7 +30,9 @@ from app.lib.auth_utils import (
     PARTNER_SIGNUP_RATE_LIMIT,
     PARTNER_LOGIN_RATE_LIMIT,
 )
-from app.models import Partner, PartnerDomain, PartnerApiKey, PartnerUsageEvent, generate_slug
+from app.models import (
+    Partner, PartnerDomain, PartnerApiKey, PartnerUsageEvent, PartnerMember, generate_slug
+)
 from app.billing.service import create_partner_checkout_session, create_partner_portal_session, get_stripe
 
 
@@ -137,10 +142,146 @@ def _current_partner():
     return partner
 
 
+def _get_or_create_owner_member(partner):
+    owner_member = PartnerMember.query.filter_by(
+        partner_id=partner.id,
+        email=partner.contact_email
+    ).first()
+    if owner_member:
+        if owner_member.role != 'owner':
+            owner_member.role = 'owner'
+        if owner_member.status != 'active':
+            owner_member.status = 'active'
+        if not owner_member.password_hash:
+            owner_member.password_hash = partner.password_hash
+        return owner_member
+
+    owner_member = PartnerMember(
+        partner_id=partner.id,
+        email=partner.contact_email,
+        full_name=partner.name,
+        password_hash=partner.password_hash,
+        role='owner',
+        status='active',
+        accepted_at=datetime.utcnow(),
+    )
+    db.session.add(owner_member)
+    db.session.flush()
+    return owner_member
+
+
+def _current_partner_member(partner=None):
+    partner = partner or _current_partner()
+    if not partner:
+        return None
+    member_id = session.get('partner_member_id')
+    if member_id:
+        member = PartnerMember.query.filter_by(
+            id=member_id,
+            partner_id=partner.id,
+            status='active'
+        ).first()
+        if member:
+            return member
+    return PartnerMember.query.filter_by(
+        partner_id=partner.id,
+        email=partner.contact_email,
+        status='active'
+    ).first()
+
+
+def _member_can_manage_team(member):
+    return bool(member and member.role in ('owner', 'admin'))
+
+
+def _has_valid_admin_preview(partner):
+    preview = session.get('partner_admin_preview') or {}
+    if not preview or preview.get('partner_id') != partner.id:
+        return False
+    admin_user_id = preview.get('admin_user_id')
+    if not admin_user_id:
+        return False
+    return bool(
+        current_user.is_authenticated and
+        getattr(current_user, 'is_admin', False) and
+        current_user.id == admin_user_id
+    )
+
+
+def _is_admin_preview(partner):
+    return _has_valid_admin_preview(partner)
+
+
+def _log_admin_preview_event(partner, action, metadata=None):
+    if not _is_admin_preview(partner):
+        return
+    preview = session.get('partner_admin_preview') or {}
+    try:
+        from app.models import AdminAuditEvent
+        forwarded_for = request.headers.get('X-Forwarded-For', '')
+        request_ip = (forwarded_for.split(',')[0].strip() if forwarded_for else (request.remote_addr or ''))[:64]
+        event = AdminAuditEvent(
+            admin_user_id=preview.get('admin_user_id'),
+            action=action,
+            target_type='partner',
+            target_id=partner.id,
+            request_ip=request_ip,
+            metadata_json=json.dumps(metadata or {}, default=str),
+        )
+        db.session.add(event)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
+def _compute_partner_health(partner, keys, domains, usage):
+    active_test_keys = [k for k in keys if k.env == 'test' and k.status == 'active']
+    verified_test_domains = [d for d in domains if d.env == 'test' and d.is_verified() and d.is_active]
+    create_count = int(usage.get('create', 0))
+    lookup_count = int(usage.get('lookup', 0))
+    snapshot_count = int(usage.get('snapshot', 0))
+
+    checks = [
+        {
+            'id': 'auth',
+            'label': 'Test key available',
+            'ok': len(active_test_keys) > 0,
+            'hint': 'Create a test API key in the API keys section.'
+        },
+        {
+            'id': 'domain',
+            'label': 'Verified test domain',
+            'ok': len(verified_test_domains) > 0,
+            'hint': 'Add a staging domain and verify DNS TXT.'
+        },
+        {
+            'id': 'api_activity',
+            'label': 'API activity detected',
+            'ok': (create_count + lookup_count) > 0,
+            'hint': 'Run one lookup or create call from your backend.'
+        },
+        {
+            'id': 'billing',
+            'label': 'Billing active for live',
+            'ok': partner.billing_status == 'active',
+            'hint': 'Activate a plan to enable live keys.'
+        },
+    ]
+
+    return {
+        'checks': checks,
+        'counts': {
+            'create': create_count,
+            'lookup': lookup_count,
+            'snapshot': snapshot_count,
+        }
+    }
+
+
 def _build_partner_portal_context(partner):
     domains = partner.domains.order_by(PartnerDomain.created_at.desc()).all()
     keys = partner.api_keys.order_by(PartnerApiKey.created_at.desc()).all()
-    has_verified_test_domain = any(d.env == 'test' and d.is_verified() for d in domains)
+    has_verified_test_domain = any(d.env == 'test' and d.is_verified() and d.is_active for d in domains)
     has_test_key = any(k.env == 'test' and k.status == 'active' for k in keys)
     has_live_key = any(k.env == 'live' and k.status == 'active' for k in keys)
     return domains, keys, has_verified_test_domain, has_test_key, has_live_key
@@ -153,6 +294,18 @@ def _clear_partner_session():
             session.pop(key, None)
 
 
+def _safe_portal_next_url(next_url):
+    """Return a safe local portal URL, or dashboard as fallback."""
+    if not next_url:
+        return url_for('partner.portal_dashboard')
+    parsed = urlparse(next_url)
+    if parsed.scheme or parsed.netloc:
+        return url_for('partner.portal_dashboard')
+    if not next_url.startswith('/for-publishers/portal'):
+        return url_for('partner.portal_dashboard')
+    return next_url
+
+
 def partner_login_required(f):
     """Decorator that ensures the user is logged in to the partner portal."""
     @wraps(f)
@@ -160,7 +313,32 @@ def partner_login_required(f):
         partner = _current_partner()
         if not partner:
             flash('Please sign in to the Partner Portal.', 'warning')
+            return redirect(url_for('partner.portal_login', next=request.full_path))
+        if session.get('partner_admin_preview') and not _has_valid_admin_preview(partner):
+            _clear_partner_session()
+            flash('Your admin preview session expired. Please re-open it from Admin.', 'warning')
             return redirect(url_for('partner.portal_login'))
+
+        if _is_admin_preview(partner) and request.method in ('POST', 'PUT', 'PATCH', 'DELETE'):
+            _log_admin_preview_event(partner, 'partner_preview_write_blocked', {
+                'path': request.path,
+                'method': request.method,
+            })
+            flash('Read-only preview mode: write actions are disabled.', 'warning')
+            return redirect(url_for('partner.portal_dashboard'))
+        member_id = session.get('partner_member_id')
+        if member_id:
+            active_member = PartnerMember.query.filter_by(
+                id=member_id, partner_id=partner.id, status='active'
+            ).first()
+            if not active_member:
+                _clear_partner_session()
+                flash('Your team access is no longer active. Please sign in again.', 'warning')
+                return redirect(url_for('partner.portal_login'))
+        else:
+            owner_member = _get_or_create_owner_member(partner)
+            db.session.commit()
+            session['partner_member_id'] = owner_member.id
         return f(*args, **kwargs)
     return decorated
 
@@ -284,7 +462,12 @@ def portal_signup():
                 ))
 
             full_key = _create_api_key_for_partner(partner, 'test')
+            owner_member = _get_or_create_owner_member(partner)
             db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash('An account with this email already exists. Please sign in.', 'warning')
+            return redirect(url_for('partner.portal_login'))
         except Exception:
             db.session.rollback()
             current_app.logger.exception("Failed to create partner account")
@@ -292,6 +475,7 @@ def portal_signup():
             return render_template('partner/portal/signup.html')
 
         session['partner_portal_id'] = partner.id
+        session['partner_member_id'] = owner_member.id
         session['partner_new_key'] = full_key
         flash('Your Partner Portal is ready. Your test key is shown once below.', 'success')
         return redirect(url_for('partner.portal_dashboard'))
@@ -306,7 +490,8 @@ def portal_login():
         email = normalize_email(request.form.get('email'))
         password = request.form.get('password', '')
 
-        partner = Partner.query.filter_by(contact_email=email).first()
+        member = PartnerMember.query.filter_by(email=email).first()
+        partner = member.partner if member else Partner.query.filter_by(contact_email=email).first()
 
         # Temporary lockout after repeated failures (stored in session to keep it simple)
         # Uses '_lockout_' prefix (not 'partner_') so _clear_partner_session() won't wipe it
@@ -326,7 +511,14 @@ def portal_login():
                 session.pop(f'{lockout_key}:until', None)
                 fail_count = 0
 
-        if not partner or not partner.check_password(password):
+        valid_login = False
+        if member:
+            if member.status == 'active' and partner and partner.status == 'active':
+                valid_login = member.check_password(password)
+        elif partner:
+            valid_login = partner.check_password(password)
+
+        if not partner or not valid_login:
             fail_count += 1
             session[lockout_key] = fail_count
             if fail_count >= 5:
@@ -347,11 +539,21 @@ def portal_login():
         session.pop(lockout_key, None)
         session.pop(f'{lockout_key}:until', None)
 
-        session['partner_portal_id'] = partner.id
-        flash('Welcome back.', 'success')
-        return redirect(url_for('partner.portal_dashboard'))
+        owner_member = _get_or_create_owner_member(partner)
+        if member and member.partner_id == partner.id and member.status == 'active':
+            active_member = member
+        else:
+            active_member = owner_member
+        active_member.last_login_at = datetime.utcnow()
+        db.session.commit()
 
-    return render_template('partner/portal/login.html')
+        session['partner_portal_id'] = partner.id
+        session['partner_member_id'] = active_member.id
+        flash('Welcome back.', 'success')
+        next_url = request.form.get('next') or request.args.get('next')
+        return redirect(_safe_portal_next_url(next_url))
+
+    return render_template('partner/portal/login.html', next_url=request.args.get('next'))
 
 
 @partner_bp.route('/portal/forgot-password', methods=['GET', 'POST'])
@@ -379,6 +581,7 @@ def portal_forgot_password():
 
 
 @partner_bp.route('/portal/reset-password/<token>', methods=['GET', 'POST'])
+@limiter.limit("5 per 15 minutes")
 def portal_reset_password(token):
     """Reset a partner's password using a valid token."""
     partner = Partner.verify_reset_token(token)
@@ -395,6 +598,10 @@ def portal_reset_password(token):
 
         partner.set_password(password)
         try:
+            owner_member = _get_or_create_owner_member(partner)
+            owner_member.set_password(password)
+            owner_member.status = 'active'
+            owner_member.accepted_at = owner_member.accepted_at or datetime.utcnow()
             db.session.commit()
         except Exception:
             db.session.rollback()
@@ -403,6 +610,7 @@ def portal_reset_password(token):
             return render_template('partner/portal/reset_password.html', token=token)
 
         session['partner_portal_id'] = partner.id
+        session['partner_member_id'] = owner_member.id
         flash('Your password has been reset. You are now signed in.', 'success')
         return redirect(url_for('partner.portal_dashboard'))
 
@@ -436,6 +644,7 @@ def portal_dashboard():
     from sqlalchemy import func
 
     partner = _current_partner()
+    current_member = _current_partner_member(partner)
     domains, keys, has_verified_test_domain, has_test_key, has_live_key = _build_partner_portal_context(partner)
     new_key = session.pop('partner_new_key', None)
     dns_checks = session.get('partner_dns_checks', {})
@@ -449,6 +658,10 @@ def portal_dashboard():
         func.sum(PartnerUsageEvent.quantity)
     ).group_by(PartnerUsageEvent.event_type).all()
     usage = {row[0]: int(row[1] or 0) for row in usage_rows}
+    partner_health = _compute_partner_health(partner, keys, domains, usage)
+    last_health_check = session.get('partner_last_health_check')
+    last_health_result = session.get('partner_last_health_result')
+    team_members = PartnerMember.query.filter_by(partner_id=partner.id).order_by(PartnerMember.created_at.asc()).all()
 
     daily_since = datetime.utcnow() - timedelta(days=13)
     daily_rows = PartnerUsageEvent.query.filter(
@@ -475,6 +688,13 @@ def portal_dashboard():
         has_verified_test_domain=has_verified_test_domain,
         has_test_key=has_test_key,
         has_live_key=has_live_key,
+        is_admin_preview=_is_admin_preview(partner),
+        current_member=current_member,
+        can_manage_team=_member_can_manage_team(current_member),
+        team_members=team_members,
+        partner_health=partner_health,
+        last_health_check=last_health_check,
+        last_health_result=last_health_result,
         usage=usage,
         usage_daily=usage_daily,
         usage_max=usage_max,
@@ -487,10 +707,14 @@ def portal_dashboard():
 @partner_login_required
 def portal_getting_started():
     partner = _current_partner()
+    current_member = _current_partner_member(partner)
     domains, keys, has_verified_test_domain, has_test_key, has_live_key = _build_partner_portal_context(partner)
     return render_template(
         'partner/portal/getting_started.html',
         partner=partner,
+        is_admin_preview=_is_admin_preview(partner),
+        current_member=current_member,
+        can_manage_team=_member_can_manage_team(current_member),
         domains=domains,
         keys=keys,
         has_verified_test_domain=has_verified_test_domain,
@@ -504,10 +728,14 @@ def portal_getting_started():
 @partner_login_required
 def portal_getting_started_success():
     partner = _current_partner()
+    current_member = _current_partner_member(partner)
     domains, keys, has_verified_test_domain, has_test_key, has_live_key = _build_partner_portal_context(partner)
     return render_template(
         'partner/portal/success.html',
         partner=partner,
+        is_admin_preview=_is_admin_preview(partner),
+        current_member=current_member,
+        can_manage_team=_member_can_manage_team(current_member),
         domains=domains,
         keys=keys,
         has_verified_test_domain=has_verified_test_domain,
@@ -515,6 +743,30 @@ def portal_getting_started_success():
         has_live_key=has_live_key,
         base_url=_get_base_url()
     )
+
+
+@partner_bp.route('/portal/health-check', methods=['POST'])
+@partner_login_required
+def portal_health_check():
+    partner = _current_partner()
+    domains, keys, _, _, _ = _build_partner_portal_context(partner)
+
+    from sqlalchemy import func
+    since = datetime.utcnow() - timedelta(days=30)
+    usage_rows = PartnerUsageEvent.query.filter(
+        PartnerUsageEvent.partner_id == partner.id,
+        PartnerUsageEvent.created_at >= since
+    ).with_entities(
+        PartnerUsageEvent.event_type,
+        func.sum(PartnerUsageEvent.quantity)
+    ).group_by(PartnerUsageEvent.event_type).all()
+    usage = {row[0]: int(row[1] or 0) for row in usage_rows}
+    health = _compute_partner_health(partner, keys, domains, usage)
+    session['partner_last_health_check'] = datetime.utcnow().isoformat()
+    session['partner_last_health_result'] = health
+    session.modified = True
+    flash('Integration health check updated.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
 
 
 @partner_bp.route('/portal/usage.csv')
@@ -549,7 +801,211 @@ def portal_usage_csv():
     )
 
 
+def _send_partner_member_invite_email(partner, email, invite_url, inviter_name=None):
+    from app.resend_client import get_resend_client
+    client = get_resend_client()
+    email_data = {
+        'from': f"Society Speaks <noreply@{current_app.config.get('RESEND_DOMAIN', 'societyspeaks.io')}>",
+        'to': [email],
+        'subject': f"You've been invited to {partner.name} on Society Speaks",
+        'html': render_template(
+            'emails/partner_member_invite.html',
+            partner=partner,
+            invite_url=invite_url,
+            inviter_name=inviter_name or partner.name,
+        ),
+    }
+    return client._send_with_retry(email_data)
+
+
+@partner_bp.route('/portal/team/invite', methods=['POST'])
+@limiter.limit("10 per hour")
+@partner_login_required
+def portal_invite_member():
+    partner = _current_partner()
+    current_member = _current_partner_member(partner)
+    if not _member_can_manage_team(current_member):
+        flash('Only owners and admins can invite team members.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    email = normalize_email(request.form.get('email'))
+    role = request.form.get('role', 'member')
+    full_name = (request.form.get('full_name') or '').strip()
+    if role not in ('admin', 'member'):
+        role = 'member'
+
+    email_ok, email_err = validate_email_format(email)
+    if not email_ok:
+        flash(email_err, 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+    if email == partner.contact_email:
+        flash('The owner email already has access.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    existing = PartnerMember.query.filter_by(email=email).first()
+    if existing and existing.partner_id != partner.id:
+        flash('That email is already linked to another partner account.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+    if existing and existing.status == 'active':
+        flash('That team member already has access.', 'info')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    token = PartnerMember.generate_invite_token()
+    if existing:
+        member = existing
+        member.role = role
+        member.status = 'pending'
+        member.full_name = full_name or member.full_name
+        member.invite_token = token
+        member.invited_at = datetime.utcnow()
+    else:
+        member = PartnerMember(
+            partner_id=partner.id,
+            email=email,
+            full_name=full_name or None,
+            role=role,
+            status='pending',
+            invite_token=token,
+            invited_at=datetime.utcnow(),
+        )
+        db.session.add(member)
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to save partner invite")
+        flash('Could not create invite. Please try again.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    invite_url = url_for('partner.portal_accept_invite', token=token, _external=True)
+    try:
+        _send_partner_member_invite_email(
+            partner=partner,
+            email=email,
+            invite_url=invite_url,
+            inviter_name=current_member.full_name if current_member else None
+        )
+    except Exception:
+        current_app.logger.exception("Failed to send partner member invite email")
+        flash('Invite saved, but email delivery failed. Copy the invite link from logs or retry.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    flash(f'Invite sent to {email}.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
+
+
+@partner_bp.route('/portal/team/accept/<token>', methods=['GET', 'POST'])
+def portal_accept_invite(token):
+    member = PartnerMember.query.filter_by(invite_token=token, status='pending').first()
+    if not member:
+        flash('This invite link is invalid or expired.', 'danger')
+        return redirect(url_for('partner.portal_login'))
+    partner = Partner.query.get(member.partner_id)
+    if not partner or partner.status != 'active':
+        flash('This partner account is not active.', 'danger')
+        return redirect(url_for('partner.portal_login'))
+
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        full_name = (request.form.get('full_name') or '').strip()
+        is_valid, error_message = validate_password(password)
+        if not is_valid:
+            flash(error_message, 'danger')
+            return render_template('partner/portal/accept_invite.html', member=member, partner=partner, token=token)
+
+        member.set_password(password)
+        member.full_name = full_name[:150] if full_name else (member.full_name or member.email)
+        member.status = 'active'
+        member.accepted_at = datetime.utcnow()
+        member.invite_token = None
+        member.last_login_at = datetime.utcnow()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception("Failed to accept partner invite")
+            flash('Could not accept invite. Please try again.', 'danger')
+            return render_template('partner/portal/accept_invite.html', member=member, partner=partner, token=token)
+
+        session['partner_portal_id'] = partner.id
+        session['partner_member_id'] = member.id
+        flash('Welcome to the partner portal.', 'success')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    return render_template('partner/portal/accept_invite.html', member=member, partner=partner, token=token)
+
+
+@partner_bp.route('/portal/team/<int:member_id>/status', methods=['POST'])
+@partner_login_required
+def portal_update_member_status(member_id):
+    partner = _current_partner()
+    current_member = _current_partner_member(partner)
+    if not _member_can_manage_team(current_member):
+        flash('Only owners and admins can update team members.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    member = PartnerMember.query.filter_by(id=member_id, partner_id=partner.id).first_or_404()
+    if member.role == 'owner':
+        flash('Owner access cannot be changed.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+    if current_member and current_member.id == member.id:
+        flash('You cannot disable your own access.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    action = request.form.get('action')
+    if action == 'disable':
+        member.status = 'disabled'
+    elif action == 'enable':
+        member.status = 'active'
+    else:
+        flash('Unsupported action.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to update partner member status")
+        flash('Could not update member status.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+    flash('Member updated.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
+
+
+@partner_bp.route('/portal/team/<int:member_id>/role', methods=['POST'])
+@partner_login_required
+def portal_update_member_role(member_id):
+    partner = _current_partner()
+    current_member = _current_partner_member(partner)
+    if not _member_can_manage_team(current_member):
+        flash('Only owners and admins can update roles.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    member = PartnerMember.query.filter_by(id=member_id, partner_id=partner.id).first_or_404()
+    if member.role == 'owner':
+        flash('Owner role cannot be changed.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    role = request.form.get('role', 'member')
+    if role not in ('admin', 'member'):
+        flash('Invalid role.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    member.role = role
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to update partner member role")
+        flash('Could not update role.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+    flash('Role updated.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
+
+
 @partner_bp.route('/portal/domains/add', methods=['POST'])
+@limiter.limit("10 per minute")
 @partner_login_required
 def portal_add_domain():
     partner = _current_partner()
@@ -592,11 +1048,51 @@ def portal_add_domain():
     return redirect(url_for('partner.portal_dashboard'))
 
 
+@partner_bp.route('/portal/domains/<int:domain_id>/toggle', methods=['POST'])
+@partner_login_required
+def portal_toggle_domain(domain_id):
+    partner = _current_partner()
+    domain = PartnerDomain.query.filter_by(id=domain_id, partner_id=partner.id).first_or_404()
+    domain.is_active = not bool(domain.is_active)
+    if not domain.is_active:
+        # Deactivated domains should not remain verified for origin allowlists.
+        domain.verified_at = None
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to toggle domain status")
+        flash('Could not update domain status.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+    flash('Domain activated.' if domain.is_active else 'Domain deactivated.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
+
+
+@partner_bp.route('/portal/domains/<int:domain_id>/remove', methods=['POST'])
+@partner_login_required
+def portal_remove_domain(domain_id):
+    partner = _current_partner()
+    domain = PartnerDomain.query.filter_by(id=domain_id, partner_id=partner.id).first_or_404()
+    try:
+        db.session.delete(domain)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to remove partner domain")
+        flash('Could not remove domain.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+    flash('Domain removed.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
+
+
 @partner_bp.route('/portal/domains/<int:domain_id>/verify', methods=['POST'])
 @partner_login_required
 def portal_verify_domain(domain_id):
     partner = _current_partner()
     domain = PartnerDomain.query.filter_by(id=domain_id, partner_id=partner.id).first_or_404()
+    if not domain.is_active:
+        flash('Activate this domain before verifying.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
     if domain.is_verified():
         flash('Domain already verified.', 'info')
         return redirect(url_for('partner.portal_dashboard'))
@@ -765,19 +1261,33 @@ def portal_billing_success():
     try:
         s = get_stripe()
         checkout_session = s.checkout.Session.retrieve(session_id)
-        if not partner.stripe_customer_id and checkout_session.customer:
-            partner.stripe_customer_id = checkout_session.customer
-            db.session.commit()
-        if partner.stripe_customer_id and checkout_session.customer != partner.stripe_customer_id:
+        metadata = checkout_session.get('metadata', {}) if isinstance(checkout_session, dict) else (checkout_session.metadata or {})
+        meta_partner_id = metadata.get('partner_id')
+        if meta_partner_id:
+            try:
+                if int(meta_partner_id) != partner.id:
+                    flash('Invalid checkout session.', 'danger')
+                    return redirect(url_for('partner.portal_dashboard'))
+            except (TypeError, ValueError):
+                flash('Invalid checkout session.', 'danger')
+                return redirect(url_for('partner.portal_dashboard'))
+
+        customer_id = checkout_session.customer if not isinstance(checkout_session, dict) else checkout_session.get('customer')
+        if partner.stripe_customer_id and customer_id and customer_id != partner.stripe_customer_id:
             flash('Invalid checkout session.', 'danger')
             return redirect(url_for('partner.portal_dashboard'))
+        if not partner.stripe_customer_id and customer_id:
+            partner.stripe_customer_id = customer_id
 
         if checkout_session.subscription:
             sub_id = checkout_session.subscription if isinstance(checkout_session.subscription, str) else checkout_session.subscription.id
             stripe_sub = s.Subscription.retrieve(sub_id)
             status = stripe_sub.get('status') if isinstance(stripe_sub, dict) else stripe_sub.status
-            partner.stripe_subscription_id = stripe_sub.get('id') if isinstance(stripe_sub, dict) else stripe_sub.id
-            partner.billing_status = 'active' if status in ['active', 'trialing'] else 'inactive'
+            if status in ('canceled', 'unpaid', 'incomplete_expired'):
+                partner.stripe_subscription_id = None
+            else:
+                partner.stripe_subscription_id = stripe_sub.get('id') if isinstance(stripe_sub, dict) else stripe_sub.id
+            partner.billing_status = 'active' if status in ['active', 'trialing', 'past_due'] else 'inactive'
 
             # Sync tier from checkout metadata to close the webhook race window
             metadata = checkout_session.get('metadata', {}) if isinstance(checkout_session, dict) else (checkout_session.metadata or {})
@@ -786,6 +1296,9 @@ def portal_billing_success():
                 partner.tier = tier_from_meta
             elif partner.billing_status == 'active' and partner.tier == 'free':
                 partner.tier = 'starter'  # legacy fallback
+
+            if status in ('canceled', 'unpaid', 'incomplete_expired'):
+                partner.tier = 'free'
 
             db.session.commit()
             flash('Subscription active. You can now create live keys.', 'success')

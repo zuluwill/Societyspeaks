@@ -1,8 +1,8 @@
 # app/admin/routes.py
-from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan, StatementVote, Partner, PartnerDomain, PartnerApiKey
+from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan, StatementVote, Partner, PartnerDomain, PartnerApiKey, PartnerMember, PartnerUsageEvent
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from app.admin.forms import UserAssignmentForm
 from datetime import date, datetime, timedelta
@@ -12,6 +12,7 @@ from app.storage_utils import upload_to_object_storage
 # Note: send_email removed during Resend migration. Using inline Resend call for admin welcome emails.
 from app.admin import admin_bp
 from app.decorators import admin_required
+import json
 
 # Import Polymarket admin routes
 try:
@@ -21,6 +22,32 @@ except ImportError:
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 import time
+
+
+def _admin_request_ip():
+    forwarded_for = request.headers.get('X-Forwarded-For', '')
+    if forwarded_for:
+        return forwarded_for.split(',')[0].strip()[:64]
+    return (request.remote_addr or '')[:64]
+
+
+def _log_admin_audit_event(action, target_type=None, target_id=None, metadata=None):
+    metadata = metadata or {}
+    try:
+        from app.models import AdminAuditEvent
+        event = AdminAuditEvent(
+            admin_user_id=current_user.id if current_user.is_authenticated else None,
+            action=action,
+            target_type=target_type,
+            target_id=target_id,
+            request_ip=_admin_request_ip(),
+            metadata_json=json.dumps(metadata, default=str),
+        )
+        db.session.add(event)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.warning(f"Admin audit log failed for {action}: {exc}")
 
 
 # Admin dashboard
@@ -472,15 +499,121 @@ def list_discussions():
 @login_required
 @admin_required
 def list_partners():
+    from sqlalchemy import func
+    from app.models import AdminAuditEvent
     partners = Partner.query.order_by(Partner.created_at.desc()).all()
     domains = PartnerDomain.query.order_by(PartnerDomain.created_at.desc()).all()
     keys = PartnerApiKey.query.order_by(PartnerApiKey.created_at.desc()).all()
+    members = PartnerMember.query.order_by(PartnerMember.created_at.desc()).all()
+
+    member_counts_raw = db.session.query(
+        PartnerMember.partner_id,
+        func.count(PartnerMember.id)
+    ).group_by(PartnerMember.partner_id).all()
+    member_counts = {partner_id: count for partner_id, count in member_counts_raw}
+
+    usage_rows = db.session.query(
+        PartnerUsageEvent.partner_id,
+        PartnerUsageEvent.event_type,
+        func.sum(PartnerUsageEvent.quantity)
+    ).group_by(PartnerUsageEvent.partner_id, PartnerUsageEvent.event_type).all()
+    usage_by_partner = {}
+    for partner_id, event_type, total in usage_rows:
+        usage_by_partner.setdefault(partner_id, {})[event_type] = int(total or 0)
+    audit_events = AdminAuditEvent.query.order_by(AdminAuditEvent.created_at.desc()).limit(30).all()
+
     return render_template(
         'admin/partners/index.html',
         partners=partners,
         domains=domains,
-        keys=keys
+        keys=keys,
+        members=members,
+        member_counts=member_counts,
+        usage_by_partner=usage_by_partner,
+        audit_events=audit_events
     )
+
+
+@admin_bp.route('/partners/<int:partner_id>/preview', methods=['POST'])
+@login_required
+@admin_required
+def preview_partner_portal(partner_id):
+    partner = Partner.query.get_or_404(partner_id)
+
+    owner_member = PartnerMember.query.filter_by(
+        partner_id=partner.id,
+        role='owner'
+    ).first()
+    if not owner_member:
+        owner_member = PartnerMember.query.filter_by(
+            partner_id=partner.id,
+            email=partner.contact_email
+        ).first()
+    if not owner_member:
+        owner_member = PartnerMember(
+            partner_id=partner.id,
+            email=partner.contact_email,
+            full_name=partner.name,
+            password_hash=partner.password_hash,
+            role='owner',
+            status='active',
+            accepted_at=datetime.utcnow(),
+        )
+        db.session.add(owner_member)
+    else:
+        if owner_member.role != 'owner':
+            owner_member.role = 'owner'
+        if owner_member.status != 'active':
+            owner_member.status = 'active'
+        if not owner_member.password_hash:
+            owner_member.password_hash = partner.password_hash
+        owner_member.accepted_at = owner_member.accepted_at or datetime.utcnow()
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to prepare partner preview session")
+        flash('Unable to open partner preview session.', 'error')
+        return redirect(url_for('admin.list_partners'))
+
+    session['partner_portal_id'] = partner.id
+    session['partner_member_id'] = owner_member.id
+    session['partner_admin_preview'] = {
+        'admin_user_id': current_user.id,
+        'partner_id': partner.id,
+        'started_at': datetime.utcnow().isoformat(),
+        'read_only': True,
+    }
+    session.modified = True
+    _log_admin_audit_event(
+        action='partner_preview_started',
+        target_type='partner',
+        target_id=partner.id,
+        metadata={'partner_slug': partner.slug, 'mode': 'read_only'}
+    )
+    flash(f'Viewing Partner Portal as {partner.name}.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
+
+
+@admin_bp.route('/partners/preview/stop', methods=['POST'])
+@login_required
+@admin_required
+def stop_partner_preview():
+    preview = session.get('partner_admin_preview') or {}
+    preview_partner_id = preview.get('partner_id')
+    preview_started_at = preview.get('started_at')
+    for key in ('partner_portal_id', 'partner_member_id', 'partner_admin_preview'):
+        session.pop(key, None)
+    session.modified = True
+    _log_admin_audit_event(
+        action='partner_preview_stopped',
+        target_type='partner',
+        target_id=preview_partner_id,
+        metadata={'started_at': preview_started_at}
+    )
+    flash('Partner preview session ended.', 'success')
+    return redirect(url_for('admin.list_partners'))
 
 
 @admin_bp.route('/partners/metrics')

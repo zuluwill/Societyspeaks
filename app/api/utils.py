@@ -160,7 +160,10 @@ def get_partner_allowed_origins(env: Optional[str] = None):
 
     try:
         from app.models import PartnerDomain
-        query = PartnerDomain.query.filter(PartnerDomain.verified_at.isnot(None))
+        query = PartnerDomain.query.filter(
+            PartnerDomain.verified_at.isnot(None),
+            PartnerDomain.is_active.is_(True)
+        )
         if env:
             query = query.filter(PartnerDomain.env == env)
         for row in query.all():
@@ -324,3 +327,12 @@ def record_partner_usage(partner_id: str, env: str, event_type: str, quantity: i
 
     except Exception as e:
         logger.warning(f"Partner usage recording error: {e}")
+
+
+def invalidate_partner_snapshot_cache(discussion_id: int):
+    """Invalidate cached partner snapshot payload for a discussion."""
+    try:
+        from app import cache
+        cache.delete(f"snapshot:{discussion_id}")
+    except Exception as e:
+        logger.warning(f"Snapshot cache invalidation failed for discussion {discussion_id}: {e}")

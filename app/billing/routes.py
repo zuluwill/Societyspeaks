@@ -284,6 +284,9 @@ def webhook():
         # Checkout session events
         elif event_type == 'checkout.session.completed':
             current_app.logger.info(f"Checkout session completed: {data.get('id')}")
+            metadata = _get_stripe_metadata(data)
+            if metadata.get('purpose') == 'partner_subscription' or metadata.get('partner_id'):
+                _handle_partner_checkout_completed(data)
         elif event_type == 'checkout.session.expired':
             current_app.logger.info(f"Checkout session expired: {data.get('id')}")
         elif event_type == 'checkout.session.async_payment_succeeded':
@@ -366,10 +369,126 @@ def _is_partner_subscription(subscription_data):
     return False
 
 
+def _get_stripe_field(obj, key, default=None):
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
+def _get_stripe_metadata(obj):
+    if isinstance(obj, dict):
+        metadata = obj.get('metadata', {})
+    else:
+        metadata = getattr(obj, 'metadata', {}) or {}
+    return metadata if isinstance(metadata, dict) else {}
+
+
+def _sync_partner_subscription_state(partner, stripe_sub, metadata_fallback=None):
+    metadata = _get_stripe_metadata(stripe_sub)
+    if metadata_fallback:
+        merged_metadata = dict(metadata_fallback)
+        merged_metadata.update(metadata)
+        metadata = merged_metadata
+
+    customer_id = _get_stripe_field(stripe_sub, 'customer')
+    if not partner.stripe_customer_id and customer_id:
+        partner.stripe_customer_id = customer_id
+
+    status = _get_stripe_field(stripe_sub, 'status', '')
+    sub_id = _get_stripe_field(stripe_sub, 'id')
+    terminal_statuses = ('canceled', 'unpaid', 'incomplete_expired')
+
+    if status in terminal_statuses:
+        # Subscription is no longer billable; clear stale Stripe sub linkage.
+        partner.stripe_subscription_id = None
+    else:
+        partner.stripe_subscription_id = sub_id
+
+    active_statuses = ('active', 'trialing', 'past_due')
+    partner.billing_status = 'active' if status in active_statuses else 'inactive'
+
+    if status == 'past_due':
+        current_app.logger.warning(f"Partner {partner.slug} subscription is past_due — grace period active")
+
+    tier_from_meta = metadata.get('partner_tier')
+    if tier_from_meta in ('starter', 'professional', 'enterprise'):
+        partner.tier = tier_from_meta
+    elif partner.billing_status == 'active' and partner.tier == 'free':
+        partner.tier = 'starter'
+
+    if status in terminal_statuses:
+        partner.tier = 'free'
+
+
+def _find_partner_for_checkout_session(checkout_data):
+    metadata = _get_stripe_metadata(checkout_data)
+    partner = None
+    partner_id = metadata.get('partner_id')
+    if partner_id:
+        try:
+            partner = Partner.query.get(int(partner_id))
+        except (ValueError, TypeError):
+            current_app.logger.warning(f"Non-numeric partner_id in checkout metadata: {partner_id}")
+
+    if not partner:
+        customer_id = _get_stripe_field(checkout_data, 'customer')
+        if customer_id:
+            partner = Partner.query.filter_by(stripe_customer_id=customer_id).first()
+
+    return partner, metadata
+
+
+def _handle_partner_checkout_completed(checkout_data):
+    partner, checkout_metadata = _find_partner_for_checkout_session(checkout_data)
+    if not partner:
+        current_app.logger.info(
+            f"Checkout session {_get_stripe_field(checkout_data, 'id')} completed without matching partner"
+        )
+        return
+
+    customer_id = _get_stripe_field(checkout_data, 'customer')
+    if partner.stripe_customer_id and customer_id and partner.stripe_customer_id != customer_id:
+        current_app.logger.warning(
+            f"Partner checkout customer mismatch for partner {partner.slug}: "
+            f"existing={partner.stripe_customer_id}, session={customer_id}"
+        )
+        return
+
+    if not partner.stripe_customer_id and customer_id:
+        partner.stripe_customer_id = customer_id
+
+    sub_id = _get_stripe_field(checkout_data, 'subscription')
+    if hasattr(sub_id, 'id'):
+        sub_id = sub_id.id
+    if not sub_id:
+        db.session.commit()
+        return
+
+    s = get_stripe()
+    try:
+        stripe_sub = s.Subscription.retrieve(sub_id)
+    except Exception as exc:
+        current_app.logger.warning(f"Failed to retrieve partner subscription {sub_id} from checkout webhook: {exc}")
+        db.session.commit()
+        return
+
+    _sync_partner_subscription_state(partner, stripe_sub, metadata_fallback=checkout_metadata)
+    db.session.commit()
+
+
 def _handle_partner_subscription(subscription_data):
     s = get_stripe()
-    stripe_sub = s.Subscription.retrieve(subscription_data['id'])
-    metadata = stripe_sub.get('metadata', {}) if isinstance(stripe_sub, dict) else (stripe_sub.metadata or {})
+    sub_id = _get_stripe_field(subscription_data, 'id')
+    metadata = _get_stripe_metadata(subscription_data)
+
+    try:
+        stripe_sub = s.Subscription.retrieve(sub_id)
+        metadata = _get_stripe_metadata(stripe_sub)
+    except Exception as exc:
+        # Deleted/canceled subscriptions may fail retrieval; fallback to webhook payload.
+        current_app.logger.warning(f"Using webhook payload for partner subscription {sub_id}: {exc}")
+        stripe_sub = subscription_data
+
     partner_id = metadata.get('partner_id')
     partner = None
     if partner_id:
@@ -384,31 +503,7 @@ def _handle_partner_subscription(subscription_data):
         current_app.logger.warning("Partner subscription received but partner not found")
         return
 
-    customer_id = stripe_sub.get('customer') if isinstance(stripe_sub, dict) else getattr(stripe_sub, 'customer', None)
-    if not partner.stripe_customer_id and customer_id:
-        partner.stripe_customer_id = customer_id
-
-    status = stripe_sub.get('status') if isinstance(stripe_sub, dict) else stripe_sub.status
-    partner.stripe_subscription_id = stripe_sub.get('id') if isinstance(stripe_sub, dict) else stripe_sub.id
-    # past_due = Stripe is still retrying payment; keep access active as a grace period.
-    # Only revoke on terminal states (canceled, unpaid, incomplete_expired).
-    active_statuses = ('active', 'trialing', 'past_due')
-    partner.billing_status = 'active' if status in active_statuses else 'inactive'
-
-    if status == 'past_due':
-        current_app.logger.warning(f"Partner {partner.slug} subscription is past_due — grace period active")
-
-    # Persist the tier from checkout metadata (starter / professional)
-    tier_from_meta = metadata.get('partner_tier')
-    if tier_from_meta in ('starter', 'professional', 'enterprise'):
-        partner.tier = tier_from_meta
-    elif partner.billing_status == 'active' and partner.tier == 'free':
-        # Legacy fallback: if somehow no tier in metadata, default to starter
-        partner.tier = 'starter'
-
-    # When subscription reaches a terminal state, revert to free tier
-    if status in ('canceled', 'unpaid', 'incomplete_expired'):
-        partner.tier = 'free'
+    _sync_partner_subscription_state(partner, stripe_sub, metadata_fallback=metadata)
 
     db.session.commit()
 

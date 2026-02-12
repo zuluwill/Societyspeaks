@@ -286,59 +286,61 @@ class TestOEmbed:
 class TestFlagStatementFromEmbed:
     """Tests for POST /api/embed/flag."""
 
-    def test_missing_body_returns_400(self, client):
+    def test_missing_origin_returns_403(self, client):
         resp = client.post('/api/embed/flag', content_type='application/json')
-        assert resp.status_code == 400
+        assert resp.status_code == 403
+        data = resp.get_json()
+        assert data['error'] == 'origin_required'
 
-    def test_missing_statement_id_returns_400(self, client):
+    def test_missing_statement_id_returns_400(self, client, partner_domain):
         resp = client.post('/api/embed/flag', json={
             'flag_reason': 'spam'
-        })
+        }, headers={'Origin': 'https://example.com'})
         assert resp.status_code == 400
         data = resp.get_json()
         assert data['error'] == 'missing_statement_id'
 
-    def test_invalid_reason_returns_400(self, client, statement):
+    def test_invalid_reason_returns_400(self, client, statement, partner_domain):
         resp = client.post('/api/embed/flag', json={
             'statement_id': statement.id,
             'flag_reason': 'invalid_reason',
             'embed_fingerprint': 'test-fp-12345678'
-        })
+        }, headers={'Origin': 'https://example.com'})
         assert resp.status_code == 400
         data = resp.get_json()
         assert data['error'] == 'invalid_reason'
 
-    def test_nonexistent_statement_returns_404(self, client):
+    def test_nonexistent_statement_returns_404(self, client, partner_domain):
         resp = client.post('/api/embed/flag', json={
             'statement_id': 99999,
             'flag_reason': 'spam',
             'embed_fingerprint': 'test-fp-12345678'
-        })
+        }, headers={'Origin': 'https://example.com'})
         assert resp.status_code == 404
 
-    def test_valid_flag_returns_201(self, client, statement):
+    def test_valid_flag_returns_201(self, client, statement, partner_domain):
         resp = client.post('/api/embed/flag', json={
             'statement_id': statement.id,
             'flag_reason': 'spam',
             'embed_fingerprint': 'test-fp-12345678'
-        })
+        }, headers={'Origin': 'https://example.com'})
         assert resp.status_code == 201
         data = resp.get_json()
         assert data['success'] is True
 
-    def test_duplicate_flag_returns_409(self, client, statement):
+    def test_duplicate_flag_returns_409(self, client, statement, partner_domain):
         # First flag succeeds
         client.post('/api/embed/flag', json={
             'statement_id': statement.id,
             'flag_reason': 'spam',
             'embed_fingerprint': 'test-fp-12345678'
-        })
+        }, headers={'Origin': 'https://example.com'})
         # Duplicate flag returns 409
         resp = client.post('/api/embed/flag', json={
             'statement_id': statement.id,
             'flag_reason': 'harassment',
             'embed_fingerprint': 'test-fp-12345678'
-        })
+        }, headers={'Origin': 'https://example.com'})
         assert resp.status_code == 409
         data = resp.get_json()
         assert data['error'] == 'already_flagged'
@@ -378,7 +380,7 @@ class TestFlagStatementFromEmbed:
             'flag_reason': 'spam',
             'ref': 'banned-ref',
             'embed_fingerprint': 'test-fp-12345678'
-        })
+        }, headers={'Origin': 'https://example.com'})
         assert resp.status_code == 403
 
 
@@ -396,6 +398,21 @@ class TestCreateDiscussion:
             'excerpt': 'Some article excerpt text here',
         })
         assert resp.status_code == 401
+
+    def test_browser_origin_rejected_for_create(self, client, app):
+        app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
+        resp = client.post(
+            '/api/partner/discussions',
+            json={
+                'article_url': 'https://example.com/article',
+                'title': 'Test Discussion',
+                'seed_statements': [{'content': 'This is a valid seed statement.', 'position': 'neutral'}],
+            },
+            headers={'X-API-Key': 'test-key', 'Origin': 'https://example.com'}
+        )
+        assert resp.status_code == 403
+        data = resp.get_json()
+        assert data['error'] == 'browser_not_allowed'
 
     def test_invalid_api_key_returns_401(self, client):
         resp = client.post(
@@ -451,6 +468,52 @@ class TestCreateDiscussion:
         assert resp.status_code == 400
         data = resp.get_json()
         assert data['error'] == 'missing_content'
+
+    def test_idempotency_key_retry_returns_same_discussion(self, client, app):
+        app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
+        payload = {
+            'article_url': 'https://example.com/idempotent-article',
+            'title': 'Idempotent Discussion',
+            'seed_statements': [{'content': 'This is a valid seed statement.', 'position': 'neutral'}],
+        }
+        headers = {'X-API-Key': 'test-key', 'Idempotency-Key': 'idem-123'}
+
+        first = client.post('/api/partner/discussions', json=payload, headers=headers)
+        second = client.post('/api/partner/discussions', json=payload, headers=headers)
+
+        assert first.status_code == 201
+        assert second.status_code == 201
+
+        first_data = first.get_json()
+        second_data = second.get_json()
+        assert first_data['discussion_id'] == second_data['discussion_id']
+
+    def test_idempotency_key_reuse_with_different_payload_returns_409(self, client, app):
+        app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
+        headers = {'X-API-Key': 'test-key', 'Idempotency-Key': 'idem-456'}
+
+        first = client.post(
+            '/api/partner/discussions',
+            json={
+                'article_url': 'https://example.com/a',
+                'title': 'First',
+                'seed_statements': [{'content': 'This is a valid seed statement.', 'position': 'neutral'}],
+            },
+            headers=headers
+        )
+        second = client.post(
+            '/api/partner/discussions',
+            json={
+                'article_url': 'https://example.com/b',
+                'title': 'Second',
+                'seed_statements': [{'content': 'This is a valid seed statement.', 'position': 'neutral'}],
+            },
+            headers=headers
+        )
+
+        assert first.status_code == 201
+        assert second.status_code == 409
+        assert second.get_json()['error'] == 'idempotency_key_reused'
 
 
 # ---------------------------------------------------------------------------

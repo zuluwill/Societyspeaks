@@ -6,6 +6,8 @@ All endpoints return JSON and use standardized error responses.
 """
 import re
 import html
+import json
+import hashlib
 from flask import Blueprint, request, jsonify, current_app
 from app import db, limiter, cache, csrf
 from flask_login import current_user
@@ -298,6 +300,24 @@ def _validate_api_key():
     return False, None, None, None
 
 
+def _normalize_idempotency_key(raw_key):
+    if not raw_key or not isinstance(raw_key, str):
+        return None
+    cleaned = raw_key.strip()
+    if not cleaned:
+        return None
+    return cleaned[:128]
+
+
+def _idempotency_cache_key(partner_id, key_env, idempotency_key):
+    return f"idempotency:create:{key_env}:{partner_id}:{idempotency_key}"
+
+
+def _request_payload_hash(data):
+    payload = json.dumps(data, sort_keys=True, separators=(',', ':'))
+    return hashlib.sha256(payload.encode('utf-8')).hexdigest()
+
+
 @partner_bp.route('/partner/discussions', methods=['POST'])
 @limiter.limit("30 per hour", key_func=_get_api_key_rate_limit_key)
 def create_discussion():
@@ -339,6 +359,16 @@ def create_discussion():
     from app.lib.url_normalizer import normalize_url
     from app.trending.seed_generator import generate_seed_statements_from_content
     from app.models import generate_slug
+
+    # Enforce server-to-server usage for API key protected writes.
+    # Browser requests with Origin should not send secret API keys.
+    request_origin = request.headers.get('Origin')
+    if request_origin:
+        return api_error(
+            'browser_not_allowed',
+            'Create Discussion must be called server-to-server (no browser Origin header).',
+            403
+        )
 
     # Validate API key
     is_valid, partner_id, key_env, partner = _validate_api_key()
@@ -401,6 +431,23 @@ def create_discussion():
             'Request body must be valid JSON.',
             400
         )
+    if not isinstance(data, dict):
+        return api_error('invalid_request', 'Request body must be a JSON object.', 400)
+
+    idempotency_key = _normalize_idempotency_key(request.headers.get('Idempotency-Key'))
+    request_hash = _request_payload_hash(data)
+    idempotency_cache_key = None
+    if idempotency_key:
+        idempotency_cache_key = _idempotency_cache_key(partner_id, key_env, idempotency_key)
+        prior = cache.get(idempotency_cache_key)
+        if prior:
+            if prior.get('request_hash') != request_hash:
+                return api_error(
+                    'idempotency_key_reused',
+                    'This Idempotency-Key was already used with a different request payload.',
+                    409
+                )
+            return jsonify(prior.get('response', {})), int(prior.get('status_code', 201))
 
     # Validate required fields
     article_url = data.get('article_url')
@@ -578,6 +625,17 @@ def create_discussion():
     })
     record_partner_usage(partner_id, key_env, 'create')
 
+    if idempotency_cache_key:
+        cache.set(
+            idempotency_cache_key,
+            {
+                'request_hash': request_hash,
+                'response': response_data,
+                'status_code': 201
+            },
+            timeout=86400
+        )
+
     return jsonify(response_data), 201
 
 
@@ -721,7 +779,9 @@ def flag_statement_from_embed():
     """
     # Validate request origin against partner allowlist
     origin = request.headers.get('Origin')
-    if origin and not is_partner_origin_allowed(origin):
+    if not origin:
+        return api_error('origin_required', 'Origin header is required for embed flagging.', 403)
+    if not is_partner_origin_allowed(origin):
         current_app.logger.warning(f"Embed flag rejected: origin {origin} not in allowlist")
         return api_error('origin_not_allowed', 'Origin not allowed.', 403)
 

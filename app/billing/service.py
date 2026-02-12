@@ -267,6 +267,10 @@ def reconcile_partner_subscriptions():
             logger.info(f"Partner reconciliation: {partner.slug} subscription {status}, reverting tier to free")
             partner.tier = 'free'
             updated += 1
+        if status in ('canceled', 'unpaid', 'incomplete_expired') and partner.stripe_subscription_id is not None:
+            logger.info(f"Partner reconciliation: clearing terminal subscription id for {partner.slug}")
+            partner.stripe_subscription_id = None
+            updated += 1
     if updated:
         db.session.commit()
     return updated
