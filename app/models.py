@@ -2726,6 +2726,12 @@ class DailyQuestionResponse(db.Model):
     # Track if vote was submitted via one-click email (no reason prompt shown initially)
     voted_via_email = db.Column(db.Boolean, default=False)
 
+    # Optional structured metadata for richer analytics
+    confidence_level = db.Column(db.String(10), nullable=True)  # low | medium | high
+    reason_tag = db.Column(db.String(30), nullable=True)  # cost | fairness | evidence | ...
+    context_expanded = db.Column(db.Boolean, default=False, nullable=False)
+    source_link_click_count = db.Column(db.SmallInteger, default=0, nullable=False)
+
     # Track which question the email was about (for analytics on vote mismatch patterns)
     # If user clicks old email link, this will differ from daily_question_id
     email_question_id = db.Column(db.Integer, db.ForeignKey('daily_question.id'), nullable=True)
@@ -2757,6 +2763,29 @@ class DailyQuestionResponse(db.Model):
         if reason and len(reason) > 500:
             raise ValueError("Reason must not exceed 500 characters")
         return reason
+
+    @validates('confidence_level')
+    def validate_confidence_level(self, key, confidence_level):
+        """Validate optional confidence signal."""
+        if confidence_level is None:
+            return None
+        valid = {'low', 'medium', 'high'}
+        if confidence_level not in valid:
+            raise ValueError("confidence_level must be low, medium, or high")
+        return confidence_level
+
+    @validates('reason_tag')
+    def validate_reason_tag(self, key, reason_tag):
+        """Validate optional structured reason tag."""
+        if reason_tag is None:
+            return None
+        valid = {
+            'cost', 'fairness', 'evidence', 'feasibility',
+            'rights', 'safety', 'trust', 'long_term_impact', 'other'
+        }
+        if reason_tag not in valid:
+            raise ValueError("Invalid reason_tag")
+        return reason_tag
     
     @property
     def vote_emoji(self):
@@ -2780,6 +2809,10 @@ class DailyQuestionResponse(db.Model):
             'reason': self.reason,
             'reason_visibility': self.reason_visibility,
             'voted_via_email': self.voted_via_email,
+            'confidence_level': self.confidence_level,
+            'reason_tag': self.reason_tag,
+            'context_expanded': self.context_expanded,
+            'source_link_click_count': self.source_link_click_count,
             'created_at': self.created_at.isoformat()
         }
     

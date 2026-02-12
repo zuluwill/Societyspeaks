@@ -35,6 +35,9 @@ import math
 
 AVOID_REPEAT_DAYS = 30
 MIN_CIVIC_SCORE = 0.5
+MAX_QUESTION_LENGTH = 500
+MAX_CONTEXT_LENGTH = 400
+MAX_WHY_LENGTH = 300
 
 # Engagement scoring weights
 WEIGHT_CIVIC = 0.25        # Civic importance
@@ -55,6 +58,94 @@ PRIORITY_TOPICS = {
     'Culture': 0.8,       # Lower priority - entertainment focused
     'Sport': 0.7,         # Lower priority
 }
+
+def _trim_text(text, max_length):
+    """Trim text to a max length with a word-boundary ellipsis."""
+    if not text:
+        return None
+    clean = " ".join(str(text).split())
+    if len(clean) <= max_length:
+        return clean
+    cutoff = clean[: max_length - 1].rstrip()
+    last_space = cutoff.rfind(" ")
+    if last_space > int(max_length * 0.6):
+        cutoff = cutoff[:last_space]
+    return f"{cutoff}..."
+
+
+def _extract_seed_content(seed_item):
+    """Normalize seed statement payloads into plain text."""
+    if isinstance(seed_item, dict):
+        return (seed_item.get('content') or '').strip()
+    return str(seed_item or '').strip()
+
+
+def _build_discussion_context(statement, discussion):
+    """Build concise pre-vote context for discussion-sourced questions."""
+    statement_text = getattr(statement, 'content', '') or ''
+    desc = (discussion.description or '').strip() if discussion else ''
+    title = (discussion.title or '').strip() if discussion else ''
+
+    if desc:
+        return _trim_text(desc, MAX_CONTEXT_LENGTH)
+
+    # Fallback to discussion title with a short lead-in for clarity.
+    if title and title.lower() not in statement_text.lower():
+        return _trim_text(f"From the discussion: {title}", MAX_CONTEXT_LENGTH)
+
+    return _trim_text(title, MAX_CONTEXT_LENGTH)
+
+
+def _build_statement_context(statement):
+    """Build context for standalone statement fallback questions."""
+    discussion = getattr(statement, 'discussion', None)
+    if not discussion:
+        return None
+    return _build_discussion_context(statement, discussion)
+
+
+def _build_trending_context(topic):
+    """Build concise context for trending-topic sourced questions."""
+    description = (topic.description or '').strip() if topic else ''
+    title = (topic.title or '').strip() if topic else ''
+
+    if description:
+        return _trim_text(description, MAX_CONTEXT_LENGTH)
+
+    if title:
+        return _trim_text(f"Topic context: {title}", MAX_CONTEXT_LENGTH)
+    return None
+
+
+def _build_why_this_question(source_type, topic_category=None, source=None):
+    """Build a short relevance explanation for why a question was selected."""
+    topic = (topic_category or '').strip()
+    if source_type == 'discussion':
+        base = "This statement comes from an active discussion and helps compare public views on a concrete claim."
+    elif source_type == 'trending':
+        base = "This statement is tied to a current news topic with high civic relevance and multiple viewpoints."
+    else:
+        base = "This statement was selected for clear framing and strong potential to surface meaningful disagreement."
+
+    if topic:
+        base = f"{base} Category: {topic}."
+
+    # Optional source freshness cue where possible
+    if source and hasattr(source, 'created_at') and source.created_at:
+        age_days = (datetime.utcnow() - source.created_at).days
+        if age_days <= 2:
+            base += " It reflects a recent development."
+
+    return _trim_text(base, MAX_WHY_LENGTH)
+
+
+def _ensure_question_text(question_text, fallback_text):
+    """Guarantee non-empty question text for DB constraints."""
+    normalized = _trim_text(question_text, MAX_QUESTION_LENGTH)
+    if normalized:
+        return normalized
+    return _trim_text(fallback_text, MAX_QUESTION_LENGTH)
+
 
 def get_topic_priority_boost(topic):
     """Get priority multiplier for a topic category."""
@@ -246,13 +337,16 @@ def calculate_topic_engagement_score(topic):
 
     # 4. Controversy potential from seed statements
     if topic.seed_statements:
-        controversy_scores = [calculate_controversy_potential(s) for s in topic.seed_statements[:3]]
+        controversy_scores = [
+            calculate_controversy_potential(_extract_seed_content(s))
+            for s in topic.seed_statements[:3]
+        ]
         scores['controversy'] = sum(controversy_scores) / len(controversy_scores)
     else:
         scores['controversy'] = 0.5
 
     # 5. Historical performance
-    scores['historical'] = get_historical_performance(topic.topic)
+    scores['historical'] = get_historical_performance(topic.primary_topic)
 
     # Weighted combination
     total_score = (
@@ -264,7 +358,7 @@ def calculate_topic_engagement_score(topic):
     )
     
     # Apply topic priority boost (Politics, Geopolitics get priority over Culture, etc.)
-    topic_boost = get_topic_priority_boost(topic.topic if hasattr(topic, 'topic') else None)
+    topic_boost = get_topic_priority_boost(topic.primary_topic if hasattr(topic, 'primary_topic') else None)
     total_score *= topic_boost
     scores['topic_boost'] = topic_boost
 
@@ -432,8 +526,16 @@ def select_next_question_source():
                 'source_type': 'discussion',
                 'source': selected['discussion'],
                 'statement': selected['statement'],
-                'question_text': selected['statement'].content,
-                'context': selected['discussion'].title,
+                'question_text': _ensure_question_text(
+                    selected['statement'].content,
+                    selected['discussion'].title
+                ),
+                'context': _build_discussion_context(selected['statement'], selected['discussion']),
+                'why_this_question': _build_why_this_question(
+                    source_type='discussion',
+                    topic_category=selected['discussion'].topic,
+                    source=selected['discussion']
+                ),
                 'topic_category': selected['discussion'].topic,
                 'discussion_slug': selected['discussion'].slug,
                 'engagement_score': selected['score']
@@ -466,11 +568,12 @@ def select_next_question_source():
                 topic = selected['topic']
                 # Also score the seed statements and pick best one
                 seed_scores = [
-                    (s, calculate_controversy_potential(s))
+                    (s, calculate_controversy_potential(_extract_seed_content(s)))
                     for s in topic.seed_statements[:5]
                 ]
                 seed_scores.sort(key=lambda x: x[1], reverse=True)
                 best_statement = seed_scores[0][0] if seed_scores else topic.seed_statements[0]
+                best_statement_text = _extract_seed_content(best_statement)
 
                 current_app.logger.info(
                     f"Selected trending topic with engagement score {selected['score']:.2f}"
@@ -479,9 +582,17 @@ def select_next_question_source():
                     'source_type': 'trending',
                     'source': topic,
                     'statement': None,
-                    'question_text': best_statement,
-                    'context': topic.summary[:300] if topic.summary else None,
-                    'topic_category': topic.topic,
+                    'question_text': _ensure_question_text(
+                        best_statement_text,
+                        f"Should we support this position on {topic.title}?"
+                    ),
+                    'context': _build_trending_context(topic),
+                    'why_this_question': _build_why_this_question(
+                        source_type='trending',
+                        topic_category=topic.primary_topic,
+                        source=topic
+                    ),
+                    'topic_category': topic.primary_topic,
                     'discussion_slug': None,
                     'engagement_score': selected['score']
                 }
@@ -510,8 +621,16 @@ def select_next_question_source():
                 'source_type': 'statement',
                 'source': stmt,
                 'statement': stmt,
-                'question_text': stmt.content,
-                'context': stmt.discussion.title if stmt.discussion else None,
+                'question_text': _ensure_question_text(
+                    stmt.content,
+                    stmt.discussion.title if stmt.discussion else "Should this statement be supported?"
+                ),
+                'context': _build_statement_context(stmt),
+                'why_this_question': _build_why_this_question(
+                    source_type='statement',
+                    topic_category=stmt.discussion.topic if stmt.discussion else None,
+                    source=stmt
+                ),
                 'topic_category': stmt.discussion.topic if stmt.discussion else None,
                 'discussion_slug': stmt.discussion.slug if stmt.discussion else None,
                 'engagement_score': selected['score']
@@ -561,6 +680,7 @@ def create_daily_question_from_source(question_date, source_info, created_by_id=
                 question_number=next_number,
                 question_text=source_info['question_text'],
                 context=source_info.get('context'),
+                why_this_question=source_info.get('why_this_question'),
                 topic_category=source_info.get('topic_category'),
                 source_type=source_type,
                 source_discussion_id=source_discussion_id,

@@ -20,6 +20,71 @@ from app.models import TrendingTopic
 logger = logging.getLogger(__name__)
 
 
+def _trim_text(text: Optional[str], max_length: int) -> str:
+    """Trim text safely at a word boundary."""
+    if not text:
+        return ""
+    clean = " ".join(str(text).split())
+    if len(clean) <= max_length:
+        return clean
+    cutoff = clean[: max_length - 1].rstrip()
+    last_space = cutoff.rfind(" ")
+    if last_space > int(max_length * 0.6):
+        cutoff = cutoff[:last_space]
+    return f"{cutoff}..."
+
+
+def _build_topic_context(topic: TrendingTopic) -> str:
+    """Build richer topic context with titles + short article summaries."""
+    lines = []
+    if topic.description:
+        lines.append(f"Topic summary:\n{_trim_text(topic.description, 600)}")
+
+    article_lines = []
+    for association in topic.articles.limit(5).all():
+        article = association.article
+        if not article:
+            continue
+        title = _trim_text(article.title, 180)
+        source_name = article.source.name if getattr(article, 'source', None) else None
+        summary = _trim_text(article.summary, 280) if article.summary else ""
+
+        parts = [f"- {title}"]
+        if source_name:
+            parts.append(f"({source_name})")
+        if summary:
+            parts.append(f": {summary}")
+        article_lines.append(" ".join(parts))
+
+    if article_lines:
+        lines.append("Related reporting:\n" + "\n".join(article_lines))
+
+    return "\n\n".join(lines)
+
+
+def _looks_specific_enough(content: str) -> bool:
+    """
+    Quality gate to reduce vague or contextless statements.
+    Ensures statements can stand alone in daily voting UX.
+    """
+    text = (content or "").strip()
+    if len(text) < 40:
+        return False
+
+    words = [w for w in text.split() if w.strip()]
+    if len(words) < 8:
+        return False
+
+    lower = text.lower()
+    vague_starts = ("this ", "these ", "it ", "they ", "there ")
+    if lower.startswith(vague_starts):
+        return False
+
+    has_alpha = any(ch.isalpha() for ch in text)
+    has_claim_structure = any(token in lower for token in (" should ", " must ", " because ", " ought ", " needs to ", " cannot ", " will "))
+    return has_alpha and has_claim_structure
+
+
 def generate_seed_statements(
     topic: Optional[TrendingTopic] = None,
     title: Optional[str] = None,
@@ -88,8 +153,7 @@ def _build_prompt(
     if topic:
         # Extract from TrendingTopic
         topic_title = topic.title
-        article_titles = [ta.article.title for ta in topic.articles if ta.article][:5]
-        context_section = f"Related news:\n{chr(10).join(f'- {t}' for t in article_titles)}"
+        context_section = _build_topic_context(topic)
     else:
         # Use raw content
         topic_title = title
@@ -112,6 +176,8 @@ Requirements:
 - Statements should be substantive and invite thoughtful responses
 - Avoid strawman arguments - represent each position charitably
 - Include at least one statement from each perspective
+- Each statement must be understandable on its own (avoid unclear pronouns like "this/it/they" unless the subject is explicitly named)
+- Prefer concrete actors, policies, or outcomes over abstract wording
 
 Return as JSON array:
 [
@@ -141,15 +207,25 @@ def _parse_and_validate_statements(response_text: str, count: int) -> List[Dict]
     statements = json.loads(content)
     valid_positions = ['pro', 'con', 'neutral']
     validated = []
+    fallback_validated = []
     for stmt in statements:
         if isinstance(stmt, dict) and 'content' in stmt:
+            content_text = " ".join(str(stmt['content']).split())
             position = stmt.get('position', 'neutral').lower()
             if position not in valid_positions:
                 position = 'neutral'
-            validated.append({
-                'content': stmt['content'][:500],
+            normalized = {
+                'content': content_text[:500],
                 'position': position
-            })
+            }
+            fallback_validated.append(normalized)
+            if _looks_specific_enough(content_text):
+                validated.append(normalized)
+
+    # Avoid empty outputs when strict filters are too aggressive.
+    if not validated:
+        validated = fallback_validated
+
     return validated[:count]
 
 

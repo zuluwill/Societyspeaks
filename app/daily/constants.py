@@ -81,3 +81,27 @@ VALID_VISIBILITY_OPTIONS = [
 
 # Default visibility for email votes
 DEFAULT_EMAIL_VOTE_VISIBILITY = 'public_anonymous'
+
+# =============================================================================
+# REASON TAGS & CONFIDENCE SIGNALS
+# =============================================================================
+
+# Optional structured reason tags to make response analysis more actionable.
+VALID_REASON_TAGS = [
+    'cost',
+    'fairness',
+    'evidence',
+    'feasibility',
+    'rights',
+    'safety',
+    'trust',
+    'long_term_impact',
+    'other'
+]
+
+# Optional confidence level for vote quality segmentation.
+VALID_CONFIDENCE_LEVELS = [
+    'low',
+    'medium',
+    'high'
+]

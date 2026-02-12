@@ -102,6 +102,16 @@
                             </tr>
                             {% endif %}
 
+                            {% if q_data.question.why_this_question and q_data.question.why_this_question.strip() %}
+                            <tr>
+                                <td style="padding-bottom: 14px;">
+                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 12px; line-height: 1.5; color: #64748b; margin: 0;">
+                                        <strong>Why this question:</strong> {{ q_data.question.why_this_question }}
+                                    </p>
+                                </td>
+                            </tr>
+                            {% endif %}
+
                             <!-- Vote Buttons (Primary CTA) -->
                             <tr>
                                 <td align="center" style="padding-bottom: 12px;">

@@ -25,6 +25,39 @@
 {% set btn_type = button_type | default('submit') %}
 
 <div id="{{ prefix }}reasonSection" class="{% if not initially_visible %}hidden{% endif %} mt-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+        <div>
+            <label for="{{ prefix }}confidence_level" class="block text-sm font-medium text-gray-700 mb-1">
+                How confident are you? (optional)
+            </label>
+            <select id="{{ prefix }}confidence_level" name="confidence_level"
+                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                <option value="">Select confidence</option>
+                <option value="low">Low - still exploring</option>
+                <option value="medium">Medium - tentative view</option>
+                <option value="high">High - strong view</option>
+            </select>
+        </div>
+        <div>
+            <label for="{{ prefix }}reason_tag" class="block text-sm font-medium text-gray-700 mb-1">
+                Main reason category (optional)
+            </label>
+            <select id="{{ prefix }}reason_tag" name="reason_tag"
+                    class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                <option value="">Select category</option>
+                <option value="evidence">Evidence</option>
+                <option value="fairness">Fairness</option>
+                <option value="cost">Cost</option>
+                <option value="feasibility">Feasibility</option>
+                <option value="rights">Rights</option>
+                <option value="safety">Safety</option>
+                <option value="trust">Trust</option>
+                <option value="long_term_impact">Long-term impact</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+    </div>
+
     <label for="{{ prefix }}reason" class="block text-sm font-medium text-gray-700 mb-2">
         Add a short reason (optional)
     </label>

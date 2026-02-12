@@ -18,6 +18,16 @@
             <div class="bg-gray-50 rounded-lg p-4 mb-6">
                 <p class="text-sm text-gray-500 mb-2 text-center">Daily Question #{{ question.question_number }}</p>
                 <p class="text-gray-900 font-medium text-center">{{ question.question_text }}</p>
+                {% if question.context %}
+                <p class="text-xs text-gray-600 mt-3 text-left">
+                    <span class="font-semibold">Context:</span> {{ question.context[:220] }}{% if question.context|length > 220 %}...{% endif %}
+                </p>
+                {% endif %}
+                {% if question.why_this_question %}
+                <p class="text-xs text-gray-600 mt-2 text-left">
+                    <span class="font-semibold">Why this question:</span> {{ question.why_this_question }}
+                </p>
+                {% endif %}
             </div>
             
             <p class="text-gray-600 mb-6 text-center">
@@ -27,6 +37,8 @@
             {# PRIMARY ACTION: Quick submit without reason #}
             <form id="quickVoteForm" method="POST" action="{{ url_for('daily.one_click_vote', token=token, vote_choice=vote_choice, source=source) if source else url_for('daily.one_click_vote', token=token, vote_choice=vote_choice) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="context_expanded" value="0">
+                <input type="hidden" name="source_link_click_count" value="0">
                 <button type="submit" 
                         class="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 flex items-center justify-center text-lg">
                     <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,6 +62,40 @@
                 <div id="reasonFormContainer" class="hidden mt-4">
                     <form id="reasonVoteForm" method="POST" action="{{ url_for('daily.one_click_vote', token=token, vote_choice=vote_choice, source=source) if source else url_for('daily.one_click_vote', token=token, vote_choice=vote_choice) }}">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="context_expanded" value="0">
+                        <input type="hidden" name="source_link_click_count" value="0">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                            <div>
+                                <label for="confidence_level" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Confidence (optional)
+                                </label>
+                                <select id="confidence_level" name="confidence_level"
+                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                    <option value="">Select confidence</option>
+                                    <option value="low">Low</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="reason_tag" class="block text-sm font-medium text-gray-700 mb-1">
+                                    Main reason (optional)
+                                </label>
+                                <select id="reason_tag" name="reason_tag"
+                                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm">
+                                    <option value="">Select category</option>
+                                    <option value="evidence">Evidence</option>
+                                    <option value="fairness">Fairness</option>
+                                    <option value="cost">Cost</option>
+                                    <option value="feasibility">Feasibility</option>
+                                    <option value="rights">Rights</option>
+                                    <option value="safety">Safety</option>
+                                    <option value="trust">Trust</option>
+                                    <option value="long_term_impact">Long-term impact</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
                         <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
                             Share why you feel this way
                         </label>

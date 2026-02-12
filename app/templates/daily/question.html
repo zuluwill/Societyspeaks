@@ -59,10 +59,35 @@
                 "{{ question.question_text }}"
             </h1>
 
-            {% if question.context %}
-            <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                <p class="text-sm text-gray-500 mb-1">From the discussion:</p>
+            {% if question.context or question.why_this_question or (source_articles and source_articles|length > 0) %}
+            <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-100">
+                <p class="text-sm text-gray-500 mb-2 font-semibold">Context in 15 seconds</p>
+                {% if question.context %}
                 <p class="text-gray-800 font-medium">{{ question.context }}</p>
+                {% endif %}
+
+                {% if question.why_this_question %}
+                <p class="text-sm text-gray-600 mt-2">
+                    <span class="font-semibold">Why this question:</span> {{ question.why_this_question }}
+                </p>
+                {% endif %}
+
+                {% if source_articles and source_articles|length > 0 %}
+                <details id="preVoteContextDetails" class="mt-3">
+                    <summary class="cursor-pointer text-sm text-blue-700 font-medium hover:text-blue-900">
+                        View source links
+                    </summary>
+                    <div class="mt-2 space-y-1">
+                        {% for article in source_articles %}
+                        <a href="{{ article.url }}" target="_blank" rel="noopener noreferrer"
+                           class="block text-sm text-blue-600 hover:text-blue-800 truncate context-source-link">
+                            {{ article.title }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </details>
+                {% endif %}
+
                 {% if question.source_discussion %}
                 <a href="{{ url_for('discussions.view_discussion', discussion_id=question.source_discussion.id, slug=question.source_discussion.slug) }}" 
                    class="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm mt-3 font-medium">
@@ -75,16 +100,10 @@
             </div>
             {% endif %}
 
-            {% if question.why_this_question %}
-            <div class="bg-blue-50 rounded-lg p-4 mb-8">
-                <p class="text-sm text-blue-800">
-                    <span class="font-semibold">Why this question?</span> {{ question.why_this_question }}
-                </p>
-            </div>
-            {% endif %}
-
             <form id="voteForm" action="{{ url_for('daily.vote') }}" method="POST" class="space-y-6">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="context_expanded" name="context_expanded" value="0">
+                <input type="hidden" id="source_link_click_count" name="source_link_click_count" value="0">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" role="group" aria-label="Vote options">
                     <button type="button" value="agree"
                             aria-label="Agree with this statement"
@@ -117,7 +136,7 @@
         <div class="text-center text-sm space-y-2">
             <p class="text-gray-500">Takes less than 2 minutes. Your response helps shape the signal.</p>
             <p class="text-gray-400 text-xs">
-                Share your first take — we'll show sources and research tools after you vote. Not sure yet? That's a valid answer too.
+                Share your first take, then explore the full discussion and research tools after voting. Not sure yet? That's a valid answer too.
             </p>
         </div>
 
@@ -155,6 +174,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const charCount = document.getElementById('charCount');
     const form = document.getElementById('voteForm');
     const submitBtn = document.getElementById('submitVoteBtn');
+    const contextDetails = document.getElementById('preVoteContextDetails');
+    const sourceLinks = document.querySelectorAll('.context-source-link');
+    const contextExpandedInput = document.getElementById('context_expanded');
+    const sourceLinkClickCountInput = document.getElementById('source_link_click_count');
+    let sourceLinkClicks = 0;
     let selectedVote = null;
 
     // Ring color map — matches canonical vote button colors
@@ -180,6 +204,23 @@ document.addEventListener('DOMContentLoaded', function() {
             reasonTextarea.focus();
         });
     });
+
+    if (contextDetails && contextExpandedInput) {
+        contextDetails.addEventListener('toggle', function() {
+            if (contextDetails.open) {
+                contextExpandedInput.value = '1';
+            }
+        });
+    }
+
+    if (sourceLinks.length && sourceLinkClickCountInput) {
+        sourceLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                sourceLinkClicks += 1;
+                sourceLinkClickCountInput.value = String(sourceLinkClicks);
+            });
+        });
+    }
 
     if (submitBtn) {
         submitBtn.addEventListener('click', function(e) {

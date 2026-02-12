@@ -5,7 +5,8 @@ from app.daily import daily_bp
 from app.daily.constants import (
     VOTE_MAP, VOTE_TO_POSITION, VOTE_LABELS, VOTE_EMOJIS,
     VOTE_GRACE_PERIOD_DAYS, VALID_UNSUBSCRIBE_REASONS, 
-    VALID_VISIBILITY_OPTIONS, DEFAULT_EMAIL_VOTE_VISIBILITY
+    VALID_VISIBILITY_OPTIONS, DEFAULT_EMAIL_VOTE_VISIBILITY,
+    VALID_REASON_TAGS, VALID_CONFIDENCE_LEVELS
 )
 from app import db, limiter
 from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionResponseFlag, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant
@@ -16,6 +17,63 @@ import secrets
 
 DAILY_CLIENT_COOKIE_NAME = 'daily_client_id'
 DAILY_CLIENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
+
+
+def _parse_bool(value, default=False):
+    """Parse common truthy values from forms/JSON safely."""
+    if value is None:
+        return default
+    if isinstance(value, bool):
+        return value
+    return str(value).strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+def _parse_int(value, default=0, min_value=0, max_value=50):
+    """Parse bounded integer values from forms/JSON safely."""
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    return max(min_value, min(max_value, parsed))
+
+
+def _normalize_reason_tag(value):
+    """Normalize optional reason tag."""
+    if not value:
+        return None
+    tag = str(value).strip().lower()
+    return tag if tag in VALID_REASON_TAGS else None
+
+
+def _normalize_confidence_level(value):
+    """Normalize optional confidence level."""
+    if not value:
+        return None
+    level = str(value).strip().lower()
+    return level if level in VALID_CONFIDENCE_LEVELS else None
+
+
+def _track_context_engagement(question, response, source='web'):
+    """Track pre-vote context engagement telemetry (best-effort)."""
+    try:
+        import posthog
+        if not posthog or not getattr(posthog, 'project_api_key', None):
+            return
+
+        distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint() or 'anonymous'
+        posthog.capture(
+            distinct_id=distinct_id,
+            event='daily_question_context_engaged',
+            properties={
+                'question_id': question.id,
+                'question_number': question.question_number,
+                'source': source,
+                'context_expanded': bool(response.context_expanded),
+                'source_link_click_count': int(response.source_link_click_count or 0),
+            }
+        )
+    except Exception as e:
+        current_app.logger.warning(f"PostHog context tracking error: {e}")
 
 
 def get_source_articles(question, limit=5):
@@ -325,8 +383,10 @@ def today():
                              reasons_stats=reasons_stats,
                              streak_data=streak_data)
     else:
+        source_articles = get_source_articles(question, limit=3)
         return render_template('daily/question.html',
-                             question=question)
+                             question=question,
+                             source_articles=source_articles)
 
 
 @daily_bp.route('/daily/<date_str>')
@@ -369,8 +429,10 @@ def by_date(date_str):
                              reasons_stats=reasons_stats,
                              streak_data=streak_data)
     else:
+        source_articles = get_source_articles(question, limit=3)
         return render_template('daily/question.html',
-                             question=question)
+                             question=question,
+                             source_articles=source_articles)
 
 
 @daily_bp.route('/daily/<date_str>/comments')
@@ -1216,6 +1278,10 @@ def weekly_batch_vote():
     question_id = data.get('question_id')
     vote_choice = data.get('vote')
     reason = data.get('reason', '').strip() if data.get('reason') else None
+    reason_tag = _normalize_reason_tag(data.get('reason_tag'))
+    confidence_level = _normalize_confidence_level(data.get('confidence_level'))
+    context_expanded = _parse_bool(data.get('context_expanded'), default=False)
+    source_link_click_count = _parse_int(data.get('source_link_click_count'), default=0, min_value=0, max_value=20)
 
     if not question_id or not vote_choice:
         return jsonify({'error': 'Missing question_id or vote'}), 400
@@ -1244,8 +1310,12 @@ def weekly_batch_vote():
             session_fingerprint=fingerprint if not current_user.is_authenticated else None,
             vote=new_vote,
             reason=reason[:500] if reason else None,
+            reason_tag=reason_tag,
+            confidence_level=confidence_level,
             reason_visibility=DEFAULT_EMAIL_VOTE_VISIBILITY if reason else None,
-            voted_via_email=True  # Mark as from weekly digest
+            voted_via_email=True,  # Mark as from weekly digest
+            context_expanded=context_expanded,
+            source_link_click_count=source_link_click_count
         )
         db.session.add(response)
 
@@ -1256,6 +1326,8 @@ def weekly_batch_vote():
         subscriber.update_participation_streak(has_reason=bool(reason))
 
         db.session.commit()
+
+        _track_context_engagement(question, response, source='weekly_batch')
 
         current_app.logger.info(
             f"Weekly batch vote recorded: {vote_choice} for question #{question.id} "
@@ -1316,7 +1388,13 @@ def weekly_batch_vote():
                     'source_name': article.source.name if hasattr(article, 'source') and article.source else 'Unknown'
                 }
                 for article in source_articles[:3]
-            ]
+            ],
+            'captured_metadata': {
+                'confidence_level': confidence_level,
+                'reason_tag': reason_tag,
+                'context_expanded': context_expanded,
+                'source_link_click_count': source_link_click_count
+            }
         })
 
     except Exception as e:
@@ -1431,6 +1509,10 @@ def one_click_vote(token, vote_choice):
         # Get optional reason from form (same as web flow for consistent experience)
         reason = request.form.get('reason', '').strip()
         reason_visibility = request.form.get('reason_visibility', DEFAULT_EMAIL_VOTE_VISIBILITY)
+        reason_tag = _normalize_reason_tag(request.form.get('reason_tag'))
+        confidence_level = _normalize_confidence_level(request.form.get('confidence_level'))
+        context_expanded = _parse_bool(request.form.get('context_expanded'), default=False)
+        source_link_click_count = _parse_int(request.form.get('source_link_click_count'), default=0, min_value=0, max_value=20)
 
         # Validate visibility using constants
         if reason_visibility not in VALID_VISIBILITY_OPTIONS:
@@ -1448,8 +1530,12 @@ def one_click_vote(token, vote_choice):
             session_fingerprint=fingerprint if not current_user.is_authenticated else None,
             vote=new_vote,
             reason=reason if reason else None,
+            reason_tag=reason_tag,
+            confidence_level=confidence_level,
             reason_visibility=reason_visibility if reason else DEFAULT_EMAIL_VOTE_VISIBILITY,
-            voted_via_email=True
+            voted_via_email=True,
+            context_expanded=context_expanded,
+            source_link_click_count=source_link_click_count
         )
         db.session.add(response)
 
@@ -1473,6 +1559,8 @@ def one_click_vote(token, vote_choice):
 
         db.session.commit()
 
+        _track_context_engagement(question, response, source='email_one_click')
+
         try:
             import posthog
             if posthog and getattr(posthog, 'project_api_key', None):
@@ -1485,6 +1573,10 @@ def one_click_vote(token, vote_choice):
                         'question_number': question.question_number,
                         'vote': vote_choice,
                         'has_reason': bool(reason),
+                        'reason_tag': reason_tag,
+                        'confidence_level': confidence_level,
+                        'context_expanded': context_expanded,
+                        'source_link_click_count': source_link_click_count,
                         'is_authenticated': current_user.is_authenticated,
                         'voted_via_email': True,
                         'source': request.args.get('source', 'email'),
@@ -1552,6 +1644,10 @@ def vote():
         return redirect(url_for('daily.today'))
     reason = request.form.get('reason', '').strip()
     reason_visibility = request.form.get('reason_visibility', DEFAULT_EMAIL_VOTE_VISIBILITY)
+    reason_tag = _normalize_reason_tag(request.form.get('reason_tag'))
+    confidence_level = _normalize_confidence_level(request.form.get('confidence_level'))
+    context_expanded = _parse_bool(request.form.get('context_expanded'), default=False)
+    source_link_click_count = _parse_int(request.form.get('source_link_click_count'), default=0, min_value=0, max_value=20)
     
     # Validate visibility using constants
     if reason_visibility not in VALID_VISIBILITY_OPTIONS:
@@ -1579,8 +1675,12 @@ def vote():
             session_fingerprint=fingerprint if not current_user.is_authenticated else None,
             vote=new_vote,
             reason=reason if reason else None,
+            reason_tag=reason_tag,
+            confidence_level=confidence_level,
             reason_visibility=reason_visibility if reason else 'public_anonymous',
-            voted_via_email=False
+            voted_via_email=False,
+            context_expanded=context_expanded,
+            source_link_click_count=source_link_click_count
         )
         db.session.add(response)
         
@@ -1626,6 +1726,8 @@ def vote():
         
         db.session.commit()
 
+        _track_context_engagement(question, response, source='daily_web')
+
         try:
             import posthog
             if posthog and getattr(posthog, 'project_api_key', None):
@@ -1638,6 +1740,10 @@ def vote():
                         'question_number': question.question_number,
                         'vote': vote_value,
                         'has_reason': bool(reason),
+                        'reason_tag': reason_tag,
+                        'confidence_level': confidence_level,
+                        'context_expanded': context_expanded,
+                        'source_link_click_count': source_link_click_count,
                         'is_authenticated': current_user.is_authenticated,
                         'voted_via_email': False,
                     }

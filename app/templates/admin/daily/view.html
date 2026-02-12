@@ -145,6 +145,17 @@
                 {% if response.reason %}
                 <p class="mt-2 text-gray-600 text-sm pl-11">"{{ response.reason }}"</p>
                 {% endif %}
+                {% if response.confidence_level or response.reason_tag %}
+                <p class="mt-1 text-xs text-gray-500 pl-11">
+                    {% if response.confidence_level %}
+                    Confidence: {{ response.confidence_level|title }}
+                    {% endif %}
+                    {% if response.confidence_level and response.reason_tag %} · {% endif %}
+                    {% if response.reason_tag %}
+                    Reason tag: {{ response.reason_tag.replace('_', ' ')|title }}
+                    {% endif %}
+                </p>
+                {% endif %}
             </div>
             {% endfor %}
         </div>

@@ -101,10 +101,18 @@
                     <p class="text-xl font-serif font-semibold text-gray-900 leading-relaxed">
                         "{{ q_data.question.question_text }}"
                     </p>
-                    {% if q_data.question.context and q_data.question.context.strip() %}
-                    <p class="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border-l-3 border-blue-500">
-                        {{ q_data.question.context[:300] }}{% if q_data.question.context|length > 300 %}...{% endif %}
-                    </p>
+                    {% if (q_data.question.context and q_data.question.context.strip()) or (q_data.question.why_this_question and q_data.question.why_this_question.strip()) %}
+                    <div class="mt-3 text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        <p class="text-xs text-gray-500 font-semibold mb-1 uppercase tracking-wide">Context</p>
+                        {% if q_data.question.context and q_data.question.context.strip() %}
+                        <p>{{ q_data.question.context[:300] }}{% if q_data.question.context|length > 300 %}...{% endif %}</p>
+                        {% endif %}
+                        {% if q_data.question.why_this_question and q_data.question.why_this_question.strip() %}
+                        <p class="mt-2 text-xs text-gray-600">
+                            <span class="font-semibold">Why this question:</span> {{ q_data.question.why_this_question }}
+                        </p>
+                        {% endif %}
+                    </div>
                     {% endif %}
                 </div>
 
@@ -155,6 +163,28 @@
                                 aria-label="Unsure about this statement">
                             ? Unsure
                         </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                        <select class="confidence-select rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                data-question="{{ q_data.question.id }}">
+                            <option value="">Confidence (optional)</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                        <select class="reason-tag-select rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+                                data-question="{{ q_data.question.id }}">
+                            <option value="">Reason category (optional)</option>
+                            <option value="evidence">Evidence</option>
+                            <option value="fairness">Fairness</option>
+                            <option value="cost">Cost</option>
+                            <option value="feasibility">Feasibility</option>
+                            <option value="rights">Rights</option>
+                            <option value="safety">Safety</option>
+                            <option value="trust">Trust</option>
+                            <option value="long_term_impact">Long-term impact</option>
+                            <option value="other">Other</option>
+                        </select>
                     </div>
                     {% endif %}
                 </div>
@@ -352,6 +382,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const vote = this.dataset.vote;
             const questionId = this.dataset.question;
             const card = this.closest('.question-card');
+            const confidenceLevel = card.querySelector('.confidence-select')?.value || '';
+            const reasonTag = card.querySelector('.reason-tag-select')?.value || '';
 
             // Disable all buttons in this card
             card.querySelectorAll('.vote-btn').forEach(b => b.disabled = true);
@@ -365,7 +397,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify({
                         question_id: questionId,
-                        vote: vote
+                        vote: vote,
+                        confidence_level: confidenceLevel,
+                        reason_tag: reasonTag,
+                        context_expanded: false,
+                        source_link_click_count: 0
                     })
                 });
 

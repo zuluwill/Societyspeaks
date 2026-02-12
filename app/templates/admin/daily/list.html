@@ -86,6 +86,137 @@
     </div>
     {% endif %}
 
+    {% if analytics %}
+    <div class="bg-white rounded-xl shadow-sm mb-8">
+        <div class="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900">Daily Question Analytics</h3>
+                <p class="text-sm text-gray-500">Signal quality and context engagement</p>
+            </div>
+            <form method="get" class="flex items-center gap-2">
+                {% if questions.page and questions.page != 1 %}
+                <input type="hidden" name="page" value="{{ questions.page }}">
+                {% endif %}
+                <label for="days" class="text-sm text-gray-600">Period:</label>
+                <select id="days" name="days" onchange="this.form.submit()"
+                        class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="7" {% if analytics_days == 7 %}selected{% endif %}>7d</option>
+                    <option value="14" {% if analytics_days == 14 %}selected{% endif %}>14d</option>
+                    <option value="30" {% if analytics_days == 30 %}selected{% endif %}>30d</option>
+                    <option value="90" {% if analytics_days == 90 %}selected{% endif %}>90d</option>
+                </select>
+            </form>
+        </div>
+
+        <div class="p-6">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <p class="text-xs font-medium text-gray-500 uppercase">Responses</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ analytics.overview.total_responses }}</p>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <p class="text-xs font-medium text-gray-500 uppercase">Reason Rate</p>
+                    <p class="text-2xl font-bold text-blue-700 mt-1">{{ analytics.overview.reason_rate }}%</p>
+                </div>
+                <div class="bg-yellow-50 rounded-lg p-4">
+                    <p class="text-xs font-medium text-gray-500 uppercase">Unsure Rate</p>
+                    <p class="text-2xl font-bold text-yellow-700 mt-1">{{ analytics.overview.unsure_rate }}%</p>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4">
+                    <p class="text-xs font-medium text-gray-500 uppercase">Context Expanded</p>
+                    <p class="text-2xl font-bold text-green-700 mt-1">{{ analytics.overview.context_expanded_rate }}%</p>
+                </div>
+                <div class="bg-purple-50 rounded-lg p-4">
+                    <p class="text-xs font-medium text-gray-500 uppercase">Avg Source Clicks</p>
+                    <p class="text-2xl font-bold text-purple-700 mt-1">{{ analytics.overview.avg_source_link_clicks }}</p>
+                </div>
+                <div class="bg-indigo-50 rounded-lg p-4">
+                    <p class="text-xs font-medium text-gray-500 uppercase">With Reasons</p>
+                    <p class="text-2xl font-bold text-indigo-700 mt-1">{{ analytics.overview.responses_with_reason }}</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="border border-gray-100 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-gray-800 mb-3">Confidence Distribution</h4>
+                    <div class="space-y-2">
+                        {% for item in analytics.confidence %}
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">{{ item.level|title }}</span>
+                            <span class="font-medium text-gray-900">{{ item.count }} ({{ item.pct_of_all_responses }}%)</span>
+                        </div>
+                        {% else %}
+                        <p class="text-sm text-gray-500">No confidence data yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="border border-gray-100 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-gray-800 mb-3">Top Reason Tags</h4>
+                    <div class="space-y-2">
+                        {% for item in analytics.tags[:6] if item.count > 0 %}
+                        <div class="flex items-center justify-between text-sm">
+                            <span class="text-gray-600">{{ item.tag.replace('_', ' ')|title }}</span>
+                            <span class="font-medium text-gray-900">{{ item.count }} ({{ item.pct }}%)</span>
+                        </div>
+                        {% else %}
+                        <p class="text-sm text-gray-500">No reason-tag data yet.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="border border-gray-100 rounded-lg p-4">
+                    <h4 class="text-sm font-semibold text-gray-800 mb-3">Context Impact (Unsure Rate)</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Expanded context</span>
+                            <span class="font-medium text-gray-900">
+                                {{ analytics.context_impact.expanded.unsure_rate }}%
+                                <span class="text-xs text-gray-500">({{ analytics.context_impact.expanded.total }} responses)</span>
+                            </span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-600">Did not expand</span>
+                            <span class="font-medium text-gray-900">
+                                {{ analytics.context_impact.not_expanded.unsure_rate }}%
+                                <span class="text-xs text-gray-500">({{ analytics.context_impact.not_expanded.total }} responses)</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if analytics.source_type_stats %}
+            <div class="mt-6 border border-gray-100 rounded-lg p-4">
+                <h4 class="text-sm font-semibold text-gray-800 mb-3">Performance by Source Type</h4>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead>
+                            <tr class="text-left text-gray-500 border-b border-gray-100">
+                                <th class="py-2 pr-4">Source</th>
+                                <th class="py-2 pr-4">Responses</th>
+                                <th class="py-2 pr-4">Unsure Rate</th>
+                                <th class="py-2 pr-4">Reason Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in analytics.source_type_stats %}
+                            <tr class="border-b border-gray-50">
+                                <td class="py-2 pr-4 text-gray-700">{{ row.source_type|title }}</td>
+                                <td class="py-2 pr-4 text-gray-900 font-medium">{{ row.responses }}</td>
+                                <td class="py-2 pr-4 text-gray-700">{{ row.unsure_rate }}%</td>
+                                <td class="py-2 pr-4 text-gray-700">{{ row.reason_rate }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
     <div class="bg-white rounded-xl shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-900">All Questions</h3>

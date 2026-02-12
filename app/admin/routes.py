@@ -876,9 +876,11 @@ def log_admin_access():
 @admin_required
 def list_daily_questions():
     from sqlalchemy import func
+    from app.daily.analytics import DailyQuestionAnalytics
     
     page = request.args.get('page', 1, type=int)
     per_page = 20
+    analytics_days = DailyQuestionAnalytics.normalize_days(request.args.get('days', 30, type=int))
     
     # Get paginated questions
     questions = DailyQuestion.query.order_by(
@@ -908,13 +910,17 @@ def list_daily_questions():
         DailyQuestion.question_date > today,
         DailyQuestion.status == 'scheduled'
     ).order_by(DailyQuestion.question_date.asc()).limit(7).all()
+
+    analytics = DailyQuestionAnalytics.get_dashboard_stats(days=analytics_days)
     
     return render_template(
         'admin/daily/list.html',
         questions=questions,
         todays_question=todays_question,
         upcoming=upcoming,
-        today=today
+        today=today,
+        analytics=analytics,
+        analytics_days=analytics_days
     )
 
 
