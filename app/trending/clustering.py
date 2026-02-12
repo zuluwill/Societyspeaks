@@ -66,27 +66,49 @@ def extract_geographic_info_from_articles(articles: List[NewsArticle]) -> tuple:
     return geographic_scope, geographic_countries
 
 
-def get_embeddings(texts: List[str]) -> Optional[List[List[float]]]:
-    """Get embeddings for texts using OpenAI."""
+def get_embeddings(texts: List[str], max_retries: int = 3) -> Optional[List[List[float]]]:
+    """Get embeddings for texts using OpenAI with retry logic for transient errors."""
+    import time
+    
     api_key = os.environ.get('OPENAI_API_KEY')
     if not api_key:
         logger.warning("OPENAI_API_KEY not set, skipping embeddings")
         return None
     
-    try:
-        import openai
-        client = openai.OpenAI(api_key=api_key)
-        
-        response = client.embeddings.create(
-            model="text-embedding-3-small",
-            input=texts
-        )
-        
-        return [item.embedding for item in response.data]
+    import openai
+    client = openai.OpenAI(api_key=api_key)
     
-    except Exception as e:
-        logger.error(f"Embedding error: {e}")
-        return None
+    for attempt in range(max_retries):
+        try:
+            response = client.embeddings.create(
+                model="text-embedding-3-small",
+                input=texts
+            )
+            return [item.embedding for item in response.data]
+        
+        except openai.APIStatusError as e:
+            if e.status_code in (500, 502, 503, 529) and attempt < max_retries - 1:
+                wait_time = 2 ** attempt
+                logger.warning(f"Embedding API error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                time.sleep(wait_time)
+                continue
+            logger.error(f"Embedding error after {attempt + 1} attempts: {e}")
+            return None
+        
+        except openai.APIConnectionError as e:
+            if attempt < max_retries - 1:
+                wait_time = 2 ** attempt
+                logger.warning(f"Embedding connection error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                time.sleep(wait_time)
+                continue
+            logger.error(f"Embedding connection error after {attempt + 1} attempts: {e}")
+            return None
+        
+        except Exception as e:
+            logger.error(f"Embedding error: {e}")
+            return None
+    
+    return None
 
 
 def cluster_articles(articles: List[NewsArticle], threshold: float = 0.7) -> List[List[NewsArticle]]:
