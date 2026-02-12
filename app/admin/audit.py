@@ -1,8 +1,11 @@
 import json
+import logging
 from sqlalchemy.orm import sessionmaker
-from flask import current_app
+from flask import current_app, has_app_context
 from app import db
 from app.models import AdminAuditEvent
+
+logger = logging.getLogger(__name__)
 
 
 def write_admin_audit_event(
@@ -18,12 +21,19 @@ def write_admin_audit_event(
     Persist an admin audit event using an isolated SQLAlchemy session.
 
     This avoids committing or rolling back the caller's in-flight transaction.
+    Uses db.engine directly to avoid reliance on the caller's scoped session
+    bind state, and guards against missing app context.
     """
+    if not has_app_context():
+        logger.warning(f"Admin audit log skipped (no app context) for {action}")
+        return
+
     metadata = metadata or {}
-    engine = db.session.get_bind()
-    session_factory = sessionmaker(bind=engine)
-    audit_session = session_factory()
+    audit_session = None
     try:
+        engine = db.engine
+        session_factory = sessionmaker(bind=engine)
+        audit_session = session_factory()
         audit_session.add(
             AdminAuditEvent(
                 admin_user_id=admin_user_id,
@@ -36,7 +46,9 @@ def write_admin_audit_event(
         )
         audit_session.commit()
     except Exception as exc:
-        audit_session.rollback()
+        if audit_session:
+            audit_session.rollback()
         current_app.logger.warning(f"Admin audit log failed for {action}: {exc}")
     finally:
-        audit_session.close()
+        if audit_session:
+            audit_session.close()
