@@ -12,8 +12,8 @@
   - topic_articles_by_topic_id (optional): Pre-loaded articles dict
 #}
 
-{# Underreported badge #}
-{% if item.is_underreported %}
+{# Underreported badge (only in legacy/unsectioned briefs — sectioned briefs show it via section header) #}
+{% if item.is_underreported and item.section != 'underreported' %}
 <div class="mb-5">
     <span class="inline-flex items-center px-3 py-1.5 rounded-md bg-amber-500 text-white text-xs font-bold uppercase tracking-wider">
         📭 Under the Radar
@@ -127,8 +127,8 @@
 </div>
 {% endif %}
 
-{# Personal impact (full depth only) #}
-{% if item.personal_impact and item.depth != 'quick' and item.depth != 'standard' %}
+{# Personal impact (full and standard depth) #}
+{% if item.personal_impact and item.depth != 'quick' %}
 <div class="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-5 mb-6">
     <p class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">💡 Why This Matters To You</p>
     <p class="text-blue-900 leading-relaxed font-medium">{{ item.personal_impact }}</p>

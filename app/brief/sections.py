@@ -161,15 +161,15 @@ DEPTH_CONFIG = {
     },
     DEPTH_STANDARD: {
         'headline': True,
-        'bullets': 2,           # Fewer bullets
-        'personal_impact': False,
+        'bullets': 4,           # Match full depth bullet count
+        'personal_impact': True,
         'so_what': True,
         'perspectives': False,
         'deeper_context': False,
         'verification_links': True,
         'blindspot': False,
         'coverage_bar': True,
-        'discussion_cta': False,
+        'discussion_cta': True,
     },
     DEPTH_QUICK: {
         'headline': True,

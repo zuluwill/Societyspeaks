@@ -507,7 +507,7 @@
             <tr id="item-{{ item.id }}">
               <td
                 class="mobile-padding"
-                style="padding: 32px 28px; border-bottom: 1px solid #e2e8f0; {% if item.is_underreported and not brief.is_sectioned %}background-color: #fef3c7;{% endif %}"
+                style="padding: 32px 28px; border-bottom: 1px solid #e2e8f0; {% if item.is_underreported or item_section == 'underreported' %}background-color: #fef3c7;{% endif %}"
               >
                 <table
                   role="presentation"
@@ -820,8 +820,8 @@
                     </td>
                   </tr>
 
-                  <!-- Why This Matters To You (full depth only) -->
-                  {% if depth == 'full' and item.personal_impact %}
+                  <!-- Why This Matters To You (full and standard depth) -->
+                  {% if depth != 'quick' and item.personal_impact %}
                   <tr>
                     <td style="padding-bottom: 20px">
                       <table

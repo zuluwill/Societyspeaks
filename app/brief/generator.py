@@ -1331,8 +1331,8 @@ Guidelines: British English, neutral tone, no clickbait, include at least one sp
         """
         Generate standard-depth content (themed section items).
 
-        Returns headline, 2 bullets, and so-what analysis. No perspectives
-        or personal impact (saves LLM tokens).
+        Returns headline, 3-4 bullets, personal impact, and so-what analysis.
+        No perspectives or deeper context (saves LLM tokens vs full depth).
         """
         if not self.llm_available:
             return {
@@ -1342,19 +1342,19 @@ Guidelines: British English, neutral tone, no clickbait, include at least one sp
                     f"Covered by {len(articles)} sources",
                 ],
                 'so_what': None,
+                'personal_impact': None,
             }
 
-        # Prepare context (fewer articles than full depth)
         current_date = datetime.now()
         article_context = []
-        for article in articles[:5]:
-            summary = article.summary[:250] if article.summary else article.title
+        for article in articles[:6]:
+            summary = article.summary[:300] if article.summary else article.title
             source_name = article.source.name if article.source else 'Unknown'
             article_context.append(f"[{source_name}] {article.title}\n   {summary}")
 
         article_text = '\n'.join(article_context)
 
-        prompt = f"""Generate a news briefing item with headline, 2 key points, and analysis.
+        prompt = f"""Generate a news briefing item with headline, 3-4 key points, personal impact, and analysis.
 
 TODAY'S DATE: {current_date.strftime('%d %B %Y')}
 
@@ -1364,7 +1364,8 @@ ARTICLES:
 Return JSON:
 {{
   "headline": "Active, specific headline (6-10 words)",
-  "bullets": ["Key fact with concrete detail", "Second key point with specific data"],
+  "bullets": ["What happened (core news with specifics)", "Key figures, numbers, or quotes", "Important context or timeline", "What happens next (if known)"],
+  "personal_impact": "2 sentences: how this affects ordinary people, with specific detail (50 words max)",
   "so_what": "2 sentences: why this matters, with specific impact"
 }}
 
@@ -1372,6 +1373,8 @@ Guidelines:
 - British English, neutral tone
 - No clickbait, vague language, or em dashes
 - Every claim needs a number, date, or named source
+- Each bullet must include at least one concrete detail (number, date, named person/organisation)
+- Personal impact should be concrete and relatable, not vague
 - So-what should be concrete and actionable"""
 
         try:
@@ -1381,12 +1384,13 @@ Guidelines:
             if 'headline' not in data or 'bullets' not in data:
                 raise ValueError("Missing headline or bullets")
 
-            data['bullets'] = data['bullets'][:2]  # Cap at 2
+            data['bullets'] = data['bullets'][:4]  # Cap at 4
 
             return {
                 'headline': data.get('headline', topic.title[:100]),
                 'bullets': data.get('bullets', []),
                 'so_what': data.get('so_what'),
+                'personal_impact': data.get('personal_impact'),
             }
         except Exception as e:
             logger.warning(f"Standard content generation failed for topic {topic.id}: {e}")
@@ -1397,6 +1401,7 @@ Guidelines:
                     f"Covered by {len(articles)} sources",
                 ],
                 'so_what': None,
+                'personal_impact': None,
             }
 
     def _generate_week_ahead(self, brief_date: date) -> Optional[List[Dict]]:
