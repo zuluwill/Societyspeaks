@@ -171,10 +171,13 @@ class PolymarketService:
             return None
         return response.get('price')
 
+    MAX_TOKEN_IDS_PER_BATCH = 50
+
     @safe_api_call(default_return={})
     def get_prices_batch(self, token_ids: List[str]) -> Dict[str, float]:
         """
-        Get prices for multiple tokens in one request.
+        Get prices for multiple tokens, automatically chunking to avoid
+        HTTP 414 URI Too Large errors from the CLOB API.
 
         Returns:
             Dict mapping token_id -> price
@@ -182,12 +185,15 @@ class PolymarketService:
         if not token_ids:
             return {}
 
-        # CLOB API supports batch price requests
-        response = self._clob_request('/prices', params={'token_ids': ','.join(token_ids)})
-        if not response:
-            return {}
+        results: Dict[str, float] = {}
+        for i in range(0, len(token_ids), self.MAX_TOKEN_IDS_PER_BATCH):
+            chunk = token_ids[i:i + self.MAX_TOKEN_IDS_PER_BATCH]
+            response = self._clob_request('/prices', params={'token_ids': ','.join(chunk)})
+            if response:
+                for item in response.get('prices', []):
+                    results[item['token_id']] = item['price']
 
-        return {item['token_id']: item['price'] for item in response.get('prices', [])}
+        return results
 
     @safe_api_call(default_return=None)
     def get_market_orderbook(self, token_id: str) -> Optional[Dict]:

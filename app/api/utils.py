@@ -281,11 +281,12 @@ def track_partner_event(event_name: str, properties: Optional[dict] = None):
         event_properties.update(properties)
 
     try:
-        posthog.capture(
-            distinct_id=f"partner:{partner_ref}",
-            event=event_name,
-            properties=event_properties
-        )
+        if posthog and getattr(posthog, 'project_api_key', None):
+            posthog.capture(
+                distinct_id=f"partner:{partner_ref}",
+                event=event_name,
+                properties=event_properties
+            )
     except Exception as e:
         logger.warning(f"PostHog tracking error for {event_name}: {e}")
 

@@ -54,10 +54,12 @@ class TopicSelector:
 
     def __init__(self, brief_date: Optional[date] = None):
         self.brief_date = brief_date or date.today()
-        self.recent_topic_ids = self._get_recent_brief_topics()
+        self.recent_topic_ids, self.recent_headlines = self._get_recent_brief_topics()
 
-    def _get_recent_brief_topics(self) -> List[int]:
-        """Get topic IDs featured in briefs in last N days"""
+    HEADLINE_SIMILARITY_THRESHOLD = 0.7
+
+    def _get_recent_brief_topics(self) -> Tuple[List[int], List[str]]:
+        """Get topic IDs and headlines featured in briefs in last N days"""
         cutoff_date = self.brief_date - timedelta(days=self.EXCLUSION_DAYS)
 
         recent_items = BriefItem.query.join(DailyBrief).filter(
@@ -65,7 +67,28 @@ class TopicSelector:
             DailyBrief.status.in_(['published', 'ready'])
         ).all()
 
-        return [item.trending_topic_id for item in recent_items if item.trending_topic_id]
+        topic_ids = [item.trending_topic_id for item in recent_items if item.trending_topic_id]
+        headlines = [item.headline.lower().strip() for item in recent_items if item.headline]
+        return topic_ids, headlines
+
+    @staticmethod
+    def _headline_similarity(a: str, b: str) -> float:
+        """Calculate word-overlap similarity between two headlines (Jaccard)."""
+        words_a = set(a.lower().split())
+        words_b = set(b.lower().split())
+        if not words_a or not words_b:
+            return 0.0
+        intersection = words_a & words_b
+        union = words_a | words_b
+        return len(intersection) / len(union)
+
+    def _is_headline_duplicate(self, title: str) -> bool:
+        """Check if a topic title is too similar to a recently featured headline."""
+        title_lower = title.lower().strip()
+        for recent_headline in self.recent_headlines:
+            if self._headline_similarity(title_lower, recent_headline) >= self.HEADLINE_SIMILARITY_THRESHOLD:
+                return True
+        return False
 
     def select_topics(self, limit: int = MAX_ITEMS) -> List[TrendingTopic]:
         """
@@ -134,6 +157,17 @@ class TopicSelector:
         
         if not candidates:
             logger.warning("No candidates found even with 72h lookback")
+
+        pre_headline_count = len(candidates)
+        candidates = [
+            t for t in candidates
+            if not self._is_headline_duplicate(t.title)
+        ]
+        if len(candidates) < pre_headline_count:
+            logger.info(
+                f"Headline similarity filter removed {pre_headline_count - len(candidates)} "
+                f"duplicate-story candidates"
+            )
 
         # Filter by quality criteria with compensation for single-source topics
         filtered = []
