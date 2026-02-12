@@ -1,6 +1,6 @@
 from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
 from flask_login import login_required, current_user
-from app import db, limiter
+from app import db, limiter, talisman
 from app.discussions.forms import CreateDiscussionForm
 from app.models import Discussion, DiscussionParticipant, TrendingTopic, DiscussionSourceArticle, NewsArticle, NewsSource
 from app.storage_utils import get_recent_activity
@@ -202,7 +202,7 @@ def create_discussion():
 @discussions_bp.route('/<int:discussion_id>', methods=['GET'])
 def view_discussion_redirect(discussion_id):
     """Redirect discussion URLs without slug to the canonical URL with slug."""
-    discussion = Discussion.query.get(discussion_id)
+    discussion = db.session.get(Discussion, discussion_id)
     if not discussion:
         base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
         return render_template(
@@ -218,6 +218,7 @@ def view_discussion_redirect(discussion_id):
 
 
 @discussions_bp.route('/<int:discussion_id>/embed', methods=['GET'])
+@talisman(frame_options=None, content_security_policy=None)
 def embed_discussion(discussion_id):
     """
     Partner embed view for voting on a discussion.
@@ -262,7 +263,9 @@ def embed_discussion(discussion_id):
             base_url=base_url
         ), 403
 
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.session.get(Discussion, discussion_id)
+    if not discussion:
+        abort(404)
 
     # Restrict test embeds to verified test domains
     origin = request.headers.get('Origin')

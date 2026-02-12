@@ -65,6 +65,7 @@ limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["1000 per hour"]
 )
+talisman = Talisman()
 
 
 def try_connect_db(app, retries=3):
@@ -212,7 +213,7 @@ def create_app():
     # Initialize Talisman with simplified CSP
     # Note: force_https=False because Replit's proxy handles HTTPS termination
     # The proxy receives HTTPS requests and forwards them as HTTP internally
-    Talisman(
+    talisman.init_app(
         app,
         force_https=False,  # Replit proxy handles HTTPS
         session_cookie_secure=env == 'production',

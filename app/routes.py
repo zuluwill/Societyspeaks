@@ -7,6 +7,7 @@ from slugify import slugify
 from app.seo import generate_sitemap
 from replit.object_storage import Client
 from sqlalchemy.orm import joinedload
+from app.lib.time import utcnow_naive
 import io
 import mimetypes
 import os
@@ -21,9 +22,9 @@ def init_routes(app):
     def inject_globals():
         from app.brief.sections import SECTIONS
         return {
-            'year': datetime.utcnow().year,
+            'year': utcnow_naive().year,
             'topics': Discussion.TOPICS,
-            'now': datetime.utcnow,
+            'now': utcnow_naive,
             'SECTIONS': SECTIONS
         }
 

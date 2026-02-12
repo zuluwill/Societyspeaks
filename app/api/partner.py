@@ -8,9 +8,11 @@ import re
 import html
 import json
 import hashlib
+import secrets
 from flask import Blueprint, request, jsonify, current_app
 from app import db, limiter, cache, csrf
 from flask_login import current_user
+from sqlalchemy.exc import IntegrityError
 
 from app.models import (
     Discussion, NewsArticle, DiscussionSourceArticle, ConsensusAnalysis, Statement,
@@ -109,7 +111,7 @@ def lookup_by_article_url():
         if article:
             link = DiscussionSourceArticle.query.filter_by(article_id=article.id).first()
             if link:
-                discussion = Discussion.query.get(link.discussion_id)
+                discussion = db.session.get(Discussion, link.discussion_id)
 
         # Phase 2: Check partner_article_url for live partner discussions
         if not discussion and hasattr(Discussion, 'partner_article_url'):
@@ -203,7 +205,7 @@ def get_snapshot(discussion_id):
         return jsonify(response_data)
 
     # Load discussion
-    discussion = Discussion.query.get(discussion_id)
+    discussion = db.session.get(Discussion, discussion_id)
     if not discussion:
         return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
 
@@ -358,6 +360,7 @@ def create_discussion():
     """
     from app.lib.url_normalizer import normalize_url
     from app.trending.seed_generator import generate_seed_statements_from_content
+    from app.trending.constants import get_unique_slug
     from app.models import generate_slug
 
     # Enforce server-to-server usage for API key protected writes.
@@ -399,7 +402,7 @@ def create_discussion():
         tier_limit = tier_limits.get(partner_tier, 25)  # default conservative
 
         if tier_limit is not None:  # None = unlimited (enterprise)
-            from datetime import datetime
+            from datetime import datetime, timezone
             if key_env == 'test':
                 # Test: lifetime cap
                 env_count = Discussion.query.filter_by(
@@ -407,7 +410,9 @@ def create_discussion():
                 ).count()
             else:
                 # Live: calendar-month cap
-                month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+                month_start = datetime.now(timezone.utc).replace(
+                    tzinfo=None, day=1, hour=0, minute=0, second=0, microsecond=0
+                )
                 env_count = Discussion.query.filter(
                     Discussion.partner_fk_id == partner.id,
                     Discussion.partner_env == 'live',
@@ -558,49 +563,93 @@ def create_discussion():
             )
 
     # Create discussion
-    try:
-        discussion = Discussion(
-            title=title[:200],  # Max 200 chars per model
-            description=excerpt[:500] if excerpt else None,
-            slug=generate_slug(title),
-            has_native_statements=True,
-            geographic_scope='global',
-            partner_article_url=normalized_url,
-            partner_id=partner_id,
-            partner_fk_id=partner.id if partner else None,
-            partner_env=key_env
-        )
-        db.session.add(discussion)
-        db.session.flush()  # Get the discussion ID
+    # Two-tier uniqueness strategy:
+    # 1) get_unique_slug() resolves known conflicts already committed in the DB.
+    # 2) outer retry handles race conditions where a competing request commits
+    #    the same slug between our uniqueness check and flush().
+    max_slug_retries = 3
+    discussion = None
+    base_slug = generate_slug(title) or 'discussion'
+    for attempt in range(max_slug_retries):
+        try:
+            slug_seed = base_slug if attempt == 0 else f"{base_slug}-{secrets.token_hex(2)}"
+            unique_slug = get_unique_slug(Discussion, slug_seed)
 
-        # Create seed statements with source tracking
-        # Determine source: partner_provided if statements came from API, ai_generated if from LLM
-        statement_source = 'partner_provided' if seed_statements else 'ai_generated'
-        for stmt_data in statements_to_create:
-            statement = Statement(
-                discussion_id=discussion.id,
-                content=stmt_data['content'],
-                statement_type='claim',
-                is_seed=True,
-                mod_status=1,  # Seed statements are pre-approved
-                source=statement_source,
+            discussion = Discussion(
+                title=title[:200],  # Max 200 chars per model
+                description=excerpt[:500] if excerpt else None,
+                slug=unique_slug,
+                has_native_statements=True,
+                geographic_scope='global',
+                partner_article_url=normalized_url,
+                partner_id=partner_id,
+                partner_fk_id=partner.id if partner else None,
+                partner_env=key_env
             )
-            db.session.add(statement)
+            db.session.add(discussion)
+            db.session.flush()  # Get the discussion ID
 
-        db.session.commit()
+            # Create seed statements with source tracking
+            # Determine source: partner_provided if statements came from API, ai_generated if from LLM
+            statement_source = 'partner_provided' if seed_statements else 'ai_generated'
+            for stmt_data in statements_to_create:
+                statement = Statement(
+                    discussion_id=discussion.id,
+                    content=stmt_data['content'],
+                    statement_type='claim',
+                    is_seed=True,
+                    mod_status=1,  # Seed statements are pre-approved
+                    source=statement_source,
+                )
+                db.session.add(statement)
 
-        current_app.logger.info(
-            f"Partner {partner_id} created discussion {discussion.id} for {normalized_url}"
-        )
+            db.session.commit()
 
-    except Exception as e:
-        db.session.rollback()
-        current_app.logger.error(f"Failed to create partner discussion: {e}")
-        return api_error(
-            'creation_failed',
-            'Failed to create discussion. Please try again.',
-            500
-        )
+            current_app.logger.info(
+                f"Partner {partner_id} created discussion {discussion.id} for {normalized_url}"
+            )
+            break
+
+        except IntegrityError as e:
+            db.session.rollback()
+            err_text = str(getattr(e, "orig", e)).lower()
+            is_slug_collision = ("slug" in err_text) or ("ix_discussion_slug" in err_text) or ("discussion.slug" in err_text)
+            if not is_slug_collision:
+                current_app.logger.error(
+                    "Failed to create partner discussion due to non-slug integrity error for partner %s: %s",
+                    partner_id,
+                    e,
+                )
+                return api_error(
+                    'creation_failed',
+                    'Failed to create discussion. Please check inputs and try again.',
+                    500
+                )
+            if attempt == max_slug_retries - 1:
+                current_app.logger.error(
+                    "Failed to create partner discussion after slug retries for partner %s: %s",
+                    partner_id,
+                    e,
+                )
+                return api_error(
+                    'creation_failed',
+                    'Failed to create discussion due to a temporary conflict. Please retry.',
+                    500
+                )
+            current_app.logger.warning(
+                "Slug conflict while creating partner discussion (attempt %s/%s): %s",
+                attempt + 1,
+                max_slug_retries,
+                e,
+            )
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Failed to create partner discussion: {e}")
+            return api_error(
+                'creation_failed',
+                'Failed to create discussion. Please try again.',
+                500
+            )
 
     # Build response (same shape as lookup)
     urls = build_discussion_urls(discussion, include_ref=False)
@@ -701,7 +750,7 @@ def oembed():
         )
 
     # Look up the discussion
-    discussion = Discussion.query.get(discussion_id)
+    discussion = db.session.get(Discussion, discussion_id)
     if not discussion:
         return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
 
@@ -809,7 +858,7 @@ def flag_statement_from_embed():
         return api_error('invalid_reason', f'flag_reason must be one of: {", ".join(valid_reasons)}', 400)
 
     # Find the statement
-    statement = Statement.query.get(statement_id)
+    statement = db.session.get(Statement, statement_id)
     if not statement:
         return api_error('statement_not_found', 'The requested statement does not exist.', 404)
 

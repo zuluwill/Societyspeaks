@@ -34,6 +34,7 @@ from app.models import (
 )
 from app.billing.service import create_partner_checkout_session, create_partner_portal_session, get_stripe
 from app.admin.audit import write_admin_audit_event
+from app.lib.time import utcnow_naive
 
 
 @partner_bp.route('/')
@@ -134,7 +135,7 @@ def _current_partner():
     partner_id = session.get('partner_portal_id')
     if not partner_id:
         return None
-    partner = Partner.query.get(partner_id)
+    partner = db.session.get(Partner, partner_id)
     if not partner or partner.status != 'active':
         # Clear stale session for deactivated/deleted partners
         _clear_partner_session()
@@ -163,7 +164,7 @@ def _get_or_create_owner_member(partner):
         password_hash=partner.password_hash,
         role='owner',
         status='active',
-        accepted_at=datetime.utcnow(),
+        accepted_at=utcnow_naive(),
     )
     db.session.add(owner_member)
     db.session.flush()
@@ -232,7 +233,7 @@ def _is_partner_invite_expired(member):
     if not member or not member.invited_at:
         return True
     expiry_days = int(current_app.config.get('PARTNER_INVITE_EXPIRY_DAYS', 7) or 7)
-    cutoff = datetime.utcnow() - timedelta(days=expiry_days)
+    cutoff = utcnow_naive() - timedelta(days=expiry_days)
     return member.invited_at < cutoff
 
 
@@ -431,6 +432,12 @@ def portal_signup():
             flash('An account with this email already exists. Please sign in.', 'warning')
             return redirect(url_for('partner.portal_login'))
 
+        # PartnerMember.email is globally unique across all partners.
+        # Check before insert to avoid integrity errors when a user was invited already.
+        if PartnerMember.query.filter_by(email=email).first():
+            flash('An account with this email already exists. Please sign in.', 'warning')
+            return redirect(url_for('partner.portal_login'))
+
         slug_base = generate_slug(name) or generate_slug(email.split('@')[0]) or 'partner'
         slug = slug_base
         counter = 1
@@ -503,8 +510,8 @@ def portal_login():
 
         if lockout_until:
             lockout_dt = datetime.fromisoformat(lockout_until)
-            if datetime.utcnow() < lockout_dt:
-                remaining = int((lockout_dt - datetime.utcnow()).total_seconds())
+            if utcnow_naive() < lockout_dt:
+                remaining = int((lockout_dt - utcnow_naive()).total_seconds())
                 flash(f'Too many failed attempts. Please try again in {remaining} seconds.', 'danger')
                 return render_template('partner/portal/login.html')
             else:
@@ -531,7 +538,7 @@ def portal_login():
             session[lockout_key] = fail_count
             if fail_count >= 5:
                 # Lock out for 5 minutes after 5 failures
-                lockout_dt = datetime.utcnow() + timedelta(minutes=5)
+                lockout_dt = utcnow_naive() + timedelta(minutes=5)
                 session[f'{lockout_key}:until'] = lockout_dt.isoformat()
                 current_app.logger.warning(f"Partner login lockout triggered for {email} after {fail_count} failures")
                 flash('Too many failed attempts. Please try again in 5 minutes.', 'danger')
@@ -552,7 +559,7 @@ def portal_login():
             active_member = member
         else:
             active_member = owner_member
-        active_member.last_login_at = datetime.utcnow()
+        active_member.last_login_at = utcnow_naive()
         db.session.commit()
 
         session['partner_portal_id'] = partner.id
@@ -609,7 +616,7 @@ def portal_reset_password(token):
             owner_member = _get_or_create_owner_member(partner)
             owner_member.set_password(password)
             owner_member.status = 'active'
-            owner_member.accepted_at = owner_member.accepted_at or datetime.utcnow()
+            owner_member.accepted_at = owner_member.accepted_at or utcnow_naive()
             db.session.commit()
         except Exception:
             db.session.rollback()
@@ -657,7 +664,7 @@ def portal_dashboard():
     new_key = session.pop('partner_new_key', None)
     dns_checks = session.get('partner_dns_checks', {})
 
-    since = datetime.utcnow() - timedelta(days=30)
+    since = utcnow_naive() - timedelta(days=30)
     usage_rows = PartnerUsageEvent.query.filter(
         PartnerUsageEvent.partner_id == partner.id,
         PartnerUsageEvent.created_at >= since
@@ -671,7 +678,7 @@ def portal_dashboard():
     last_health_result = session.get('partner_last_health_result')
     team_members = PartnerMember.query.filter_by(partner_id=partner.id).order_by(PartnerMember.created_at.asc()).all()
 
-    daily_since = datetime.utcnow() - timedelta(days=13)
+    daily_since = utcnow_naive() - timedelta(days=13)
     daily_rows = PartnerUsageEvent.query.filter(
         PartnerUsageEvent.partner_id == partner.id,
         PartnerUsageEvent.created_at >= daily_since
@@ -680,7 +687,7 @@ def portal_dashboard():
         func.sum(PartnerUsageEvent.quantity)
     ).group_by('day').all()
     daily_map = {str(row[0]): int(row[1] or 0) for row in daily_rows}
-    today = datetime.utcnow().date()
+    today = utcnow_naive().date()
     usage_daily = []
     for idx in range(13, -1, -1):
         day = today - timedelta(days=idx)
@@ -760,7 +767,7 @@ def portal_health_check():
     domains, keys, _, _, _ = _build_partner_portal_context(partner)
 
     from sqlalchemy import func
-    since = datetime.utcnow() - timedelta(days=30)
+    since = utcnow_naive() - timedelta(days=30)
     usage_rows = PartnerUsageEvent.query.filter(
         PartnerUsageEvent.partner_id == partner.id,
         PartnerUsageEvent.created_at >= since
@@ -770,7 +777,7 @@ def portal_health_check():
     ).group_by(PartnerUsageEvent.event_type).all()
     usage = {row[0]: int(row[1] or 0) for row in usage_rows}
     health = _compute_partner_health(partner, keys, domains, usage)
-    session['partner_last_health_check'] = datetime.utcnow().isoformat()
+    session['partner_last_health_check'] = utcnow_naive().isoformat()
     session['partner_last_health_result'] = health
     session.modified = True
     flash('Integration health check updated.', 'success')
@@ -786,7 +793,7 @@ def portal_usage_csv():
     from io import StringIO
 
     partner = _current_partner()
-    since = datetime.utcnow() - timedelta(days=90)
+    since = utcnow_naive() - timedelta(days=90)
     rows = PartnerUsageEvent.query.filter(
         PartnerUsageEvent.partner_id == partner.id,
         PartnerUsageEvent.created_at >= since
@@ -865,7 +872,7 @@ def portal_invite_member():
         member.status = 'pending'
         member.full_name = full_name or member.full_name
         member.invite_token = token
-        member.invited_at = datetime.utcnow()
+        member.invited_at = utcnow_naive()
     else:
         member = PartnerMember(
             partner_id=partner.id,
@@ -874,7 +881,7 @@ def portal_invite_member():
             role=role,
             status='pending',
             invite_token=token,
-            invited_at=datetime.utcnow(),
+            invited_at=utcnow_naive(),
         )
         db.session.add(member)
 
@@ -910,7 +917,7 @@ def portal_accept_invite(token):
     if not member or _is_partner_invite_expired(member):
         flash('This invite link is invalid or expired.', 'danger')
         return redirect(url_for('partner.portal_login'))
-    partner = Partner.query.get(member.partner_id)
+    partner = db.session.get(Partner, member.partner_id)
     if not partner or partner.status != 'active':
         flash('This partner account is not active.', 'danger')
         return redirect(url_for('partner.portal_login'))
@@ -926,9 +933,9 @@ def portal_accept_invite(token):
         member.set_password(password)
         member.full_name = full_name[:150] if full_name else (member.full_name or member.email)
         member.status = 'active'
-        member.accepted_at = datetime.utcnow()
+        member.accepted_at = utcnow_naive()
         member.invite_token = None
-        member.last_login_at = datetime.utcnow()
+        member.last_login_at = utcnow_naive()
         try:
             db.session.commit()
         except Exception:
@@ -1116,7 +1123,7 @@ def portal_verify_domain(domain_id):
         try:
             prev_dt = datetime.fromisoformat(prev_check['checked_at'])
             cooldown_seconds = 30
-            if (datetime.utcnow() - prev_dt).total_seconds() < cooldown_seconds:
+            if (utcnow_naive() - prev_dt).total_seconds() < cooldown_seconds:
                 flash('Please wait 30 seconds between verification attempts.', 'warning')
                 return redirect(url_for('partner.portal_dashboard'))
         except (ValueError, TypeError):
@@ -1124,7 +1131,7 @@ def portal_verify_domain(domain_id):
 
     verified, details = _verify_dns_txt(domain.domain, domain.verification_token)
     dns_checks[str(domain.id)] = {
-        'checked_at': datetime.utcnow().isoformat(),
+        'checked_at': utcnow_naive().isoformat(),
         'expected': details.get('expected'),
         'records': details.get('records', [])[:3],
         'error': details.get('error'),
@@ -1139,7 +1146,7 @@ def portal_verify_domain(domain_id):
     session.modified = True
 
     if verified:
-        domain.verified_at = datetime.utcnow()
+        domain.verified_at = utcnow_naive()
         db.session.commit()
         flash('Domain verified successfully.', 'success')
     else:

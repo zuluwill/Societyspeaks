@@ -27,20 +27,30 @@ def init_api(app):
     # Public partner APIs are intentionally cross-origin for easy self-serve embeds.
     # Do not allow X-API-Key in browser CORS preflight; key-protected writes must be
     # server-to-server (enforced in endpoint handlers).
-    CORS(
-        partner_bp,
-        origins="*",
-        methods=['GET', 'POST', 'OPTIONS'],
-        allow_headers=['Content-Type', 'X-Requested-With', 'X-Partner-Ref', 'Idempotency-Key'],
-        max_age=86400,
-        supports_credentials=False
-    )
-
-    # Register standardized error handlers
-    register_error_handlers(partner_bp)
+    # Blueprint objects are module singletons; guard against re-registering
+    # handlers when create_app() is called multiple times in tests.
+    if not getattr(partner_bp, "_ss_error_handlers_registered", False):
+        register_error_handlers(partner_bp)
+        partner_bp._ss_error_handlers_registered = True
 
     # Register the blueprint with /api prefix
     app.register_blueprint(partner_bp, url_prefix='/api')
+
+    # Public partner APIs are intentionally cross-origin for easy self-serve embeds.
+    # Bind CORS to the app routes (not blueprint objects) so repeated app factory
+    # usage in tests does not mutate an already-registered blueprint.
+    CORS(
+        app,
+        resources={
+            r"/api/*": {
+                "origins": "*",
+                "methods": ['GET', 'POST', 'OPTIONS'],
+                "allow_headers": ['Content-Type', 'X-Requested-With', 'X-Partner-Ref', 'Idempotency-Key'],
+                "max_age": 86400,
+            }
+        },
+        supports_credentials=False,
+    )
 
     app.logger.info("Partner API initialized with dynamic origin allowlist")
 

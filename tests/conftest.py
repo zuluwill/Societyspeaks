@@ -6,6 +6,8 @@ import pytest
 import os
 import sys
 from unittest.mock import MagicMock
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.dialects.postgresql import JSONB
 
 # Add the app directory to the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -18,6 +20,13 @@ os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
 _replit_mock = MagicMock()
 sys.modules.setdefault('replit', _replit_mock)
 sys.modules.setdefault('replit.object_storage', _replit_mock)
+
+
+# SQLite compatibility for tests that use in-memory DB:
+# map PostgreSQL JSONB columns to JSON so metadata.create_all() can run.
+@compiles(JSONB, "sqlite")
+def _compile_jsonb_sqlite(_element, _compiler, **_kwargs):
+    return "JSON"
 
 
 @pytest.fixture

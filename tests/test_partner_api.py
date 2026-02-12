@@ -469,6 +469,32 @@ class TestCreateDiscussion:
         data = resp.get_json()
         assert data['error'] == 'missing_content'
 
+    def test_same_title_different_urls_generate_unique_slugs(self, client, app):
+        """Same title across different URLs should not fail on slug collisions."""
+        app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
+        headers = {'X-API-Key': 'test-key'}
+
+        payload_one = {
+            'article_url': 'https://example.com/article-one',
+            'title': 'Shared Headline',
+            'seed_statements': [{'content': 'This is a valid seed statement for article one.', 'position': 'neutral'}],
+        }
+        payload_two = {
+            'article_url': 'https://example.com/article-two',
+            'title': 'Shared Headline',
+            'seed_statements': [{'content': 'This is a valid seed statement for article two.', 'position': 'neutral'}],
+        }
+
+        first = client.post('/api/partner/discussions', json=payload_one, headers=headers)
+        second = client.post('/api/partner/discussions', json=payload_two, headers=headers)
+
+        assert first.status_code == 201
+        assert second.status_code == 201
+        first_data = first.get_json()
+        second_data = second.get_json()
+        assert first_data['discussion_id'] != second_data['discussion_id']
+        assert first_data['slug'] != second_data['slug']
+
     def test_idempotency_key_retry_returns_same_discussion(self, client, app):
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         payload = {
