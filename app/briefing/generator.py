@@ -38,6 +38,112 @@ class BriefingGenerator:
         
         if not self.llm_available:
             logger.warning("No LLM API key found. Brief will use fallback content generation.")
+
+    def _call_llm(self, prompt: str, system_prompt: str = "You are a helpful assistant.", max_tokens: int = 500, temperature: float = 0.7, max_retries: int = 3) -> Optional[str]:
+        """Call LLM API with retry logic for transient errors."""
+        import time
+
+        if not self.llm_available:
+            return None
+
+        if self.provider == 'openai':
+            return self._call_llm_openai(prompt, system_prompt, max_tokens, temperature, max_retries)
+        elif self.provider == 'anthropic':
+            return self._call_llm_anthropic(prompt, system_prompt, max_tokens, temperature, max_retries)
+        else:
+            return None
+
+    def _call_llm_openai(self, prompt: str, system_prompt: str, max_tokens: int, temperature: float, max_retries: int) -> Optional[str]:
+        import time
+        import openai
+
+        client = openai.OpenAI(api_key=self.api_key)
+
+        for attempt in range(max_retries):
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=temperature,
+                    max_tokens=max_tokens
+                )
+                content = response.choices[0].message.content
+                if not content:
+                    logger.warning("Empty response from OpenAI")
+                    return None
+                return content
+
+            except openai.APIStatusError as e:
+                if e.status_code in (500, 502, 503, 529) and attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"OpenAI API error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                    time.sleep(wait_time)
+                    continue
+                logger.error(f"OpenAI API error after {attempt + 1} attempts: {e}")
+                return None
+
+            except openai.APIConnectionError as e:
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"OpenAI connection error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                    time.sleep(wait_time)
+                    continue
+                logger.error(f"OpenAI connection error after {attempt + 1} attempts: {e}")
+                return None
+
+            except Exception as e:
+                logger.error(f"OpenAI API error: {e}")
+                return None
+
+        return None
+
+    def _call_llm_anthropic(self, prompt: str, system_prompt: str, max_tokens: int, temperature: float, max_retries: int) -> Optional[str]:
+        import time
+        import anthropic
+
+        client = anthropic.Anthropic(api_key=self.api_key)
+
+        for attempt in range(max_retries):
+            try:
+                response = client.messages.create(
+                    model="claude-3-haiku-20240307",
+                    max_tokens=max_tokens,
+                    system=system_prompt,
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                content_block = response.content[0]
+                content = getattr(content_block, 'text', None) or str(content_block)
+                if not content:
+                    logger.warning("Empty response from Anthropic")
+                    return None
+                return content
+
+            except anthropic.APIStatusError as e:
+                if e.status_code in (500, 502, 503, 529) and attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Anthropic API error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                    time.sleep(wait_time)
+                    continue
+                logger.error(f"Anthropic API error after {attempt + 1} attempts: {e}")
+                return None
+
+            except anthropic.APIConnectionError as e:
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Anthropic connection error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                    time.sleep(wait_time)
+                    continue
+                logger.error(f"Anthropic connection error after {attempt + 1} attempts: {e}")
+                return None
+
+            except Exception as e:
+                logger.error(f"Anthropic API error: {e}")
+                return None
+
+        return None
     
     def generate_brief_run(
         self,
@@ -552,48 +658,26 @@ Respond in JSON format:
   "markdown": "string"
 }}"""
         
-        try:
-            if self.provider == 'openai':
-                import openai
-                client = openai.OpenAI(api_key=self.api_key)
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "You are a helpful assistant that creates clear, neutral summaries."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.7,
-                    max_tokens=500
-                )
-                content = response.choices[0].message.content
-            elif self.provider == 'anthropic':
-                import anthropic
-                client = anthropic.Anthropic(api_key=self.api_key)
-                response = client.messages.create(
-                    model="claude-3-haiku-20240307",
-                    max_tokens=500,
-                    system="You are a helpful assistant that creates clear, neutral summaries.",
-                    messages=[{"role": "user", "content": prompt}]
-                )
-                content_block = response.content[0]
-                content = getattr(content_block, 'text', None) or str(content_block)
-            else:
-                content = None
-            
-            if content:
+        content = self._call_llm(
+            prompt,
+            system_prompt="You are a helpful assistant that creates clear, neutral summaries.",
+            max_tokens=500,
+            temperature=0.7
+        )
+        
+        if content:
+            try:
                 result = extract_json(content)
                 if result:
-                    # Convert markdown to HTML (simple)
                     html = self._markdown_to_html_simple(result.get('markdown', ''))
                     result['html'] = html
                     result['source_name'] = source_name
-                    # Ensure category and context fields have defaults
                     result['category'] = result.get('category', 'UPDATE').upper()
                     result['context_label'] = result.get('context_label', 'What This Means')
                     result['context_insight'] = result.get('context_insight', '')
                     return result
-        except Exception as e:
-            logger.error(f"LLM generation failed: {e}")
+            except Exception as e:
+                logger.error(f"LLM generation failed: {e}")
         
         # Fallback with premium structure
         return {
@@ -650,40 +734,20 @@ Respond in JSON format:
   "takeaways": ["insight 1", "insight 2", "insight 3"]
 }}"""
         
-        try:
-            if self.provider == 'openai':
-                import openai
-                client = openai.OpenAI(api_key=self.api_key)
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "You are an expert analyst who identifies patterns and synthesizes insights across multiple news stories."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.7,
-                    max_tokens=400
-                )
-                content = response.choices[0].message.content
-            elif self.provider == 'anthropic':
-                import anthropic
-                client = anthropic.Anthropic(api_key=self.api_key)
-                response = client.messages.create(
-                    model="claude-3-haiku-20240307",
-                    max_tokens=400,
-                    system="You are an expert analyst who identifies patterns and synthesizes insights across multiple news stories.",
-                    messages=[{"role": "user", "content": prompt}]
-                )
-                content_block = response.content[0]
-                content = getattr(content_block, 'text', None) or str(content_block)
-            else:
-                return []
-            
-            if content:
+        content = self._call_llm(
+            prompt,
+            system_prompt="You are an expert analyst who identifies patterns and synthesizes insights across multiple news stories.",
+            max_tokens=400,
+            temperature=0.7
+        )
+        
+        if content:
+            try:
                 result = extract_json(content)
                 if result and 'takeaways' in result:
                     return result['takeaways'][:5]
-        except Exception as e:
-            logger.error(f"Key takeaways generation failed: {e}")
+            except Exception as e:
+                logger.error(f"Key takeaways generation failed: {e}")
         
         return []
     
@@ -960,35 +1024,17 @@ Guidelines:
 
 Return ONLY the deeper context text (no JSON, no labels, just the prose)."""
 
-            if self.provider == 'openai':
-                import openai
-                client = openai.OpenAI(api_key=self.api_key)
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "You are a news analyst providing deeper context."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.7,
-                    max_tokens=800
-                )
-                content = response.choices[0].message.content
-            elif self.provider == 'anthropic':
-                import anthropic
-                client = anthropic.Anthropic(api_key=self.api_key)
-                response = client.messages.create(
-                    model="claude-3-haiku-20240307",
-                    max_tokens=800,
-                    system="You are a news analyst providing deeper context.",
-                    messages=[{"role": "user", "content": prompt}]
-                )
-                content_block = response.content[0]
-                content = getattr(content_block, 'text', None) or str(content_block)
-            else:
+            content = self._call_llm(
+                prompt,
+                system_prompt="You are a news analyst providing deeper context.",
+                max_tokens=800,
+                temperature=0.7
+            )
+            
+            if not content:
                 return None
             
-            # Clean up response
-            context = content.strip() if content else None
+            context = content.strip()
             
             # Limit length (roughly 800-1200 words)
             if context and len(context) > 2000:

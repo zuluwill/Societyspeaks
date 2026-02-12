@@ -1676,63 +1676,101 @@ Guidelines:
         else:
             raise ValueError(f"Unknown LLM provider: {self.provider}")
 
-    def _call_openai(self, prompt: str, api_key: Optional[str] = None) -> str:
-        """Call OpenAI API"""
+    def _call_openai(self, prompt: str, api_key: Optional[str] = None, max_retries: int = 3) -> str:
+        """Call OpenAI API with retry logic for transient errors."""
+        import time
         import openai
 
-        # Use provided key or fall back to self.api_key, then environment
         key = api_key or self.api_key or os.environ.get('OPENAI_API_KEY')
         client = openai.OpenAI(api_key=key)
 
-        try:
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "You are a news editor creating calm, neutral briefings. Respond only in valid JSON."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=500,
-                temperature=0.3
-            )
+        for attempt in range(max_retries):
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a news editor creating calm, neutral briefings. Respond only in valid JSON."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=500,
+                    temperature=0.3
+                )
 
-            content = response.choices[0].message.content
-            if not content:
-                raise ValueError("Empty response from OpenAI")
+                content = response.choices[0].message.content
+                if not content:
+                    raise ValueError("Empty response from OpenAI")
 
-            return content
+                return content
 
-        except Exception as e:
-            logger.error(f"OpenAI API error: {e}")
-            raise
+            except openai.APIStatusError as e:
+                if e.status_code in (500, 502, 503, 529) and attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"OpenAI API error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                    time.sleep(wait_time)
+                    continue
+                logger.error(f"OpenAI API error after {attempt + 1} attempts: {e}")
+                raise
 
-    def _call_anthropic(self, prompt: str, api_key: Optional[str] = None) -> str:
-        """Call Anthropic API"""
+            except openai.APIConnectionError as e:
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"OpenAI connection error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                    time.sleep(wait_time)
+                    continue
+                logger.error(f"OpenAI connection error after {attempt + 1} attempts: {e}")
+                raise
+
+            except Exception as e:
+                logger.error(f"OpenAI API error: {e}")
+                raise
+
+    def _call_anthropic(self, prompt: str, api_key: Optional[str] = None, max_retries: int = 3) -> str:
+        """Call Anthropic API with retry logic for transient errors."""
+        import time
         import anthropic
 
-        # Use provided key or fall back to self.api_key, then environment
         key = api_key or self.api_key or os.environ.get('ANTHROPIC_API_KEY')
         client = anthropic.Anthropic(api_key=key)
 
-        try:
-            message = client.messages.create(
-                model="claude-3-haiku-20240307",
-                max_tokens=500,
-                temperature=0.3,
-                system="You are a news editor creating calm, neutral briefings. Respond only in valid JSON.",
-                messages=[{"role": "user", "content": prompt}]
-            )
+        for attempt in range(max_retries):
+            try:
+                message = client.messages.create(
+                    model="claude-3-haiku-20240307",
+                    max_tokens=500,
+                    temperature=0.3,
+                    system="You are a news editor creating calm, neutral briefings. Respond only in valid JSON.",
+                    messages=[{"role": "user", "content": prompt}]
+                )
 
-            content_block = message.content[0]
-            content = getattr(content_block, 'text', None) or str(content_block)
+                content_block = message.content[0]
+                content = getattr(content_block, 'text', None) or str(content_block)
 
-            if not content:
-                raise ValueError("Empty response from Anthropic")
+                if not content:
+                    raise ValueError("Empty response from Anthropic")
 
-            return content
+                return content
 
-        except Exception as e:
-            logger.error(f"Anthropic API error: {e}")
-            raise
+            except anthropic.APIStatusError as e:
+                if e.status_code in (500, 502, 503, 529) and attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Anthropic API error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                    time.sleep(wait_time)
+                    continue
+                logger.error(f"Anthropic API error after {attempt + 1} attempts: {e}")
+                raise
+
+            except anthropic.APIConnectionError as e:
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Anthropic connection error (attempt {attempt + 1}/{max_retries}), retrying in {wait_time}s: {e}")
+                    time.sleep(wait_time)
+                    continue
+                logger.error(f"Anthropic connection error after {attempt + 1} attempts: {e}")
+                raise
+
+            except Exception as e:
+                logger.error(f"Anthropic API error: {e}")
+                raise
 
 
 def generate_daily_brief(brief_date: Optional[date] = None, auto_publish: bool = True) -> Optional[DailyBrief]:
