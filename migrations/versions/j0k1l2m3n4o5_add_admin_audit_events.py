@@ -27,7 +27,7 @@ def upgrade():
         sa.Column('request_ip', sa.String(length=64), nullable=True),
         sa.Column('metadata_json', sa.Text(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(['admin_user_id'], ['user.id']),
+        sa.ForeignKeyConstraint(['admin_user_id'], ['user.id'], ondelete='SET NULL'),
         sa.PrimaryKeyConstraint('id')
     )
     op.create_index('ix_admin_audit_event_created_at', 'admin_audit_event', ['created_at'], unique=False)

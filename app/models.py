@@ -248,7 +248,7 @@ class AdminAuditEvent(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    admin_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    admin_user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
     action = db.Column(db.String(100), nullable=False)
     target_type = db.Column(db.String(50), nullable=True)
     target_id = db.Column(db.Integer, nullable=True)

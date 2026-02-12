@@ -69,6 +69,7 @@ class Config:
         'professional': 500,
         'enterprise':   None,  # unlimited
     }
+    PARTNER_INVITE_EXPIRY_DAYS = int(os.getenv('PARTNER_INVITE_EXPIRY_DAYS', '7'))
 
     # At start of Config class
     if not SQLALCHEMY_DATABASE_URI:

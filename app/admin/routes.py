@@ -12,7 +12,7 @@ from app.storage_utils import upload_to_object_storage
 # Note: send_email removed during Resend migration. Using inline Resend call for admin welcome emails.
 from app.admin import admin_bp
 from app.decorators import admin_required
-import json
+from app.admin.audit import write_admin_audit_event
 
 # Import Polymarket admin routes
 try:
@@ -32,22 +32,14 @@ def _admin_request_ip():
 
 
 def _log_admin_audit_event(action, target_type=None, target_id=None, metadata=None):
-    metadata = metadata or {}
-    try:
-        from app.models import AdminAuditEvent
-        event = AdminAuditEvent(
-            admin_user_id=current_user.id if current_user.is_authenticated else None,
-            action=action,
-            target_type=target_type,
-            target_id=target_id,
-            request_ip=_admin_request_ip(),
-            metadata_json=json.dumps(metadata, default=str),
-        )
-        db.session.add(event)
-        db.session.commit()
-    except Exception as exc:
-        db.session.rollback()
-        current_app.logger.warning(f"Admin audit log failed for {action}: {exc}")
+    write_admin_audit_event(
+        admin_user_id=current_user.id if current_user.is_authenticated else None,
+        action=action,
+        target_type=target_type,
+        target_id=target_id,
+        request_ip=_admin_request_ip(),
+        metadata=metadata or {},
+    )
 
 
 # Admin dashboard

@@ -12,7 +12,6 @@ Routes for the partner-facing pages:
 import os
 import re
 import secrets
-import json
 from functools import wraps
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
@@ -34,6 +33,7 @@ from app.models import (
     Partner, PartnerDomain, PartnerApiKey, PartnerUsageEvent, PartnerMember, generate_slug
 )
 from app.billing.service import create_partner_checkout_session, create_partner_portal_session, get_stripe
+from app.admin.audit import write_admin_audit_event
 
 
 @partner_bp.route('/')
@@ -216,22 +216,24 @@ def _log_admin_preview_event(partner, action, metadata=None):
     if not _is_admin_preview(partner):
         return
     preview = session.get('partner_admin_preview') or {}
-    try:
-        from app.models import AdminAuditEvent
-        forwarded_for = request.headers.get('X-Forwarded-For', '')
-        request_ip = (forwarded_for.split(',')[0].strip() if forwarded_for else (request.remote_addr or ''))[:64]
-        event = AdminAuditEvent(
-            admin_user_id=preview.get('admin_user_id'),
-            action=action,
-            target_type='partner',
-            target_id=partner.id,
-            request_ip=request_ip,
-            metadata_json=json.dumps(metadata or {}, default=str),
-        )
-        db.session.add(event)
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
+    forwarded_for = request.headers.get('X-Forwarded-For', '')
+    request_ip = (forwarded_for.split(',')[0].strip() if forwarded_for else (request.remote_addr or ''))[:64]
+    write_admin_audit_event(
+        admin_user_id=preview.get('admin_user_id'),
+        action=action,
+        target_type='partner',
+        target_id=partner.id,
+        request_ip=request_ip,
+        metadata=metadata or {},
+    )
+
+
+def _is_partner_invite_expired(member):
+    if not member or not member.invited_at:
+        return True
+    expiry_days = int(current_app.config.get('PARTNER_INVITE_EXPIRY_DAYS', 7) or 7)
+    cutoff = datetime.utcnow() - timedelta(days=expiry_days)
+    return member.invited_at < cutoff
 
 
 def _compute_partner_health(partner, keys, domains, usage):
@@ -514,7 +516,13 @@ def portal_login():
         valid_login = False
         if member:
             if member.status == 'active' and partner and partner.status == 'active':
-                valid_login = member.check_password(password)
+                # Owner credentials are sourced from Partner for backward compatibility.
+                if member.role == 'owner' or member.email == partner.contact_email:
+                    valid_login = partner.check_password(password)
+                    if valid_login and member.password_hash != partner.password_hash:
+                        member.password_hash = partner.password_hash
+                else:
+                    valid_login = member.check_password(password)
         elif partner:
             valid_login = partner.check_password(password)
 
@@ -896,9 +904,10 @@ def portal_invite_member():
 
 
 @partner_bp.route('/portal/team/accept/<token>', methods=['GET', 'POST'])
+@limiter.limit("30 per hour")
 def portal_accept_invite(token):
     member = PartnerMember.query.filter_by(invite_token=token, status='pending').first()
-    if not member:
+    if not member or _is_partner_invite_expired(member):
         flash('This invite link is invalid or expired.', 'danger')
         return redirect(url_for('partner.portal_login'))
     partner = Partner.query.get(member.partner_id)
@@ -1064,7 +1073,10 @@ def portal_toggle_domain(domain_id):
         current_app.logger.exception("Failed to toggle domain status")
         flash('Could not update domain status.', 'danger')
         return redirect(url_for('partner.portal_dashboard'))
-    flash('Domain activated.' if domain.is_active else 'Domain deactivated.', 'success')
+    if domain.is_active:
+        flash('Domain activated. Re-verify DNS TXT before embed requests are allowed.', 'success')
+    else:
+        flash('Domain deactivated.', 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
 

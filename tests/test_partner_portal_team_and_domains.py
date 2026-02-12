@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 
@@ -115,3 +115,52 @@ def test_disabled_member_is_forced_to_reauthenticate(app, db):
     response = client.get('/for-publishers/portal/dashboard', follow_redirects=False)
     assert response.status_code == 302
     assert '/for-publishers/portal/login' in response.location
+
+
+def test_invite_token_expiry_blocks_acceptance(app, db):
+    from app.models import PartnerMember
+
+    partner, owner = _create_partner_with_owner(db, email='owner3@example.com')
+    stale_member = PartnerMember(
+        partner_id=partner.id,
+        email='stale-invite@example.com',
+        full_name='Stale Invite',
+        role='member',
+        status='pending',
+        invite_token='stale-token-123',
+        invited_at=datetime.utcnow() - timedelta(days=10),
+    )
+    db.session.add(stale_member)
+    db.session.commit()
+
+    client = app.test_client()
+    with client.session_transaction() as flask_session:
+        flask_session['partner_portal_id'] = partner.id
+        flask_session['partner_member_id'] = owner.id
+
+    response = client.post(
+        f'/for-publishers/portal/team/accept/{stale_member.invite_token}',
+        data={'full_name': 'Stale Invite', 'password': 'AnotherPass123!'},
+        follow_redirects=False,
+    )
+    assert response.status_code == 302
+    assert '/for-publishers/portal/login' in response.location
+
+
+def test_owner_login_uses_partner_password_source(app, db):
+    partner, owner = _create_partner_with_owner(db, email='owner4@example.com')
+    owner.set_password('OldOwnerPass123!')
+    partner.set_password('NewPartnerPass123!')
+    db.session.commit()
+
+    client = app.test_client()
+    response = client.post(
+        '/for-publishers/portal/login',
+        data={'email': partner.contact_email, 'password': 'NewPartnerPass123!'},
+        follow_redirects=False,
+    )
+    assert response.status_code == 302
+    assert '/for-publishers/portal/dashboard' in response.location
+    db.session.refresh(owner)
+    db.session.refresh(partner)
+    assert owner.password_hash == partner.password_hash
