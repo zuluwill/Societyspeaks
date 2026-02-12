@@ -11,10 +11,11 @@ import threading
 import logging
 import pytz
 from datetime import datetime
+from email.utils import parseaddr
 from typing import List, Optional
 from flask import render_template, current_app
 from app.models import DailyBrief, DailyBriefSubscriber, BriefItem, db
-from app.brief.sections import SECTIONS
+from app.brief.sections import SECTIONS, TOPIC_DISPLAY_LABELS, TOPIC_DISPLAY_COLORS
 from app.email_utils import RateLimiter
 from app.storage_utils import get_base_url
 
@@ -68,6 +69,103 @@ class ResendClient:
             self.from_email = self._from_email_addr
         else:
             self.from_email = f'Daily Brief <{self._from_email_addr}>'
+        self.reply_to = os.environ.get('BRIEF_REPLY_TO', self._from_email_addr)
+
+    def _extract_email_domain(self, address: Optional[str]) -> str:
+        """Extract normalized domain for lightweight deliverability preflight logging."""
+        if not address:
+            return 'unknown'
+        _, parsed_email = parseaddr(address)
+        if not parsed_email or '@' not in parsed_email:
+            return 'unknown'
+        return parsed_email.split('@', 1)[1].lower()
+
+    def _render_brief_text(
+        self,
+        brief: DailyBrief,
+        magic_link_url: str,
+        unsubscribe_url: str,
+        preferences_url: str,
+        sorted_items: Optional[List[BriefItem]] = None,
+    ) -> str:
+        """Render a plain-text alternative to improve inbox deliverability."""
+        if sorted_items is None:
+            sorted_items = self._get_sorted_brief_items(brief)
+
+        lines = [
+            brief.title or "Daily Brief",
+            "",
+            f"Date: {brief.date.strftime('%A, %B %d, %Y') if getattr(brief, 'date', None) else 'Today'}",
+        ]
+
+        intro_text = getattr(brief, 'intro_text', None)
+        if intro_text:
+            lines.extend(["", intro_text.strip()])
+
+        lines.extend(["", "Top stories:"])
+        for item in sorted_items:
+            headline = (item.headline or '').strip()
+            if not headline:
+                continue
+            lines.append(f"{item.position}. {headline}")
+
+            quick_summary = (item.quick_summary or '').strip()
+            if quick_summary:
+                lines.append(f"   {quick_summary}")
+
+            for bullet in (item.summary_bullets or [])[:3]:
+                bullet_text = (bullet or '').strip()
+                if bullet_text:
+                    lines.append(f"   - {bullet_text}")
+
+            if item.personal_impact:
+                lines.append(f"   Why this matters: {item.personal_impact}")
+            lines.append("")
+
+        lines.extend([
+            f"View on web: {magic_link_url}",
+            f"Manage preferences: {preferences_url}",
+            f"Unsubscribe: {unsubscribe_url}",
+        ])
+        return "\n".join(lines).strip() + "\n"
+
+    def _get_sorted_brief_items(self, brief: DailyBrief) -> List[BriefItem]:
+        """Fetch brief items once in position order for reuse across renderers."""
+        return list(brief.items.order_by(BriefItem.position.asc()).all())
+
+    def _render_welcome_text(
+        self,
+        subscriber: DailyBriefSubscriber,
+        magic_link_url: str,
+        preferences_url: str,
+        unsubscribe_url: str,
+        is_free_tier: bool,
+        trial_end_date: str,
+        trial_days: Optional[int],
+    ) -> str:
+        """Render a plain-text welcome email alternative."""
+        cadence_label = 'Weekly Brief' if subscriber.cadence == 'weekly' else 'Daily Brief'
+        lines = [
+            f"Welcome to Society Speaks {cadence_label}",
+            "",
+            "Your access is active.",
+        ]
+
+        if not is_free_tier:
+            lines.append(f"Trial ends: {trial_end_date}")
+            if trial_days is not None:
+                lines.append(f"Days remaining: {trial_days}")
+
+        lines.extend([
+            "",
+            f"Preferred send hour: {subscriber.preferred_send_hour}:00",
+            f"Timezone: {subscriber.timezone}",
+            "",
+            f"Open your brief: {magic_link_url}",
+            f"Manage preferences: {preferences_url}",
+            f"Unsubscribe: {unsubscribe_url}",
+        ])
+        return "\n".join(lines).strip() + "\n"
 
     def _from_for_brief(self, brief: DailyBrief = None) -> str:
         """Return from address with cadence-appropriate display name."""
@@ -98,7 +196,10 @@ class ResendClient:
 
             # Build unsubscribe URL using environment config
             base_url = get_base_url()
+            magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
             unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
+            preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
+            sorted_items = self._get_sorted_brief_items(brief)
 
             # Prepare email data with List-Unsubscribe headers for compliance
             email_data = {
@@ -106,11 +207,32 @@ class ResendClient:
                 'to': [subscriber.email],
                 'subject': brief.title,
                 'html': html_content,
+                'text': self._render_brief_text(
+                    brief=brief,
+                    magic_link_url=magic_link_url,
+                    unsubscribe_url=unsubscribe_url,
+                    preferences_url=preferences_url,
+                    sorted_items=sorted_items
+                ),
+                'reply_to': self.reply_to,
+                'tags': [
+                    {'name': 'campaign', 'value': 'daily_brief'},
+                    {'name': 'brief_type', 'value': getattr(brief, 'brief_type', 'daily')},
+                ],
                 'headers': {
                     'List-Unsubscribe': f'<{unsubscribe_url}>',
                     'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
                 }
             }
+
+            from_domain = self._extract_email_domain(email_data.get('from'))
+            reply_to_domain = self._extract_email_domain(email_data.get('reply_to'))
+            logger.info(
+                "Brief send preflight: from_domain=%s reply_to_domain=%s brief_type=%s",
+                from_domain,
+                reply_to_domain,
+                getattr(brief, 'brief_type', 'daily')
+            )
 
             # Send with rate limiting
             self.rate_limiter.acquire()
@@ -224,6 +346,7 @@ class ResendClient:
         magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
         unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
         preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
+        sorted_items = self._get_sorted_brief_items(brief)
 
         # Render template
         # Note: This assumes template exists at templates/emails/daily_brief.html
@@ -231,12 +354,15 @@ class ResendClient:
             html = render_template(
                 'emails/daily_brief.html',
                 brief=brief,
+                sorted_items=sorted_items,
                 subscriber=subscriber,
                 magic_link_url=magic_link_url,
                 unsubscribe_url=unsubscribe_url,
                 preferences_url=preferences_url,
                 base_url=base_url,
-                SECTIONS=SECTIONS
+                SECTIONS=SECTIONS,
+                TOPIC_DISPLAY_LABELS=TOPIC_DISPLAY_LABELS,
+                TOPIC_DISPLAY_COLORS=TOPIC_DISPLAY_COLORS
             )
             return html
         except Exception as e:
@@ -257,7 +383,7 @@ class ResendClient:
             str: Simple HTML email
         """
         items_html = ""
-        for item in brief.items.order_by(BriefItem.position.asc()):
+        for item in self._get_sorted_brief_items(brief):
             bullets_html = "".join([f"<li>{bullet}</li>" for bullet in (item.summary_bullets or [])])
             items_html += f"""
             <div style="margin-bottom: 30px; padding: 20px; background: #f9f9f9; border-left: 4px solid #333;">
@@ -359,7 +485,21 @@ class ResendClient:
                 'from': self.from_email,
                 'to': [subscriber.email],
                 'subject': subject,
-                'html': html_content
+                'html': html_content,
+                'text': self._render_welcome_text(
+                    subscriber=subscriber,
+                    magic_link_url=magic_link_url,
+                    preferences_url=preferences_url,
+                    unsubscribe_url=unsubscribe_url,
+                    is_free_tier=is_free_tier,
+                    trial_end_date=trial_end_date,
+                    trial_days=trial_days
+                ),
+                'reply_to': self.reply_to,
+                'tags': [
+                    {'name': 'campaign', 'value': 'brief_welcome'},
+                    {'name': 'cadence', 'value': subscriber.cadence or 'daily'},
+                ],
             }
 
             self.rate_limiter.acquire()

@@ -157,6 +157,58 @@
                                 {% if item.source_count %}
                                 <span class="text-xs text-gray-400 mt-1 inline-block">{{ item.source_count }} sources</span>
                                 {% endif %}
+
+                                {# Quick sources (match email quick depth richness) #}
+                                {% set quick_topic_articles = (topic_articles_by_topic_id.get(item.trending_topic.id, [])[:2] if topic_articles_by_topic_id is defined and item.trending_topic else (item.trending_topic.articles.all()[:2] if item.trending_topic else [])) %}
+                                {% if quick_topic_articles %}
+                                <div class="mt-3">
+                                    <p class="text-[11px] font-bold tracking-wide uppercase text-gray-500 mb-1">📰 Sources</p>
+                                    <div class="space-y-1">
+                                        {% for topic_article in quick_topic_articles %}
+                                        {% if topic_article.article and topic_article.article.url %}
+                                        <a href="{{ topic_article.article.url }}" target="_blank" rel="noopener" class="block text-sm text-blue-700 hover:text-blue-800 hover:underline">
+                                            {{ topic_article.article.source_name or topic_article.article.title[:40] }} &rarr;
+                                        </a>
+                                        {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {# Quick verification links #}
+                                {% if item.verification_links %}
+                                <div class="mt-3">
+                                    <p class="text-[11px] font-bold tracking-wide uppercase text-gray-500 mb-1">🔗 Verify</p>
+                                    <div class="space-y-1">
+                                        {% for link in item.verification_links[:2] %}
+                                        <a href="{{ link.url }}" target="_blank" rel="noopener" class="block text-sm text-blue-700 hover:text-blue-800 hover:underline">
+                                            {{ link.description }} &rarr;
+                                        </a>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {# Quick coverage snapshot #}
+                                {% if item.coverage_distribution %}
+                                {% set quick_left_pct = (item.coverage_distribution.get('left', 0) * 100)|int %}
+                                {% set quick_center_pct = (item.coverage_distribution.get('center', 0) * 100)|int %}
+                                {% set quick_right_pct = (item.coverage_distribution.get('right', 0) * 100)|int %}
+                                <div class="mt-3">
+                                    <p class="text-[11px] text-gray-500">
+                                        <span class="text-blue-600">{{ quick_left_pct }}% Left</span>
+                                        &nbsp;&bull;&nbsp;
+                                        <span class="text-purple-600">{{ quick_center_pct }}% Centre</span>
+                                        &nbsp;&bull;&nbsp;
+                                        <span class="text-red-600">{{ quick_right_pct }}% Right</span>
+                                    </p>
+                                    <div class="mt-1 h-1.5 w-full rounded-full overflow-hidden bg-gray-200 flex">
+                                        {% if quick_left_pct > 0 %}<div class="h-full bg-blue-500" style="width: {{ quick_left_pct }}%;"></div>{% endif %}
+                                        {% if quick_center_pct > 0 %}<div class="h-full bg-purple-500" style="width: {{ quick_center_pct }}%;"></div>{% endif %}
+                                        {% if quick_right_pct > 0 %}<div class="h-full bg-red-500" style="width: {{ quick_right_pct }}%;"></div>{% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -166,7 +218,7 @@
             {% else %}
             {# Standard and full depth items — rendered as article cards #}
             {% for item in section_items %}
-            <article id="item-{{ item.id }}" class="rounded-2xl shadow-lg border overflow-hidden {% if item.is_underreported %}bg-amber-50 border-amber-300{% else %}bg-white border-gray-100{% endif %}">
+            <article id="item-{{ item.id }}" class="rounded-2xl shadow-lg border overflow-hidden {% if item.is_underreported or section_key == 'underreported' %}bg-amber-50 border-amber-300{% else %}bg-white border-gray-100{% endif %}">
                 <div class="p-6 sm:p-8">
                     {# Section header inside the first card of each section #}
                     {% if loop.first and section_key != '_unsectioned' %}
