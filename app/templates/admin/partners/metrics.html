@@ -1,8 +1,9 @@
-{% extends "layout.html" %}
+{% extends "admin/_admin_base.html" %}
 
-{% block content %}
+{% block admin_content %}
 {% macro metrics_table(rows) %}
   {% if rows %}
+    <div class="overflow-x-auto">
     <table class="min-w-full divide-y divide-gray-200 text-sm">
       <thead class="bg-gray-50">
         <tr>
@@ -23,19 +24,20 @@
         {% endfor %}
       </tbody>
     </table>
+    </div>
   {% else %}
     <p class="text-sm text-gray-500">No partner activity yet.</p>
   {% endif %}
 {% endmacro %}
 
-<div class="min-h-screen bg-gray-100 py-6">
+<div class="py-2">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
       <div>
         <h1 class="text-2xl font-semibold text-gray-900">Partner Metrics</h1>
         <p class="text-sm text-gray-500">Votes and participation by partner ref.</p>
       </div>
-      <div class="flex items-center gap-4">
+      <div class="flex flex-wrap items-center gap-4">
         <a href="{{ url_for('admin.partner_metrics_csv') }}" class="text-sm text-gray-700 hover:text-gray-900">Download CSV</a>
         <a href="{{ url_for('admin.dashboard') }}" class="text-sm text-blue-600 hover:text-blue-900">Back to dashboard</a>
       </div>
@@ -71,6 +73,7 @@
     <div class="bg-white shadow rounded-lg p-6 mb-8">
       <h2 class="text-lg font-semibold text-gray-900 mb-4">Partner-Created Discussions</h2>
       {% if partner_discussions %}
+        <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200 text-sm">
           <thead class="bg-gray-50">
             <tr>
@@ -89,6 +92,7 @@
             {% endfor %}
           </tbody>
         </table>
+        </div>
       {% else %}
         <p class="text-sm text-gray-500">No partner-created discussions.</p>
       {% endif %}

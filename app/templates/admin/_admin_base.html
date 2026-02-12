@@ -24,6 +24,14 @@
                            class="{% if 'discussion' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Discussions
                         </a>
+                        <a href="{{ url_for('admin.list_partners') }}"
+                           class="{% if request.endpoint in ['admin.list_partners', 'admin.preview_partner_portal', 'admin.stop_partner_preview'] %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Partners
+                        </a>
+                        <a href="{{ url_for('admin.partner_metrics') }}"
+                           class="{% if request.endpoint in ['admin.partner_metrics', 'admin.partner_metrics_csv'] %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Partner Metrics
+                        </a>
                         <a href="{{ url_for('admin.list_users') }}"
                            class="{% if 'user' in request.endpoint %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Users
@@ -87,6 +95,14 @@
                 <a href="{{ url_for('admin.list_discussions') }}"
                    class="{% if 'discussion' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
                     Discussions
+                </a>
+                <a href="{{ url_for('admin.list_partners') }}"
+                   class="{% if request.endpoint in ['admin.list_partners', 'admin.preview_partner_portal', 'admin.stop_partner_preview'] %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Partners
+                </a>
+                <a href="{{ url_for('admin.partner_metrics') }}"
+                   class="{% if request.endpoint in ['admin.partner_metrics', 'admin.partner_metrics_csv'] %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                    Partner Metrics
                 </a>
                 <a href="{{ url_for('admin.list_users') }}"
                    class="{% if 'user' in request.endpoint %}bg-blue-50 border-blue-500 text-blue-700{% else %}border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800{% endif %} block pl-3 pr-4 py-2 border-l-4 text-base font-medium">
