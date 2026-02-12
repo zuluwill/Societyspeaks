@@ -87,6 +87,22 @@ MIN_SOURCES_PER_PERSPECTIVE = 2
 HEADLINES_TO_DISPLAY = 2
 
 
+def _to_utc_timestamp(dt: Optional[datetime]) -> float:
+    """
+    Normalize naive/aware datetimes to a comparable UTC timestamp.
+
+    Naive datetimes are treated as UTC to match existing DB semantics.
+    Missing dates sort last when using reverse=True (most recent first).
+    """
+    if dt is None:
+        return float("-inf")
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt.timestamp()
+
+
 def retry_on_api_error(max_retries=3, backoff_factor=2):
     """
     Decorator to retry LLM API calls with exponential backoff.
@@ -747,11 +763,11 @@ Return ONLY the omission (or "none"), no explanation or JSON."""
                 display[perspective] = []
                 continue
             
-            # Sort by recency (most recent first)
-            # Use timezone-aware datetime.min for safety
+            # Sort by recency (most recent first).
+            # Normalize naive/aware datetimes to avoid mixed-datetime comparison errors.
             sorted_headlines = sorted(
                 headlines,
-                key=lambda h: h.published_at or datetime.min.replace(tzinfo=timezone.utc),
+                key=lambda h: _to_utc_timestamp(h.published_at),
                 reverse=True
             )
             
