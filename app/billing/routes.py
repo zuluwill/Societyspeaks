@@ -1,6 +1,4 @@
 import stripe
-import logging
-from datetime import datetime
 from flask import request, redirect, url_for, jsonify, flash, current_app, session
 from flask_login import login_required, current_user
 from app.billing import billing_bp
@@ -208,9 +206,11 @@ def checkout_success():
             if sub and sub.status == 'trialing' and sub.trial_end:
                 trial_date = sub.trial_end.strftime('%d %B %Y')
                 msg = f'Welcome! Your free trial is active until {trial_date}.'
-            if sub and sub.current_period_end:
-                interval_label = 'yearly' if sub.current_period_end and (sub.current_period_end - datetime.utcnow()).days > 60 else 'monthly'
-                msg += f' You\'re on the {interval_label} plan.'
+            if sub:
+                interval = _normalize_billing_interval(getattr(sub, 'billing_interval', None))
+                if interval:
+                    interval_label = 'yearly' if interval == 'year' else 'monthly'
+                    msg += f' You\'re on the {interval_label} plan.'
             msg += ' You can start creating your first brief!'
             flash(msg, 'success')
             return redirect(url_for('briefing.list_briefings'))
@@ -238,23 +238,61 @@ def customer_portal():
         return redirect(url_for('briefing.list_briefings'))
 
 
-def _webhook_event_already_processed(event_id: str) -> bool:
-    """Check if a Stripe webhook event has already been processed (Redis-based idempotency).
-    Returns True if already processed, False if new. Gracefully returns False if Redis unavailable."""
+def _get_webhook_redis():
+    """Return Redis client for webhook idempotency, or None if unavailable."""
     try:
         import redis
         redis_url = current_app.config.get('REDIS_URL')
         if not redis_url:
-            return False
-        r = redis.from_url(redis_url, socket_connect_timeout=2)
-        key = f"stripe:webhook:processed:{event_id}"
-        if r.setnx(key, "1"):
-            r.expire(key, 86400 * 7)
-            return False
-        current_app.logger.info(f"Duplicate Stripe webhook event {event_id}, skipping")
-        return True
+            return None
+        return redis.from_url(redis_url, socket_connect_timeout=2)
     except Exception:
-        return False
+        return None
+
+
+def _start_webhook_processing(event_id: str):
+    """
+    Start webhook processing with idempotency protection.
+
+    Returns:
+        tuple[should_process, redis_client, skip_reason]
+    """
+    r = _get_webhook_redis()
+    if not r:
+        return True, None, None
+
+    processed_key = f"stripe:webhook:processed:{event_id}"
+    processing_key = f"stripe:webhook:processing:{event_id}"
+
+    try:
+        if r.get(processed_key):
+            current_app.logger.info(f"Duplicate Stripe webhook event {event_id}, already processed")
+            return False, r, 'already_processed'
+
+        if r.setnx(processing_key, "1"):
+            r.expire(processing_key, 300)  # 5 minutes processing lock
+            return True, r, None
+
+        # Another worker/request is already processing this event.
+        current_app.logger.info(f"Stripe webhook event {event_id} is already being processed")
+        return False, r, 'already_processing'
+    except Exception:
+        # Fail open if Redis errors to avoid dropping legitimate webhooks.
+        return True, None, None
+
+
+def _finish_webhook_processing(r, event_id: str, success: bool):
+    """Finalize webhook idempotency markers."""
+    if not r:
+        return
+    processing_key = f"stripe:webhook:processing:{event_id}"
+    processed_key = f"stripe:webhook:processed:{event_id}"
+    try:
+        if success:
+            r.setex(processed_key, 86400 * 7, "1")
+        r.delete(processing_key)
+    except Exception:
+        pass
 
 
 @billing_bp.route('/webhook', methods=['POST'])
@@ -279,8 +317,14 @@ def webhook():
         current_app.logger.error("Invalid webhook signature")
         return jsonify({'error': 'Invalid signature'}), 400
     
-    if _webhook_event_already_processed(event['id']):
-        return jsonify({'status': 'already_processed'}), 200
+    event_id = event.get('id')
+    if event_id:
+        should_process, webhook_redis, skip_reason = _start_webhook_processing(event_id)
+        if not should_process:
+            return jsonify({'status': skip_reason or 'already_processed'}), 200
+    else:
+        current_app.logger.warning("Stripe webhook event received without id")
+        webhook_redis = None
     
     event_type = event['type']
     data = event['data']['object']
@@ -358,9 +402,11 @@ def webhook():
         else:
             current_app.logger.info(f"Unhandled webhook event type: {event_type}")
     except Exception as e:
+        _finish_webhook_processing(webhook_redis, event_id, success=False)
         current_app.logger.error(f"Error processing webhook {event_type}: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
-    
+
+    _finish_webhook_processing(webhook_redis, event_id, success=True)
     return jsonify({'status': 'success'}), 200
 
 
