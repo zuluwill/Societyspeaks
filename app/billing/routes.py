@@ -1,4 +1,6 @@
 import stripe
+import logging
+from datetime import datetime
 from flask import request, redirect, url_for, jsonify, flash, current_app, session
 from flask_login import login_required, current_user
 from app.billing import billing_bp
@@ -202,7 +204,15 @@ def checkout_success():
             flash('Welcome! Your team subscription is now active. You can invite team members from your organization settings.', 'success')
             return redirect(url_for('briefing.organization_settings'))
         else:
-            flash('Welcome! Your subscription is now active. You can start creating your first brief!', 'success')
+            msg = 'Welcome! Your subscription is now active.'
+            if sub and sub.status == 'trialing' and sub.trial_end:
+                trial_date = sub.trial_end.strftime('%d %B %Y')
+                msg = f'Welcome! Your free trial is active until {trial_date}.'
+            if sub and sub.current_period_end:
+                interval_label = 'yearly' if sub.current_period_end and (sub.current_period_end - datetime.utcnow()).days > 60 else 'monthly'
+                msg += f' You\'re on the {interval_label} plan.'
+            msg += ' You can start creating your first brief!'
+            flash(msg, 'success')
             return redirect(url_for('briefing.list_briefings'))
     else:
         # If we reach here, subscription wasn't synced properly
@@ -228,6 +238,25 @@ def customer_portal():
         return redirect(url_for('briefing.list_briefings'))
 
 
+def _webhook_event_already_processed(event_id: str) -> bool:
+    """Check if a Stripe webhook event has already been processed (Redis-based idempotency).
+    Returns True if already processed, False if new. Gracefully returns False if Redis unavailable."""
+    try:
+        import redis
+        redis_url = current_app.config.get('REDIS_URL')
+        if not redis_url:
+            return False
+        r = redis.from_url(redis_url, socket_connect_timeout=2)
+        key = f"stripe:webhook:processed:{event_id}"
+        if r.setnx(key, "1"):
+            r.expire(key, 86400 * 7)
+            return False
+        current_app.logger.info(f"Duplicate Stripe webhook event {event_id}, skipping")
+        return True
+    except Exception:
+        return False
+
+
 @billing_bp.route('/webhook', methods=['POST'])
 @csrf.exempt
 def webhook():
@@ -249,6 +278,9 @@ def webhook():
     except s.error.SignatureVerificationError:
         current_app.logger.error("Invalid webhook signature")
         return jsonify({'error': 'Invalid signature'}), 400
+    
+    if _webhook_event_already_processed(event['id']):
+        return jsonify({'status': 'already_processed'}), 200
     
     event_type = event['type']
     data = event['data']['object']

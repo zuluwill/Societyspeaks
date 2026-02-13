@@ -57,6 +57,8 @@ APP_BASE_URL = "https://societyspeaks.io"
 RESEND_FROM_EMAIL = "Society Speaks <hello@brief.societyspeaks.io>"
 RESEND_DAILY_FROM_EMAIL = "Daily Questions <daily@brief.societyspeaks.io>"
 AUDIO_ENABLED = "false"
+STRIPE_PERSONAL_MONTHLY_PRICE_ID = "price_1T0InvAjRojnyfWfBrvh6xe8"
+STRIPE_PERSONAL_YEARLY_PRICE_ID = "price_1T0IoaAjRojnyfWfKlEFMxme"
 
 [userenv.production]
 

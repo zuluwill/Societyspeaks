@@ -484,11 +484,14 @@ def list_briefings():
             is_featured=True
         ).order_by(BriefTemplate.sort_order).limit(6).all()
 
+    active_sub = get_active_subscription(current_user)
+
     return render_template(
         'briefing/list.html',
         user_briefings=user_briefings,
         org_briefings=org_briefings,
-        featured_templates=featured_templates
+        featured_templates=featured_templates,
+        active_sub=active_sub
     )
 
 

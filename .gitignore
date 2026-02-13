@@ -165,6 +165,9 @@ cython_debug/
 # Node.js
 node_modules/
 
+# macOS metadata
+.DS_Store
+
 # Sensitive assets - screenshots, logs, and temporary files
 attached_assets/
 
