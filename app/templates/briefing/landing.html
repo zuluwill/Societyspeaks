@@ -835,7 +835,7 @@
   <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
       <h2 class="text-3xl font-bold text-slate-900 mb-4">Simple pricing</h2>
-      <p class="text-lg text-slate-600">One plan for individuals. Team and Enterprise for organisations.</p>
+      <p class="text-lg text-slate-600">Personal and Pro for individuals. Team and Enterprise for organisations.</p>
     </div>
 
     <!-- Pricing toggle -->
@@ -852,7 +852,7 @@
 
     <!-- Individual pricing -->
     <div id="pricing-individuals" class="pricing-tab">
-      <div class="grid md:grid-cols-1 gap-8 max-w-2xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
         <!-- Personal -->
         <div class="bg-white rounded-2xl border-2 border-slate-200 p-8">
           <div class="mb-6">
@@ -871,11 +871,15 @@
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>Full-quality brief depth and context</span>
+              <span>Up to 10 sources per brief</span>
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
               <span>Custom sources and schedules</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>PDF document uploads</span>
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
@@ -909,6 +913,69 @@
           </a>
           {% endif %}
           <p class="text-xs text-slate-500 text-center mt-3">30-day free trial, then £4.99/month</p>
+        </div>
+
+        <!-- Pro -->
+        <div class="bg-white rounded-2xl border-2 border-slate-900 p-8 relative">
+          <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-3 py-1 rounded-full">Most popular</span>
+          <div class="mb-6">
+            <h3 class="text-xl font-bold text-slate-900">Pro</h3>
+            <p class="text-slate-500 text-sm mt-1">Stay on top of everything that matters</p>
+          </div>
+          <div class="mb-6">
+            <span class="text-4xl font-bold text-slate-900">£25</span>
+            <span class="text-slate-500">/month</span>
+            <p class="text-sm text-emerald-600 mt-1">or £250/year (save 17%)</p>
+          </div>
+          <ul class="space-y-3 text-slate-700 mb-8">
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Up to 10 briefs</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span><strong>Unlimited sources</strong></span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Up to 50 recipients per brief</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>PDF document uploads</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>30-day free trial, cancel anytime</span>
+            </li>
+          </ul>
+          <p class="text-sm text-slate-500 mb-4 italic">"I need multiple briefs across topics with deep source coverage."</p>
+          {% if current_user.is_authenticated %}
+          <form action="{{ url_for('billing.checkout') }}" method="POST" class="mb-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="plan" value="professional">
+            <input type="hidden" name="interval" value="month">
+            <button type="submit" class="block w-full text-center rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors">
+              Start free trial
+            </button>
+          </form>
+          <form action="{{ url_for('billing.checkout') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="plan" value="professional">
+            <input type="hidden" name="interval" value="year">
+            <button type="submit" class="block w-full text-center rounded-lg border border-slate-300 px-6 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+              Or pay £250/year (save 17%)
+            </button>
+          </form>
+          {% else %}
+          <a href="{{ url_for('auth.register', checkout_plan='professional', checkout_interval='month') }}" class="block w-full text-center rounded-lg bg-slate-900 px-6 py-3 text-sm font-semibold text-white hover:bg-slate-800 transition-colors mb-2">
+            Start free trial
+          </a>
+          <a href="{{ url_for('auth.register', checkout_plan='professional', checkout_interval='year') }}" class="block w-full text-center rounded-lg border border-slate-300 px-6 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+            Or pay £250/year (save 17%)
+          </a>
+          {% endif %}
+          <p class="text-xs text-slate-500 text-center mt-3">30-day free trial, then £25/month</p>
         </div>
       </div>
     </div>
