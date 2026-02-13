@@ -25,7 +25,7 @@ PRICING_PLANS = [
         'stripe_price_monthly_id': os.getenv('STRIPE_PERSONAL_MONTHLY_PRICE_ID'),
         'stripe_price_yearly_id': os.getenv('STRIPE_PERSONAL_YEARLY_PRICE_ID'),
         'max_briefs': -1,
-        'max_sources': 10,
+        'max_sources': 15,
         'max_recipients': 10,
         'max_editors': 1,
         'allow_document_uploads': True,
