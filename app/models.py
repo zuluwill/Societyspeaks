@@ -4161,8 +4161,8 @@ class PricingPlan(db.Model):
     description = db.Column(db.Text)
 
     # Pricing
-    price_monthly = db.Column(db.Integer, nullable=False)  # In pence (£12 = 1200)
-    price_yearly = db.Column(db.Integer, nullable=True)    # In pence (£250 = 25000)
+    price_monthly = db.Column(db.Integer, nullable=False)  # In pence (e.g. £4.99 = 499)
+    price_yearly = db.Column(db.Integer, nullable=True)    # In pence (e.g. £49 = 4900)
     currency = db.Column(db.String(3), default='GBP')
 
     # Stripe IDs

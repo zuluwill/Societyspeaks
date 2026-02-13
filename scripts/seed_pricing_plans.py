@@ -15,10 +15,10 @@ from app.models import PricingPlan
 PRICING_PLANS = [
     {
         'code': 'starter',
-        'name': 'Starter',
-        'description': 'Perfect for getting started with one focused brief',
-        'price_monthly': 1200,  # £12
-        'price_yearly': None,
+        'name': 'Personal',
+        'description': 'For individuals who want to stay informed without information overload',
+        'price_monthly': 499,  # £4.99
+        'price_yearly': 4900,  # £49
         'max_briefs': 1,
         'max_sources': 10,
         'max_recipients': 10,
