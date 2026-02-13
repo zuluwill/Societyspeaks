@@ -333,15 +333,19 @@ society_speaks/
 - [COMPLETE_SYSTEM_GUIDE.md](./COMPLETE_SYSTEM_GUIDE.md) - Full technical documentation
 - [QUICK_START.md](./QUICK_START.md) - Getting started guide
 - [IDEAS.md](./IDEAS.md) - Future plans and roadmap
+- [CONTRIBUTING.md](./CONTRIBUTING.md) - Current contribution policy
+- [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md) - Community standards
+- [MAINTAINERS.md](./MAINTAINERS.md) - Maintainer and governance details
+- [SECURITY.md](./SECURITY.md) - Private vulnerability disclosure process
+- [.github/LABELS.md](./.github/LABELS.md) - Suggested issue triage labels
 - [docs/](./docs/) - Implementation summaries
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+External pull requests are currently paused while the project is maintained by a single contributor.
+
+- Please open an issue for bugs, ideas, or collaboration requests.
+- If external contributions are reopened, contribution terms and process will be documented in `CONTRIBUTING.md`.
 
 ## Known Issues
 
@@ -365,7 +369,17 @@ For support, please open an issue or contact the maintainers.
 
 ## License
 
-AGPL-3.0 license
+This project is licensed under the GNU Affero General Public License v3.0 (`AGPL-3.0`).
+
+- Full text: `LICENSE`
+- Copyright and ownership: `COPYRIGHT`
+- Third-party notices: `NOTICE`
+
+If you run a modified version of this software over a network, AGPL requires you to make the corresponding source available to users of that service.
+
+### Commercial Licensing
+
+If you are a publisher, enterprise, or partner and need non-AGPL commercial terms for embeds, API usage, or distribution, contact the maintainers to discuss a commercial license.
 
 ---
 

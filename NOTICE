@@ -1,0 +1,15 @@
+Society Speaks includes third-party open-source software.
+
+Third-party components are provided under their respective licenses.
+Package managers and lockfiles in this repository (including `requirements.txt`,
+`pyproject.toml`, `package.json`, and `package-lock.json`) define dependency sources.
+
+Key examples include:
+- Flask and related extensions
+- SQLAlchemy
+- Redis clients
+- scikit-learn, numpy, pandas
+- Tailwind CSS
+
+Where required, attribution and license obligations for third-party components remain with
+their original authors and license terms.
