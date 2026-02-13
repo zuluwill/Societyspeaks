@@ -44,6 +44,10 @@ PRICING_PLANS = [
         'price_monthly': 2500,  # £25
         'price_yearly': 25000,  # £250
         'currency': 'GBP',
+        # Optional Stripe IDs for Pro tier (supports either PROFESSIONAL_* or PRO_* env names)
+        'stripe_product_id': os.getenv('STRIPE_PROFESSIONAL_PRODUCT_ID') or os.getenv('STRIPE_PRO_PRODUCT_ID'),
+        'stripe_price_monthly_id': os.getenv('STRIPE_PROFESSIONAL_MONTHLY_PRICE_ID') or os.getenv('STRIPE_PRO_MONTHLY_PRICE_ID'),
+        'stripe_price_yearly_id': os.getenv('STRIPE_PROFESSIONAL_YEARLY_PRICE_ID') or os.getenv('STRIPE_PRO_YEARLY_PRICE_ID'),
         'max_briefs': -1,  # Unlimited (fair use)
         'max_sources': -1,  # Unlimited (fair use)
         'max_recipients': 50,
