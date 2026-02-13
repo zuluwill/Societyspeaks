@@ -2,10 +2,10 @@
 {% block title %}Personal Briefs - Stop drowning in newsletters. Start knowing what matters. | Society Speaks{% endblock %}
 {% block meta_description %}Replace 15 newsletters with one calm daily brief. Tailored to your sources, delivered on your schedule. Used by policy researchers, analysts, and think tanks.{% endblock %}
 {% block og_title %}Personal Briefs - One daily brief from sources you trust{% endblock %}
-{% block og_description %}Stop reading 15 newsletters. Start knowing what matters. Synthesised daily briefs from the sources you actually trust. From £12/month.{% endblock %}
+{% block og_description %}Stop reading 15 newsletters. Start knowing what matters. Synthesised daily briefs from the sources you actually trust. From £4.99/month.{% endblock %}
 {% block og_image %}{{ url_for('main.serve_asset', filename='images/briefing-og-image.jpg', _external=True) }}{% endblock %}
 {% block twitter_title %}Personal Briefs - Stop drowning in newsletters. Start knowing what matters.{% endblock %}
-{% block twitter_description %}Replace 15 newsletters with one calm daily brief. Tailored to your sources, delivered on your schedule. From £12/month.{% endblock %}
+{% block twitter_description %}Replace 15 newsletters with one calm daily brief. Tailored to your sources, delivered on your schedule. From £4.99/month.{% endblock %}
 {% block twitter_image %}{{ url_for('main.serve_asset', filename='images/briefing-og-image.jpg', _external=True) }}{% endblock %}
 
 {% block head %}
@@ -23,19 +23,11 @@
   "offers": [
     {
       "@type": "Offer",
-      "name": "Starter",
-      "price": "12",
+      "name": "Personal",
+      "price": "4.99",
       "priceCurrency": "GBP",
       "priceValidUntil": "2026-12-31",
-      "description": "1 daily brief, up to 20 sources"
-    },
-    {
-      "@type": "Offer",
-      "name": "Professional",
-      "price": "25",
-      "priceCurrency": "GBP",
-      "priceValidUntil": "2026-12-31",
-      "description": "Up to 10 briefs, unlimited sources, PDF uploads"
+      "description": "Unlimited briefs with full-quality summaries, context, and source links"
     },
     {
       "@type": "Offer",
@@ -81,7 +73,7 @@
       "name": "Can I upload my own research documents?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes, on Professional and above. Upload PDFs and we'll synthesise them alongside your public sources. Great for combining internal research with external news."
+        "text": "Yes, on Team and Enterprise plans. Upload PDFs and we'll synthesise them alongside your public sources."
       }
     },
     {
@@ -97,7 +89,7 @@
       "name": "What if I don't like it?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Cancel anytime, no questions asked. 30-day free trial, no credit card required."
+        "text": "Cancel anytime, no questions asked. 30-day free trial."
       }
     },
     {
@@ -197,7 +189,7 @@
             See an example brief
           </a>
         </div>
-        <p class="text-sm mt-4" style="color: #64748b">From £12/month. 30-day free trial.</p>
+        <p class="text-sm mt-4" style="color: #64748b">From £4.99/month. 30-day free trial.</p>
       </div>
 
       <!-- Right: Brief preview that shows real value -->
@@ -367,7 +359,7 @@
             Private, shareable, or public — you choose
           </li>
         </ul>
-        <p class="text-sm font-semibold text-slate-900">From £12/month</p>
+        <p class="text-sm font-semibold text-slate-900">From £4.99/month</p>
       </div>
 
       <!-- ICP 2: Researcher/Analyst -->
@@ -394,7 +386,7 @@
             Full source attribution
           </li>
         </ul>
-        <p class="text-sm font-semibold text-slate-900">From £25/month</p>
+        <p class="text-sm font-semibold text-slate-900">From £4.99/month</p>
       </div>
 
       <!-- ICP 3: Organisation -->
@@ -843,7 +835,7 @@
   <section class="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
       <h2 class="text-3xl font-bold text-slate-900 mb-4">Simple pricing</h2>
-      <p class="text-lg text-slate-600">Start with a 30-day free trial.</p>
+      <p class="text-lg text-slate-600">One plan for individuals. Team and Enterprise for organisations.</p>
     </div>
 
     <!-- Pricing toggle -->
@@ -860,37 +852,37 @@
 
     <!-- Individual pricing -->
     <div id="pricing-individuals" class="pricing-tab">
-      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        <!-- Starter -->
+      <div class="grid md:grid-cols-1 gap-8 max-w-2xl mx-auto">
+        <!-- Personal -->
         <div class="bg-white rounded-2xl border-2 border-slate-200 p-8">
           <div class="mb-6">
-            <h3 class="text-xl font-bold text-slate-900">Starter</h3>
-            <p class="text-slate-500 text-sm mt-1">For focused professionals with one main interest</p>
+            <h3 class="text-xl font-bold text-slate-900">Personal</h3>
+            <p class="text-slate-500 text-sm mt-1">For individuals who want to stay informed without information overload</p>
           </div>
           <div class="mb-6">
-            <span class="text-4xl font-bold text-slate-900">£12</span>
+            <span class="text-4xl font-bold text-slate-900">£4.99</span>
             <span class="text-slate-500">/month</span>
-            <p class="text-sm text-emerald-600 mt-1">or £120/year (save 17%)</p>
+            <p class="text-sm text-emerald-600 mt-1">or £49/year (save 18%)</p>
           </div>
           <ul class="space-y-3 text-slate-700 mb-8">
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>1 daily brief</span>
+              <span>Unlimited briefs</span>
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>Up to 20 sources</span>
+              <span>Full-quality brief depth and context</span>
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>All templates included</span>
+              <span>Custom sources and schedules</span>
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>Daily or weekly delivery</span>
+              <span>30-day free trial, cancel anytime</span>
             </li>
           </ul>
-          <p class="text-sm text-slate-500 mb-4 italic">"I want one calm daily brief covering my main interest."</p>
+          <p class="text-sm text-slate-500 mb-4 italic">"I want one calm daily brief that keeps me informed."</p>
           {% if current_user.is_authenticated %}
           <form action="{{ url_for('billing.checkout') }}" method="POST" class="mb-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -905,7 +897,7 @@
             <input type="hidden" name="plan" value="starter">
             <input type="hidden" name="interval" value="year">
             <button type="submit" class="block w-full text-center rounded-lg border border-slate-300 px-6 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-              Or pay £120/year (save 17%)
+              Or pay £49/year (save 18%)
             </button>
           </form>
           {% else %}
@@ -913,75 +905,10 @@
             Start free trial
           </a>
           <a href="{{ url_for('auth.register', checkout_plan='starter', checkout_interval='year') }}" class="block w-full text-center rounded-lg border border-slate-300 px-6 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-            Or pay £120/year (save 17%)
+            Or pay £49/year (save 18%)
           </a>
           {% endif %}
-          <p class="text-xs text-slate-500 text-center mt-3">30-day free trial, then £12/month</p>
-        </div>
-
-        <!-- Professional -->
-        <div class="bg-white rounded-2xl border-2 border-blue-600 p-8 relative">
-          <div class="absolute -top-3 left-1/2 transform -translate-x-1/2">
-            <span class="bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-full">MOST POPULAR</span>
-          </div>
-          <div class="mb-6">
-            <h3 class="text-xl font-bold text-slate-900">Professional</h3>
-            <p class="text-slate-500 text-sm mt-1">For people who need to track multiple domains</p>
-          </div>
-          <div class="mb-6">
-            <span class="text-4xl font-bold text-slate-900">£25</span>
-            <span class="text-slate-500">/month</span>
-            <p class="text-sm text-emerald-600 mt-1">or £250/year (save 17%)</p>
-          </div>
-          <ul class="space-y-3 text-slate-700 mb-8">
-            <li class="flex items-center gap-3">
-              <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span><strong>Up to 10 briefs</strong> (tech, politics, markets...)</span>
-            </li>
-            <li class="flex items-center gap-3">
-              <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>Unlimited sources</span>
-            </li>
-            <li class="flex items-center gap-3">
-              <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span><strong>Upload PDFs</strong> and documents</span>
-            </li>
-            <li class="flex items-center gap-3">
-              <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>Priority processing</span>
-            </li>
-            <li class="flex items-center gap-3">
-              <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>Deeper synthesis</span>
-            </li>
-          </ul>
-          <p class="text-sm text-slate-500 mb-4 italic">"I need to stay on top of tech, policy, AND markets."</p>
-          {% if current_user.is_authenticated %}
-          <form action="{{ url_for('billing.checkout') }}" method="POST" class="mb-2">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="plan" value="professional">
-            <input type="hidden" name="interval" value="month">
-            <button type="submit" class="block w-full text-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-500 transition-colors">
-              Start free trial
-            </button>
-          </form>
-          <form action="{{ url_for('billing.checkout') }}" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <input type="hidden" name="plan" value="professional">
-            <input type="hidden" name="interval" value="year">
-            <button type="submit" class="block w-full text-center rounded-lg border border-slate-300 px-6 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-              Or pay £250/year (save 17%)
-            </button>
-          </form>
-          {% else %}
-          <a href="{{ url_for('auth.register', checkout_plan='professional', checkout_interval='month') }}" class="block w-full text-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white hover:bg-blue-500 transition-colors mb-2">
-            Start free trial
-          </a>
-          <a href="{{ url_for('auth.register', checkout_plan='professional', checkout_interval='year') }}" class="block w-full text-center rounded-lg border border-slate-300 px-6 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-            Or pay £250/year (save 17%)
-          </a>
-          {% endif %}
-          <p class="text-xs text-slate-500 text-center mt-3">30-day free trial, then £25/month</p>
+          <p class="text-xs text-slate-500 text-center mt-3">30-day free trial, then £4.99/month</p>
         </div>
       </div>
     </div>
@@ -1269,7 +1196,7 @@
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">Can I upload my own research documents?</h3>
-        <p class="text-slate-600">Yes, on Professional and above. Upload PDFs and we'll synthesise them alongside your public sources. Great for combining internal research with external news.</p>
+        <p class="text-slate-600">Yes, on Team and Enterprise plans. Upload PDFs and we'll synthesise them alongside your public sources.</p>
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">Can I review before sending to my team?</h3>
@@ -1277,7 +1204,7 @@
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">What if I don't like it?</h3>
-        <p class="text-slate-600">Cancel anytime, no questions asked. 30-day free trial, no credit card required.</p>
+        <p class="text-slate-600">Cancel anytime, no questions asked. 30-day free trial.</p>
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">What sources can I add?</h3>
