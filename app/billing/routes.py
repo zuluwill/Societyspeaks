@@ -15,6 +15,16 @@ from app.models import User, PricingPlan, Subscription, Partner
 from app import db, csrf
 
 
+def _normalize_billing_interval(raw_interval):
+    """Normalize billing interval to month/year for consistent checkout handling."""
+    interval = (raw_interval or 'month').strip().lower()
+    if interval in ('year', 'yearly', 'annual', 'annually'):
+        return 'year'
+    if interval in ('month', 'monthly'):
+        return 'month'
+    return None
+
+
 @billing_bp.route('/checkout', methods=['POST'])
 @login_required
 def checkout():
@@ -22,7 +32,10 @@ def checkout():
     current_app.logger.info(f"Checkout initiated by user {current_user.id} ({current_user.email})")
     
     plan_code = request.form.get('plan', 'starter')
-    billing_interval = request.form.get('interval', 'month')
+    billing_interval = _normalize_billing_interval(request.form.get('interval', 'month'))
+    if not billing_interval:
+        flash('Invalid billing interval selected.', 'error')
+        return redirect(url_for('briefing.landing'))
     
     current_app.logger.info(f"Plan: {plan_code}, Interval: {billing_interval}")
 
@@ -156,7 +169,7 @@ def checkout_success():
                         import posthog
                         if posthog and getattr(posthog, 'project_api_key', None):
                             meta = getattr(checkout_session, 'metadata', None) or {}
-                            interval = meta.get('billing_interval', 'month')
+                            interval = _normalize_billing_interval(meta.get('billing_interval', 'month')) or 'month'
                             plan = sub.plan
                             price_pence = plan.price_yearly if interval == 'year' else plan.price_monthly
                             price_display = (price_pence / 100.0) if price_pence else None
@@ -581,7 +594,10 @@ def handle_subscription_resumed(subscription_data):
 def pending_checkout():
     """Handle pending checkout after registration/login."""
     plan_code = request.args.get('plan', 'starter')
-    billing_interval = request.args.get('interval', 'month')
+    billing_interval = _normalize_billing_interval(request.args.get('interval', 'month'))
+    if not billing_interval:
+        flash('Invalid billing interval selected.', 'error')
+        return redirect(url_for('briefing.landing'))
     
     try:
         checkout_session = create_checkout_session(

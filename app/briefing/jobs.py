@@ -450,7 +450,6 @@ def process_generation_job(job_id: str) -> bool:
             except Exception:
                 pass
 
-    finally:
         # Always release the lock when done (explicit cleanup)
         if lock_acquired and client:
             try:

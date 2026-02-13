@@ -19,6 +19,11 @@ PRICING_PLANS = [
         'description': 'For individuals who want to stay informed without information overload',
         'price_monthly': 499,  # £4.99
         'price_yearly': 4900,  # £49
+        'currency': 'GBP',
+        # Optional Stripe IDs (recommended to set in environment for consistent deploys)
+        'stripe_product_id': os.getenv('STRIPE_PERSONAL_PRODUCT_ID'),
+        'stripe_price_monthly_id': os.getenv('STRIPE_PERSONAL_MONTHLY_PRICE_ID'),
+        'stripe_price_yearly_id': os.getenv('STRIPE_PERSONAL_YEARLY_PRICE_ID'),
         'max_briefs': -1,
         'max_sources': 10,
         'max_recipients': 10,
@@ -38,6 +43,7 @@ PRICING_PLANS = [
         'description': 'Stay on top of everything that matters',
         'price_monthly': 2500,  # £25
         'price_yearly': 25000,  # £250
+        'currency': 'GBP',
         'max_briefs': 10,
         'max_sources': -1,  # Unlimited (fair use)
         'max_recipients': 50,
@@ -57,6 +63,7 @@ PRICING_PLANS = [
         'description': 'Align your team with shared intelligence',
         'price_monthly': 30000,  # £300
         'price_yearly': None,
+        'currency': 'GBP',
         'max_briefs': -1,  # Unlimited (fair use)
         'max_sources': -1,
         'max_recipients': 500,
@@ -76,6 +83,7 @@ PRICING_PLANS = [
         'description': 'For organisations with complex needs',
         'price_monthly': 200000,  # £2,000
         'price_yearly': None,
+        'currency': 'GBP',
         'max_briefs': -1,
         'max_sources': -1,
         'max_recipients': -1,
@@ -104,6 +112,9 @@ def seed_pricing_plans():
             if existing:
                 print(f"Updating plan: {code}")
                 for key, value in plan_data.items():
+                    # Do not wipe existing Stripe IDs when env vars are not provided.
+                    if key.startswith('stripe_') and value is None:
+                        continue
                     setattr(existing, key, value)
             else:
                 print(f"Creating plan: {code}")

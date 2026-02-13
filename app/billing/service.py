@@ -4,6 +4,8 @@ from flask import current_app
 from app import db
 from app.models import User, CompanyProfile, PricingPlan, Subscription, OrganizationMember, generate_slug, Partner
 
+VALID_BILLING_INTERVALS = {'month', 'year'}
+
 
 def get_stripe():
     """Get configured Stripe module with API key from Flask config."""
@@ -38,6 +40,9 @@ def get_or_create_stripe_customer(user):
 def create_checkout_session(user, plan_code, billing_interval='month', success_url=None, cancel_url=None):
     """Create a Stripe Checkout session for subscription."""
     s = get_stripe()
+
+    if billing_interval not in VALID_BILLING_INTERVALS:
+        raise ValueError(f"Invalid billing interval '{billing_interval}'. Expected 'month' or 'year'.")
     
     plan = PricingPlan.query.filter_by(code=plan_code, is_active=True).first()
     if not plan:
