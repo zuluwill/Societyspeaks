@@ -23,7 +23,7 @@ PRICING_PLANS = [
         'max_sources': 10,
         'max_recipients': 10,
         'max_editors': 1,
-        'allow_document_uploads': False,
+        'allow_document_uploads': True,
         'allow_custom_branding': False,
         'allow_approval_workflow': False,
         'allow_slack_integration': False,
