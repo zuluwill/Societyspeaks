@@ -248,6 +248,25 @@ def queue_brief_generation(briefing_id: int, user_id: int) -> Optional[str]:
         Job ID if successful, None if failed (including when queue is full)
     """
     import uuid
+    from app.billing.abuse_guardrails import (
+        check_generation_rate_limit, check_user_concurrency,
+        check_token_spend_limit, increment_user_jobs
+    )
+
+    allowed, msg = check_generation_rate_limit(user_id)
+    if not allowed:
+        logger.warning(f"Generation rate limit hit for user {user_id}: {msg}")
+        return None
+
+    allowed, msg = check_user_concurrency(user_id)
+    if not allowed:
+        logger.warning(f"Concurrency limit hit for user {user_id}: {msg}")
+        return None
+
+    allowed, msg = check_token_spend_limit(user_id)
+    if not allowed:
+        logger.warning(f"Token spend limit hit for user {user_id}: {msg}")
+        return None
 
     client = get_redis_client()
     if not client:
@@ -289,6 +308,7 @@ def queue_brief_generation(briefing_id: int, user_id: int) -> Optional[str]:
     if job.save():
         try:
             client.lpush('briefing:generation_queue', job_id)
+            increment_user_jobs(user_id, 'queued')
             logger.info(f"Queued generation job {job_id} for briefing {briefing_id}")
             _log_metrics('job_queued', {'job_id': job_id, 'briefing_id': briefing_id})
             return job_id
@@ -327,6 +347,7 @@ def process_generation_job(job_id: str) -> bool:
     lock_key = f"{JOB_PREFIX}{job_id}:lock"
     lock_acquired = False
     job = None  # Initialize for finally block
+    _job_active = False  # Track whether we incremented the active counter
 
     try:
         # Try to atomically claim the job FIRST (before reading job state)
@@ -351,18 +372,21 @@ def process_generation_job(job_id: str) -> bool:
             logger.info(f"Job {job_id} already being processed (status: {job.status})")
             return False
 
+        from app.billing.abuse_guardrails import decrement_user_jobs, increment_user_jobs as inc_jobs, record_generation
+
         job.update_status('processing', 'Loading briefing configuration...')
+        decrement_user_jobs(job.user_id, 'queued')
+        inc_jobs(job.user_id, 'active')
+        _job_active = True
         _log_metrics('job_started', {'job_id': job_id, 'retry_count': job.retry_count})
 
         briefing = Briefing.query.get(job.briefing_id)
         if not briefing:
-            # Non-retryable error - briefing doesn't exist
             job.update_status('failed', error='Briefing not found')
             _log_metrics('job_failed_permanent', {'job_id': job_id, 'reason': 'briefing_not_found'})
             return False
 
         if not briefing.sources:
-            # Non-retryable error - no sources configured
             job.update_status('failed', error='No sources configured for this briefing')
             _log_metrics('job_failed_permanent', {'job_id': job_id, 'reason': 'no_sources'})
             return False
@@ -381,7 +405,6 @@ def process_generation_job(job_id: str) -> bool:
         )
 
         if brief_run is None:
-            # Semi-retryable - might have content later
             error_msg = 'No content available from your sources. Try adding more sources or wait for content to be ingested.'
             job.update_status('failed', error=error_msg)
             _log_metrics('job_failed', {'job_id': job_id, 'reason': 'no_content'})
@@ -391,6 +414,7 @@ def process_generation_job(job_id: str) -> bool:
         db.session.commit()
 
         job.update_status('completed', 'Brief generated successfully!', brief_run_id=brief_run.id)
+        record_generation(job.user_id)
         _log_metrics('job_completed', {'job_id': job_id, 'brief_run_id': brief_run.id})
         logger.info(f"Completed generation job {job_id} with brief_run {brief_run.id}")
         return True
@@ -399,14 +423,12 @@ def process_generation_job(job_id: str) -> bool:
         logger.error(f"Error processing job {job_id}: {e}", exc_info=True)
         db.session.rollback()
 
-        # Schedule retry for transient errors
         try:
             if job is None:
                 job = GenerationJob.get(job_id)
             if job:
                 error_msg = str(e)
                 if job.can_retry():
-                    # Schedule retry with exponential backoff
                     job.schedule_retry(error_msg)
                     _log_metrics('job_retry_scheduled', {
                         'job_id': job_id,
@@ -414,13 +436,19 @@ def process_generation_job(job_id: str) -> bool:
                         'delay': job.calculate_retry_delay()
                     })
                 else:
-                    # Max retries exceeded
                     job.update_status('dead', error=error_msg)
                     _log_metrics('job_dead', {'job_id': job_id, 'error': error_msg})
         except Exception as update_error:
             logger.error(f"Failed to update job status: {update_error}")
 
         return False
+
+    finally:
+        if _job_active and job:
+            try:
+                decrement_user_jobs(job.user_id, 'active')
+            except Exception:
+                pass
 
     finally:
         # Always release the lock when done (explicit cleanup)

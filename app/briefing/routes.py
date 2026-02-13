@@ -1530,6 +1530,7 @@ def upload_source():
         try:
             from replit.object_storage import Client
             from werkzeug.utils import secure_filename
+            from app.billing.abuse_guardrails import check_upload_rate_limit, record_upload
             import secrets
             import hashlib
             
@@ -1542,11 +1543,15 @@ def upload_source():
                 flash('No file selected', 'error')
                 return redirect(url_for('briefing.upload_source'))
             
-            # Validate file
             filename = secure_filename(file.filename or '')
             file.seek(0, 2)  # Seek to end
             file_size = file.tell()
             file.seek(0)  # Reset
+            
+            upload_allowed, upload_error = check_upload_rate_limit(current_user.id, file_size)
+            if not upload_allowed:
+                flash(upload_error, 'error')
+                return redirect(url_for('briefing.upload_source'))
             
             is_valid, error = validate_file_upload(filename, max_size_mb=10)
             if not is_valid:
@@ -1580,6 +1585,8 @@ def upload_source():
             
             db.session.add(source)
             db.session.commit()
+            
+            record_upload(current_user.id, file_size)
             
             flash(f'File uploaded successfully. Text extraction in progress...', 'success')
             
@@ -2673,8 +2680,22 @@ def test_generate(briefing_id):
     
     try:
         from app.briefing.jobs import queue_brief_generation, is_redis_available
+        from app.billing.abuse_guardrails import check_generation_rate_limit, check_token_spend_limit, record_generation
         
-        # Try async approach if Redis is available
+        allowed, rate_msg = check_generation_rate_limit(current_user.id)
+        if not allowed:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'error': rate_msg}), 429
+            flash(rate_msg, 'warning')
+            return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+        
+        allowed, spend_msg = check_token_spend_limit(current_user.id)
+        if not allowed:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify({'error': spend_msg}), 429
+            flash(spend_msg, 'warning')
+            return redirect(url_for('briefing.detail', briefing_id=briefing_id))
+        
         if is_redis_available():
             job_id = queue_brief_generation(briefing_id, current_user.id)
             
@@ -2718,6 +2739,8 @@ def test_generate(briefing_id):
         
         brief_run.status = 'generated_draft'
         db.session.commit()
+        
+        record_generation(current_user.id)
         
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({

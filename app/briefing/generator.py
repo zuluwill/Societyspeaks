@@ -35,9 +35,19 @@ class BriefingGenerator:
     def __init__(self):
         self.api_key, self.provider = get_system_api_key()
         self.llm_available = bool(self.api_key)
+        self._current_user_id = None
         
         if not self.llm_available:
             logger.warning("No LLM API key found. Brief will use fallback content generation.")
+
+    def _track_token_spend(self, tokens_used: int, cost_usd: float, model: str):
+        """Record token spend for the current user if available."""
+        if self._current_user_id:
+            try:
+                from app.billing.abuse_guardrails import record_token_spend
+                record_token_spend(self._current_user_id, tokens_used, cost_usd, model)
+            except Exception as e:
+                logger.debug(f"Could not record token spend: {e}")
 
     def _call_llm(self, prompt: str, system_prompt: str = "You are a helpful assistant.", max_tokens: int = 500, temperature: float = 0.7, max_retries: int = 3) -> Optional[str]:
         """Call LLM API with retry logic for transient errors."""
@@ -74,6 +84,10 @@ class BriefingGenerator:
                 if not content:
                     logger.warning("Empty response from OpenAI")
                     return None
+                if hasattr(response, 'usage') and response.usage:
+                    total_tokens = (response.usage.prompt_tokens or 0) + (response.usage.completion_tokens or 0)
+                    cost = total_tokens * 0.00000015
+                    self._track_token_spend(total_tokens, cost, 'gpt-4o-mini')
                 return content
 
             except openai.APIStatusError as e:
@@ -119,6 +133,10 @@ class BriefingGenerator:
                 if not content:
                     logger.warning("Empty response from Anthropic")
                     return None
+                if hasattr(response, 'usage') and response.usage:
+                    total_tokens = (getattr(response.usage, 'input_tokens', 0) or 0) + (getattr(response.usage, 'output_tokens', 0) or 0)
+                    cost = total_tokens * 0.00000025
+                    self._track_token_spend(total_tokens, cost, 'claude-3-haiku')
                 return content
 
             except anthropic.APIStatusError as e:
@@ -163,7 +181,16 @@ class BriefingGenerator:
             BriefRun instance (saved to database) or None if no content
         """
         try:
-            # Select items if not provided
+            if briefing.owner_type == 'user':
+                self._current_user_id = briefing.owner_id
+            elif briefing.owner_type == 'org':
+                from app.models import OrganizationMember
+                admin_member = OrganizationMember.query.filter_by(
+                    organization_id=briefing.owner_id, role='admin'
+                ).first()
+                if admin_member:
+                    self._current_user_id = admin_member.user_id
+
             if ingested_items is None:
                 ingested_items = self._select_items_for_briefing(briefing)
             

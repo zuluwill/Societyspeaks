@@ -19,7 +19,7 @@ PRICING_PLANS = [
         'description': 'For individuals who want to stay informed without information overload',
         'price_monthly': 499,  # £4.99
         'price_yearly': 4900,  # £49
-        'max_briefs': 1,
+        'max_briefs': -1,
         'max_sources': 10,
         'max_recipients': 10,
         'max_editors': 1,
