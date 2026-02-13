@@ -110,10 +110,18 @@
     },
     {
       "@type": "Question",
-      "name": "Do you offer team or enterprise trials?",
+      "name": "What's the difference between Personal and Pro?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Team and Enterprise plans include a 30-day free trial. For Enterprise, contact us to discuss your specific requirements and we'll set up a tailored pilot."
+        "text": "Both plans include unlimited briefs and PDF uploads. Personal gives you up to 10 sources per brief and up to 10 recipients — perfect for staying informed yourself. Pro unlocks unlimited sources, up to 50 recipients, and priority processing — ideal if you need deeper coverage or want to share briefs with colleagues."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do all plans include a free trial?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Every plan includes a 30-day free trial. For Enterprise, contact us to discuss your specific requirements and we'll set up a tailored pilot."
       }
     },
     {
@@ -930,7 +938,7 @@
           <ul class="space-y-3 text-slate-700 mb-8">
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
-              <span>Up to 10 briefs</span>
+              <span><strong>Unlimited briefs</strong></span>
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
@@ -946,10 +954,14 @@
             </li>
             <li class="flex items-center gap-3">
               <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Priority processing</span>
+            </li>
+            <li class="flex items-center gap-3">
+              <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
               <span>30-day free trial, cancel anytime</span>
             </li>
           </ul>
-          <p class="text-sm text-slate-500 mb-4 italic">"I need multiple briefs across topics with deep source coverage."</p>
+          <p class="text-sm text-slate-500 mb-4 italic">"I need unlimited sources and the ability to share briefs with my team."</p>
           {% if current_user.is_authenticated %}
           <form action="{{ url_for('billing.checkout') }}" method="POST" class="mb-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -1282,8 +1294,12 @@
         <p class="text-slate-600">About 2 minutes. Pick a template, customise your sources if you want, set your delivery time, and you're done. First brief arrives the next morning.</p>
       </div>
       <div class="border-b border-slate-200 pb-6">
-        <h3 class="font-semibold text-slate-900 mb-2">Do you offer team or enterprise trials?</h3>
-        <p class="text-slate-600">Yes. Team and Enterprise plans include a 30-day free trial. For Enterprise, contact us to discuss your specific requirements and we'll set up a tailored pilot.</p>
+        <h3 class="font-semibold text-slate-900 mb-2">What's the difference between Personal and Pro?</h3>
+        <p class="text-slate-600">Both plans include unlimited briefs and PDF uploads. Personal gives you up to 10 sources per brief and up to 10 recipients — perfect for staying informed yourself. Pro unlocks unlimited sources, up to 50 recipients, and priority processing — ideal if you need deeper coverage or want to share briefs with colleagues.</p>
+      </div>
+      <div class="border-b border-slate-200 pb-6">
+        <h3 class="font-semibold text-slate-900 mb-2">Do all plans include a free trial?</h3>
+        <p class="text-slate-600">Yes. Every plan includes a 30-day free trial. For Enterprise, contact us to discuss your specific requirements and we'll set up a tailored pilot.</p>
       </div>
       <div class="border-b border-slate-200 pb-6">
         <h3 class="font-semibold text-slate-900 mb-2">Can I keep my briefs private or share them publicly?</h3>

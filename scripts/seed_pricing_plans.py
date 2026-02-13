@@ -44,7 +44,7 @@ PRICING_PLANS = [
         'price_monthly': 2500,  # £25
         'price_yearly': 25000,  # £250
         'currency': 'GBP',
-        'max_briefs': 10,
+        'max_briefs': -1,  # Unlimited (fair use)
         'max_sources': -1,  # Unlimited (fair use)
         'max_recipients': 50,
         'max_editors': 1,
