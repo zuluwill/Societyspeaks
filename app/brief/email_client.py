@@ -5,6 +5,7 @@ Handles email delivery via Resend API with timezone support.
 """
 
 import os
+import re
 import time
 import requests
 import threading
@@ -27,6 +28,42 @@ def _daily_brief_email_allowed() -> bool:
     if os.environ.get('ALLOW_EMAIL_IN_NON_PROD') == '1':
         return True
     return os.environ.get('REPLIT_DEPLOYMENT') == '1'
+
+
+_SYSTEM_FONT = (
+    "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,"
+    "'Helvetica Neue',Arial,sans-serif"
+)
+_SERIF_FONT = "Georgia,'Times New Roman',serif"
+
+_RE_WHITESPACE_BETWEEN_TAGS = re.compile(r'>\s{2,}<')
+_RE_HTML_COMMENT = re.compile(r'<!--(?!\[if )(?!<!\[endif\]).*?-->', re.DOTALL)
+_RE_STYLE_INNER_WS = re.compile(r'\s*:\s+')
+_RE_STYLE_SEMI_WS = re.compile(r'\s*;\s+')
+_RE_BLANK_LINES = re.compile(r'\n\s*\n')
+
+
+def _minify_email_html(html: str) -> str:
+    html = _RE_HTML_COMMENT.sub('', html)
+    html = _RE_BLANK_LINES.sub('\n', html)
+    html = _RE_WHITESPACE_BETWEEN_TAGS.sub('><', html)
+    html = re.sub(
+        r"-apple-system,\s*BlinkMacSystemFont,\s*"
+        r"(?:&quot;|')Segoe UI(?:&quot;|'),\s*Roboto,\s*"
+        r"(?:&quot;|')Helvetica Neue(?:&quot;|'),\s*Arial,\s*sans-serif",
+        _SYSTEM_FONT,
+        html,
+    )
+    html = re.sub(
+        r"Georgia,\s*(?:&quot;|')Times New Roman(?:&quot;|'),\s*serif",
+        _SERIF_FONT,
+        html,
+    )
+    html = re.sub(r'style="\s+', 'style="', html)
+    html = re.sub(r'\s*;\s*"', '"', html)
+    html = re.sub(r'\n\s+', ' ', html)
+    html = re.sub(r'  +', ' ', html)
+    return html.strip()
 
 
 class ResendClient:
@@ -364,6 +401,7 @@ class ResendClient:
                 TOPIC_DISPLAY_LABELS=TOPIC_DISPLAY_LABELS,
                 TOPIC_DISPLAY_COLORS=TOPIC_DISPLAY_COLORS
             )
+            html = _minify_email_html(html)
             return html
         except Exception as e:
             logger.error(f"Template rendering failed: {e}")
