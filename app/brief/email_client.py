@@ -38,9 +38,15 @@ _SERIF_FONT = "Georgia,'Times New Roman',serif"
 
 _RE_WHITESPACE_BETWEEN_TAGS = re.compile(r'>\s{2,}<')
 _RE_HTML_COMMENT = re.compile(r'<!--(?!\[if )(?!<!\[endif\]).*?-->', re.DOTALL)
-_RE_STYLE_INNER_WS = re.compile(r'\s*:\s+')
-_RE_STYLE_SEMI_WS = re.compile(r'\s*;\s+')
 _RE_BLANK_LINES = re.compile(r'\n\s*\n')
+_RE_STYLE_ATTR = re.compile(r'(style=")(.*?)(")', re.DOTALL)
+_RE_TAG_LINE_INDENT = re.compile(r'^[ \t]+(</?\w)', re.MULTILINE)
+
+
+def _compact_style(match: re.Match) -> str:
+    prefix, body, suffix = match.group(1), match.group(2), match.group(3)
+    body = ' '.join(body.split())
+    return prefix + body + suffix
 
 
 def _minify_email_html(html: str) -> str:
@@ -59,10 +65,8 @@ def _minify_email_html(html: str) -> str:
         _SERIF_FONT,
         html,
     )
-    html = re.sub(r'style="\s+', 'style="', html)
-    html = re.sub(r'\s*;\s*"', '"', html)
-    html = re.sub(r'\n\s+', ' ', html)
-    html = re.sub(r'  +', ' ', html)
+    html = _RE_STYLE_ATTR.sub(_compact_style, html)
+    html = _RE_TAG_LINE_INDENT.sub(r'\1', html)
     return html.strip()
 
 
