@@ -57,10 +57,18 @@ def generate_weekly_insights_post(platform: str = 'x') -> Optional[str]:
     # Build post
     max_length = 280 if platform == 'x' else 300
     
-    if top_consensus and total_participants > 0:
+    from app.trending.social_insights import PARTICIPANT_DISPLAY_THRESHOLD
+
+    if top_consensus and total_participants >= PARTICIPANT_DISPLAY_THRESHOLD:
         post = f"📊 Weekly Insight:\n\n{total_participants} people across {total_discussions} discussions this week.\n\nTop finding: {int(top_consensus_rate * 100)}% agree that:\n\n\"{top_consensus}...\"\n\nThis is why nuanced debate matters. #CivicEngagement"
+    elif top_consensus:
+        post = f"📊 Weekly Insight:\n\nTop finding: {int(top_consensus_rate * 100)}% agree that:\n\n\"{top_consensus}...\"\n\nNuanced debate reveals consensus where headlines show division. #CivicEngagement"
     else:
-        post = f"📊 Weekly Insight:\n\n{total_participants} people participated across {total_discussions} discussions this week.\n\nNuanced debate reveals consensus where headlines show division. #CivicEngagement"
+        logger.info(
+            f"Skipping weekly insights post: {total_participants} participants, "
+            f"no consensus findings — not enough to share"
+        )
+        return None
     
     return post[:max_length]
 
