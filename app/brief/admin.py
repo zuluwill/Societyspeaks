@@ -13,6 +13,7 @@ from app.brief.generator import generate_daily_brief
 from app.brief.topic_selector import select_todays_topics
 from app.decorators import admin_required
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -270,7 +271,11 @@ def send_missed():
 @brief_admin_bp.route('/emergency-generate', methods=['POST'])
 @admin_required
 def emergency_generate():
-    """Run full pipeline + generate + publish + send brief in one step."""
+    """Queue emergency brief generation as a background task.
+    
+    The actual work runs in the scheduler to avoid gunicorn worker timeouts
+    (the full pipeline can take 5+ minutes with hundreds of clusters).
+    """
     brief_date = date.today()
     
     try:
@@ -279,50 +284,55 @@ def emergency_generate():
             flash(f'Brief already published for {brief_date}.', 'warning')
             return redirect(url_for('brief_admin.dashboard'))
         
-        if existing and existing.status == 'draft':
-            try:
-                db.session.delete(existing)
-                db.session.commit()
-                logger.info(f"Deleted existing draft brief for {brief_date}")
-            except Exception:
-                db.session.rollback()
-
-        logger.info(f"Emergency brief generation for {brief_date}")
-        
-        from app.trending.pipeline import run_pipeline, auto_publish_daily
-        try:
-            articles, topics, ready = run_pipeline(hold_minutes=0)
-            logger.info(f"Pipeline: {articles} articles, {topics} topics, {ready} ready")
-        except Exception as pipe_err:
-            logger.error(f"Pipeline step failed: {pipe_err}", exc_info=True)
-            db.session.rollback()
-        
-        try:
-            published_topics = auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
-            logger.info(f"Auto-published {published_topics} topics")
-        except Exception as pub_err:
-            logger.error(f"Auto-publish step failed: {pub_err}", exc_info=True)
-            db.session.rollback()
-        
-        try:
-            brief = generate_daily_brief(brief_date, auto_publish=True)
-        except Exception as gen_err:
-            logger.error(f"Brief generation step failed: {gen_err}", exc_info=True)
-            db.session.rollback()
-            brief = None
-        
-        if brief is None:
-            flash('Failed to generate brief - no suitable topics found even after running pipeline.', 'error')
+        import redis as redis_lib
+        redis_url = current_app.config.get('REDIS_URL') or os.environ.get('REDIS_URL')
+        if not redis_url:
+            flash('Redis not available — cannot queue background task.', 'error')
             return redirect(url_for('brief_admin.dashboard'))
         
-        flash(f'Brief generated and published: {brief.title} ({brief.item_count} items). Emails will be sent at the next scheduled hour.', 'success')
-        return redirect(url_for('brief_admin.preview', date_str=brief_date.isoformat()))
+        r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+        key = 'emergency_brief_generate'
+        
+        current_status = (r.get(f'{key}:status') or b'').decode()
+        if current_status in ('running', 'queued'):
+            flash('Emergency generation is already running in the background. Refresh the page to check progress.', 'info')
+            return redirect(url_for('brief_admin.dashboard'))
+        
+        acquired = r.set(f'{key}:status', 'queued', ex=900, nx=True)
+        if not acquired:
+            flash('Emergency generation is already in progress.', 'info')
+            return redirect(url_for('brief_admin.dashboard'))
+        r.set(f'{key}:step', 'Queued — waiting for scheduler pickup...', ex=900)
+        r.delete(f'{key}:error')
+        
+        logger.info(f"Emergency brief generation queued for {brief_date}")
+        flash('Emergency generation started in the background. This page will update automatically.', 'success')
+        return redirect(url_for('brief_admin.dashboard'))
         
     except Exception as e:
-        logger.error(f"Emergency brief generation failed: {e}", exc_info=True)
-        db.session.rollback()
-        flash(f'Emergency generation failed: {str(e)}', 'error')
+        logger.error(f"Failed to queue emergency generation: {e}", exc_info=True)
+        flash(f'Failed to start emergency generation: {str(e)}', 'error')
         return redirect(url_for('brief_admin.dashboard'))
+
+
+@brief_admin_bp.route('/emergency-generate/status')
+@admin_required
+def emergency_generate_status():
+    """Poll endpoint for emergency generation progress."""
+    import redis as redis_lib
+    redis_url = current_app.config.get('REDIS_URL') or os.environ.get('REDIS_URL')
+    if not redis_url:
+        return jsonify({'status': 'unknown', 'step': 'Redis unavailable'})
+    
+    try:
+        r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+        key = 'emergency_brief_generate'
+        status = (r.get(f'{key}:status') or b'').decode() or 'idle'
+        step = (r.get(f'{key}:step') or b'').decode() or ''
+        error = (r.get(f'{key}:error') or b'').decode() or ''
+        return jsonify({'status': status, 'step': step, 'error': error})
+    except Exception:
+        return jsonify({'status': 'unknown', 'step': 'Could not check status'})
 
 
 @brief_admin_bp.route('/publish/<int:brief_id>', methods=['POST'])

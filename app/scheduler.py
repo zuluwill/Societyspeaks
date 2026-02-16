@@ -1404,6 +1404,107 @@ def init_scheduler(app):
                 logger.error(msg, exc_info=True)
                 _send_ops_alert(msg)
 
+    @scheduler.scheduled_job('interval', seconds=5, id='check_emergency_brief_generate')
+    def check_emergency_brief_generate_job():
+        """
+        Check for emergency brief generation requests queued via admin dashboard.
+        Runs every 5 seconds. The actual pipeline work happens here in the scheduler
+        thread, avoiding gunicorn worker timeouts.
+        """
+        with app.app_context():
+            import redis as redis_lib
+            redis_url = os.environ.get('REDIS_URL')
+            if not redis_url:
+                return
+            
+            try:
+                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                key = 'emergency_brief_generate'
+                status = (r.get(f'{key}:status') or b'').decode()
+                
+                if status != 'queued':
+                    return
+                
+                claimed = r.eval(
+                    "if redis.call('get', KEYS[1]) == 'queued' then "
+                    "redis.call('set', KEYS[1], 'running', 'EX', 900) "
+                    "return 1 else return 0 end",
+                    1, f'{key}:status'
+                )
+                if not claimed:
+                    return
+                r.set(f'{key}:step', 'Starting pipeline...', ex=900)
+                
+                from app import db
+                from app.models import DailyBrief
+                from app.brief.generator import generate_daily_brief
+                from datetime import date
+                
+                brief_date = date.today()
+                logger.info(f"Emergency brief generation for {brief_date}")
+                
+                existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').first()
+                if existing and existing.status == 'published':
+                    r.set(f'{key}:status', 'done', ex=300)
+                    r.set(f'{key}:step', 'Brief already published for today.', ex=300)
+                    return
+                
+                if existing and existing.status == 'draft':
+                    try:
+                        db.session.delete(existing)
+                        db.session.commit()
+                        logger.info(f"Deleted existing draft brief for {brief_date}")
+                    except Exception:
+                        db.session.rollback()
+                
+                r.set(f'{key}:step', 'Fetching articles from sources...', ex=900)
+                from app.trending.pipeline import run_pipeline, auto_publish_daily
+                try:
+                    articles, topics, ready = run_pipeline(hold_minutes=0)
+                    logger.info(f"Pipeline: {articles} articles, {topics} topics, {ready} ready")
+                    r.set(f'{key}:step', f'Pipeline done: {articles} articles, {topics} topics. Publishing...', ex=900)
+                except Exception as pipe_err:
+                    logger.error(f"Emergency pipeline step failed: {pipe_err}", exc_info=True)
+                    db.session.rollback()
+                    r.set(f'{key}:step', f'Pipeline failed, trying to continue: {pipe_err}', ex=900)
+                
+                r.set(f'{key}:step', 'Auto-publishing top topics...', ex=900)
+                try:
+                    published_topics = auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
+                    logger.info(f"Auto-published {published_topics} topics")
+                    r.set(f'{key}:step', f'Published {published_topics} topics. Generating brief...', ex=900)
+                except Exception as pub_err:
+                    logger.error(f"Emergency auto-publish step failed: {pub_err}", exc_info=True)
+                    db.session.rollback()
+                
+                r.set(f'{key}:step', 'Generating brief with AI analysis...', ex=900)
+                try:
+                    brief = generate_daily_brief(brief_date, auto_publish=True)
+                except Exception as gen_err:
+                    logger.error(f"Emergency brief generation step failed: {gen_err}", exc_info=True)
+                    db.session.rollback()
+                    brief = None
+                
+                if brief is None:
+                    r.set(f'{key}:status', 'failed', ex=600)
+                    r.set(f'{key}:step', 'Failed to generate brief — no suitable topics found.', ex=600)
+                    r.set(f'{key}:error', 'No suitable topics found even after running pipeline.', ex=600)
+                    _send_ops_alert("Emergency brief generation failed: no suitable topics found after full pipeline run.")
+                else:
+                    r.set(f'{key}:status', 'done', ex=600)
+                    r.set(f'{key}:step', f'Done! {brief.title} ({brief.item_count} items). Emails at next scheduled hour.', ex=600)
+                    logger.info(f"Emergency brief generated: {brief.title} ({brief.item_count} items)")
+                    
+            except Exception as e:
+                logger.error(f"Emergency brief generation failed: {e}", exc_info=True)
+                try:
+                    r.set(f'{key}:status', 'failed', ex=600)
+                    r.set(f'{key}:step', f'Failed: {str(e)[:200]}', ex=600)
+                    r.set(f'{key}:error', str(e)[:500], ex=600)
+                except Exception:
+                    pass
+                _send_ops_alert(f"Emergency brief generation failed: {e}")
+
     @scheduler.scheduled_job('cron', day_of_week='sat', hour=17, minute=0, id='generate_weekly_brief')
     def generate_weekly_brief_job():
         """

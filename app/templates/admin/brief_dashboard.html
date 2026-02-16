@@ -178,15 +178,23 @@
                                class="inline-flex items-center px-4 py-2 bg-amber-600 text-white font-medium rounded-lg hover:bg-amber-700 transition">
                                 Generate Now
                             </a>
-                            <form action="{{ url_for('brief_admin.emergency_generate') }}" method="POST" class="inline">
+                            <form action="{{ url_for('brief_admin.emergency_generate') }}" method="POST" class="inline" id="emergencyForm">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit"
-                                        onclick="this.disabled=true; this.innerText='Running pipeline...'; this.form.submit();"
+                                <button type="submit" id="emergencyBtn"
                                         class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
                                         title="Runs the full news pipeline, creates topics, then generates and publishes the brief">
                                     Emergency: Pipeline + Generate + Publish
                                 </button>
                             </form>
+                        </div>
+                        <div id="emergencyProgress" class="hidden mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                <span id="emergencyStep" class="text-blue-800 font-medium">Starting...</span>
+                            </div>
                         </div>
                     </div>
                     {% endif %}
@@ -277,4 +285,79 @@
         </div>
     </div>
 </div>
+
+<script>
+(function() {
+    const btn = document.getElementById('emergencyBtn');
+    const progress = document.getElementById('emergencyProgress');
+    const stepEl = document.getElementById('emergencyStep');
+    if (!btn || !progress) return;
+
+    let polling = false;
+
+    function startPolling() {
+        if (polling) return;
+        polling = true;
+        btn.disabled = true;
+        btn.textContent = 'Running in background...';
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+        progress.classList.remove('hidden');
+        poll();
+    }
+
+    function poll() {
+        fetch('{{ url_for("brief_admin.emergency_generate_status") }}')
+            .then(r => r.json())
+            .then(data => {
+                if (data.step) stepEl.textContent = data.step;
+                if (data.status === 'done') {
+                    progress.classList.remove('bg-blue-50', 'border-blue-200');
+                    progress.classList.add('bg-green-50', 'border-green-200');
+                    stepEl.classList.remove('text-blue-800');
+                    stepEl.classList.add('text-green-800');
+                    progress.querySelector('svg').classList.add('hidden');
+                    setTimeout(function() { location.reload(); }, 3000);
+                    return;
+                }
+                if (data.status === 'failed') {
+                    progress.classList.remove('bg-blue-50', 'border-blue-200');
+                    progress.classList.add('bg-red-50', 'border-red-200');
+                    stepEl.classList.remove('text-blue-800');
+                    stepEl.classList.add('text-red-800');
+                    progress.querySelector('svg').classList.add('hidden');
+                    btn.disabled = false;
+                    btn.textContent = 'Emergency: Pipeline + Generate + Publish';
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    return;
+                }
+                if (data.status === 'running' || data.status === 'queued') {
+                    setTimeout(poll, 3000);
+                } else {
+                    polling = false;
+                    btn.disabled = false;
+                    btn.textContent = 'Emergency: Pipeline + Generate + Publish';
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    progress.classList.add('hidden');
+                }
+            })
+            .catch(function() { setTimeout(poll, 5000); });
+    }
+
+    fetch('{{ url_for("brief_admin.emergency_generate_status") }}')
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'running' || data.status === 'queued') {
+                startPolling();
+            }
+        })
+        .catch(function() {});
+
+    var form = document.getElementById('emergencyForm');
+    if (form) {
+        form.addEventListener('submit', function() {
+            setTimeout(startPolling, 1000);
+        });
+    }
+})();
+</script>
 {% endblock %}
