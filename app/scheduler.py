@@ -524,7 +524,7 @@ def init_scheduler(app):
     @scheduler.scheduled_job('cron', hour=8, id='daily_auto_publish')
     def daily_auto_publish():
         """
-        Auto-publish up to 5 diverse topics daily.
+        Auto-publish up to 15 diverse topics daily.
         Runs once at 8am UTC.
         Bluesky and X posts are scheduled for staggered times throughout the day.
         """
@@ -534,7 +534,7 @@ def init_scheduler(app):
             logger.info("Starting daily auto-publish")
             
             try:
-                published = auto_publish_daily(max_topics=5, schedule_bluesky=True, schedule_x=True)
+                published = auto_publish_daily(max_topics=15, schedule_bluesky=True, schedule_x=True)
                 logger.info(f"Auto-published {published} topics (Bluesky and X posts scheduled)")
             except Exception as e:
                 logger.error(f"Daily auto-publish error: {e}", exc_info=True)

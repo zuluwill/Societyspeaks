@@ -34,8 +34,11 @@ def dashboard():
     from app.trending.topic_signals import get_hot_topics_summary
     from app.trending.social_poster import get_social_posting_status
     
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+
     stats = get_pipeline_stats()
-    queue = get_review_queue()
+    queue = get_review_queue(page=page, per_page=per_page)
     sources = NewsSource.query.order_by(NewsSource.name).all()
     hot_topics = get_hot_topics_summary()
     social_status = get_social_posting_status()

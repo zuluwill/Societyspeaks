@@ -296,14 +296,26 @@ def auto_publish_high_confidence() -> int:
     return auto_publish_daily(max_topics=15)
 
 
-def get_review_queue(limit: int = 50) -> List[TrendingTopic]:
-    """Get topics pending review (paginated to prevent N+1 timeouts)."""
-    from sqlalchemy.orm import selectinload
+def get_review_queue(page: int = 1, per_page: int = 50):
+    """
+    Get a paginated review queue.
+
+    The dashboard only needs topic-level fields for list rendering, so we avoid
+    eager-loading dynamic relationships here and rely on pagination to bound
+    query time and payload size.
+    """
+    safe_page = max(1, int(page or 1))
+    safe_per_page = max(1, min(int(per_page or 50), 100))
+
     return TrendingTopic.query.filter_by(
         status='pending_review'
-    ).options(
-        selectinload(TrendingTopic.articles).selectinload(TrendingTopicArticle.article).selectinload(NewsArticle.source)
-    ).order_by(TrendingTopic.created_at.desc()).limit(limit).all()
+    ).order_by(
+        TrendingTopic.created_at.desc()
+    ).paginate(
+        page=safe_page,
+        per_page=safe_per_page,
+        error_out=False
+    )
 
 
 def get_pipeline_stats() -> dict:

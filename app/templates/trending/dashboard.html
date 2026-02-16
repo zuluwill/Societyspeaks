@@ -142,9 +142,9 @@
             <h2 class="text-xl font-semibold">Review Queue</h2>
         </div>
         
-        {% if queue %}
+        {% if queue.items %}
         <div class="divide-y">
-            {% for topic in queue %}
+            {% for topic in queue.items %}
             <div class="p-4 hover:bg-gray-50">
                 <div class="flex justify-between items-start">
                     <div class="flex-1">
@@ -172,8 +172,8 @@
                         {% endif %}
                     </div>
                     <div class="flex gap-2 ml-4">
-                        {% if topic.is_high_confidence %}
-                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">High Confidence</span>
+                        {% if topic.should_auto_publish %}
+                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Auto-Publish Eligible</span>
                         {% endif %}
                         <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">{{ topic.status }}</span>
                     </div>
@@ -184,6 +184,30 @@
             </div>
             {% endfor %}
         </div>
+        {% if queue.pages > 1 %}
+        <div class="p-4 border-t bg-gray-50 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                Showing {{ queue.items|length }} of {{ queue.total }} pending topics
+            </div>
+            <div class="flex gap-2">
+                {% if queue.has_prev %}
+                <a href="{{ url_for('trending.dashboard', page=queue.prev_num) }}"
+                   class="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white hover:bg-gray-100">
+                    Previous
+                </a>
+                {% endif %}
+                <span class="px-3 py-1.5 text-sm rounded border border-gray-200 bg-white text-gray-700">
+                    Page {{ queue.page }} of {{ queue.pages }}
+                </span>
+                {% if queue.has_next %}
+                <a href="{{ url_for('trending.dashboard', page=queue.next_num) }}"
+                   class="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white hover:bg-gray-100">
+                    Next
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
         {% else %}
         <div class="p-8 text-center text-gray-500">
             <p>No topics pending review.</p>
