@@ -140,7 +140,7 @@ def preview(date_str=None):
 @brief_admin_bp.route('/generate', methods=['GET', 'POST'])
 @admin_required
 def generate(date_str=None):
-    """Generate brief for a date"""
+    """Generate brief for a date. Auto-runs trending pipeline if no topics available."""
     if request.method == 'POST':
         date_str = request.form.get('date')
 
@@ -154,18 +154,28 @@ def generate(date_str=None):
         return redirect(url_for('brief_admin.dashboard'))
 
     try:
-        # Check if daily brief already exists for this date
         existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').first()
         if existing and existing.status != 'draft':
             flash(f'Daily brief already exists for {brief_date} with status: {existing.status}', 'warning')
             return redirect(url_for('brief_admin.preview', date_str=date_str))
 
-        # Generate
         logger.info(f"Admin generating brief for {brief_date}")
         brief = generate_daily_brief(brief_date, auto_publish=False)
 
         if brief is None:
-            flash('No suitable topics available for this date. Try fetching news first.', 'warning')
+            logger.info("No topics available, auto-running trending pipeline...")
+            try:
+                from app.trending.pipeline import run_pipeline, auto_publish_daily
+                articles, topics, ready = run_pipeline(hold_minutes=0)
+                logger.info(f"Emergency pipeline: {articles} articles, {topics} topics, {ready} ready")
+                published = auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
+                logger.info(f"Emergency auto-publish: {published} topics published")
+                brief = generate_daily_brief(brief_date, auto_publish=False)
+            except Exception as pipeline_err:
+                logger.error(f"Emergency pipeline failed: {pipeline_err}", exc_info=True)
+
+        if brief is None:
+            flash('No suitable topics available even after refreshing news. This may indicate a system issue.', 'error')
             return redirect(url_for('brief_admin.dashboard'))
 
         flash(f'Brief generated successfully! Review it before publishing.', 'success')
@@ -174,6 +184,46 @@ def generate(date_str=None):
     except Exception as e:
         logger.error(f"Brief generation failed: {e}", exc_info=True)
         flash(f'Error generating brief: {str(e)}', 'error')
+        return redirect(url_for('brief_admin.dashboard'))
+
+@brief_admin_bp.route('/emergency-generate', methods=['POST'])
+@admin_required
+def emergency_generate():
+    """Run full pipeline + generate + publish + send brief in one step."""
+    brief_date = date.today()
+    
+    try:
+        existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').first()
+        if existing and existing.status == 'published':
+            flash(f'Brief already published for {brief_date}.', 'warning')
+            return redirect(url_for('brief_admin.dashboard'))
+        
+        if existing and existing.status == 'draft':
+            db.session.delete(existing)
+            db.session.commit()
+            logger.info(f"Deleted existing draft brief for {brief_date}")
+
+        logger.info(f"Emergency brief generation for {brief_date}")
+        
+        from app.trending.pipeline import run_pipeline, auto_publish_daily
+        articles, topics, ready = run_pipeline(hold_minutes=0)
+        logger.info(f"Pipeline: {articles} articles, {topics} topics, {ready} ready")
+        
+        published_topics = auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
+        logger.info(f"Auto-published {published_topics} topics")
+        
+        brief = generate_daily_brief(brief_date, auto_publish=True)
+        
+        if brief is None:
+            flash('Failed to generate brief - no suitable topics found even after running pipeline.', 'error')
+            return redirect(url_for('brief_admin.dashboard'))
+        
+        flash(f'Brief generated and published: {brief.title} ({brief.item_count} items). Emails will be sent at the next scheduled hour.', 'success')
+        return redirect(url_for('brief_admin.preview', date_str=brief_date.isoformat()))
+        
+    except Exception as e:
+        logger.error(f"Emergency brief generation failed: {e}", exc_info=True)
+        flash(f'Emergency generation failed: {str(e)}', 'error')
         return redirect(url_for('brief_admin.dashboard'))
 
 

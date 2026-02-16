@@ -1241,6 +1241,9 @@ def init_scheduler(app):
         legacy flat format if sectioned selection fails.
         
         Idempotency: Checks if brief already exists with ready/published status.
+        
+        Self-healing: If no topics available, automatically runs the trending
+        pipeline and retries generation to prevent missed briefs.
         """
         with app.app_context():
             from app.brief.generator import generate_daily_brief
@@ -1250,7 +1253,6 @@ def init_scheduler(app):
             logger.info("Starting daily brief generation (sectioned mode)")
 
             try:
-                # Idempotency check
                 existing = DailyBrief.query.filter_by(
                     date=date.today(), brief_type='daily'
                 ).first()
@@ -1264,7 +1266,24 @@ def init_scheduler(app):
                 )
 
                 if brief is None:
-                    logger.warning("No topics available for today's brief - skipping")
+                    logger.warning("No topics available - attempting self-healing pipeline run")
+                    try:
+                        from app.trending.pipeline import run_pipeline, auto_publish_daily
+                        articles, topics, ready = run_pipeline(hold_minutes=0)
+                        logger.info(f"Self-healing pipeline: {articles} articles, {topics} topics, {ready} ready")
+                        published_count = auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
+                        logger.info(f"Self-healing auto-publish: {published_count} topics published")
+                        
+                        brief = generate_daily_brief(
+                            brief_date=date.today(),
+                            auto_publish=True
+                        )
+                        if brief:
+                            logger.info(f"Self-healing succeeded: {brief.title} ({brief.item_count} items)")
+                        else:
+                            logger.error("CRITICAL: Daily brief generation failed even after self-healing pipeline run. Manual intervention required.")
+                    except Exception as heal_err:
+                        logger.error(f"CRITICAL: Self-healing pipeline failed: {heal_err}", exc_info=True)
                     return
 
                 logger.info(f"Daily brief generated: {brief.title} ({brief.item_count} items)")
