@@ -1422,13 +1422,49 @@ def init_scheduler(app):
             error_key = f'{key}:error'
             queued_at_key = f'{key}:queued_at'
             queue_alerted_key = f'{key}:queue_alerted'
+            heartbeat_key = f'{key}:heartbeat'
+            claim_key = f'{key}:claim'
             RUNNING_TTL_SECONDS = 3600
             QUEUE_WAIT_ALERT_SECONDS = 120
             FINAL_STATUS_TTL_SECONDS = 600
+            STALE_HEARTBEAT_SECONDS = 600
             
             try:
                 r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
                 status = (r.get(status_key) or b'').decode()
+
+                if status == 'running':
+                    heartbeat_raw = (r.get(heartbeat_key) or b'').decode()
+                    is_stale = False
+                    if heartbeat_raw:
+                        try:
+                            heartbeat_age = datetime.utcnow().timestamp() - float(heartbeat_raw)
+                            if heartbeat_age > STALE_HEARTBEAT_SECONDS:
+                                logger.warning(
+                                    f"Emergency brief worker heartbeat stale ({heartbeat_age:.0f}s). "
+                                    f"Worker likely crashed. Re-queuing for retry."
+                                )
+                                is_stale = True
+                        except ValueError:
+                            pass
+                    else:
+                        heartbeat_missing_ttl = r.ttl(status_key)
+                        if heartbeat_missing_ttl > 0 and (RUNNING_TTL_SECONDS - heartbeat_missing_ttl) > STALE_HEARTBEAT_SECONDS:
+                            logger.warning("Emergency brief worker has no heartbeat and started >10min ago. Re-queuing.")
+                            is_stale = True
+
+                    if is_stale:
+                        r.set(status_key, 'queued', ex=RUNNING_TTL_SECONDS)
+                        r.set(queued_at_key, str(datetime.utcnow().timestamp()), ex=RUNNING_TTL_SECONDS)
+                        r.set(step_key, 'Previous worker crashed. Re-queued for automatic retry...', ex=RUNNING_TTL_SECONDS)
+                        r.delete(heartbeat_key)
+                        r.delete(queue_alerted_key)
+                        r.delete(claim_key)
+                        _send_ops_alert(
+                            "WARNING: Emergency brief generation worker crashed (stale heartbeat). "
+                            "Job has been automatically re-queued for retry."
+                        )
+                        status = 'queued'
 
                 if status == 'queued':
                     queued_at_raw = (r.get(queued_at_key) or b'').decode()
@@ -1452,19 +1488,29 @@ def init_scheduler(app):
                 if status != 'queued':
                     return
                 
+                import uuid
+                my_claim = str(uuid.uuid4())
                 claimed = r.eval(
                     "if redis.call('get', KEYS[1]) == 'queued' then "
                     "redis.call('set', KEYS[1], 'running', 'EX', ARGV[1]) "
+                    "redis.call('set', KEYS[2], ARGV[2], 'EX', ARGV[1]) "
                     "return 1 else return 0 end",
-                    1, status_key, str(RUNNING_TTL_SECONDS)
+                    2, status_key, claim_key, str(RUNNING_TTL_SECONDS), my_claim
                 )
                 if not claimed:
                     return
 
+                def _check_claim() -> bool:
+                    current = (r.get(claim_key) or b'').decode()
+                    return current == my_claim
+
                 def _set_step(message: str) -> None:
-                    # Keep the running lock alive while this long task executes.
+                    if not _check_claim():
+                        logger.warning("Emergency brief claim invalidated — another worker took over. Aborting.")
+                        raise RuntimeError("Claim invalidated")
                     r.expire(status_key, RUNNING_TTL_SECONDS)
                     r.set(step_key, message, ex=RUNNING_TTL_SECONDS)
+                    r.set(heartbeat_key, str(datetime.utcnow().timestamp()), ex=RUNNING_TTL_SECONDS)
 
                 _set_step('Starting pipeline...')
                 
@@ -1482,6 +1528,8 @@ def init_scheduler(app):
                     r.set(step_key, 'Brief already published for today.', ex=FINAL_STATUS_TTL_SECONDS)
                     r.delete(queued_at_key)
                     r.delete(queue_alerted_key)
+                    r.delete(heartbeat_key)
+                    r.delete(claim_key)
                     return
                 
                 if existing and existing.status == 'draft':
@@ -1492,17 +1540,34 @@ def init_scheduler(app):
                     except Exception:
                         db.session.rollback()
                 
-                _set_step('Fetching articles from sources...')
-                from app.trending.pipeline import run_pipeline, auto_publish_daily
-                try:
-                    articles, topics, ready = run_pipeline(hold_minutes=0)
-                    logger.info(f"Pipeline: {articles} articles, {topics} topics, {ready} ready")
-                    _set_step(f'Pipeline done: {articles} articles, {topics} topics. Publishing...')
-                except Exception as pipe_err:
-                    logger.error(f"Emergency pipeline step failed: {pipe_err}", exc_info=True)
-                    db.session.rollback()
-                    _set_step(f'Pipeline failed, trying to continue: {pipe_err}')
-                
+                from app.trending.pipeline import auto_publish_daily
+                from app.models import TrendingTopic
+
+                pending_count = TrendingTopic.query.filter(
+                    TrendingTopic.status == 'pending_review',
+                    TrendingTopic.civic_score >= 0.5,
+                    TrendingTopic.risk_flag == False
+                ).count()
+                published_today = TrendingTopic.query.filter(
+                    TrendingTopic.status == 'published',
+                    TrendingTopic.published_at >= brief_date
+                ).count()
+
+                if pending_count == 0 and published_today < 3:
+                    _set_step('Running full pipeline (not enough topics)...')
+                    try:
+                        from app.trending.pipeline import run_pipeline
+                        articles, topics, ready = run_pipeline(hold_minutes=0)
+                        logger.info(f"Pipeline: {articles} articles, {topics} topics, {ready} ready")
+                        _set_step(f'Pipeline done: {topics} topics. Publishing...')
+                    except Exception as pipe_err:
+                        logger.error(f"Emergency pipeline step failed: {pipe_err}", exc_info=True)
+                        db.session.rollback()
+                        _set_step(f'Pipeline failed, trying to continue: {pipe_err}')
+                else:
+                    logger.info(f"Skipping pipeline: {pending_count} publishable topics pending, {published_today} published today")
+                    _set_step(f'Found {pending_count} pending + {published_today} published topics. Skipping pipeline...')
+
                 _set_step('Auto-publishing top topics...')
                 try:
                     published_topics = auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
@@ -1526,6 +1591,8 @@ def init_scheduler(app):
                     r.set(error_key, 'No suitable topics found even after running pipeline.', ex=FINAL_STATUS_TTL_SECONDS)
                     r.delete(queued_at_key)
                     r.delete(queue_alerted_key)
+                    r.delete(heartbeat_key)
+                    r.delete(claim_key)
                     _send_ops_alert("Emergency brief generation failed: no suitable topics found after full pipeline run.")
                 else:
                     r.set(status_key, 'done', ex=FINAL_STATUS_TTL_SECONDS)
@@ -1537,6 +1604,8 @@ def init_scheduler(app):
                     r.delete(error_key)
                     r.delete(queued_at_key)
                     r.delete(queue_alerted_key)
+                    r.delete(heartbeat_key)
+                    r.delete(claim_key)
                     logger.info(f"Emergency brief generated: {brief.title} ({brief.item_count} items)")
                     
             except Exception as e:
@@ -1547,6 +1616,8 @@ def init_scheduler(app):
                     r.set(error_key, str(e)[:500], ex=FINAL_STATUS_TTL_SECONDS)
                     r.delete(queued_at_key)
                     r.delete(queue_alerted_key)
+                    r.delete(heartbeat_key)
+                    r.delete(claim_key)
                 except Exception:
                     pass
                 _send_ops_alert(
