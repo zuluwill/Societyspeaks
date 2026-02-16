@@ -1456,7 +1456,7 @@ def init_scheduler(app):
                     "if redis.call('get', KEYS[1]) == 'queued' then "
                     "redis.call('set', KEYS[1], 'running', 'EX', ARGV[1]) "
                     "return 1 else return 0 end",
-                    1, status_key, RUNNING_TTL_SECONDS
+                    1, status_key, str(RUNNING_TTL_SECONDS)
                 )
                 if not claimed:
                     return
@@ -1546,6 +1546,7 @@ def init_scheduler(app):
                     r.set(step_key, f'Failed: {str(e)[:200]}', ex=FINAL_STATUS_TTL_SECONDS)
                     r.set(error_key, str(e)[:500], ex=FINAL_STATUS_TTL_SECONDS)
                     r.delete(queued_at_key)
+                    r.delete(queue_alerted_key)
                 except Exception:
                     pass
                 _send_ops_alert(
