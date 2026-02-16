@@ -1442,11 +1442,14 @@ class TrendingTopic(db.Model):
     def should_auto_publish(self):
         """
         Auto-publish criteria:
-        - From a trusted source
-        - Has civic relevance
-        - Not risky
+        - Has civic relevance (worth discussing)
+        - Not flagged as risky
+        All curated sources are trusted by default.
         """
-        return self.is_high_confidence
+        return (
+            (self.civic_score or 0) >= 0.5 and
+            not self.risk_flag
+        )
     
     def to_dict(self):
         return {

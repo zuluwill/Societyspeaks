@@ -188,7 +188,7 @@ def _get_topic_political_leaning(topic: TrendingTopic) -> str:
     return Counter(leanings).most_common(1)[0][0]
 
 
-def auto_publish_daily(max_topics: int = 5, schedule_bluesky: bool = True, schedule_x: bool = True) -> int:
+def auto_publish_daily(max_topics: int = 15, schedule_bluesky: bool = True, schedule_x: bool = True) -> int:
     """
     Auto-publish up to max_topics diverse topics daily.
     Selects topics from trusted sources with civic relevance.
@@ -293,14 +293,17 @@ def auto_publish_daily(max_topics: int = 5, schedule_bluesky: bool = True, sched
 
 def auto_publish_high_confidence() -> int:
     """Legacy function - calls auto_publish_daily for backwards compatibility."""
-    return auto_publish_daily(max_topics=5)
+    return auto_publish_daily(max_topics=15)
 
 
-def get_review_queue() -> List[TrendingTopic]:
-    """Get all topics pending review."""
+def get_review_queue(limit: int = 50) -> List[TrendingTopic]:
+    """Get topics pending review (paginated to prevent N+1 timeouts)."""
+    from sqlalchemy.orm import selectinload
     return TrendingTopic.query.filter_by(
         status='pending_review'
-    ).order_by(TrendingTopic.created_at.desc()).all()
+    ).options(
+        selectinload(TrendingTopic.articles).selectinload(TrendingTopicArticle.article).selectinload(NewsArticle.source)
+    ).order_by(TrendingTopic.created_at.desc()).limit(limit).all()
 
 
 def get_pipeline_stats() -> dict:

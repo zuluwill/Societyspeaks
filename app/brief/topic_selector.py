@@ -50,7 +50,7 @@ class TopicSelector:
     MIN_QUALITY_SCORE_SINGLE_SOURCE = 0.7  # Quality check for single-source
     MIN_SOURCES = 1  # Allow single-source topics for brief
     MAX_IMBALANCE = 0.8  # Allow some imbalance, but not extreme
-    EXCLUSION_DAYS = 30
+    EXCLUSION_DAYS = 5
 
     def __init__(self, brief_date: Optional[date] = None):
         self.brief_date = brief_date or date.today()
