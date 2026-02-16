@@ -7,6 +7,7 @@ Handles email delivery via Resend API with timezone support.
 import os
 import re
 import time
+import secrets
 import requests
 import threading
 import logging
@@ -68,6 +69,54 @@ def _minify_email_html(html: str) -> str:
     html = _RE_STYLE_ATTR.sub(_compact_style, html)
     html = _RE_TAG_LINE_INDENT.sub(r'\1', html)
     return html.strip()
+
+
+def _daily_send_lock_key(target_date=None) -> str:
+    """Shared lock key for all daily brief sends on a given date."""
+    if target_date is None:
+        target_date = datetime.utcnow().date()
+    return f"brief_send_lock:daily:{target_date.isoformat()}"
+
+
+def acquire_daily_send_lock(target_date=None, ttl_seconds: int = 3500):
+    """
+    Acquire Redis lock for daily brief sending.
+
+    Returns:
+        (acquired, redis_client, lock_key, lock_token, reason)
+    """
+    redis_url = os.environ.get('REDIS_URL')
+    if not redis_url:
+        return False, None, None, None, "redis_unavailable"
+
+    lock_key = _daily_send_lock_key(target_date)
+    lock_token = secrets.token_urlsafe(18)
+
+    try:
+        import redis as redis_lib
+        client = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+        acquired = client.set(lock_key, lock_token, nx=True, ex=max(30, int(ttl_seconds)))
+        if not acquired:
+            return False, None, lock_key, None, "lock_held"
+        return True, client, lock_key, lock_token, "ok"
+    except Exception as e:
+        logger.warning(f"Could not acquire daily brief send lock: {e}")
+        return False, None, lock_key, None, "redis_error"
+
+
+def release_daily_send_lock(redis_client, lock_key: str, lock_token: str) -> None:
+    """Release lock only if token still matches (safe unlock)."""
+    if not redis_client or not lock_key or not lock_token:
+        return
+    try:
+        redis_client.eval(
+            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+            1,
+            lock_key,
+            lock_token,
+        )
+    except Exception as e:
+        logger.warning(f"Could not release daily brief send lock: {e}")
 
 
 class ResendClient:
@@ -661,18 +710,34 @@ class BriefEmailScheduler:
 
         for subscriber in subscribers:
             try:
-                if not subscriber.magic_token or (
-                    subscriber.magic_token_expires and subscriber.magic_token_expires < datetime.utcnow()
-                ):
-                    subscriber.generate_magic_token(expires_hours=168)
-                    db.session.commit()
+                # Re-fetch latest subscriber state before each send to reduce race risk.
+                current_subscriber = DailyBriefSubscriber.query.filter_by(
+                    id=subscriber.id
+                ).with_for_update().first()
 
-                success = self.client.send_brief(subscriber, brief)
+                if not current_subscriber:
+                    results['failed'] += 1
+                    results['errors'].append(f"Subscriber {subscriber.id} no longer exists")
+                    db.session.rollback()
+                    continue
+
+                if not current_subscriber.can_receive_brief(brief_id=brief.id):
+                    db.session.rollback()
+                    continue
+
+                if not current_subscriber.magic_token or (
+                    current_subscriber.magic_token_expires and current_subscriber.magic_token_expires < datetime.utcnow()
+                ):
+                    current_subscriber.generate_magic_token(expires_hours=168)
+                    db.session.flush()
+
+                success = self.client.send_brief(current_subscriber, brief)
                 if success:
                     results['sent'] += 1
                 else:
                     results['failed'] += 1
-                    results['errors'].append(f"Failed to send to {subscriber.email}")
+                    results['errors'].append(f"Failed to send to {current_subscriber.email}")
+                    db.session.rollback()
 
             except Exception as e:
                 db.session.rollback()
@@ -701,43 +766,44 @@ class BriefEmailScheduler:
 
         current_hour = datetime.utcnow().hour
         today = date.today()
-
-        lock_key = f"brief_send_lock:daily:{today.isoformat()}:{current_hour}"
-        redis_url = os.environ.get('REDIS_URL')
-        if redis_url:
-            try:
-                import redis as redis_lib
-                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                if not r.set(lock_key, os.getpid(), nx=True, ex=3500):
-                    logger.info(f"Daily brief send already in progress for hour {current_hour} (lock held), skipping")
-                    return {'sent': 0, 'failed': 0, 'errors': []}
-            except Exception as e:
-                logger.warning(f"Could not acquire Redis send lock: {e}, proceeding with send")
-        
-        BRIEF_PUBLISH_HOUR = 18
-        
-        if current_hour < BRIEF_PUBLISH_HOUR:
-            brief_date = today - timedelta(days=1)
-            brief = DailyBrief.get_by_date(brief_date, brief_type='daily')
-            if not brief:
-                brief = DailyBrief.get_today(brief_type='daily')
+        lock_acquired, lock_client, lock_key, lock_token, lock_reason = acquire_daily_send_lock(
+            target_date=today,
+            ttl_seconds=3500
+        )
+        if not lock_acquired:
+            if lock_reason == "lock_held":
+                logger.info("Daily brief send already in progress (shared lock held), skipping")
             else:
-                logger.info(f"Morning send: using yesterday's brief ({brief_date})")
-        else:
-            brief = DailyBrief.get_today(brief_type='daily')
-
-        if not brief:
-            logger.info("No published daily brief available, skipping send")
-            return None
-
-        subscribers = self.get_subscribers_for_hour(current_hour, cadence='daily', brief_id=brief.id)
-
-        if not subscribers:
-            logger.info(f"No daily subscribers for hour {current_hour}")
+                logger.error("Daily brief send lock unavailable; skipping send to prevent duplicates")
             return {'sent': 0, 'failed': 0, 'errors': []}
 
-        results = self.send_to_subscribers(subscribers, brief)
-        return results
+        try:
+            BRIEF_PUBLISH_HOUR = 18
+
+            if current_hour < BRIEF_PUBLISH_HOUR:
+                brief_date = today - timedelta(days=1)
+                brief = DailyBrief.get_by_date(brief_date, brief_type='daily')
+                if not brief:
+                    brief = DailyBrief.get_today(brief_type='daily')
+                else:
+                    logger.info(f"Morning send: using yesterday's brief ({brief_date})")
+            else:
+                brief = DailyBrief.get_today(brief_type='daily')
+
+            if not brief:
+                logger.info("No published daily brief available, skipping send")
+                return None
+
+            subscribers = self.get_subscribers_for_hour(current_hour, cadence='daily', brief_id=brief.id)
+
+            if not subscribers:
+                logger.info(f"No daily subscribers for hour {current_hour}")
+                return {'sent': 0, 'failed': 0, 'errors': []}
+
+            results = self.send_to_subscribers(subscribers, brief)
+            return results
+        finally:
+            release_daily_send_lock(lock_client, lock_key, lock_token)
 
     def send_weekly_brief_hourly(self) -> Optional[dict]:
         """

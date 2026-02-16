@@ -194,9 +194,18 @@ def send_missed():
     """Send today's published brief to all eligible subscribers who haven't received it yet."""
     brief_date = date.today()
     
+    lock_acquired = False
+    lock_client = None
+    lock_key = None
+    lock_token = None
+
     try:
         from app.models import DailyBriefSubscriber
-        import os
+        from app.brief.email_client import (
+            BriefEmailScheduler,
+            acquire_daily_send_lock,
+            release_daily_send_lock
+        )
         
         brief = DailyBrief.query.filter_by(
             date=brief_date, brief_type='daily', status='published'
@@ -205,20 +214,17 @@ def send_missed():
         if not brief:
             flash('No published brief for today. Generate and publish one first.', 'error')
             return redirect(url_for('brief_admin.dashboard'))
-        
-        redis_url = os.environ.get('REDIS_URL')
-        if redis_url:
-            try:
-                import redis as redis_lib
-                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                lock_key = f"brief_catchup_lock:{brief_date.isoformat()}"
-                if not r.set(lock_key, os.getpid(), nx=True, ex=600):
-                    flash('A catch-up send is already in progress. Please wait a few minutes.', 'warning')
-                    return redirect(url_for('brief_admin.dashboard'))
-            except Exception as lock_err:
-                logger.warning(f"Could not acquire Redis catch-up lock: {lock_err}, proceeding")
-        
-        from app.brief.email_client import BriefEmailScheduler
+
+        lock_acquired, lock_client, lock_key, lock_token, lock_reason = acquire_daily_send_lock(
+            target_date=brief_date,
+            ttl_seconds=3600
+        )
+        if not lock_acquired:
+            if lock_reason == 'lock_held':
+                flash('A daily brief send is already in progress. Please wait a few minutes.', 'warning')
+            else:
+                flash('Could not secure send lock. Catch-up send aborted to prevent duplicates.', 'error')
+            return redirect(url_for('brief_admin.dashboard'))
         
         scheduler_obj = BriefEmailScheduler()
         
@@ -256,6 +262,9 @@ def send_missed():
         db.session.rollback()
         flash(f'Catch-up send failed: {str(e)}', 'error')
         return redirect(url_for('brief_admin.dashboard'))
+    finally:
+        if lock_acquired:
+            release_daily_send_lock(lock_client, lock_key, lock_token)
 
 
 @brief_admin_bp.route('/emergency-generate', methods=['POST'])
