@@ -565,6 +565,11 @@ def archive():
 def subscribe():
     """Subscribe to daily brief"""
     if request.method == 'POST':
+        from app.lib.bot_protection import check_bot_submission
+        if check_bot_submission():
+            flash('You have successfully subscribed!', 'success')
+            return redirect(url_for('brief.subscribe_success'))
+
         email = request.form.get('email', '').strip().lower()
         timezone = request.form.get('timezone', 'UTC')
         preferred_hour = request.form.get('preferred_hour', DEFAULT_SEND_HOUR, type=int)
@@ -630,6 +635,14 @@ def subscribe_success():
 @limiter.limit("5 per minute")
 def subscribe_inline():
     """Inline subscription from email capture forms (AJAX-friendly)"""
+    from app.lib.bot_protection import check_bot_submission
+    if check_bot_submission():
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        if is_ajax:
+            return jsonify({'success': True, 'message': "You're subscribed! Check your inbox."})
+        flash('You have successfully subscribed!', 'success')
+        return redirect(request.referrer or url_for('brief.today'))
+
     email = request.form.get('email', '').strip().lower()
     source = request.form.get('source', 'inline')
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'

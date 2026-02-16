@@ -1,4 +1,5 @@
 {% macro email_capture_inline(variant='default', context='brief') %}
+{% from 'components/bot_protection.html' import bot_fields %}
 <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 sm:p-8 border border-blue-100 shadow-sm" id="email-capture-section">
     <div class="max-w-2xl mx-auto text-center">
         <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-600 mb-4">
@@ -18,6 +19,7 @@
         <form action="{{ url_for('brief.subscribe_inline') }}" method="POST" class="email-capture-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input type="hidden" name="source" value="{{ context }}" />
+            {{ bot_fields() }}
             <div class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
                 <input type="email" 
                        name="email" 
@@ -51,6 +53,7 @@
 {% endmacro %}
 
 {% macro email_capture_compact(variant='default') %}
+{% from 'components/bot_protection.html' import bot_fields %}
 <div class="bg-white rounded-xl p-4 sm:p-5 border border-gray-200 shadow-sm">
     <div class="flex flex-col sm:flex-row sm:items-center gap-4">
         <div class="flex-1">
@@ -60,6 +63,7 @@
         <form action="{{ url_for('brief.subscribe_inline') }}" method="POST" class="email-capture-form flex flex-col sm:flex-row gap-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input type="hidden" name="source" value="compact" />
+            {{ bot_fields() }}
             <input type="email" 
                    name="email" 
                    placeholder="Your email" 

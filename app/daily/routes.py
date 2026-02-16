@@ -789,6 +789,11 @@ def sync_vote_to_statement(question, vote_value, fingerprint):
 def subscribe():
     """Email subscription signup for daily questions"""
     if request.method == 'POST':
+        from app.lib.bot_protection import check_bot_submission
+        if check_bot_submission():
+            flash('You have successfully subscribed to daily civic questions!', 'success')
+            return redirect(url_for('daily.subscribe_success'))
+
         email = request.form.get('email', '').strip().lower()
         
         if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):

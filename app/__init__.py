@@ -279,6 +279,9 @@ def create_app():
     login_manager.login_message_category = "info"
     app.jinja_env.globals.update(current_user=current_user)
 
+    from app.lib.bot_protection import generate_form_token
+    app.jinja_env.globals['bot_form_token'] = generate_form_token
+
     from app.utils.db_diagnostics import init_n_plus_one_guard
     init_n_plus_one_guard(app)
     
