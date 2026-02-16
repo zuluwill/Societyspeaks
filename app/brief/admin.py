@@ -188,6 +188,76 @@ def generate(date_str=None):
         flash(f'Error generating brief: {str(e)}', 'error')
         return redirect(url_for('brief_admin.dashboard'))
 
+@brief_admin_bp.route('/send-missed', methods=['POST'])
+@admin_required
+def send_missed():
+    """Send today's published brief to all eligible subscribers who haven't received it yet."""
+    brief_date = date.today()
+    
+    try:
+        from app.models import DailyBriefSubscriber
+        import os
+        
+        brief = DailyBrief.query.filter_by(
+            date=brief_date, brief_type='daily', status='published'
+        ).first()
+        
+        if not brief:
+            flash('No published brief for today. Generate and publish one first.', 'error')
+            return redirect(url_for('brief_admin.dashboard'))
+        
+        redis_url = os.environ.get('REDIS_URL')
+        if redis_url:
+            try:
+                import redis as redis_lib
+                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+                lock_key = f"brief_catchup_lock:{brief_date.isoformat()}"
+                if not r.set(lock_key, os.getpid(), nx=True, ex=600):
+                    flash('A catch-up send is already in progress. Please wait a few minutes.', 'warning')
+                    return redirect(url_for('brief_admin.dashboard'))
+            except Exception as lock_err:
+                logger.warning(f"Could not acquire Redis catch-up lock: {lock_err}, proceeding")
+        
+        from app.brief.email_client import BriefEmailScheduler
+        
+        scheduler_obj = BriefEmailScheduler()
+        
+        all_eligible = DailyBriefSubscriber.query.filter(
+            DailyBriefSubscriber.status == 'active'
+        ).filter(
+            db.or_(
+                DailyBriefSubscriber.cadence == 'daily',
+                DailyBriefSubscriber.cadence == None
+            )
+        ).all()
+        
+        missed = []
+        for sub in all_eligible:
+            if not sub.can_receive_brief(brief_id=brief.id):
+                continue
+            missed.append(sub)
+        
+        if not missed:
+            flash('All eligible subscribers have already received today\'s brief.', 'info')
+            return redirect(url_for('brief_admin.dashboard'))
+        
+        logger.info(f"Sending catch-up brief to {len(missed)} missed subscribers")
+        results = scheduler_obj.send_to_subscribers(missed, brief)
+        
+        flash(
+            f'Catch-up send complete: {results["sent"]} sent, {results["failed"]} failed '
+            f'(out of {len(missed)} missed subscribers).',
+            'success' if results['failed'] == 0 else 'warning'
+        )
+        return redirect(url_for('brief_admin.dashboard'))
+        
+    except Exception as e:
+        logger.error(f"Catch-up send failed: {e}", exc_info=True)
+        db.session.rollback()
+        flash(f'Catch-up send failed: {str(e)}', 'error')
+        return redirect(url_for('brief_admin.dashboard'))
+
+
 @brief_admin_bp.route('/emergency-generate', methods=['POST'])
 @admin_required
 def emergency_generate():

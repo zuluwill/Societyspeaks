@@ -144,7 +144,7 @@
                     </div>
                     <h3 class="font-semibold text-gray-900 mb-2">{{ today_brief.title }}</h3>
                     <p class="text-sm text-gray-600 mb-4">{{ today_brief.item_count }} items</p>
-                    <div class="flex gap-3">
+                    <div class="flex gap-3 flex-wrap">
                         <a href="{{ url_for('brief_admin.preview') }}" 
                            class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
                             Preview
@@ -155,6 +155,17 @@
                             <button type="submit" 
                                     class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition">
                                 Publish
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% if today_brief.status == 'published' %}
+                        <form action="{{ url_for('brief_admin.send_missed') }}" method="POST" class="inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit"
+                                    onclick="this.disabled=true; this.innerText='Sending to missed subscribers...'; this.form.submit();"
+                                    class="inline-flex items-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition"
+                                    title="Send today's published brief to all eligible subscribers who haven't received it yet">
+                                Send to Missed Subscribers
                             </button>
                         </form>
                         {% endif %}
