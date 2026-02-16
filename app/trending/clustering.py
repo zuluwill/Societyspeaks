@@ -135,27 +135,38 @@ def cluster_articles(articles: List[NewsArticle], threshold: float = 0.7) -> Lis
         from sklearn.metrics.pairwise import cosine_similarity
         from sklearn.cluster import AgglomerativeClustering
     except (OSError, ImportError) as e:
-        logger.error(f"sklearn import failed ({e}), falling back to numpy cosine similarity")
+        logger.error(f"sklearn import failed ({e}), falling back to numpy clustering")
         norms = np.linalg.norm(embeddings_array, axis=1, keepdims=True)
         norms = np.where(norms == 0, 1, norms)
         normed = embeddings_array / norms
         sim_matrix = np.dot(normed, normed.T)
         distance_matrix = 1 - sim_matrix
         n = len(articles)
-        labels = list(range(n))
+        parent = list(range(n))
+        
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+        
+        def union(a, b):
+            ra, rb = find(a), find(b)
+            if ra != rb:
+                parent[rb] = ra
+        
         for i in range(n):
             for j in range(i + 1, n):
                 if distance_matrix[i][j] < (1 - threshold):
-                    old_label = labels[j]
-                    new_label = labels[i]
-                    for k in range(n):
-                        if labels[k] == old_label:
-                            labels[k] = new_label
+                    union(i, j)
+        
         clusters_dict = {}
-        for i, label in enumerate(labels):
-            if label not in clusters_dict:
-                clusters_dict[label] = []
-            clusters_dict[label].append(articles[i])
+        for i in range(n):
+            root = find(i)
+            if root not in clusters_dict:
+                clusters_dict[root] = []
+            clusters_dict[root].append(articles[i])
+        logger.info(f"Numpy fallback clustering: {n} articles -> {len(clusters_dict)} clusters")
         return list(clusters_dict.values())
 
     distance_matrix = 1 - cosine_similarity(embeddings_array)

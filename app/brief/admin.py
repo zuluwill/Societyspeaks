@@ -173,6 +173,7 @@ def generate(date_str=None):
                 brief = generate_daily_brief(brief_date, auto_publish=False)
             except Exception as pipeline_err:
                 logger.error(f"Emergency pipeline failed: {pipeline_err}", exc_info=True)
+                db.session.rollback()
 
         if brief is None:
             flash('No suitable topics available even after refreshing news. This may indicate a system issue.', 'error')
@@ -183,6 +184,7 @@ def generate(date_str=None):
 
     except Exception as e:
         logger.error(f"Brief generation failed: {e}", exc_info=True)
+        db.session.rollback()
         flash(f'Error generating brief: {str(e)}', 'error')
         return redirect(url_for('brief_admin.dashboard'))
 
@@ -199,20 +201,36 @@ def emergency_generate():
             return redirect(url_for('brief_admin.dashboard'))
         
         if existing and existing.status == 'draft':
-            db.session.delete(existing)
-            db.session.commit()
-            logger.info(f"Deleted existing draft brief for {brief_date}")
+            try:
+                db.session.delete(existing)
+                db.session.commit()
+                logger.info(f"Deleted existing draft brief for {brief_date}")
+            except Exception:
+                db.session.rollback()
 
         logger.info(f"Emergency brief generation for {brief_date}")
         
         from app.trending.pipeline import run_pipeline, auto_publish_daily
-        articles, topics, ready = run_pipeline(hold_minutes=0)
-        logger.info(f"Pipeline: {articles} articles, {topics} topics, {ready} ready")
+        try:
+            articles, topics, ready = run_pipeline(hold_minutes=0)
+            logger.info(f"Pipeline: {articles} articles, {topics} topics, {ready} ready")
+        except Exception as pipe_err:
+            logger.error(f"Pipeline step failed: {pipe_err}", exc_info=True)
+            db.session.rollback()
         
-        published_topics = auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
-        logger.info(f"Auto-published {published_topics} topics")
+        try:
+            published_topics = auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
+            logger.info(f"Auto-published {published_topics} topics")
+        except Exception as pub_err:
+            logger.error(f"Auto-publish step failed: {pub_err}", exc_info=True)
+            db.session.rollback()
         
-        brief = generate_daily_brief(brief_date, auto_publish=True)
+        try:
+            brief = generate_daily_brief(brief_date, auto_publish=True)
+        except Exception as gen_err:
+            logger.error(f"Brief generation step failed: {gen_err}", exc_info=True)
+            db.session.rollback()
+            brief = None
         
         if brief is None:
             flash('Failed to generate brief - no suitable topics found even after running pipeline.', 'error')
@@ -223,6 +241,7 @@ def emergency_generate():
         
     except Exception as e:
         logger.error(f"Emergency brief generation failed: {e}", exc_info=True)
+        db.session.rollback()
         flash(f'Emergency generation failed: {str(e)}', 'error')
         return redirect(url_for('brief_admin.dashboard'))
 
