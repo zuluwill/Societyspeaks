@@ -43,6 +43,54 @@ def _job_error_listener(event):
 scheduler = None
 _shutdown_registered = False
 _shutting_down = False
+_ops_alert_lock = threading.Lock()
+_ops_alert_last_sent: dict[str, datetime] = {}
+
+
+def _ops_alert_fingerprint(message: str) -> str:
+    """Create a stable fingerprint for deduping repeated alerts."""
+    return (message or "").strip().lower()
+
+
+def _ops_alert_cooldown_seconds() -> int:
+    """Cooldown window for duplicate ops alerts (default: 15 minutes)."""
+    raw = os.environ.get("OPS_ALERT_COOLDOWN_SECONDS", "900")
+    try:
+        return max(0, int(raw))
+    except ValueError:
+        logger.warning(f"Invalid OPS_ALERT_COOLDOWN_SECONDS='{raw}', using 900")
+        return 900
+
+
+def _should_send_ops_alert(message: str) -> tuple[bool, str]:
+    """
+    Check dedupe window for this alert fingerprint.
+    Returns (should_send, fingerprint).
+    """
+    fingerprint = _ops_alert_fingerprint(message)
+    cooldown = _ops_alert_cooldown_seconds()
+    if cooldown == 0:
+        return True, fingerprint
+
+    now = datetime.utcnow()
+    with _ops_alert_lock:
+        # Keep in-memory state bounded by removing old entries.
+        cutoff = now - timedelta(seconds=max(cooldown * 2, 3600))
+        stale_keys = [k for k, ts in _ops_alert_last_sent.items() if ts < cutoff]
+        for k in stale_keys:
+            del _ops_alert_last_sent[k]
+
+        last_sent = _ops_alert_last_sent.get(fingerprint)
+        if last_sent and (now - last_sent).total_seconds() < cooldown:
+            return False, fingerprint
+
+    return True, fingerprint
+
+
+def _mark_ops_alert_sent(fingerprint: str) -> None:
+    """Record successful alert delivery timestamp for dedupe cooldown."""
+    with _ops_alert_lock:
+        _ops_alert_last_sent[fingerprint] = datetime.utcnow()
 
 
 def _is_production_environment() -> bool:
@@ -78,25 +126,80 @@ def _is_production_environment() -> bool:
 
 def _send_ops_alert(message: str) -> None:
     """
-    Send critical scheduler alerts to Slack when configured.
-    Falls back to logs if webhook is missing/invalid.
+    Send critical scheduler alerts to email (Resend) and optional Slack.
+
+    Email is primary because it is already part of this stack and doesn't
+    require separate chat tooling. Slack remains optional.
     """
-    webhook_url = os.environ.get('SLACK_WEBHOOK_URL')
-    if not webhook_url:
+    alert_sent = False
+    alerts_allowed = _is_production_environment() or os.environ.get("ALLOW_EMAIL_IN_NON_PROD") == "1"
+
+    if not alerts_allowed:
+        logger.info("Ops alert delivery skipped outside deployed production")
         return
 
-    if not webhook_url.startswith(("https://hooks.slack.com/", "https://hooks.slack-gov.com/")):
-        logger.warning("Invalid SLACK_WEBHOOK_URL format; skipping alert delivery")
+    should_send, fingerprint = _should_send_ops_alert(message)
+    if not should_send:
+        logger.info("Suppressing duplicate ops alert inside cooldown window")
         return
 
-    try:
-        requests.post(
-            webhook_url,
-            json={"text": f":warning: {message}"},
-            timeout=8
-        )
-    except requests.RequestException as e:
-        logger.warning(f"Failed to send scheduler alert to Slack: {e}")
+    # Primary channel: Resend email alerts.
+    # Defaults to founder inbox for production safety if env var is unset.
+    to_email = os.environ.get("OPS_ALERT_EMAIL_TO", "will@societyspeaks.io").strip()
+    resend_api_key = os.environ.get("RESEND_API_KEY")
+    resend_from = (
+        os.environ.get("RESEND_DAILY_FROM_EMAIL")
+        or os.environ.get("RESEND_FROM_EMAIL")
+        or "Society Speaks Ops <hello@brief.societyspeaks.io>"
+    )
+
+    if to_email and resend_api_key:
+        subject = f"[Society Speaks] CRITICAL Scheduler Alert ({datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')})"
+        try:
+            response = requests.post(
+                "https://api.resend.com/emails",
+                json={
+                    "from": resend_from,
+                    "to": [to_email],
+                    "subject": subject,
+                    "text": message,
+                },
+                headers={
+                    "Authorization": f"Bearer {resend_api_key}",
+                    "Content-Type": "application/json",
+                },
+                timeout=10,
+            )
+            if response.status_code == 200:
+                alert_sent = True
+            else:
+                logger.warning(
+                    f"Failed to send scheduler alert email: {response.status_code} {response.text}"
+                )
+        except requests.RequestException as e:
+            logger.warning(f"Failed to send scheduler alert email: {e}")
+
+    # Secondary channel: Slack webhook, if configured.
+    webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+    if webhook_url:
+        if webhook_url.startswith(("https://hooks.slack.com/", "https://hooks.slack-gov.com/")):
+            try:
+                requests.post(
+                    webhook_url,
+                    json={"text": f":warning: {message}"},
+                    timeout=8
+                )
+                alert_sent = True
+            except requests.RequestException as e:
+                logger.warning(f"Failed to send scheduler alert to Slack: {e}")
+        else:
+            logger.warning("Invalid SLACK_WEBHOOK_URL format; skipping alert delivery")
+
+    if not alert_sent:
+        logger.warning("No ops alert channel delivered successfully for critical scheduler event")
+        return
+
+    _mark_ops_alert_sent(fingerprint)
 
 
 def init_scheduler(app):
@@ -1273,7 +1376,7 @@ def init_scheduler(app):
                         logger.info(f"Self-healing pipeline: {articles} articles, {topics} topics, {ready} ready")
                         published_count = auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
                         logger.info(f"Self-healing auto-publish: {published_count} topics published")
-                        
+
                         brief = generate_daily_brief(
                             brief_date=date.today(),
                             auto_publish=True
@@ -1281,10 +1384,15 @@ def init_scheduler(app):
                         if brief:
                             logger.info(f"Self-healing succeeded: {brief.title} ({brief.item_count} items)")
                         else:
-                            logger.error("CRITICAL: Daily brief generation failed even after self-healing pipeline run. Manual intervention required.")
+                            msg = "CRITICAL: Daily brief generation failed even after self-healing pipeline run. Manual intervention required."
+                            logger.error(msg)
+                            _send_ops_alert(msg)
+                            return
                     except Exception as heal_err:
-                        logger.error(f"CRITICAL: Self-healing pipeline failed: {heal_err}", exc_info=True)
-                    return
+                        msg = f"CRITICAL: Self-healing pipeline failed: {heal_err}"
+                        logger.error(msg, exc_info=True)
+                        _send_ops_alert(msg)
+                        return
 
                 logger.info(f"Daily brief generated: {brief.title} ({brief.item_count} items)")
 
@@ -1292,7 +1400,9 @@ def init_scheduler(app):
                     logger.warning(f"Brief only has {brief.item_count} items, below minimum!")
 
             except Exception as e:
-                logger.error(f"Daily brief generation failed: {e}", exc_info=True)
+                msg = f"CRITICAL: Daily brief generation failed with unhandled error: {e}"
+                logger.error(msg, exc_info=True)
+                _send_ops_alert(msg)
 
     @scheduler.scheduled_job('cron', day_of_week='sat', hour=17, minute=0, id='generate_weekly_brief')
     def generate_weekly_brief_job():

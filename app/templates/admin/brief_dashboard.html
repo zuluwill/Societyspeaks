@@ -168,6 +168,7 @@
                                 Generate Now
                             </a>
                             <form action="{{ url_for('brief_admin.emergency_generate') }}" method="POST" class="inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit"
                                         onclick="this.disabled=true; this.innerText='Running pipeline...'; this.form.submit();"
                                         class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"

@@ -126,6 +126,11 @@ class BriefGenerator:
                 # Continue with other items
                 continue
 
+        if items_created == 0:
+            # Prevent publishing an empty "ready" brief when all item generation fails.
+            db.session.rollback()
+            raise ValueError("No brief items were generated")
+
         # Add underreported "Under the Radar" bonus item
         if include_underreported and items_created > 0:
             try:
@@ -1099,6 +1104,11 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
                         f"Failed to generate {section_key} item for topic {topic.id}: {e}"
                     )
                     continue
+
+        if items_created == 0:
+            # Keep idempotency record clean when all sectioned item generation fails.
+            db.session.rollback()
+            raise ValueError("No sectioned brief items were generated")
 
         # Add underreported "Under the Radar" bonus item
         if items_created > 0:

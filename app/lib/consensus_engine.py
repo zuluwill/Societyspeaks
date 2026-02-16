@@ -246,6 +246,23 @@ def can_cluster(discussion_id, db):
     return True, "Ready for clustering"
 
 
+def _numpy_pca(matrix, n_components=2):
+    """
+    Pure-numpy PCA fallback when sklearn is unavailable.
+    Returns (transformed_matrix, explained_variance_ratios).
+    """
+    centered = matrix - np.mean(matrix, axis=0)
+    cov = np.cov(centered, rowvar=False)
+    eigenvalues, eigenvectors = np.linalg.eigh(cov)
+    # eigh returns ascending order; reverse for descending
+    idx = np.argsort(eigenvalues)[::-1][:n_components]
+    components = eigenvectors[:, idx]
+    transformed = centered @ components
+    total_var = np.sum(eigenvalues)
+    explained_ratios = eigenvalues[idx] / total_var if total_var > 0 else np.zeros(n_components)
+    return transformed, explained_ratios
+
+
 def perform_pca(vote_matrix, n_components=2):
     """
     Perform PCA dimensionality reduction
@@ -257,74 +274,185 @@ def perform_pca(vote_matrix, n_components=2):
     - PCA should focus on high-variance (divisive) statements to find opinion groups
     - Cosine distance clustering doesn't require standardization anyway
     """
-    from sklearn.decomposition import PCA
+    try:
+        from sklearn.decomposition import PCA
 
-    # Apply PCA directly (no standardization)
-    pca = PCA(n_components=n_components)
-    vote_matrix_pca = pca.fit_transform(vote_matrix)
+        pca = PCA(n_components=n_components)
+        vote_matrix_pca = pca.fit_transform(vote_matrix)
 
-    logger.info(f"PCA explained variance: {pca.explained_variance_ratio_}")
-    logger.info(f"PCA components shape: {vote_matrix_pca.shape}")
+        logger.info(f"PCA explained variance: {pca.explained_variance_ratio_}")
+        logger.info(f"PCA components shape: {vote_matrix_pca.shape}")
 
-    return vote_matrix_pca, pca
+        return vote_matrix_pca, pca
+    except (OSError, ImportError) as e:
+        logger.error(f"sklearn PCA import failed ({e}), using numpy fallback")
+        matrix = np.array(vote_matrix)
+        transformed, explained_ratios = _numpy_pca(matrix, n_components)
+
+        # Return a lightweight object with the attribute the caller needs
+        class _PCAResult:
+            def __init__(self, ratios):
+                self.explained_variance_ratio_ = ratios
+
+        logger.info(f"Numpy PCA explained variance: {explained_ratios}")
+        logger.info(f"Numpy PCA components shape: {transformed.shape}")
+
+        return transformed, _PCAResult(explained_ratios)
+
+
+def _numpy_cosine_distance_matrix(data):
+    """Compute pairwise cosine distance matrix using numpy."""
+    norms = np.linalg.norm(data, axis=1, keepdims=True)
+    norms = np.where(norms == 0, 1, norms)
+    normed = data / norms
+    sim = np.dot(normed, normed.T)
+    return 1 - np.clip(sim, -1, 1)
+
+
+def _numpy_silhouette(data, labels):
+    """Compute mean silhouette score using cosine distance (numpy fallback)."""
+    dist = _numpy_cosine_distance_matrix(data)
+    unique_labels = np.unique(labels)
+    if len(unique_labels) < 2:
+        return 0.0
+    n = len(labels)
+    scores = np.zeros(n)
+    for i in range(n):
+        same = labels == labels[i]
+        same[i] = False
+        if same.sum() == 0:
+            scores[i] = 0.0
+            continue
+        a = dist[i][same].mean()
+        b_vals = []
+        for lbl in unique_labels:
+            if lbl == labels[i]:
+                continue
+            other = labels == lbl
+            if other.sum() > 0:
+                b_vals.append(dist[i][other].mean())
+        b = min(b_vals) if b_vals else 0.0
+        scores[i] = (b - a) / max(a, b) if max(a, b) > 0 else 0.0
+    return float(np.mean(scores))
+
+
+def _numpy_agglomerative(data, n_clusters):
+    """Simple average-linkage agglomerative clustering using numpy with cosine distance."""
+    dist = _numpy_cosine_distance_matrix(data)
+    n = len(data)
+    # Each point starts in its own cluster
+    labels = list(range(n))
+    # Track which points belong to each cluster
+    clusters = {i: [i] for i in range(n)}
+
+    while len(clusters) > n_clusters:
+        # Find closest pair of clusters (average linkage)
+        best_dist = float('inf')
+        best_pair = (0, 1)
+        cluster_ids = list(clusters.keys())
+        for ci in range(len(cluster_ids)):
+            for cj in range(ci + 1, len(cluster_ids)):
+                id_a, id_b = cluster_ids[ci], cluster_ids[cj]
+                pts_a, pts_b = clusters[id_a], clusters[id_b]
+                avg_d = np.mean([dist[a][b] for a in pts_a for b in pts_b])
+                if avg_d < best_dist:
+                    best_dist = avg_d
+                    best_pair = (id_a, id_b)
+        # Merge
+        merge_into, merge_from = best_pair
+        clusters[merge_into].extend(clusters[merge_from])
+        del clusters[merge_from]
+
+    # Assign final labels
+    final_labels = np.zeros(n, dtype=int)
+    for new_label, (_, pts) in enumerate(clusters.items()):
+        for p in pts:
+            final_labels[p] = new_label
+    return final_labels
 
 
 def cluster_users(vote_matrix_pca, n_clusters=None, method='agglomerative'):
     """
     Cluster users based on PCA-reduced vote matrix
-    
+
     Pol.is uses agglomerative clustering with automatic k selection
     We'll use silhouette score to find optimal k
     """
-    from sklearn.cluster import AgglomerativeClustering, KMeans
-    from sklearn.metrics import silhouette_score
-    
+    try:
+        from sklearn.cluster import AgglomerativeClustering, KMeans
+        from sklearn.metrics import silhouette_score
+        _use_sklearn = True
+    except (OSError, ImportError) as e:
+        logger.error(f"sklearn clustering import failed ({e}), using numpy fallback")
+        _use_sklearn = False
+
     if n_clusters is None:
         # Find optimal number of clusters (2 to min(10, n_users/2))
         max_clusters = min(10, len(vote_matrix_pca) // 2)
-        
+
         if max_clusters < 2:
             logger.warning("Not enough users for clustering")
             return np.zeros(len(vote_matrix_pca)), 0
-        
+
         best_score = -1
         best_k = 2
-        
+
         for k in range(2, max_clusters + 1):
-            if method == 'agglomerative':
-                clusterer = AgglomerativeClustering(
-                    n_clusters=k,
-                    linkage='average',
-                    metric='cosine'
-                )
-            else:  # kmeans
-                clusterer = KMeans(n_clusters=k, random_state=42)
-            
-            labels = clusterer.fit_predict(vote_matrix_pca)
-            score = silhouette_score(vote_matrix_pca, labels, metric='cosine')
-            
+            if _use_sklearn:
+                try:
+                    if method == 'agglomerative':
+                        clusterer = AgglomerativeClustering(
+                            n_clusters=k,
+                            linkage='average',
+                            metric='cosine'
+                        )
+                    else:
+                        clusterer = KMeans(n_clusters=k, random_state=42)
+                    labels = clusterer.fit_predict(vote_matrix_pca)
+                    score = silhouette_score(vote_matrix_pca, labels, metric='cosine')
+                except (OSError, ImportError) as e:
+                    logger.error(
+                        f"sklearn clustering runtime failed ({e}), switching to numpy fallback"
+                    )
+                    _use_sklearn = False
+                    labels = _numpy_agglomerative(np.array(vote_matrix_pca), k)
+                    score = _numpy_silhouette(np.array(vote_matrix_pca), labels)
+            else:
+                labels = _numpy_agglomerative(np.array(vote_matrix_pca), k)
+                score = _numpy_silhouette(np.array(vote_matrix_pca), labels)
+
             logger.info(f"k={k}: silhouette={score:.3f}")
-            
+
             if score > best_score:
                 best_score = score
                 best_k = k
-        
+
         n_clusters = best_k
         logger.info(f"Selected {n_clusters} clusters (silhouette={best_score:.3f})")
-    
+
     # Final clustering with optimal k
-    if method == 'agglomerative':
-        clusterer = AgglomerativeClustering(
-            n_clusters=n_clusters,
-            linkage='average',
-            metric='cosine'
-        )
+    if _use_sklearn:
+        try:
+            if method == 'agglomerative':
+                clusterer = AgglomerativeClustering(
+                    n_clusters=n_clusters,
+                    linkage='average',
+                    metric='cosine'
+                )
+            else:
+                clusterer = KMeans(n_clusters=n_clusters, random_state=42)
+            labels = clusterer.fit_predict(vote_matrix_pca)
+            silhouette = silhouette_score(vote_matrix_pca, labels, metric='cosine')
+        except (OSError, ImportError) as e:
+            logger.error(
+                f"sklearn final clustering runtime failed ({e}), using numpy fallback"
+            )
+            labels = _numpy_agglomerative(np.array(vote_matrix_pca), n_clusters)
+            silhouette = _numpy_silhouette(np.array(vote_matrix_pca), labels)
     else:
-        clusterer = KMeans(n_clusters=n_clusters, random_state=42)
-    
-    labels = clusterer.fit_predict(vote_matrix_pca)
-    silhouette = silhouette_score(vote_matrix_pca, labels, metric='cosine')
-    
+        labels = _numpy_agglomerative(np.array(vote_matrix_pca), n_clusters)
+        silhouette = _numpy_silhouette(np.array(vote_matrix_pca), labels)
+
     return labels, silhouette
 
 
