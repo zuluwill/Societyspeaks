@@ -1416,24 +1416,57 @@ def init_scheduler(app):
             redis_url = os.environ.get('REDIS_URL')
             if not redis_url:
                 return
+            key = 'emergency_brief_generate'
+            status_key = f'{key}:status'
+            step_key = f'{key}:step'
+            error_key = f'{key}:error'
+            queued_at_key = f'{key}:queued_at'
+            queue_alerted_key = f'{key}:queue_alerted'
+            RUNNING_TTL_SECONDS = 3600
+            QUEUE_WAIT_ALERT_SECONDS = 120
+            FINAL_STATUS_TTL_SECONDS = 600
             
             try:
                 r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                key = 'emergency_brief_generate'
-                status = (r.get(f'{key}:status') or b'').decode()
+                status = (r.get(status_key) or b'').decode()
+
+                if status == 'queued':
+                    queued_at_raw = (r.get(queued_at_key) or b'').decode()
+                    if queued_at_raw:
+                        try:
+                            queued_for_seconds = datetime.utcnow().timestamp() - float(queued_at_raw)
+                            if queued_for_seconds > QUEUE_WAIT_ALERT_SECONDS:
+                                if r.set(queue_alerted_key, '1', nx=True, ex=900):
+                                    _send_ops_alert(
+                                        "CRITICAL: Emergency brief generation request has been queued too long "
+                                        "without worker pickup. Check scheduler health and Redis connectivity."
+                                    )
+                                r.set(
+                                    step_key,
+                                    "Queued longer than expected; waiting for scheduler worker pickup...",
+                                    ex=900
+                                )
+                        except ValueError:
+                            pass
                 
                 if status != 'queued':
                     return
                 
                 claimed = r.eval(
                     "if redis.call('get', KEYS[1]) == 'queued' then "
-                    "redis.call('set', KEYS[1], 'running', 'EX', 900) "
+                    "redis.call('set', KEYS[1], 'running', 'EX', ARGV[1]) "
                     "return 1 else return 0 end",
-                    1, f'{key}:status'
+                    1, status_key, RUNNING_TTL_SECONDS
                 )
                 if not claimed:
                     return
-                r.set(f'{key}:step', 'Starting pipeline...', ex=900)
+
+                def _set_step(message: str) -> None:
+                    # Keep the running lock alive while this long task executes.
+                    r.expire(status_key, RUNNING_TTL_SECONDS)
+                    r.set(step_key, message, ex=RUNNING_TTL_SECONDS)
+
+                _set_step('Starting pipeline...')
                 
                 from app import db
                 from app.models import DailyBrief
@@ -1445,8 +1478,10 @@ def init_scheduler(app):
                 
                 existing = DailyBrief.query.filter_by(date=brief_date, brief_type='daily').first()
                 if existing and existing.status == 'published':
-                    r.set(f'{key}:status', 'done', ex=300)
-                    r.set(f'{key}:step', 'Brief already published for today.', ex=300)
+                    r.set(status_key, 'done', ex=FINAL_STATUS_TTL_SECONDS)
+                    r.set(step_key, 'Brief already published for today.', ex=FINAL_STATUS_TTL_SECONDS)
+                    r.delete(queued_at_key)
+                    r.delete(queue_alerted_key)
                     return
                 
                 if existing and existing.status == 'draft':
@@ -1457,27 +1492,27 @@ def init_scheduler(app):
                     except Exception:
                         db.session.rollback()
                 
-                r.set(f'{key}:step', 'Fetching articles from sources...', ex=900)
+                _set_step('Fetching articles from sources...')
                 from app.trending.pipeline import run_pipeline, auto_publish_daily
                 try:
                     articles, topics, ready = run_pipeline(hold_minutes=0)
                     logger.info(f"Pipeline: {articles} articles, {topics} topics, {ready} ready")
-                    r.set(f'{key}:step', f'Pipeline done: {articles} articles, {topics} topics. Publishing...', ex=900)
+                    _set_step(f'Pipeline done: {articles} articles, {topics} topics. Publishing...')
                 except Exception as pipe_err:
                     logger.error(f"Emergency pipeline step failed: {pipe_err}", exc_info=True)
                     db.session.rollback()
-                    r.set(f'{key}:step', f'Pipeline failed, trying to continue: {pipe_err}', ex=900)
+                    _set_step(f'Pipeline failed, trying to continue: {pipe_err}')
                 
-                r.set(f'{key}:step', 'Auto-publishing top topics...', ex=900)
+                _set_step('Auto-publishing top topics...')
                 try:
                     published_topics = auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
                     logger.info(f"Auto-published {published_topics} topics")
-                    r.set(f'{key}:step', f'Published {published_topics} topics. Generating brief...', ex=900)
+                    _set_step(f'Published {published_topics} topics. Generating brief...')
                 except Exception as pub_err:
                     logger.error(f"Emergency auto-publish step failed: {pub_err}", exc_info=True)
                     db.session.rollback()
                 
-                r.set(f'{key}:step', 'Generating brief with AI analysis...', ex=900)
+                _set_step('Generating brief with AI analysis...')
                 try:
                     brief = generate_daily_brief(brief_date, auto_publish=True)
                 except Exception as gen_err:
@@ -1486,24 +1521,37 @@ def init_scheduler(app):
                     brief = None
                 
                 if brief is None:
-                    r.set(f'{key}:status', 'failed', ex=600)
-                    r.set(f'{key}:step', 'Failed to generate brief — no suitable topics found.', ex=600)
-                    r.set(f'{key}:error', 'No suitable topics found even after running pipeline.', ex=600)
+                    r.set(status_key, 'failed', ex=FINAL_STATUS_TTL_SECONDS)
+                    r.set(step_key, 'Failed to generate brief — no suitable topics found.', ex=FINAL_STATUS_TTL_SECONDS)
+                    r.set(error_key, 'No suitable topics found even after running pipeline.', ex=FINAL_STATUS_TTL_SECONDS)
+                    r.delete(queued_at_key)
+                    r.delete(queue_alerted_key)
                     _send_ops_alert("Emergency brief generation failed: no suitable topics found after full pipeline run.")
                 else:
-                    r.set(f'{key}:status', 'done', ex=600)
-                    r.set(f'{key}:step', f'Done! {brief.title} ({brief.item_count} items). Emails at next scheduled hour.', ex=600)
+                    r.set(status_key, 'done', ex=FINAL_STATUS_TTL_SECONDS)
+                    r.set(
+                        step_key,
+                        f'Done! {brief.title} ({brief.item_count} items). Emails at next scheduled hour.',
+                        ex=FINAL_STATUS_TTL_SECONDS
+                    )
+                    r.delete(error_key)
+                    r.delete(queued_at_key)
+                    r.delete(queue_alerted_key)
                     logger.info(f"Emergency brief generated: {brief.title} ({brief.item_count} items)")
                     
             except Exception as e:
                 logger.error(f"Emergency brief generation failed: {e}", exc_info=True)
                 try:
-                    r.set(f'{key}:status', 'failed', ex=600)
-                    r.set(f'{key}:step', f'Failed: {str(e)[:200]}', ex=600)
-                    r.set(f'{key}:error', str(e)[:500], ex=600)
+                    r.set(status_key, 'failed', ex=FINAL_STATUS_TTL_SECONDS)
+                    r.set(step_key, f'Failed: {str(e)[:200]}', ex=FINAL_STATUS_TTL_SECONDS)
+                    r.set(error_key, str(e)[:500], ex=FINAL_STATUS_TTL_SECONDS)
+                    r.delete(queued_at_key)
                 except Exception:
                     pass
-                _send_ops_alert(f"Emergency brief generation failed: {e}")
+                _send_ops_alert(
+                    "CRITICAL: Emergency brief generation worker failed with an unhandled exception. "
+                    "See scheduler logs for traceback."
+                )
 
     @scheduler.scheduled_job('cron', day_of_week='sat', hour=17, minute=0, id='generate_weekly_brief')
     def generate_weekly_brief_job():

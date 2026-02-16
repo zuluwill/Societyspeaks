@@ -302,8 +302,10 @@ def emergency_generate():
         if not acquired:
             flash('Emergency generation is already in progress.', 'info')
             return redirect(url_for('brief_admin.dashboard'))
+        r.set(f'{key}:queued_at', str(datetime.utcnow().timestamp()), ex=900)
         r.set(f'{key}:step', 'Queued — waiting for scheduler pickup...', ex=900)
         r.delete(f'{key}:error')
+        r.delete(f'{key}:queue_alerted')
         
         logger.info(f"Emergency brief generation queued for {brief_date}")
         flash('Emergency generation started in the background. This page will update automatically.', 'success')
