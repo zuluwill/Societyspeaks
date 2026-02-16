@@ -1447,6 +1447,10 @@ def init_scheduler(app):
                 process_extraction_queue()
             except Exception as e:
                 logger.error(f"Extraction queue processing failed: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Paid briefing extraction queue processor failed. "
+                    "See scheduler logs for traceback."
+                )
 
     @scheduler.scheduled_job('interval', seconds=3, id='process_brief_generation_queue')
     def process_brief_generation_queue_job():
@@ -1460,6 +1464,10 @@ def init_scheduler(app):
                 process_pending_jobs()
             except Exception as e:
                 logger.error(f"Brief generation queue processing failed: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Paid briefing generation queue processor failed. "
+                    "See scheduler logs for traceback."
+                )
 
     @scheduler.scheduled_job('interval', seconds=10, id='process_audio_generation_queue')
     def process_audio_generation_queue_job():
@@ -1642,6 +1650,10 @@ def init_scheduler(app):
                         
             except Exception as e:
                 logger.error(f"Error in briefing runs processor: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Paid briefing run scheduler failed at top-level. "
+                    "See scheduler logs for traceback."
+                )
 
     @scheduler.scheduled_job('interval', minutes=5, id='send_approved_brief_runs')
     def send_approved_brief_runs_job():
@@ -1706,6 +1718,10 @@ def init_scheduler(app):
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error expiring stale runs: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Paid briefing send pipeline failed in stale-run expiry phase. "
+                    "See scheduler logs for traceback."
+                )
             
             # === Phase 2: Clear unsendable runs ===
             # Runs for inactive briefings or briefings with no active recipients
@@ -1742,6 +1758,10 @@ def init_scheduler(app):
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error clearing unsendable runs: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Paid briefing send pipeline failed in unsendable-run cleanup phase. "
+                    "See scheduler logs for traceback."
+                )
             
             # === Phase 3: Fail runs that exceeded max send attempts ===
             try:
@@ -1764,6 +1784,10 @@ def init_scheduler(app):
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error failing max-attempt runs: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Paid briefing send pipeline failed in max-attempt failure phase. "
+                    "See scheduler logs for traceback."
+                )
             
             # === Phase 4: Send eligible approved runs ===
             try:
@@ -1792,6 +1816,10 @@ def init_scheduler(app):
                         
             except Exception as e:
                 logger.error(f"Error in approved BriefRuns sender: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Paid briefing send pipeline failed in approved-run send phase. "
+                    "See scheduler logs for traceback."
+                )
             
             # === Phase 5: Recover stuck 'sending' runs ===
             # Reset runs stuck in 'sending' for too long back to 'approved' for retry
@@ -1841,6 +1869,10 @@ def init_scheduler(app):
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error recovering stuck sends: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Paid briefing send pipeline failed in stuck-send recovery phase. "
+                    "See scheduler logs for traceback."
+                )
             
             # === Phase 6: Clean up stale email claims ===
             try:
@@ -1893,6 +1925,10 @@ def init_scheduler(app):
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Error cleaning up stale email claims: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Paid briefing send pipeline failed in stale-claim cleanup phase. "
+                    "See scheduler logs for traceback."
+                )
 
     @scheduler.scheduled_job('cron', hour=18, minute=0, id='auto_publish_brief')
     def auto_publish_daily_brief():
