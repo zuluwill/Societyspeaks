@@ -131,8 +131,33 @@ def cluster_articles(articles: List[NewsArticle], threshold: float = 0.7) -> Lis
     
     embeddings_array = np.array(embeddings)
     
-    from sklearn.metrics.pairwise import cosine_similarity
-    from sklearn.cluster import AgglomerativeClustering
+    try:
+        from sklearn.metrics.pairwise import cosine_similarity
+        from sklearn.cluster import AgglomerativeClustering
+    except (OSError, ImportError) as e:
+        logger.error(f"sklearn import failed ({e}), falling back to numpy cosine similarity")
+        norms = np.linalg.norm(embeddings_array, axis=1, keepdims=True)
+        norms = np.where(norms == 0, 1, norms)
+        normed = embeddings_array / norms
+        sim_matrix = np.dot(normed, normed.T)
+        distance_matrix = 1 - sim_matrix
+        n = len(articles)
+        labels = list(range(n))
+        for i in range(n):
+            for j in range(i + 1, n):
+                if distance_matrix[i][j] < (1 - threshold):
+                    old_label = labels[j]
+                    new_label = labels[i]
+                    for k in range(n):
+                        if labels[k] == old_label:
+                            labels[k] = new_label
+        clusters_dict = {}
+        for i, label in enumerate(labels):
+            if label not in clusters_dict:
+                clusters_dict[label] = []
+            clusters_dict[label].append(articles[i])
+        return list(clusters_dict.values())
+
     distance_matrix = 1 - cosine_similarity(embeddings_array)
     
     clustering = AgglomerativeClustering(
