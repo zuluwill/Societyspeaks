@@ -143,13 +143,13 @@
                 <div class="divide-y divide-gray-100">
                     {% for item in section_items %}
                     <div id="item-{{ item.id }}" class="px-6 py-4">
-                        <div class="flex items-start gap-3">
+                        <div>
                             {% if item.trending_topic and item.trending_topic.geographic_countries %}
-                            <span class="flex-shrink-0 text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded mt-0.5">
+                            <span class="inline-block text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded mb-2">
                                 {{ item.trending_topic.geographic_countries.split(',')[0]|trim }}
                             </span>
                             {% endif %}
-                            <div class="flex-1">
+                            <div>
                                 <h3 class="font-serif text-lg font-bold text-gray-900 leading-snug">{{ item.headline }}</h3>
                                 {% if item.quick_summary %}
                                 <p class="text-gray-600 text-sm mt-1.5 leading-relaxed">{{ item.quick_summary }}</p>
