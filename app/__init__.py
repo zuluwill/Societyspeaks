@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, abort
+from flask import Flask, render_template, redirect, url_for, flash, request, abort, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, current_user
@@ -576,22 +576,16 @@ def create_app():
     @app.errorhandler(429)
     def too_many_requests(e):
         app.logger.warning(f"429 Too Many Requests: {e}")
-        try:
-            raw = getattr(e, 'retry_after', 60) or 60
-            retry_after = max(1, min(3600, int(float(raw))))
-        except (ValueError, TypeError):
-            retry_after = 60
+        from app.api.errors import _retry_after_seconds
+        retry_after = _retry_after_seconds(e, 60)
         # Return JSON for API/embed requests so clients get Retry-After and consistent format
         if request.is_json or request.headers.get('X-Embed-Request'):
-            from flask import jsonify
             resp = jsonify({'error': 'rate_limited', 'message': f'Too many requests. Please retry in {retry_after} seconds.'})
             resp.status_code = 429
             resp.headers['Retry-After'] = str(retry_after)
             return resp
-        response = render_template('errors/429.html', error_code=429,
-               error_message="Too many requests. Please try again later.")
-        from flask import make_response
-        r = make_response(response, 429)
+        r = make_response(render_template('errors/429.html', error_code=429,
+               error_message="Too many requests. Please try again later."), 429)
         r.headers['Retry-After'] = str(retry_after)
         return r
 

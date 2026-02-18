@@ -421,14 +421,12 @@ def create_discussion():
 
             if env_count >= tier_limit:
                 limit_label = f"{tier_limit} discussions" + (" this month" if key_env == 'live' else "")
-                response = api_error(
+                return api_error(
                     f'{key_env}_limit_reached',
                     f'Your {partner_tier.title()} plan is limited to {limit_label}. '
                     f'Upgrade your plan for higher limits.',
                     429
                 )
-                response.headers['Retry-After'] = '3600'
-                return response
 
     # Parse JSON body
     data = request.get_json()

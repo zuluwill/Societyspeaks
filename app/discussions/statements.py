@@ -463,14 +463,14 @@ def vote_statement(statement_id):
             if is_form_post:
                 flash('Vote value is required.', 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
-            return jsonify({'error': 'Vote value is required'}), 400
+            return jsonify({'error': 'bad_request', 'message': 'Vote value is required'}), 400
         try:
             vote_value = int(data.get('vote'))
         except (ValueError, TypeError):
             if is_form_post:
                 flash('Invalid vote value.', 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
-            return jsonify({'error': 'Invalid vote value format'}), 400
+            return jsonify({'error': 'bad_request', 'message': 'Invalid vote value format'}), 400
         confidence = data.get('confidence', 3)
         try:
             confidence = int(confidence) if confidence is not None else 3
@@ -489,14 +489,14 @@ def vote_statement(statement_id):
             if is_form_post:
                 flash('Vote value is required.', 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
-            return jsonify({'error': 'Vote value is required'}), 400
+            return jsonify({'error': 'bad_request', 'message': 'Vote value is required'}), 400
         try:
             vote_value = int(vote_raw)
         except (ValueError, TypeError):
             if is_form_post:
                 flash('Invalid vote value.', 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
-            return jsonify({'error': 'Invalid vote value format'}), 400
+            return jsonify({'error': 'bad_request', 'message': 'Invalid vote value format'}), 400
         confidence_raw = request.form.get('confidence', 3)
         try:
             confidence = int(confidence_raw) if confidence_raw else 3

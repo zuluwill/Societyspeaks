@@ -339,10 +339,10 @@ paths:
         '409':
           description: Discussion already exists for this URL
         '429':
-          description: Rate limit or tier limit exceeded; includes Retry-After header
+          description: Rate limit or tier limit exceeded. Rate limit responses include Retry-After header; tier limit (plan cap) does not.
           headers:
             Retry-After:
-              description: Seconds until the next request is allowed (60 for rate limit, 3600 for tier limit)
+              description: Present only for rate limit (60s). Omitted for tier/plan limit.
               schema:
                 type: integer
                 example: 60
