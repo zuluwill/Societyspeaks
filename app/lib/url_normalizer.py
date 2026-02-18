@@ -74,6 +74,10 @@ DOMAIN_RULES: Dict[str, dict] = {
         'strip_path_prefixes': ['/uk/', '/us/', '/au/', '/international/'],
         'strip_params': ['CMP', 'INTCMP'],
     },
+    # The Observer (Guardian Media Group): same tracking params as Guardian
+    'observer.co.uk': {
+        'strip_params': ['CMP', 'INTCMP'],
+    },
     # Financial Times: strip various FT-specific params
     'ft.com': {
         'strip_params': ['ftcamp', 'segmentId'],

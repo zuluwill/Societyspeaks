@@ -449,7 +449,10 @@ def vote_statement(statement_id):
         if is_form_post:
             flash(rate_message, 'error')
             return redirect(url_for('statements.view_statement', statement_id=statement_id))
-        return jsonify({'error': rate_message}), 429
+        resp = jsonify({'error': 'rate_limited', 'message': rate_message})
+        resp.status_code = 429
+        resp.headers['Retry-After'] = '60'
+        return resp
 
     # Partner ref for attribution (from embed or query param)
     partner_ref = request.args.get('ref', '')

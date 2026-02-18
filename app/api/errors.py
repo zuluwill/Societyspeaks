@@ -8,6 +8,18 @@ from flask import jsonify, current_app
 from werkzeug.exceptions import HTTPException
 
 
+def _retry_after_seconds(e, default: int = 60) -> int:
+    """Extract Retry-After seconds from a 429 exception; clamp to 1-3600."""
+    raw = getattr(e, 'retry_after', None)
+    if raw is not None and str(raw).strip() != '':
+        try:
+            secs = int(float(raw))
+            return max(1, min(3600, secs))
+        except (ValueError, TypeError):
+            pass
+    return max(1, min(3600, default))
+
+
 def api_error(code: str, message: str, status_code: int = 400):
     """
     Create a standardized API error response.
@@ -18,7 +30,7 @@ def api_error(code: str, message: str, status_code: int = 400):
         status_code: HTTP status code (default 400)
 
     Returns:
-        Tuple of (response, status_code) for Flask
+        Flask Response with status_code set (return this directly from a view).
 
     Example:
         return api_error('invalid_url', 'The provided URL is not valid.', 400)
@@ -57,11 +69,14 @@ def register_error_handlers(blueprint):
 
     @blueprint.errorhandler(429)
     def rate_limited(e):
-        return api_error(
+        retry_after = _retry_after_seconds(e, 60)
+        response = api_error(
             'rate_limited',
-            'Too many requests. Please retry in 60 seconds.',
+            f'Too many requests. Please retry in {retry_after} seconds.',
             429
         )
+        response.headers['Retry-After'] = str(retry_after)
+        return response
 
     @blueprint.errorhandler(500)
     def internal_error(e):

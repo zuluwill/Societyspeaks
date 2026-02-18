@@ -71,8 +71,18 @@ paths:
                     enum: [test, live]
         '400':
           description: Invalid or missing URL
+        '403':
+          description: Embed and API access revoked for this partner ref
         '404':
           description: No discussion found for this URL
+        '429':
+          description: Too many requests; includes Retry-After header
+          headers:
+            Retry-After:
+              description: Seconds until the next request is allowed
+              schema:
+                type: integer
+                example: 60
 
   /api/discussions/{discussion_id}/snapshot:
     get:
@@ -128,8 +138,18 @@ paths:
                     format: date-time
                   teaser_text:
                     type: string
+        '403':
+          description: Partner disabled or test discussion requires valid test API key
         '404':
           description: Discussion not found
+        '429':
+          description: Too many requests; includes Retry-After header
+          headers:
+            Retry-After:
+              description: Seconds until the next request is allowed
+              schema:
+                type: integer
+                example: 60
 
   /api/oembed:
     get:
@@ -189,6 +209,16 @@ paths:
           description: Invalid URL
         '404':
           description: Discussion not found
+        '501':
+          description: Unsupported format (only JSON supported)
+        '429':
+          description: Too many requests; includes Retry-After header
+          headers:
+            Retry-After:
+              description: Seconds until the next request is allowed
+              schema:
+                type: integer
+                example: 60
 
   /api/embed/flag:
     post:
@@ -302,8 +332,20 @@ paths:
           description: Invalid request or missing excerpt/seed_statements
         '401':
           description: Missing or invalid API key
+        '402':
+          description: Live API requires active subscription
+        '403':
+          description: Partner inactive or browser request not allowed (use server-to-server)
         '409':
           description: Discussion already exists for this URL
+        '429':
+          description: Rate limit or tier limit exceeded; includes Retry-After header
+          headers:
+            Retry-After:
+              description: Seconds until the next request is allowed (60 for rate limit, 3600 for tier limit)
+              schema:
+                type: integer
+                example: 60
 
 components:
   securitySchemes:

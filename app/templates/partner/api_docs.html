@@ -84,6 +84,7 @@
         <a href="#lookup" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Lookup by Article URL</a>
         <a href="#snapshot" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Discussion Snapshot</a>
         <a href="#embed-url-parameters" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Embed URL Parameters</a>
+        <a href="#embed-sessions" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Session Tracking &amp; Privacy</a>
         <a href="#postmessage" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">PostMessage Events</a>
         <a href="#oembed" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">oEmbed Provider</a>
         <a href="#create-discussion" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Create Discussion</a>
@@ -101,6 +102,7 @@
         <a href="#lookup" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Lookup</a>
         <a href="#snapshot" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Snapshot</a>
         <a href="#embed-url-parameters" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Embed Params</a>
+        <a href="#embed-sessions" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Sessions</a>
         <a href="#postmessage" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">PostMessage</a>
         <a href="#oembed" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">oEmbed</a>
         <a href="#create-discussion" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Create</a>
@@ -128,6 +130,16 @@
         <p class="text-sm text-gray-600 mt-3">
           Domains must be verified via DNS TXT to allow embeds.
         </p>
+        <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <p class="text-sm font-semibold text-amber-900 mb-1">Server-to-server only for write operations</p>
+          <p class="text-sm text-amber-800">
+            The <code>X-API-Key</code> header is intentionally excluded from browser CORS preflight.
+            <strong>Create Discussion</strong> must be called from your server, not from client-side JavaScript
+            (requests with an <code>Origin</code> header are rejected with <code>403</code>).
+            Read-only endpoints (Lookup, Snapshot, oEmbed) work from browsers without an API key.
+            If you need authenticated lookups from the browser, proxy through your own backend.
+          </p>
+        </div>
       </div>
     </section>
     <!-- Base URL -->
@@ -255,8 +267,16 @@ const embedUrl = data.embed_url;</pre>
                 <span class="text-gray-600"><code>invalid_url</code> - URL could not be parsed</span>
               </div>
               <div class="flex gap-4">
+                <code class="text-red-600">403</code>
+                <span class="text-gray-600"><code>partner_disabled</code> - Embed and API access revoked for this partner ref</span>
+              </div>
+              <div class="flex gap-4">
                 <code class="text-red-600">404</code>
                 <span class="text-gray-600"><code>no_discussion</code> - No discussion for this URL</span>
+              </div>
+              <div class="flex gap-4">
+                <code class="text-red-600">429</code>
+                <span class="text-gray-600"><code>rate_limited</code> - Too many requests; retry later</span>
               </div>
             </div>
           </div>
@@ -321,6 +341,28 @@ const embedUrl = data.embed_url;</pre>
   "consensus_url": "{{ base_url }}/discussions/123/.../consensus"
 }</pre>
           </div>
+
+          <div>
+            <h4 class="font-semibold text-gray-900 mb-2">Error Responses</h4>
+            <div class="space-y-2 text-sm">
+              <div class="flex gap-4">
+                <code class="text-red-600">403</code>
+                <span class="text-gray-600"><code>partner_disabled</code> - Embed and API access revoked for this partner ref</span>
+              </div>
+              <div class="flex gap-4">
+                <code class="text-red-600">403</code>
+                <span class="text-gray-600"><code>forbidden</code> - Valid test API key required for test discussions</span>
+              </div>
+              <div class="flex gap-4">
+                <code class="text-red-600">404</code>
+                <span class="text-gray-600"><code>discussion_not_found</code> - Discussion does not exist</span>
+              </div>
+              <div class="flex gap-4">
+                <code class="text-red-600">429</code>
+                <span class="text-gray-600"><code>rate_limited</code> - Too many requests; retry later</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -380,6 +422,34 @@ const embedUrl = data.embed_url;</pre>
               <strong>Allowed fonts:</strong> system-ui, Georgia, Inter, Lato, Open Sans, Source Serif Pro
             </p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Embed: Session Tracking & Privacy -->
+    <section id="embed-sessions">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Embed: Session Tracking &amp; Privacy</h2>
+      <div class="bg-white border border-gray-200 rounded-lg p-5 space-y-4">
+        <p class="text-sm text-gray-700">
+          The embed uses a first-party cookie to deduplicate anonymous votes across page loads.
+          When the embed is loaded in a cross-domain iframe (the normal case for partner sites),
+          browsers with strict privacy settings may block this cookie as a third-party cookie.
+        </p>
+        <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+          <p class="text-sm text-green-900">
+            <strong>No action required.</strong> The embed automatically falls back to a
+            <code>localStorage</code>-based session identifier (<code>embed_fingerprint</code>)
+            when cookies are unavailable. Vote deduplication works in both modes.
+          </p>
+        </div>
+        <div class="text-sm text-gray-700 space-y-2">
+          <p><strong>How it works:</strong></p>
+          <ul class="list-disc list-inside space-y-1 text-gray-600">
+            <li>The embed generates a random participant ID and stores it in <code>localStorage</code> under the embed origin.</li>
+            <li>This ID is sent with each vote as <code>embed_fingerprint</code> for server-side deduplication.</li>
+            <li>If the user clears site data or uses private browsing, a new session starts (they can vote again).</li>
+            <li>Safari, Firefox, and Brave are fully supported via this fallback.</li>
+          </ul>
         </div>
       </div>
     </section>
@@ -684,8 +754,24 @@ const { discussion_id, embed_url } = data;</pre>
               <td class="py-3 font-mono text-gray-900">120 req / min / IP</td>
             </tr>
             <tr class="border-b">
-              <td class="py-3 text-gray-600">Vote submission</td>
+              <td class="py-3 text-gray-600">Vote submission (default)</td>
               <td class="py-3 font-mono text-gray-900">30 req / min / IP</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 text-gray-600">Vote submission (integrity mode)</td>
+              <td class="py-3 font-mono text-gray-900">10 req / min / discussion</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 text-gray-600">Statement creation (authenticated)</td>
+              <td class="py-3 font-mono text-gray-900">10 per hour</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 text-gray-600">Statement creation (anonymous)</td>
+              <td class="py-3 font-mono text-gray-900">5 per hour</td>
+            </tr>
+            <tr class="border-b">
+              <td class="py-3 text-gray-600">Flag statement (from embed)</td>
+              <td class="py-3 font-mono text-gray-900">10 req / min / IP</td>
             </tr>
             <tr>
               <td class="py-3 text-gray-600">Create discussion</td>
@@ -695,7 +781,12 @@ const { discussion_id, embed_url } = data;</pre>
         </table>
         </div>
         <p class="text-sm text-gray-500 mt-4">
-          Responses include a <code>429 Too Many Requests</code> with <code>rate_limited</code> error when limits are exceeded.
+          Responses include a <code>429 Too Many Requests</code> with a <code>Retry-After</code> header indicating
+          seconds until the next request is allowed.
+        </p>
+        <p class="text-sm text-gray-500 mt-2">
+          <strong>Integrity mode:</strong> Some discussions have stricter vote rate limits enabled for integrity protection.
+          The embed handles this transparently &mdash; users see a &ldquo;please slow down&rdquo; message.
         </p>
       </div>
     </section>

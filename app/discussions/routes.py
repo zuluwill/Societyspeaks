@@ -230,7 +230,7 @@ def embed_discussion(discussion_id):
 
     Query Parameters:
         ref: Partner reference for analytics
-        theme: Preset theme (observer, time, ted, or default)
+        theme: Preset theme (default, dark, editorial, minimal, bold, muted)
         primary: Primary color hex (e.g., 1e40af)
         bg: Background color hex
         font: Font family from allowlist
