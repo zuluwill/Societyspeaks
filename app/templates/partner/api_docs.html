@@ -38,7 +38,10 @@
         <div class="lg:col-span-4">
           <div class="rounded-xl border border-blue-100 bg-white p-5 shadow-sm">
             <p class="text-xs font-semibold uppercase tracking-wide text-blue-600">Quick start</p>
-            <pre class="mt-3 bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto break-all sm:break-normal">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article"</pre>
+            <div class="code-block relative group mt-3">
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article"</pre>
+            </div>
             <p class="text-xs text-gray-500 mt-2">Then embed with the returned <code>embed_url</code>.</p>
           </div>
         </div>
@@ -145,7 +148,10 @@
     <!-- Base URL -->
     <section id="base-url">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Base URL</h2>
-      <code class="block bg-gray-900 text-green-400 px-4 py-3 rounded-lg">{{ base_url }}/api</code>
+      <div class="code-block relative group">
+        <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+        <code class="block bg-gray-900 text-green-400 px-4 py-3 rounded-lg">{{ base_url }}/api</code>
+      </div>
     </section>
 
     <!-- Common Workflows -->
@@ -159,7 +165,9 @@
             <li>2) If none exists, create discussion</li>
             <li>3) Store <code>discussion_id</code> and use <code>embed_url</code></li>
           </ol>
-          <pre class="mt-4 bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto"># 1) Lookup
+          <div class="code-block relative group mt-4">
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words"># 1) Lookup
 curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article" \
   -H "X-API-Key: sspk_test_..."
 
@@ -168,6 +176,7 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
   -H "X-API-Key: sspk_test_..." \
   -H "Content-Type: application/json" \
   -d '{"article_url":"https://example.com/article","title":"Example title","excerpt":"..."}'</pre>
+          </div>
         </div>
         <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <h3 class="font-semibold text-gray-900 mb-2">Manual embed (quick start)</h3>
@@ -217,14 +226,16 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
 
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
-            <div class="rounded-lg border border-gray-700 overflow-hidden ss-code-tabs">
-              <div class="flex bg-gray-800 border-b border-gray-700 text-xs" role="tablist">
-                <button role="tab" aria-selected="true" data-lang="curl" class="ss-tab px-3 py-2 font-medium transition-colors text-white bg-gray-900">curl</button>
-                <button role="tab" aria-selected="false" data-lang="python" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Python</button>
-                <button role="tab" aria-selected="false" data-lang="node" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Node.js</button>
-              </div>
-              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="curl">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article"</pre>
-              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="python" hidden>import requests
+            <div class="code-block relative group">
+              <button class="copy-btn absolute top-10 right-2 z-10 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <div class="rounded-lg border border-gray-700 overflow-hidden ss-code-tabs">
+                <div class="flex bg-gray-800 border-b border-gray-700 text-xs" role="tablist">
+                  <button role="tab" aria-selected="true" data-lang="curl" class="ss-tab px-3 py-2 font-medium transition-colors text-white bg-gray-900">curl</button>
+                  <button role="tab" aria-selected="false" data-lang="python" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Python</button>
+                  <button role="tab" aria-selected="false" data-lang="node" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Node.js</button>
+                </div>
+                <pre class="bg-gray-900 text-green-400 p-3 text-sm whitespace-pre-wrap break-words ss-panel" data-lang="curl">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article"</pre>
+                <pre class="bg-gray-900 text-green-400 p-3 text-sm whitespace-pre-wrap break-words ss-panel" data-lang="python" hidden>import requests
 
 resp = requests.get(
     "{{ base_url }}/api/discussions/by-article-url",
@@ -232,18 +243,21 @@ resp = requests.get(
 )
 data = resp.json()
 embed_url = data["embed_url"]</pre>
-              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="node" hidden>const resp = await fetch(
+                <pre class="bg-gray-900 text-green-400 p-3 text-sm whitespace-pre-wrap break-words ss-panel" data-lang="node" hidden>const resp = await fetch(
   `{{ base_url }}/api/discussions/by-article-url?` +
   new URLSearchParams({ url: "https://example.com/article" })
 );
 const data = await resp.json();
 const embedUrl = data.embed_url;</pre>
+              </div>
             </div>
           </div>
 
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">Success Response (200)</h4>
-            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+            <div class="code-block relative group">
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "discussion_id": 123,
   "slug": "should-we-reform-housing-policy",
   "title": "Should we reform housing policy?",
@@ -253,6 +267,7 @@ const embedUrl = data.embed_url;</pre>
   "source": "rss",
   "env": "live"
 }</pre>
+            </div>
           </div>
 
           <div>
@@ -312,12 +327,17 @@ const embedUrl = data.embed_url;</pre>
 
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
-            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">curl "{{ base_url }}/api/discussions/123/snapshot"</pre>
+            <div class="code-block relative group">
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">curl "{{ base_url }}/api/discussions/123/snapshot"</pre>
+            </div>
           </div>
 
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">Success Response (200)</h4>
-            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+            <div class="code-block relative group">
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "discussion_id": 123,
   "discussion_title": "Should we reform housing policy?",
   "participant_count": 847,
@@ -328,11 +348,14 @@ const embedUrl = data.embed_url;</pre>
   "consensus_url": "{{ base_url }}/discussions/123/.../consensus",
   "teaser_text": "Housing reform debate reveals surprising common ground"
 }</pre>
+            </div>
           </div>
 
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">When Analysis Not Ready</h4>
-            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+            <div class="code-block relative group">
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "discussion_id": 123,
   "discussion_title": "Should we reform housing policy?",
   "participant_count": 23,
@@ -340,6 +363,7 @@ const embedUrl = data.embed_url;</pre>
   "has_analysis": false,
   "consensus_url": "{{ base_url }}/discussions/123/.../consensus"
 }</pre>
+            </div>
           </div>
 
           <div>
@@ -463,31 +487,40 @@ const embedUrl = data.embed_url;</pre>
         <div>
           <h4 class="font-semibold text-gray-900 mb-2">societyspeaks:embed:loaded</h4>
           <p class="text-gray-600 text-sm mb-2">Sent when the embed finishes loading.</p>
-          <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+          <div class="code-block relative group">
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "type": "societyspeaks:embed:loaded",
   "discussionId": 123,
   "statementCount": 5
 }</pre>
+          </div>
         </div>
 
         <div>
           <h4 class="font-semibold text-gray-900 mb-2">societyspeaks:embed:resize</h4>
           <p class="text-gray-600 text-sm mb-2">Sent when the embed content height changes. Use to resize iframe.</p>
-          <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+          <div class="code-block relative group">
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "type": "societyspeaks:embed:resize",
   "discussionId": 123,
   "height": 450
 }</pre>
+          </div>
         </div>
 
         <div>
           <h4 class="font-semibold text-gray-900 mb-2">Example: Auto-resize iframe</h4>
-          <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">window.addEventListener('message', (event) => {
+          <div class="code-block relative group">
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">window.addEventListener('message', (event) => {
   if (event.data.type === 'societyspeaks:embed:resize') {
     const iframe = document.querySelector('iframe[src*="societyspeaks"]');
     if (iframe) iframe.style.height = event.data.height + 'px';
   }
 });</pre>
+          </div>
         </div>
       </div>
     </section>
@@ -535,12 +568,17 @@ const embedUrl = data.embed_url;</pre>
 
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
-            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">curl "{{ base_url }}/api/oembed?url={{ base_url }}/discussions/123/my-discussion"</pre>
+            <div class="code-block relative group">
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">curl "{{ base_url }}/api/oembed?url={{ base_url }}/discussions/123/my-discussion"</pre>
+            </div>
           </div>
 
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">Success Response (200)</h4>
-            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+            <div class="code-block relative group">
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "type": "rich",
   "version": "1.0",
   "title": "Should we reform housing policy?",
@@ -551,6 +589,7 @@ const embedUrl = data.embed_url;</pre>
   "height": 400,
   "cache_age": 3600
 }</pre>
+            </div>
           </div>
 
           <div class="p-3 bg-blue-50 rounded-lg">
@@ -629,13 +668,15 @@ const embedUrl = data.embed_url;</pre>
 
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">Example Request</h4>
-            <div class="rounded-lg border border-gray-700 overflow-hidden ss-code-tabs">
-              <div class="flex bg-gray-800 border-b border-gray-700 text-xs" role="tablist">
-                <button role="tab" aria-selected="true" data-lang="curl" class="ss-tab px-3 py-2 font-medium transition-colors text-white bg-gray-900">curl</button>
-                <button role="tab" aria-selected="false" data-lang="python" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Python</button>
-                <button role="tab" aria-selected="false" data-lang="node" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Node.js</button>
-              </div>
-              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="curl">curl -X POST "{{ base_url }}/api/partner/discussions" \
+            <div class="code-block relative group">
+              <button class="copy-btn absolute top-10 right-2 z-10 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <div class="rounded-lg border border-gray-700 overflow-hidden ss-code-tabs">
+                <div class="flex bg-gray-800 border-b border-gray-700 text-xs" role="tablist">
+                  <button role="tab" aria-selected="true" data-lang="curl" class="ss-tab px-3 py-2 font-medium transition-colors text-white bg-gray-900">curl</button>
+                  <button role="tab" aria-selected="false" data-lang="python" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Python</button>
+                  <button role="tab" aria-selected="false" data-lang="node" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Node.js</button>
+                </div>
+                <pre class="bg-gray-900 text-green-400 p-3 text-sm whitespace-pre-wrap break-words ss-panel" data-lang="curl">curl -X POST "{{ base_url }}/api/partner/discussions" \
   -H "X-API-Key: your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
@@ -644,7 +685,7 @@ const embedUrl = data.embed_url;</pre>
     "excerpt": "A new study shows that car-free zones improve air quality...",
     "source_name": "Example News"
   }'</pre>
-              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="python" hidden>import requests
+                <pre class="bg-gray-900 text-green-400 p-3 text-sm whitespace-pre-wrap break-words ss-panel" data-lang="python" hidden>import requests
 
 resp = requests.post(
     "{{ base_url }}/api/partner/discussions",
@@ -662,7 +703,7 @@ resp = requests.post(
 data = resp.json()
 discussion_id = data["discussion_id"]
 embed_url = data["embed_url"]</pre>
-              <pre class="bg-gray-900 text-green-400 p-3 text-sm overflow-x-auto ss-panel" data-lang="node" hidden>const resp = await fetch("{{ base_url }}/api/partner/discussions", {
+                <pre class="bg-gray-900 text-green-400 p-3 text-sm whitespace-pre-wrap break-words ss-panel" data-lang="node" hidden>const resp = await fetch("{{ base_url }}/api/partner/discussions", {
   method: "POST",
   headers: {
     "X-API-Key": "your_api_key",
@@ -677,12 +718,15 @@ embed_url = data["embed_url"]</pre>
 });
 const data = await resp.json();
 const { discussion_id, embed_url } = data;</pre>
+              </div>
             </div>
           </div>
 
           <div>
             <h4 class="font-semibold text-gray-900 mb-2">Success Response (201)</h4>
-            <pre class="bg-gray-900 text-green-400 p-3 rounded text-sm overflow-x-auto">{
+            <div class="code-block relative group">
+              <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+              <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "discussion_id": 456,
   "slug": "should-cities-ban-cars-from-downtown-areas",
   "title": "Should cities ban cars from downtown areas?",
@@ -693,6 +737,7 @@ const { discussion_id, embed_url } = data;</pre>
   "env": "live",
   "statement_count": 5
 }</pre>
+            </div>
           </div>
 
           <div>
@@ -795,10 +840,13 @@ const { discussion_id, embed_url } = data;</pre>
     <section id="error-format">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Error Format</h2>
       <p class="text-gray-600 mb-4">All errors return JSON with a consistent format.</p>
-      <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">{
+      <div class="code-block relative group">
+        <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+        <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm whitespace-pre-wrap break-words">{
   "error": "error_code",
   "message": "Human-readable description of the error"
 }</pre>
+      </div>
     </section>
     </div><!-- /lg:col-span-9 -->
   </div><!-- /lg:grid -->
