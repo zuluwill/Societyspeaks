@@ -28,6 +28,49 @@ import re
 logger = logging.getLogger(__name__)
 
 
+def _extract_text_from_possible_json(text: str) -> str:
+    """Extract plain text from a string that may be raw JSON.
+    
+    Handles common LLM failure modes where JSON is returned despite asking for
+    plain text, including:
+    - Simple objects: {"introduction": "..."}
+    - Nested objects: {"deeper_context": {"historical_context": "...", ...}}
+    - Truncated/broken JSON from token limits
+    """
+    if not text:
+        return text
+    stripped = text.strip()
+    if not (stripped.startswith('{') or stripped.startswith('[')):
+        return text
+    try:
+        data = json.loads(stripped)
+        if isinstance(data, str):
+            return data
+        if isinstance(data, dict):
+            parts = []
+            for value in data.values():
+                if isinstance(value, str) and value.strip():
+                    parts.append(value.strip())
+                elif isinstance(value, dict):
+                    for sub_value in value.values():
+                        if isinstance(sub_value, str) and sub_value.strip():
+                            parts.append(sub_value.strip())
+                elif isinstance(value, list):
+                    for item in value:
+                        if isinstance(item, str) and item.strip():
+                            parts.append(item.strip())
+            if parts:
+                return '\n\n'.join(parts)
+    except (json.JSONDecodeError, ValueError):
+        pass
+    values = re.findall(r'"[a-z_]+"\s*:\s*"((?:[^"\\]|\\.)*)"', stripped, re.DOTALL)
+    if values:
+        prose = [v.strip() for v in values if len(v.strip()) > 50]
+        if prose:
+            return '\n\n'.join(prose)
+    return text
+
+
 class BriefGenerator:
     """
     Generates daily brief content using LLM.
@@ -242,9 +285,12 @@ Guidelines:
 Return ONLY the intro text, no JSON, no quotes, no label."""
 
         try:
-            response = self._call_llm(prompt)
+            response = self._call_llm(
+                prompt,
+                system_prompt="You are a news editor creating calm, neutral briefings. Respond with plain text only, no JSON."
+            )
             intro = response.strip().strip('"').strip("'")
-            # Basic validation: must be reasonable length and not empty
+            intro = _extract_text_from_possible_json(intro)
             if intro and 20 < len(intro) < 500:
                 return intro
             else:
@@ -830,21 +876,13 @@ Guidelines:
 
 Return ONLY the deeper context text (no JSON, no labels, just the prose)."""
 
-            response = self._call_llm(prompt)
+            response = self._call_llm(
+                prompt,
+                system_prompt="You are a senior news analyst providing deeper context. Respond with plain prose only, no JSON.",
+                max_tokens=1200
+            )
             
-            # Clean up response (remove JSON markers if present)
-            context = response.strip()
-            if context.startswith('{') or context.startswith('"'):
-                # Try to extract text from JSON
-                try:
-                    import json
-                    data = json.loads(context)
-                    if isinstance(data, dict):
-                        context = data.get('deeper_context') or data.get('context') or data.get('text', context)
-                    elif isinstance(data, str):
-                        context = data
-                except:
-                    pass
+            context = _extract_text_from_possible_json(response.strip())
             
             # Limit length (roughly 800-1200 words)
             if len(context) > 2000:
@@ -1668,12 +1706,16 @@ Guidelines:
             logger.debug(f"Failed to fetch event slug for {market_slug}: {e}")
         return None
 
-    def _call_llm(self, prompt: str) -> str:
+    def _call_llm(self, prompt: str, system_prompt: Optional[str] = None, max_tokens: Optional[int] = None) -> str:
         """
         Call LLM API (OpenAI or Anthropic).
 
         Args:
             prompt: User prompt
+            system_prompt: Override the default system prompt. Use this when the
+                caller expects plain text instead of JSON.
+            max_tokens: Override the default max_tokens (500). Use higher values
+                for longer content like deeper_context.
 
         Returns:
             str: LLM response text
@@ -1685,29 +1727,31 @@ Guidelines:
             raise ValueError("No LLM API key configured")
         
         if self.provider == 'openai':
-            return self._call_openai(prompt)
+            return self._call_openai(prompt, system_prompt=system_prompt, max_tokens=max_tokens)
         elif self.provider == 'anthropic':
-            return self._call_anthropic(prompt)
+            return self._call_anthropic(prompt, system_prompt=system_prompt, max_tokens=max_tokens)
         else:
             raise ValueError(f"Unknown LLM provider: {self.provider}")
 
-    def _call_openai(self, prompt: str, api_key: Optional[str] = None, max_retries: int = 3) -> str:
+    def _call_openai(self, prompt: str, api_key: Optional[str] = None, max_retries: int = 3, system_prompt: Optional[str] = None, max_tokens: Optional[int] = None) -> str:
         """Call OpenAI API with retry logic for transient errors."""
         import time
         import openai
 
         key = api_key or self.api_key or os.environ.get('OPENAI_API_KEY')
         client = openai.OpenAI(api_key=key)
+        sys_msg = system_prompt or "You are a news editor creating calm, neutral briefings. Respond only in valid JSON."
+        tokens = max_tokens or 500
 
         for attempt in range(max_retries):
             try:
                 response = client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[
-                        {"role": "system", "content": "You are a news editor creating calm, neutral briefings. Respond only in valid JSON."},
+                        {"role": "system", "content": sys_msg},
                         {"role": "user", "content": prompt}
                     ],
-                    max_tokens=500,
+                    max_tokens=tokens,
                     temperature=0.3
                 )
 
@@ -1739,21 +1783,23 @@ Guidelines:
                 logger.error(f"OpenAI API error: {e}")
                 raise
 
-    def _call_anthropic(self, prompt: str, api_key: Optional[str] = None, max_retries: int = 3) -> str:
+    def _call_anthropic(self, prompt: str, api_key: Optional[str] = None, max_retries: int = 3, system_prompt: Optional[str] = None, max_tokens: Optional[int] = None) -> str:
         """Call Anthropic API with retry logic for transient errors."""
         import time
         import anthropic
 
         key = api_key or self.api_key or os.environ.get('ANTHROPIC_API_KEY')
         client = anthropic.Anthropic(api_key=key)
+        sys_msg = system_prompt or "You are a news editor creating calm, neutral briefings. Respond only in valid JSON."
+        tokens = max_tokens or 500
 
         for attempt in range(max_retries):
             try:
                 message = client.messages.create(
                     model="claude-3-haiku-20240307",
-                    max_tokens=500,
+                    max_tokens=tokens,
                     temperature=0.3,
-                    system="You are a news editor creating calm, neutral briefings. Respond only in valid JSON.",
+                    system=sys_msg,
                     messages=[{"role": "user", "content": prompt}]
                 )
 
