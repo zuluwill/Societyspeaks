@@ -5,6 +5,7 @@ Centralized analytics helpers for admin reporting to keep routes/templates DRY.
 """
 
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import Dict, Any, List
 
 from sqlalchemy import func, case
@@ -36,7 +37,7 @@ class DailyQuestionAnalytics:
 
     @classmethod
     def _base_query(cls, days: int):
-        cutoff = datetime.utcnow() - timedelta(days=days)
+        cutoff = utcnow_naive() - timedelta(days=days)
         return DailyQuestionResponse.query.join(
             DailyQuestion, DailyQuestionResponse.daily_question_id == DailyQuestion.id
         ).filter(
@@ -64,7 +65,7 @@ class DailyQuestionAnalytics:
         ).join(
             DailyQuestion, DailyQuestionResponse.daily_question_id == DailyQuestion.id
         ).filter(
-            DailyQuestionResponse.created_at >= datetime.utcnow() - timedelta(days=days)
+            DailyQuestionResponse.created_at >= utcnow_naive() - timedelta(days=days)
         ).scalar() or 0.0
 
         # Confidence distribution
@@ -74,7 +75,7 @@ class DailyQuestionAnalytics:
         ).join(
             DailyQuestion, DailyQuestionResponse.daily_question_id == DailyQuestion.id
         ).filter(
-            DailyQuestionResponse.created_at >= datetime.utcnow() - timedelta(days=days),
+            DailyQuestionResponse.created_at >= utcnow_naive() - timedelta(days=days),
             DailyQuestionResponse.confidence_level.isnot(None)
         ).group_by(DailyQuestionResponse.confidence_level).all()
         confidence_map = {level: count for level, count in confidence_raw if level}
@@ -97,7 +98,7 @@ class DailyQuestionAnalytics:
         ).join(
             DailyQuestion, DailyQuestionResponse.daily_question_id == DailyQuestion.id
         ).filter(
-            DailyQuestionResponse.created_at >= datetime.utcnow() - timedelta(days=days),
+            DailyQuestionResponse.created_at >= utcnow_naive() - timedelta(days=days),
             DailyQuestionResponse.reason_tag.isnot(None)
         ).group_by(DailyQuestionResponse.reason_tag).all()
         tag_map = {tag: count for tag, count in tag_raw if tag}
@@ -120,7 +121,7 @@ class DailyQuestionAnalytics:
         ).join(
             DailyQuestion, DailyQuestionResponse.daily_question_id == DailyQuestion.id
         ).filter(
-            DailyQuestionResponse.created_at >= datetime.utcnow() - timedelta(days=days)
+            DailyQuestionResponse.created_at >= utcnow_naive() - timedelta(days=days)
         ).group_by(DailyQuestionResponse.context_expanded).all()
 
         context_impact = {
@@ -145,7 +146,7 @@ class DailyQuestionAnalytics:
         ).join(
             DailyQuestionResponse, DailyQuestionResponse.daily_question_id == DailyQuestion.id
         ).filter(
-            DailyQuestionResponse.created_at >= datetime.utcnow() - timedelta(days=days)
+            DailyQuestionResponse.created_at >= utcnow_naive() - timedelta(days=days)
         ).group_by(DailyQuestion.source_type).all()
         source_type_stats: List[Dict[str, Any]] = []
         for source_type, responses, unsure_count, reason_rate in source_rows:

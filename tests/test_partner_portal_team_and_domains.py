@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
+from app.lib.time import utcnow_naive
 
 
 def _create_partner_with_owner(db, email='owner@example.com'):
@@ -24,7 +25,7 @@ def _create_partner_with_owner(db, email='owner@example.com'):
         full_name='Owner User',
         role='owner',
         status='active',
-        accepted_at=datetime.utcnow(),
+        accepted_at=utcnow_naive(),
     )
     owner.set_password('ValidPass123!')
     db.session.add(owner)
@@ -43,7 +44,7 @@ def test_is_partner_origin_allowed_rejects_inactive_domain(app, db):
         env='live',
         verification_method='dns_txt',
         verification_token='tok_domain',
-        verified_at=datetime.utcnow(),
+        verified_at=utcnow_naive(),
         is_active=False,
     )
     db.session.add(domain)
@@ -98,7 +99,7 @@ def test_disabled_member_is_forced_to_reauthenticate(app, db):
         full_name='Member Two',
         role='member',
         status='active',
-        accepted_at=datetime.utcnow(),
+        accepted_at=utcnow_naive(),
     )
     member.set_password('MemberPass123!')
     db.session.add(member)
@@ -128,7 +129,7 @@ def test_invite_token_expiry_blocks_acceptance(app, db):
         role='member',
         status='pending',
         invite_token='stale-token-123',
-        invited_at=datetime.utcnow() - timedelta(days=10),
+        invited_at=utcnow_naive() - timedelta(days=10),
     )
     db.session.add(stale_member)
     db.session.commit()

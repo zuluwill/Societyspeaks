@@ -114,8 +114,8 @@ def create_discussion_notification(user_id, discussion_id, notification_type, ad
             current_app.logger.warning(f"Unknown notification type: {notification_type}")
             return None
         
-        user = User.query.get(user_id)
-        discussion = Discussion.query.get(discussion_id)
+        user = db.session.get(User, user_id)
+        discussion = db.session.get(Discussion, discussion_id)
         
         if not user or not discussion:
             current_app.logger.warning(f"User {user_id} or discussion {discussion_id} not found")

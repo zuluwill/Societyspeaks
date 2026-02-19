@@ -22,6 +22,7 @@ RECENT IMPROVEMENTS (2026-01-06):
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from app.lib.time import utcnow_naive
 from typing import Dict, List, Tuple, Optional
 import logging
 
@@ -744,7 +745,7 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
             'method': method,
             'participants_count': len(user_ids),
             'statements_count': len(statement_ids),
-            'analyzed_at': datetime.utcnow().isoformat(),
+            'analyzed_at': utcnow_naive().isoformat(),
             'explained_variance': pca.explained_variance_ratio_.tolist()
         }
     }

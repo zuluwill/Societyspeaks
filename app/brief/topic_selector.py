@@ -10,6 +10,7 @@ Criteria: civic importance, source diversity, topical diversity, recency.
 """
 
 from datetime import datetime, timedelta, date
+from app.lib.time import utcnow_naive
 from typing import List, Dict, Optional, Tuple
 from collections import OrderedDict
 from app.models import TrendingTopic, DailyBrief, BriefItem
@@ -139,7 +140,7 @@ class TopicSelector:
         candidates = []
         
         for hours in lookback_hours:
-            cutoff = datetime.utcnow() - timedelta(hours=hours)
+            cutoff = utcnow_naive() - timedelta(hours=hours)
             
             # Get all potentially eligible topics (basic filters)
             # Order by published_at desc to ensure most recent topics are considered first

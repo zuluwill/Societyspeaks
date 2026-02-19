@@ -27,6 +27,7 @@ sys.path.insert(0, str(project_root))
 from app import create_app, db
 from app.models import User, Discussion, Statement, StatementVote, Response, Evidence, StatementFlag
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 import random
 
 
@@ -161,7 +162,7 @@ def create_statements(discussion, users, num_statements=20):
             user_id=author.id,
             content=content,
             statement_type='claim',
-            created_at=datetime.utcnow() - timedelta(days=random.randint(0, 7))
+            created_at=utcnow_naive() - timedelta(days=random.randint(0, 7))
         )
         
         db.session.add(statement)
@@ -300,7 +301,7 @@ def create_responses(statements, users, num_responses=30):
                 user_id=author.id,
                 position=position,
                 content=content,
-                created_at=datetime.utcnow() - timedelta(days=random.randint(0, 5))
+                created_at=utcnow_naive() - timedelta(days=random.randint(0, 5))
             )
             
             db.session.add(response)

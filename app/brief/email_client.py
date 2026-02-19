@@ -13,6 +13,7 @@ import threading
 import logging
 import pytz
 from datetime import datetime
+from app.lib.time import utcnow_naive
 from email.utils import parseaddr
 from typing import List, Optional
 from flask import render_template, current_app
@@ -74,7 +75,7 @@ def _minify_email_html(html: str) -> str:
 def _daily_send_lock_key(target_date=None) -> str:
     """Shared lock key for all daily brief sends on a given date."""
     if target_date is None:
-        target_date = datetime.utcnow().date()
+        target_date = utcnow_naive().date()
     return f"brief_send_lock:daily:{target_date.isoformat()}"
 
 
@@ -330,7 +331,7 @@ class ResendClient:
             success = self._send_with_retry(email_data)
 
             if success:
-                subscriber.last_sent_at = datetime.utcnow()
+                subscriber.last_sent_at = utcnow_naive()
                 subscriber.last_brief_id_sent = brief.id
                 subscriber.total_briefs_received += 1
                 db.session.commit()
@@ -598,7 +599,7 @@ class ResendClient:
 
             if success:
                 # Record that welcome email was sent to prevent duplicates
-                subscriber.welcome_email_sent_at = datetime.utcnow()
+                subscriber.welcome_email_sent_at = utcnow_naive()
                 db.session.commit()
                 logger.info(f"Sent welcome email to {subscriber.email}")
             else:
@@ -659,7 +660,7 @@ class BriefEmailScheduler:
 
             # For weekly: also check it's their preferred day
             if cadence == 'weekly':
-                now_utc = datetime.utcnow().replace(tzinfo=pytz.utc)
+                now_utc = utcnow_naive().replace(tzinfo=pytz.utc)
                 try:
                     local_tz = pytz.timezone(subscriber.timezone)
                     now_local = now_utc.astimezone(local_tz)
@@ -673,7 +674,7 @@ class BriefEmailScheduler:
             # Convert subscriber's preferred time to UTC
             try:
                 local_tz = pytz.timezone(subscriber.timezone)
-                now_utc = datetime.utcnow().replace(tzinfo=pytz.utc)
+                now_utc = utcnow_naive().replace(tzinfo=pytz.utc)
                 now_local = now_utc.astimezone(local_tz)
 
                 # Check if it's their preferred send hour in their timezone
@@ -726,7 +727,7 @@ class BriefEmailScheduler:
                     continue
 
                 if not current_subscriber.magic_token or (
-                    current_subscriber.magic_token_expires and current_subscriber.magic_token_expires < datetime.utcnow()
+                    current_subscriber.magic_token_expires and current_subscriber.magic_token_expires < utcnow_naive()
                 ):
                     current_subscriber.generate_magic_token(expires_hours=168)
                     db.session.flush()
@@ -764,7 +765,7 @@ class BriefEmailScheduler:
         """
         from datetime import date, timedelta
 
-        current_hour = datetime.utcnow().hour
+        current_hour = utcnow_naive().hour
         today = date.today()
         lock_acquired, lock_client, lock_key, lock_token, lock_reason = acquire_daily_send_lock(
             target_date=today,
@@ -818,7 +819,7 @@ class BriefEmailScheduler:
         """
         from datetime import date, timedelta
 
-        current_hour = datetime.utcnow().hour
+        current_hour = utcnow_naive().hour
         today = date.today()
 
         lock_key = f"brief_send_lock:weekly:{today.isoformat()}:{current_hour}"

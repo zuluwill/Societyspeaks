@@ -10,6 +10,7 @@ from app import db, limiter
 from app.models import Discussion, Statement, StatementFlag, Response
 from sqlalchemy import desc, func
 from datetime import datetime
+from app.lib.time import utcnow_naive
 
 moderation_bp = Blueprint('moderation', __name__)
 
@@ -104,7 +105,7 @@ def review_flag(discussion_id, flag_id):
         # Approve the flag - mark statement as problematic
         flag.status = 'approved'
         flag.reviewed_by_user_id = current_user.id
-        flag.reviewed_at = datetime.utcnow()
+        flag.reviewed_at = utcnow_naive()
         
         # Update statement moderation status
         flag.statement.mod_status = -1  # Rejected
@@ -120,7 +121,7 @@ def review_flag(discussion_id, flag_id):
         # Reject the flag - content is fine
         flag.status = 'rejected'
         flag.reviewed_by_user_id = current_user.id
-        flag.reviewed_at = datetime.utcnow()
+        flag.reviewed_at = utcnow_naive()
         
         # Mark statement as accepted
         flag.statement.mod_status = 1  # Accepted
@@ -175,7 +176,7 @@ def bulk_moderation_action(discussion_id):
         for flag in flags:
             flag.status = 'approved'
             flag.reviewed_by_user_id = current_user.id
-            flag.reviewed_at = datetime.utcnow()
+            flag.reviewed_at = utcnow_naive()
             flag.statement.mod_status = -1
             if request.form.get('delete_statements') == 'yes':
                 flag.statement.is_deleted = True
@@ -187,7 +188,7 @@ def bulk_moderation_action(discussion_id):
         for flag in flags:
             flag.status = 'rejected'
             flag.reviewed_by_user_id = current_user.id
-            flag.reviewed_at = datetime.utcnow()
+            flag.reviewed_at = utcnow_naive()
             flag.statement.mod_status = 1
             count += 1
         db.session.commit()

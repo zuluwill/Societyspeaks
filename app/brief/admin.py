@@ -7,6 +7,7 @@ Admin routes for reviewing, editing, and publishing daily briefs.
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from datetime import date, datetime, timedelta
+from app.lib.time import utcnow_naive
 from app import db
 from app.models import DailyBrief, BriefItem, TrendingTopic, User
 from app.brief.generator import generate_daily_brief
@@ -302,7 +303,7 @@ def emergency_generate():
         if not acquired:
             flash('Emergency generation is already in progress.', 'info')
             return redirect(url_for('brief_admin.dashboard'))
-        r.set(f'{key}:queued_at', str(datetime.utcnow().timestamp()), ex=900)
+        r.set(f'{key}:queued_at', str(utcnow_naive().timestamp()), ex=900)
         r.set(f'{key}:step', 'Queued — waiting for scheduler pickup...', ex=900)
         r.delete(f'{key}:error')
         r.delete(f'{key}:queue_alerted')
@@ -349,7 +350,7 @@ def publish(brief_id):
 
     # Update status
     brief.status = 'published'
-    brief.published_at = datetime.utcnow()
+    brief.published_at = utcnow_naive()
     brief.auto_selected = False  # Marked as manually published
     brief.admin_edited_by = current_user.id
 

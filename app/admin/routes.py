@@ -6,6 +6,7 @@ from app.models import User, IndividualProfile, CompanyProfile, Discussion, Dail
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from app.admin.forms import UserAssignmentForm
 from datetime import date, datetime, timedelta
+from app.lib.time import utcnow_naive
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
 from app.storage_utils import upload_to_object_storage
@@ -262,7 +263,7 @@ def delete_profile(profile_type, profile_id):
         else:
             profile = CompanyProfile.query.get_or_404(profile_id)
 
-        user = User.query.get(profile.user_id)
+        user = db.session.get(User,profile.user_id)
         if not user.company_profile and not user.individual_profile:
             user.profile_type = None
 
@@ -289,7 +290,7 @@ def handle_image_upload(file_data, prefix):
 
 def create_or_get_user(user_form):
     if user_form.assignment_type.data == 'existing':
-        return User.query.get(user_form.existing_user.data)
+        return db.session.get(User,user_form.existing_user.data)
 
     user = User(
         username=user_form.username.data,
@@ -310,7 +311,7 @@ def update_profile_fields(profile, form):
 def handle_user_reassignment(profile, user_form, profile_type):
     new_user = create_or_get_user(user_form)
     if profile.user_id != new_user.id:
-        old_user = User.query.get(profile.user_id)
+        old_user = db.session.get(User,profile.user_id)
         if not (old_user.individual_profile or old_user.company_profile):
             old_user.profile_type = None
 
@@ -549,7 +550,7 @@ def preview_partner_portal(partner_id):
             password_hash=partner.password_hash,
             role='owner',
             status='active',
-            accepted_at=datetime.utcnow(),
+            accepted_at=utcnow_naive(),
         )
         db.session.add(owner_member)
     else:
@@ -559,7 +560,7 @@ def preview_partner_portal(partner_id):
             owner_member.status = 'active'
         if not owner_member.password_hash:
             owner_member.password_hash = partner.password_hash
-        owner_member.accepted_at = owner_member.accepted_at or datetime.utcnow()
+        owner_member.accepted_at = owner_member.accepted_at or utcnow_naive()
 
     try:
         db.session.commit()
@@ -574,7 +575,7 @@ def preview_partner_portal(partner_id):
     session['partner_admin_preview'] = {
         'admin_user_id': current_user.id,
         'partner_id': partner.id,
-        'started_at': datetime.utcnow().isoformat(),
+        'started_at': utcnow_naive().isoformat(),
         'read_only': True,
     }
     session.modified = True
@@ -625,7 +626,7 @@ def partner_metrics():
             )
         )
         if days:
-            query = query.filter(StatementVote.created_at >= datetime.utcnow() - timedelta(days=days))
+            query = query.filter(StatementVote.created_at >= utcnow_naive() - timedelta(days=days))
 
         participant_key = case(
             (StatementVote.user_id.isnot(None), literal('u:') + cast(StatementVote.user_id, String)),
@@ -864,7 +865,7 @@ def manage_user_subscription(user_id):
                     flash('Please select a plan.', 'error')
                     return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
                 
-                plan = PricingPlan.query.get(plan_id)
+                plan = db.session.get(PricingPlan,plan_id)
                 if not plan:
                     flash('Invalid plan selected.', 'error')
                     return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
@@ -888,7 +889,7 @@ def manage_user_subscription(user_id):
                 # Cancel existing active subscription if any (only manual ones at this point)
                 if active_sub:
                     active_sub.status = 'canceled'
-                    active_sub.canceled_at = datetime.utcnow()
+                    active_sub.canceled_at = utcnow_naive()
                 
                 # Create new manual subscription
                 new_sub = Subscription(
@@ -898,9 +899,9 @@ def manage_user_subscription(user_id):
                     stripe_subscription_id=None,  # No Stripe involvement for manual grants
                     stripe_customer_id=None,
                     billing_interval='lifetime' if subscription_type == 'free' else 'month',
-                    created_at=datetime.utcnow(),
-                    current_period_start=datetime.utcnow(),
-                    current_period_end=None if subscription_type == 'free' else datetime.utcnow() + timedelta(days=30 if subscription_type == 'trial' else 365),
+                    created_at=utcnow_naive(),
+                    current_period_start=utcnow_naive(),
+                    current_period_end=None if subscription_type == 'free' else utcnow_naive() + timedelta(days=30 if subscription_type == 'trial' else 365),
                     cancel_at_period_end=False
                 )
                 
@@ -936,7 +937,7 @@ def manage_user_subscription(user_id):
                     return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
                 
                 active_sub.status = 'canceled'
-                active_sub.canceled_at = datetime.utcnow()
+                active_sub.canceled_at = utcnow_naive()
                 db.session.commit()
                 
                 current_app.logger.info(
@@ -956,7 +957,7 @@ def manage_user_subscription(user_id):
                     flash('Please select a plan.', 'error')
                     return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
                 
-                plan = PricingPlan.query.get(plan_id)
+                plan = db.session.get(PricingPlan,plan_id)
                 if not plan:
                     flash('Invalid plan selected.', 'error')
                     return redirect(url_for('admin.manage_user_subscription', user_id=user_id))
@@ -1088,7 +1089,7 @@ def create_daily_question():
             )
             
             if question.status == 'published':
-                question.published_at = datetime.utcnow()
+                question.published_at = utcnow_naive()
             
             db.session.add(question)
             db.session.commit()
@@ -1146,7 +1147,7 @@ def edit_daily_question(question_id):
             if new_status != question.status:
                 question.status = new_status
                 if new_status == 'published' and not question.published_at:
-                    question.published_at = datetime.utcnow()
+                    question.published_at = utcnow_naive()
             
             db.session.commit()
             flash('Daily question updated successfully!', 'success')
@@ -1169,7 +1170,7 @@ def publish_daily_question(question_id):
     
     try:
         question.status = 'published'
-        question.published_at = datetime.utcnow()
+        question.published_at = utcnow_naive()
         db.session.commit()
         flash(f'Daily question #{question.question_number} published!', 'success')
     except Exception as e:
@@ -1330,7 +1331,7 @@ def add_subscriber():
     added = 0
     for user_id in user_ids:
         try:
-            user = User.query.get(int(user_id))
+            user = db.session.get(User,int(user_id))
             if not user or not user.email:
                 continue
             
@@ -1434,7 +1435,7 @@ def bulk_remove_subscribers():
     removed = 0
     for sub_id in subscriber_ids:
         try:
-            subscriber = DailyQuestionSubscriber.query.get(int(sub_id))
+            subscriber = db.session.get(DailyQuestionSubscriber,int(sub_id))
             if subscriber:
                 db.session.delete(subscriber)
                 removed += 1
@@ -1552,7 +1553,7 @@ def resend_daily_question(subscriber_id):
         
         if success:
             # Update last_email_sent
-            subscriber.last_email_sent = datetime.utcnow()
+            subscriber.last_email_sent = utcnow_naive()
             db.session.commit()
             flash(f'Daily question resent to {subscriber.email}', 'success')
         else:
@@ -1644,7 +1645,7 @@ def review_statement_flag(flag_id):
             return redirect(url_for('admin.list_statement_flags'))
 
         flag.reviewed_by_user_id = current_user.id
-        flag.reviewed_at = datetime.utcnow()
+        flag.reviewed_at = utcnow_naive()
         if review_notes:
             flag.additional_context = review_notes
 
@@ -1679,7 +1680,7 @@ def bulk_review_statement_flags():
     skipped = 0
     try:
         for flag_id in flag_ids:
-            flag = StatementFlag.query.get(int(flag_id))
+            flag = db.session.get(StatementFlag,int(flag_id))
             if not flag or flag.status != 'pending':
                 skipped += 1
                 continue
@@ -1697,7 +1698,7 @@ def bulk_review_statement_flags():
                 flag.status = 'dismissed'
 
             flag.reviewed_by_user_id = current_user.id
-            flag.reviewed_at = datetime.utcnow()
+            flag.reviewed_at = utcnow_naive()
             processed += 1
 
         db.session.commit()
@@ -1786,7 +1787,7 @@ def review_response_flag(flag_id):
             flag.status = 'reviewed_valid'
             response.is_hidden = True
             response.reviewed_by_admin = True
-            response.reviewed_at = datetime.utcnow()
+            response.reviewed_at = utcnow_naive()
             response.reviewed_by_user_id = current_user.id
             flash_msg = 'Flag validated and response hidden.'
         elif action == 'invalid':
@@ -1806,7 +1807,7 @@ def review_response_flag(flag_id):
                 flash_msg = f'Flag marked as invalid, but response remains hidden ({other_valid_flags} other flag(s) pending/valid).'
 
             response.reviewed_by_admin = True
-            response.reviewed_at = datetime.utcnow()
+            response.reviewed_at = utcnow_naive()
             response.reviewed_by_user_id = current_user.id
         elif action == 'dismiss':
             flag.status = 'dismissed'
@@ -1816,7 +1817,7 @@ def review_response_flag(flag_id):
             return redirect(url_for('admin.list_response_flags'))
 
         flag.reviewed_by_user_id = current_user.id
-        flag.reviewed_at = datetime.utcnow()
+        flag.reviewed_at = utcnow_naive()
         if review_notes:
             flag.review_notes = review_notes
 
@@ -1851,7 +1852,7 @@ def bulk_review_response_flags():
     skipped = 0
     try:
         for flag_id in flag_ids:
-            flag = DailyQuestionResponseFlag.query.get(int(flag_id))
+            flag = db.session.get(DailyQuestionResponseFlag,int(flag_id))
             if not flag or flag.status != 'pending':
                 skipped += 1
                 continue
@@ -1865,7 +1866,7 @@ def bulk_review_response_flags():
                 flag.status = 'reviewed_valid'
                 response.is_hidden = True
                 response.reviewed_by_admin = True
-                response.reviewed_at = datetime.utcnow()
+                response.reviewed_at = utcnow_naive()
                 response.reviewed_by_user_id = current_user.id
             elif action == 'invalid':
                 flag.status = 'reviewed_invalid'
@@ -1881,13 +1882,13 @@ def bulk_review_response_flags():
                     response.is_hidden = False
 
                 response.reviewed_by_admin = True
-                response.reviewed_at = datetime.utcnow()
+                response.reviewed_at = utcnow_naive()
                 response.reviewed_by_user_id = current_user.id
             else:
                 flag.status = 'dismissed'
 
             flag.reviewed_by_user_id = current_user.id
-            flag.reviewed_at = datetime.utcnow()
+            flag.reviewed_at = utcnow_naive()
             processed += 1
 
         db.session.commit()
@@ -2034,7 +2035,7 @@ def source_claims():
     ).order_by(NewsSource.claim_requested_at.desc()).all()
 
     # Get recently processed claims (last 30 days)
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    thirty_days_ago = utcnow_naive() - timedelta(days=30)
     recent_claims = NewsSource.query.filter(
         NewsSource.claim_status.in_(['approved', 'rejected']),
         NewsSource.claimed_at >= thirty_days_ago
@@ -2075,7 +2076,7 @@ def approve_source_claim(source_id):
     # Approve the claim
     source.claim_status = 'approved'
     source.claimed_by_profile_id = requesting_user.company_profile.id
-    source.claimed_at = datetime.utcnow()
+    source.claimed_at = utcnow_naive()
 
     try:
         db.session.commit()

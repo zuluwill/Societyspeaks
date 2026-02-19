@@ -11,6 +11,7 @@ import os
 import json
 import re
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import Optional, List, Dict
 
 from sqlalchemy.exc import IntegrityError
@@ -637,7 +638,7 @@ def process_recent_podcast_episodes(
             logger.error("No admin user found for podcast publishing")
             return {'error': 'No admin user found'}
     
-    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    cutoff_date = utcnow_naive() - timedelta(days=days)
     
     podcast_sources = NewsSource.query.filter_by(
         is_active=True,
@@ -724,7 +725,7 @@ def process_single_source_articles(
             logger.error("No admin user found for single-source publishing")
             return {'error': 'No admin user found'}
     
-    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    cutoff_date = utcnow_naive() - timedelta(days=days)
     
     sources = NewsSource.query.filter(
         NewsSource.is_active == True,

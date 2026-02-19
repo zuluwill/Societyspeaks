@@ -12,6 +12,7 @@ import os
 import logging
 import time
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import Optional, List, Tuple, Dict
 from urllib.parse import quote
 
@@ -98,7 +99,7 @@ def _get_x_daily_post_count() -> Tuple[int, datetime]:
     """
     from app.models import Discussion
     
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start = utcnow_naive().replace(hour=0, minute=0, second=0, microsecond=0)
     tomorrow_start = today_start + timedelta(days=1)
     
     try:
@@ -123,7 +124,7 @@ def _get_x_monthly_post_count() -> Tuple[int, datetime]:
     """
     from app.models import Discussion
     
-    now = datetime.utcnow()
+    now = utcnow_naive()
     month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     # Calculate next month start
     if now.month == 12:
@@ -153,7 +154,7 @@ def _is_x_rate_limited() -> Tuple[bool, str]:
     # Check monthly limit first (hard limit from X API)
     monthly_count, monthly_reset = _get_x_monthly_post_count()
     if monthly_count >= X_MONTHLY_POST_LIMIT:
-        days_until_reset = (monthly_reset - datetime.utcnow()).days
+        days_until_reset = (monthly_reset - utcnow_naive()).days
         return True, f"Monthly limit reached ({monthly_count}/{X_MONTHLY_POST_LIMIT}). Resets in {days_until_reset} days."
     
     # Warn if approaching monthly limit (90% threshold)
@@ -164,7 +165,7 @@ def _is_x_rate_limited() -> Tuple[bool, str]:
     # Check daily limit
     daily_count, daily_reset = _get_x_daily_post_count()
     if daily_count >= X_DAILY_POST_LIMIT:
-        hours_until_reset = (daily_reset - datetime.utcnow()).total_seconds() / 3600
+        hours_until_reset = (daily_reset - utcnow_naive()).total_seconds() / 3600
         return True, f"Daily limit reached ({daily_count}/{X_DAILY_POST_LIMIT}). Resets in {hours_until_reset:.1f} hours."
     
     return False, ""
@@ -1033,7 +1034,7 @@ def schedule_bluesky_post(discussion, slot_index: int = 0) -> Optional[datetime]
     from app import db
     
     try:
-        now = datetime.utcnow()
+        now = utcnow_naive()
         
         # Get the hour for this slot
         slot_index = slot_index % len(BLUESKY_POST_HOURS_UTC)
@@ -1081,7 +1082,7 @@ def process_scheduled_bluesky_posts() -> int:
 
     for _ in range(max_posts_per_run):
         try:
-            now = datetime.utcnow()
+            now = utcnow_naive()
 
             # Use FOR UPDATE SKIP LOCKED to prevent race conditions with autoscale
             # This ensures only one instance processes each post, even when multiple
@@ -1097,7 +1098,7 @@ def process_scheduled_bluesky_posts() -> int:
                 break
 
             # Mark as "in progress" immediately while we hold the lock
-            discussion.bluesky_posted_at = datetime.utcnow()
+            discussion.bluesky_posted_at = utcnow_naive()
             db.session.commit()
 
             discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
@@ -1154,7 +1155,7 @@ def schedule_x_post(discussion, slot_index: int = 0) -> Optional[datetime]:
     from app import db
     
     try:
-        now = datetime.utcnow()
+        now = utcnow_naive()
         
         # Get the hour for this slot
         slot_index = slot_index % len(X_POST_HOURS_UTC)
@@ -1208,7 +1209,7 @@ def process_scheduled_x_posts() -> int:
 
     for _ in range(max_posts_per_run):
         try:
-            now = datetime.utcnow()
+            now = utcnow_naive()
 
             # Use FOR UPDATE SKIP LOCKED to prevent race conditions with autoscale
             # This ensures only one instance processes each post, even when multiple
@@ -1224,7 +1225,7 @@ def process_scheduled_x_posts() -> int:
                 break
 
             # Mark as "in progress" immediately while we hold the lock
-            discussion.x_posted_at = datetime.utcnow()
+            discussion.x_posted_at = utcnow_naive()
             db.session.commit()
 
             discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"

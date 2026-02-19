@@ -15,6 +15,7 @@ Sections:
 
 import logging
 from datetime import datetime, date, timedelta
+from app.lib.time import utcnow_naive
 from typing import List, Dict, Optional, Any
 from collections import defaultdict
 
@@ -171,7 +172,7 @@ class WeeklyBriefGenerator:
 
         # Finalize
         brief.status = 'ready' if auto_publish else 'draft'
-        brief.created_at = datetime.utcnow()
+        brief.created_at = utcnow_naive()
         db.session.commit()
 
         logger.info(f"Weekly brief generated: {brief.title} ({position - 1} items)")

@@ -7,6 +7,7 @@ Supports the mission: "Making Disagreement Useful Again"
 
 import logging
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import Dict, List
 
 from app import db
@@ -51,7 +52,7 @@ def get_discussion_diversity_stats(days: int = DIVERSITY_DEFAULT_DAYS, limit: in
     Returns:
         Dict with source counts, discussion counts, and balance metrics
     """
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = utcnow_naive() - timedelta(days=days)
 
     source_stats = db.session.query(
         NewsSource.political_leaning,
@@ -262,5 +263,5 @@ def run_diversity_check(days: int = DIVERSITY_DEFAULT_DAYS, target_discussions: 
     return {
         'stats': stats,
         'underrepresented_sources': underrepresented,
-        'checked_at': datetime.utcnow().isoformat()
+        'checked_at': utcnow_naive().isoformat()
     }

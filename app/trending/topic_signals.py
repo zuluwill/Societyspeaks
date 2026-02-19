@@ -9,6 +9,7 @@ import logging
 import re
 from collections import Counter
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import List, Dict, Set
 
 from app import db
@@ -65,7 +66,7 @@ def get_trending_topics_from_premium_sources(hours: int = 48) -> Dict[str, int]:
     Analyze recent articles from premium sources to find trending topics.
     Returns dict of topic keywords with their frequency count.
     """
-    cutoff = datetime.utcnow() - timedelta(hours=hours)
+    cutoff = utcnow_naive() - timedelta(hours=hours)
     
     premium_source_ids = db.session.query(NewsSource.id).filter(
         NewsSource.name.in_(PREMIUM_SOURCES),

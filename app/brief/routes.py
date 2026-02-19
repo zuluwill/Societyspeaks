@@ -16,6 +16,7 @@ from flask import render_template, redirect, url_for, flash, request, jsonify, s
 from flask_login import current_user
 from sqlalchemy import func
 from datetime import date, datetime, timedelta
+from app.lib.time import utcnow_naive
 
 from sqlalchemy.orm import joinedload
 
@@ -78,7 +79,7 @@ def get_subscriber_status():
     is_subscriber = False
 
     if 'brief_subscriber_id' in session:
-        subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
+        subscriber = db.session.get(DailyBriefSubscriber,session['brief_subscriber_id'])
         if subscriber and subscriber.is_subscribed_eligible():
             is_subscriber = True
 
@@ -520,7 +521,7 @@ def archive():
     # Check if user is subscriber
     subscriber = None
     if 'brief_subscriber_id' in session:
-        subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
+        subscriber = db.session.get(DailyBriefSubscriber,session['brief_subscriber_id'])
 
     # Build query — filter by type if specified
     query = DailyBrief.query.filter_by(status='published')
@@ -706,7 +707,7 @@ def unsubscribe(token):
 
     # Update database
     subscriber.status = 'unsubscribed'
-    subscriber.unsubscribed_at = datetime.utcnow()
+    subscriber.unsubscribed_at = utcnow_naive()
     db.session.commit()
 
     try:
@@ -792,7 +793,7 @@ def magic_link(token):
             max_renew_age_days = 30
             allow_renew = True
             if expired_sub.magic_token_expires:
-                allow_renew = (datetime.utcnow() - expired_sub.magic_token_expires) <= timedelta(days=max_renew_age_days)
+                allow_renew = (utcnow_naive() - expired_sub.magic_token_expires) <= timedelta(days=max_renew_age_days)
             if allow_renew:
                 expired_sub.generate_magic_token(expires_hours=168)
                 db.session.commit()
@@ -831,7 +832,7 @@ def manage_preferences(token):
         return redirect(url_for('brief.subscribe'))
     
     # Check token expiration for security (but allow unsubscribed users to manage preferences)
-    if subscriber.magic_token_expires and subscriber.magic_token_expires < datetime.utcnow():
+    if subscriber.magic_token_expires and subscriber.magic_token_expires < utcnow_naive():
         # Regenerate token for active subscribers
         if subscriber.status == 'active':
             subscriber.generate_magic_token(expires_hours=PREFERENCES_TOKEN_EXPIRE_HOURS)
@@ -1007,7 +1008,7 @@ def api_latest():
     # Check if user is an active subscriber
     subscriber = None
     if 'brief_subscriber_id' in session:
-        subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
+        subscriber = db.session.get(DailyBriefSubscriber,session['brief_subscriber_id'])
 
     if not subscriber or subscriber.status != 'active':
         return jsonify({
@@ -1030,7 +1031,7 @@ def api_brief_by_date(date_str):
     # Check if user is an active subscriber
     subscriber = None
     if 'brief_subscriber_id' in session:
-        subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
+        subscriber = db.session.get(DailyBriefSubscriber,session['brief_subscriber_id'])
 
     if not subscriber or subscriber.status != 'active':
         return jsonify({
@@ -1277,10 +1278,10 @@ def resend_webhook():
                     normalized_type = event_type.replace('email.', '')
                     if normalized_type == 'opened':
                         subscriber.total_opens = (subscriber.total_opens or 0) + 1
-                        subscriber.last_opened_at = datetime.utcnow()
+                        subscriber.last_opened_at = utcnow_naive()
                     elif normalized_type == 'clicked':
                         subscriber.total_clicks = (subscriber.total_clicks or 0) + 1
-                        subscriber.last_clicked_at = datetime.utcnow()
+                        subscriber.last_clicked_at = utcnow_naive()
                     db.session.commit()
         except Exception as sub_error:
             logger.warning(f"Failed to update subscriber metrics (non-fatal): {sub_error}")

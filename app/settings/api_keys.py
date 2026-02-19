@@ -11,6 +11,7 @@ from app import db, limiter
 from app.models import UserAPIKey
 from app.lib.llm_utils import encrypt_api_key, validate_api_key
 from datetime import datetime
+from app.lib.time import utcnow_naive
 import logging
 
 api_keys_bp = Blueprint('api_keys', __name__)
@@ -76,7 +77,7 @@ def add_api_key():
                 provider=provider,
                 encrypted_api_key=encrypted_key,
                 is_active=True,
-                last_validated=datetime.utcnow()
+                last_validated=utcnow_naive()
             )
             
             db.session.add(new_key)
@@ -157,7 +158,7 @@ def revalidate_api_key(key_id):
         is_valid, message = validate_api_key(api_key_record.provider, plain_key)
         
         if is_valid:
-            api_key_record.last_validated = datetime.utcnow()
+            api_key_record.last_validated = utcnow_naive()
             api_key_record.is_active = True
             db.session.commit()
             flash("API key is valid and active", "success")

@@ -10,6 +10,7 @@ Substack newsletters, etc.
 
 import logging
 from datetime import datetime
+from app.lib.time import utcnow_naive
 from typing import List, Optional
 import hashlib
 
@@ -132,7 +133,7 @@ class PolymarketSourceAdapter:
             item.content_text = content_text
             item.content_hash = content_hash
             item.metadata_json = self._build_metadata(market)
-            item.updated_at = datetime.utcnow()
+            item.updated_at = utcnow_naive()
             return item
         else:
             # Create new item
@@ -143,8 +144,8 @@ class PolymarketSourceAdapter:
                 content_text=content_text,
                 content_hash=content_hash,
                 url=market.polymarket_url,
-                published_at=market.first_seen_at or market.created_at or datetime.utcnow(),
-                fetched_at=datetime.utcnow(),
+                published_at=market.first_seen_at or market.created_at or utcnow_naive(),
+                fetched_at=utcnow_naive(),
                 metadata_json=self._build_metadata(market)
             )
             db.session.add(item)

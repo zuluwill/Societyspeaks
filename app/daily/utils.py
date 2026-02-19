@@ -3,6 +3,7 @@ Utility functions for the Daily Questions feature.
 These are reusable across routes, email templates, and scheduler jobs.
 """
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from flask import url_for
 from app import db
 
@@ -87,7 +88,7 @@ def get_discussion_stats_for_question(question):
     ).count()
 
     # Check if discussion is active (has activity in last 24h)
-    yesterday = datetime.utcnow() - timedelta(hours=24)
+    yesterday = utcnow_naive() - timedelta(hours=24)
     recent_votes = StatementVote.query.filter(
         StatementVote.discussion_id == discussion.id,
         StatementVote.created_at >= yesterday

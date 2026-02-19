@@ -9,6 +9,7 @@ import os
 import logging
 import numpy as np
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import List, Dict, Optional, Tuple
 
 from collections import Counter
@@ -194,7 +195,7 @@ def find_duplicate_topic(topic_embedding: List[float], days: int = 30) -> Option
     Check if a similar topic already exists in the last N days.
     Returns the existing topic if found.
     """
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = utcnow_naive() - timedelta(days=days)
     
     recent_topics = TrendingTopic.query.filter(
         TrendingTopic.created_at >= cutoff,
@@ -225,7 +226,7 @@ def find_similar_discussion(topic_embedding: List[float], days: int = 30) -> Opt
     Check if a similar discussion already exists.
     Looks at discussion titles.
     """
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = utcnow_naive() - timedelta(days=days)
     
     recent_discussions = Discussion.query.filter(
         Discussion.created_at >= cutoff,
@@ -312,7 +313,7 @@ def create_topic_from_cluster(
         geographic_scope=geographic_scope,
         geographic_countries=geographic_countries,
         status='pending',
-        hold_until=datetime.utcnow() + timedelta(minutes=hold_minutes)
+        hold_until=utcnow_naive() + timedelta(minutes=hold_minutes)
     )
     
     db.session.add(topic)

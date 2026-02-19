@@ -17,6 +17,7 @@ Avoids repeating content within a configurable time window.
 """
 
 from datetime import date, datetime, timedelta
+from app.lib.time import utcnow_naive
 from flask import current_app
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
@@ -132,7 +133,7 @@ def _build_why_this_question(source_type, topic_category=None, source=None):
 
     # Optional source freshness cue where possible
     if source and hasattr(source, 'created_at') and source.created_at:
-        age_days = (datetime.utcnow() - source.created_at).days
+        age_days = (utcnow_naive() - source.created_at).days
         if age_days <= 2:
             base += " It reflects a recent development."
 
@@ -162,7 +163,7 @@ def calculate_timeliness_score(created_at):
     if not created_at:
         return 0.5  # Default for missing dates
 
-    days_old = (datetime.utcnow() - created_at).days
+    days_old = (utcnow_naive() - created_at).days
     # Exponential decay: score = e^(-days/7)
     # 0 days = 1.0, 7 days = 0.37, 14 days = 0.14
     return math.exp(-days_old / 7)
@@ -233,7 +234,7 @@ def get_historical_performance(topic_category=None, days_lookback=30):
     Learn from historical daily question performance.
     Returns average response rate for similar topics.
     """
-    cutoff = datetime.utcnow() - timedelta(days=days_lookback)
+    cutoff = utcnow_naive() - timedelta(days=days_lookback)
 
     # Get response counts per question with proper grouping
     # Explicitly specify join condition to avoid ambiguity (DailyQuestionResponse has 2 FKs to DailyQuestion)
@@ -413,7 +414,7 @@ def is_duplicate_date_error(error):
 
 def get_eligible_discussions(days_to_avoid=AVOID_REPEAT_DAYS):
     """Get discussions that haven't been used recently"""
-    cutoff = datetime.utcnow() - timedelta(days=days_to_avoid)
+    cutoff = utcnow_naive() - timedelta(days=days_to_avoid)
     
     recently_used_ids = db.session.query(DailyQuestionSelection.source_discussion_id).filter(
         DailyQuestionSelection.source_type == 'discussion',
@@ -431,7 +432,7 @@ def get_eligible_discussions(days_to_avoid=AVOID_REPEAT_DAYS):
 
 def get_eligible_trending_topics(days_to_avoid=AVOID_REPEAT_DAYS, min_civic_score=MIN_CIVIC_SCORE):
     """Get published trending topics that haven't been used recently"""
-    cutoff = datetime.utcnow() - timedelta(days=days_to_avoid)
+    cutoff = utcnow_naive() - timedelta(days=days_to_avoid)
     
     recently_used_ids = db.session.query(DailyQuestionSelection.source_trending_topic_id).filter(
         DailyQuestionSelection.source_type == 'trending',
@@ -450,7 +451,7 @@ def get_eligible_trending_topics(days_to_avoid=AVOID_REPEAT_DAYS, min_civic_scor
 
 def get_eligible_statements(days_to_avoid=AVOID_REPEAT_DAYS):
     """Get seed statements from discussions that haven't been used recently"""
-    cutoff = datetime.utcnow() - timedelta(days=days_to_avoid)
+    cutoff = utcnow_naive() - timedelta(days=days_to_avoid)
     
     recently_used_ids = db.session.query(DailyQuestionSelection.source_statement_id).filter(
         DailyQuestionSelection.source_type == 'statement',
@@ -774,7 +775,7 @@ def auto_publish_todays_question():
     
     if question and question.status != 'published':
         question.status = 'published'
-        question.published_at = datetime.utcnow()
+        question.published_at = utcnow_naive()
         db.session.commit()
         current_app.logger.info(f"Auto-published daily question #{question.question_number}")
 
@@ -817,7 +818,7 @@ def select_questions_for_weekly_digest(days_back=7, count=5):
 
             # Additional boost if discussion is active (has recent votes)
             from app.models import StatementVote
-            yesterday = datetime.utcnow() - timedelta(hours=24)
+            yesterday = utcnow_naive() - timedelta(hours=24)
             recent_activity = StatementVote.query.filter(
                 StatementVote.discussion_id == question.source_discussion_id,
                 StatementVote.created_at >= yesterday
@@ -889,7 +890,7 @@ def select_questions_for_monthly_digest(days_back=30, count=10):
 
             # Additional boost if discussion is active (has recent votes)
             from app.models import StatementVote
-            week_ago = datetime.utcnow() - timedelta(days=7)
+            week_ago = utcnow_naive() - timedelta(days=7)
             recent_activity = StatementVote.query.filter(
                 StatementVote.discussion_id == question.source_discussion_id,
                 StatementVote.created_at >= week_ago

@@ -8,6 +8,7 @@ Reuses existing email infrastructure with briefing-specific logic.
 import os
 import logging
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import Dict, List, Optional
 from flask import render_template, current_app
 from sqlalchemy import update, func
@@ -48,7 +49,7 @@ def _claim_brief_run_for_sending(brief_run: BriefRun) -> bool:
             .where(BriefRun.sent_at == None)  # Extra safety: only if not already sent
             .values(
                 status='sending',
-                claimed_at=datetime.utcnow(),
+                claimed_at=utcnow_naive(),
                 send_attempts=func.coalesce(BriefRun.send_attempts, 0) + 1
             )
         )
@@ -98,7 +99,7 @@ def _mark_brief_run_sent(brief_run: BriefRun, reason: str = "sent") -> bool:
             update(BriefRun)
             .where(BriefRun.id == brief_run.id)
             .where(BriefRun.sent_at == None)  # noqa: E711 - SQLAlchemy requires == None
-            .values(sent_at=datetime.utcnow(), status='sent')
+            .values(sent_at=utcnow_naive(), status='sent')
         )
         db.session.commit()
 
@@ -231,7 +232,7 @@ class BriefingEmailClient:
         try:
             if briefing.sending_domain_id:
                 # Reload domain to ensure it still exists (handles deletion race condition)
-                domain = SendingDomain.query.get(briefing.sending_domain_id)
+                domain = db.session.get(SendingDomain, briefing.sending_domain_id)
                 if domain and domain.status == 'verified' and briefing.from_email:
                     # Use custom domain email
                     return briefing.from_email
@@ -288,7 +289,7 @@ class BriefingEmailClient:
         company_logo_url = None
         if briefing.owner_type == 'org' and briefing.owner_id:
             from app.models import CompanyProfile
-            company = CompanyProfile.query.get(briefing.owner_id)
+            company = db.session.get(CompanyProfile, briefing.owner_id)
             if company and company.logo:
                 # Build full URL for logo
                 company_logo_url = f"{base_url}/profiles/image/{company.logo}"
@@ -390,7 +391,7 @@ class BriefingEmailClient:
         # This ensures large sends don't get prematurely marked as stale
         recipient_count = len(all_eligible_recipients)
         stale_minutes = max(15, 15 + (recipient_count // 100))
-        stale_cutoff = datetime.utcnow() - timedelta(minutes=stale_minutes)
+        stale_cutoff = utcnow_naive() - timedelta(minutes=stale_minutes)
 
         # Mark stale claims as failed (not delete) to preserve audit trail
         # This handles cases where a process crashed after send but before marking sent

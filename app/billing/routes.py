@@ -517,7 +517,7 @@ def _find_partner_for_checkout_session(checkout_data):
     partner_id = metadata.get('partner_id')
     if partner_id:
         try:
-            partner = Partner.query.get(int(partner_id))
+            partner = db.session.get(Partner,int(partner_id))
         except (ValueError, TypeError):
             current_app.logger.warning(f"Non-numeric partner_id in checkout metadata: {partner_id}")
 
@@ -584,7 +584,7 @@ def _handle_partner_subscription(subscription_data):
     partner = None
     if partner_id:
         try:
-            partner = Partner.query.get(int(partner_id))
+            partner = db.session.get(Partner,int(partner_id))
         except (ValueError, TypeError):
             current_app.logger.warning(f"Non-numeric partner_id in subscription metadata: {partner_id}")
     if not partner:

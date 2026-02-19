@@ -1,4 +1,5 @@
 from datetime import datetime
+from app.lib.time import utcnow_naive
 
 
 def _create_admin_user(db):
@@ -34,7 +35,7 @@ def _create_partner(db):
         full_name='Owner Preview',
         role='owner',
         status='active',
-        accepted_at=datetime.utcnow(),
+        accepted_at=utcnow_naive(),
         password_hash=partner.password_hash,
     )
     db.session.add(owner)

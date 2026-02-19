@@ -2,6 +2,7 @@
 """
 Utility functions for source profile statistics and data aggregation.
 """
+from app.lib.time import utcnow_naive
 from sqlalchemy import func, distinct
 from sqlalchemy.orm import joinedload
 from app import db
@@ -142,8 +143,7 @@ def get_source_stats(source_id):
         ).order_by(Discussion.created_at.asc()).first()
         
         if oldest_discussion:
-            from datetime import datetime
-            days_since_first = max(1, (datetime.utcnow() - oldest_discussion.created_at).days)
+            days_since_first = max(1, (utcnow_naive() - oldest_discussion.created_at).days)
             # Score = discussions * participants / days (both factors matter independently)
             engagement_score = round((discussion_count * total_participants) / days_since_first, 2)
 

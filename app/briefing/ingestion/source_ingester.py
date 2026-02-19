@@ -10,6 +10,7 @@ import hashlib
 import feedparser
 import requests
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import List, Optional
 from app import db
 from app.models import InputSource, IngestedItem
@@ -76,7 +77,7 @@ class SourceIngester:
             if feed.bozo:
                 logger.warning(f"RSS feed parse error for {source.name}: {feed.bozo_exception}")
             
-            cutoff_date = datetime.utcnow() - timedelta(days=days_back)
+            cutoff_date = utcnow_naive() - timedelta(days=days_back)
             new_items = []
             
             for entry in feed.entries:
@@ -134,7 +135,7 @@ class SourceIngester:
                     continue
             
             # Update source metadata
-            source.last_fetched_at = datetime.utcnow()
+            source.last_fetched_at = utcnow_naive()
             source.fetch_error_count = 0
             
             try:
@@ -144,7 +145,7 @@ class SourceIngester:
                 db.session.rollback()
                 logger.warning(f"Duplicate content detected during RSS ingestion for {source.name}, some items skipped: {e}")
                 # Update source metadata in a new transaction
-                source.last_fetched_at = datetime.utcnow()
+                source.last_fetched_at = utcnow_naive()
                 source.fetch_error_count = 0
                 db.session.commit()
                 return []
@@ -210,7 +211,7 @@ class SourceIngester:
                     continue
             
             # Update source metadata
-            source.last_fetched_at = datetime.utcnow()
+            source.last_fetched_at = utcnow_naive()
             source.fetch_error_count = 0
             
             try:
@@ -220,7 +221,7 @@ class SourceIngester:
                 db.session.rollback()
                 logger.warning(f"Duplicate content detected during URL list ingestion for {source.name}, some items skipped: {e}")
                 # Update source metadata in a new transaction
-                source.last_fetched_at = datetime.utcnow()
+                source.last_fetched_at = utcnow_naive()
                 source.fetch_error_count = 0
                 db.session.commit()
                 return []
@@ -248,7 +249,7 @@ class SourceIngester:
                 source_id=source.id
             ).order_by(IngestedItem.fetched_at.desc()).first()
             
-            if recent and recent.fetched_at > datetime.utcnow() - timedelta(hours=24):
+            if recent and recent.fetched_at > utcnow_naive() - timedelta(hours=24):
                 logger.info(f"Webpage {source.name} was recently fetched, skipping")
                 return []
             
@@ -270,7 +271,7 @@ class SourceIngester:
             
             if existing:
                 # Update fetched_at
-                existing.fetched_at = datetime.utcnow()
+                existing.fetched_at = utcnow_naive()
                 db.session.commit()
                 return []
             
@@ -287,7 +288,7 @@ class SourceIngester:
             )
             
             db.session.add(item)
-            source.last_fetched_at = datetime.utcnow()
+            source.last_fetched_at = utcnow_naive()
             source.fetch_error_count = 0
             
             try:
@@ -297,7 +298,7 @@ class SourceIngester:
                 db.session.rollback()
                 logger.warning(f"Duplicate content detected during webpage ingestion for {source.name}: {e}")
                 # Update source metadata in a new transaction
-                source.last_fetched_at = datetime.utcnow()
+                source.last_fetched_at = utcnow_naive()
                 source.fetch_error_count = 0
                 db.session.commit()
                 return []
@@ -333,7 +334,7 @@ class SourceIngester:
                 # Update if text changed
                 if existing.content_text != source.extracted_text:
                     existing.content_text = source.extracted_text[:10000]
-                    existing.fetched_at = datetime.utcnow()
+                    existing.fetched_at = utcnow_naive()
                     db.session.commit()
                 return []
             
@@ -355,7 +356,7 @@ class SourceIngester:
             )
             
             db.session.add(item)
-            source.last_fetched_at = datetime.utcnow()
+            source.last_fetched_at = utcnow_naive()
             
             try:
                 db.session.commit()

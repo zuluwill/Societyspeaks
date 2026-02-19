@@ -15,6 +15,7 @@ import os
 import json
 import logging
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import Optional, Tuple, Dict, Any
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ def check_generation_rate_limit(user_id: int) -> Tuple[bool, Optional[str]]:
         return True, None
 
     try:
-        now = datetime.utcnow()
+        now = utcnow_naive()
         hour_key = f"{RATE_LIMIT_PREFIX}gen:{user_id}:h:{now.strftime('%Y%m%d%H')}"
         day_key = f"{RATE_LIMIT_PREFIX}gen:{user_id}:d:{now.strftime('%Y%m%d')}"
 
@@ -97,7 +98,7 @@ def record_generation(user_id: int):
         return
 
     try:
-        now = datetime.utcnow()
+        now = utcnow_naive()
         hour_key = f"{RATE_LIMIT_PREFIX}gen:{user_id}:h:{now.strftime('%Y%m%d%H')}"
         day_key = f"{RATE_LIMIT_PREFIX}gen:{user_id}:d:{now.strftime('%Y%m%d')}"
 
@@ -131,7 +132,7 @@ def check_upload_rate_limit(user_id: int, file_size_bytes: int = 0) -> Tuple[boo
         return True, None
 
     try:
-        now = datetime.utcnow()
+        now = utcnow_naive()
         day_key = f"{RATE_LIMIT_PREFIX}upload:{user_id}:d:{now.strftime('%Y%m%d')}"
 
         daily_count = int(client.get(day_key) or 0)
@@ -152,7 +153,7 @@ def record_upload(user_id: int, file_size_bytes: int = 0):
         return
 
     try:
-        now = datetime.utcnow()
+        now = utcnow_naive()
         day_key = f"{RATE_LIMIT_PREFIX}upload:{user_id}:d:{now.strftime('%Y%m%d')}"
 
         pipe = client.pipeline()
@@ -241,7 +242,7 @@ def record_token_spend(user_id: int, tokens_used: int, cost_usd: float, model: s
         return
 
     try:
-        now = datetime.utcnow()
+        now = utcnow_naive()
         day_key = f"{RATE_LIMIT_PREFIX}spend:{user_id}:d:{now.strftime('%Y%m%d')}"
 
         pipe = client.pipeline()
@@ -279,7 +280,7 @@ def check_token_spend_limit(user_id: int) -> Tuple[bool, Optional[str]]:
         return True, None
 
     try:
-        now = datetime.utcnow()
+        now = utcnow_naive()
         day_key = f"{RATE_LIMIT_PREFIX}spend:{user_id}:d:{now.strftime('%Y%m%d')}"
 
         daily_spend = float(client.get(day_key) or 0)
@@ -305,7 +306,7 @@ def get_user_abuse_stats(user_id: int) -> Dict[str, Any]:
         return {'redis_available': False}
 
     try:
-        now = datetime.utcnow()
+        now = utcnow_naive()
         hour_key = f"{RATE_LIMIT_PREFIX}gen:{user_id}:h:{now.strftime('%Y%m%d%H')}"
         day_gen_key = f"{RATE_LIMIT_PREFIX}gen:{user_id}:d:{now.strftime('%Y%m%d')}"
         day_upload_key = f"{RATE_LIMIT_PREFIX}upload:{user_id}:d:{now.strftime('%Y%m%d')}"

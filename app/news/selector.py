@@ -7,6 +7,7 @@ organized by political spectrum diversity.
 """
 
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import List
 from app.models import TrendingTopic, AdminSettings
 from app.brief.coverage_analyzer import CoverageAnalyzer
@@ -50,7 +51,7 @@ class NewsPageSelector:
 
         Returns topics organized by source leaning diversity (interleaved).
         """
-        cutoff = datetime.utcnow() - timedelta(hours=self.lookback_hours)
+        cutoff = utcnow_naive() - timedelta(hours=self.lookback_hours)
 
         # Query topics (articles relationship is lazy='dynamic', accessed on-demand)
         candidates = TrendingTopic.query.filter(

@@ -9,6 +9,7 @@ Or: python -c "from scripts.update_source_metadata import update_all_sources; up
 """
 
 from datetime import datetime
+from app.lib.time import utcnow_naive
 from app import db, create_app
 from app.models import NewsSource
 import logging
@@ -465,7 +466,7 @@ def update_all_sources():
         if metadata.get('description'):
             source.description = metadata['description']
         
-        source.updated_at = datetime.utcnow()
+        source.updated_at = utcnow_naive()
         updated += 1
         print(f"Updated: {source_name}")
     

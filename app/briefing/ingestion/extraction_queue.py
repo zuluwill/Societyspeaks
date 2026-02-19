@@ -7,6 +7,7 @@ Prevents blocking upload requests.
 
 import logging
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from app import db
 from app.models import InputSource
 from app.briefing.ingestion import extract_text_from_pdf, extract_text_from_docx
@@ -104,7 +105,7 @@ def timeout_stuck_extractions():
     the extraction process crashes or hangs.
     """
     try:
-        timeout_threshold = datetime.utcnow() - timedelta(minutes=EXTRACTION_TIMEOUT_MINUTES)
+        timeout_threshold = utcnow_naive() - timedelta(minutes=EXTRACTION_TIMEOUT_MINUTES)
 
         stuck_sources = InputSource.query.filter(
             InputSource.status == 'extracting',
@@ -140,7 +141,7 @@ def retry_failed_extraction(source_id: int) -> bool:
         bool: True if reset successful, False otherwise
     """
     try:
-        source = InputSource.query.get(source_id)
+        source = db.session.get(InputSource, source_id)
         if not source:
             logger.error(f"InputSource {source_id} not found")
             return False

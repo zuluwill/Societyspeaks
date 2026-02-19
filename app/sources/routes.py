@@ -3,6 +3,7 @@
 Routes for source profiles - discovery, viewing, and claiming.
 """
 from datetime import datetime
+from app.lib.time import utcnow_naive
 from flask import render_template, redirect, url_for, request, flash, current_app
 from flask_login import login_required, current_user
 from sqlalchemy.orm import joinedload
@@ -135,7 +136,7 @@ def claim_source(slug):
     if request.method == 'POST':
         # Submit claim request
         source.claim_status = 'pending'
-        source.claim_requested_at = datetime.utcnow()
+        source.claim_requested_at = utcnow_naive()
         source.claim_requested_by_id = current_user.id
 
         try:

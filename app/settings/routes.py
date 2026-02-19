@@ -74,7 +74,7 @@ def delete_account():
         InputSource, IngestedItem, SendingDomain
     )
     
-    user = User.query.get(current_user.id)
+    user = db.session.get(User, current_user.id)
     if not user:
         flash('Account deletion failed. Please try again.', 'error')
         return redirect(url_for('settings.view_settings'))

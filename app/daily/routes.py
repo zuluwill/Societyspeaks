@@ -1,6 +1,7 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, session, current_app, make_response
 from flask_login import current_user, login_user
 from datetime import date, datetime, timedelta
+from app.lib.time import utcnow_naive
 from app.daily import daily_bp
 from app.daily.constants import (
     VOTE_MAP, VOTE_TO_POSITION, VOTE_LABELS, VOTE_EMOJIS,
@@ -243,7 +244,7 @@ def get_user_streak_data():
     if not subscriber:
         subscriber_id = session.get('daily_subscriber_id')
         if subscriber_id:
-            subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+            subscriber = db.session.get(DailyQuestionSubscriber,subscriber_id)
             if subscriber and not subscriber.is_active:
                 subscriber = None
 
@@ -723,7 +724,7 @@ def sync_vote_to_statement(question, vote_value, fingerprint):
     if not question.source_statement_id or not question.source_discussion_id:
         return False, False
     
-    statement = Statement.query.get(question.source_statement_id)
+    statement = db.session.get(Statement,question.source_statement_id)
     if not statement:
         return False, False
     
@@ -890,7 +891,7 @@ def unsubscribe(token):
     # Update database (source of truth for subscription status)
     subscriber.is_active = False
     subscriber.unsubscribe_reason = reason
-    subscriber.unsubscribed_at = datetime.utcnow()
+    subscriber.unsubscribed_at = utcnow_naive()
     db.session.commit()
 
     try:
@@ -938,7 +939,7 @@ def manage_preferences():
     else:
         subscriber_id = session.get('daily_subscriber_id')
         if subscriber_id:
-            subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+            subscriber = db.session.get(DailyQuestionSubscriber,subscriber_id)
 
     # Also check if logged-in user has a subscription
     if not subscriber and current_user.is_authenticated:
@@ -1075,7 +1076,7 @@ def weekly_batch():
     else:
         subscriber_id = session.get('daily_subscriber_id')
         if subscriber_id:
-            subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+            subscriber = db.session.get(DailyQuestionSubscriber,subscriber_id)
 
     # Also check logged-in user
     if not subscriber and current_user.is_authenticated:
@@ -1267,7 +1268,7 @@ def weekly_batch_vote():
     if not subscriber_id:
         return jsonify({'error': 'Not authenticated'}), 401
 
-    subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+    subscriber = db.session.get(DailyQuestionSubscriber,subscriber_id)
     if not subscriber or not subscriber.is_active:
         return jsonify({'error': 'Subscriber not found or inactive'}), 404
 
@@ -1296,7 +1297,7 @@ def weekly_batch_vote():
         return jsonify({'error': 'Invalid vote'}), 400
 
     # Get the question
-    question = DailyQuestion.query.get(question_id)
+    question = db.session.get(DailyQuestion,question_id)
     if not question:
         return jsonify({'error': 'Question not found'}), 404
 
@@ -1469,7 +1470,7 @@ def one_click_vote(token, vote_choice):
         login_user(subscriber.user)
 
     # Get the specific question this email was about
-    question = DailyQuestion.query.get(email_question_id)
+    question = db.session.get(DailyQuestion,email_question_id)
     if not question:
         flash('This question is no longer available.', 'info')
         return redirect(url_for('daily.today'))
@@ -1725,7 +1726,7 @@ def vote():
         
         subscriber_id = session.get('daily_subscriber_id')
         if subscriber_id:
-            subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+            subscriber = db.session.get(DailyQuestionSubscriber,subscriber_id)
             if subscriber:
                 subscriber.update_participation_streak(has_reason=bool(reason))
         
@@ -1869,7 +1870,7 @@ def get_subscriber_streak():
     """Get current subscriber's streak info if available"""
     subscriber_id = session.get('daily_subscriber_id')
     if subscriber_id:
-        subscriber = DailyQuestionSubscriber.query.get(subscriber_id)
+        subscriber = db.session.get(DailyQuestionSubscriber,subscriber_id)
         if subscriber and subscriber.current_streak > 0:
             return {
                 'current_streak': subscriber.current_streak,

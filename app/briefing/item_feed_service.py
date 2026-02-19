@@ -10,6 +10,7 @@ This service ensures editorial control while sharing a single ingestion pipeline
 """
 
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import List, Optional
 from sqlalchemy import and_, or_
 from app import db
@@ -74,7 +75,7 @@ class ItemFeedService:
         Returns:
             List of IngestedItem instances
         """
-        cutoff = datetime.utcnow() - timedelta(days=days_back)
+        cutoff = utcnow_naive() - timedelta(days=days_back)
         
         # Build source filter based on channel
         if source_ids:
@@ -220,13 +221,13 @@ class ItemFeedService:
         Returns:
             Dict with health metrics
         """
-        source = InputSource.query.get(source_id)
+        source = db.session.get(InputSource,source_id)
         if not source:
             return {'status': 'not_found'}
         
         recent_items = IngestedItem.query.filter(
             IngestedItem.source_id == source_id,
-            IngestedItem.fetched_at >= datetime.utcnow() - timedelta(days=7)
+            IngestedItem.fetched_at >= utcnow_naive() - timedelta(days=7)
         ).count()
         
         return {
@@ -252,7 +253,7 @@ class ItemFeedService:
         Returns:
             True if allowed, False otherwise
         """
-        source = InputSource.query.get(source_id)
+        source = db.session.get(InputSource,source_id)
         if not source:
             return False
         return source.can_be_used_in(channel)

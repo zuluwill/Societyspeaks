@@ -10,6 +10,7 @@ Provides UI for:
 
 import logging
 from datetime import datetime
+from app.lib.time import utcnow_naive
 from flask import render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 
@@ -273,7 +274,7 @@ def discard(topic_id):
     
     topic.status = 'discarded'
     topic.reviewed_by_id = current_user.id
-    topic.reviewed_at = datetime.utcnow()
+    topic.reviewed_at = utcnow_naive()
     db.session.commit()
     
     flash("Topic discarded", "success")
@@ -297,7 +298,7 @@ def unpublish(topic_id):
     discussion_title = None
     
     try:
-        discussion = Discussion.query.get(discussion_id)
+        discussion = db.session.get(Discussion, discussion_id)
         if discussion:
             discussion_title = discussion.title
             
@@ -523,7 +524,7 @@ def promote_article(article_id):
             topic_embedding=topic_embedding,
             source_count=1,
             status='pending_review',
-            hold_until=datetime.utcnow()
+            hold_until=utcnow_naive()
         )
         
         db.session.add(topic)
@@ -599,7 +600,7 @@ def bulk_article_action():
                 geographic_scope=geographic_scope,
                 geographic_countries=geographic_countries,
                 status='pending_review',
-                hold_until=datetime.utcnow()
+                hold_until=utcnow_naive()
             )
             
             db.session.add(topic)

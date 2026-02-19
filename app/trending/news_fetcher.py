@@ -11,6 +11,7 @@ import logging
 import requests
 import feedparser
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import List, Dict, Optional
 from flask import current_app
 
@@ -192,7 +193,7 @@ class NewsFetcher:
                     continue
                 
                 all_articles.extend(articles)
-                source.last_fetched_at = datetime.utcnow()
+                source.last_fetched_at = utcnow_naive()
                 source.fetch_error_count = 0  # Reset on success
                 db.session.commit()
                 successful_sources += 1
@@ -269,7 +270,7 @@ class NewsFetcher:
                     'show-fields': 'headline,trailText,shortUrl',
                     'page-size': 20,
                     'order-by': 'newest',
-                    'from-date': (datetime.utcnow() - timedelta(hours=6)).strftime('%Y-%m-%d'),
+                    'from-date': (utcnow_naive() - timedelta(hours=6)).strftime('%Y-%m-%d'),
                 },
                 timeout=30
             )

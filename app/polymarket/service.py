@@ -15,6 +15,7 @@ Design Principles:
 import os
 import logging
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import Optional, List, Dict, Any
 from functools import wraps
 import time
@@ -371,7 +372,7 @@ class PolymarketService:
         stats = {'updated': 0, 'errors': 0}
 
         # Get markets that need price refresh
-        stale_threshold = datetime.utcnow() - timedelta(seconds=self.CACHE_PRICE_DURATION)
+        stale_threshold = utcnow_naive() - timedelta(seconds=self.CACHE_PRICE_DURATION)
 
         # Build query - prioritize specified markets
         if priority_market_ids:
@@ -427,7 +428,7 @@ class PolymarketService:
                             market.probability_24h_ago = market.probability
                         elif market.last_price_update_at:
                             # Check if 24 hours have passed since last update
-                            hours_since_last = (datetime.utcnow() - market.last_price_update_at).total_seconds() / 3600
+                            hours_since_last = (utcnow_naive() - market.last_price_update_at).total_seconds() / 3600
                             if hours_since_last >= 24:
                                 market.probability_24h_ago = market.probability
                         else:
@@ -444,7 +445,7 @@ class PolymarketService:
                         outcomes[outcome_idx]['price'] = price
                         market.outcomes = outcomes
 
-                    market.last_price_update_at = datetime.utcnow()
+                    market.last_price_update_at = utcnow_naive()
                     stats['updated'] += 1
                 except Exception as e:
                     logger.warning(f"Error updating price for market {market.id}: {e}")
@@ -599,7 +600,7 @@ class PolymarketService:
             market.end_date = self._parse_date(data.get('endDate') or data.get('end_date'))
             market.resolution = data.get('resolution')
             market.is_active = data.get('active', True)
-            market.last_synced_at = datetime.utcnow()
+            market.last_synced_at = utcnow_naive()
             market.sync_failures = 0
             if probability is not None:
                 if market.probability is not None:
@@ -607,7 +608,7 @@ class PolymarketService:
                 elif probability_24h_ago is not None:
                     market.probability_24h_ago = probability_24h_ago
                 market.probability = probability
-                market.last_price_update_at = datetime.utcnow()
+                market.last_price_update_at = utcnow_naive()
             return ('updated', market)
         else:
             market = PolymarketMarket(
@@ -625,10 +626,10 @@ class PolymarketService:
                 trader_count=data.get('trader_count', 0),
                 end_date=self._parse_date(data.get('endDate') or data.get('end_date')),
                 is_active=data.get('active', True),
-                last_synced_at=datetime.utcnow(),
+                last_synced_at=utcnow_naive(),
                 probability=probability,
                 probability_24h_ago=probability_24h_ago,
-                last_price_update_at=datetime.utcnow() if probability is not None else None
+                last_price_update_at=utcnow_naive() if probability is not None else None
             )
             db.session.add(market)
             return ('created', market)

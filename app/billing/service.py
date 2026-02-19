@@ -1,5 +1,6 @@
 import stripe
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from flask import current_app
 from app import db
 from app.models import User, CompanyProfile, PricingPlan, Subscription, OrganizationMember, generate_slug, Partner
@@ -534,7 +535,7 @@ def get_or_create_organization(user, plan):
         user_id=user.id,
         role='owner',
         status='active',
-        joined_at=datetime.utcnow(),
+        joined_at=utcnow_naive(),
     )
     db.session.add(owner_membership)
     db.session.commit()
@@ -558,7 +559,7 @@ def _ensure_owner_membership(org, user):
             user_id=user.id,
             role='owner',
             status='active',
-            joined_at=datetime.utcnow(),
+            joined_at=utcnow_naive(),
         )
         db.session.add(owner_membership)
         db.session.commit()
@@ -636,7 +637,7 @@ def invite_team_member(org, email, role, invited_by):
                 existing_membership.invite_token = secrets.token_urlsafe(32)
                 existing_membership.invite_email = email
                 existing_membership.invited_by_id = invited_by.id
-                existing_membership.invited_at = datetime.utcnow()
+                existing_membership.invited_at = utcnow_naive()
                 existing_membership.joined_at = None
                 db.session.commit()
                 return existing_membership
@@ -661,7 +662,7 @@ def invite_team_member(org, email, role, invited_by):
         invite_token=secrets.token_urlsafe(32),
         invite_email=email,
         invited_by_id=invited_by.id,
-        invited_at=datetime.utcnow(),
+        invited_at=utcnow_naive(),
     )
     db.session.add(membership)
     db.session.commit()
@@ -703,7 +704,7 @@ def accept_invitation(token, user):
 
     membership.user_id = user.id
     membership.status = 'active'
-    membership.joined_at = datetime.utcnow()
+    membership.joined_at = utcnow_naive()
     membership.invite_token = None  # Clear token after use
     db.session.commit()
 

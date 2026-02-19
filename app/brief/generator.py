@@ -16,6 +16,7 @@ import logging
 import json
 from datetime import datetime, date, timedelta
 from typing import List, Dict, Optional, Tuple, Any
+from app.lib.time import utcnow_naive
 from app.models import DailyBrief, BriefItem, TrendingTopic, NewsArticle, UpcomingEvent, db
 from app.brief.coverage_analyzer import CoverageAnalyzer
 from app.brief.sections import (
@@ -202,7 +203,7 @@ class BriefGenerator:
 
         # Set status
         brief.status = 'ready' if auto_publish else 'draft'
-        brief.created_at = datetime.utcnow()
+        brief.created_at = utcnow_naive()
 
         db.session.commit()
 
@@ -1204,7 +1205,7 @@ Only include sources explicitly mentioned or cited. Do NOT guess URLs."""
 
         # Finalize
         brief.status = 'ready' if auto_publish else 'draft'
-        brief.created_at = datetime.utcnow()
+        brief.created_at = utcnow_naive()
         db.session.commit()
 
         logger.info(f"Sectioned brief generated: {brief.title} ({items_created} items)")
@@ -1928,9 +1929,9 @@ def _log_topic_diagnostic(brief_date: date):
     try:
         from app.models import TrendingTopic
 
-        cutoff_24h = datetime.utcnow() - timedelta(hours=24)
-        cutoff_48h = datetime.utcnow() - timedelta(hours=48)
-        cutoff_72h = datetime.utcnow() - timedelta(hours=72)
+        cutoff_24h = utcnow_naive() - timedelta(hours=24)
+        cutoff_48h = utcnow_naive() - timedelta(hours=48)
+        cutoff_72h = utcnow_naive() - timedelta(hours=72)
 
         published_24h = TrendingTopic.query.filter(
             TrendingTopic.status == 'published',

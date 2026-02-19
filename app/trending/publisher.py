@@ -7,6 +7,7 @@ Handles the conversion from TrendingTopic to Discussion + seed Statements.
 
 import logging
 from datetime import datetime
+from app.lib.time import utcnow_naive
 from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
@@ -59,7 +60,7 @@ def publish_topic(
     """
     if topic.discussion_id:
         logger.warning(f"Topic {topic.id} already published to discussion {topic.discussion_id}")
-        return Discussion.query.get(topic.discussion_id)
+        return db.session.get(Discussion, topic.discussion_id)
 
     base_slug = generate_slug(topic.title)
 
@@ -126,9 +127,9 @@ def publish_topic(
     
     topic.discussion_id = discussion.id
     topic.status = 'published'
-    topic.published_at = datetime.utcnow()
+    topic.published_at = utcnow_naive()
     topic.reviewed_by_id = admin_user.id
-    topic.reviewed_at = datetime.utcnow()
+    topic.reviewed_at = utcnow_naive()
     
     db.session.commit()
     
@@ -223,7 +224,7 @@ def merge_topic_into_discussion(
     topic.merged_into_discussion_id = discussion.id
     topic.status = 'merged'
     topic.reviewed_by_id = admin_user.id
-    topic.reviewed_at = datetime.utcnow()
+    topic.reviewed_at = utcnow_naive()
     
     db.session.commit()
     

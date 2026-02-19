@@ -10,6 +10,7 @@ import os
 import logging
 from html import escape as html_escape
 from datetime import datetime, date, timedelta
+from app.lib.time import utcnow_naive
 from typing import List, Optional, Dict, Any
 from sqlalchemy.exc import IntegrityError
 from app import db
@@ -213,7 +214,7 @@ class BriefingGenerator:
                 briefing_id=briefing.id,
                 scheduled_at=scheduled_at,
                 status='generated_draft' if briefing.mode == 'approval_required' else 'approved',
-                generated_at=datetime.utcnow()
+                generated_at=utcnow_naive()
             )
             
             try:
@@ -330,7 +331,7 @@ class BriefingGenerator:
         # Use ItemFeedService for proper channel filtering
         from app.briefing.item_feed_service import ItemFeedService
         
-        now = datetime.utcnow()
+        now = utcnow_naive()
         
         # ItemFeedService handles channel filtering and returns allowed items
         all_items = ItemFeedService.get_items_for_channel(
@@ -1098,7 +1099,7 @@ def generate_brief_run_for_briefing(
     Returns:
         BriefRun instance or None
     """
-    briefing = Briefing.query.get(briefing_id)
+    briefing = db.session.get(Briefing, briefing_id)
     if not briefing:
         logger.error(f"Briefing {briefing_id} not found")
         return None
@@ -1108,7 +1109,7 @@ def generate_brief_run_for_briefing(
         return None
     
     if scheduled_at is None:
-        scheduled_at = datetime.utcnow()
+        scheduled_at = utcnow_naive()
     
     generator = BriefingGenerator()
     return generator.generate_brief_run(briefing, scheduled_at)

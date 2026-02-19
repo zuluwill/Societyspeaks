@@ -9,6 +9,7 @@ Main routes:
 from flask import render_template, session, jsonify, current_app, request
 from flask_login import current_user
 from datetime import date, datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import List, Dict
 from sqlalchemy.orm import joinedload
 from app.news import news_bp
@@ -97,7 +98,7 @@ def _get_dashboard_data():
             center_sources.append(source_data)
 
     # Get articles from last 24 hours with eager-loaded sources
-    cutoff = datetime.utcnow() - timedelta(hours=24)
+    cutoff = utcnow_naive() - timedelta(hours=24)
     
     # Get all source IDs
     source_ids = [s.id for s in sources]
@@ -237,7 +238,7 @@ def dashboard():
     is_subscriber = False
 
     if 'brief_subscriber_id' in session:
-        subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
+        subscriber = db.session.get(DailyBriefSubscriber,session['brief_subscriber_id'])
         if subscriber and subscriber.is_subscribed_eligible():
             is_subscriber = True
 
@@ -328,7 +329,7 @@ def load_perspectives(topic_id):
     # Verify subscription
     subscriber = None
     if 'brief_subscriber_id' in session:
-        subscriber = DailyBriefSubscriber.query.get(session['brief_subscriber_id'])
+        subscriber = db.session.get(DailyBriefSubscriber,session['brief_subscriber_id'])
 
     is_admin = current_user.is_authenticated and current_user.is_admin
 
@@ -352,7 +353,7 @@ def load_perspectives(topic_id):
     # Use selector's lookback hours for consistency
     from app.news.selector import NewsPageSelector
     selector = NewsPageSelector()
-    cutoff = datetime.utcnow() - timedelta(hours=selector.lookback_hours)
+    cutoff = utcnow_naive() - timedelta(hours=selector.lookback_hours)
 
     if not topic.published_at or topic.published_at < cutoff:
         return jsonify({
@@ -410,7 +411,7 @@ def load_perspectives(topic_id):
             'so_what': result['so_what'],
             'personal_impact': result['personal_impact'],
             'source': 'generated',
-            'generated_at': datetime.utcnow().isoformat()
+            'generated_at': utcnow_naive().isoformat()
         })
 
     except Exception as e:

@@ -6,6 +6,7 @@ Similar to Ground News "Blindspot" feature.
 """
 
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import List, Dict
 from app.models import TrendingTopic, DailyBrief, BriefItem
 from app.brief.coverage_analyzer import CoverageAnalyzer
@@ -29,7 +30,7 @@ class UnderreportedDetector:
 
     def __init__(self, lookback_days: int = LOOKBACK_DAYS):
         self.lookback_days = lookback_days
-        self.cutoff_date = datetime.utcnow() - timedelta(days=lookback_days)
+        self.cutoff_date = utcnow_naive() - timedelta(days=lookback_days)
 
     def find_underreported_stories(self, limit: int = 10) -> List[Dict]:
         """
@@ -74,7 +75,7 @@ class UnderreportedDetector:
 
     def _get_recent_brief_topics(self) -> List[int]:
         """Get topic IDs featured in recent briefs"""
-        cutoff = datetime.utcnow() - timedelta(days=self.lookback_days)
+        cutoff = utcnow_naive() - timedelta(days=self.lookback_days)
 
         items = BriefItem.query.join(DailyBrief).filter(
             DailyBrief.date >= cutoff.date(),

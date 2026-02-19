@@ -11,6 +11,7 @@ from app.models import Discussion, ConsensusAnalysis, Statement, StatementVote
 from app.discussions.statements import get_statement_vote_fingerprint
 from app.lib.consensus_engine import run_consensus_analysis, save_consensus_analysis, can_cluster
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 import logging
 
 consensus_bp = Blueprint('consensus', __name__)
@@ -108,7 +109,7 @@ def trigger_analysis(discussion_id):
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
     
     if recent_analysis:
-        time_since_last = datetime.utcnow() - recent_analysis.created_at
+        time_since_last = utcnow_naive() - recent_analysis.created_at
         if time_since_last < timedelta(hours=1):
             flash(f"Analysis was run {int(time_since_last.total_seconds() / 60)} minutes ago. Please wait before running again.", "info")
             return redirect(url_for('consensus.view_results', discussion_id=discussion_id))
@@ -502,7 +503,7 @@ def generate_summary(discussion_id):
     # Enrich with content
     for stmt_list in [consensus_stmts, bridge_stmts, divisive_stmts]:
         for stmt in stmt_list:
-            statement = Statement.query.get(stmt['statement_id'])
+            statement = db.session.get(Statement, stmt['statement_id'])
             if statement:
                 stmt['content'] = statement.content
     
@@ -519,7 +520,7 @@ def generate_summary(discussion_id):
         if summary:
             # Store summary in cluster_data
             analysis.cluster_data['ai_summary'] = summary
-            analysis.cluster_data['summary_generated_at'] = datetime.utcnow().isoformat()
+            analysis.cluster_data['summary_generated_at'] = utcnow_naive().isoformat()
             analysis.cluster_data['summary_generated_by'] = current_user.id
             db.session.commit()
             _invalidate_snapshot_cache(discussion_id)
@@ -614,7 +615,7 @@ def generate_cluster_labels_route(discussion_id):
         if labels:
             # Store labels in cluster_data
             analysis.cluster_data['cluster_labels'] = labels
-            analysis.cluster_data['labels_generated_at'] = datetime.utcnow().isoformat()
+            analysis.cluster_data['labels_generated_at'] = utcnow_naive().isoformat()
             db.session.commit()
             _invalidate_snapshot_cache(discussion_id)
             

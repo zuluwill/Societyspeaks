@@ -28,6 +28,7 @@ from app import create_app, db
 from app.models import User, Discussion, DiscussionParticipant, StatementVote, Response
 from app.resend_client import send_weekly_discussion_digest
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from sqlalchemy import func
 import logging
 
@@ -51,7 +52,7 @@ def get_user_discussion_activity(user, days=7):
     Returns:
         dict: Digest data including discussions with activity and user stats
     """
-    cutoff = datetime.utcnow() - timedelta(days=days)
+    cutoff = utcnow_naive() - timedelta(days=days)
     base_url = os.environ.get('BASE_URL', 'https://societyspeaks.io')
     
     # Get discussions created by this user

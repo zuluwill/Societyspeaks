@@ -8,6 +8,7 @@ from functools import wraps
 from flask import render_template, redirect, url_for, flash, request, jsonify, g, session
 from flask_login import login_required, current_user
 from datetime import datetime
+from app.lib.time import utcnow_naive
 from app.briefing import briefing_bp
 from app.briefing.validators import (
     validate_email, validate_briefing_name, validate_rss_url,
@@ -336,10 +337,10 @@ def populate_briefing_sources_from_template(briefing, default_sources, user):
             # Try as InputSource ID first
             elif isinstance(source_ref, int):
                 source_name_for_log = f"ID:{source_ref}"
-                source = InputSource.query.get(source_ref)
+                source = db.session.get(InputSource,source_ref)
                 # Also try as NewsSource ID (convert to InputSource)
                 if not source:
-                    news_source = NewsSource.query.get(source_ref)
+                    news_source = db.session.get(NewsSource,source_ref)
                     if news_source:
                         source = create_input_source_from_news_source(news_source.id, user)
 
@@ -852,7 +853,7 @@ def create_briefing():
                     flash('Email address is required when a sending domain is selected', 'error')
                     return redirect(url_for('briefing.create_briefing'))
                 
-                domain = SendingDomain.query.get(sending_domain_id)
+                domain = db.session.get(SendingDomain,sending_domain_id)
                 if not domain:
                     flash('Selected domain not found', 'error')
                     return redirect(url_for('briefing.create_briefing'))
@@ -888,7 +889,7 @@ def create_briefing():
             template_accent_color = None
             
             if template_id:
-                template = BriefTemplate.query.get(template_id)
+                template = db.session.get(BriefTemplate,template_id)
                 if template:
                     template_tone = template.default_tone
                     template_guardrails = template.guardrails or {}
@@ -1138,7 +1139,7 @@ def edit(briefing_id):
                     flash('Email address is required when a sending domain is selected', 'error')
                     return redirect(url_for('briefing.edit', briefing_id=briefing_id))
                 
-                domain = SendingDomain.query.get(sending_domain_id)
+                domain = db.session.get(SendingDomain,sending_domain_id)
                 if not domain:
                     flash('Selected domain not found', 'error')
                     return redirect(url_for('briefing.edit', briefing_id=briefing_id))
@@ -1596,7 +1597,7 @@ def upload_source():
             # Redirect back to briefing if provided, otherwise to sources list
             if briefing_id:
                 # Verify user has access to briefing
-                briefing = Briefing.query.get(briefing_id)
+                briefing = db.session.get(Briefing,briefing_id)
                 if briefing and can_access_briefing(current_user, briefing):
                     return redirect(url_for('briefing.detail', briefing_id=briefing_id))
             
@@ -1640,7 +1641,7 @@ def add_source_to_briefing(briefing_id):
             source = create_input_source_from_news_source(news_source_id, current_user)
         else:
             source_id = int(source_id_str)
-            source = InputSource.query.get(source_id)
+            source = db.session.get(InputSource,source_id)
             if not source:
                 flash('Source not found', 'error')
                 return redirect(url_for('briefing.detail', briefing_id=briefing_id))
@@ -2032,7 +2033,7 @@ def unsubscribe(briefing_id, token):
         flash('You are already unsubscribed', 'info')
     else:
         recipient.status = 'unsubscribed'
-        recipient.unsubscribed_at = datetime.utcnow()
+        recipient.unsubscribed_at = utcnow_naive()
         # Regenerate token to invalidate any other links (security)
         recipient.generate_magic_token(expires_hours=0)  # Immediately expired
         db.session.commit()
@@ -2154,7 +2155,7 @@ def edit_run(briefing_id, run_id):
                 brief_run.approved_markdown = brief_run.draft_markdown
                 brief_run.approved_html = brief_run.draft_html
                 brief_run.approved_by_user_id = current_user.id
-                brief_run.approved_at = datetime.utcnow()
+                brief_run.approved_at = utcnow_naive()
                 brief_run.status = 'approved'
                 
                 db.session.commit()
@@ -2421,7 +2422,7 @@ def check_domain_verification(domain_id):
 
         if result.get('status') == 'verified':
             domain.status = 'verified'
-            domain.verified_at = datetime.utcnow()
+            domain.verified_at = utcnow_naive()
             db.session.commit()
             flash('Domain verified successfully!', 'success')
         else:
@@ -2471,7 +2472,7 @@ def get_domain_status(domain_id):
         new_status = result.get('status')
         if new_status == 'verified' and domain.status != 'verified':
             domain.status = 'verified'
-            domain.verified_at = datetime.utcnow()
+            domain.verified_at = utcnow_naive()
             db.session.commit()
         elif new_status != 'verified' and domain.status != new_status:
             domain.status = new_status
@@ -2726,7 +2727,7 @@ def test_generate(briefing_id):
         import random
         
         generator = BriefingGenerator()
-        test_scheduled_at = datetime.utcnow() + timedelta(microseconds=random.randint(1, 999999))
+        test_scheduled_at = utcnow_naive() + timedelta(microseconds=random.randint(1, 999999))
         
         brief_run = generator.generate_brief_run(
             briefing=briefing,
@@ -3023,7 +3024,7 @@ def browse_sources():
     briefing = None
     added_source_ids = set()
     if briefing_id:
-        briefing = Briefing.query.get(briefing_id)
+        briefing = db.session.get(Briefing,briefing_id)
         if briefing:
             if can_access_briefing(current_user, briefing):
                 added_source_ids = {bs.source_id for bs in briefing.sources}
@@ -3084,7 +3085,7 @@ def track_open(run_id):
     
     try:
         # Get brief run
-        brief_run = BriefRun.query.get(run_id)
+        brief_run = db.session.get(BriefRun,run_id)
         if brief_run:
             # Get recipient hash or generate one from IP+UA for deduplication
             recipient_hash = request.args.get("r", "")
@@ -3150,7 +3151,7 @@ def track_click(run_id):
         return redirect("/")
     
     try:
-        brief_run = BriefRun.query.get(run_id)
+        brief_run = db.session.get(BriefRun,run_id)
         if not brief_run:
             # Unknown run - redirect safely to home
             logger.warning(f"Click tracking for unknown brief_run {run_id}")

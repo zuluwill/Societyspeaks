@@ -35,6 +35,7 @@ Last updated: January 2026
 """
 
 from datetime import datetime
+from app.lib.time import utcnow_naive
 from app import db
 from app.models import NewsSource
 import logging
@@ -839,7 +840,7 @@ def update_source_leanings(force: bool = False):
         # Update leaning
         source.political_leaning = new_leaning
         source.leaning_source = new_source_type
-        source.leaning_updated_at = datetime.utcnow()
+        source.leaning_updated_at = utcnow_naive()
 
         logger.info(f"Updated {source_name}: leaning={new_leaning} ({rating_data['notes']})")
         results['updated'] += 1

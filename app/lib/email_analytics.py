@@ -24,6 +24,7 @@ Usage:
 
 import logging
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import Dict, Any, Optional, List, Tuple
 from flask import current_app
 from app import db
@@ -253,7 +254,7 @@ class EmailAnalytics:
                     logger.info(f"Marked brief subscriber {email} as bounced")
                 elif event_type == cls.EVENT_COMPLAINED:
                     brief_sub.status = 'unsubscribed'
-                    brief_sub.unsubscribed_at = datetime.utcnow()
+                    brief_sub.unsubscribed_at = utcnow_naive()
                     logger.info(f"Unsubscribed brief subscriber {email} due to complaint")
             
             # Update question subscriber
@@ -271,11 +272,11 @@ class EmailAnalytics:
             if briefing_recipient:
                 if event_type == cls.EVENT_BOUNCED and bounce_type == 'hard':
                     briefing_recipient.status = 'unsubscribed'
-                    briefing_recipient.unsubscribed_at = datetime.utcnow()
+                    briefing_recipient.unsubscribed_at = utcnow_naive()
                     logger.info(f"Unsubscribed briefing recipient {email} due to hard bounce")
                 elif event_type == cls.EVENT_COMPLAINED:
                     briefing_recipient.status = 'unsubscribed'
-                    briefing_recipient.unsubscribed_at = datetime.utcnow()
+                    briefing_recipient.unsubscribed_at = utcnow_naive()
                     logger.info(f"Unsubscribed briefing recipient {email} due to complaint")
                     
         except Exception as e:
@@ -336,7 +337,7 @@ class EmailAnalytics:
         if category:
             query = query.filter(EmailEvent.email_category == category)
         if days and days > 0:
-            cutoff = datetime.utcnow() - timedelta(days=days)
+            cutoff = utcnow_naive() - timedelta(days=days)
             query = query.filter(EmailEvent.created_at >= cutoff)
         return query.limit(limit).all()
 
@@ -346,7 +347,7 @@ class EmailAnalytics:
         Get performance metrics for a specific email address.
         Useful for subscriber detail views.
         """
-        cutoff = datetime.utcnow() - timedelta(days=days)
+        cutoff = utcnow_naive() - timedelta(days=days)
         
         events = EmailEvent.query.filter(
             EmailEvent.recipient_email == email,

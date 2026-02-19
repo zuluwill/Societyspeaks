@@ -10,6 +10,7 @@ These posts educate, inform, and engage without directly promoting.
 import logging
 from typing import List, Optional
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +27,7 @@ def generate_weekly_insights_post(platform: str = 'x') -> Optional[str]:
     from app.models import Discussion, ConsensusAnalysis
     from app.trending.social_insights import get_discussion_insights
     
-    week_ago = datetime.utcnow() - timedelta(days=7)
+    week_ago = utcnow_naive() - timedelta(days=7)
     
     # Get discussions from last week
     recent_discussions = Discussion.query.filter(

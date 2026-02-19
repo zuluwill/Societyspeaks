@@ -14,6 +14,7 @@ from app.email_utils import create_discussion_notification
 from sqlalchemy import func, desc, or_
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 import hashlib
 import re
 import secrets
@@ -95,7 +96,7 @@ def check_statement_rate_limit(identifier):
     
     Returns: (allowed: bool, remaining: int, message: str)
     """
-    one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+    one_hour_ago = utcnow_naive() - timedelta(hours=1)
     
     # Build query based on user type
     if identifier['user_id']:
@@ -193,7 +194,7 @@ def create_statement(discussion_id):
                 
                 if similar and len(similar) > 0:
                     # Found similar statements, warn user
-                    similar_stmt = Statement.query.get(similar[0]['id'])
+                    similar_stmt = db.session.get(Statement, similar[0]['id'])
                     if similar_stmt and not similar_stmt.is_deleted:
                         flash(f"A similar statement already exists: '{similar_stmt.content}'. Consider voting on it instead.", "info")
                         return redirect(url_for('statements.view_statement', statement_id=similar_stmt.id))
@@ -367,7 +368,7 @@ def check_integrity_rate_limit(discussion, user_identifier):
         return True, None
 
     # Stricter limits for integrity mode: 10 votes per minute per discussion
-    one_minute_ago = datetime.utcnow() - timedelta(minutes=1)
+    one_minute_ago = utcnow_naive() - timedelta(minutes=1)
 
     if user_identifier['user_id']:
         recent_votes = StatementVote.query.filter(
@@ -545,7 +546,7 @@ def vote_statement(statement_id):
                 old_vote = existing_vote.vote
                 existing_vote.vote = vote_value
                 existing_vote.confidence = confidence
-                existing_vote.updated_at = datetime.utcnow()
+                existing_vote.updated_at = utcnow_naive()
 
                 if old_vote == 1:
                     statement.vote_count_agree -= 1
@@ -586,7 +587,7 @@ def vote_statement(statement_id):
                 old_vote = existing_vote.vote
                 existing_vote.vote = vote_value
                 existing_vote.confidence = confidence
-                existing_vote.updated_at = datetime.utcnow()
+                existing_vote.updated_at = utcnow_naive()
 
                 if old_vote == 1:
                     statement.vote_count_agree -= 1
@@ -616,7 +617,7 @@ def vote_statement(statement_id):
             
     except IntegrityError:
         db.session.rollback()
-        statement = Statement.query.get(statement_id)
+        statement = db.session.get(Statement, statement_id)
         if current_user.is_authenticated:
             existing_vote = StatementVote.query.filter_by(
                 statement_id=statement_id,
@@ -633,7 +634,7 @@ def vote_statement(statement_id):
             old_vote = existing_vote.vote
             existing_vote.vote = vote_value
             existing_vote.confidence = confidence
-            existing_vote.updated_at = datetime.utcnow()
+            existing_vote.updated_at = utcnow_naive()
             
             if old_vote == 1:
                 statement.vote_count_agree = max(0, statement.vote_count_agree - 1)
@@ -781,7 +782,7 @@ def edit_statement(statement_id):
         return redirect(url_for('statements.view_statement', statement_id=statement_id))
     
     # Check edit window (10 minutes like pol.is)
-    if datetime.utcnow() - statement.created_at > timedelta(minutes=10):
+    if utcnow_naive() - statement.created_at > timedelta(minutes=10):
         flash("Edit window expired (10 minutes)", "error")
         return redirect(url_for('statements.view_statement', statement_id=statement_id))
     
@@ -790,7 +791,7 @@ def edit_statement(statement_id):
     if form.validate_on_submit():
         statement.content = form.content.data.strip()
         statement.statement_type = form.statement_type.data
-        statement.updated_at = datetime.utcnow()
+        statement.updated_at = utcnow_naive()
         db.session.commit()
         
         flash("Statement updated successfully", "success")
@@ -1105,7 +1106,7 @@ def edit_response(response_id):
     
     # Check 10-minute edit window
     edit_deadline = response.created_at + timedelta(minutes=10)
-    if datetime.utcnow() > edit_deadline:
+    if utcnow_naive() > edit_deadline:
         flash("Edit window has expired (10 minutes)", "warning")
         return redirect(url_for('statements.view_statement', statement_id=response.statement_id))
     
@@ -1115,7 +1116,7 @@ def edit_response(response_id):
         try:
             response.content = form.content.data
             response.position = form.position.data
-            response.updated_at = datetime.utcnow()
+            response.updated_at = utcnow_naive()
             db.session.commit()
             
             flash("Response updated successfully!", "success")

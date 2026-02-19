@@ -46,7 +46,7 @@ def notify_draft_ready(brief_run_id: int) -> dict:
     from flask import url_for, current_app
 
     try:
-        brief_run = BriefRun.query.get(brief_run_id)
+        brief_run = db.session.get(BriefRun, brief_run_id)
         if not brief_run:
             return {'success': False, 'error': 'BriefRun not found'}
 
@@ -63,7 +63,7 @@ def notify_draft_ready(brief_run_id: int) -> dict:
         recipients = []
 
         if briefing.owner_type == 'user':
-            owner = User.query.get(briefing.owner_id)
+            owner = db.session.get(User, briefing.owner_id)
             if owner and owner.email:
                 recipients.append({
                     'email': owner.email,
@@ -72,7 +72,7 @@ def notify_draft_ready(brief_run_id: int) -> dict:
         elif briefing.owner_type == 'org':
             # Get org admins/members
             from app.models import CompanyProfile
-            org = CompanyProfile.query.get(briefing.owner_id)
+            org = db.session.get(CompanyProfile, briefing.owner_id)
             if org and org.user:
                 recipients.append({
                     'email': org.user.email,

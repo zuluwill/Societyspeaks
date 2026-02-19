@@ -7,6 +7,7 @@ Sends brief runs to Slack channels via incoming webhooks.
 import requests
 import logging
 from datetime import datetime
+from app.lib.time import utcnow_naive
 import pytz
 
 logger = logging.getLogger(__name__)
@@ -76,7 +77,7 @@ def send_brief_to_slack(brief_run, briefing):
             tz = pytz.timezone(briefing.timezone) if briefing.timezone else pytz.UTC
             local_date = datetime.now(tz).strftime('%B %d, %Y')
         except Exception:
-            local_date = datetime.utcnow().strftime('%B %d, %Y')
+            local_date = utcnow_naive().strftime('%B %d, %Y')
 
         blocks.append({
             "type": "context",

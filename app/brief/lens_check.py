@@ -61,6 +61,7 @@ import logging
 import time
 import threading
 from datetime import datetime, timedelta, date, timezone
+from app.lib.time import utcnow_naive
 from typing import List, Dict, Optional, Tuple, Any
 from dataclasses import dataclass
 from collections import defaultdict
@@ -297,7 +298,7 @@ class LensCheckGenerator:
             'contrast_analysis': contrast_analysis,
             'omissions': omissions,
             'methodology_version': METHODOLOGY_VERSION,
-            'generated_at': datetime.utcnow().isoformat(),
+            'generated_at': utcnow_naive().isoformat(),
             'metadata': {
                 'total_tokens_used': self.total_tokens,
                 'api_calls_made': self.total_api_calls,
@@ -322,8 +323,8 @@ class LensCheckGenerator:
         Returns:
             List of (TrendingTopic, coverage_stats) tuples
         """
-        cutoff_24h = datetime.utcnow() - timedelta(hours=24)
-        cutoff_48h = datetime.utcnow() - timedelta(hours=48)
+        cutoff_24h = utcnow_naive() - timedelta(hours=24)
+        cutoff_48h = utcnow_naive() - timedelta(hours=48)
         
         # First try 24h, then 48h if needed
         for cutoff in [cutoff_24h, cutoff_48h]:

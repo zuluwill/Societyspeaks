@@ -11,6 +11,7 @@ DRY Principle: Reuses existing models, properties, and data structures.
 import logging
 from typing import Optional, Dict, List, Tuple
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from functools import lru_cache
 import time
 import threading
@@ -705,7 +706,7 @@ def generate_weekly_insights_thread() -> List[str]:
     from app.models import Discussion, ConsensusAnalysis, StatementVote
     from datetime import datetime, timedelta
     
-    week_ago = datetime.utcnow() - timedelta(days=7)
+    week_ago = utcnow_naive() - timedelta(days=7)
     
     # Get discussions from last week
     recent_discussions = Discussion.query.filter(

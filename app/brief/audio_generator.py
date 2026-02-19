@@ -15,6 +15,7 @@ import logging
 import re
 from typing import Optional
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 import hashlib
 import os
 
@@ -70,7 +71,7 @@ class AudioGenerator:
             
             # Get brief and items based on type
             if brief_type == 'brief_run':
-                brief_run = BriefRun.query.get(brief_run_id) if brief_run_id else None
+                brief_run = db.session.get(BriefRun,brief_run_id) if brief_run_id else None
                 if not brief_run:
                     logger.error(f"BriefRun {brief_run_id} not found")
                     return None
@@ -78,7 +79,7 @@ class AudioGenerator:
                 total_items = len(items)
                 lookup_id = brief_run_id
             else:
-                brief = DailyBrief.query.get(brief_id)
+                brief = db.session.get(DailyBrief,brief_id)
                 if not brief:
                     logger.error(f"Brief {brief_id} not found")
                     return None
@@ -107,7 +108,7 @@ class AudioGenerator:
             if existing:
                 # Check if it's a stale job (stuck in processing)
                 if existing.status == 'processing' and existing.started_at:
-                    stale_threshold = datetime.utcnow() - timedelta(minutes=JOB_TIMEOUT_MINUTES)
+                    stale_threshold = utcnow_naive() - timedelta(minutes=JOB_TIMEOUT_MINUTES)
                     if existing.started_at < stale_threshold:
                         logger.warning(f"Found stale job {existing.id}, marking as failed")
                         existing.status = 'failed'
@@ -174,7 +175,7 @@ class AudioGenerator:
             Number of jobs recovered
         """
         try:
-            stale_threshold = datetime.utcnow() - timedelta(minutes=JOB_TIMEOUT_MINUTES)
+            stale_threshold = utcnow_naive() - timedelta(minutes=JOB_TIMEOUT_MINUTES)
 
             stale_jobs = AudioGenerationJob.query.filter(
                 AudioGenerationJob.status == 'processing',
@@ -226,7 +227,7 @@ class AudioGenerator:
 
             # Update status to processing
             job.status = 'processing'
-            job.started_at = datetime.utcnow()
+            job.started_at = utcnow_naive()
             job.progress = 0
             job.completed_items = 0
             job.failed_items = 0
@@ -236,7 +237,7 @@ class AudioGenerator:
             from app.models import BriefRun, BriefRunItem
             
             if job.brief_type == 'brief_run':
-                brief_run = BriefRun.query.get(job.brief_run_id)
+                brief_run = db.session.get(BriefRun,job.brief_run_id)
                 if not brief_run:
                     job.status = 'failed'
                     job.error_message = "BriefRun not found"
@@ -245,7 +246,7 @@ class AudioGenerator:
                 items = brief_run.items.order_by(BriefRunItem.position).all()
                 item_model = BriefRunItem
             else:
-                brief = DailyBrief.query.get(job.brief_id)
+                brief = db.session.get(DailyBrief,job.brief_id)
                 if not brief:
                     job.status = 'failed'
                     job.error_message = "Brief not found"
@@ -290,7 +291,7 @@ class AudioGenerator:
                         logger.info(f"Item {item_id} already has audio, skipping")
                         completed += 1
                         # Refresh connection and update job
-                        job = AudioGenerationJob.query.get(job_id)
+                        job = db.session.get(AudioGenerationJob,job_id)
                         job.completed_items = completed
                         job.failed_items = failed
                         db.session.commit()
@@ -334,7 +335,7 @@ class AudioGenerator:
                         except UnicodeDecodeError:
                             logger.error(f"Failed to decode text for item {item_id}")
                             failed += 1
-                            job = AudioGenerationJob.query.get(job_id)
+                            job = db.session.get(AudioGenerationJob,job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
@@ -344,7 +345,7 @@ class AudioGenerator:
                     if not audio_text or len(audio_text.strip()) == 0:
                         logger.warning(f"Item {item_id} has no text content, counting as failed")
                         failed += 1
-                        job = AudioGenerationJob.query.get(job_id)
+                        job = db.session.get(AudioGenerationJob,job_id)
                         job.completed_items = completed
                         job.failed_items = failed
                         db.session.commit()
@@ -356,7 +357,7 @@ class AudioGenerator:
                     audio_path = None
                     
                     # Get voice_id before closing session
-                    job = AudioGenerationJob.query.get(job_id)
+                    job = db.session.get(AudioGenerationJob,job_id)
                     voice_id = job.voice_id
                     brief_type = job.brief_type
                     brief_id = job.brief_id
@@ -375,7 +376,7 @@ class AudioGenerator:
                                 "check logs for 'XTTS audio generation failed' for details)"
                             )
                             failed += 1
-                            job = AudioGenerationJob.query.get(job_id)
+                            job = db.session.get(AudioGenerationJob,job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
@@ -386,7 +387,7 @@ class AudioGenerator:
                         if not os.path.exists(audio_path) or not os.path.isfile(audio_path):
                             logger.error(f"Generated audio file does not exist: {audio_path}")
                             failed += 1
-                            job = AudioGenerationJob.query.get(job_id)
+                            job = db.session.get(AudioGenerationJob,job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
@@ -405,7 +406,7 @@ class AudioGenerator:
                         except Exception as read_error:
                             logger.error(f"Failed to read audio file for item {item_id}: {read_error}")
                             failed += 1
-                            job = AudioGenerationJob.query.get(job_id)
+                            job = db.session.get(AudioGenerationJob,job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
@@ -419,7 +420,7 @@ class AudioGenerator:
                             continue
 
                         # Generate filename (sanitize to prevent path traversal)
-                        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+                        timestamp = utcnow_naive().strftime('%Y%m%d_%H%M%S')
                         text_hash = hashlib.md5(audio_text.encode('utf-8')).hexdigest()[:8]
                         if brief_type == 'brief_run':
                             filename = f"brief_run_{brief_run_id}_item_{item_id}_{timestamp}_{text_hash}.wav"
@@ -430,7 +431,7 @@ class AudioGenerator:
                         if '..' in filename or '/' in filename or '\\' in filename:
                             logger.error(f"Invalid filename generated: {filename}")
                             failed += 1
-                            job = AudioGenerationJob.query.get(job_id)
+                            job = db.session.get(AudioGenerationJob,job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
@@ -452,7 +453,7 @@ class AudioGenerator:
                         if not audio_url:
                             logger.error(f"Failed to save audio for item {item_id}")
                             failed += 1
-                            job = AudioGenerationJob.query.get(job_id)
+                            job = db.session.get(AudioGenerationJob,job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
@@ -466,11 +467,11 @@ class AudioGenerator:
                             continue
 
                         # Re-query item from database with fresh connection
-                        item = item_model.query.get(item_id)
+                        item = db.session.get(item_model,item_id)
                         if not item:
                             logger.error(f"Item {item_id} no longer exists")
                             failed += 1
-                            job = AudioGenerationJob.query.get(job_id)
+                            job = db.session.get(AudioGenerationJob,job_id)
                             job.completed_items = completed
                             job.failed_items = failed
                             db.session.commit()
@@ -480,7 +481,7 @@ class AudioGenerator:
                         # Update item
                         item.audio_url = audio_url
                         item.audio_voice_id = voice_id
-                        item.audio_generated_at = datetime.utcnow()
+                        item.audio_generated_at = utcnow_naive()
 
                     finally:
                         # Always cleanup temp file, even on errors
@@ -492,7 +493,7 @@ class AudioGenerator:
 
                     completed += 1
                     # Refresh job from database
-                    job = AudioGenerationJob.query.get(job_id)
+                    job = db.session.get(AudioGenerationJob,job_id)
                     job.completed_items = completed
                     job.failed_items = failed
                     db.session.commit()
@@ -504,7 +505,7 @@ class AudioGenerator:
                     logger.error(f"Error processing item {item_id}: {e}", exc_info=True)
                     failed += 1
                     try:
-                        job = AudioGenerationJob.query.get(job_id)
+                        job = db.session.get(AudioGenerationJob,job_id)
                         job.completed_items = completed
                         job.failed_items = failed
                         db.session.commit()
@@ -515,9 +516,9 @@ class AudioGenerator:
                     continue
 
             # Mark job as completed
-            job = AudioGenerationJob.query.get(job_id)
+            job = db.session.get(AudioGenerationJob,job_id)
             job.status = 'completed'
-            job.completed_at = datetime.utcnow()
+            job.completed_at = utcnow_naive()
             db.session.commit()
 
             if failed > 0:
@@ -533,7 +534,7 @@ class AudioGenerator:
 
             # Update job status
             try:
-                job = AudioGenerationJob.query.get(job_id)
+                job = db.session.get(AudioGenerationJob,job_id)
                 if job:
                     job.status = 'failed'
                     job.error_message = str(e)[:500]  # Truncate long error messages
@@ -553,7 +554,7 @@ class AudioGenerator:
         Returns:
             Job status dictionary, or None if job not found
         """
-        job = AudioGenerationJob.query.get(job_id)
+        job = db.session.get(AudioGenerationJob,job_id)
         if not job:
             return None
         

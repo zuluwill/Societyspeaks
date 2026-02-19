@@ -12,6 +12,7 @@ import os
 import logging
 from typing import Optional, Dict, List
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 
 from app.db_retry import with_db_retry, cleanup_db_session
 
@@ -30,7 +31,7 @@ def reset_x_rate_limit_if_expired() -> None:
     Call this at the start of each scheduler run.
     """
     global _x_rate_limited_until
-    if _x_rate_limited_until and datetime.utcnow() >= _x_rate_limited_until:
+    if _x_rate_limited_until and utcnow_naive() >= _x_rate_limited_until:
         logger.info("X rate limit cooldown expired, resetting")
         _x_rate_limited_until = None
 
@@ -103,7 +104,7 @@ def record_post(
             content_type=content_type,
             discussion_id=discussion_id,
             hook_variant=hook_variant,
-            posted_at=posted_at or datetime.utcnow()
+            posted_at=posted_at or utcnow_naive()
         )
 
         db.session.add(engagement)
@@ -130,7 +131,7 @@ def fetch_x_engagement(tweet_id: str) -> Optional[Dict]:
     global _x_rate_limited_until
     
     # Check if we're currently rate limited - skip all X fetches until reset
-    if _x_rate_limited_until and datetime.utcnow() < _x_rate_limited_until:
+    if _x_rate_limited_until and utcnow_naive() < _x_rate_limited_until:
         logger.debug(f"X rate limited until {_x_rate_limited_until}, skipping fetch for {tweet_id}")
         return None
     
@@ -187,7 +188,7 @@ def fetch_x_engagement(tweet_id: str) -> Optional[Dict]:
         # Handle rate limiting gracefully - skip this fetch and set cooldown
         if '429' in str(e) or 'rate limit' in error_str or 'too many requests' in error_str:
             # Set rate limit cooldown for 15 minutes (X rate limit window)
-            _x_rate_limited_until = datetime.utcnow() + timedelta(minutes=15)
+            _x_rate_limited_until = utcnow_naive() + timedelta(minutes=15)
             logger.warning(f"X rate limited while fetching engagement for {tweet_id}, pausing until {_x_rate_limited_until}")
             return None
         logger.error(f"Failed to fetch X engagement for {tweet_id}: {e}")
@@ -266,7 +267,7 @@ def update_engagement(engagement_id: int) -> bool:
     from app.models import SocialPostEngagement
 
     try:
-        engagement = SocialPostEngagement.query.get(engagement_id)
+        engagement = db.session.get(SocialPostEngagement, engagement_id)
         if not engagement:
             logger.warning(f"Engagement record {engagement_id} not found")
             return False
@@ -287,7 +288,7 @@ def update_engagement(engagement_id: int) -> bool:
         engagement.replies = metrics.get('replies', 0)
         engagement.quotes = metrics.get('quotes', 0)
         engagement.impressions = metrics.get('impressions', 0)
-        engagement.last_updated = datetime.utcnow()
+        engagement.last_updated = utcnow_naive()
 
         db.session.commit()
 
@@ -332,10 +333,10 @@ def update_recent_engagements(hours: int = 48, limit: int = 10) -> int:
     from app.models import SocialPostEngagement
 
     try:
-        cutoff = datetime.utcnow() - timedelta(hours=hours)
+        cutoff = utcnow_naive() - timedelta(hours=hours)
 
         # Get recent posts that haven't been updated in the last hour
-        one_hour_ago = datetime.utcnow() - timedelta(hours=1)
+        one_hour_ago = utcnow_naive() - timedelta(hours=1)
 
         # Extract IDs first to avoid session detachment issues
         # (update_engagement calls cleanup_db_session which detaches objects)
@@ -361,7 +362,7 @@ def update_recent_engagements(hours: int = 48, limit: int = 10) -> int:
         updated_count = 0
         for i, post_id in enumerate(post_ids):
             # Check if rate limited - abort the entire batch to honor cooldown
-            if _x_rate_limited_until and datetime.utcnow() < _x_rate_limited_until:
+            if _x_rate_limited_until and utcnow_naive() < _x_rate_limited_until:
                 logger.warning(f"X rate limited, aborting engagement batch ({i}/{len(post_ids)} processed)")
                 break
             
@@ -410,7 +411,7 @@ def get_engagement_summary(
     from sqlalchemy import func
 
     try:
-        cutoff = datetime.utcnow() - timedelta(days=days)
+        cutoff = utcnow_naive() - timedelta(days=days)
 
         query = SocialPostEngagement.query.filter(
             SocialPostEngagement.posted_at >= cutoff

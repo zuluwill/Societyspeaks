@@ -12,6 +12,7 @@ Covers:
 import pytest
 from unittest.mock import patch, MagicMock
 from datetime import datetime
+from app.lib.time import utcnow_naive
 
 
 # ---------------------------------------------------------------------------
@@ -52,7 +53,7 @@ def partner_domain(db, partner):
         env='live',
         verification_method='dns_txt',
         verification_token='tok_123',
-        verified_at=datetime.utcnow(),
+        verified_at=utcnow_naive(),
     )
     db.session.add(d)
     db.session.commit()

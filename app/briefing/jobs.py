@@ -16,6 +16,7 @@ import json
 import logging
 import threading
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import Optional, Dict, Any, List
 import redis
 
@@ -71,8 +72,8 @@ class GenerationJob:
         self.status = 'queued'
         self.brief_run_id: Optional[int] = None
         self.error: Optional[str] = None
-        self.created_at = datetime.utcnow().isoformat()
-        self.updated_at = datetime.utcnow().isoformat()
+        self.created_at = utcnow_naive().isoformat()
+        self.updated_at = utcnow_naive().isoformat()
         self.progress_message = 'Preparing to generate brief...'
         # Retry tracking
         self.retry_count = 0
@@ -105,8 +106,8 @@ class GenerationJob:
         job.status = data.get('status', 'queued')
         job.brief_run_id = data.get('brief_run_id')
         job.error = data.get('error')
-        job.created_at = data.get('created_at', datetime.utcnow().isoformat())
-        job.updated_at = data.get('updated_at', datetime.utcnow().isoformat())
+        job.created_at = data.get('created_at', utcnow_naive().isoformat())
+        job.updated_at = data.get('updated_at', utcnow_naive().isoformat())
         job.progress_message = data.get('progress_message', '')
         job.retry_count = data.get('retry_count', 0)
         job.next_retry_at = data.get('next_retry_at')
@@ -139,7 +140,7 @@ class GenerationJob:
             bool: True if retry scheduled, False if max retries exceeded
         """
         # Add error to history
-        self.error_history.append(f"[{datetime.utcnow().isoformat()}] {error_msg}")
+        self.error_history.append(f"[{utcnow_naive().isoformat()}] {error_msg}")
         self.error = error_msg
 
         if not self.can_retry():
@@ -155,7 +156,7 @@ class GenerationJob:
         # retry 1: 30s, retry 2: 60s, retry 3: 120s
         delay = self.calculate_retry_delay()
         self.retry_count += 1
-        self.next_retry_at = (datetime.utcnow() + timedelta(seconds=delay)).isoformat()
+        self.next_retry_at = (utcnow_naive() + timedelta(seconds=delay)).isoformat()
         self.status = 'queued'  # Reset to queued for retry
         self.progress_message = f'Retry {self.retry_count}/{MAX_RETRIES} scheduled in {delay}s'
         self.save()
@@ -168,7 +169,7 @@ class GenerationJob:
     def save(self) -> bool:
         """Save job to Redis."""
         client = get_redis_client()
-        self.updated_at = datetime.utcnow().isoformat()
+        self.updated_at = utcnow_naive().isoformat()
 
         if not client:
             try:
@@ -202,7 +203,7 @@ class GenerationJob:
                 if updated_at_raw:
                     try:
                         updated_at = datetime.fromisoformat(updated_at_raw)
-                        if (datetime.utcnow() - updated_at).total_seconds() > JOB_EXPIRY:
+                        if (utcnow_naive() - updated_at).total_seconds() > JOB_EXPIRY:
                             with _IN_MEMORY_JOBS_LOCK:
                                 _IN_MEMORY_JOBS.pop(job_id, None)
                             return None
@@ -380,7 +381,7 @@ def process_generation_job(job_id: str) -> bool:
         _job_active = True
         _log_metrics('job_started', {'job_id': job_id, 'retry_count': job.retry_count})
 
-        briefing = Briefing.query.get(job.briefing_id)
+        briefing = db.session.get(Briefing, job.briefing_id)
         if not briefing:
             job.update_status('failed', error='Briefing not found')
             _log_metrics('job_failed_permanent', {'job_id': job_id, 'reason': 'briefing_not_found'})
@@ -394,7 +395,7 @@ def process_generation_job(job_id: str) -> bool:
         job.update_status('processing', 'Selecting content from sources...')
 
         generator = BriefingGenerator()
-        test_scheduled_at = datetime.utcnow() + timedelta(microseconds=random.randint(1, 999999))
+        test_scheduled_at = utcnow_naive() + timedelta(microseconds=random.randint(1, 999999))
 
         job.update_status('processing', 'Generating brief content with AI...')
 
@@ -523,7 +524,7 @@ def _schedule_retry(job_id: str, delay_seconds: int) -> bool:
         return False
 
     try:
-        retry_at = datetime.utcnow() + timedelta(seconds=delay_seconds)
+        retry_at = utcnow_naive() + timedelta(seconds=delay_seconds)
         retry_timestamp = retry_at.timestamp()
 
         # Add to sorted set with score = retry timestamp
@@ -549,7 +550,7 @@ def _process_retry_queue() -> int:
         return 0
 
     try:
-        now = datetime.utcnow().timestamp()
+        now = utcnow_naive().timestamp()
         # Get all jobs with retry time <= now
         due_jobs = client.zrangebyscore(RETRY_QUEUE, '-inf', now)
 
@@ -595,7 +596,7 @@ def _move_to_dead_letter(job: 'GenerationJob') -> bool:
         # Store job data in dead letter queue (list for easy inspection)
         dead_job_data = json.dumps({
             **job.to_dict(),
-            'moved_to_dead_letter_at': datetime.utcnow().isoformat()
+            'moved_to_dead_letter_at': utcnow_naive().isoformat()
         })
         client.lpush(DEAD_LETTER_QUEUE, dead_job_data)
 
@@ -623,7 +624,7 @@ def _log_metrics(event: str, data: Dict[str, Any]) -> None:
     try:
         metrics_data = {
             'event': event,
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': utcnow_naive().isoformat(),
             **data
         }
         # Log as JSON for easy parsing by log aggregation tools
@@ -645,7 +646,7 @@ def get_queue_metrics() -> Dict[str, Any]:
 
     try:
         metrics = {
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': utcnow_naive().isoformat(),
             'main_queue_size': client.llen('briefing:generation_queue'),
             'retry_queue_size': client.zcard(RETRY_QUEUE),
             'dead_letter_queue_size': client.llen(DEAD_LETTER_QUEUE),

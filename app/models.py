@@ -1,4 +1,5 @@
 from app import db, cache
+from app.lib.time import utcnow_naive
 from flask import current_app
 from datetime import datetime, timedelta
 from slugify import slugify as python_slugify
@@ -46,7 +47,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(150), nullable=False, unique=True)
     password = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     # New field to indicate profile type
     profile_type = db.Column(db.String(50))  # 'individual' or 'company'
@@ -90,7 +91,7 @@ class User(UserMixin, db.Model):
             user_id = s.loads(token, salt='password-reset-salt', max_age=expiration)['user_id']
         except Exception:
             return None
-        return User.query.get(user_id)
+        return db.session.get(User, user_id)
 
     # Flask-Login required methods
     def is_active(self):
@@ -121,8 +122,8 @@ class Partner(db.Model):
     stripe_subscription_id = db.Column(db.String(255), nullable=True)
     billing_status = db.Column(db.String(30), default='inactive', nullable=False)
     tier = db.Column(db.String(30), default='free', nullable=False)  # free | starter | professional | enterprise
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     domains = db.relationship('PartnerDomain', backref='partner', lazy='dynamic')
     api_keys = db.relationship('PartnerApiKey', backref='partner', lazy='dynamic')
@@ -147,7 +148,7 @@ class Partner(db.Model):
             data = s.loads(token, salt='partner-password-reset', max_age=expiration)
         except Exception:
             return None
-        return Partner.query.get(data.get('partner_id'))
+        return db.session.get(Partner, data.get('partner_id'))
 
 
 class PartnerDomain(db.Model):
@@ -165,7 +166,7 @@ class PartnerDomain(db.Model):
     verification_token = db.Column(db.String(200), nullable=False)
     verified_at = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     def is_verified(self):
         return self.verified_at is not None
@@ -187,7 +188,7 @@ class PartnerApiKey(db.Model):
     key_last4 = db.Column(db.String(4), nullable=False)
     env = db.Column(db.String(10), default='test', nullable=False)  # test | live
     status = db.Column(db.String(20), default='active', nullable=False)  # active | revoked
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     last_used_at = db.Column(db.DateTime, nullable=True)
 
 
@@ -210,8 +211,8 @@ class PartnerMember(db.Model):
     invited_at = db.Column(db.DateTime, nullable=True)
     accepted_at = db.Column(db.DateTime, nullable=True)
     last_login_at = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -237,7 +238,7 @@ class PartnerUsageEvent(db.Model):
     env = db.Column(db.String(10), default='test', nullable=False)
     event_type = db.Column(db.String(50), nullable=False)
     quantity = db.Column(db.Integer, default=1, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
 
 class AdminAuditEvent(db.Model):
@@ -254,7 +255,7 @@ class AdminAuditEvent(db.Model):
     target_id = db.Column(db.Integer, nullable=True)
     request_ip = db.Column(db.String(64), nullable=True)
     metadata_json = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
 
 
 class ProfileView(db.Model):
@@ -263,7 +264,7 @@ class ProfileView(db.Model):
     individual_profile_id = db.Column(db.Integer, db.ForeignKey('individual_profile.id'), nullable=True)
     company_profile_id = db.Column(db.Integer, db.ForeignKey('company_profile.id'), nullable=True)
     viewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # nullable for anonymous views
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=utcnow_naive)
     ip_address = db.Column(db.String(45))  # Store IP address for analytics
 
 
@@ -271,7 +272,7 @@ class DiscussionView(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
     viewer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # nullable for anonymous views
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=utcnow_naive)
     ip_address = db.Column(db.String(45))  # Store IP address for analytics
 
 
@@ -283,7 +284,7 @@ class Notification(db.Model):
     title = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text, nullable=False)
     is_read = db.Column(db.Boolean, default=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     email_sent = db.Column(db.Boolean, default=False)
 
     # Relationships
@@ -300,8 +301,8 @@ class DiscussionParticipant(db.Model):
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Can be null for anonymous
     participant_identifier = db.Column(db.String(255))  # External identifier from Pol.is
-    joined_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_activity = db.Column(db.DateTime, default=datetime.utcnow)
+    joined_at = db.Column(db.DateTime, default=utcnow_naive)
+    last_activity = db.Column(db.DateTime, default=utcnow_naive)
     response_count = db.Column(db.Integer, default=0)
 
     # Relationships
@@ -350,7 +351,7 @@ class DiscussionParticipant(db.Model):
             db.session.flush()
         else:
             # Update last activity
-            existing.last_activity = datetime.utcnow()
+            existing.last_activity = utcnow_naive()
             participant = existing
 
         if commit:
@@ -373,7 +374,7 @@ class DiscussionParticipant(db.Model):
         # Use atomic update to prevent race conditions
         self.__class__.query.filter_by(id=self.id).update({
             'response_count': self.__class__.response_count + 1,
-            'last_activity': datetime.utcnow()
+            'last_activity': utcnow_naive()
         }, synchronize_session=False)
 
         if commit:
@@ -484,7 +485,7 @@ class OrganizationMember(db.Model):
 
     # Invitation tracking
     invited_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
-    invited_at = db.Column(db.DateTime, default=datetime.utcnow)
+    invited_at = db.Column(db.DateTime, default=utcnow_naive)
     joined_at = db.Column(db.DateTime, nullable=True)  # NULL if invite pending
 
     # Invitation token for email invites
@@ -494,8 +495,8 @@ class OrganizationMember(db.Model):
     # Status: 'pending', 'active', 'removed'
     status = db.Column(db.String(20), default='pending', nullable=False)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     # Relationships
     org = db.relationship('CompanyProfile', backref=db.backref('members', lazy='dynamic'))
@@ -571,8 +572,8 @@ class Discussion(db.Model):
     topic = db.Column(db.String(100))
     is_featured = db.Column(db.Boolean, default=False)
     participant_count = db.Column(db.Integer, default=0)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     # Foreign keys to link discussions to profiles
     individual_profile_id = db.Column(db.Integer, db.ForeignKey('individual_profile.id'), nullable=True)
@@ -726,7 +727,7 @@ class Discussion(db.Model):
             discussion = cls.query\
                 .filter(
                     cls.topic == topic,
-                    cls.created_at >= (datetime.utcnow() - timedelta(days=30))
+                    cls.created_at >= (utcnow_naive() - timedelta(days=30))
                 )\
                 .order_by(cls.created_at.desc())\
                 .first()
@@ -829,8 +830,8 @@ class Statement(db.Model):
     # Values: 'ai_generated', 'partner_provided', 'user_submitted'
     source = db.Column(db.String(20), nullable=True)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
     
     # Relationships
     discussion = db.relationship('Discussion', backref='statements')
@@ -926,8 +927,8 @@ class StatementVote(db.Model):
     # Partner attribution for embed votes (e.g., 'observer', 'time', 'ted')
     partner_ref = db.Column(db.String(50), nullable=True)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
     
     statement = db.relationship('Statement', backref='votes')
     user = db.relationship('User', backref='statement_votes')
@@ -952,7 +953,7 @@ class StatementVote(db.Model):
             ).first()
             
             if existing_user_vote:
-                statement = Statement.query.get(anon_vote.statement_id)
+                statement = db.session.get(Statement, anon_vote.statement_id)
                 if statement:
                     if anon_vote.vote == 1:
                         statement.vote_count_agree = max(0, statement.vote_count_agree - 1)
@@ -1008,8 +1009,8 @@ class Response(db.Model):
     content = db.Column(db.Text)  # Optional elaboration
     is_deleted = db.Column(db.Boolean, default=False)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
     
     # Relationships
     statement = db.relationship('Statement', backref='responses')
@@ -1039,7 +1040,7 @@ class Evidence(db.Model):
     storage_url = db.Column(db.String(1000))  # Public URL
     
     added_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     
     # Relationships
     response = db.relationship('Response', backref='evidence')
@@ -1068,7 +1069,7 @@ class ConsensusAnalysis(db.Model):
     participants_count = db.Column(db.Integer)
     statements_count = db.Column(db.Integer)
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     
     # Relationships
     discussion = db.relationship('Discussion', backref='consensus_analyses')
@@ -1098,7 +1099,7 @@ class StatementFlag(db.Model):
     reviewed_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     reviewed_at = db.Column(db.DateTime)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     # Relationships
     statement = db.relationship('Statement', backref='flags')
@@ -1121,7 +1122,7 @@ class UserAPIKey(db.Model):
     encrypted_api_key = db.Column(db.Text, nullable=False)  # Fernet encrypted
     is_active = db.Column(db.Boolean, default=True)
     last_validated = db.Column(db.DateTime)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     
     # Relationships
     user = db.relationship('User', backref='api_keys')
@@ -1159,8 +1160,8 @@ class NewsSource(db.Model):
     last_fetched_at = db.Column(db.DateTime)
     fetch_error_count = db.Column(db.Integer, default=0)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     # Source profile fields
     slug = db.Column(db.String(200), nullable=True)
@@ -1287,7 +1288,7 @@ class NewsArticle(db.Model):
     url_hash = db.Column(db.String(32), nullable=True)  # SHA-256 hash for fast indexing
     
     published_at = db.Column(db.DateTime)
-    fetched_at = db.Column(db.DateTime, default=datetime.utcnow)
+    fetched_at = db.Column(db.DateTime, default=utcnow_naive)
     
     # Scoring (computed at fetch time)
     sensationalism_score = db.Column(db.Float)  # 0-1: higher = more clickbait
@@ -1301,7 +1302,7 @@ class NewsArticle(db.Model):
     # Embedding for clustering (stored as JSON array of floats)
     title_embedding = db.Column(db.JSON)
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     def __repr__(self):
         return f'<NewsArticle {self.title[:50]}...>'
@@ -1392,7 +1393,7 @@ class TrendingTopic(db.Model):
     seed_statements = db.Column(db.JSON)  # [{"content": "...", "position": "pro/con/neutral"}]
     
     # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     reviewed_at = db.Column(db.DateTime)
     reviewed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     published_at = db.Column(db.DateTime)
@@ -1495,7 +1496,7 @@ class TrendingTopicArticle(db.Model):
     article_id = db.Column(db.Integer, db.ForeignKey('news_article.id', ondelete='CASCADE'), nullable=False)
     
     # When this article was added to the topic
-    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+    added_at = db.Column(db.DateTime, default=utcnow_naive)
     
     # Similarity score to the topic centroid
     similarity_score = db.Column(db.Float)
@@ -1523,7 +1524,7 @@ class DiscussionSourceArticle(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id', ondelete='CASCADE'), nullable=False)
     article_id = db.Column(db.Integer, db.ForeignKey('news_article.id', ondelete='CASCADE'), nullable=False)
-    added_at = db.Column(db.DateTime, default=datetime.utcnow)
+    added_at = db.Column(db.DateTime, default=utcnow_naive)
     
     # Relationships
     discussion = db.relationship('Discussion', backref='source_article_links')
@@ -1570,7 +1571,7 @@ class DailyBrief(db.Model):
     admin_edited_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     admin_notes = db.Column(db.Text)  # Why was this edited/skipped?
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     published_at = db.Column(db.DateTime)
 
     # "Same Story, Different Lens" cross-perspective analysis
@@ -1775,7 +1776,7 @@ class BriefItem(db.Model):
     audio_voice_id = db.Column(db.String(100))  # XTTS voice ID used
     audio_generated_at = db.Column(db.DateTime)  # When audio was generated
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     # Relationships
     trending_topic = db.relationship('TrendingTopic', backref='brief_items')
@@ -1852,7 +1853,7 @@ class NewsPerspectiveCache(db.Model):
 
     # Cache metadata
     generated_date = db.Column(db.Date, nullable=False)  # Date generated for (allows re-generation)
-    generated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    generated_at = db.Column(db.DateTime, default=utcnow_naive)
 
     # Relationships
     trending_topic = db.relationship('TrendingTopic', backref='news_perspective_cache')
@@ -1903,7 +1904,7 @@ class AudioGenerationJob(db.Model):
     failed_items = db.Column(db.Integer, default=0)  # Track items that failed to generate
     error_message = db.Column(db.Text, nullable=True)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
     started_at = db.Column(db.DateTime, nullable=True)
     completed_at = db.Column(db.DateTime, nullable=True)
 
@@ -1925,7 +1926,7 @@ class AudioGenerationJob(db.Model):
         """Check if job is stuck in processing for too long (30 minutes)."""
         if self.status != 'processing' or not self.started_at:
             return False
-        return datetime.utcnow() - self.started_at > timedelta(minutes=30)
+        return utcnow_naive() - self.started_at > timedelta(minutes=30)
 
     def to_dict(self):
         return {
@@ -1961,7 +1962,7 @@ class AdminSettings(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(100), unique=True, nullable=False)
     value = db.Column(db.JSON, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
     updated_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
     # Relationships
@@ -2048,7 +2049,7 @@ class DailyBriefSubscriber(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
     # Tracking
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     last_sent_at = db.Column(db.DateTime)
     last_brief_id_sent = db.Column(db.Integer, db.ForeignKey('daily_brief.id'), nullable=True)
     total_briefs_received = db.Column(db.Integer, default=0)
@@ -2068,7 +2069,7 @@ class DailyBriefSubscriber(db.Model):
         """Generate a new magic link token"""
         import secrets
         self.magic_token = secrets.token_urlsafe(32)
-        self.magic_token_expires = datetime.utcnow() + timedelta(hours=expires_hours)
+        self.magic_token_expires = utcnow_naive() + timedelta(hours=expires_hours)
         return self.magic_token
 
     @staticmethod
@@ -2082,7 +2083,7 @@ class DailyBriefSubscriber(db.Model):
         if not subscriber:
             return None
 
-        if subscriber.magic_token_expires and subscriber.magic_token_expires < datetime.utcnow():
+        if subscriber.magic_token_expires and subscriber.magic_token_expires < utcnow_naive():
             return None
 
         return subscriber
@@ -2090,14 +2091,14 @@ class DailyBriefSubscriber(db.Model):
     def start_trial(self, days=30):
         """Start free trial with specified duration (default 30 days)"""
         self.tier = 'trial'
-        self.trial_started_at = datetime.utcnow()
-        self.trial_ends_at = datetime.utcnow() + timedelta(days=days)
+        self.trial_started_at = utcnow_naive()
+        self.trial_ends_at = utcnow_naive() + timedelta(days=days)
         self.status = 'active'
 
     def extend_trial(self, additional_days=30):
         """Extend trial by specified number of days"""
         if not self.trial_ends_at:
-            self.trial_ends_at = datetime.utcnow()
+            self.trial_ends_at = utcnow_naive()
         self.trial_ends_at = self.trial_ends_at + timedelta(days=additional_days)
         self.tier = 'trial'
 
@@ -2113,7 +2114,7 @@ class DailyBriefSubscriber(db.Model):
         """Returns days remaining in trial, or None if not on trial"""
         if self.tier != 'trial' or not self.trial_ends_at:
             return None
-        remaining = (self.trial_ends_at - datetime.utcnow()).days
+        remaining = (self.trial_ends_at - utcnow_naive()).days
         return max(0, remaining)
 
     @property
@@ -2123,7 +2124,7 @@ class DailyBriefSubscriber(db.Model):
             return False
         if not self.trial_ends_at:
             return True
-        return datetime.utcnow() > self.trial_ends_at
+        return utcnow_naive() > self.trial_ends_at
 
     @property
     def subscription_status_display(self):
@@ -2142,7 +2143,7 @@ class DailyBriefSubscriber(db.Model):
                 return f'Trial: {days} days left'
         elif self.tier in ['individual', 'team']:
             if self.subscription_expires_at:
-                if datetime.utcnow() > self.subscription_expires_at:
+                if utcnow_naive() > self.subscription_expires_at:
                     return f'{self.tier.title()} (Expired)'
                 return f'{self.tier.title()} (Active)'
             return f'{self.tier.title()} (Pending)'
@@ -2173,11 +2174,11 @@ class DailyBriefSubscriber(db.Model):
         if self.tier == 'trial':
             if not self.trial_ends_at:
                 return False
-            return datetime.utcnow() < self.trial_ends_at
+            return utcnow_naive() < self.trial_ends_at
 
         if self.tier in ['individual', 'team']:
             # Check Stripe subscription status
-            return self.subscription_expires_at and datetime.utcnow() < self.subscription_expires_at
+            return self.subscription_expires_at and utcnow_naive() < self.subscription_expires_at
 
         return False
 
@@ -2256,7 +2257,7 @@ class BriefTeam(db.Model):
     status = db.Column(db.String(20), default='active')  # active|cancelled|payment_failed
 
     # Tracking
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     @property
     def current_seat_count(self):
@@ -2322,7 +2323,7 @@ class UpcomingEvent(db.Model):
     status = db.Column(db.String(20), default='active')  # active, used, cancelled, past
 
     # Tracking
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
     # Relationships
@@ -2407,7 +2408,7 @@ class EmailEvent(db.Model):
     user_agent = db.Column(db.String(500))
     ip_address = db.Column(db.String(45))
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     # Relationships
     user = db.relationship('User', backref='email_events')
@@ -2501,7 +2502,7 @@ class EmailEvent(db.Model):
         """
         from sqlalchemy import func
         
-        cutoff = datetime.utcnow() - timedelta(days=days)
+        cutoff = utcnow_naive() - timedelta(days=days)
         query = cls.query.filter(cls.created_at >= cutoff)
         
         if email_category:
@@ -2606,7 +2607,7 @@ class DailyQuestion(db.Model):
     
     cold_start_threshold = db.Column(db.Integer, default=20)
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     published_at = db.Column(db.DateTime)
 
@@ -2691,7 +2692,7 @@ class DailyQuestion(db.Model):
             return None
 
         # Import here to avoid circular import
-        market = PolymarketMarket.query.get(self.polymarket_market_id)
+        market = db.session.get(PolymarketMarket, self.polymarket_market_id)
         if not market or market.probability is None:
             return None
 
@@ -2801,7 +2802,7 @@ class DailyQuestionResponse(db.Model):
     reviewed_at = db.Column(db.DateTime, nullable=True)
     reviewed_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     
     daily_question = db.relationship('DailyQuestion', foreign_keys=[daily_question_id], backref='responses')
     email_question = db.relationship('DailyQuestion', foreign_keys=[email_question_id], backref='email_responses')
@@ -2923,7 +2924,7 @@ class DailyQuestionResponseFlag(db.Model):
     reviewed_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     review_notes = db.Column(db.String(500), nullable=True)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     # Relationships
     response = db.relationship('DailyQuestionResponse', backref='flags')
@@ -2973,7 +2974,7 @@ class DailyQuestionSubscriber(db.Model):
     last_participation_date = db.Column(db.Date)
     thoughtful_participations = db.Column(db.Integer, default=0)
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     last_email_sent = db.Column(db.DateTime)
 
     # Track unsubscribe reason: 'too_frequent', 'not_interested', 'content_quality', 'other'
@@ -2993,7 +2994,7 @@ class DailyQuestionSubscriber(db.Model):
         """Generate a new magic link token for login/authentication"""
         import secrets
         self.magic_token = secrets.token_urlsafe(32)
-        self.token_expires_at = datetime.utcnow() + timedelta(hours=expires_hours)
+        self.token_expires_at = utcnow_naive() + timedelta(hours=expires_hours)
         return self.magic_token
 
     def generate_vote_token(self, question_id, expires_hours=None):
@@ -3091,7 +3092,7 @@ class DailyQuestionSubscriber(db.Model):
         if not subscriber:
             return None
 
-        if subscriber.token_expires_at and subscriber.token_expires_at < datetime.utcnow():
+        if subscriber.token_expires_at and subscriber.token_expires_at < utcnow_naive():
             return None
 
         return subscriber
@@ -3174,7 +3175,7 @@ class DailyQuestionSubscriber(db.Model):
         from flask import current_app
 
         if utc_now is None:
-            utc_now = datetime.utcnow()
+            utc_now = utcnow_naive()
 
         # Only applies to weekly subscribers
         if self.email_frequency != 'weekly':
@@ -3212,14 +3213,14 @@ class DailyQuestionSubscriber(db.Model):
         """Check if weekly digest was already sent this week (within last 6 days)"""
         if not self.last_weekly_email_sent:
             return False
-        week_ago = datetime.utcnow() - timedelta(days=6)
+        week_ago = utcnow_naive() - timedelta(days=6)
         return self.last_weekly_email_sent > week_ago
     
     def has_received_monthly_digest_this_month(self):
         """Check if monthly digest was already sent this month (within last 25 days)"""
         if not self.last_weekly_email_sent:  # Reuse same field for monthly tracking
             return False
-        month_ago = datetime.utcnow() - timedelta(days=25)
+        month_ago = utcnow_naive() - timedelta(days=25)
         return self.last_weekly_email_sent > month_ago
     
     def should_receive_monthly_digest_now(self, utc_now=None):
@@ -3237,7 +3238,7 @@ class DailyQuestionSubscriber(db.Model):
         from flask import current_app
 
         if utc_now is None:
-            utc_now = datetime.utcnow()
+            utc_now = utcnow_naive()
 
         # Only applies to monthly subscribers
         if self.email_frequency != 'monthly':
@@ -3297,14 +3298,14 @@ class DailyQuestionSelection(db.Model):
     source_statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=True)
     source_trending_topic_id = db.Column(db.Integer, db.ForeignKey('trending_topic.id'), nullable=True)
     
-    selected_at = db.Column(db.DateTime, default=datetime.utcnow)
+    selected_at = db.Column(db.DateTime, default=utcnow_naive)
     question_date = db.Column(db.Date, nullable=False)
     daily_question_id = db.Column(db.Integer, db.ForeignKey('daily_question.id'), nullable=True)
     
     @staticmethod
     def is_recently_used(source_type, source_id, days=30):
         """Check if a source has been used in the last N days"""
-        cutoff = datetime.utcnow() - timedelta(days=days)
+        cutoff = utcnow_naive() - timedelta(days=days)
         
         query = DailyQuestionSelection.query.filter(
             DailyQuestionSelection.source_type == source_type,
@@ -3356,8 +3357,8 @@ class SocialPostEngagement(db.Model):
 
     # Timestamps
     posted_at = db.Column(db.DateTime, nullable=False)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_updated = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     # Unique constraint on platform + post_id
     __table_args__ = (
@@ -3474,8 +3475,8 @@ class BriefTemplate(db.Model):
     times_used = db.Column(db.Integer, default=0)  # How many briefings created from this
 
     # Metadata
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     @staticmethod
     def get_category_label(category):
@@ -3572,8 +3573,8 @@ class InputSource(db.Model):
     political_leaning = db.Column(db.Float, nullable=True)  # -1.0 (left) to 1.0 (right), null = unknown
     is_verified = db.Column(db.Boolean, default=False)  # Admin-verified quality source
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     # Relationships
     ingested_items = db.relationship('IngestedItem', backref='source', lazy='dynamic', cascade='all, delete-orphan')
@@ -3628,7 +3629,7 @@ class IngestedItem(db.Model):
 
     # Timing
     published_at = db.Column(db.DateTime, nullable=True)  # From source
-    fetched_at = db.Column(db.DateTime, default=datetime.utcnow)
+    fetched_at = db.Column(db.DateTime, default=utcnow_naive)
 
     # Content
     content_text = db.Column(db.Text)  # Extracted text
@@ -3638,7 +3639,7 @@ class IngestedItem(db.Model):
     # For uploads
     storage_key = db.Column(db.String(500), nullable=True)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     def to_dict(self):
         return {
@@ -3726,8 +3727,8 @@ class Briefing(db.Model):
     slack_webhook_url = db.Column(db.String(500), nullable=True)  # Slack incoming webhook URL
     slack_channel_name = db.Column(db.String(100), nullable=True)  # For display purposes
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     # Relationships
     template = db.relationship('BriefTemplate', backref='briefings')
@@ -3780,7 +3781,7 @@ class BriefingSource(db.Model):
     briefing_id = db.Column(db.Integer, db.ForeignKey('briefing.id', ondelete='CASCADE'), primary_key=True)
     source_id = db.Column(db.Integer, db.ForeignKey('input_source.id', ondelete='CASCADE'), primary_key=True)
     priority = db.Column(db.Integer, default=1)  # 1-5, higher = more important
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
     
     # Relationship to access source details
     source = db.relationship('InputSource', backref=db.backref('briefing_associations', overlaps='briefing_sources,input_source'), overlaps='briefing_sources,input_source')
@@ -3905,7 +3906,7 @@ class BriefRunItem(db.Model):
     audio_generated_at = db.Column(db.DateTime)  # When audio was generated
 
     # Metadata
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     # Relationships
     ingested_item = db.relationship('IngestedItem', backref='brief_run_items')
@@ -3940,7 +3941,7 @@ class BriefEmailOpen(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     brief_run_id = db.Column(db.Integer, db.ForeignKey('brief_run.id', ondelete='CASCADE'), nullable=False)
     recipient_email = db.Column(db.String(255), nullable=True)  # Hashed or anonymized
-    opened_at = db.Column(db.DateTime, default=datetime.utcnow)
+    opened_at = db.Column(db.DateTime, default=utcnow_naive)
     user_agent = db.Column(db.String(500), nullable=True)
     ip_address = db.Column(db.String(45), nullable=True)
 
@@ -3980,7 +3981,7 @@ class BriefEmailSend(db.Model):
     brief_run_id = db.Column(db.Integer, db.ForeignKey('brief_run.id', ondelete='CASCADE'), nullable=False)
     recipient_id = db.Column(db.Integer, db.ForeignKey('brief_recipient.id', ondelete='CASCADE'), nullable=False)
     status = db.Column(db.String(20), default='sent')  # 'claimed' | 'sent' | 'failed' | 'permanently_failed'
-    claimed_at = db.Column(db.DateTime, default=datetime.utcnow)  # When claim was created
+    claimed_at = db.Column(db.DateTime, default=utcnow_naive)  # When claim was created
     sent_at = db.Column(db.DateTime, nullable=True)  # When email was actually sent
     resend_id = db.Column(db.String(100), nullable=True)  # Resend message ID for tracking
     attempt_count = db.Column(db.Integer, default=1)  # Number of send attempts
@@ -4009,7 +4010,7 @@ class BriefLinkClick(db.Model):
     brief_run_item_id = db.Column(db.Integer, db.ForeignKey('brief_run_item.id', ondelete='SET NULL'), nullable=True)
     recipient_email = db.Column(db.String(255), nullable=True)  # Hashed or anonymized
     target_url = db.Column(db.String(2000), nullable=False)
-    clicked_at = db.Column(db.DateTime, default=datetime.utcnow)
+    clicked_at = db.Column(db.DateTime, default=utcnow_naive)
     user_agent = db.Column(db.String(500), nullable=True)
 
     def __repr__(self):
@@ -4041,14 +4042,14 @@ class BriefRecipient(db.Model):
     magic_token = db.Column(db.String(64), unique=True, nullable=True)
     magic_token_expires_at = db.Column(db.DateTime, nullable=True)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     def generate_magic_token(self, expires_hours=48):
         """Generate a new magic link token with expiry"""
         import secrets
         from datetime import timedelta
         self.magic_token = secrets.token_urlsafe(32)
-        self.magic_token_expires_at = datetime.utcnow() + timedelta(hours=expires_hours)
+        self.magic_token_expires_at = utcnow_naive() + timedelta(hours=expires_hours)
         return self.magic_token
 
     def is_magic_token_valid(self) -> bool:
@@ -4058,7 +4059,7 @@ class BriefRecipient(db.Model):
         if not self.magic_token_expires_at:
             # Legacy tokens without expiry - consider valid but should be regenerated
             return True
-        return datetime.utcnow() < self.magic_token_expires_at
+        return utcnow_naive() < self.magic_token_expires_at
 
     def to_dict(self):
         return {
@@ -4096,8 +4097,8 @@ class SendingDomain(db.Model):
     dns_records_required = db.Column(db.JSON)  # SPF, DKIM, etc.
 
     verified_at = db.Column(db.DateTime, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     # Relationships
     org = db.relationship('CompanyProfile', backref='sending_domains')
@@ -4134,7 +4135,7 @@ class BriefEdit(db.Model):
     content_markdown = db.Column(db.Text)
     content_html = db.Column(db.Text)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
 
     # Relationships
     edited_by = db.relationship('User', backref='brief_edits', foreign_keys=[edited_by_user_id])
@@ -4192,8 +4193,8 @@ class PricingPlan(db.Model):
     is_organisation = db.Column(db.Boolean, default=False)  # Team/Enterprise plans
     display_order = db.Column(db.Integer, default=0)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     # Relationships
     subscriptions = db.relationship('Subscription', backref='plan', lazy='dynamic')
@@ -4269,8 +4270,8 @@ class Subscription(db.Model):
     # Extra data
     extra_data = db.Column(db.JSON, default=dict)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     # Relationships
     user = db.relationship('User', backref=db.backref('subscriptions', lazy='dynamic'))
@@ -4291,7 +4292,7 @@ class Subscription(db.Model):
         """Days remaining in current period"""
         if not self.current_period_end:
             return None
-        delta = self.current_period_end - datetime.utcnow()
+        delta = self.current_period_end - utcnow_naive()
         return max(0, delta.days)
 
     def can_use_feature(self, feature):
@@ -4402,13 +4403,13 @@ class PolymarketMarket(db.Model):
     resolved_at = db.Column(db.DateTime)
 
     # Sync Tracking
-    first_seen_at = db.Column(db.DateTime, default=datetime.utcnow)
+    first_seen_at = db.Column(db.DateTime, default=utcnow_naive)
     last_synced_at = db.Column(db.DateTime)
     last_price_update_at = db.Column(db.DateTime)
     sync_failures = db.Column(db.Integer, default=0)  # Track consecutive failures
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     # Quality Thresholds (class constants)
     MIN_VOLUME_24H = 1000    # $1k minimum daily volume
@@ -4549,8 +4550,8 @@ class TopicMarketMatch(db.Model):
     volume_at_match = db.Column(db.Float)
 
     # Lifecycle
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
     # Thresholds (class constants)
     SIMILARITY_THRESHOLD = 0.75  # Minimum similarity to create match

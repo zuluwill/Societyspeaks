@@ -15,6 +15,7 @@ Design Principles:
 
 import logging
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import Optional, List, Dict
 
 import numpy as np
@@ -127,7 +128,7 @@ class MarketMatcher:
         """
         stats = {'processed': 0, 'matched': 0, 'skipped': 0, 'errors': 0}
 
-        cutoff = datetime.utcnow() - timedelta(days=days_back)
+        cutoff = utcnow_naive() - timedelta(days=days_back)
 
         query = TrendingTopic.query.filter(
             TrendingTopic.created_at >= cutoff,
@@ -163,7 +164,7 @@ class MarketMatcher:
                         # Update similarity score
                         existing.similarity_score = match['similarity']
                         existing.match_method = match['method']
-                        existing.updated_at = datetime.utcnow()
+                        existing.updated_at = utcnow_naive()
                     else:
                         # Create new match
                         db.session.add(TopicMarketMatch(

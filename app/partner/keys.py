@@ -68,7 +68,7 @@ def find_partner_api_key(api_key: str):
     record = PartnerApiKey.query.filter_by(key_hash=key_hash, status='active').first()
     if not record:
         return None, None, None
-    partner = Partner.query.get(record.partner_id)
+    partner = db.session.get(Partner, record.partner_id)
     if not partner:
         return None, None, None
 

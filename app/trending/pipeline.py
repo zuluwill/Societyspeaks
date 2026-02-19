@@ -12,6 +12,7 @@ Coordinates the full pipeline:
 
 import logging
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 from typing import List, Tuple
 
 from app import db
@@ -55,7 +56,7 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
             premium_unscored = NewsArticle.query.join(NewsSource).filter(
                 NewsArticle.relevance_score.is_(None),
                 NewsSource.reputation_score >= 0.7,
-                NewsArticle.fetched_at >= datetime.utcnow() - timedelta(days=7)
+                NewsArticle.fetched_at >= utcnow_naive() - timedelta(days=7)
             ).all()
         
         if premium_unscored:
@@ -69,7 +70,7 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     
     try:
         unprocessed = NewsArticle.query.filter(
-            NewsArticle.fetched_at >= datetime.utcnow() - timedelta(hours=6),
+            NewsArticle.fetched_at >= utcnow_naive() - timedelta(hours=6),
             NewsArticle.relevance_score.isnot(None),
             NewsArticle.relevance_score >= 0.4
         ).all()
@@ -128,7 +129,7 @@ def process_held_topics(batch_size: int = 10) -> int:
     Score them and move to pending_review.
     Processes in batches with error handling per topic.
     """
-    now = datetime.utcnow()
+    now = utcnow_naive()
     
     held_topics = TrendingTopic.query.filter(
         TrendingTopic.status == 'pending',
@@ -205,7 +206,7 @@ def auto_publish_daily(max_topics: int = 15, schedule_bluesky: bool = True, sche
     from app.trending.publisher import publish_topic
     from collections import Counter
     
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_start = utcnow_naive().replace(hour=0, minute=0, second=0, microsecond=0)
     already_published_today = TrendingTopic.query.filter(
         TrendingTopic.status == 'published',
         TrendingTopic.published_at >= today_start
@@ -322,7 +323,7 @@ def get_pipeline_stats() -> dict:
     """Get statistics for the trending topics system."""
     from app.models import NewsSource, NewsArticle
     
-    now = datetime.utcnow()
+    now = utcnow_naive()
     day_ago = now - timedelta(days=1)
     week_ago = now - timedelta(days=7)
     
@@ -388,7 +389,7 @@ def _backfill_single_article(
                 best_similarity = float(similarity)
                 best_match = topic
     else:
-        cutoff = datetime.utcnow() - timedelta(days=7)
+        cutoff = utcnow_naive() - timedelta(days=7)
         recent_topics = TrendingTopic.query.filter(
             TrendingTopic.created_at >= cutoff,
             TrendingTopic.topic_embedding.isnot(None),
@@ -440,7 +441,7 @@ def backfill_orphan_articles(limit: int = 100) -> int:
     """
     import numpy as np
     
-    cutoff = datetime.utcnow() - timedelta(days=7)
+    cutoff = utcnow_naive() - timedelta(days=7)
     
     linked_article_ids = db.session.query(TrendingTopicArticle.article_id).distinct()
     

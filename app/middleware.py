@@ -44,7 +44,7 @@ def track_discussion_view(f):
         discussion_id = kwargs.get('discussion_id')
         if discussion_id:
             # Check if the discussion exists before tracking the view
-            discussion = Discussion.query.get(discussion_id)
+            discussion = db.session.get(Discussion, discussion_id)
             if discussion:
                 try:
                     # Create a new view record only if discussion exists

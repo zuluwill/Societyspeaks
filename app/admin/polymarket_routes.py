@@ -6,6 +6,7 @@ from flask import render_template, request, jsonify
 from flask_login import login_required
 from sqlalchemy import desc
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 
 from app import db
 from app.models import PolymarketMarket, TopicMarketMatch, TrendingTopic
@@ -130,7 +131,7 @@ def health_dashboard():
     ).first()
     
     last_sync = latest_market.last_synced_at if latest_market else None
-    sync_stale = not last_sync or (datetime.utcnow() - last_sync) > timedelta(hours=4)
+    sync_stale = not last_sync or (utcnow_naive() - last_sync) > timedelta(hours=4)
     
     # Market counts
     active_markets = PolymarketMarket.query.filter_by(is_active=True).count()
@@ -138,7 +139,7 @@ def health_dashboard():
     
     # Recent matches
     recent_matches = TopicMarketMatch.query.filter(
-        TopicMarketMatch.created_at >= datetime.utcnow() - timedelta(hours=24)
+        TopicMarketMatch.created_at >= utcnow_naive() - timedelta(hours=24)
     ).count()
     
     # Markets needing embeddings

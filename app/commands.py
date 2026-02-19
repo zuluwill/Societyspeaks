@@ -5,6 +5,7 @@ import click
 from app import db
 from app.models import User, IndividualProfile, CompanyProfile, Discussion
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 
 @click.command('clean-spam')
 @with_appcontext
@@ -325,7 +326,7 @@ def init_commands(app):
     def publish_brief_cmd(brief_id):
         """Manually publish a brief"""
         try:
-            brief = DailyBrief.query.get(brief_id)
+            brief = db.session.get(DailyBrief, brief_id)
             if not brief:
                 click.echo(f"Brief {brief_id} not found", err=True)
                 return
@@ -335,7 +336,7 @@ def init_commands(app):
                 return
 
             brief.status = 'published'
-            brief.published_at = datetime.utcnow()
+            brief.published_at = utcnow_naive()
             brief.auto_selected = False
             db.session.commit()
 

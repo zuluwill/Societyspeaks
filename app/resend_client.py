@@ -14,6 +14,7 @@ import time
 import logging
 import threading
 from datetime import datetime
+from app.lib.time import utcnow_naive
 from typing import List, Dict, Optional, Any
 from flask import render_template, current_app, url_for
 import requests
@@ -504,7 +505,7 @@ class ResendEmailClient:
         success = self._send_with_retry(email_data)
 
         if success:
-            subscriber.last_email_sent = datetime.utcnow()
+            subscriber.last_email_sent = utcnow_naive()
             
             # Record analytics event
             try:
@@ -590,8 +591,8 @@ class ResendEmailClient:
         success = self._send_with_retry(email_data)
 
         if success:
-            subscriber.last_weekly_email_sent = datetime.utcnow()
-            subscriber.last_email_sent = datetime.utcnow()
+            subscriber.last_weekly_email_sent = utcnow_naive()
+            subscriber.last_email_sent = utcnow_naive()
             
             # Record analytics event
             try:
@@ -674,8 +675,8 @@ class ResendEmailClient:
         success = self._send_with_retry(email_data)
 
         if success:
-            subscriber.last_weekly_email_sent = datetime.utcnow()  # Reuse field for monthly tracking
-            subscriber.last_email_sent = datetime.utcnow()
+            subscriber.last_weekly_email_sent = utcnow_naive()  # Reuse field for monthly tracking
+            subscriber.last_email_sent = utcnow_naive()
             
             # Record analytics event
             try:
@@ -802,7 +803,7 @@ class ResendEmailClient:
                 # Note: With batch API, we assume all or none in the batch succeeded
                 if batch_result['sent'] > 0:
                     for subscriber in batch_subscribers:
-                        subscriber.last_email_sent = datetime.utcnow()
+                        subscriber.last_email_sent = utcnow_naive()
                         
                         # Record analytics event for each successful send
                         try:

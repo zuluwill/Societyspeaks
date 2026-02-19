@@ -13,6 +13,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MISSED
 from datetime import datetime, timedelta
+from app.lib.time import utcnow_naive
 import logging
 import threading
 import atexit
@@ -72,7 +73,7 @@ def _should_send_ops_alert(message: str) -> tuple[bool, str]:
     if cooldown == 0:
         return True, fingerprint
 
-    now = datetime.utcnow()
+    now = utcnow_naive()
     with _ops_alert_lock:
         # Keep in-memory state bounded by removing old entries.
         cutoff = now - timedelta(seconds=max(cooldown * 2, 3600))
@@ -90,7 +91,7 @@ def _should_send_ops_alert(message: str) -> tuple[bool, str]:
 def _mark_ops_alert_sent(fingerprint: str) -> None:
     """Record successful alert delivery timestamp for dedupe cooldown."""
     with _ops_alert_lock:
-        _ops_alert_last_sent[fingerprint] = datetime.utcnow()
+        _ops_alert_last_sent[fingerprint] = utcnow_naive()
 
 
 def _is_production_environment() -> bool:
@@ -154,7 +155,7 @@ def _send_ops_alert(message: str) -> None:
     )
 
     if to_email and resend_api_key:
-        subject = f"[Society Speaks] CRITICAL Scheduler Alert ({datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')})"
+        subject = f"[Society Speaks] CRITICAL Scheduler Alert ({utcnow_naive().strftime('%Y-%m-%d %H:%M UTC')})"
         try:
             response = requests.post(
                 "https://api.resend.com/emails",
@@ -242,8 +243,8 @@ def init_scheduler(app):
             # - Has recent activity (votes in last 7 days)
             # - No analysis in last 6 hours OR has new votes since last analysis
             
-            recent_activity_threshold = datetime.utcnow() - timedelta(days=7)
-            recent_analysis_threshold = datetime.utcnow() - timedelta(hours=6)
+            recent_activity_threshold = utcnow_naive() - timedelta(days=7)
+            recent_analysis_threshold = utcnow_naive() - timedelta(hours=6)
             
             # Get discussions with recent votes
             active_discussion_ids = db.session.query(StatementVote.discussion_id).filter(
@@ -256,7 +257,7 @@ def init_scheduler(app):
             
             for discussion_id in active_discussion_ids:
                 try:
-                    discussion = Discussion.query.get(discussion_id)
+                    discussion = db.session.get(Discussion, discussion_id)
                     
                     if not discussion or not discussion.has_native_statements:
                         continue
@@ -319,8 +320,8 @@ def init_scheduler(app):
             
             logger.info("Starting cleanup of old data")
             
-            cutoff_30_days = datetime.utcnow() - timedelta(days=30)
-            cutoff_7_days = datetime.utcnow() - timedelta(days=7)
+            cutoff_30_days = utcnow_naive() - timedelta(days=30)
+            cutoff_7_days = utcnow_naive() - timedelta(days=7)
             
             # Get IDs of articles linked to published discussions (we want to KEEP these)
             # These preserve source attribution for user-facing content
@@ -756,7 +757,7 @@ def init_scheduler(app):
                 logger.info("Background thread: Starting weekly digest processing")
 
                 # Get current UTC time
-                utc_now = datetime.utcnow()
+                utc_now = utcnow_naive()
 
                 # Get all active weekly subscribers
                 weekly_subscribers = DailyQuestionSubscriber.query.filter_by(
@@ -850,7 +851,7 @@ def init_scheduler(app):
                 logger.info("Background thread: Starting monthly digest processing")
 
                 # Get current UTC time
-                utc_now = datetime.utcnow()
+                utc_now = utcnow_naive()
 
                 # Get all active monthly subscribers
                 monthly_subscribers = DailyQuestionSubscriber.query.filter_by(
@@ -1438,7 +1439,7 @@ def init_scheduler(app):
                     is_stale = False
                     if heartbeat_raw:
                         try:
-                            heartbeat_age = datetime.utcnow().timestamp() - float(heartbeat_raw)
+                            heartbeat_age = utcnow_naive().timestamp() - float(heartbeat_raw)
                             if heartbeat_age > STALE_HEARTBEAT_SECONDS:
                                 logger.warning(
                                     f"Emergency brief worker heartbeat stale ({heartbeat_age:.0f}s). "
@@ -1455,7 +1456,7 @@ def init_scheduler(app):
 
                     if is_stale:
                         r.set(status_key, 'queued', ex=RUNNING_TTL_SECONDS)
-                        r.set(queued_at_key, str(datetime.utcnow().timestamp()), ex=RUNNING_TTL_SECONDS)
+                        r.set(queued_at_key, str(utcnow_naive().timestamp()), ex=RUNNING_TTL_SECONDS)
                         r.set(step_key, 'Previous worker crashed. Re-queued for automatic retry...', ex=RUNNING_TTL_SECONDS)
                         r.delete(heartbeat_key)
                         r.delete(queue_alerted_key)
@@ -1470,7 +1471,7 @@ def init_scheduler(app):
                     queued_at_raw = (r.get(queued_at_key) or b'').decode()
                     if queued_at_raw:
                         try:
-                            queued_for_seconds = datetime.utcnow().timestamp() - float(queued_at_raw)
+                            queued_for_seconds = utcnow_naive().timestamp() - float(queued_at_raw)
                             if queued_for_seconds > QUEUE_WAIT_ALERT_SECONDS:
                                 if r.set(queue_alerted_key, '1', nx=True, ex=900):
                                     _send_ops_alert(
@@ -1510,7 +1511,7 @@ def init_scheduler(app):
                         raise RuntimeError("Claim invalidated")
                     r.expire(status_key, RUNNING_TTL_SECONDS)
                     r.set(step_key, message, ex=RUNNING_TTL_SECONDS)
-                    r.set(heartbeat_key, str(datetime.utcnow().timestamp()), ex=RUNNING_TTL_SECONDS)
+                    r.set(heartbeat_key, str(utcnow_naive().timestamp()), ex=RUNNING_TTL_SECONDS)
 
                 _set_step('Starting pipeline...')
                 
@@ -1903,7 +1904,7 @@ def init_scheduler(app):
             from sqlalchemy import update, or_, func
             from datetime import datetime, timedelta
             
-            now = datetime.utcnow()
+            now = utcnow_naive()
             MAX_BRIEFRUN_SEND_ATTEMPTS = 5
             STALE_DAILY_HOURS = 20
             STALE_WEEKLY_HOURS = 48
@@ -2174,7 +2175,7 @@ def init_scheduler(app):
                 if ready_briefs:
                     for brief in ready_briefs:
                         brief.status = 'published'
-                        brief.published_at = datetime.utcnow()
+                        brief.published_at = utcnow_naive()
                         logger.info(f"Auto-published {brief.brief_type} brief: {brief.title}")
 
                     db.session.commit()
@@ -2211,7 +2212,7 @@ def init_scheduler(app):
         with app.app_context():
             from app.brief.email_client import BriefEmailScheduler
 
-            current_hour = datetime.utcnow().hour
+            current_hour = utcnow_naive().hour
             logger.info(f"Starting brief email send for hour {current_hour} UTC")
 
             try:
