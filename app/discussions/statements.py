@@ -449,9 +449,11 @@ def vote_statement(statement_id):
         if is_form_post:
             flash(rate_message, 'error')
             return redirect(url_for('statements.view_statement', statement_id=statement_id))
+        from app.api.errors import _retry_after_seconds
+        retry_after = _retry_after_seconds(None, 60)
         resp = jsonify({'error': 'rate_limited', 'message': rate_message})
         resp.status_code = 429
-        resp.headers['Retry-After'] = '60'
+        resp.headers['Retry-After'] = str(retry_after)
         return resp
 
     # Partner ref for attribution (from embed or query param)

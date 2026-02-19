@@ -578,8 +578,13 @@ def create_app():
         app.logger.warning(f"429 Too Many Requests: {e}")
         from app.api.errors import _retry_after_seconds
         retry_after = _retry_after_seconds(e, 60)
-        # Return JSON for API/embed requests so clients get Retry-After and consistent format
-        if request.is_json or request.headers.get('X-Embed-Request'):
+        is_json_client = (
+            request.is_json
+            or request.headers.get('X-Embed-Request')
+            or request.accept_mimetypes.best == 'application/json'
+            or request.path.startswith('/api/')
+        )
+        if is_json_client:
             resp = jsonify({'error': 'rate_limited', 'message': f'Too many requests. Please retry in {retry_after} seconds.'})
             resp.status_code = 429
             resp.headers['Retry-After'] = str(retry_after)
