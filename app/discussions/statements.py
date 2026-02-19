@@ -194,8 +194,9 @@ def create_statement(discussion_id):
                 if similar and len(similar) > 0:
                     # Found similar statements, warn user
                     similar_stmt = Statement.query.get(similar[0]['id'])
-                    flash(f"A similar statement already exists: '{similar_stmt.content}'. Consider voting on it instead.", "info")
-                    return redirect(url_for('statements.view_statement', statement_id=similar_stmt.id))
+                    if similar_stmt and not similar_stmt.is_deleted:
+                        flash(f"A similar statement already exists: '{similar_stmt.content}'. Consider voting on it instead.", "info")
+                        return redirect(url_for('statements.view_statement', statement_id=similar_stmt.id))
             
             except Exception as e:
                 # Don't block statement creation if deduplication fails

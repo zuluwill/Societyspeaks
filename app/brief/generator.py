@@ -138,6 +138,7 @@ class BriefGenerator:
             else:
                 brief = DailyBrief(
                     date=brief_date,
+                    brief_type='daily',
                     status='draft',
                     auto_selected=True
                 )

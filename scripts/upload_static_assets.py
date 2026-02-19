@@ -63,4 +63,5 @@ def upload_assets():
 
 
 if __name__ == '__main__':
-    upload_assets()
+    ok = upload_assets()
+    sys.exit(0 if ok else 1)
