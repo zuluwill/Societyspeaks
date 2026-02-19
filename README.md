@@ -2,7 +2,7 @@
 
 ![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL%20v3-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.11+-blue.svg)
-![Flask](https://img.shields.io/badge/flask-2.3.3-blue.svg)
+![Flask](https://img.shields.io/badge/flask-3.0+-blue.svg)
 
 ## Overview
 
@@ -87,7 +87,7 @@ Publishers can embed Society Speaks on their articles and use the Partner API fo
 
 | Category | Technology |
 |----------|------------|
-| Backend | Python 3.11+ / Flask 2.3.3 |
+| Backend | Python 3.11+ / Flask 3.0+ |
 | Database | PostgreSQL |
 | Caching | Redis |
 | Storage | Replit Object Storage |
@@ -106,8 +106,8 @@ Publishers can embed Society Speaks on their articles and use the Partner API fo
 ## Requirements
 
 ```txt
-# Core Flask
-Flask==2.3.3
+# Core Flask (see requirements.txt for full pinned list)
+Flask>=3.0.0
 Flask-SQLAlchemy==3.0.5
 Flask-Migrate==4.0.0
 Flask-Login==0.6.3
@@ -205,7 +205,7 @@ npm install
 4. Configure environment:
 ```bash
 cp .env.example .env
-# Edit .env with your configurations
+# Edit .env with your configurations. For Daily Brief vars see .env.brief.example.
 ```
 
 5. Set up Redis and PostgreSQL:
