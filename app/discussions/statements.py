@@ -193,9 +193,13 @@ def create_statement(discussion_id):
                 )
                 
                 if similar and len(similar) > 0:
-                    # Found similar statements, warn user
-                    similar_stmt = db.session.get(Statement, similar[0]['id'])
-                    if similar_stmt and not similar_stmt.is_deleted:
+                    similar_stmt = None
+                    for candidate in similar:
+                        s = db.session.get(Statement, candidate['id'])
+                        if s and not s.is_deleted:
+                            similar_stmt = s
+                            break
+                    if similar_stmt:
                         flash(f"A similar statement already exists: '{similar_stmt.content}'. Consider voting on it instead.", "info")
                         return redirect(url_for('statements.view_statement', statement_id=similar_stmt.id))
             
