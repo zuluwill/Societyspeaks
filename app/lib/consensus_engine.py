@@ -121,14 +121,15 @@ def build_vote_matrix(discussion_id, db):
     """
     from app.models import StatementVote, Statement
     
-    # Get all votes for this discussion (both authenticated and anonymous)
+    # Get all votes for this discussion (authenticated + anonymous), only on non-deleted statements
     votes = db.session.query(
         StatementVote.user_id,
         StatementVote.session_fingerprint,
         StatementVote.statement_id,
         StatementVote.vote
-    ).filter(
-        StatementVote.discussion_id == discussion_id
+    ).join(Statement, StatementVote.statement_id == Statement.id).filter(
+        StatementVote.discussion_id == discussion_id,
+        Statement.is_deleted.is_(False)
     ).all()
     
     if not votes:
@@ -198,7 +199,7 @@ def can_cluster(discussion_id, db):
     from app.models import StatementVote, Statement
     from sqlalchemy import case, func
     
-    # Count unique participants (user_id OR session_fingerprint)
+    # Count unique participants (user_id OR session_fingerprint) who voted on non-deleted statements
     participant_count = db.session.query(
         func.count(func.distinct(
             case(
@@ -206,8 +207,9 @@ def can_cluster(discussion_id, db):
                 else_=func.concat('a_', StatementVote.session_fingerprint)
             )
         ))
-    ).filter(
-        StatementVote.discussion_id == discussion_id
+    ).join(Statement, StatementVote.statement_id == Statement.id).filter(
+        StatementVote.discussion_id == discussion_id,
+        Statement.is_deleted.is_(False)
     ).scalar() or 0
     
     # Count statements
@@ -216,17 +218,21 @@ def can_cluster(discussion_id, db):
         is_deleted=False
     ).count()
     
-    # Count total votes
-    vote_count = StatementVote.query.filter(
-        StatementVote.discussion_id == discussion_id
+    # Count total votes on non-deleted statements
+    vote_count = db.session.query(StatementVote.id).join(
+        Statement, StatementVote.statement_id == Statement.id
+    ).filter(
+        StatementVote.discussion_id == discussion_id,
+        Statement.is_deleted.is_(False)
     ).count()
     
-    # Check minimum votes per statement
+    # Check minimum votes per statement (only non-deleted statements)
     min_votes_per_statement = db.session.query(
         StatementVote.statement_id,
         db.func.count(StatementVote.id).label('vote_count')
-    ).filter(
-        StatementVote.discussion_id == discussion_id
+    ).join(Statement, StatementVote.statement_id == Statement.id).filter(
+        StatementVote.discussion_id == discussion_id,
+        Statement.is_deleted.is_(False)
     ).group_by(StatementVote.statement_id).all()
     
     if not min_votes_per_statement:
@@ -489,7 +495,8 @@ def identify_consensus_statements(vote_matrix, user_labels, consensus_threshold=
         if overall_agreement < consensus_threshold:
             continue
 
-        # Check agreement in each cluster
+        # Check agreement in each cluster (Pol.is: every cluster must have voted and meet threshold)
+        n_clusters = len(np.unique(user_labels))
         cluster_agreements = []
         for cluster_id in np.unique(user_labels):
             cluster_mask = user_labels == cluster_id
@@ -503,8 +510,8 @@ def identify_consensus_statements(vote_matrix, user_labels, consensus_threshold=
                 cluster_agreement = cluster_agree / cluster_total
                 cluster_agreements.append(cluster_agreement)
 
-        # All clusters must meet threshold
-        if all(ca >= cluster_threshold for ca in cluster_agreements):
+        # All clusters must have at least one vote AND meet threshold (no "consensus" if a group didn't vote)
+        if len(cluster_agreements) == n_clusters and all(ca >= cluster_threshold for ca in cluster_agreements):
             consensus_statements.append({
                 'statement_id': statement_id,
                 'agreement_rate': overall_agreement,
@@ -533,7 +540,8 @@ def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max
     for statement_id in vote_matrix.columns:
         statement_votes = vote_matrix[statement_id]
 
-        # Calculate agreement in each cluster (using real votes only)
+        # Calculate agreement in each cluster (using real votes only; all clusters must have voted)
+        n_clusters = len(np.unique(user_labels))
         cluster_agreements = []
         for cluster_id in np.unique(user_labels):
             cluster_mask = user_labels == cluster_id
@@ -547,7 +555,7 @@ def identify_bridge_statements(vote_matrix, user_labels, min_agreement=0.65, max
                 cluster_agreement = cluster_agree / cluster_total
                 cluster_agreements.append(cluster_agreement)
 
-        if len(cluster_agreements) < 2:
+        if len(cluster_agreements) < 2 or len(cluster_agreements) != n_clusters:
             continue
 
         mean_agreement = np.mean(cluster_agreements)

@@ -35,44 +35,57 @@ def get_user_vote_count(discussion_id):
     """
     Get the number of statements a user has voted on in this discussion.
     Works for both authenticated and anonymous users.
+    Only counts votes on non-deleted statements (aligned with consensus analysis).
     
     For authenticated users, also counts any votes made before login 
     (via session fingerprint) to ensure votes persist across login.
     
     Returns: (vote_count, identifier_type)
-        - vote_count: number of distinct statements voted on
+        - vote_count: number of distinct (non-deleted) statements voted on
         - identifier_type: 'user' or 'anonymous'
     """
+    # Only count votes on non-deleted statements (same as consensus analysis)
     if current_user.is_authenticated:
-        # Count votes by user_id
-        user_count = StatementVote.query.filter_by(
-            discussion_id=discussion_id,
-            user_id=current_user.id
-        ).count()
-        
-        # Also count any anonymous votes from same session (pre-login votes)
-        # This ensures the gate respects votes made before user logged in
-        fingerprint_count = 0
+        # Count distinct statements voted on (avoid double-count if user had both anon and user votes before merge)
+        user_stmt_ids = [
+            r[0] for r in StatementVote.query.filter_by(
+                discussion_id=discussion_id,
+                user_id=current_user.id
+            ).join(Statement, StatementVote.statement_id == Statement.id).filter(
+                Statement.is_deleted.is_(False)
+            ).with_entities(StatementVote.statement_id).distinct().all()
+        ]
+        user_set = set(user_stmt_ids)
         try:
             fingerprint = get_statement_vote_fingerprint()
             if fingerprint:
-                fingerprint_count = StatementVote.query.filter_by(
-                    discussion_id=discussion_id,
-                    session_fingerprint=fingerprint
-                ).filter(StatementVote.user_id.is_(None)).count()
+                anon_stmt_ids = [
+                    r[0] for r in StatementVote.query.filter_by(
+                        discussion_id=discussion_id,
+                        session_fingerprint=fingerprint
+                    ).filter(StatementVote.user_id.is_(None)).join(
+                        Statement, StatementVote.statement_id == Statement.id
+                    ).filter(Statement.is_deleted.is_(False)).with_entities(
+                        StatementVote.statement_id
+                    ).distinct().all()
+                ]
+                user_set = user_set | set(anon_stmt_ids)
         except Exception as e:
             logger.debug(f"Could not get fingerprint for auth user: {e}")
-        
-        return user_count + fingerprint_count, 'user'
+        return len(user_set), 'user'
     else:
         try:
             fingerprint = get_statement_vote_fingerprint()
             if fingerprint:
-                count = StatementVote.query.filter_by(
-                    discussion_id=discussion_id,
-                    session_fingerprint=fingerprint
-                ).count()
-                return count, 'anonymous'
+                anon_stmt_ids = [
+                    r[0] for r in StatementVote.query.filter_by(
+                        discussion_id=discussion_id,
+                        session_fingerprint=fingerprint
+                    ).join(Statement, StatementVote.statement_id == Statement.id).filter(
+                        Statement.is_deleted.is_(False)
+                    ).with_entities(StatementVote.statement_id).distinct().all()
+                ]
+                return len(anon_stmt_ids), 'anonymous'
         except Exception as e:
             logger.debug(f"Could not get fingerprint: {e}")
         return 0, 'anonymous'
