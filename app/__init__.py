@@ -157,11 +157,13 @@ def create_app():
 
     # When behind Cloudflare, use CF-Connecting-IP so rate limiting and logging see the real client IP.
     # Without this, request.remote_addr would be Cloudflare's IP and per-user limits would be wrong.
+    _original_wsgi_app = app.wsgi_app
+
     def _cloudflare_remote_addr(environ, start_response):
         cf_ip = environ.get("HTTP_CF_CONNECTING_IP")
         if cf_ip and cf_ip.strip():
             environ["REMOTE_ADDR"] = cf_ip.strip()
-        return app.wsgi_app(environ, start_response)
+        return _original_wsgi_app(environ, start_response)
 
     app.wsgi_app = _cloudflare_remote_addr
 
