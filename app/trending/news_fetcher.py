@@ -556,11 +556,20 @@ def seed_default_sources():
         },
         {
             'name': 'The Observer',
-            'feed_url': 'https://www.theguardian.com/theobserver/rss',
+            'feed_url': 'https://observer.co.uk/news/rss',
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United Kingdom',
-            'political_leaning': -2.0  # Left - UK Sunday paper, Guardian sibling
+            'political_leaning': -1.0,  # Lean Left - now owned by Tortoise Media (since Apr 2025)
+            'is_active': False  # Article feeds paywalled on observer.co.uk
+        },
+        {
+            'name': 'The Slow Newscast',
+            'feed_url': 'https://feeds.acast.com/public/shows/a8a5a759-8cb1-52ad-b50a-8e08dcee4d1f',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': -0.5  # Lean Left - Tortoise Media & Observer podcast
         },
         {
             'name': 'The Intercept',
@@ -1825,7 +1834,6 @@ def seed_default_sources():
             existing = NewsSource.query.filter_by(name=source_data['name']).first()
             
             if existing:
-                # Update existing source with new field values
                 fields_to_update = ['feed_url', 'source_type', 'reputation_score', 'country', 'political_leaning']
                 source_updated = False
                 
@@ -1834,16 +1842,20 @@ def seed_default_sources():
                         current_value = getattr(existing, field, None)
                         new_value = source_data[field]
                         
-                        # Update if field is None or different
                         if current_value is None or current_value != new_value:
                             setattr(existing, field, new_value)
                             source_updated = True
+                
+                if 'is_active' in source_data and source_data['is_active'] is False:
+                    if existing.is_active:
+                        existing.is_active = False
+                        source_updated = True
+                        logger.info(f"Deactivated source: {source_data['name']}")
                 
                 if source_updated:
                     updated += 1
                     logger.info(f"Updated source: {source_data['name']}")
             else:
-                # Add new source
                 source = NewsSource(**source_data)
                 db.session.add(source)
                 added += 1
