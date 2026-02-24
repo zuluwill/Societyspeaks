@@ -445,6 +445,12 @@ class NewsFetcher:
                 if not title:
                     continue  # Skip entries without titles
                 
+                is_google_news = 'news.google.com' in (source.feed_url or '')
+                if is_google_news:
+                    title = re.sub(r'\s*-\s*[^-]+$', '', title).strip()
+                    if cleaned_summary and cleaned_summary == title:
+                        cleaned_summary = None
+                
                 # Get URL with validation
                 url = entry.get('link', '')
                 if not url or not url.startswith(('http://', 'https://')):
@@ -556,12 +562,19 @@ def seed_default_sources():
         },
         {
             'name': 'The Observer',
-            'feed_url': 'https://observer.co.uk/news/rss',
+            'feed_url': 'https://news.google.com/rss/search?q=site:observer.co.uk&hl=en-GB&gl=GB&ceid=GB:en',
             'source_type': 'rss',
             'reputation_score': 0.85,
             'country': 'United Kingdom',
-            'political_leaning': -1.0,  # Lean Left - now owned by Tortoise Media (since Apr 2025)
-            'is_active': False  # Article feeds paywalled on observer.co.uk
+            'political_leaning': -1.0  # Lean Left - now owned by Tortoise Media (since Apr 2025), via Google News
+        },
+        {
+            'name': 'Tortoise Media',
+            'feed_url': 'https://news.google.com/rss/search?q=site:tortoisemedia.com&hl=en-GB&gl=GB&ceid=GB:en',
+            'source_type': 'rss',
+            'reputation_score': 0.85,
+            'country': 'United Kingdom',
+            'political_leaning': -0.5  # Lean Left - investigative journalism, via Google News
         },
         {
             'name': 'The Slow Newscast',
