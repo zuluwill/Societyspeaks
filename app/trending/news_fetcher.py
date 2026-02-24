@@ -22,6 +22,23 @@ from sqlalchemy.exc import IntegrityError
 logger = logging.getLogger(__name__)
 
 
+def _resolve_google_news_url(gnews_url: str) -> Optional[str]:
+    """
+    Resolve a Google News redirect URL to the actual article URL.
+    Returns the decoded URL or None if resolution fails.
+    """
+    try:
+        from googlenewsdecoder import gnewsdecoder
+        result = gnewsdecoder(gnews_url, interval=0.5)
+        if isinstance(result, dict) and result.get('status') and result.get('decoded_url'):
+            decoded = result['decoded_url']
+            logger.debug(f"Resolved Google News URL: {decoded}")
+            return decoded
+    except Exception as e:
+        logger.debug(f"Failed to resolve Google News URL: {e}")
+    return None
+
+
 # Pre-compiled HTML tag patterns for performance
 HTML_PATTERNS = [
     (re.compile(r'<br\s*/?>'), ' '),
@@ -455,6 +472,13 @@ class NewsFetcher:
                 url = entry.get('link', '')
                 if not url or not url.startswith(('http://', 'https://')):
                     continue  # Skip entries without valid URLs
+                
+                if is_google_news and 'news.google.com' in url:
+                    resolved = _resolve_google_news_url(url)
+                    if resolved:
+                        url = resolved
+                    else:
+                        logger.debug(f"Could not resolve Google News URL for '{title[:60]}', using redirect URL")
                 
                 article = NewsArticle(
                     source_id=source.id,
