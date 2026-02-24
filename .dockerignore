@@ -1,0 +1,17 @@
+.git
+.cache
+.pythonlibs
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.pytest_cache
+.ruff_cache
+node_modules
+.config
+.local
+attached_assets
+tests
+*.md
+.gitignore
+.dockerignore

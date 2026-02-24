@@ -60,7 +60,7 @@ PostgreSQL is the primary database, optimized with connection pooling, paginatio
 - **Node.js**: For frontend asset management.
 
 ### Audio Generation (TTS)
-- **Coqui XTTS v2**: Open-source text-to-speech for generating audio versions of brief items.
+- **Coqui XTTS v2**: Text-to-speech code exists in `app/brief/xtts_client.py` but the `tts` package is NOT installed (removed Feb 2025 to reduce deployment image size by ~15GB). The code gracefully degrades — audio generation is disabled when the package is absent. Re-add `tts = "^0.22.0"` to pyproject.toml if TTS is needed again, but note it requires PyTorch/CUDA and will significantly increase deployment size.
 - **Audio Storage**: Uses Replit Object Storage for persistence.
 
 ### Geographic Data
