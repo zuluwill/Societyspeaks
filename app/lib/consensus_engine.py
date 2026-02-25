@@ -26,6 +26,14 @@ from app.lib.time import utcnow_naive
 from typing import Dict, List, Tuple, Optional
 import logging
 
+from app.lib.sklearn_compat import (
+    SKLEARN_AVAILABLE,
+    AgglomerativeClustering,
+    KMeans,
+    PCA,
+    silhouette_score,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -281,30 +289,24 @@ def perform_pca(vote_matrix, n_components=2):
     - PCA should focus on high-variance (divisive) statements to find opinion groups
     - Cosine distance clustering doesn't require standardization anyway
     """
-    try:
-        from sklearn.decomposition import PCA
-
-        pca = PCA(n_components=n_components)
-        vote_matrix_pca = pca.fit_transform(vote_matrix)
-
-        logger.info(f"PCA explained variance: {pca.explained_variance_ratio_}")
-        logger.info(f"PCA components shape: {vote_matrix_pca.shape}")
-
-        return vote_matrix_pca, pca
-    except (OSError, ImportError) as e:
-        logger.error(f"sklearn PCA import failed ({e}), using numpy fallback")
+    if not SKLEARN_AVAILABLE:
         matrix = np.array(vote_matrix)
         transformed, explained_ratios = _numpy_pca(matrix, n_components)
 
-        # Return a lightweight object with the attribute the caller needs
         class _PCAResult:
             def __init__(self, ratios):
                 self.explained_variance_ratio_ = ratios
 
         logger.info(f"Numpy PCA explained variance: {explained_ratios}")
         logger.info(f"Numpy PCA components shape: {transformed.shape}")
-
         return transformed, _PCAResult(explained_ratios)
+
+    pca = PCA(n_components=n_components)
+    vote_matrix_pca = pca.fit_transform(vote_matrix)
+
+    logger.info(f"PCA explained variance: {pca.explained_variance_ratio_}")
+    logger.info(f"PCA components shape: {vote_matrix_pca.shape}")
+    return vote_matrix_pca, pca
 
 
 def _numpy_cosine_distance_matrix(data):
@@ -385,13 +387,7 @@ def cluster_users(vote_matrix_pca, n_clusters=None, method='agglomerative'):
     Pol.is uses agglomerative clustering with automatic k selection
     We'll use silhouette score to find optimal k
     """
-    try:
-        from sklearn.cluster import AgglomerativeClustering, KMeans
-        from sklearn.metrics import silhouette_score
-        _use_sklearn = True
-    except (OSError, ImportError) as e:
-        logger.error(f"sklearn clustering import failed ({e}), using numpy fallback")
-        _use_sklearn = False
+    _use_sklearn = SKLEARN_AVAILABLE
 
     if n_clusters is None:
         # Find optimal number of clusters (2 to min(10, n_users/2))

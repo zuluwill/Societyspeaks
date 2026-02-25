@@ -16,6 +16,11 @@ from collections import Counter
 
 from app import db
 from app.models import NewsArticle, TrendingTopic, TrendingTopicArticle, Discussion
+from app.lib.sklearn_compat import (
+    SKLEARN_AVAILABLE,
+    cosine_similarity,
+    AgglomerativeClustering,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +117,52 @@ def get_embeddings(texts: List[str], max_retries: int = 3) -> Optional[List[List
     return None
 
 
+def _numpy_cluster_articles(
+    articles: List[NewsArticle],
+    embeddings_array: "np.ndarray",
+    threshold: float,
+) -> List[List[NewsArticle]]:
+    """
+    Pure-numpy fallback for article clustering using Union-Find on cosine distance.
+    Used when scikit-learn is unavailable (see app.lib.sklearn_compat).
+    """
+    norms = np.linalg.norm(embeddings_array, axis=1, keepdims=True)
+    norms = np.where(norms == 0, 1, norms)
+    normed = embeddings_array / norms
+    distance_matrix = 1 - np.dot(normed, normed.T)
+
+    n = len(articles)
+    parent = list(range(n))
+
+    def find(x: int) -> int:
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    def union(a: int, b: int) -> None:
+        ra, rb = find(a), find(b)
+        if ra != rb:
+            parent[rb] = ra
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            if distance_matrix[i][j] < (1 - threshold):
+                union(i, j)
+
+    clusters_dict: Dict[int, List[NewsArticle]] = {}
+    for i in range(n):
+        root = find(i)
+        clusters_dict.setdefault(root, []).append(articles[i])
+
+    logger.info(
+        "Numpy fallback clustering: %d articles -> %d clusters",
+        n,
+        len(clusters_dict),
+    )
+    return list(clusters_dict.values())
+
+
 def cluster_articles(articles: List[NewsArticle], threshold: float = 0.7) -> List[List[NewsArticle]]:
     """
     Cluster articles by semantic similarity.
@@ -131,44 +182,9 @@ def cluster_articles(articles: List[NewsArticle], threshold: float = 0.7) -> Lis
     db.session.commit()
     
     embeddings_array = np.array(embeddings)
-    
-    try:
-        from sklearn.metrics.pairwise import cosine_similarity
-        from sklearn.cluster import AgglomerativeClustering
-    except (OSError, ImportError) as e:
-        logger.error(f"sklearn import failed ({e}), falling back to numpy clustering")
-        norms = np.linalg.norm(embeddings_array, axis=1, keepdims=True)
-        norms = np.where(norms == 0, 1, norms)
-        normed = embeddings_array / norms
-        sim_matrix = np.dot(normed, normed.T)
-        distance_matrix = 1 - sim_matrix
-        n = len(articles)
-        parent = list(range(n))
-        
-        def find(x):
-            while parent[x] != x:
-                parent[x] = parent[parent[x]]
-                x = parent[x]
-            return x
-        
-        def union(a, b):
-            ra, rb = find(a), find(b)
-            if ra != rb:
-                parent[rb] = ra
-        
-        for i in range(n):
-            for j in range(i + 1, n):
-                if distance_matrix[i][j] < (1 - threshold):
-                    union(i, j)
-        
-        clusters_dict = {}
-        for i in range(n):
-            root = find(i)
-            if root not in clusters_dict:
-                clusters_dict[root] = []
-            clusters_dict[root].append(articles[i])
-        logger.info(f"Numpy fallback clustering: {n} articles -> {len(clusters_dict)} clusters")
-        return list(clusters_dict.values())
+
+    if not SKLEARN_AVAILABLE:
+        return _numpy_cluster_articles(articles, embeddings_array, threshold)
 
     distance_matrix = 1 - cosine_similarity(embeddings_array)
     

@@ -415,12 +415,29 @@ def create_app():
             app.logger.error("Rate limiter initialized with memory fallback in production - not ideal for scaling")
 
     # Database check
-    
-    # Replace current database check with:
     if not try_connect_db(app):
         raise RuntimeError("Could not establish database connection")
-        
 
+    # scikit-learn / native-library startup health check.
+    # Runs once at boot so any sklearn unavailability surfaces immediately in
+    # the startup logs rather than silently on the first scheduler tick.
+    from app.lib.sklearn_compat import check_sklearn_health
+    _sklearn_health = check_sklearn_health()
+    if _sklearn_health["sklearn_available"]:
+        app.logger.info("Startup check: scikit-learn is available.")
+    else:
+        app.logger.warning(
+            "Startup check: scikit-learn is NOT available — clustering and PCA "
+            "will use numpy fallback implementations for this process lifetime."
+        )
+    if not _sklearn_health["native_libs_ok"]:
+        app.logger.warning(
+            "Startup check: one or more native shared libraries (libgomp, "
+            "libopenblas/libblas) could not be loaded. This is the likely cause "
+            "of any [Errno 5] Input/output error seen during sklearn import. "
+            "Verify that libgomp and libopenblas are present in the deployment "
+            "environment (e.g. via apt or nix packages)."
+        )
 
     # Security settings
     app.config.update(
