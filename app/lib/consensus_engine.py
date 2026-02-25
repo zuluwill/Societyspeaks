@@ -289,14 +289,13 @@ def perform_pca(vote_matrix, n_components=2):
     - PCA should focus on high-variance (divisive) statements to find opinion groups
     - Cosine distance clustering doesn't require standardization anyway
     """
+    class _PCAResult:
+        def __init__(self, ratios):
+            self.explained_variance_ratio_ = ratios
+
     if not SKLEARN_AVAILABLE:
         matrix = np.array(vote_matrix)
         transformed, explained_ratios = _numpy_pca(matrix, n_components)
-
-        class _PCAResult:
-            def __init__(self, ratios):
-                self.explained_variance_ratio_ = ratios
-
         logger.info(f"Numpy PCA explained variance: {explained_ratios}")
         logger.info(f"Numpy PCA components shape: {transformed.shape}")
         return transformed, _PCAResult(explained_ratios)
@@ -311,9 +310,6 @@ def perform_pca(vote_matrix, n_components=2):
         logger.error(f"sklearn PCA runtime failed ({e}), using numpy fallback")
         matrix = np.array(vote_matrix)
         transformed, explained_ratios = _numpy_pca(matrix, n_components)
-        class _PCAResult:
-            def __init__(self, ratios):
-                self.explained_variance_ratio_ = ratios
         logger.info(f"Numpy PCA explained variance: {explained_ratios}")
         logger.info(f"Numpy PCA components shape: {transformed.shape}")
         return transformed, _PCAResult(explained_ratios)
