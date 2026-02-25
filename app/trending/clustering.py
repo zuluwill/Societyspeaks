@@ -186,24 +186,28 @@ def cluster_articles(articles: List[NewsArticle], threshold: float = 0.7) -> Lis
     if not SKLEARN_AVAILABLE:
         return _numpy_cluster_articles(articles, embeddings_array, threshold)
 
-    distance_matrix = 1 - cosine_similarity(embeddings_array)
-    
-    clustering = AgglomerativeClustering(
-        n_clusters=None,
-        distance_threshold=1 - threshold,
-        metric='precomputed',
-        linkage='average'
-    )
-    
-    labels = clustering.fit_predict(distance_matrix)
-    
-    clusters = {}
-    for i, label in enumerate(labels):
-        if label not in clusters:
-            clusters[label] = []
-        clusters[label].append(articles[i])
-    
-    return list(clusters.values())
+    try:
+        distance_matrix = 1 - cosine_similarity(embeddings_array)
+        clustering = AgglomerativeClustering(
+            n_clusters=None,
+            distance_threshold=1 - threshold,
+            metric='precomputed',
+            linkage='average'
+        )
+        labels = clustering.fit_predict(distance_matrix)
+        clusters = {}
+        for i, label in enumerate(labels):
+            if label not in clusters:
+                clusters[label] = []
+            clusters[label].append(articles[i])
+        return list(clusters.values())
+    except (OSError, ImportError) as e:
+        logger.warning(
+            "sklearn clustering runtime failed (%s), using numpy fallback: %s",
+            type(e).__name__,
+            e,
+        )
+        return _numpy_cluster_articles(articles, embeddings_array, threshold)
 
 
 def find_duplicate_topic(topic_embedding: List[float], days: int = 30) -> Optional[TrendingTopic]:

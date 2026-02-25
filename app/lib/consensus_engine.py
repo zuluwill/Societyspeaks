@@ -301,12 +301,22 @@ def perform_pca(vote_matrix, n_components=2):
         logger.info(f"Numpy PCA components shape: {transformed.shape}")
         return transformed, _PCAResult(explained_ratios)
 
-    pca = PCA(n_components=n_components)
-    vote_matrix_pca = pca.fit_transform(vote_matrix)
-
-    logger.info(f"PCA explained variance: {pca.explained_variance_ratio_}")
-    logger.info(f"PCA components shape: {vote_matrix_pca.shape}")
-    return vote_matrix_pca, pca
+    try:
+        pca = PCA(n_components=n_components)
+        vote_matrix_pca = pca.fit_transform(vote_matrix)
+        logger.info(f"PCA explained variance: {pca.explained_variance_ratio_}")
+        logger.info(f"PCA components shape: {vote_matrix_pca.shape}")
+        return vote_matrix_pca, pca
+    except (OSError, ImportError) as e:
+        logger.error(f"sklearn PCA runtime failed ({e}), using numpy fallback")
+        matrix = np.array(vote_matrix)
+        transformed, explained_ratios = _numpy_pca(matrix, n_components)
+        class _PCAResult:
+            def __init__(self, ratios):
+                self.explained_variance_ratio_ = ratios
+        logger.info(f"Numpy PCA explained variance: {explained_ratios}")
+        logger.info(f"Numpy PCA components shape: {transformed.shape}")
+        return transformed, _PCAResult(explained_ratios)
 
 
 def _numpy_cosine_distance_matrix(data):
