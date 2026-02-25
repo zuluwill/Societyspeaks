@@ -29,6 +29,9 @@ The application uses gunicorn with multiple workers for Replit VM deployments. W
 ### System Design Choices
 PostgreSQL is the primary database, optimized with connection pooling, pagination, eager loading, and indexing. Redis caching enhances performance. Logging is centralized, and configuration uses `config.py` with environment variables. A `SparsityAwareScaler` is used in consensus clustering. A "Participation Gate" requires users to vote before viewing consensus analysis. Briefing templates are available via a marketplace. Briefing output includes structured HTML, email analytics, and Slack integration.
 
+### scikit-learn Integration
+All scikit-learn imports are centralised in `app/lib/sklearn_compat.py`. This module attempts a single module-level import of sklearn (and each required symbol) at process start, sets a `SKLEARN_AVAILABLE` boolean flag, and verifies native shared library dependencies (`libgomp`, `libopenblas`) via `ctypes`. Consumers (`app/trending/clustering.py`, `app/lib/consensus_engine.py`) import `SKLEARN_AVAILABLE` and the sklearn symbols from this module and branch on the flag — they never attempt lazy imports inside function bodies. A `check_sklearn_health()` function is called once from `create_app()` to surface any unavailability immediately at startup rather than silently on the first scheduler tick. The `openblas` system package is declared in `replit.nix` to ensure `libopenblas.so` is present in the deployment container, which prevents `[Errno 5] Input/output error` failures in sklearn's compiled C extensions.
+
 ## External Dependencies
 
 ### Core Services

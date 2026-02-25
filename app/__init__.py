@@ -112,8 +112,6 @@ def create_app():
                     return None
                 if drop_if(exc_msg, "multiple head revisions"):
                     return None
-                if exc_type is OSError and drop_if(exc_msg, "errno 5", "input/output error"):
-                    return None
                 if "PendingRollbackError" in (getattr(exc_type, "__name__", "") or ""):
                     return None
             # Event may have exception in payload (e.g. from logging integration)
@@ -123,8 +121,6 @@ def create_app():
                 if typ == "RuntimeError" and drop_if(val, "cannot schedule new futures after shutdown"):
                     return None
                 if drop_if(val, "multiple head revisions"):
-                    return None
-                if typ == "OSError" and drop_if(val, "errno 5", "input/output error"):
                     return None
                 if "PendingRollbackError" in typ:
                     return None
