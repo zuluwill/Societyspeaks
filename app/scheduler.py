@@ -1609,6 +1609,27 @@ def init_scheduler(app):
                     r.delete(claim_key)
                     logger.info(f"Emergency brief generated: {brief.title} ({brief.item_count} items)")
                     
+            except RuntimeError as e:
+                if "Claim invalidated" in str(e):
+                    logger.warning(
+                        "Emergency brief worker aborted: claim was taken over by another worker. "
+                        "This is expected during restarts or when multiple schedulers are running."
+                    )
+                    return
+                logger.error(f"Emergency brief generation failed: {e}", exc_info=True)
+                try:
+                    r.set(status_key, 'failed', ex=FINAL_STATUS_TTL_SECONDS)
+                    r.set(step_key, f'Failed: {str(e)[:200]}', ex=FINAL_STATUS_TTL_SECONDS)
+                    r.set(error_key, str(e)[:500], ex=FINAL_STATUS_TTL_SECONDS)
+                    r.delete(queued_at_key)
+                    r.delete(queue_alerted_key)
+                    r.delete(heartbeat_key)
+                    r.delete(claim_key)
+                except Exception:
+                    pass
+                _send_ops_alert(
+                    f"CRITICAL: Emergency brief generation worker failed with an unhandled RuntimeError: {e}"
+                )
             except Exception as e:
                 logger.error(f"Emergency brief generation failed: {e}", exc_info=True)
                 try:
@@ -1622,8 +1643,7 @@ def init_scheduler(app):
                 except Exception:
                     pass
                 _send_ops_alert(
-                    "CRITICAL: Emergency brief generation worker failed with an unhandled exception. "
-                    "See scheduler logs for traceback."
+                    f"CRITICAL: Emergency brief generation worker failed — {type(e).__name__}: {str(e)[:300]}"
                 )
 
     @scheduler.scheduled_job('cron', day_of_week='sat', hour=17, minute=0, id='generate_weekly_brief')
