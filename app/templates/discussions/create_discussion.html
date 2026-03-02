@@ -284,8 +284,17 @@
 
             <!-- Programme Section -->
             <div class="border-t border-gray-200 pt-6">
-              <h3 class="text-lg font-semibold text-gray-900 mb-3">Programme (Optional)</h3>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-1">Programme <span class="text-sm font-normal text-gray-500">(Optional)</span></h3>
+              <p class="text-sm text-gray-500 mb-4">
+                A <strong>Programme</strong> is a structured dialogue — for example, a national consultation, a research project, or a multi-discussion public engagement campaign. Linking this discussion to a Programme lets organisers export a combined analysis across all discussions in the programme, and group discussions by theme or phase.
+                {% if not programme_meta %}
+                <span class="block mt-2">You don't have any programmes yet.
+                  <a href="{{ url_for('programmes.create_programme') }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-medium">Create a programme →</a>
+                  (opens in a new tab — come back here to continue.)
+                </span>
+                {% endif %}
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   {{ form.programme_id.label(class="block text-sm font-medium text-gray-700") }}
                   {{ form.programme_id(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
@@ -293,16 +302,18 @@
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                   {% endfor %}{% endif %}
                 </div>
-                <div>
+                <div id="programme_theme_wrapper">
                   {{ form.programme_theme.label(class="block text-sm font-medium text-gray-700") }}
-                  {{ form.programme_theme(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                  {{ form.programme_theme(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50") }}
+                  <p class="mt-1 text-xs text-gray-400" id="theme_hint">Select a programme first</p>
                   {% if form.programme_theme.errors %}{% for error in form.programme_theme.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                   {% endfor %}{% endif %}
                 </div>
-                <div>
+                <div id="programme_phase_wrapper">
                   {{ form.programme_phase.label(class="block text-sm font-medium text-gray-700") }}
-                  {{ form.programme_phase(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                  {{ form.programme_phase(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50") }}
+                  <p class="mt-1 text-xs text-gray-400" id="phase_hint">Select a programme first</p>
                   {% if form.programme_phase.errors %}{% for error in form.programme_phase.errors %}
                   <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                   {% endfor %}{% endif %}
@@ -553,12 +564,14 @@
     const programmeSelect = document.getElementById("programme_id");
     const themeSelect = document.getElementById("programme_theme");
     const phaseSelect = document.getElementById("programme_phase");
+    const themeHint = document.getElementById("theme_hint");
+    const phaseHint = document.getElementById("phase_hint");
     if (!programmeSelect || !themeSelect || !phaseSelect) return;
 
     const selectedId = Number(programmeSelect.value || 0);
     const programme = programmeMeta.find((item) => Number(item.id) === selectedId);
 
-    const setOptions = (selectEl, values, defaultLabel) => {
+    const setOptions = (selectEl, values, defaultLabel, desiredValue) => {
       selectEl.innerHTML = "";
       const defaultOption = document.createElement("option");
       defaultOption.value = "";
@@ -570,11 +583,42 @@
         option.textContent = value;
         selectEl.appendChild(option);
       });
+      if (desiredValue && (values || []).includes(desiredValue)) {
+        selectEl.value = desiredValue;
+      }
       selectEl.disabled = !programme;
+      selectEl.classList.toggle("bg-gray-50", !programme);
+      selectEl.classList.toggle("opacity-60", !programme);
     };
 
-    setOptions(themeSelect, programme ? programme.themes : [], "No theme");
-    setOptions(phaseSelect, programme ? programme.phases : [], "No phase");
+    const currentThemeValue = themeSelect.value;
+    const currentPhaseValue = phaseSelect.value;
+    setOptions(themeSelect, programme ? programme.themes : [], "No theme", currentThemeValue);
+    setOptions(phaseSelect, programme ? programme.phases : [], "No phase", currentPhaseValue);
+
+    // Update hint text
+    if (themeHint) {
+      if (!programme) {
+        themeHint.textContent = "Select a programme first";
+        themeHint.classList.remove("hidden");
+      } else if (!programme.themes || programme.themes.length === 0) {
+        themeHint.textContent = "This programme has no themes defined";
+        themeHint.classList.remove("hidden");
+      } else {
+        themeHint.classList.add("hidden");
+      }
+    }
+    if (phaseHint) {
+      if (!programme) {
+        phaseHint.textContent = "Select a programme first";
+        phaseHint.classList.remove("hidden");
+      } else if (!programme.phases || programme.phases.length === 0) {
+        phaseHint.textContent = "This programme has no phases defined";
+        phaseHint.classList.remove("hidden");
+      } else {
+        phaseHint.classList.add("hidden");
+      }
+    }
   }
 
   function handleScopeChange() {

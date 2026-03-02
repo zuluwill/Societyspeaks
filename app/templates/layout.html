@@ -535,6 +535,12 @@
                   >Discussions</a
                 >
                 <a
+                  href="{{ url_for('programmes.list_programmes') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Programmes</a
+                >
+                <a
                   href="{{ url_for('sources.index') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
@@ -815,6 +821,11 @@
                 href="/discussions/search"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
                 >Discussions</a
+              >
+              <a
+                href="{{ url_for('programmes.list_programmes') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                >Programmes</a
               >
               <a
                 href="{{ url_for('sources.index') }}"

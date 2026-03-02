@@ -3,57 +3,93 @@
 
   <div>
     {{ form.name.label(class="block text-sm font-medium text-gray-700") }}
-    {{ form.name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+    {{ form.name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", placeholder="e.g. National Citizens' Dialogue on Climate") }}
+    {% if form.name.errors %}{% for error in form.name.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
   </div>
 
   <div>
     {{ form.description.label(class="block text-sm font-medium text-gray-700") }}
-    {{ form.description(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", rows="4") }}
+    <p class="text-xs text-gray-500 mb-1">A short summary shown on the programme page. Helps participants and organisers understand the purpose.</p>
+    {{ form.description(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", rows="4", placeholder="Describe the purpose and goals of this programme.") }}
+    {% if form.description.errors %}{% for error in form.description.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
       {{ form.geographic_scope.label(class="block text-sm font-medium text-gray-700") }}
+      <p class="text-xs text-gray-500 mb-1">Used for discovery and filtering.</p>
       {{ form.geographic_scope(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+      {% if form.geographic_scope.errors %}{% for error in form.geographic_scope.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
     <div>
       {{ form.country.label(class="block text-sm font-medium text-gray-700") }}
       {{ form.country(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+      {% if form.country.errors %}{% for error in form.country.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>
       {{ form.owner_type.label(class="block text-sm font-medium text-gray-700") }}
-      {{ form.owner_type(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+      <p class="text-xs text-gray-500 mb-1">Who owns this programme — your personal account or an organisation.</p>
+      {{ form.owner_type(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", id="owner_type_select") }}
+      {% if form.owner_type.errors %}{% for error in form.owner_type.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
-    <div>
+    <div id="company_profile_wrapper">
       {{ form.company_profile_id.label(class="block text-sm font-medium text-gray-700") }}
       {{ form.company_profile_id(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+      {% if form.company_profile_id.errors %}{% for error in form.company_profile_id.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
   </div>
 
   <div>
     {{ form.logo_url.label(class="block text-sm font-medium text-gray-700") }}
-    {{ form.logo_url(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+    <p class="text-xs text-gray-500 mb-1">Optional. A public URL for the programme logo or banner image.</p>
+    {{ form.logo_url(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", placeholder="https://example.com/logo.png") }}
+    {% if form.logo_url.errors %}{% for error in form.logo_url.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
   </div>
 
   <div>
     {{ form.themes_csv.label(class="block text-sm font-medium text-gray-700") }}
-    {{ form.themes_csv(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", rows="3") }}
+    <p class="text-xs text-gray-500 mb-1">Themes let you group discussions by topic within this programme. Enter as a comma-separated list.<br>Example: <code>Health, Prosperity, Security, Environment</code></p>
+    {{ form.themes_csv(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", rows="2", placeholder="Health, Prosperity, Security, Environment") }}
+    {% if form.themes_csv.errors %}{% for error in form.themes_csv.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
   </div>
 
   <div>
     {{ form.phases_csv.label(class="block text-sm font-medium text-gray-700") }}
-    {{ form.phases_csv(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", rows="3") }}
+    <p class="text-xs text-gray-500 mb-1">Optional. Phases represent stages of the programme over time.<br>Example: <code>Agenda-setting, Wave 1, Wave 2</code></p>
+    {{ form.phases_csv(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", rows="2", placeholder="Agenda-setting, Wave 1, Wave 2") }}
+    {% if form.phases_csv.errors %}{% for error in form.phases_csv.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
   </div>
 
   <div>
     {{ form.cohorts_text.label(class="block text-sm font-medium text-gray-700") }}
-    {{ form.cohorts_text(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", rows="4") }}
+    <p class="text-xs text-gray-500 mb-1">Optional. Cohorts let you track different participant groups (e.g. online vs. in-person). Enter one per line as <code>slug|Label</code>.<br>Example:<br><code>open|Open online</code><br><code>pilot-informed|Pilot (informed)</code></p>
+    {{ form.cohorts_text(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 font-mono text-sm", rows="4", placeholder="open|Open online&#10;pilot-informed|Pilot (informed)") }}
+    {% if form.cohorts_text.errors %}{% for error in form.cohorts_text.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
   </div>
 
   <div>
-    {{ form.submit(class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700") }}
+    {{ form.submit(class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium") }}
   </div>
 </form>
+
+<script>
+  (function () {
+    const ownerSelect = document.getElementById("owner_type_select");
+    const companyWrapper = document.getElementById("company_profile_wrapper");
+    if (!ownerSelect || !companyWrapper) return;
+
+    function toggleCompany() {
+      if (ownerSelect.value === "company") {
+        companyWrapper.style.display = "";
+      } else {
+        companyWrapper.style.display = "none";
+      }
+    }
+
+    ownerSelect.addEventListener("change", toggleCompany);
+    toggleCompany(); // run on load
+  })();
+</script>

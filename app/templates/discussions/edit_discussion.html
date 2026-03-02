@@ -1,0 +1,337 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<!-- Include Choices.js CSS and JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
+<div class="max-w-4xl mx-auto py-8 px-4">
+  <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
+     class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 mb-4">
+    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+    </svg>
+    Back to discussion
+  </a>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="mb-4 space-y-2">
+    {% for category, message in messages %}
+    <div class="px-4 py-3 rounded-md text-sm
+      {% if category == 'error' %}bg-red-50 text-red-700 border border-red-200
+      {% elif category == 'success' %}bg-green-50 text-green-700 border border-green-200
+      {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <h1 class="text-2xl font-bold text-gray-900 mb-1">Edit discussion</h1>
+    <p class="text-sm text-gray-500 mb-6">{{ discussion.title }}</p>
+
+    <form method="POST" action="{{ url_for('discussions.edit_discussion', discussion_id=discussion.id) }}" class="space-y-6">
+      {{ form.csrf_token }}
+      {% if not discussion.has_native_statements %}
+      {{ form.embed_code() }}
+      {% endif %}
+
+      <!-- Details Section -->
+      <div class="space-y-4">
+        <div>
+          {{ form.title.label(class="block text-sm font-medium text-gray-700") }}
+          {{ form.title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="Enter a descriptive title for your discussion") }}
+          {% if form.title.errors %}{% for error in form.title.errors %}
+          <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+          {% endfor %}{% endif %}
+        </div>
+
+        <div>
+          {{ form.description.label(class="block text-sm font-medium text-gray-700") }}
+          {{ form.description(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="4", placeholder="Provide context about what you want to discuss") }}
+          {% if form.description.errors %}{% for error in form.description.errors %}
+          <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+          {% endfor %}{% endif %}
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            {{ form.topic.label(class="block text-sm font-medium text-gray-700") }}
+            {{ form.topic(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+            {% if form.topic.errors %}{% for error in form.topic.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}{% endif %}
+          </div>
+          <div>
+            {{ form.keywords.label(class="block text-sm font-medium text-gray-700") }}
+            {{ form.keywords(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="e.g. climate, energy, policy") }}
+            {% if form.keywords.errors %}{% for error in form.keywords.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}{% endif %}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            {{ form.geographic_scope.label(class="block text-sm font-medium text-gray-700") }}
+            {{ form.geographic_scope(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm", onchange="handleScopeChange()") }}
+            {% if form.geographic_scope.errors %}{% for error in form.geographic_scope.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}{% endif %}
+          </div>
+          <div id="country_wrapper">
+            {{ form.country.label(class="block text-sm font-medium text-gray-700") }}
+            {{ form.country(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm", onchange="fetchCities()") }}
+            {% if form.country.errors %}{% for error in form.country.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}{% endif %}
+          </div>
+        </div>
+
+        <div id="city_wrapper">
+          {{ form.city.label(class="block text-sm font-medium text-gray-700") }}
+          {% set selected_city = (form.city.data or discussion.city or '') %}
+          <select id="city" name="city"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            {% if selected_city %}
+            <option value="{{ selected_city }}" selected>{{ selected_city }}</option>
+            {% else %}
+            <option value="">Select a city</option>
+            {% endif %}
+          </select>
+          {% if form.city.errors %}{% for error in form.city.errors %}
+          <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+          {% endfor %}{% endif %}
+        </div>
+      </div>
+
+      <!-- Programme Section -->
+      <div class="border-t border-gray-200 pt-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">Programme <span class="text-sm font-normal text-gray-500">(Optional)</span></h3>
+        <p class="text-sm text-gray-500 mb-4">
+          Link this discussion to a Programme to group it with related discussions for combined analysis and reporting.
+          {% if not programme_meta %}
+          <span class="block mt-2">You don't have any active programmes.
+            <a href="{{ url_for('programmes.create_programme') }}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline font-medium">Create a programme →</a>
+            (opens in a new tab)
+          </span>
+          {% endif %}
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            {{ form.programme_id.label(class="block text-sm font-medium text-gray-700") }}
+            {{ form.programme_id(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+            {% if form.programme_id.errors %}{% for error in form.programme_id.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}{% endif %}
+          </div>
+          <div>
+            {{ form.programme_theme.label(class="block text-sm font-medium text-gray-700") }}
+            {{ form.programme_theme(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50") }}
+            <p class="mt-1 text-xs text-gray-400" id="theme_hint">{% if not discussion.programme %}Select a programme first{% endif %}</p>
+            {% if form.programme_theme.errors %}{% for error in form.programme_theme.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}{% endif %}
+          </div>
+          <div>
+            {{ form.programme_phase.label(class="block text-sm font-medium text-gray-700") }}
+            {{ form.programme_phase(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-gray-50") }}
+            <p class="mt-1 text-xs text-gray-400" id="phase_hint">{% if not discussion.programme %}Select a programme first{% endif %}</p>
+            {% if form.programme_phase.errors %}{% for error in form.programme_phase.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Information Before Participation Section -->
+      <div class="border-t border-gray-200 pt-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-1">Information Before Participation <span class="text-sm font-normal text-gray-500">(Optional)</span></h3>
+        <p class="text-sm text-gray-500 mb-4">
+          Context shown to participants before they start voting. Supports Markdown in the body.
+        </p>
+        <div class="space-y-4">
+          <div>
+            {{ form.information_title.label(class="block text-sm font-medium text-gray-700") }}
+            {{ form.information_title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="Why this discussion matters") }}
+            {% if form.information_title.errors %}{% for error in form.information_title.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}{% endif %}
+          </div>
+          <div>
+            {{ form.information_body.label(class="block text-sm font-medium text-gray-700") }}
+            {{ form.information_body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="6", placeholder="Use Markdown. Example: **Important** context and [source](https://example.com)") }}
+            {% if form.information_body.errors %}{% for error in form.information_body.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}{% endif %}
+          </div>
+          <div>
+            {{ form.information_links.label(class="block text-sm font-medium text-gray-700") }}
+            {{ form.information_links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="4", placeholder="Watch explainer|https://example.com/video") }}
+            <p class="mt-1 text-xs text-gray-500">One per line in format <code>Label|https://url</code>. Only http/https links are kept.</p>
+            {% if form.information_links.errors %}{% for error in form.information_links.errors %}
+            <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+            {% endfor %}{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
+           class="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
+          Cancel
+        </a>
+        {{ form.submit(class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700") }}
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const programmeMeta = {{ programme_meta|default([])|tojson }};
+  let cityChoices;
+
+  document.addEventListener("DOMContentLoaded", function () {
+    const citySelectEl = document.getElementById("city");
+    cityChoices = new Choices(citySelectEl, {
+      searchEnabled: true,
+      itemSelectText: "",
+      placeholder: true,
+      placeholderValue: "Select a city",
+      searchPlaceholderValue: "Type to search cities",
+      removeItemButton: true,
+    });
+
+    document.getElementById("programme_id")?.addEventListener("change", syncProgrammeSelectors);
+    document.querySelector('[name="geographic_scope"]').addEventListener("change", handleScopeChange);
+    document.querySelector('[name="country"]').addEventListener("change", fetchCities);
+
+    handleScopeChange();
+    syncProgrammeSelectors();
+
+    // Pre-populate city if set
+    const existingCity = {{ (form.city.data or discussion.city or '')|tojson }};
+    if (existingCity) {
+      const countryCode = document.querySelector('[name="country"]').value;
+      if (countryCode) {
+        fetch(`/discussions/api/cities/${countryCode}`)
+          .then(r => r.json())
+          .then(cities => {
+            if (Array.isArray(cities) && cities.length > 0) {
+              cities.sort((a, b) => a.localeCompare(b));
+              const options = cities.map(c => ({ value: c, label: c, selected: c === existingCity }));
+              cityChoices.setChoices(options, "value", "label", true);
+              cityChoices.setChoiceByValue(existingCity);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  });
+
+  function syncProgrammeSelectors() {
+    const programmeSelect = document.getElementById("programme_id");
+    const themeSelect = document.getElementById("programme_theme");
+    const phaseSelect = document.getElementById("programme_phase");
+    const themeHint = document.getElementById("theme_hint");
+    const phaseHint = document.getElementById("phase_hint");
+    if (!programmeSelect || !themeSelect || !phaseSelect) return;
+
+    const selectedId = Number(programmeSelect.value || 0);
+    const programme = programmeMeta.find((item) => Number(item.id) === selectedId);
+
+    const setOptions = (selectEl, values, defaultLabel, desiredValue) => {
+      selectEl.innerHTML = "";
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = defaultLabel;
+      selectEl.appendChild(defaultOption);
+      (values || []).forEach((value) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        selectEl.appendChild(option);
+      });
+      if (desiredValue && (values || []).includes(desiredValue)) {
+        selectEl.value = desiredValue;
+      }
+      selectEl.disabled = !programme;
+      selectEl.classList.toggle("bg-gray-50", !programme);
+      selectEl.classList.toggle("opacity-60", !programme);
+    };
+
+    const currentThemeValue = themeSelect.value;
+    const currentPhaseValue = phaseSelect.value;
+    setOptions(themeSelect, programme ? programme.themes : [], "No theme", currentThemeValue);
+    setOptions(phaseSelect, programme ? programme.phases : [], "No phase", currentPhaseValue);
+
+    if (themeHint) {
+      if (!programme) {
+        themeHint.textContent = "Select a programme first";
+        themeHint.classList.remove("hidden");
+      } else if (!programme.themes || programme.themes.length === 0) {
+        themeHint.textContent = "This programme has no themes defined";
+        themeHint.classList.remove("hidden");
+      } else {
+        themeHint.classList.add("hidden");
+      }
+    }
+    if (phaseHint) {
+      if (!programme) {
+        phaseHint.textContent = "Select a programme first";
+        phaseHint.classList.remove("hidden");
+      } else if (!programme.phases || programme.phases.length === 0) {
+        phaseHint.textContent = "This programme has no phases defined";
+        phaseHint.classList.remove("hidden");
+      } else {
+        phaseHint.classList.add("hidden");
+      }
+    }
+  }
+
+  function handleScopeChange() {
+    const scope = document.querySelector('[name="geographic_scope"]').value;
+    const countryWrapper = document.getElementById("country_wrapper");
+    const cityWrapper = document.getElementById("city_wrapper");
+    if (scope === "global") {
+      countryWrapper.classList.add("hidden");
+      cityWrapper.classList.add("hidden");
+      document.querySelector('[name="country"]').value = "";
+      if (cityChoices) cityChoices.clearStore();
+    } else if (scope === "country") {
+      countryWrapper.classList.remove("hidden");
+      cityWrapper.classList.add("hidden");
+      if (cityChoices) cityChoices.clearStore();
+    } else {
+      countryWrapper.classList.remove("hidden");
+      cityWrapper.classList.remove("hidden");
+    }
+  }
+
+  function fetchCities() {
+    const countryCode = document.querySelector('[name="country"]').value;
+    if (cityChoices) {
+      cityChoices.clearStore();
+      cityChoices.setChoices(
+        [{ value: "", label: "Select a city", selected: true, disabled: true }],
+        "value", "label", false
+      );
+    }
+    if (countryCode) {
+      fetch(`/discussions/api/cities/${countryCode}`)
+        .then(r => r.json())
+        .then(cities => {
+          if (Array.isArray(cities) && cities.length > 0) {
+            cities.sort((a, b) => a.localeCompare(b));
+            cityChoices.setChoices(cities.map(c => ({ value: c, label: c })), "value", "label", true);
+          }
+        })
+        .catch(() => {});
+    }
+  }
+</script>
+
+{% endblock %}

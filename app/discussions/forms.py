@@ -201,6 +201,21 @@ country_choices = [
 ]
 
 
+TOPICS = [
+    ('Healthcare', 'Healthcare'),
+    ('Environment', 'Environment'),
+    ('Education', 'Education'),
+    ('Technology', 'Technology'),
+    ('Economy', 'Economy'),
+    ('Politics', 'Politics'),
+    ('Society', 'Society'),
+    ('Infrastructure', 'Infrastructure'),
+    ('Geopolitics', 'Geopolitics'),
+    ('Business', 'Business'),
+    ('Culture', 'Culture'),
+]
+
+
 class CreateDiscussionForm(FlaskForm):
     title = StringField('Discussion Title', validators=[
         DataRequired(),
@@ -210,19 +225,7 @@ class CreateDiscussionForm(FlaskForm):
         DataRequired(),
         Length(min=30, max=1000, message="Description must be between 30 and 1000 characters")
     ])
-    topic = SelectField('Topic', choices=[
-        ('Healthcare', 'Healthcare'),
-        ('Environment', 'Environment'),
-        ('Education', 'Education'),
-        ('Technology', 'Technology'),
-        ('Economy', 'Economy'),
-        ('Politics', 'Politics'),
-        ('Society', 'Society'),
-        ('Infrastructure', 'Infrastructure'),
-        ('Geopolitics', 'Geopolitics'),
-        ('Business', 'Business'),
-        ('Culture', 'Culture')
-    ], validators=[DataRequired()])
+    topic = SelectField('Topic', choices=TOPICS, validators=[DataRequired()])
 
     # Phase 1: Native Statement System
     use_native_statements = BooleanField(
@@ -269,6 +272,56 @@ class CreateDiscussionForm(FlaskForm):
             return False
 
         # Existing geographic validation
+        if self.geographic_scope.data == 'country' and not self.country.data:
+            self.country.errors.append('Country is required for country-specific discussions')
+            return False
+
+        if self.geographic_scope.data == 'city' and not all([self.city.data, self.country.data]):
+            if not self.city.data:
+                self.city.errors.append('City is required for city-specific discussions')
+            if not self.country.data:
+                self.country.errors.append('Country is required for city-specific discussions')
+            return False
+
+        return True
+class EditDiscussionForm(FlaskForm):
+    title = StringField('Discussion Title', validators=[
+        DataRequired(),
+        Length(min=10, max=200, message="Title must be between 10 and 200 characters")
+    ])
+    description = TextAreaField('Description', validators=[
+        DataRequired(),
+        Length(min=30, max=1000, message="Description must be between 30 and 1000 characters")
+    ])
+    topic = SelectField('Topic', choices=TOPICS, validators=[DataRequired()])
+    keywords = StringField('Keywords', validators=[Optional(), Length(max=200)])
+    geographic_scope = SelectField('Geographic Scope', choices=[
+        ('global', 'Global'),
+        ('country', 'Country'),
+        ('city', 'City')
+    ], validators=[DataRequired()])
+    country = SelectField('Country', validators=[Optional()], choices=country_choices)
+    city = StringField('City', validators=[Optional()])
+    embed_code = HiddenField('Embed Code', validators=[Optional()])
+    programme_id = SelectField('Programme', coerce=int, validators=[Optional()], choices=[(0, 'No programme')])
+    programme_theme = SelectField('Programme Theme', validators=[Optional()], choices=[('', 'No theme')])
+    programme_phase = SelectField('Programme Phase', validators=[Optional()], choices=[('', 'No phase')])
+    information_title = StringField('Information Step Title', validators=[Optional(), Length(max=200)])
+    information_body = TextAreaField(
+        'Information Step (Markdown)',
+        validators=[Optional(), Length(max=10000)],
+        description='Markdown only. Raw HTML is not supported.'
+    )
+    information_links = TextAreaField(
+        'Information Links (one per line: Label|https://url)',
+        validators=[Optional(), Length(max=4000)]
+    )
+    submit = SubmitField('Save changes')
+
+    def validate(self, **kwargs):
+        if not super().validate(**kwargs):
+            return False
+
         if self.geographic_scope.data == 'country' and not self.country.data:
             self.country.errors.append('Country is required for country-specific discussions')
             return False

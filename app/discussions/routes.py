@@ -1,7 +1,7 @@
 from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db, limiter, talisman
-from app.discussions.forms import CreateDiscussionForm
+from app.discussions.forms import CreateDiscussionForm, EditDiscussionForm
 from app.models import Discussion, DiscussionParticipant, Programme, TrendingTopic, DiscussionSourceArticle, NewsArticle, NewsSource
 from app.storage_utils import get_recent_activity
 from app.middleware import track_discussion_view 
@@ -155,16 +155,29 @@ def create_discussion():
     ]
 
     selected_programme = None
-    selected_programme_id = form.programme_id.data or request.form.get('programme_id', type=int)
+    selected_programme_id = (
+        form.programme_id.data
+        or request.form.get('programme_id', type=int)
+        or request.args.get('programme_id', type=int)
+    )
     if selected_programme_id:
         selected_programme = next((p for p in editable_programmes if p.id == selected_programme_id), None)
         if selected_programme:
+            if request.method == 'GET':
+                form.programme_id.data = selected_programme.id
             form.programme_theme.choices = [('', 'No theme')] + [
                 (theme, theme) for theme in (selected_programme.themes or [])
             ]
             form.programme_phase.choices = [('', 'No phase')] + [
                 (phase, phase) for phase in (selected_programme.phases or [])
             ]
+            if request.method == 'GET':
+                preselected_theme = (request.args.get('programme_theme') or '').strip()
+                preselected_phase = (request.args.get('programme_phase') or '').strip()
+                if preselected_theme and preselected_theme in (selected_programme.themes or []):
+                    form.programme_theme.data = preselected_theme
+                if preselected_phase and preselected_phase in (selected_programme.phases or []):
+                    form.programme_phase.data = preselected_phase
         else:
             form.programme_theme.choices = [('', 'No theme')]
             form.programme_phase.choices = [('', 'No phase')]
@@ -267,6 +280,200 @@ def create_discussion():
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
     return render_template('discussions/create_discussion.html', form=form, programme_meta=programme_meta)
+
+
+@discussions_bp.route('/<int:discussion_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_discussion(discussion_id):
+    discussion = db.session.get(Discussion, discussion_id)
+    if not discussion:
+        abort(404)
+
+    if discussion.creator_id != current_user.id and not current_user.is_admin:
+        flash("You don't have permission to edit this discussion.", "error")
+        return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
+
+    # Build editable programmes list
+    editable_programmes = []
+    for programme in Programme.query.filter_by(status='active').order_by(Programme.name.asc()).all():
+        if can_add_discussion_to_programme(programme, current_user):
+            editable_programmes.append(programme)
+
+    # If discussion has a programme not in editable list (e.g. user removed from org), include it
+    current_programme = discussion.programme
+    if current_programme and current_programme not in editable_programmes:
+        editable_programmes_with_current = [current_programme] + editable_programmes
+    else:
+        editable_programmes_with_current = editable_programmes
+
+    programme_choices = [(0, 'No programme')] + [
+        (p.id, p.name) for p in editable_programmes_with_current
+    ]
+    programme_meta = [
+        {"id": p.id, "themes": p.themes or [], "phases": p.phases or []}
+        for p in editable_programmes_with_current
+    ]
+
+    if request.method == 'GET':
+        form = EditDiscussionForm(obj=discussion)
+        form.programme_id.choices = programme_choices
+        form.programme_id.data = discussion.programme_id or 0
+
+        # Set theme/phase choices based on current programme
+        if current_programme:
+            form.programme_theme.choices = [('', 'No theme')] + [
+                (t, t) for t in (current_programme.themes or [])
+            ]
+            form.programme_phase.choices = [('', 'No phase')] + [
+                (p, p) for p in (current_programme.phases or [])
+            ]
+        else:
+            form.programme_theme.choices = [('', 'No theme')]
+            form.programme_phase.choices = [('', 'No phase')]
+
+        # Convert information_links JSON list → pipe-text for the textarea
+        links = discussion.information_links or []
+        if links:
+            form.information_links.data = '\n'.join(
+                f"{item.get('label', '')}|{item.get('url', '')}"
+                for item in links
+                if item.get('url')
+            )
+        else:
+            form.information_links.data = ''
+
+        return render_template(
+            'discussions/edit_discussion.html',
+            form=form,
+            discussion=discussion,
+            programme_meta=programme_meta,
+        )
+
+    # POST
+    form = EditDiscussionForm()
+    form.programme_id.choices = programme_choices
+    selected_programme_id = request.form.get('programme_id', type=int) or 0
+    selected_programme = next(
+        (p for p in editable_programmes_with_current if p.id == selected_programme_id),
+        None
+    )
+    if selected_programme:
+        form.programme_theme.choices = [('', 'No theme')] + [
+            (theme, theme) for theme in (selected_programme.themes or [])
+        ]
+        form.programme_phase.choices = [('', 'No phase')] + [
+            (phase, phase) for phase in (selected_programme.phases or [])
+        ]
+    else:
+        form.programme_theme.choices = [('', 'No theme')]
+        form.programme_phase.choices = [('', 'No phase')]
+
+    if not form.validate_on_submit():
+        return render_template(
+            'discussions/edit_discussion.html',
+            form=form,
+            discussion=discussion,
+            programme_meta=programme_meta,
+        )
+
+    # Validate programme assignment
+    chosen_programme_id = form.programme_id.data or 0
+    chosen_programme = None
+    if chosen_programme_id:
+        chosen_programme = next(
+            (p for p in editable_programmes_with_current if p.id == chosen_programme_id), None
+        )
+        if not chosen_programme:
+            form.programme_id.errors.append('Selected programme is invalid or not editable.')
+            return render_template(
+                'discussions/edit_discussion.html',
+                form=form,
+                discussion=discussion,
+                programme_meta=programme_meta,
+            )
+
+        if form.programme_theme.data and form.programme_theme.data not in (chosen_programme.themes or []):
+            form.programme_theme.errors.append('Selected theme is not valid for this programme.')
+            return render_template(
+                'discussions/edit_discussion.html',
+                form=form,
+                discussion=discussion,
+                programme_meta=programme_meta,
+            )
+
+        if form.programme_phase.data and form.programme_phase.data not in (chosen_programme.phases or []):
+            form.programme_phase.errors.append('Selected phase is not valid for this programme.')
+            return render_template(
+                'discussions/edit_discussion.html',
+                form=form,
+                discussion=discussion,
+                programme_meta=programme_meta,
+            )
+
+    # Parse information_links from pipe-text → safe JSON list
+    raw_links = (form.information_links.data or '').strip()
+    information_links = []
+    if raw_links:
+        for line in raw_links.splitlines():
+            cleaned = line.strip()
+            if not cleaned or '|' not in cleaned:
+                continue
+            label, url = cleaned.split('|', 1)
+            information_links.append({"label": label.strip(), "url": url.strip()})
+        information_links = safe_information_links(information_links)
+
+    # Track old programme for cache invalidation
+    old_programme_id = discussion.programme_id
+
+    # Update fields in place
+    discussion.title = form.title.data
+    discussion.description = form.description.data
+    discussion.topic = form.topic.data
+    discussion.keywords = form.keywords.data or None
+    discussion.geographic_scope = form.geographic_scope.data
+    discussion.country = form.country.data or None
+    discussion.city = form.city.data or None
+    discussion.programme_id = chosen_programme.id if chosen_programme else None
+    discussion.programme_theme = (form.programme_theme.data or None) if chosen_programme else None
+    discussion.programme_phase = (form.programme_phase.data or None) if chosen_programme else None
+    discussion.information_title = (form.information_title.data or '').strip() or None
+    discussion.information_body = (form.information_body.data or '').strip() or None
+    discussion.information_links = information_links
+
+    # Update embed_code only for embed-mode discussions
+    if not discussion.has_native_statements:
+        discussion.embed_code = form.embed_code.data or discussion.embed_code
+
+    # Regenerate slug from new title
+    discussion.update_slug()
+
+    db.session.commit()
+
+    # Invalidate programme summary cache for old and new programmes
+    from app.programmes.routes import invalidate_programme_summary_cache
+    new_programme_id = discussion.programme_id
+    if old_programme_id and old_programme_id != new_programme_id:
+        invalidate_programme_summary_cache(old_programme_id)
+    if new_programme_id:
+        invalidate_programme_summary_cache(new_programme_id)
+
+    # PostHog tracking
+    if posthog and getattr(posthog, 'project_api_key', None):
+        try:
+            posthog.capture(
+                distinct_id=str(current_user.id),
+                event='discussion_edited',
+                properties={
+                    'discussion_id': discussion.id,
+                    'topic': discussion.topic,
+                    'programme_id': discussion.programme_id,
+                }
+            )
+        except Exception as e:
+            current_app.logger.warning(f"PostHog tracking error: {e}")
+
+    flash("Discussion updated successfully.", "success")
+    return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
 
 @discussions_bp.route('/<int:discussion_id>', methods=['GET'])

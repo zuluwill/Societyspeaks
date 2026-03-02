@@ -21,6 +21,12 @@ def _create_user(db, username, email):
     return user
 
 
+def _login(client, user_id):
+    with client.session_transaction() as session:
+        session['_user_id'] = str(user_id)
+        session['_fresh'] = True
+
+
 def test_programme_creator_can_edit(app, db):
     with app.app_context():
         creator = _create_user(db, 'creator', 'creator@example.com')
@@ -262,3 +268,109 @@ def test_programme_summary_cache_and_invalidation(app, db):
         invalidate_programme_summary_cache(programme.id)
         summary_after_invalidate = get_programme_summary(programme.id)
         assert summary_after_invalidate["discussion_count"] == 2
+
+
+def test_edit_discussion_accepts_valid_programme_theme_phase(app, db):
+    with app.app_context():
+        creator = _create_user(db, 'editcreator', 'editcreator@example.com')
+        programme = Programme(
+            name='Edit Programme',
+            slug=generate_slug('Edit Programme'),
+            creator_id=creator.id,
+            themes=['Health'],
+            phases=['Phase 1'],
+        )
+        db.session.add(programme)
+        db.session.flush()
+
+        discussion = Discussion(
+            title='Editable discussion title',
+            slug=generate_slug('Editable discussion title'),
+            description='A long enough discussion description for validation.',
+            creator_id=creator.id,
+            topic='Society',
+            geographic_scope='global',
+            has_native_statements=True,
+        )
+        db.session.add(discussion)
+        db.session.commit()
+        discussion_id = discussion.id
+        programme_id = programme.id
+        creator_id = creator.id
+
+    client = app.test_client()
+    _login(client, creator_id)
+
+    response = client.post(
+        f'/discussions/{discussion_id}/edit',
+        data={
+            'title': 'Editable discussion title updated',
+            'description': 'A long enough updated discussion description for validation.',
+            'topic': 'Society',
+            'keywords': '',
+            'geographic_scope': 'global',
+            'country': '',
+            'city': '',
+            'programme_id': str(programme_id),
+            'programme_theme': 'Health',
+            'programme_phase': 'Phase 1',
+            'information_title': '',
+            'information_body': '',
+            'information_links': '',
+        },
+        follow_redirects=False,
+    )
+    assert response.status_code == 302
+
+    with app.app_context():
+        updated = db.session.get(Discussion, discussion_id)
+        assert updated.programme_id == programme_id
+        assert updated.programme_theme == 'Health'
+        assert updated.programme_phase == 'Phase 1'
+
+
+def test_edit_discussion_preserves_city_on_validation_error(app, db):
+    with app.app_context():
+        creator = _create_user(db, 'editcity', 'editcity@example.com')
+        discussion = Discussion(
+            title='City editable discussion',
+            slug=generate_slug('City editable discussion'),
+            description='A long enough discussion description for validation.',
+            creator_id=creator.id,
+            topic='Society',
+            geographic_scope='city',
+            country='UK',
+            city='London',
+            has_native_statements=True,
+        )
+        db.session.add(discussion)
+        db.session.commit()
+        discussion_id = discussion.id
+        creator_id = creator.id
+
+    client = app.test_client()
+    _login(client, creator_id)
+
+    response = client.post(
+        f'/discussions/{discussion_id}/edit',
+        data={
+            'title': 'short',
+            'description': 'A long enough updated discussion description for validation.',
+            'topic': 'Society',
+            'keywords': '',
+            'geographic_scope': 'city',
+            'country': 'UK',
+            'city': 'Leeds',
+            'programme_id': '0',
+            'programme_theme': '',
+            'programme_phase': '',
+            'information_title': '',
+            'information_body': '',
+            'information_links': '',
+        },
+        follow_redirects=False,
+    )
+    body = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert 'Title must be between 10 and 200 characters' in body
+    assert 'value="Leeds" selected' in body

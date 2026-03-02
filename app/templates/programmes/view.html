@@ -1,55 +1,150 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="max-w-6xl mx-auto py-8 px-4">
+
+  {# Programme header #}
   <div class="bg-white rounded-lg shadow p-6 mb-6">
     <div class="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 class="text-3xl font-bold text-gray-900">{{ programme.name }}</h1>
+      <div class="flex-1 min-w-0">
+        {% if programme.logo_url %}
+        <img src="{{ programme.logo_url }}" alt="{{ programme.name }}" class="h-12 object-contain mb-3">
+        {% endif %}
+        <div class="flex items-center gap-2 flex-wrap">
+          <h1 class="text-3xl font-bold text-gray-900">{{ programme.name }}</h1>
+          {% if programme.status == 'archived' %}
+          <span class="px-2 py-0.5 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">Archived</span>
+          {% endif %}
+        </div>
         {% if programme.description %}
         <p class="mt-2 text-gray-700">{{ programme.description }}</p>
         {% endif %}
-        <div class="mt-2 text-sm text-gray-500">
-          {{ programme.geographic_scope|capitalize }}{% if programme.country %} · {{ programme.country }}{% endif %}
+        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-500">
+          <span>{{ programme.geographic_scope|capitalize }}{% if programme.country %} · {{ programme.country }}{% endif %}</span>
+          {% if summary %}
+          <span>{{ summary.discussion_count }} discussion{{ 's' if summary.discussion_count != 1 }}</span>
+          <span>{{ summary.participant_count }} participant{{ 's' if summary.participant_count != 1 }}</span>
+          {% endif %}
         </div>
-        {% if summary %}
-        <div class="mt-2 text-sm text-gray-600">
-          {{ summary.discussion_count }} discussions · {{ summary.participant_count }} participants
-        </div>
-        {% endif %}
       </div>
       {% if can_edit or can_steward %}
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         {% if can_edit %}
-        <a href="{{ url_for('programmes.edit_programme', slug=programme.slug) }}" class="px-4 py-2 border rounded-md hover:bg-gray-50">Edit</a>
-        <a href="{{ url_for('programmes.programme_settings', slug=programme.slug) }}" class="px-4 py-2 border rounded-md hover:bg-gray-50">Settings</a>
+        <a href="{{ url_for('programmes.edit_programme', slug=programme.slug) }}" class="px-4 py-2 border rounded-md hover:bg-gray-50 text-sm">Edit</a>
+        <a href="{{ url_for('programmes.programme_settings', slug=programme.slug) }}" class="px-4 py-2 border rounded-md hover:bg-gray-50 text-sm">Settings</a>
         {% endif %}
         {% if can_steward %}
-        <a href="{{ url_for('programmes.export_programme', slug=programme.slug) }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Export</a>
+        <a href="{{ url_for('programmes.export_programme', slug=programme.slug) }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">Export analysis</a>
         {% endif %}
       </div>
       {% endif %}
     </div>
   </div>
 
+  {# Theme / phase filter tabs #}
+  {% set has_themes = programme.themes and programme.themes|length > 0 %}
+  {% set has_phases = programme.phases and programme.phases|length > 0 %}
+  {% if has_themes or has_phases %}
+  <div class="bg-white rounded-lg shadow px-6 py-4 mb-4 flex flex-wrap items-center gap-4">
+
+    {% if has_themes %}
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Theme</span>
+      <a href="{{ url_for('programmes.view_programme', slug=programme.slug, phase=selected_phase) }}"
+         class="px-3 py-1 rounded-full text-sm border {% if not selected_theme %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
+        All
+      </a>
+      {% for theme in programme.themes %}
+      <a href="{{ url_for('programmes.view_programme', slug=programme.slug, theme=theme, phase=selected_phase) }}"
+         class="px-3 py-1 rounded-full text-sm border {% if selected_theme == theme %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
+        {{ theme }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if has_themes and has_phases %}<div class="border-l border-gray-200 h-6"></div>{% endif %}
+
+    {% if has_phases %}
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Phase</span>
+      <a href="{{ url_for('programmes.view_programme', slug=programme.slug, theme=selected_theme) }}"
+         class="px-3 py-1 rounded-full text-sm border {% if not selected_phase %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
+        All
+      </a>
+      {% for phase in programme.phases %}
+      <a href="{{ url_for('programmes.view_programme', slug=programme.slug, theme=selected_theme, phase=phase) }}"
+         class="px-3 py-1 rounded-full text-sm border {% if selected_phase == phase %}bg-blue-600 text-white border-blue-600{% else %}bg-white text-gray-600 border-gray-300 hover:bg-gray-50{% endif %}">
+        {{ phase }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}
+
+  {# Discussion list #}
   <div class="bg-white rounded-lg shadow p-6">
-    <h2 class="text-xl font-semibold text-gray-900 mb-4">Discussions</h2>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-semibold text-gray-900">
+        Discussions
+        {% if selected_theme or selected_phase %}
+        <span class="text-sm font-normal text-gray-400 ml-2">
+          {% if selected_theme %}{{ selected_theme }}{% endif %}{% if selected_theme and selected_phase %} · {% endif %}{% if selected_phase %}{{ selected_phase }}{% endif %}
+        </span>
+        {% endif %}
+      </h2>
+      {% if can_edit %}
+      <a href="{{ url_for('discussions.create_discussion', programme_id=programme.id, programme_theme=selected_theme, programme_phase=selected_phase) }}" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">Add discussion</a>
+      {% endif %}
+    </div>
+
     {% if discussions.items %}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       {% for discussion in discussions.items %}
-      <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" class="block border rounded-lg p-4 hover:bg-gray-50">
-        <h3 class="font-semibold text-gray-900">{{ discussion.title }}</h3>
+      <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" class="block border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+        <h3 class="font-semibold text-gray-900 leading-snug">{{ discussion.title }}</h3>
         {% if discussion.programme_theme or discussion.programme_phase %}
-        <p class="text-xs text-gray-500 mt-1">
-          {% if discussion.programme_theme %}Theme: {{ discussion.programme_theme }}{% endif %}
-          {% if discussion.programme_theme and discussion.programme_phase %} · {% endif %}
-          {% if discussion.programme_phase %}Phase: {{ discussion.programme_phase }}{% endif %}
-        </p>
+        <div class="flex flex-wrap gap-2 mt-2">
+          {% if discussion.programme_theme %}
+          <span class="inline-block px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">{{ discussion.programme_theme }}</span>
+          {% endif %}
+          {% if discussion.programme_phase %}
+          <span class="inline-block px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">{{ discussion.programme_phase }}</span>
+          {% endif %}
+        </div>
         {% endif %}
       </a>
       {% endfor %}
     </div>
+
+    {# Pagination #}
+    {% if discussions.pages > 1 %}
+    <div class="mt-6 flex justify-center gap-2">
+      {% if discussions.has_prev %}
+      <a href="{{ url_for('programmes.view_programme', slug=programme.slug, page=discussions.prev_num, theme=selected_theme, phase=selected_phase) }}"
+         class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Previous</a>
+      {% endif %}
+      <span class="px-3 py-2 text-sm text-gray-600">Page {{ discussions.page }} of {{ discussions.pages }}</span>
+      {% if discussions.has_next %}
+      <a href="{{ url_for('programmes.view_programme', slug=programme.slug, page=discussions.next_num, theme=selected_theme, phase=selected_phase) }}"
+         class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Next</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
     {% else %}
-    <p class="text-gray-600">No discussions in this programme yet.</p>
+    <div class="py-10 text-center text-gray-500">
+      {% if selected_theme or selected_phase %}
+      <p class="mb-2">No discussions match this filter.</p>
+      <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}" class="text-sm text-blue-600 hover:underline">Clear filters</a>
+      {% else %}
+      <p class="mb-1">No discussions in this programme yet.</p>
+      {% if can_edit %}
+      <p class="text-sm"><a href="{{ url_for('discussions.create_discussion', programme_id=programme.id) }}" class="text-blue-600 hover:underline">Create the first discussion →</a></p>
+      {% endif %}
+      {% endif %}
+    </div>
     {% endif %}
   </div>
 </div>
