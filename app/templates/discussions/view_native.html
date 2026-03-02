@@ -592,7 +592,8 @@
               credentials: 'same-origin',
               body: JSON.stringify({
                   vote: voteValue,
-                  confidence: confidence
+                  confidence: confidence,
+                  cohort: {{ cohort_slug|tojson }}
               })
           });
 

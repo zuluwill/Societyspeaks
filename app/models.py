@@ -67,6 +67,13 @@ class User(UserMixin, db.Model):
 
     discussions_created = db.relationship('Discussion', backref='creator', lazy='dynamic')
     notifications = db.relationship('Notification', backref='user', lazy='dynamic')
+    programmes_created = db.relationship('Programme', backref='creator', lazy='select', foreign_keys='Programme.creator_id')
+    programme_stewardships = db.relationship(
+        'ProgrammeSteward',
+        backref='user',
+        lazy='select',
+        foreign_keys='ProgrammeSteward.user_id'
+    )
 
     # Password methods
     def set_password(self, password):
@@ -301,6 +308,8 @@ class DiscussionParticipant(db.Model):
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Can be null for anonymous
     participant_identifier = db.Column(db.String(255))  # External identifier from Pol.is
+    cohort_slug = db.Column(db.String(80), nullable=True)
+    viewed_information_at = db.Column(db.DateTime, nullable=True)
     joined_at = db.Column(db.DateTime, default=utcnow_naive)
     last_activity = db.Column(db.DateTime, default=utcnow_naive)
     response_count = db.Column(db.Integer, default=0)
@@ -544,6 +553,78 @@ class OrganizationMember(db.Model):
         return f'<OrganizationMember org:{self.org_id} user:{self.user_id} ({self.role})>'
 
 
+class Programme(db.Model):
+    __tablename__ = 'programme'
+    __table_args__ = (
+        db.Index('ix_programme_slug', 'slug', unique=True),
+        db.Index('ix_programme_creator_id', 'creator_id'),
+        db.Index('ix_programme_company_profile_id', 'company_profile_id'),
+        db.Index('ix_programme_scope_country', 'geographic_scope', 'country'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    slug = db.Column(db.String(150), nullable=False, unique=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    company_profile_id = db.Column(
+        db.Integer,
+        db.ForeignKey('company_profile.id', ondelete='RESTRICT'),
+        nullable=True
+    )
+    geographic_scope = db.Column(db.String(20), nullable=False, default='global')
+    country = db.Column(db.String(100), nullable=True)
+    logo_url = db.Column(db.String(255), nullable=True)
+    themes = db.Column(db.JSON, nullable=False, default=list)
+    phases = db.Column(db.JSON, nullable=False, default=list)
+    cohorts = db.Column(db.JSON, nullable=False, default=list)
+    status = db.Column(db.String(20), nullable=False, default='active')
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
+
+    company_profile = db.relationship('CompanyProfile', backref=db.backref('programmes', lazy='select'))
+    discussions = db.relationship('Discussion', backref='programme', lazy='select')
+    stewards = db.relationship('ProgrammeSteward', backref='programme', lazy='select')
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if not self.slug and self.name:
+            self.slug = generate_slug(self.name)
+
+    def update_slug(self):
+        if self.name:
+            self.slug = generate_slug(self.name)
+
+
+class ProgrammeSteward(db.Model):
+    __tablename__ = 'programme_steward'
+    __table_args__ = (
+        db.Index('ix_programme_steward_programme_id', 'programme_id'),
+        db.Index('ix_programme_steward_user_id', 'user_id'),
+        db.Index('ix_programme_steward_invite_token', 'invite_token', unique=True),
+        db.UniqueConstraint('programme_id', 'user_id', name='uq_programme_steward_programme_user'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    programme_id = db.Column(db.Integer, db.ForeignKey('programme.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='steward')
+    invited_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
+    status = db.Column(db.String(20), nullable=False, default='pending')
+    invite_token = db.Column(db.String(255), nullable=True)
+    invited_at = db.Column(db.DateTime, nullable=True)
+    accepted_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
+
+    invited_by = db.relationship('User', foreign_keys=[invited_by_id])
+
+    @staticmethod
+    def generate_invite_token():
+        import secrets
+        return secrets.token_urlsafe(32)
+
+
 class Discussion(db.Model):
     __table_args__ = (
         db.Index('idx_discussion_title_desc', 'title', 'description'),
@@ -554,6 +635,9 @@ class Discussion(db.Model):
         db.Index('idx_discussion_partner_article_url', 'partner_article_url'),
         db.Index('idx_discussion_partner_id', 'partner_id'),
         db.Index('idx_discussion_partner_env_created', 'partner_env', 'created_at'),
+        db.Index('idx_discussion_programme_id', 'programme_id'),
+        db.Index('idx_discussion_programme_phase', 'programme_id', 'programme_phase'),
+        db.Index('idx_discussion_programme_theme', 'programme_id', 'programme_theme'),
     )
     
     id = db.Column(db.Integer, primary_key=True)
@@ -578,6 +662,12 @@ class Discussion(db.Model):
     # Foreign keys to link discussions to profiles
     individual_profile_id = db.Column(db.Integer, db.ForeignKey('individual_profile.id'), nullable=True)
     company_profile_id = db.Column(db.Integer, db.ForeignKey('company_profile.id'), nullable=True)
+    programme_id = db.Column(db.Integer, db.ForeignKey('programme.id'), nullable=True)
+    programme_phase = db.Column(db.String(50), nullable=True)
+    programme_theme = db.Column(db.String(100), nullable=True)
+    information_title = db.Column(db.String(200), nullable=True)
+    information_body = db.Column(db.Text, nullable=True)
+    information_links = db.Column(db.JSON, nullable=False, default=list)
     views = db.relationship('DiscussionView', backref='discussion', lazy='dynamic')
 
     # Bluesky posting schedule (for staggered posts throughout the day)
@@ -753,7 +843,19 @@ class Discussion(db.Model):
 
     
     @staticmethod
-    def search_discussions(search=None, country=None, city=None, topic=None, scope=None, keywords=None, page=1, per_page=9):
+    def search_discussions(
+        search=None,
+        country=None,
+        city=None,
+        topic=None,
+        scope=None,
+        keywords=None,
+        programme_id=None,
+        programme_phase=None,
+        programme_theme=None,
+        page=1,
+        per_page=9
+    ):
         query = Discussion.query.options(db.joinedload(Discussion.creator)).filter(Discussion.partner_env != 'test')
 
         if search:
@@ -780,6 +882,15 @@ class Discussion(db.Model):
         # New keyword filtering
         if keywords:
             query = query.filter(Discussion.keywords.ilike(f"%{keywords}%"))
+
+        if programme_id:
+            query = query.filter(Discussion.programme_id == programme_id)
+
+        if programme_phase:
+            query = query.filter(Discussion.programme_phase == programme_phase)
+
+        if programme_theme:
+            query = query.filter(Discussion.programme_theme == programme_theme)
 
         return query.order_by(Discussion.created_at.desc())\
                     .paginate(page=page, per_page=per_page, error_out=False)
@@ -912,6 +1023,7 @@ class StatementVote(db.Model):
         db.Index('idx_vote_discussion_statement', 'discussion_id', 'statement_id'),
         db.Index('idx_vote_session_fingerprint', 'session_fingerprint'),
         db.Index('idx_vote_partner_ref', 'partner_ref'),
+        db.Index('idx_vote_discussion_cohort', 'discussion_id', 'cohort_slug'),
     )
     
     id = db.Column(db.Integer, primary_key=True)
@@ -926,6 +1038,7 @@ class StatementVote(db.Model):
 
     # Partner attribution for embed votes (e.g., 'observer', 'time', 'ted')
     partner_ref = db.Column(db.String(50), nullable=True)
+    cohort_slug = db.Column(db.String(80), nullable=True)
 
     created_at = db.Column(db.DateTime, default=utcnow_naive)
     updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)

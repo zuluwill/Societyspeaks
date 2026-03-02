@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-6xl mx-auto py-8 px-4">
+  <div class="bg-white rounded-lg shadow p-6 mb-6">
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900">{{ programme.name }}</h1>
+        {% if programme.description %}
+        <p class="mt-2 text-gray-700">{{ programme.description }}</p>
+        {% endif %}
+        <div class="mt-2 text-sm text-gray-500">
+          {{ programme.geographic_scope|capitalize }}{% if programme.country %} · {{ programme.country }}{% endif %}
+        </div>
+        {% if summary %}
+        <div class="mt-2 text-sm text-gray-600">
+          {{ summary.discussion_count }} discussions · {{ summary.participant_count }} participants
+        </div>
+        {% endif %}
+      </div>
+      {% if can_edit or can_steward %}
+      <div class="flex gap-2">
+        {% if can_edit %}
+        <a href="{{ url_for('programmes.edit_programme', slug=programme.slug) }}" class="px-4 py-2 border rounded-md hover:bg-gray-50">Edit</a>
+        <a href="{{ url_for('programmes.programme_settings', slug=programme.slug) }}" class="px-4 py-2 border rounded-md hover:bg-gray-50">Settings</a>
+        {% endif %}
+        {% if can_steward %}
+        <a href="{{ url_for('programmes.export_programme', slug=programme.slug) }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Export</a>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">Discussions</h2>
+    {% if discussions.items %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for discussion in discussions.items %}
+      <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" class="block border rounded-lg p-4 hover:bg-gray-50">
+        <h3 class="font-semibold text-gray-900">{{ discussion.title }}</h3>
+        {% if discussion.programme_theme or discussion.programme_phase %}
+        <p class="text-xs text-gray-500 mt-1">
+          {% if discussion.programme_theme %}Theme: {{ discussion.programme_theme }}{% endif %}
+          {% if discussion.programme_theme and discussion.programme_phase %} · {% endif %}
+          {% if discussion.programme_phase %}Phase: {{ discussion.programme_phase }}{% endif %}
+        </p>
+        {% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-gray-600">No discussions in this programme yet.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+  <div class="max-w-3xl mx-auto">
+    {% if discussion.information_title %}
+    <h2 class="text-xl font-semibold text-blue-900 mb-3">{{ discussion.information_title }}</h2>
+    {% endif %}
+
+    {% if safe_information_html %}
+    <div class="prose max-w-none text-blue-950 mb-4">{{ safe_information_html|safe }}</div>
+    {% endif %}
+
+    {% if safe_information_links %}
+    <div class="flex flex-wrap gap-2 mb-4">
+      {% for link in safe_information_links %}
+      <a
+        href="{{ link.url }}"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded-md hover:bg-blue-100"
+      >
+        {{ link.label }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('discussions.mark_information_viewed', discussion_id=discussion.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if cohort_slug %}
+      <input type="hidden" name="cohort" value="{{ cohort_slug }}">
+      {% endif %}
+      <button
+        type="submit"
+        class="inline-flex items-center px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors"
+      >
+        Continue to discussion
+      </button>
+    </form>
+  </div>
+</div>

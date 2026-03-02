@@ -477,6 +477,10 @@
   </div>
   {% endif %}
 
+  {% if discussion.information_title or discussion.information_body or discussion.information_links %}
+  {% include 'discussions/_information_step.html' %}
+  {% endif %}
+
   <!-- Native vs Pol.is Discussion Rendering -->
   <div class="min-h-screen">
     {% if discussion.has_native_statements %}

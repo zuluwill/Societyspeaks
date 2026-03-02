@@ -32,6 +32,7 @@ To see our future plans and ideas, check out [IDEAS.md](./IDEAS.md).
 - **Evidence Attachments** - Citations, URLs, and file uploads via Replit Object Storage
 - **Moderation Queue** - Flag and review system for discussion owners
 - **Edit Windows** - 10-minute edit window for statements, then immutable for integrity
+- **Programmes** - Multi-discussion dialogue containers with phases, themes, cohorts, steward access, and streaming export
 
 ### Consensus Analysis (Machine Learning)
 - **Opinion Clustering** - PCA dimensionality reduction + Agglomerative clustering

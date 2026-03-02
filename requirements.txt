@@ -37,6 +37,8 @@ APScheduler==3.10.4
 cryptography>=43.0.1
 pandas>=2.0.0
 dnspython>=2.6.1
+markdown>=3.6
+bleach>=6.1.0
 
 # Social Media Posting
 atproto>=0.0.30

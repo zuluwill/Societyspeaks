@@ -281,6 +281,66 @@
                 {% endfor %} {% endif %}
               </div>
             </div>
+
+            <!-- Programme Section -->
+            <div class="border-t border-gray-200 pt-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">Programme (Optional)</h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  {{ form.programme_id.label(class="block text-sm font-medium text-gray-700") }}
+                  {{ form.programme_id(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                  {% if form.programme_id.errors %}{% for error in form.programme_id.errors %}
+                  <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                  {% endfor %}{% endif %}
+                </div>
+                <div>
+                  {{ form.programme_theme.label(class="block text-sm font-medium text-gray-700") }}
+                  {{ form.programme_theme(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                  {% if form.programme_theme.errors %}{% for error in form.programme_theme.errors %}
+                  <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                  {% endfor %}{% endif %}
+                </div>
+                <div>
+                  {{ form.programme_phase.label(class="block text-sm font-medium text-gray-700") }}
+                  {{ form.programme_phase(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
+                  {% if form.programme_phase.errors %}{% for error in form.programme_phase.errors %}
+                  <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                  {% endfor %}{% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Information Step Section -->
+            <div class="border-t border-gray-200 pt-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-3">Information Before Participation (Optional)</h3>
+              <p class="text-sm text-gray-500 mb-4">
+                Add optional context participants see before voting. Use Markdown only for body text.
+              </p>
+              <div class="space-y-4">
+                <div>
+                  {{ form.information_title.label(class="block text-sm font-medium text-gray-700") }}
+                  {{ form.information_title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="Why this discussion matters") }}
+                  {% if form.information_title.errors %}{% for error in form.information_title.errors %}
+                  <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                  {% endfor %}{% endif %}
+                </div>
+                <div>
+                  {{ form.information_body.label(class="block text-sm font-medium text-gray-700") }}
+                  {{ form.information_body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="6", placeholder="Use Markdown. Example: **Important** context and [source](https://example.com)") }}
+                  {% if form.information_body.errors %}{% for error in form.information_body.errors %}
+                  <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                  {% endfor %}{% endif %}
+                </div>
+                <div>
+                  {{ form.information_links.label(class="block text-sm font-medium text-gray-700") }}
+                  {{ form.information_links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="4", placeholder="Watch explainer|https://example.com/video") }}
+                  <p class="mt-1 text-xs text-gray-500">One per line in format <code>Label|https://url</code>. Only http/https links are kept.</p>
+                  {% if form.information_links.errors %}{% for error in form.information_links.errors %}
+                  <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                  {% endfor %}{% endif %}
+                </div>
+              </div>
+            </div>
           </div>
         </form>
       </div>
@@ -431,6 +491,7 @@
   let citySelect; // Define citySelect at the top level for reuse
   let useNativeStatements = true; // Track native statements mode - default to native
   let seedStatements = []; // Track seed statements for native discussions
+  const programmeMeta = {{ programme_meta|default([])|tojson }};
 
   document.addEventListener("DOMContentLoaded", function () {
     const countrySelect = document.querySelector('[name="country"]');
@@ -455,6 +516,7 @@
       .querySelector('[name="geographic_scope"]')
       .addEventListener("change", handleScopeChange);
     countrySelect.addEventListener("change", fetchCities);
+    document.getElementById("programme_id")?.addEventListener("change", syncProgrammeSelectors);
 
     // Phase 1: Native statements checkbox handler
     const nativeCheckbox = document.getElementById(
@@ -484,7 +546,36 @@
     // Initialize visibility and handle scope change at load
     updateStepVisibility();
     handleScopeChange();
+    syncProgrammeSelectors();
   });
+
+  function syncProgrammeSelectors() {
+    const programmeSelect = document.getElementById("programme_id");
+    const themeSelect = document.getElementById("programme_theme");
+    const phaseSelect = document.getElementById("programme_phase");
+    if (!programmeSelect || !themeSelect || !phaseSelect) return;
+
+    const selectedId = Number(programmeSelect.value || 0);
+    const programme = programmeMeta.find((item) => Number(item.id) === selectedId);
+
+    const setOptions = (selectEl, values, defaultLabel) => {
+      selectEl.innerHTML = "";
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = defaultLabel;
+      selectEl.appendChild(defaultOption);
+      (values || []).forEach((value) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = value;
+        selectEl.appendChild(option);
+      });
+      selectEl.disabled = !programme;
+    };
+
+    setOptions(themeSelect, programme ? programme.themes : [], "No theme");
+    setOptions(phaseSelect, programme ? programme.phases : [], "No phase");
+  }
 
   function handleScopeChange() {
     const scope = document.querySelector('[name="geographic_scope"]').value;

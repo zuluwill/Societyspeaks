@@ -1,0 +1,59 @@
+<form method="POST" class="space-y-6">
+  {{ form.csrf_token }}
+
+  <div>
+    {{ form.name.label(class="block text-sm font-medium text-gray-700") }}
+    {{ form.name(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+  </div>
+
+  <div>
+    {{ form.description.label(class="block text-sm font-medium text-gray-700") }}
+    {{ form.description(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", rows="4") }}
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      {{ form.geographic_scope.label(class="block text-sm font-medium text-gray-700") }}
+      {{ form.geographic_scope(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+    </div>
+    <div>
+      {{ form.country.label(class="block text-sm font-medium text-gray-700") }}
+      {{ form.country(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      {{ form.owner_type.label(class="block text-sm font-medium text-gray-700") }}
+      {{ form.owner_type(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+    </div>
+    <div>
+      {{ form.company_profile_id.label(class="block text-sm font-medium text-gray-700") }}
+      {{ form.company_profile_id(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+    </div>
+  </div>
+
+  <div>
+    {{ form.logo_url.label(class="block text-sm font-medium text-gray-700") }}
+    {{ form.logo_url(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+  </div>
+
+  <div>
+    {{ form.themes_csv.label(class="block text-sm font-medium text-gray-700") }}
+    {{ form.themes_csv(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", rows="3") }}
+  </div>
+
+  <div>
+    {{ form.phases_csv.label(class="block text-sm font-medium text-gray-700") }}
+    {{ form.phases_csv(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", rows="3") }}
+  </div>
+
+  <div>
+    {{ form.cohorts_text.label(class="block text-sm font-medium text-gray-700") }}
+    {{ form.cohorts_text(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", rows="4") }}
+  </div>
+
+  <div>
+    {{ form.submit(class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700") }}
+  </div>
+</form>

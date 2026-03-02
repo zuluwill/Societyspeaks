@@ -2,7 +2,7 @@ from flask import abort, render_template, redirect, url_for, flash, request, Blu
 from flask_login import login_required, current_user
 from app import db, limiter, talisman
 from app.discussions.forms import CreateDiscussionForm
-from app.models import Discussion, DiscussionParticipant, TrendingTopic, DiscussionSourceArticle, NewsArticle, NewsSource
+from app.models import Discussion, DiscussionParticipant, Programme, TrendingTopic, DiscussionSourceArticle, NewsArticle, NewsSource
 from app.storage_utils import get_recent_activity
 from app.middleware import track_discussion_view 
 from app.email_utils import create_discussion_notification
@@ -10,6 +10,9 @@ from app.webhook_security import webhook_required, webhook_with_timestamp
 from app.discussions.consensus import get_user_vote_count, PARTICIPATION_THRESHOLD
 from app.api.utils import is_partner_origin_allowed, get_partner_allowed_origins
 from app.trending.conversion_tracking import track_social_click
+from app.lib.time import utcnow_naive
+from app.programmes.permissions import can_add_discussion_to_programme
+from app.programmes.utils import render_safe_information_markdown, safe_information_links, validate_cohort_for_discussion
 from sqlalchemy.orm import joinedload, selectinload
 import json
 import os
@@ -134,7 +137,65 @@ def create_discussion():
     from app.models import Statement
     
     form = CreateDiscussionForm()
+    editable_programmes = []
+    for programme in Programme.query.filter_by(status='active').order_by(Programme.name.asc()).all():
+        if can_add_discussion_to_programme(programme, current_user):
+            editable_programmes.append(programme)
+
+    form.programme_id.choices = [(0, 'No programme')] + [
+        (programme.id, programme.name) for programme in editable_programmes
+    ]
+    programme_meta = [
+        {
+            "id": programme.id,
+            "themes": programme.themes or [],
+            "phases": programme.phases or [],
+        }
+        for programme in editable_programmes
+    ]
+
+    selected_programme = None
+    selected_programme_id = form.programme_id.data or request.form.get('programme_id', type=int)
+    if selected_programme_id:
+        selected_programme = next((p for p in editable_programmes if p.id == selected_programme_id), None)
+        if selected_programme:
+            form.programme_theme.choices = [('', 'No theme')] + [
+                (theme, theme) for theme in (selected_programme.themes or [])
+            ]
+            form.programme_phase.choices = [('', 'No phase')] + [
+                (phase, phase) for phase in (selected_programme.phases or [])
+            ]
+        else:
+            form.programme_theme.choices = [('', 'No theme')]
+            form.programme_phase.choices = [('', 'No phase')]
+
     if form.validate_on_submit():
+        chosen_programme = None
+        if form.programme_id.data:
+            chosen_programme = next((p for p in editable_programmes if p.id == form.programme_id.data), None)
+            if not chosen_programme:
+                form.programme_id.errors.append('Selected programme is invalid or not editable.')
+                return render_template('discussions/create_discussion.html', form=form, programme_meta=programme_meta)
+
+            if form.programme_theme.data and form.programme_theme.data not in (chosen_programme.themes or []):
+                form.programme_theme.errors.append('Selected theme is not valid for this programme.')
+                return render_template('discussions/create_discussion.html', form=form, programme_meta=programme_meta)
+
+            if form.programme_phase.data and form.programme_phase.data not in (chosen_programme.phases or []):
+                form.programme_phase.errors.append('Selected phase is not valid for this programme.')
+                return render_template('discussions/create_discussion.html', form=form, programme_meta=programme_meta)
+
+        information_links = []
+        raw_information_links = (form.information_links.data or '').strip()
+        if raw_information_links:
+            for line in raw_information_links.splitlines():
+                cleaned = line.strip()
+                if not cleaned or '|' not in cleaned:
+                    continue
+                label, url = cleaned.split('|', 1)
+                information_links.append({"label": label.strip(), "url": url.strip()})
+            information_links = safe_information_links(information_links)
+
         # Create a new discussion
         discussion = Discussion(
             # Phase 1: Support both native statements and pol.is embeds
@@ -149,7 +210,13 @@ def create_discussion():
             geographic_scope=form.geographic_scope.data,
             creator_id=current_user.id,
             individual_profile_id=current_user.individual_profile.id if current_user.profile_type == 'individual' else None,
-            company_profile_id=current_user.company_profile.id if current_user.profile_type == 'company' else None
+            company_profile_id=current_user.company_profile.id if current_user.profile_type == 'company' else None,
+            programme_id=chosen_programme.id if chosen_programme else None,
+            programme_theme=(form.programme_theme.data or None) if chosen_programme else None,
+            programme_phase=(form.programme_phase.data or None) if chosen_programme else None,
+            information_title=(form.information_title.data or '').strip() or None,
+            information_body=(form.information_body.data or '').strip() or None,
+            information_links=information_links
         )
         db.session.add(discussion)
         db.session.flush()  # Flush to get discussion.id before creating statements
@@ -174,6 +241,9 @@ def create_discussion():
                     current_app.logger.error(f"Error parsing seed statements: {e}")
         
         db.session.commit()
+        if discussion.programme_id:
+            from app.programmes.routes import invalidate_programme_summary_cache
+            invalidate_programme_summary_cache(discussion.programme_id)
         
         # Track discussion creation with PostHog
         if posthog and getattr(posthog, 'project_api_key', None):
@@ -196,7 +266,7 @@ def create_discussion():
         # Redirect with both discussion_id and slug
         return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
 
-    return render_template('discussions/create_discussion.html', form=form)
+    return render_template('discussions/create_discussion.html', form=form, programme_meta=programme_meta)
 
 
 @discussions_bp.route('/<int:discussion_id>', methods=['GET'])
@@ -464,6 +534,15 @@ def view_discussion(discussion_id, slug):
     
     # Get user's vote count for participation gate display
     user_vote_count, _ = get_user_vote_count(discussion_id)
+    cohort_slug = (request.args.get('cohort') or '').strip() or None
+    if cohort_slug and not validate_cohort_for_discussion(discussion, cohort_slug):
+        cohort_slug = None
+
+    safe_information_html = None
+    safe_info_links = []
+    if discussion.information_title or discussion.information_body or discussion.information_links:
+        safe_information_html = render_safe_information_markdown(discussion.information_body)
+        safe_info_links = safe_information_links(discussion.information_links)
     
     # Render the page
     return render_template('discussions/view_discussion.html', 
@@ -472,11 +551,46 @@ def view_discussion(discussion_id, slug):
                          sort=sort,
                          form=form,
                          user_vote_count=user_vote_count,
-                         participation_threshold=PARTICIPATION_THRESHOLD)
+                         participation_threshold=PARTICIPATION_THRESHOLD,
+                         safe_information_html=safe_information_html,
+                         safe_information_links=safe_info_links,
+                         cohort_slug=cohort_slug)
+
+
+@discussions_bp.route('/<int:discussion_id>/information-continue', methods=['POST'])
+def mark_information_viewed(discussion_id):
+    discussion = db.session.get(Discussion, discussion_id)
+    if not discussion:
+        abort(404)
+    if discussion.partner_env == 'test':
+        abort(404)
+
+    user_id = current_user.id if current_user.is_authenticated else None
+    participant_identifier = None
+    if not user_id:
+        from app.discussions.statements import get_statement_vote_fingerprint
+        participant_identifier = get_statement_vote_fingerprint()
+
+    cohort_slug = (request.form.get('cohort') or request.args.get('cohort') or '').strip() or None
+    if cohort_slug and not validate_cohort_for_discussion(discussion, cohort_slug):
+        cohort_slug = None
+
+    participant = DiscussionParticipant.track_participant(
+        discussion_id=discussion.id,
+        user_id=user_id,
+        participant_identifier=participant_identifier,
+        commit=False
+    )
+    participant.viewed_information_at = participant.viewed_information_at or utcnow_naive()
+    if cohort_slug:
+        participant.cohort_slug = cohort_slug
+    db.session.commit()
+
+    return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, cohort=cohort_slug))
 
 
 
-def fetch_discussions(search, country, city, topic, keywords, page, per_page=9, sort='recent'):
+def fetch_discussions(search, country, city, topic, keywords, programme_id, page, per_page=9, sort='recent'):
     from sqlalchemy import or_
     query = _exclude_test_discussions(Discussion.query)
 
@@ -494,6 +608,8 @@ def fetch_discussions(search, country, city, topic, keywords, page, per_page=9, 
         query = query.filter_by(city=city)
     if topic:
         query = query.filter_by(topic=topic)
+    if programme_id:
+        query = query.filter_by(programme_id=programme_id)
 
     # Apply sorting
     if sort == 'recent':
@@ -518,8 +634,10 @@ def search_discussions():
     country = request.args.get('country')
     city = request.args.get('city')
     keywords = request.args.get('keywords', '')
+    programme_id = request.args.get('programme_id', type=int)
     page = request.args.get('page', 1, type=int)
     sort = request.args.get('sort', 'popular')
+    programmes = Programme.query.filter_by(status='active').order_by(Programme.name.asc()).all()
 
     # Use modified fetch_discussions to include sorting
     discussions = fetch_discussions(
@@ -528,6 +646,7 @@ def search_discussions():
         city=city,
         topic=topic,
         keywords=keywords,
+        programme_id=programme_id,
         page=page,
         sort=sort
     )
@@ -537,7 +656,8 @@ def search_discussions():
         discussions=discussions,
         search_term=search_term,
         countries=countries,
-        cities_by_country=cities_by_country
+        cities_by_country=cities_by_country,
+        programmes=programmes
     )
 
 
@@ -551,6 +671,9 @@ def api_search_discussions():
         city = request.args.get('city', '')
         topic = request.args.get('topic', '')
         keywords = request.args.get('keywords', '')
+        programme_id = request.args.get('programme_id', type=int)
+        programme_phase = request.args.get('programme_phase', '')
+        programme_theme = request.args.get('programme_theme', '')
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 12, type=int)  # Allow customizable page size
 
@@ -568,6 +691,9 @@ def api_search_discussions():
             city=city,
             topic=topic,
             keywords=keywords,
+            programme_id=programme_id,
+            programme_phase=programme_phase,
+            programme_theme=programme_theme,
             page=page,
             per_page=per_page
         )
@@ -592,7 +718,10 @@ def api_search_discussions():
                     'country': country,
                     'city': city,
                     'topic': topic,
-                    'keywords': keywords
+                    'keywords': keywords,
+                    'programme_id': programme_id,
+                    'programme_phase': programme_phase,
+                    'programme_theme': programme_theme
                 }
             }
         }

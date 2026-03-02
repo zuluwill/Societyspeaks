@@ -243,6 +243,19 @@ class CreateDiscussionForm(FlaskForm):
 
     country = SelectField('Country', validators=[Optional()], choices=country_choices)
     city = StringField('City', validators=[Optional()])
+    programme_id = SelectField('Programme', coerce=int, validators=[Optional()], choices=[(0, 'No programme')])
+    programme_theme = SelectField('Programme Theme', validators=[Optional()], choices=[('', 'No theme')])
+    programme_phase = SelectField('Programme Phase', validators=[Optional()], choices=[('', 'No phase')])
+    information_title = StringField('Information Step Title', validators=[Optional(), Length(max=200)])
+    information_body = TextAreaField(
+        'Information Step Markdown',
+        validators=[Optional(), Length(max=10000)],
+        description='Markdown only. Raw HTML is not supported.'
+    )
+    information_links = TextAreaField(
+        'Information Links (one per line: Label|https://url)',
+        validators=[Optional(), Length(max=4000)]
+    )
 
     submit = SubmitField('Create Discussion')
 

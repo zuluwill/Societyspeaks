@@ -11,6 +11,7 @@ from app.db_retry import with_db_retry
 from app.discussions.statement_forms import StatementForm, VoteForm, ResponseForm, FlagStatementForm
 from app.models import Discussion, Statement, StatementVote, Response, StatementFlag, DiscussionParticipant
 from app.email_utils import create_discussion_notification
+from app.programmes.utils import validate_cohort_for_discussion
 from sqlalchemy import func, desc, or_
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
@@ -464,6 +465,7 @@ def vote_statement(statement_id):
 
     # Partner ref for attribution (from embed or query param)
     partner_ref = request.args.get('ref', '')
+    cohort_slug = (request.args.get('cohort') or '').strip() or None
 
     if request.is_json:
         data = request.get_json()
@@ -491,6 +493,8 @@ def vote_statement(statement_id):
             partner_ref = data.get('ref')
         if data.get('embed_fingerprint'):
             embed_fingerprint = normalize_embed_fingerprint(data.get('embed_fingerprint'))
+        if data.get('cohort'):
+            cohort_slug = str(data.get('cohort')).strip() or None
     else:
         vote_raw = request.form.get('vote')
         if vote_raw is None or vote_raw == '':
@@ -517,6 +521,8 @@ def vote_statement(statement_id):
             partner_ref = request.form.get('ref')
         if request.form.get('embed_fingerprint'):
             embed_fingerprint = normalize_embed_fingerprint(request.form.get('embed_fingerprint'))
+        if request.form.get('cohort'):
+            cohort_slug = request.form.get('cohort').strip() or None
 
     # Reject votes from disabled partner refs (kill switch)
     ref_str = (partner_ref if isinstance(partner_ref, str) else str(partner_ref or '')).strip().lower()
@@ -539,6 +545,8 @@ def vote_statement(statement_id):
             return redirect(url_for('statements.view_statement', statement_id=statement_id))
         return jsonify({'error': 'Invalid vote value. Must be -1, 0, or 1'}), 400
 
+    cohort_slug = validate_cohort_for_discussion(discussion, cohort_slug)
+
     try:
         if current_user.is_authenticated:
             existing_vote = StatementVote.query.filter_by(
@@ -551,6 +559,7 @@ def vote_statement(statement_id):
                 existing_vote.vote = vote_value
                 existing_vote.confidence = confidence
                 existing_vote.updated_at = utcnow_naive()
+                existing_vote.cohort_slug = cohort_slug
 
                 if old_vote == 1:
                     statement.vote_count_agree -= 1
@@ -565,7 +574,8 @@ def vote_statement(statement_id):
                     discussion_id=statement.discussion_id,
                     vote=vote_value,
                     confidence=confidence,
-                    partner_ref=partner_ref
+                    partner_ref=partner_ref,
+                    cohort_slug=cohort_slug
                 )
                 db.session.add(existing_vote)
 
@@ -592,6 +602,7 @@ def vote_statement(statement_id):
                 existing_vote.vote = vote_value
                 existing_vote.confidence = confidence
                 existing_vote.updated_at = utcnow_naive()
+                existing_vote.cohort_slug = cohort_slug
 
                 if old_vote == 1:
                     statement.vote_count_agree -= 1
@@ -606,7 +617,8 @@ def vote_statement(statement_id):
                     discussion_id=statement.discussion_id,
                     vote=vote_value,
                     confidence=confidence,
-                    partner_ref=partner_ref
+                    partner_ref=partner_ref,
+                    cohort_slug=cohort_slug
                 )
                 db.session.add(existing_vote)
 
@@ -639,6 +651,7 @@ def vote_statement(statement_id):
             existing_vote.vote = vote_value
             existing_vote.confidence = confidence
             existing_vote.updated_at = utcnow_naive()
+            existing_vote.cohort_slug = cohort_slug
             
             if old_vote == 1:
                 statement.vote_count_agree = max(0, statement.vote_count_agree - 1)
@@ -714,6 +727,9 @@ def vote_statement(statement_id):
             commit=True,
             return_is_new=True
         )
+        if cohort_slug:
+            participant.cohort_slug = cohort_slug
+            db.session.commit()
 
         # Notify discussion creator about new participant (not for their own votes)
         if is_new and discussion.creator_id and discussion.creator_id != user_id:

@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-6xl mx-auto py-8 px-4">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Programmes</h1>
+    {% if current_user.is_authenticated %}
+    <a href="{{ url_for('programmes.create_programme') }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+      New programme
+    </a>
+    {% endif %}
+  </div>
+
+  {% if programmes.items %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for programme in programmes.items %}
+    <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}" class="block bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow">
+      <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ programme.name }}</h2>
+      {% if programme.description %}
+      <p class="text-sm text-gray-600 line-clamp-3">{{ programme.description }}</p>
+      {% endif %}
+      <div class="mt-3 text-xs text-gray-500">
+        {{ programme.geographic_scope|capitalize }}{% if programme.country %} · {{ programme.country }}{% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="bg-white rounded-lg shadow p-8 text-center text-gray-600">
+    No programmes yet.
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
