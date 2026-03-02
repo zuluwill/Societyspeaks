@@ -1,65 +1,158 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="max-w-6xl mx-auto py-8 px-4">
-  <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
-    <div class="min-w-0">
+<div class="max-w-6xl mx-auto py-8 px-4 sm:px-6">
+
+  {# ── Page header ── #}
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
       <h1 class="text-3xl font-bold text-gray-900">Programmes</h1>
-      <p class="mt-1 text-sm text-gray-500">A Programme is a structured dialogue — a container for related discussions such as a national consultation, a research project, or a multi-stage public engagement campaign. Programmes let organisers group discussions by theme or phase, invite stewards, and export a combined analysis.</p>
+      <p class="mt-1 text-sm text-gray-500">Structured dialogues that group discussions by theme, phase, and cohort.</p>
     </div>
     {% if current_user.is_authenticated %}
-    <a href="{{ url_for('programmes.create_programme') }}" class="flex-shrink-0 inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium whitespace-nowrap">
+    <a href="{{ url_for('programmes.create_programme') }}"
+       class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium whitespace-nowrap transition-colors">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+      </svg>
       New programme
     </a>
     {% endif %}
   </div>
 
-  <div class="mt-6">
-    {% if programmes.items %}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {% for programme in programmes.items %}
-      <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}" class="block bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow">
-        {% if programme.logo_url %}
-        <img src="{{ programme.logo_url }}" alt="{{ programme.name }}" class="w-full h-24 object-contain mb-3 rounded">
-        {% endif %}
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ programme.name }}</h2>
-        {% if programme.description %}
-        <p class="text-sm text-gray-600 line-clamp-3 mb-3">{{ programme.description }}</p>
-        {% endif %}
-        <div class="flex flex-wrap gap-2 text-xs text-gray-500">
-          <span>{{ programme.geographic_scope|capitalize }}{% if programme.country %} · {{ programme.country }}{% endif %}</span>
-          {% if programme.themes %}
-          <span>{{ programme.themes|length }} theme{{ 's' if programme.themes|length != 1 }}</span>
+  {% if programmes.items %}
+  {# ── Programme grid ── #}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for programme in programmes.items %}
+    <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}"
+       class="group flex flex-col bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all overflow-hidden">
+      {% if programme.logo_url %}
+      <div class="h-28 bg-gray-50 border-b border-gray-100 flex items-center justify-center p-4">
+        <img src="{{ programme.logo_url }}" alt="{{ programme.name }}" class="max-h-full max-w-full object-contain">
+      </div>
+      {% else %}
+      <div class="h-2 bg-gradient-to-r from-blue-500 to-blue-400"></div>
+      {% endif %}
+      <div class="flex flex-col flex-1 p-5">
+        <div class="flex items-start justify-between gap-2 mb-2">
+          <h2 class="text-base font-semibold text-gray-900 group-hover:text-blue-600 leading-snug transition-colors">{{ programme.name }}</h2>
+          {% if programme.status == 'archived' %}
+          <span class="flex-shrink-0 text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full">Archived</span>
           {% endif %}
         </div>
-      </a>
-      {% endfor %}
-    </div>
+        {% if programme.description %}
+        <p class="text-sm text-gray-500 line-clamp-2 mb-4 flex-1">{{ programme.description }}</p>
+        {% else %}
+        <div class="flex-1"></div>
+        {% endif %}
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 pt-3 border-t border-gray-100">
+          <span class="inline-flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
+            </svg>
+            {{ programme.geographic_scope|capitalize }}{% if programme.country %} · {{ programme.country }}{% endif %}
+          </span>
+          {% if programme.themes %}
+          <span class="inline-flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+            </svg>
+            {{ programme.themes|length }} theme{{ 's' if programme.themes|length != 1 }}
+          </span>
+          {% endif %}
+          {% if programme.phases %}
+          <span class="inline-flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            {{ programme.phases|length }} phase{{ 's' if programme.phases|length != 1 }}
+          </span>
+          {% endif %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
 
-    {# Pagination #}
-    {% if programmes.pages > 1 %}
-    <div class="mt-8 flex justify-center gap-2">
-      {% if programmes.has_prev %}
-      <a href="{{ url_for('programmes.list_programmes', page=programmes.prev_num) }}" class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Previous</a>
-      {% endif %}
-      <span class="px-3 py-2 text-sm text-gray-600">Page {{ programmes.page }} of {{ programmes.pages }}</span>
-      {% if programmes.has_next %}
-      <a href="{{ url_for('programmes.list_programmes', page=programmes.next_num) }}" class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Next</a>
-      {% endif %}
-    </div>
+  {# Pagination #}
+  {% if programmes.pages > 1 %}
+  <div class="mt-8 flex justify-center gap-2">
+    {% if programmes.has_prev %}
+    <a href="{{ url_for('programmes.list_programmes', page=programmes.prev_num) }}"
+       class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Previous</a>
     {% endif %}
-
-    {% else %}
-    <div class="bg-white rounded-lg shadow p-10 text-center">
-      <div class="text-gray-400 text-5xl mb-4">🗂</div>
-      <h2 class="text-xl font-semibold text-gray-700 mb-2">No programmes yet</h2>
-      <p class="text-sm text-gray-500 max-w-md mx-auto mb-6">Programmes let you organise related discussions into a structured dialogue — for example, a national consultation across multiple topics. Participants see individual discussions, while organisers can export a combined analysis across the whole programme.</p>
-      {% if current_user.is_authenticated %}
-      <a href="{{ url_for('programmes.create_programme') }}" class="inline-block px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium text-sm">Create your first programme</a>
-      {% else %}
-      <p class="text-sm text-gray-400">Sign in to create a programme.</p>
-      {% endif %}
-    </div>
+    <span class="px-3 py-2 text-sm text-gray-600">Page {{ programmes.page }} of {{ programmes.pages }}</span>
+    {% if programmes.has_next %}
+    <a href="{{ url_for('programmes.list_programmes', page=programmes.next_num) }}"
+       class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Next</a>
     {% endif %}
   </div>
+  {% endif %}
+
+  {% else %}
+  {# ── Empty state ── #}
+  <div class="rounded-xl border border-gray-200 bg-white overflow-hidden">
+
+    {# Hero #}
+    <div class="px-8 py-10 sm:px-12 sm:py-12 text-center border-b border-gray-100">
+      <div class="mx-auto mb-5 w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center">
+        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+      </div>
+      <h2 class="text-xl font-semibold text-gray-900 mb-2">No programmes yet</h2>
+      <p class="text-sm text-gray-500 max-w-sm mx-auto mb-6">
+        Programmes let you group related discussions into a structured dialogue — with shared themes, phases, and combined analysis.
+      </p>
+      {% if current_user.is_authenticated %}
+      <a href="{{ url_for('programmes.create_programme') }}"
+         class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Create your first programme
+      </a>
+      {% else %}
+      <a href="{{ url_for('auth.login') }}"
+         class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors">
+        Sign in to get started
+      </a>
+      {% endif %}
+    </div>
+
+    {# Feature highlights #}
+    <div class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100 bg-gray-50">
+      <div class="px-6 py-6">
+        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+          </svg>
+        </div>
+        <h3 class="text-sm font-semibold text-gray-900 mb-1">Themes &amp; Phases</h3>
+        <p class="text-xs text-gray-500 leading-relaxed">Organise discussions by topic and stage. Filter and compare results across the whole dialogue.</p>
+      </div>
+      <div class="px-6 py-6">
+        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+        </div>
+        <h3 class="text-sm font-semibold text-gray-900 mb-1">Stewards &amp; Cohorts</h3>
+        <p class="text-xs text-gray-500 leading-relaxed">Invite co-managers and track different participant groups side by side.</p>
+      </div>
+      <div class="px-6 py-6">
+        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mb-3">
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+          </svg>
+        </div>
+        <h3 class="text-sm font-semibold text-gray-900 mb-1">Combined Export</h3>
+        <p class="text-xs text-gray-500 leading-relaxed">Download a single JSON analysis covering consensus, bridge statements, and divisions across every discussion.</p>
+      </div>
+    </div>
+
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}
