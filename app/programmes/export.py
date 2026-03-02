@@ -4,7 +4,6 @@ from flask import Response
 from sqlalchemy import distinct, func
 
 from app import db
-from app.api.utils import get_discussion_participant_count
 from app.models import ConsensusAnalysis, Discussion, StatementVote
 
 
@@ -37,11 +36,11 @@ def build_discussion_export_payload(discussion, cohort_slug=None):
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
 
     cluster_data = analysis.cluster_data if analysis else {}
-    participant_count = (
-        _participant_count_for_cohort(discussion.id, cohort_slug)
-        if cohort_slug else
-        get_discussion_participant_count(discussion)
-    )
+    if cohort_slug:
+        participant_count = _participant_count_for_cohort(discussion.id, cohort_slug)
+    else:
+        from app.api.utils import get_discussion_participant_count
+        participant_count = get_discussion_participant_count(discussion)
 
     return {
         "discussion_id": discussion.id,
