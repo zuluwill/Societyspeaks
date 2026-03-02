@@ -44,7 +44,8 @@
   {% set has_themes = programme.themes and programme.themes|length > 0 %}
   {% set has_phases = programme.phases and programme.phases|length > 0 %}
   {% if has_themes or has_phases %}
-  <div class="bg-white rounded-lg shadow px-6 py-4 mb-4 flex flex-wrap items-center gap-4">
+  <div class="bg-white rounded-lg shadow px-4 sm:px-6 py-4 mb-4 overflow-x-auto">
+  <div class="flex flex-wrap items-center gap-4 min-w-0">
 
     {% if has_themes %}
     <div class="flex flex-wrap items-center gap-2">
@@ -81,11 +82,12 @@
     {% endif %}
 
   </div>
+  </div>
   {% endif %}
 
   {# Discussion list #}
   <div class="bg-white rounded-lg shadow p-6">
-    <div class="flex items-center justify-between mb-4">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
       <h2 class="text-xl font-semibold text-gray-900">
         Discussions
         {% if selected_theme or selected_phase %}
@@ -95,7 +97,7 @@
         {% endif %}
       </h2>
       {% if can_edit %}
-      <a href="{{ url_for('discussions.create_discussion', programme_id=programme.id, programme_theme=selected_theme, programme_phase=selected_phase) }}" class="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">Add discussion</a>
+      <a href="{{ url_for('discussions.create_discussion', programme_id=programme.id, programme_theme=selected_theme, programme_phase=selected_phase) }}" class="flex-shrink-0 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 whitespace-nowrap">Add discussion</a>
       {% endif %}
     </div>
 

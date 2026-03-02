@@ -18,10 +18,10 @@
     <div>
       {{ form.geographic_scope.label(class="block text-sm font-medium text-gray-700") }}
       <p class="text-xs text-gray-500 mb-1">Used for discovery and filtering.</p>
-      {{ form.geographic_scope(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+      {{ form.geographic_scope(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", id="prog_scope_select") }}
       {% if form.geographic_scope.errors %}{% for error in form.geographic_scope.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
-    <div>
+    <div id="prog_country_wrapper">
       {{ form.country.label(class="block text-sm font-medium text-gray-700") }}
       {{ form.country(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
       {% if form.country.errors %}{% for error in form.country.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
@@ -79,17 +79,22 @@
   (function () {
     const ownerSelect = document.getElementById("owner_type_select");
     const companyWrapper = document.getElementById("company_profile_wrapper");
-    if (!ownerSelect || !companyWrapper) return;
-
-    function toggleCompany() {
-      if (ownerSelect.value === "company") {
-        companyWrapper.style.display = "";
-      } else {
-        companyWrapper.style.display = "none";
+    if (ownerSelect && companyWrapper) {
+      function toggleCompany() {
+        companyWrapper.style.display = ownerSelect.value === "company" ? "" : "none";
       }
+      ownerSelect.addEventListener("change", toggleCompany);
+      toggleCompany();
     }
 
-    ownerSelect.addEventListener("change", toggleCompany);
-    toggleCompany(); // run on load
+    const scopeSelect = document.getElementById("prog_scope_select");
+    const countryWrapper = document.getElementById("prog_country_wrapper");
+    if (scopeSelect && countryWrapper) {
+      function toggleCountry() {
+        countryWrapper.style.display = scopeSelect.value === "global" ? "none" : "";
+      }
+      scopeSelect.addEventListener("change", toggleCountry);
+      toggleCountry();
+    }
   })();
 </script>

@@ -1,13 +1,13 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="max-w-6xl mx-auto py-8 px-4">
-  <div class="flex items-start justify-between mb-2">
-    <div>
+  <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-2">
+    <div class="min-w-0">
       <h1 class="text-3xl font-bold text-gray-900">Programmes</h1>
       <p class="mt-1 text-sm text-gray-500">A Programme is a structured dialogue — a container for related discussions such as a national consultation, a research project, or a multi-stage public engagement campaign. Programmes let organisers group discussions by theme or phase, invite stewards, and export a combined analysis.</p>
     </div>
     {% if current_user.is_authenticated %}
-    <a href="{{ url_for('programmes.create_programme') }}" class="ml-4 flex-shrink-0 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">
+    <a href="{{ url_for('programmes.create_programme') }}" class="flex-shrink-0 inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium whitespace-nowrap">
       New programme
     </a>
     {% endif %}
