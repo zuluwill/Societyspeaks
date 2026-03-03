@@ -123,6 +123,90 @@ def test_org_viewer_and_outsider_cannot_steward_org_programme_without_explicit_s
         assert can_steward_programme(programme, outsider) is True
 
 
+def test_workspace_shows_owner_label(app, db):
+    with app.app_context():
+        owner = _create_user(db, 'ws_owner', 'ws_owner@example.com')
+        prog = Programme(
+            name='Workspace Owned Programme',
+            slug=generate_slug('Workspace Owned Programme'),
+            creator_id=owner.id,
+            visibility='public',
+            status='active',
+        )
+        db.session.add(prog)
+        db.session.commit()
+        owner_id = owner.id
+
+    client = app.test_client()
+    _login(client, owner_id)
+    resp = client.get('/programmes/workspace')
+    body = resp.get_data(as_text=True)
+    assert resp.status_code == 200
+    assert 'Workspace Owned Programme' in body
+    assert 'Owner/Editor' in body
+
+
+def test_workspace_shows_steward_label(app, db):
+    with app.app_context():
+        owner = _create_user(db, 'ws_owner2', 'ws_owner2@example.com')
+        steward_user = _create_user(db, 'ws_steward', 'ws_steward@example.com')
+        prog = Programme(
+            name='Workspace Stewarded Programme',
+            slug=generate_slug('Workspace Stewarded Programme'),
+            creator_id=owner.id,
+            visibility='public',
+            status='active',
+        )
+        db.session.add(prog)
+        db.session.flush()
+        db.session.add(ProgrammeSteward(
+            programme_id=prog.id,
+            user_id=steward_user.id,
+            status='active',
+        ))
+        db.session.commit()
+        steward_id = steward_user.id
+
+    client = app.test_client()
+    _login(client, steward_id)
+    resp = client.get('/programmes/workspace')
+    body = resp.get_data(as_text=True)
+    assert resp.status_code == 200
+    assert 'Workspace Stewarded Programme' in body
+    assert 'Steward' in body
+
+
+def test_workspace_shows_invited_label(app, db):
+    with app.app_context():
+        owner = _create_user(db, 'ws_owner3', 'ws_owner3@example.com')
+        invited_user = _create_user(db, 'ws_invited', 'ws_invited@example.com')
+        prog = Programme(
+            name='Workspace Invited Programme',
+            slug=generate_slug('Workspace Invited Programme'),
+            creator_id=owner.id,
+            visibility='invite_only',
+            status='active',
+        )
+        db.session.add(prog)
+        db.session.flush()
+        db.session.add(ProgrammeAccessGrant(
+            programme_id=prog.id,
+            user_id=invited_user.id,
+            invited_by_id=owner.id,
+            status='active',
+        ))
+        db.session.commit()
+        invited_id = invited_user.id
+
+    client = app.test_client()
+    _login(client, invited_id)
+    resp = client.get('/programmes/workspace')
+    body = resp.get_data(as_text=True)
+    assert resp.status_code == 200
+    assert 'Workspace Invited Programme' in body
+    assert 'Invited participant' in body
+
+
 def test_steward_can_export_permissions(app, db):
     with app.app_context():
         creator = _create_user(db, 'creator2', 'creator2@example.com')
