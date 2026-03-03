@@ -4,12 +4,13 @@ Consensus & Clustering API Routes (Phase 3)
 
 Provides endpoints for running consensus analysis and viewing results
 """
-from flask import render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
+from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db, limiter
 from app.models import Discussion, ConsensusAnalysis, Statement, StatementVote
 from app.discussions.statements import get_statement_vote_fingerprint
 from app.lib.consensus_engine import run_consensus_analysis, save_consensus_analysis, can_cluster
+from app.programmes.permissions import can_view_programme
 from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 import logging
@@ -100,7 +101,10 @@ def trigger_analysis(discussion_id):
     Rate limited to prevent abuse (computationally expensive)
     """
     discussion = Discussion.query.get_or_404(discussion_id)
-    
+
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(403)
+
     # Only discussion owner can trigger analysis
     if discussion.creator_id != current_user.id:
         flash("Only the discussion owner can run consensus analysis", "danger")
@@ -167,7 +171,10 @@ def view_results(discussion_id):
     - Admins can always view
     """
     discussion = Discussion.query.get_or_404(discussion_id)
-    
+
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(403)
+
     # Check participation gate (unless user is creator, admin, or demo discussion)
     is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
     is_admin = current_user.is_authenticated and getattr(current_user, 'is_admin', False)
@@ -308,7 +315,10 @@ def get_cluster_data(discussion_id):
     Returns JSON with user positions and cluster assignments
     """
     discussion = Discussion.query.get_or_404(discussion_id)
-    
+
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        return jsonify({'error': 'forbidden'}), 403
+
     # Get latest analysis
     analysis = ConsensusAnalysis.query.filter_by(
         discussion_id=discussion_id
@@ -331,7 +341,10 @@ def get_special_statements(discussion_id):
     API endpoint to get consensus, bridge, and divisive statements
     """
     discussion = Discussion.query.get_or_404(discussion_id)
-    
+
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        return jsonify({'error': 'forbidden'}), 403
+
     # Get latest analysis
     analysis = ConsensusAnalysis.query.filter_by(
         discussion_id=discussion_id
@@ -353,7 +366,10 @@ def get_analysis_status(discussion_id):
     API endpoint to check if analysis is ready or available
     """
     discussion = Discussion.query.get_or_404(discussion_id)
-    
+
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        return jsonify({'error': 'forbidden'}), 403
+
     # Check if ready
     ready, message = can_cluster(discussion_id, db)
     
@@ -385,12 +401,15 @@ def generate_report(discussion_id):
     """
     Generate a detailed PDF/HTML report of consensus analysis
     Includes cluster descriptions, key statements, and recommendations
-    
+
     Participation Gate: Same as view_results - users must vote on at least
     PARTICIPATION_THRESHOLD statements before viewing.
     """
     discussion = Discussion.query.get_or_404(discussion_id)
-    
+
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(403)
+
     # Check participation gate (same as view_results)
     is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
     is_admin = current_user.is_authenticated and getattr(current_user, 'is_admin', False)
@@ -445,7 +464,10 @@ def export_analysis(discussion_id):
     Useful for external analysis tools
     """
     discussion = Discussion.query.get_or_404(discussion_id)
-    
+
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        return jsonify({'error': 'forbidden'}), 403
+
     # Get latest analysis
     analysis = ConsensusAnalysis.query.filter_by(
         discussion_id=discussion_id
@@ -483,9 +505,12 @@ def generate_summary(discussion_id):
     Requires user to have an active API key
     """
     from app.lib.llm_utils import generate_discussion_summary
-    
+
     discussion = Discussion.query.get_or_404(discussion_id)
-    
+
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(403)
+
     # Get latest analysis
     analysis = ConsensusAnalysis.query.filter_by(
         discussion_id=discussion_id
@@ -554,8 +579,10 @@ def get_summary_api(discussion_id):
     """
     API endpoint to get AI-generated summary
     """
-    from flask import jsonify
-    
+    discussion = Discussion.query.get_or_404(discussion_id)
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        return jsonify({'error': 'forbidden'}), 403
+
     analysis = ConsensusAnalysis.query.filter_by(
         discussion_id=discussion_id
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
@@ -584,9 +611,12 @@ def generate_cluster_labels_route(discussion_id):
     Requires user to have an active API key
     """
     from app.lib.llm_utils import generate_cluster_labels
-    
+
     discussion = Discussion.query.get_or_404(discussion_id)
-    
+
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(403)
+
     # Get latest analysis
     analysis = ConsensusAnalysis.query.filter_by(
         discussion_id=discussion_id

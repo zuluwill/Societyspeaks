@@ -1,5 +1,5 @@
 from app import db
-from app.models import CompanyProfile, OrganizationMember, ProgrammeSteward
+from app.models import CompanyProfile, OrganizationMember, ProgrammeAccessGrant, ProgrammeSteward
 
 
 def _is_authenticated(user):
@@ -51,3 +51,42 @@ def can_steward_programme(programme, user):
 
 def can_add_discussion_to_programme(programme, user):
     return can_edit_programme(programme, user)
+
+
+def _has_programme_access_grant(programme_id, user_id):
+    if not programme_id or not user_id:
+        return False
+    grant = ProgrammeAccessGrant.query.filter_by(
+        programme_id=programme_id,
+        user_id=user_id,
+        status='active'
+    ).first()
+    return grant is not None
+
+
+def can_view_programme(programme, user):
+    if can_steward_programme(programme, user):
+        return True
+
+    visibility = (getattr(programme, 'visibility', None) or 'public').strip()
+    is_active = getattr(programme, 'status', None) == 'active'
+    if not is_active:
+        return False
+
+    if visibility == 'public':
+        return True
+    if visibility == 'unlisted':
+        return True
+    if visibility == 'private':
+        return False
+    if visibility == 'invite_only':
+        if not _is_authenticated(user):
+            return False
+        return _has_programme_access_grant(programme.id, user.id)
+
+    # Safe default for unknown visibility values.
+    return False
+
+
+def can_participate_in_programme(programme, user):
+    return can_view_programme(programme, user)

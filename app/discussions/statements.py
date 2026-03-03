@@ -4,13 +4,14 @@ Routes for Native Statement System (Phase 1)
 
 Adapted from pol.is patterns with Society Speaks enhancements
 """
-from flask import render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app, session
+from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app, session
 from flask_login import login_required, current_user
 from app import db, limiter, csrf
 from app.db_retry import with_db_retry
 from app.discussions.statement_forms import StatementForm, VoteForm, ResponseForm, FlagStatementForm
 from app.models import Discussion, Statement, StatementVote, Response, StatementFlag, DiscussionParticipant
 from app.email_utils import create_discussion_notification
+from app.programmes.permissions import can_view_programme
 from app.programmes.utils import validate_cohort_for_discussion
 from sqlalchemy import func, desc, or_
 from sqlalchemy.exc import IntegrityError
@@ -31,6 +32,11 @@ statements_bp = Blueprint('statements', __name__)
 STATEMENT_CLIENT_COOKIE_NAME = 'statement_client_id'
 STATEMENT_CLIENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
 EMBED_FINGERPRINT_MAX_LENGTH = 128
+
+
+def _enforce_programme_visibility_for_discussion(discussion):
+    if discussion and discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(403)
 
 
 def calculate_wilson_score(agree, disagree, confidence=0.95):
@@ -132,7 +138,10 @@ def check_statement_rate_limit(identifier):
 def create_statement(discussion_id):
     """Create a new statement in a native discussion (authenticated or anonymous)"""
     discussion = Discussion.query.get_or_404(discussion_id)
-    
+
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(403)
+
     if not discussion.has_native_statements:
         flash("This discussion does not support native statements", "error")
         return redirect(url_for('discussions.view_discussion', 
@@ -444,6 +453,11 @@ def vote_statement(statement_id):
             flash('This discussion is closed and no longer accepts votes.', 'error')
             return redirect(url_for('statements.view_statement', statement_id=statement_id))
         return jsonify({'error': 'discussion_closed'}), 403
+    if discussion and discussion.programme and not can_view_programme(discussion.programme, current_user):
+        if is_form_post:
+            flash('You do not have access to this programme discussion.', 'error')
+            return redirect(url_for('main.index'))
+        return jsonify({'error': 'forbidden'}), 403
 
     # Check integrity mode rate limits
     embed_fingerprint = extract_embed_fingerprint_from_request()
@@ -765,6 +779,7 @@ def view_statement(statement_id):
     """View a single statement with its responses and votes"""
     statement = Statement.query.get_or_404(statement_id)
     discussion = statement.discussion
+    _enforce_programme_visibility_for_discussion(discussion)
     
     # Get user's vote if logged in
     user_vote = None
@@ -795,6 +810,7 @@ def view_statement(statement_id):
 def edit_statement(statement_id):
     """Edit own statement (within 10 minute window)"""
     statement = Statement.query.get_or_404(statement_id)
+    _enforce_programme_visibility_for_discussion(statement.discussion)
     
     # Check ownership
     if statement.user_id != current_user.id:
@@ -827,6 +843,7 @@ def edit_statement(statement_id):
 def delete_statement(statement_id):
     """Soft delete own statement"""
     statement = Statement.query.get_or_404(statement_id)
+    _enforce_programme_visibility_for_discussion(statement.discussion)
     
     # Check ownership or admin
     if statement.user_id != current_user.id and not current_user.is_admin:
@@ -848,7 +865,8 @@ def delete_statement(statement_id):
 def flag_statement(statement_id):
     """Flag a statement for moderation"""
     statement = Statement.query.get_or_404(statement_id)
-    
+    _enforce_programme_visibility_for_discussion(statement.discussion)
+
     # Check if user already flagged this statement
     existing_flag = StatementFlag.query.filter_by(
         statement_id=statement_id,
@@ -886,7 +904,8 @@ def list_statements(discussion_id):
     Progressive disclosure: prioritize statements with fewer votes
     """
     discussion = Discussion.query.get_or_404(discussion_id)
-    
+    _enforce_programme_visibility_for_discussion(discussion)
+
     if not discussion.has_native_statements:
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id, 
@@ -965,6 +984,7 @@ def list_statements(discussion_id):
 def get_statement_votes(statement_id):
     """Get vote breakdown for a statement (API endpoint)"""
     statement = Statement.query.get_or_404(statement_id)
+    _enforce_programme_visibility_for_discussion(statement.discussion)
     
     return jsonify({
         'statement_id': statement.id,
@@ -1000,6 +1020,8 @@ def quick_response(statement_id):
     if not discussion:
         flash("Discussion not found", "error")
         return redirect(url_for('discussions.search_discussions'))
+
+    _enforce_programme_visibility_for_discussion(discussion)
 
     content = request.form.get('content', '').strip()
     position = request.form.get('position', 'neutral')
@@ -1045,6 +1067,9 @@ def create_response(statement_id):
     Supports pro/con/neutral positioning
     """
     statement = Statement.query.get_or_404(statement_id)
+
+    _enforce_programme_visibility_for_discussion(statement.discussion)
+
     form = ResponseForm()
     # Pre-fill position from query param when coming from inline "write a detailed argument" link
     if request.method == 'GET':
@@ -1081,6 +1106,7 @@ def create_response(statement_id):
 def view_response(response_id):
     """View a specific response with its thread"""
     response = Response.query.get_or_404(response_id)
+    _enforce_programme_visibility_for_discussion(response.statement.discussion)
     
     if response.is_deleted:
         flash("This response has been deleted", "info")
@@ -1113,6 +1139,7 @@ def edit_response(response_id):
     Only the author can edit
     """
     response = Response.query.get_or_404(response_id)
+    _enforce_programme_visibility_for_discussion(response.statement.discussion)
     
     # Check ownership
     if response.user_id != current_user.id:
@@ -1156,6 +1183,7 @@ def delete_response(response_id):
     """
     response = Response.query.get_or_404(response_id)
     discussion = response.statement.discussion
+    _enforce_programme_visibility_for_discussion(discussion)
     
     # Check permissions
     if response.user_id != current_user.id and discussion.creator_id != current_user.id:
@@ -1180,6 +1208,7 @@ def list_responses(statement_id):
     from sqlalchemy.orm import joinedload, selectinload
     
     statement = Statement.query.get_or_404(statement_id)
+    _enforce_programme_visibility_for_discussion(statement.discussion)
     
     # Fetch ALL responses for this statement with eager loading of users
     # This prevents N+1 queries when building the tree
@@ -1241,6 +1270,7 @@ def get_response_children(response_id):
     from sqlalchemy import exists, and_
     
     response = Response.query.get_or_404(response_id)
+    _enforce_programme_visibility_for_discussion(response.statement.discussion)
     
     # Eager load user relationship to prevent N+1
     children = Response.query.options(
@@ -1290,6 +1320,7 @@ def add_evidence(response_id):
     import os
     
     response = Response.query.get_or_404(response_id)
+    _enforce_programme_visibility_for_discussion(response.statement.discussion)
     
     # Check if user can add evidence (response author or discussion owner)
     if response.user_id != current_user.id and response.statement.discussion.creator_id != current_user.id:
@@ -1371,6 +1402,7 @@ def delete_evidence(evidence_id):
     evidence = Evidence.query.get_or_404(evidence_id)
     response = evidence.response
     discussion = response.statement.discussion
+    _enforce_programme_visibility_for_discussion(discussion)
     
     # Check permissions
     if evidence.added_by_user_id != current_user.id and discussion.creator_id != current_user.id:
@@ -1405,6 +1437,7 @@ def update_evidence_quality(evidence_id):
     
     evidence = Evidence.query.get_or_404(evidence_id)
     discussion = evidence.response.statement.discussion
+    _enforce_programme_visibility_for_discussion(discussion)
     
     # Check permissions (discussion owner only for now)
     if discussion.creator_id != current_user.id:
@@ -1433,6 +1466,7 @@ def download_evidence(evidence_id):
     import io
     
     evidence = Evidence.query.get_or_404(evidence_id)
+    _enforce_programme_visibility_for_discussion(evidence.response.statement.discussion)
     
     if not evidence.storage_key:
         flash("No file attached to this evidence", "danger")

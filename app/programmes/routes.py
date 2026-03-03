@@ -1,14 +1,22 @@
-from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from sqlalchemy import distinct, func
+from sqlalchemy import distinct, func, or_
 
 from app import cache, db, limiter
 from app.lib.auth_utils import normalize_email
 from app.lib.time import utcnow_naive
-from app.models import CompanyProfile, Discussion, OrganizationMember, Programme, ProgrammeSteward, StatementVote
-from app.programmes.export import stream_programme_export
-from app.programmes.forms import InviteStewardForm, ProgrammeForm
-from app.programmes.permissions import can_edit_programme, can_steward_programme
+from app.models import (
+    CompanyProfile,
+    Discussion,
+    OrganizationMember,
+    Programme,
+    ProgrammeAccessGrant,
+    ProgrammeSteward,
+    StatementVote,
+)
+from app.programmes.export import stream_programme_export_csv, stream_programme_export_json
+from app.programmes.forms import InviteProgrammeAccessForm, InviteStewardForm, ProgrammeForm
+from app.programmes.permissions import can_edit_programme, can_steward_programme, can_view_programme
 from app.programmes.utils import (
     get_programme_cohort_slugs,
     parse_cohorts_csv,
@@ -107,15 +115,60 @@ def _assign_programme_fields(programme, form):
     programme.themes = parse_csv_list(form.themes_csv.data)
     programme.phases = parse_csv_list(form.phases_csv.data)
     programme.cohorts = parse_cohorts_csv(form.cohorts_text.data)
+    programme.visibility = form.visibility.data or 'public'
 
 
 @programmes_bp.route('/')
 def list_programmes():
     page = request.args.get('page', 1, type=int)
-    programmes = Programme.query.filter_by(status='active').order_by(
-        Programme.created_at.desc()
-    ).paginate(page=page, per_page=12, error_out=False)
+    live_discussion_exists = db.session.query(Discussion.id).filter(
+        Discussion.programme_id == Programme.id,
+        Discussion.partner_env != 'test',
+        Discussion.is_closed.is_(False)
+    ).exists()
+    programmes = Programme.query.filter(
+        Programme.status == 'active',
+        Programme.visibility == 'public',
+        live_discussion_exists
+    ).order_by(Programme.created_at.desc()).paginate(page=page, per_page=12, error_out=False)
     return render_template('programmes/list.html', programmes=programmes)
+
+
+@programmes_bp.route('/workspace')
+@login_required
+def workspace_programmes():
+    org_ids = {org.id for org in _editable_company_profiles(current_user)}
+    editable_predicate = or_(
+        Programme.creator_id == current_user.id,
+        Programme.company_profile_id.in_(list(org_ids)) if org_ids else Programme.id == -1
+    )
+
+    editable_programmes = Programme.query.filter(editable_predicate).all()
+    stewarded_programmes = Programme.query.join(
+        ProgrammeSteward,
+        ProgrammeSteward.programme_id == Programme.id
+    ).filter(
+        ProgrammeSteward.user_id == current_user.id,
+        ProgrammeSteward.status == 'active'
+    ).all()
+    invited_programmes = Programme.query.join(
+        ProgrammeAccessGrant,
+        ProgrammeAccessGrant.programme_id == Programme.id
+    ).filter(
+        ProgrammeAccessGrant.user_id == current_user.id,
+        ProgrammeAccessGrant.status == 'active'
+    ).all()
+
+    rows = {}
+    for programme in editable_programmes:
+        rows[programme.id] = {"programme": programme, "access_label": "Owner/Editor"}
+    for programme in stewarded_programmes:
+        rows.setdefault(programme.id, {"programme": programme, "access_label": "Steward"})
+    for programme in invited_programmes:
+        rows.setdefault(programme.id, {"programme": programme, "access_label": "Invited participant"})
+
+    programmes = sorted(rows.values(), key=lambda row: row["programme"].updated_at or row["programme"].created_at, reverse=True)
+    return render_template('programmes/workspace.html', programmes=programmes)
 
 
 @programmes_bp.route('/new', methods=['GET', 'POST'])
@@ -167,6 +220,8 @@ def create_programme():
 @programmes_bp.route('/<slug>')
 def view_programme(slug):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
+    if not can_view_programme(programme, current_user):
+        abort(404)
     theme = request.args.get('theme', '').strip() or None
     phase = request.args.get('phase', '').strip() or None
     page = request.args.get('page', 1, type=int)
@@ -257,15 +312,28 @@ def programme_settings(slug):
         flash("You don't have permission to access settings.", "danger")
         return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
+    access_page = request.args.get('access_page', 1, type=int)
     invite_form = InviteStewardForm()
+    invite_access_form = InviteProgrammeAccessForm()
     stewards = ProgrammeSteward.query.filter_by(programme_id=programme.id).order_by(
         ProgrammeSteward.created_at.desc()
     ).all()
+    access_grants_pagination = ProgrammeAccessGrant.query.filter_by(
+        programme_id=programme.id,
+        status='active'
+    ).order_by(ProgrammeAccessGrant.created_at.desc()).paginate(
+        page=access_page,
+        per_page=50,
+        error_out=False
+    )
     return render_template(
         'programmes/settings.html',
         programme=programme,
         stewards=stewards,
-        invite_form=invite_form
+        invite_form=invite_form,
+        invite_access_form=invite_access_form,
+        access_grants=access_grants_pagination.items,
+        access_grants_pagination=access_grants_pagination
     )
 
 
@@ -385,6 +453,103 @@ def invite_steward(slug):
     return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
 
+def _send_access_grant_email(programme, email, programme_url):
+    from app.resend_client import get_resend_client
+
+    client = get_resend_client()
+    email_data = {
+        'from': f"Society Speaks <noreply@{current_app.config.get('RESEND_DOMAIN', 'societyspeaks.io')}>",
+        'to': [email],
+        'subject': f"You've been invited to join: {programme.name}",
+        'html': render_template(
+            'emails/programme_access_invite.html',
+            programme=programme,
+            programme_url=programme_url,
+            inviter_name=current_user.username,
+        ),
+    }
+    return client._send_with_retry(email_data)
+
+
+@programmes_bp.route('/<slug>/access/invite', methods=['POST'])
+@login_required
+@limiter.limit("20 per hour")
+def invite_programme_access(slug):
+    programme = Programme.query.filter_by(slug=slug).first_or_404()
+    if not can_edit_programme(programme, current_user):
+        flash("You don't have permission to invite participants.", "danger")
+        return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+
+    form = InviteProgrammeAccessForm()
+    if not form.validate_on_submit():
+        flash('Please provide a valid participant email.', 'danger')
+        return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+
+    email = normalize_email(form.email.data)
+    from app.models import User
+    user = User.query.filter(db.func.lower(User.email) == email).first()
+    if not user:
+        flash('No existing user found with that email. They must register first.', 'warning')
+        return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+
+    if can_steward_programme(programme, user):
+        flash('That user already has steward or owner access.', 'info')
+        return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+
+    grant = ProgrammeAccessGrant.query.filter_by(programme_id=programme.id, user_id=user.id).first()
+    if grant and grant.status == 'active':
+        flash('That user already has participant access.', 'info')
+        return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+
+    if grant:
+        grant.status = 'active'
+        grant.invited_by_id = current_user.id
+    else:
+        grant = ProgrammeAccessGrant(
+            programme_id=programme.id,
+            user_id=user.id,
+            invited_by_id=current_user.id,
+            status='active'
+        )
+        db.session.add(grant)
+
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Failed to save programme access grant')
+        flash('Could not grant participant access.', 'danger')
+        return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+
+    programme_url = url_for('programmes.view_programme', slug=programme.slug, _external=True)
+    email_delivery_failed = False
+    try:
+        _send_access_grant_email(programme, email, programme_url)
+    except Exception:
+        current_app.logger.exception('Failed to send programme access invite email')
+        email_delivery_failed = True
+
+    flash(f'Participant access granted to {email}.', 'success')
+    if email_delivery_failed:
+        flash("Invite email could not be delivered. Access is active, but you may need to share the programme link manually.", 'warning')
+    return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+
+
+@programmes_bp.route('/<slug>/access/<int:grant_id>/revoke', methods=['POST'])
+@login_required
+def revoke_programme_access(slug, grant_id):
+    programme = Programme.query.filter_by(slug=slug).first_or_404()
+    if not can_edit_programme(programme, current_user):
+        flash("You don't have permission to revoke participant access.", "danger")
+        return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+
+    grant = ProgrammeAccessGrant.query.filter_by(id=grant_id, programme_id=programme.id).first_or_404()
+    grant.status = 'revoked'
+    db.session.commit()
+    flash('Participant access revoked.', 'success')
+    return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+
+
 @programmes_bp.route('/stewards/accept/<token>', methods=['GET'])
 @login_required
 def accept_steward_invite(token):
@@ -415,4 +580,7 @@ def export_programme(slug):
             flash('Unknown cohort slug for this programme.', 'danger')
             return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
-    return stream_programme_export(programme, cohort_slug=cohort_slug)
+    export_format = (request.args.get('format') or 'csv').strip().lower()
+    if export_format == 'json':
+        return stream_programme_export_json(programme, cohort_slug=cohort_slug)
+    return stream_programme_export_csv(programme, cohort_slug=cohort_slug)

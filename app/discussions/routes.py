@@ -12,6 +12,7 @@ from app.api.utils import is_partner_origin_allowed, get_partner_allowed_origins
 from app.trending.conversion_tracking import track_social_click
 from app.lib.time import utcnow_naive
 from app.programmes.permissions import can_add_discussion_to_programme
+from app.programmes.permissions import can_view_programme
 from app.programmes.utils import render_safe_information_markdown, safe_information_links, validate_cohort_for_discussion
 from sqlalchemy.orm import joinedload, selectinload
 import json
@@ -489,6 +490,8 @@ def view_discussion_redirect(discussion_id):
         ), 410
     if discussion.partner_env == 'test':
         abort(404)
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(404)
     return redirect(url_for('discussions.view_discussion',
                           discussion_id=discussion.id,
                           slug=discussion.slug), code=301)
@@ -543,6 +546,15 @@ def embed_discussion(discussion_id):
     discussion = db.session.get(Discussion, discussion_id)
     if not discussion:
         abort(404)
+
+    # Enforce programme visibility — restricted programmes must not be embeddable
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+        return render_template(
+            'discussions/embed_unavailable.html',
+            unavailable_reason='access_restricted',
+            base_url=base_url
+        ), 403
 
     # Restrict test embeds to verified test domains
     origin = request.headers.get('Origin')
@@ -674,6 +686,8 @@ def view_discussion(discussion_id, slug):
     # Block test discussions from public access
     if discussion.partner_env == 'test':
         abort(404)
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(404)
     # Redirect if the slug in the URL doesn't match the discussion's slug
     if discussion.slug != slug:
         return redirect(url_for('discussions.view_discussion', 
@@ -771,6 +785,8 @@ def mark_information_viewed(discussion_id):
         abort(404)
     if discussion.partner_env == 'test':
         abort(404)
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(404)
 
     user_id = current_user.id if current_user.is_authenticated else None
     participant_identifier = None
@@ -798,8 +814,15 @@ def mark_information_viewed(discussion_id):
 
 
 def fetch_discussions(search, country, city, topic, keywords, programme_id, page, per_page=9, sort='recent'):
-    from sqlalchemy import or_
-    query = _exclude_test_discussions(Discussion.query)
+    from sqlalchemy import and_, or_
+    query = _exclude_test_discussions(Discussion.query).outerjoin(
+        Programme, Discussion.programme_id == Programme.id
+    ).filter(
+        or_(
+            Discussion.programme_id.is_(None),
+            and_(Programme.status == 'active', Programme.visibility == 'public')
+        )
+    )
 
     # Apply filters if provided - search both title and description
     if search:
@@ -816,7 +839,7 @@ def fetch_discussions(search, country, city, topic, keywords, programme_id, page
     if topic:
         query = query.filter_by(topic=topic)
     if programme_id:
-        query = query.filter_by(programme_id=programme_id)
+        query = query.filter(Discussion.programme_id == programme_id)
 
     # Apply sorting
     if sort == 'recent':
@@ -844,7 +867,7 @@ def search_discussions():
     programme_id = request.args.get('programme_id', type=int)
     page = request.args.get('page', 1, type=int)
     sort = request.args.get('sort', 'popular')
-    programmes = Programme.query.filter_by(status='active').order_by(Programme.name.asc()).all()
+    programmes = Programme.query.filter_by(status='active', visibility='public').order_by(Programme.name.asc()).all()
 
     # Use modified fetch_discussions to include sorting
     discussions = fetch_discussions(

@@ -3,7 +3,7 @@
 <div class="max-w-4xl mx-auto py-8 px-4 space-y-6">
   <div class="bg-white rounded-lg shadow p-6">
     <h1 class="text-2xl font-bold text-gray-900">Programme settings</h1>
-    <p class="text-sm text-gray-500">{{ programme.name }} · Status: {{ programme.status }}</p>
+    <p class="text-sm text-gray-500">{{ programme.name }} · Status: {{ programme.status }} · Visibility: {{ programme.visibility|replace('_', ' ')|title }}</p>
     <div class="mt-4">
       {% if programme.status == 'active' %}
       <form method="POST" action="{{ url_for('programmes.archive_programme', slug=programme.slug) }}">
@@ -44,6 +44,54 @@
       </div>
       <div>
         {{ invite_form.submit(class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700") }}
+      </div>
+    </form>
+  </div>
+
+  <div class="bg-white rounded-lg shadow p-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-1">Participant access</h2>
+    <p class="text-sm text-gray-500 mb-4">
+      Use this for <strong>Invite-only</strong> programmes. Users must already have an account.
+    </p>
+
+    {% if access_grants %}
+    <div class="space-y-2 mb-6">
+      {% for grant in access_grants %}
+      <div class="flex items-center justify-between border rounded p-3 gap-3">
+        <div class="text-sm text-gray-700">
+          {{ grant.user.username if grant.user else ('User #' ~ grant.user_id) }}
+          {% if grant.user and grant.user.email %}<span class="text-gray-500">· {{ grant.user.email }}</span>{% endif %}
+        </div>
+        <form method="POST" action="{{ url_for('programmes.revoke_programme_access', slug=programme.slug, grant_id=grant.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Revoke</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+    {% if access_grants_pagination and access_grants_pagination.pages > 1 %}
+    <div class="mb-6 flex items-center justify-center gap-2">
+      {% if access_grants_pagination.has_prev %}
+      <a href="{{ url_for('programmes.programme_settings', slug=programme.slug, access_page=access_grants_pagination.prev_num) }}" class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Previous</a>
+      {% endif %}
+      <span class="px-3 py-2 text-sm text-gray-600">Page {{ access_grants_pagination.page }} of {{ access_grants_pagination.pages }}</span>
+      {% if access_grants_pagination.has_next %}
+      <a href="{{ url_for('programmes.programme_settings', slug=programme.slug, access_page=access_grants_pagination.next_num) }}" class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Next</a>
+      {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="text-sm text-gray-600 mb-6">No participant access grants yet.</p>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('programmes.invite_programme_access', slug=programme.slug) }}" class="space-y-3">
+      {{ invite_access_form.csrf_token }}
+      <div>
+        {{ invite_access_form.email.label(class="block text-sm font-medium text-gray-700") }}
+        {{ invite_access_form.email(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+      </div>
+      <div>
+        {{ invite_access_form.submit(class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700") }}
       </div>
     </form>
   </div>

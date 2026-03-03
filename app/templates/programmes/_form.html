@@ -43,6 +43,13 @@
   </div>
 
   <div>
+    {{ form.visibility.label(class="block text-sm font-medium text-gray-700") }}
+    <p class="text-xs text-gray-500 mb-1">Controls who can discover and access this programme.</p>
+    {{ form.visibility(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500") }}
+    {% if form.visibility.errors %}{% for error in form.visibility.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
+  </div>
+
+  <div>
     {{ form.logo_url.label(class="block text-sm font-medium text-gray-700") }}
     <p class="text-xs text-gray-500 mb-1">Optional. A public URL for the programme logo or banner image.</p>
     {{ form.logo_url(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500", placeholder="https://example.com/logo.png") }}

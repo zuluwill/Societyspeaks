@@ -33,7 +33,7 @@
         <a href="{{ url_for('programmes.programme_settings', slug=programme.slug) }}" class="px-4 py-2 border rounded-md hover:bg-gray-50 text-sm">Settings</a>
         {% endif %}
         {% if can_steward %}
-        <a href="{{ url_for('programmes.export_programme', slug=programme.slug) }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">Export analysis</a>
+        <a href="{{ url_for('programmes.export_programme', slug=programme.slug) }}" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">Export CSV</a>
         {% endif %}
       </div>
       {% endif %}

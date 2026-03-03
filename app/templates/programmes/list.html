@@ -5,10 +5,15 @@
   {# ── Page header ── #}
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
     <div>
-      <h1 class="text-3xl font-bold text-gray-900">Programmes</h1>
-      <p class="mt-1 text-sm text-gray-500">Structured dialogues that group discussions by theme, phase, and cohort.</p>
+      <h1 class="text-3xl font-bold text-gray-900">Public Programmes</h1>
+      <p class="mt-1 text-sm text-gray-500">Live public programmes with open discussions you can participate in.</p>
     </div>
+    <div class="flex items-center gap-2">
     {% if current_user.is_authenticated %}
+    <a href="{{ url_for('programmes.workspace_programmes') }}"
+       class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-white text-blue-700 border border-blue-200 rounded-md hover:bg-blue-50 text-sm font-medium whitespace-nowrap transition-colors">
+      My workspace
+    </a>
     <a href="{{ url_for('programmes.create_programme') }}"
        class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium whitespace-nowrap transition-colors">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17,6 +22,7 @@
       New programme
     </a>
     {% endif %}
+    </div>
   </div>
 
   {% if programmes.items %}

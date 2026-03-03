@@ -34,6 +34,12 @@ def help():
             'description': 'How we source and select trending topics for debate',
             'icon': 'newspaper',
             'url': url_for('help.news_feed')
+        },
+        'programmes': {
+            'title': 'Programmes',
+            'description': 'Run structured deliberation campaigns with multiple discussions',
+            'icon': 'sparkles',
+            'url': url_for('help.programmes')
         }
     }
 
@@ -66,3 +72,7 @@ def native_system():
 @help_bp.route('/news-feed')
 def news_feed():
     return render_template('help/news_feed.html')
+
+@help_bp.route('/programmes')
+def programmes():
+    return render_template('help/programmes.html')

@@ -559,6 +559,7 @@ class Programme(db.Model):
         db.Index('ix_programme_slug', 'slug', unique=True),
         db.Index('ix_programme_creator_id', 'creator_id'),
         db.Index('ix_programme_company_profile_id', 'company_profile_id'),
+        db.Index('ix_programme_visibility_status', 'visibility', 'status'),
         db.Index('ix_programme_scope_country', 'geographic_scope', 'country'),
     )
 
@@ -578,6 +579,7 @@ class Programme(db.Model):
     themes = db.Column(db.JSON, nullable=False, default=list)
     phases = db.Column(db.JSON, nullable=False, default=list)
     cohorts = db.Column(db.JSON, nullable=False, default=list)
+    visibility = db.Column(db.String(20), nullable=False, default='public')
     status = db.Column(db.String(20), nullable=False, default='active')
     created_at = db.Column(db.DateTime, default=utcnow_naive)
     updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
@@ -585,6 +587,12 @@ class Programme(db.Model):
     company_profile = db.relationship('CompanyProfile', backref=db.backref('programmes', lazy='select'))
     discussions = db.relationship('Discussion', backref='programme', lazy='select')
     stewards = db.relationship('ProgrammeSteward', backref='programme', lazy='select')
+    access_grants = db.relationship(
+        'ProgrammeAccessGrant',
+        backref='programme',
+        lazy='select',
+        cascade='all, delete-orphan'
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -623,6 +631,27 @@ class ProgrammeSteward(db.Model):
     def generate_invite_token():
         import secrets
         return secrets.token_urlsafe(32)
+
+
+class ProgrammeAccessGrant(db.Model):
+    __tablename__ = 'programme_access_grant'
+    __table_args__ = (
+        db.Index('ix_programme_access_programme_id', 'programme_id'),
+        db.Index('ix_programme_access_user_id', 'user_id'),
+        db.Index('ix_programme_access_status', 'status'),
+        db.UniqueConstraint('programme_id', 'user_id', name='uq_programme_access_programme_user'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    programme_id = db.Column(db.Integer, db.ForeignKey('programme.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    invited_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
+    status = db.Column(db.String(20), nullable=False, default='active')
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
+
+    user = db.relationship('User', foreign_keys=[user_id])
+    invited_by = db.relationship('User', foreign_keys=[invited_by_id])
 
 
 class Discussion(db.Model):
@@ -857,6 +886,12 @@ class Discussion(db.Model):
         per_page=9
     ):
         query = Discussion.query.options(db.joinedload(Discussion.creator)).filter(Discussion.partner_env != 'test')
+        query = query.outerjoin(Programme, Discussion.programme_id == Programme.id).filter(
+            db.or_(
+                Discussion.programme_id.is_(None),
+                db.and_(Programme.status == 'active', Programme.visibility == 'public')
+            )
+        )
 
         if search:
             search_term = f"%{search}%"

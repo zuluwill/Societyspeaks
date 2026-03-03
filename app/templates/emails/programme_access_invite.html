@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+  <body style="font-family: Arial, sans-serif; line-height: 1.5; color: #111827;">
+    <h2>You've been invited to join a programme</h2>
+    <p><strong>{{ inviter_name }}</strong> has granted you access to the programme <strong>{{ programme.name }}</strong> on Society Speaks.</p>
+    <p>
+      <a href="{{ programme_url }}" style="display: inline-block; padding: 10px 14px; background: #2563eb; color: #ffffff; text-decoration: none; border-radius: 6px;">
+        View programme
+      </a>
+    </p>
+    <p>If the button does not work, copy and paste this URL:</p>
+    <p><a href="{{ programme_url }}">{{ programme_url }}</a></p>
+  </body>
+</html>

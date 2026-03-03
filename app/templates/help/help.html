@@ -151,6 +151,12 @@
         class="text-blue-600 hover:underline"
         >Learn more →</a
       >
+      {% elif key == 'programmes' %}
+      <a
+        href="{{ url_for('help.programmes') }}"
+        class="text-blue-600 hover:underline"
+        >Learn more →</a
+      >
       {% endif %}
     </div>
     {% endfor %}
