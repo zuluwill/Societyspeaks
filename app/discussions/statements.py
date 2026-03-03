@@ -984,7 +984,9 @@ def list_statements(discussion_id):
 def get_statement_votes(statement_id):
     """Get vote breakdown for a statement (API endpoint)"""
     statement = Statement.query.get_or_404(statement_id)
-    _enforce_programme_visibility_for_discussion(statement.discussion)
+    discussion = statement.discussion
+    if discussion and discussion.programme and not can_view_programme(discussion.programme, current_user):
+        return jsonify({'error': 'forbidden'}), 403
     
     return jsonify({
         'statement_id': statement.id,

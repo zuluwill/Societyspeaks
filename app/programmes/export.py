@@ -87,8 +87,9 @@ def stream_programme_export_json(programme, cohort_slug=None, chunk_size=50):
         first = True
         page = 1
         while True:
-            pagination = Discussion.query.filter_by(
-                programme_id=programme.id
+            pagination = Discussion.query.filter(
+                Discussion.programme_id == programme.id,
+                Discussion.partner_env != 'test'
             ).order_by(Discussion.created_at.asc()).paginate(
                 page=page,
                 per_page=chunk_size,
@@ -152,8 +153,9 @@ def stream_programme_export_csv(programme, cohort_slug=None, chunk_size=200):
 
         page = 1
         while True:
-            pagination = Discussion.query.filter_by(
-                programme_id=programme.id
+            pagination = Discussion.query.filter(
+                Discussion.programme_id == programme.id,
+                Discussion.partner_env != 'test'
             ).order_by(Discussion.created_at.asc()).paginate(
                 page=page,
                 per_page=chunk_size,

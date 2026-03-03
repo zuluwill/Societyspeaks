@@ -296,6 +296,7 @@ def test_programme_summary_cache_and_invalidation(app, db):
         db.session.add(vote_anon)
         db.session.commit()
 
+        invalidate_programme_summary_cache(programme.id)
         summary_initial = get_programme_summary(programme.id)
         assert summary_initial["discussion_count"] == 1
         assert summary_initial["participant_count"] == 2

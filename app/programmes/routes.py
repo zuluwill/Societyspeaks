@@ -545,7 +545,13 @@ def revoke_programme_access(slug, grant_id):
 
     grant = ProgrammeAccessGrant.query.filter_by(id=grant_id, programme_id=programme.id).first_or_404()
     grant.status = 'revoked'
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Failed to revoke programme access grant')
+        flash('Could not revoke participant access. Please try again.', 'danger')
+        return redirect(url_for('programmes.programme_settings', slug=programme.slug))
     flash('Participant access revoked.', 'success')
     return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
