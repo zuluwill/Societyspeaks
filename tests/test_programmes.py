@@ -3,6 +3,7 @@ from app.models import (
     StatementVote,
     CompanyProfile,
     Discussion,
+    DiscussionParticipant,
     OrganizationMember,
     Programme,
     ProgrammeAccessGrant,
@@ -74,6 +75,52 @@ def test_org_editor_can_edit_programme(app, db):
         db.session.commit()
 
         assert can_edit_programme(programme, editor) is True
+
+
+def test_org_viewer_and_outsider_cannot_steward_org_programme_without_explicit_steward(app, db):
+    with app.app_context():
+        owner = _create_user(db, 'orgowner', 'orgowner@example.com')
+        viewer = _create_user(db, 'orgviewer', 'orgviewer@example.com')
+        outsider = _create_user(db, 'orgoutsider', 'orgoutsider@example.com')
+        company = CompanyProfile(
+            user_id=owner.id,
+            company_name='Civic Org Two',
+            slug=generate_slug('Civic Org Two'),
+        )
+        db.session.add(company)
+        db.session.flush()
+
+        membership = OrganizationMember(
+            org_id=company.id,
+            user_id=viewer.id,
+            role='viewer',
+            status='active',
+        )
+        db.session.add(membership)
+        db.session.flush()
+
+        programme = Programme(
+            name='Org Restricted Programme',
+            slug=generate_slug('Org Restricted Programme'),
+            creator_id=None,
+            company_profile_id=company.id,
+            visibility='invite_only',
+            status='active',
+        )
+        db.session.add(programme)
+        db.session.flush()
+
+        assert can_edit_programme(programme, viewer) is False
+        assert can_steward_programme(programme, viewer) is False
+        assert can_steward_programme(programme, outsider) is False
+
+        db.session.add(ProgrammeSteward(
+            programme_id=programme.id,
+            user_id=outsider.id,
+            status='active',
+        ))
+        db.session.commit()
+        assert can_steward_programme(programme, outsider) is True
 
 
 def test_steward_can_export_permissions(app, db):
@@ -208,6 +255,47 @@ def test_validate_cohort_for_discussion(app, db):
 
         assert validate_cohort_for_discussion(discussion, 'pilot') == 'pilot'
         assert validate_cohort_for_discussion(discussion, 'invalid') is None
+
+
+def test_mark_information_viewed_tracks_anonymous_participant_and_cohort(app, db):
+    with app.app_context():
+        creator = _create_user(db, 'infocreator', 'infocreator@example.com')
+        programme = Programme(
+            name='Info Programme',
+            slug=generate_slug('Info Programme'),
+            creator_id=creator.id,
+            visibility='public',
+            status='active',
+            cohorts=[{"slug": "pilot", "label": "Pilot"}],
+        )
+        db.session.add(programme)
+        db.session.flush()
+
+        discussion = Discussion(
+            title='Info step discussion',
+            slug=generate_slug('Info step discussion'),
+            description='Description long enough for information step discussion.',
+            creator_id=creator.id,
+            geographic_scope='global',
+            programme_id=programme.id,
+            information_title='Please read first',
+            information_body='Important context',
+            has_native_statements=True,
+        )
+        db.session.add(discussion)
+        db.session.commit()
+        discussion_id = discussion.id
+
+    client = app.test_client()
+    response = client.post(f'/discussions/{discussion_id}/information-continue', data={'cohort': 'pilot'})
+    assert response.status_code == 302
+
+    with app.app_context():
+        participant = DiscussionParticipant.query.filter_by(discussion_id=discussion_id, user_id=None).first()
+        assert participant is not None
+        assert participant.participant_identifier
+        assert participant.viewed_information_at is not None
+        assert participant.cohort_slug == 'pilot'
 
 
 def test_search_page_filters_by_programme_id(app, db):
@@ -672,6 +760,39 @@ def test_revoked_grant_denies_programme_access(app, db):
     _login(client, revoked_user_id)
     resp = client.get(f'/programmes/{slug}')
     assert resp.status_code == 404
+
+
+def test_private_programme_blocks_participant_invites(app, db):
+    with app.app_context():
+        owner = _create_user(db, 'private_inviter', 'private_inviter@example.com')
+        target = _create_user(db, 'private_target', 'private_target@example.com')
+        programme = Programme(
+            name='Strict Private Programme',
+            slug=generate_slug('Strict Private Programme'),
+            creator_id=owner.id,
+            visibility='private',
+            status='active',
+        )
+        db.session.add(programme)
+        db.session.commit()
+        slug = programme.slug
+        owner_id = owner.id
+        target_id = target.id
+
+    client = app.test_client()
+    _login(client, owner_id)
+    response = client.post(
+        f'/programmes/{slug}/access/invite',
+        data={'email': 'private_target@example.com'},
+        follow_redirects=True,
+    )
+    body = response.get_data(as_text=True)
+    assert response.status_code == 200
+    assert 'Private programmes only allow owner/steward access' in body
+
+    with app.app_context():
+        grant = ProgrammeAccessGrant.query.filter_by(user_id=target_id).first()
+        assert grant is None
 
 
 def test_statement_routes_respect_programme_visibility(app, db):

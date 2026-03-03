@@ -31,6 +31,19 @@
     </a>
     {% endfor %}
   </div>
+  {% if programmes_pagination and programmes_pagination.pages > 1 %}
+  <div class="mt-8 flex items-center justify-center gap-2">
+    {% if programmes_pagination.has_prev %}
+    <a href="{{ url_for('programmes.workspace_programmes', page=programmes_pagination.prev_num) }}"
+       class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Previous</a>
+    {% endif %}
+    <span class="px-3 py-2 text-sm text-gray-600">Page {{ programmes_pagination.page }} of {{ programmes_pagination.pages }}</span>
+    {% if programmes_pagination.has_next %}
+    <a href="{{ url_for('programmes.workspace_programmes', page=programmes_pagination.next_num) }}"
+       class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Next</a>
+    {% endif %}
+  </div>
+  {% endif %}
   {% else %}
   <div class="bg-white rounded-lg shadow p-10 text-center">
     <h2 class="text-xl font-semibold text-gray-700 mb-2">No workspace programmes yet</h2>

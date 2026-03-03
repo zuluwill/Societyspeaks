@@ -40,7 +40,7 @@ To see our future plans and ideas, check out [IDEAS.md](./IDEAS.md).
 - **Bridge Statements** - Finds statements that unite different opinion clusters
 - **Divisive Statements** - Surfaces controversial topics with high disagreement
 - **Silhouette Scoring** - Automatic cluster count optimization
-- **JSON Export** - Export analysis results for external use
+- **CSV-First Export** - Export analysis results as CSV by default (with optional JSON for integrations)
 
 ### AI Integration (Optional)
 - **LLM Support** - OpenAI, Anthropic (Claude), and Mistral integration

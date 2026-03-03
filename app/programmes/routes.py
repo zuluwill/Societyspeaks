@@ -1,6 +1,7 @@
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from sqlalchemy import distinct, func, or_
+from sqlalchemy import distinct, func, literal, or_
+from sqlalchemy.orm import load_only
 
 from app import cache, db, limiter
 from app.lib.auth_utils import normalize_email
@@ -137,38 +138,83 @@ def list_programmes():
 @programmes_bp.route('/workspace')
 @login_required
 def workspace_programmes():
+    page = request.args.get('page', 1, type=int)
     org_ids = {org.id for org in _editable_company_profiles(current_user)}
     editable_predicate = or_(
         Programme.creator_id == current_user.id,
         Programme.company_profile_id.in_(list(org_ids)) if org_ids else Programme.id == -1
     )
 
-    editable_programmes = Programme.query.filter(editable_predicate).all()
-    stewarded_programmes = Programme.query.join(
-        ProgrammeSteward,
-        ProgrammeSteward.programme_id == Programme.id
+    editable_programme_ids = db.session.query(
+        Programme.id.label('programme_id'),
+        literal(3).label('access_rank')
+    ).filter(editable_predicate)
+    stewarded_programme_ids = db.session.query(
+        ProgrammeSteward.programme_id.label('programme_id'),
+        literal(2).label('access_rank')
     ).filter(
         ProgrammeSteward.user_id == current_user.id,
         ProgrammeSteward.status == 'active'
-    ).all()
-    invited_programmes = Programme.query.join(
-        ProgrammeAccessGrant,
-        ProgrammeAccessGrant.programme_id == Programme.id
+    )
+    invited_programme_ids = db.session.query(
+        ProgrammeAccessGrant.programme_id.label('programme_id'),
+        literal(1).label('access_rank')
     ).filter(
         ProgrammeAccessGrant.user_id == current_user.id,
         ProgrammeAccessGrant.status == 'active'
-    ).all()
+    )
 
-    rows = {}
-    for programme in editable_programmes:
-        rows[programme.id] = {"programme": programme, "access_label": "Owner/Editor"}
-    for programme in stewarded_programmes:
-        rows.setdefault(programme.id, {"programme": programme, "access_label": "Steward"})
-    for programme in invited_programmes:
-        rows.setdefault(programme.id, {"programme": programme, "access_label": "Invited participant"})
+    access_union = editable_programme_ids.union_all(
+        stewarded_programme_ids,
+        invited_programme_ids
+    ).subquery()
+    ranked_access = db.session.query(
+        access_union.c.programme_id,
+        func.max(access_union.c.access_rank).label('access_rank')
+    ).group_by(access_union.c.programme_id).subquery()
 
-    programmes = sorted(rows.values(), key=lambda row: row["programme"].updated_at or row["programme"].created_at, reverse=True)
-    return render_template('programmes/workspace.html', programmes=programmes)
+    workspace_pagination = db.session.query(
+        Programme,
+        ranked_access.c.access_rank
+    ).join(
+        ranked_access,
+        ranked_access.c.programme_id == Programme.id
+    ).options(
+        load_only(
+            Programme.id,
+            Programme.slug,
+            Programme.name,
+            Programme.description,
+            Programme.visibility,
+            Programme.status,
+            Programme.created_at,
+            Programme.updated_at
+        )
+    ).order_by(
+        func.coalesce(Programme.updated_at, Programme.created_at).desc()
+    ).paginate(
+        page=page,
+        per_page=12,
+        error_out=False
+    )
+
+    access_labels = {
+        3: "Owner/Editor",
+        2: "Steward",
+        1: "Invited participant",
+    }
+    programmes = [
+        {
+            "programme": programme,
+            "access_label": access_labels.get(int(access_rank or 1), "Invited participant")
+        }
+        for programme, access_rank in workspace_pagination.items
+    ]
+    return render_template(
+        'programmes/workspace.html',
+        programmes=programmes,
+        programmes_pagination=workspace_pagination
+    )
 
 
 @programmes_bp.route('/new', methods=['GET', 'POST'])
@@ -478,6 +524,12 @@ def invite_programme_access(slug):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_edit_programme(programme, current_user):
         flash("You don't have permission to invite participants.", "danger")
+        return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+    if programme.visibility == 'private':
+        flash(
+            "Private programmes only allow owner/steward access. Invite as steward or switch visibility to invite-only.",
+            "warning"
+        )
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     form = InviteProgrammeAccessForm()
