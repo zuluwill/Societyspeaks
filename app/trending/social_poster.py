@@ -1061,6 +1061,60 @@ def schedule_bluesky_post(discussion, slot_index: int = 0) -> Optional[datetime]
         return None
 
 
+BLUESKY_MAX_POSTS_PER_DAY = 15
+BLUESKY_MAX_POSTS_PER_RUN = 3
+BLUESKY_STALE_CLAIM_MINUTES = 30
+
+
+def _recover_stale_bluesky_claims(db, Discussion):
+    """
+    Reset any Bluesky posts that were claimed (bluesky_posted_at set) but never
+    actually posted (bluesky_post_uri still null) and the claim is older than
+    BLUESKY_STALE_CLAIM_MINUTES. This happens when a worker crashes mid-post.
+
+    The sentinel value '1970-01-01' is used for intentionally abandoned posts
+    and is excluded from recovery.
+    """
+    stale_cutoff = utcnow_naive() - timedelta(minutes=BLUESKY_STALE_CLAIM_MINUTES)
+    abandoned_sentinel = datetime(1970, 1, 1, 0, 0, 0)
+
+    try:
+        stale = Discussion.query.filter(
+            Discussion.bluesky_posted_at.isnot(None),
+            Discussion.bluesky_posted_at != abandoned_sentinel,
+            Discussion.bluesky_posted_at < stale_cutoff,
+            Discussion.bluesky_post_uri.is_(None)
+        ).all()
+
+        if stale:
+            logger.warning(
+                f"Recovering {len(stale)} stale Bluesky claims "
+                f"(claimed >{BLUESKY_STALE_CLAIM_MINUTES}min ago with no URI)"
+            )
+            for d in stale:
+                d.bluesky_posted_at = None
+            db.session.commit()
+            return len(stale)
+    except Exception as e:
+        logger.error(f"Error recovering stale Bluesky claims: {e}")
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+    return 0
+
+
+def _count_bluesky_posts_today(db, Discussion) -> int:
+    """Count genuinely successful Bluesky posts made today (have a URI)."""
+    from datetime import date
+    today_start = datetime.combine(date.today(), datetime.min.time())
+    return db.session.query(Discussion).filter(
+        Discussion.bluesky_posted_at >= today_start,
+        Discussion.bluesky_post_uri.isnot(None),
+        Discussion.bluesky_post_uri != ''
+    ).count()
+
+
 def process_scheduled_bluesky_posts() -> int:
     """
     Process any discussions that are due to be posted to Bluesky.
@@ -1070,6 +1124,10 @@ def process_scheduled_bluesky_posts() -> int:
     scheduler instances (Replit autoscale) run concurrently. Each instance
     processes only unlocked rows, ensuring no duplicates.
 
+    Includes stale claim recovery: if a worker crashes after claiming a post
+    (setting bluesky_posted_at) but before confirming it (setting bluesky_post_uri),
+    the claim is automatically reset after BLUESKY_STALE_CLAIM_MINUTES.
+
     Returns:
         Number of posts sent
     """
@@ -1078,9 +1136,18 @@ def process_scheduled_bluesky_posts() -> int:
 
     base_url = get_base_url()
     posted_count = 0
-    max_posts_per_run = 10  # Safety limit to prevent runaway loops
 
-    for _ in range(max_posts_per_run):
+    _recover_stale_bluesky_claims(db, Discussion)
+
+    today_count = _count_bluesky_posts_today(db, Discussion)
+    remaining_today = BLUESKY_MAX_POSTS_PER_DAY - today_count
+    if remaining_today <= 0:
+        logger.info(f"Daily Bluesky limit reached ({BLUESKY_MAX_POSTS_PER_DAY} posts today). Skipping.")
+        return 0
+
+    max_this_run = min(BLUESKY_MAX_POSTS_PER_RUN, remaining_today)
+
+    for _ in range(max_this_run):
         try:
             now = utcnow_naive()
 
@@ -1094,16 +1161,16 @@ def process_scheduled_bluesky_posts() -> int:
             ).with_for_update(skip_locked=True).first()
 
             if not discussion:
-                # No more unlocked posts to process
                 break
 
-            # Mark as "in progress" immediately while we hold the lock
+            # Mark as "in progress" immediately while we hold the lock.
+            # NOTE: If the worker crashes here before bluesky_post_uri is set,
+            # _recover_stale_bluesky_claims() will reset this after BLUESKY_STALE_CLAIM_MINUTES.
             discussion.bluesky_posted_at = utcnow_naive()
             db.session.commit()
 
             discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
 
-            # Pass discussion object to leverage insights (DRY: reuse existing data)
             uri = post_to_bluesky(
                 title=discussion.title,
                 topic=discussion.topic or 'Society',
@@ -1112,13 +1179,11 @@ def process_scheduled_bluesky_posts() -> int:
             )
 
             if uri:
-                # Update with actual post URI (bluesky_posted_at already set above)
                 discussion.bluesky_post_uri = uri
                 db.session.commit()
                 posted_count += 1
                 logger.info(f"Posted discussion {discussion.id} to Bluesky: {uri}")
             else:
-                # Post failed - clear the bluesky_posted_at so it can be retried
                 discussion.bluesky_posted_at = None
                 db.session.commit()
                 logger.warning(f"Failed to post discussion {discussion.id} to Bluesky (no URI returned) - will retry")
