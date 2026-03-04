@@ -31,7 +31,7 @@
         {% for value, label in form.geographic_scope.choices %}
         <label class="flex-1 {% if not loop.last %}border-r border-gray-300{% endif %}">
           <input type="radio" name="{{ form.geographic_scope.name }}" value="{{ value }}"
-            class="sr-only peer" id="prog_scope_select"
+            class="sr-only peer"
             {% if form.geographic_scope.data == value or (not form.geographic_scope.data and value == 'global') %}checked{% endif %}
             onchange="toggleCountry(this)">
           <span class="block text-center py-2.5 px-4 text-sm font-medium cursor-pointer transition-colors
