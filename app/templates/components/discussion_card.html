@@ -1,4 +1,4 @@
-{% macro discussion_card(discussion, style='default') %}
+{% macro discussion_card(discussion, style='default', button_label='Join Discussion') %}
 <article class="flex flex-col rounded-lg bg-white shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden h-full border-t-4 
     {% if discussion.topic == 'Healthcare' %}border-emerald-500
     {% elif discussion.topic == 'Environment' %}border-green-500
@@ -132,7 +132,7 @@
            {% elif discussion.topic == 'Business' %}bg-teal-600 hover:bg-teal-700
            {% elif discussion.topic == 'Culture' %}bg-pink-600 hover:bg-pink-700
            {% else %}bg-slate-600 hover:bg-slate-700{% endif %}">
-            Join Discussion
+            {{ button_label }}
         </a>
     </div>
 </article>

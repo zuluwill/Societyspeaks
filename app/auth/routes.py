@@ -366,18 +366,21 @@ def dashboard():
             (ProfileView.company_profile_id == profile.id)
         ).count()
 
-    # Get recent discussions
+    # Discussion views across ALL user's discussions (for the stat)
+    discussion_views = 0
+    all_discussion_ids = [
+        row[0] for row in
+        db.session.query(Discussion.id).filter_by(creator_id=current_user.id).all()
+    ]
+    if all_discussion_ids:
+        discussion_views = DiscussionView.query.filter(
+            DiscussionView.discussion_id.in_(all_discussion_ids)
+        ).count()
+
+    # Get the 6 most recent discussions for the dashboard preview
     discussions = Discussion.query.filter_by(creator_id=current_user.id)\
         .order_by(Discussion.created_at.desc())\
-        .all()
-
-    # Get discussion views for recent discussions
-    discussion_views = 0
-    if discussions:
-        discussion_ids = [d.id for d in discussions]
-        discussion_views = DiscussionView.query.filter(
-            DiscussionView.discussion_id.in_(discussion_ids)
-        ).count()
+        .limit(6).all()
 
     # Build workspace programmes (same union logic as the workspace page)
     org_ids = set()
