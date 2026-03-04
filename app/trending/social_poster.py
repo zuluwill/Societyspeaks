@@ -1080,31 +1080,32 @@ BLUESKY_STALE_CLAIM_MINUTES = 30
 
 def _recover_stale_bluesky_claims(db, Discussion):
     """
-    Reset any Bluesky posts that were claimed (bluesky_posted_at set) but never
-    actually posted (bluesky_post_uri still null) and the claim is older than
-    BLUESKY_STALE_CLAIM_MINUTES. This happens when a worker crashes mid-post.
+    Reset any Bluesky posts where a worker crashed mid-post.
 
-    The sentinel value '1970-01-01' is used for intentionally abandoned posts
-    and is excluded from recovery.
+    A stale claim is one where bluesky_claimed_at is set (a worker started
+    processing it) but bluesky_posted_at is still null (the post never confirmed)
+    and the claim is older than BLUESKY_STALE_CLAIM_MINUTES.
+
+    bluesky_claimed_at is the claim marker; bluesky_posted_at is only set
+    on confirmed success. This separation means stale recovery never touches
+    genuinely completed posts.
     """
     stale_cutoff = utcnow_naive() - timedelta(minutes=BLUESKY_STALE_CLAIM_MINUTES)
-    abandoned_sentinel = datetime(1970, 1, 1, 0, 0, 0)
 
     try:
         stale = Discussion.query.filter(
-            Discussion.bluesky_posted_at.isnot(None),
-            Discussion.bluesky_posted_at != abandoned_sentinel,
-            Discussion.bluesky_posted_at < stale_cutoff,
-            Discussion.bluesky_post_uri.is_(None)
+            Discussion.bluesky_claimed_at.isnot(None),
+            Discussion.bluesky_claimed_at < stale_cutoff,
+            Discussion.bluesky_posted_at.is_(None)
         ).all()
 
         if stale:
             logger.warning(
                 f"Recovering {len(stale)} stale Bluesky claims "
-                f"(claimed >{BLUESKY_STALE_CLAIM_MINUTES}min ago with no URI)"
+                f"(claimed >{BLUESKY_STALE_CLAIM_MINUTES}min ago, never confirmed)"
             )
             for d in stale:
-                d.bluesky_posted_at = None
+                d.bluesky_claimed_at = None
             db.session.commit()
             return len(stale)
     except Exception as e:
@@ -1117,13 +1118,11 @@ def _recover_stale_bluesky_claims(db, Discussion):
 
 
 def _count_bluesky_posts_today(db, Discussion) -> int:
-    """Count genuinely successful Bluesky posts made today (have a URI)."""
+    """Count confirmed successful Bluesky posts today (bluesky_posted_at is the source of truth)."""
     from datetime import date
     today_start = datetime.combine(date.today(), datetime.min.time())
     return db.session.query(Discussion).filter(
-        Discussion.bluesky_posted_at >= today_start,
-        Discussion.bluesky_post_uri.isnot(None),
-        Discussion.bluesky_post_uri != ''
+        Discussion.bluesky_posted_at >= today_start
     ).count()
 
 
@@ -1160,25 +1159,28 @@ def process_scheduled_bluesky_posts() -> int:
     max_this_run = min(BLUESKY_MAX_POSTS_PER_RUN, remaining_today)
 
     for _ in range(max_this_run):
+        discussion = None
         try:
             now = utcnow_naive()
 
-            # Use FOR UPDATE SKIP LOCKED to prevent race conditions with autoscale
-            # This ensures only one instance processes each post, even when multiple
-            # scheduler instances query at the same time
+            # Select the next unclaimed, unposted, non-skipped post.
+            # FOR UPDATE SKIP LOCKED prevents two workers from claiming the same row.
             discussion = Discussion.query.filter(
                 Discussion.bluesky_scheduled_at.isnot(None),
                 Discussion.bluesky_scheduled_at <= now,
-                Discussion.bluesky_posted_at.is_(None)
+                Discussion.bluesky_claimed_at.is_(None),   # not already claimed by a worker
+                Discussion.bluesky_posted_at.is_(None),    # not already confirmed posted
+                Discussion.bluesky_skipped.is_(False)       # not intentionally skipped
             ).with_for_update(skip_locked=True).first()
 
             if not discussion:
                 break
 
-            # Mark as "in progress" immediately while we hold the lock.
-            # NOTE: If the worker crashes here before bluesky_post_uri is set,
-            # _recover_stale_bluesky_claims() will reset this after BLUESKY_STALE_CLAIM_MINUTES.
-            discussion.bluesky_posted_at = utcnow_naive()
+            # Claim the row: record when this worker started processing it.
+            # bluesky_posted_at is NOT set here — it is only set on confirmed success.
+            # If this worker crashes, _recover_stale_bluesky_claims() will clear
+            # bluesky_claimed_at after BLUESKY_STALE_CLAIM_MINUTES so the next run retries.
+            discussion.bluesky_claimed_at = utcnow_naive()
             db.session.commit()
 
             discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
@@ -1191,17 +1193,21 @@ def process_scheduled_bluesky_posts() -> int:
             )
 
             if uri:
+                # Confirmed success: record the exact moment it went live, clear the claim marker.
                 discussion.bluesky_post_uri = uri
+                discussion.bluesky_posted_at = utcnow_naive()
+                discussion.bluesky_claimed_at = None
                 db.session.commit()
                 posted_count += 1
                 logger.info(f"Posted discussion {discussion.id} to Bluesky: {uri}")
             else:
-                discussion.bluesky_posted_at = None
+                # API call returned no URI — release the claim so the next run retries.
+                discussion.bluesky_claimed_at = None
                 db.session.commit()
-                logger.warning(f"Failed to post discussion {discussion.id} to Bluesky (no URI returned) - will retry")
+                logger.warning(f"Failed to post discussion {discussion.id} to Bluesky (no URI returned) — will retry")
 
         except Exception as e:
-            logger.error(f"Error processing scheduled Bluesky post: {e}")
+            logger.error(f"Error processing scheduled Bluesky post for discussion {getattr(discussion, 'id', '?')}: {e}")
             try:
                 db.session.rollback()
             except Exception:
@@ -1298,29 +1304,30 @@ def process_scheduled_x_posts() -> int:
     max_posts_per_run = 10  # Safety limit to prevent runaway loops
 
     for _ in range(max_posts_per_run):
+        discussion = None
         try:
             now = utcnow_naive()
 
-            # Use FOR UPDATE SKIP LOCKED to prevent race conditions with autoscale
-            # This ensures only one instance processes each post, even when multiple
-            # scheduler instances query at the same time
+            # Select the next unclaimed, unposted, non-skipped post.
+            # FOR UPDATE SKIP LOCKED prevents two workers from claiming the same row.
             discussion = Discussion.query.filter(
                 Discussion.x_scheduled_at.isnot(None),
                 Discussion.x_scheduled_at <= now,
-                Discussion.x_posted_at.is_(None)
+                Discussion.x_claimed_at.is_(None),   # not already claimed by a worker
+                Discussion.x_posted_at.is_(None),    # not already confirmed posted
+                Discussion.x_skipped.is_(False)       # not intentionally skipped
             ).with_for_update(skip_locked=True).first()
 
             if not discussion:
-                # No more unlocked posts to process
                 break
 
-            # Mark as "in progress" immediately while we hold the lock
-            discussion.x_posted_at = utcnow_naive()
+            # Claim the row: record when this worker started processing it.
+            # x_posted_at is NOT set here — it is only set on confirmed success.
+            discussion.x_claimed_at = utcnow_naive()
             db.session.commit()
 
             discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
 
-            # Pass discussion object to leverage insights (DRY: reuse existing data)
             tweet_id = post_to_x(
                 title=discussion.title,
                 topic=discussion.topic or 'Society',
@@ -1329,26 +1336,34 @@ def process_scheduled_x_posts() -> int:
             )
 
             if tweet_id:
-                # Update with actual tweet ID (x_posted_at already set above)
+                # Confirmed success: record the exact moment it went live, clear the claim marker.
                 discussion.x_post_id = tweet_id
+                discussion.x_posted_at = utcnow_naive()
+                discussion.x_claimed_at = None
                 db.session.commit()
                 posted_count += 1
                 logger.info(f"Posted discussion {discussion.id} to X: {tweet_id}")
             else:
-                # Post failed - clear the x_posted_at so it can be retried
-                discussion.x_posted_at = None
+                # API call returned no ID — release the claim so the next run retries.
+                discussion.x_claimed_at = None
                 db.session.commit()
-                logger.warning(f"Failed to post discussion {discussion.id} to X (no ID returned) - will retry")
+                logger.warning(f"Failed to post discussion {discussion.id} to X (no ID returned) — will retry")
 
         except DuplicatePostError:
-            # Content already exists on X - treat as success, keep x_posted_at set
-            # We can't get the tweet_id but the content is posted
-            logger.info(f"Discussion already posted to X (duplicate detected) - marking as complete")
+            # Content already exists on X — treat as success.
+            # We don't have the tweet_id but the content is live; mark it complete.
+            if discussion:
+                try:
+                    discussion.x_posted_at = utcnow_naive()
+                    discussion.x_claimed_at = None
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
+            logger.info(f"Discussion {getattr(discussion, 'id', '?')} already posted to X (duplicate) — marking complete")
             posted_count += 1
-            # x_posted_at is already set, just continue
 
         except Exception as e:
-            logger.error(f"Error processing scheduled X post: {e}")
+            logger.error(f"Error processing scheduled X post for discussion {getattr(discussion, 'id', '?')}: {e}")
             try:
                 db.session.rollback()
             except Exception:

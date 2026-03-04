@@ -701,14 +701,18 @@ class Discussion(db.Model):
     views = db.relationship('DiscussionView', backref='discussion', lazy='dynamic')
 
     # Bluesky posting schedule (for staggered posts throughout the day)
-    bluesky_scheduled_at = db.Column(db.DateTime, nullable=True)  # When to post to Bluesky
-    bluesky_posted_at = db.Column(db.DateTime, nullable=True)  # When actually posted
-    bluesky_post_uri = db.Column(db.String(500), nullable=True)  # Bluesky post URI after posting
+    bluesky_scheduled_at = db.Column(db.DateTime, nullable=True)   # When to post to Bluesky
+    bluesky_claimed_at = db.Column(db.DateTime, nullable=True)     # Set when a worker claims this post (cleared on completion or failure)
+    bluesky_posted_at = db.Column(db.DateTime, nullable=True)      # Set ONLY when the post is confirmed live on Bluesky (has a URI)
+    bluesky_post_uri = db.Column(db.String(500), nullable=True)    # Bluesky post URI — the source of truth that posting succeeded
+    bluesky_skipped = db.Column(db.Boolean, nullable=False, default=False)  # True if intentionally not posted (too old, off-topic, etc.)
 
     # X/Twitter posting schedule (mirrors Bluesky pattern)
-    x_scheduled_at = db.Column(db.DateTime, nullable=True)  # When to post to X
-    x_posted_at = db.Column(db.DateTime, nullable=True)  # When actually posted
-    x_post_id = db.Column(db.String(100), nullable=True)  # X tweet ID after posting
+    x_scheduled_at = db.Column(db.DateTime, nullable=True)         # When to post to X
+    x_claimed_at = db.Column(db.DateTime, nullable=True)           # Set when a worker claims this post (cleared on completion or failure)
+    x_posted_at = db.Column(db.DateTime, nullable=True)            # Set ONLY when the post is confirmed live on X (has an ID)
+    x_post_id = db.Column(db.String(100), nullable=True)           # X tweet ID — the source of truth that posting succeeded
+    x_skipped = db.Column(db.Boolean, nullable=False, default=False)  # True if intentionally not posted (disabled tier, too old, etc.)
 
     # Partner embed integration (Phase 2)
     # For discussions created by partners whose content is not ingested via RSS

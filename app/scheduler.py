@@ -633,7 +633,8 @@ def init_scheduler(app):
 
                 bluesky_overdue_count = db.session.query(func.count(Discussion.id)).filter(
                     Discussion.bluesky_scheduled_at <= now - timedelta(hours=4),
-                    Discussion.bluesky_posted_at.is_(None)
+                    Discussion.bluesky_posted_at.is_(None),
+                    Discussion.bluesky_skipped.is_(False)
                 ).scalar() or 0
 
                 if bluesky_overdue_count > 0:
@@ -654,7 +655,8 @@ def init_scheduler(app):
 
                     x_overdue_count = db.session.query(func.count(Discussion.id)).filter(
                         Discussion.x_scheduled_at <= now - timedelta(hours=4),
-                        Discussion.x_posted_at.is_(None)
+                        Discussion.x_posted_at.is_(None),
+                        Discussion.x_skipped.is_(False)
                     ).scalar() or 0
 
                     if x_overdue_count > 0:
