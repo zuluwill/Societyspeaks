@@ -1145,65 +1145,42 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        // Mobile menu toggle - improved for touch devices
+        // Shared helper: wire toggle + outside-click-close + aria for a button/menu pair.
+        // Returns a setOpen(bool) fn so callers can drive state (e.g. touchend).
+        function wireMenuToggle(btn, menu) {
+          function setOpen(open) {
+            menu.classList.toggle("hidden", !open);
+            btn.setAttribute("aria-expanded", String(open));
+          }
+          btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            setOpen(menu.classList.contains("hidden"));
+          });
+          document.addEventListener("click", function (e) {
+            if (!btn.contains(e.target) && !menu.contains(e.target)) {
+              setOpen(false);
+            }
+          });
+          return setOpen;
+        }
+
+        // Mobile menu toggle
         const mobileMenuButton = document.getElementById("mobile-menu-button");
         const mobileMenu = document.getElementById("mobile-menu");
-
         if (mobileMenuButton && mobileMenu) {
-          // Handle both click and touch events
-          function toggleMobileMenu(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            mobileMenu.classList.toggle("hidden");
-
-            // Update aria-expanded for accessibility
-            const isExpanded = !mobileMenu.classList.contains("hidden");
-            mobileMenuButton.setAttribute("aria-expanded", isExpanded);
-          }
-
-          mobileMenuButton.addEventListener("click", toggleMobileMenu);
+          const setMobileOpen = wireMenuToggle(mobileMenuButton, mobileMenu);
+          // touchend fires before the synthetic click — keeps response snappy on mobile
           mobileMenuButton.addEventListener("touchend", function (e) {
             e.preventDefault();
-            toggleMobileMenu(e);
-          });
-
-          // Close mobile menu when clicking outside
-          document.addEventListener("click", function (e) {
-            if (mobileMenu && !mobileMenu.classList.contains("hidden")) {
-              if (
-                !mobileMenuButton.contains(e.target) &&
-                !mobileMenu.contains(e.target)
-              ) {
-                mobileMenu.classList.add("hidden");
-                mobileMenuButton.setAttribute("aria-expanded", "false");
-              }
-            }
+            setMobileOpen(mobileMenu.classList.contains("hidden"));
           });
         }
 
         // Desktop user menu toggle
         const userMenuButton = document.getElementById("desktop-user-menu");
-        const userMenuDropdown = document.getElementById(
-          "desktop-dropdown-menu",
-        );
-
+        const userMenuDropdown = document.getElementById("desktop-dropdown-menu");
         if (userMenuButton && userMenuDropdown) {
-          userMenuButton.addEventListener("click", function (e) {
-            e.stopPropagation();
-            const isExpanded = userMenuDropdown.classList.toggle("hidden") === false;
-            userMenuButton.setAttribute("aria-expanded", isExpanded);
-          });
-
-          // Close when clicking outside
-          document.addEventListener("click", function (e) {
-            if (
-              !userMenuButton.contains(e.target) &&
-              !userMenuDropdown.contains(e.target)
-            ) {
-              userMenuDropdown.classList.add("hidden");
-              userMenuButton.setAttribute("aria-expanded", "false");
-            }
-          });
+          wireMenuToggle(userMenuButton, userMenuDropdown);
         }
 
         // Navigation dropdown menus (Products, Explore, About)
