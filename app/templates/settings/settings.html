@@ -4,6 +4,11 @@
 {# Hero Section with Gradient Background #}
 <div class="bg-gradient-to-r from-indigo-500 to-purple-600 pb-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <nav class="flex items-center gap-1.5 text-sm text-indigo-200 mb-3">
+            <a href="{{ url_for('auth.dashboard') }}" class="hover:text-white">Dashboard</a>
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <span class="text-white font-medium">Settings</span>
+        </nav>
         <h1 class="text-3xl font-bold text-white">Account Settings</h1>
         <p class="mt-2 text-blue-100">Manage your account preferences and security</p>
     </div>
