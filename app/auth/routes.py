@@ -367,10 +367,10 @@ def dashboard():
         elif current_user.profile_type == 'company':
             profile_views = ProfileView.query.filter_by(company_profile_id=profile.id).count()
 
-    # Discussion views across ALL user's discussions (for the stat) — single query via correlated subquery
+    # Discussion views across ALL user's discussions (for the stat)
     owned_discussion_ids = db.session.query(Discussion.id).filter_by(creator_id=current_user.id)
     discussion_views = db.session.query(func.count(DiscussionView.id)).filter(
-        DiscussionView.discussion_id.in_(owned_discussion_ids.subquery().select())
+        DiscussionView.discussion_id.in_(owned_discussion_ids)
     ).scalar() or 0
 
     # Get the 6 most recent discussions for the dashboard preview
@@ -378,11 +378,14 @@ def dashboard():
         .order_by(Discussion.created_at.desc())\
         .limit(6).all()
 
+    # Build the access subquery once, reuse it for both the count and the programme list
     ranked_access = ranked_programme_access_subquery(current_user)
     total_programmes = db.session.query(func.count()).select_from(ranked_access).scalar() or 0
 
     _access_labels = programme_access_labels()
-    _prog_rows = query_accessible_programmes(current_user).order_by(Programme.updated_at.desc()).limit(6).all()
+    _prog_rows = db.session.query(Programme, ranked_access.c.access_rank).join(
+        ranked_access, ranked_access.c.programme_id == Programme.id
+    ).order_by(Programme.updated_at.desc()).limit(6).all()
     workspace_programmes = [
         {'programme': prog, 'access_label': _access_labels.get(int(rank or 1), 'Invited participant')}
         for prog, rank in _prog_rows
