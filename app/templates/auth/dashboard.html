@@ -264,14 +264,10 @@
                 <p class="text-xs text-gray-400 mt-0.5">Discussions you have created</p>
             </div>
             <div class="flex items-center gap-2">
-                {% if total_discussions > 6 %}
-                  {% if profile %}
-                    <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) if current_user.profile_type == 'individual' else url_for('profiles.view_company_profile', company_name=profile.slug) }}"
-                       class="text-sm text-blue-600 hover:text-blue-700 font-medium">View all {{ total_discussions }}</a>
-                  {% else %}
-                    <span class="text-sm text-gray-400">{{ total_discussions }} total</span>
-                  {% endif %}
-                {% endif %}
+                <a href="{{ url_for('auth.my_discussions') }}"
+                   class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    View all {% if total_discussions > 6 %}({{ total_discussions }}){% endif %}
+                </a>
                 <a href="{{ url_for('discussions.create_discussion') }}"
                    class="inline-flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
                     New

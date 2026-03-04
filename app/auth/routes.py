@@ -405,6 +405,27 @@ def dashboard():
 
 
 
+@auth_bp.route('/dashboard/discussions')
+@login_required
+def my_discussions():
+    page = request.args.get('page', 1, type=int)
+    q = request.args.get('q', '').strip()
+
+    query = Discussion.query.filter_by(creator_id=current_user.id)
+    if q:
+        query = query.filter(Discussion.title.ilike(f'%{q}%'))
+
+    pagination = query.order_by(Discussion.created_at.desc()).paginate(
+        page=page, per_page=12, error_out=False
+    )
+    return render_template(
+        'auth/discussions.html',
+        discussions=pagination.items,
+        pagination=pagination,
+        q=q,
+    )
+
+
 @auth_bp.route('/logout')
 @login_required
 def logout():
