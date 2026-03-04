@@ -1,63 +1,95 @@
 {% extends "layout.html" %}
 {% block content %}
-<div class="max-w-6xl mx-auto py-8 px-4 sm:px-6">
 
-  {# Breadcrumb #}
-  <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
-    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
-    <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-    <span class="text-gray-900 font-medium">Workspace</span>
-  </nav>
-
-  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-    <div>
-      <h1 class="text-3xl font-bold text-gray-900">My Programmes Workspace</h1>
-      <p class="mt-1 text-sm text-gray-500">Programmes you own, steward, or have invited participant access to.</p>
-    </div>
-    <div class="flex items-center gap-2">
-      <a href="{{ url_for('programmes.list_programmes') }}" class="inline-flex items-center justify-center px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700">Public catalogue</a>
-      <a href="{{ url_for('programmes.create_programme') }}" class="inline-flex items-center justify-center px-4 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium">New programme</a>
+{# Hero #}
+<div class="bg-gradient-to-r from-indigo-900 to-indigo-600 pb-16">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-8">
+    <nav class="flex items-center gap-1.5 text-sm text-indigo-300 mb-5">
+      <a href="{{ url_for('auth.dashboard') }}" class="hover:text-white">Dashboard</a>
+      <svg class="w-4 h-4 shrink-0 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      <span class="text-white">Workspace</span>
+    </nav>
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold text-white">My Programmes</h1>
+        <p class="mt-1 text-sm text-indigo-200">Programmes you own, steward, or have been invited to participate in.</p>
+      </div>
+      <div class="flex items-center gap-3 pb-1">
+        <a href="{{ url_for('programmes.list_programmes') }}"
+           class="inline-flex items-center gap-1.5 px-4 py-2 text-sm border border-indigo-300 text-white rounded-md hover:bg-indigo-700 transition-colors">
+          Public catalogue
+        </a>
+        <a href="{{ url_for('programmes.create_programme') }}"
+           class="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-white text-indigo-700 rounded-md hover:bg-indigo-50 font-semibold transition-colors">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          New programme
+        </a>
+      </div>
     </div>
   </div>
+</div>
+
+{# Main content #}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 -mt-8">
 
   {% if programmes %}
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for row in programmes %}
     {% set programme = row.programme %}
-    <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}" class="block bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition">
+    <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}"
+       class="block bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md hover:border-indigo-200 transition-all">
       <div class="flex items-start justify-between gap-2 mb-2">
-        <h2 class="text-lg font-semibold text-gray-900">{{ programme.name }}</h2>
-        <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">{{ row.access_label }}</span>
+        <h2 class="text-base font-semibold text-gray-900 leading-snug">{{ programme.name }}</h2>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 shrink-0 whitespace-nowrap">{{ row.access_label }}</span>
       </div>
       {% if programme.description %}
-      <p class="text-sm text-gray-600 line-clamp-3 mb-3">{{ programme.description }}</p>
+      <p class="text-sm text-gray-500 line-clamp-3 mb-3">{{ programme.description }}</p>
       {% endif %}
-      <div class="text-xs text-gray-500 flex flex-wrap gap-x-3 gap-y-1">
+      <div class="text-xs text-gray-400 flex flex-wrap gap-x-3 gap-y-1 mt-auto">
         <span>{{ programme.visibility|replace('_', ' ')|title }}</span>
+        <span>·</span>
         <span>{{ programme.status|capitalize }}</span>
       </div>
     </a>
     {% endfor %}
   </div>
+
   {% if programmes_pagination and programmes_pagination.pages > 1 %}
   <div class="mt-8 flex items-center justify-center gap-2">
     {% if programmes_pagination.has_prev %}
     <a href="{{ url_for('programmes.workspace_programmes', page=programmes_pagination.prev_num) }}"
-       class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Previous</a>
+       class="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">← Previous</a>
     {% endif %}
-    <span class="px-3 py-2 text-sm text-gray-600">Page {{ programmes_pagination.page }} of {{ programmes_pagination.pages }}</span>
+    <span class="px-4 py-2 text-sm text-gray-500">Page {{ programmes_pagination.page }} of {{ programmes_pagination.pages }}</span>
     {% if programmes_pagination.has_next %}
     <a href="{{ url_for('programmes.workspace_programmes', page=programmes_pagination.next_num) }}"
-       class="px-3 py-2 text-sm border rounded-md hover:bg-gray-50">Next</a>
+       class="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">Next →</a>
     {% endif %}
   </div>
   {% endif %}
+
   {% else %}
-  <div class="bg-white rounded-lg shadow p-10 text-center">
-    <h2 class="text-xl font-semibold text-gray-700 mb-2">No workspace programmes yet</h2>
-    <p class="text-sm text-gray-500 mb-6">Create a new programme or ask an owner to invite you as a steward or participant.</p>
-    <a href="{{ url_for('programmes.create_programme') }}" class="inline-flex items-center justify-center px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium">Create programme</a>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 px-8 py-16 text-center">
+    <div class="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-5">
+      <svg class="w-7 h-7 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+      </svg>
+    </div>
+    <h2 class="text-lg font-semibold text-gray-800 mb-2">No programmes yet</h2>
+    <p class="text-sm text-gray-500 max-w-sm mx-auto mb-8">Create a programme to group discussions into a structured engagement campaign, or ask an owner to invite you as a steward or participant.</p>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+      <a href="{{ url_for('programmes.create_programme') }}"
+         class="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-semibold transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Create a programme
+      </a>
+      <a href="{{ url_for('programmes.list_programmes') }}"
+         class="inline-flex items-center gap-2 px-6 py-2.5 border border-gray-300 text-gray-600 rounded-md hover:bg-gray-50 text-sm font-medium transition-colors">
+        Browse public catalogue
+      </a>
+    </div>
   </div>
   {% endif %}
+
 </div>
 {% endblock %}
