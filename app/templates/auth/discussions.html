@@ -43,7 +43,7 @@
         value="{{ q }}"
         placeholder="Search your discussions…"
         class="block w-full pl-9 pr-4 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-        autofocus="{{ 'autofocus' if q else '' }}"
+        {% if q %}autofocus{% endif %}
       >
     </div>
   </form>

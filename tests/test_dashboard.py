@@ -254,3 +254,84 @@ def test_dashboard_profile_views_only_count_active_profile_type(app, db):
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
     _assert_dashboard_stat(body, 'Profile Views', 0)
+
+
+def test_my_discussions_redirects_unauthenticated(app, db):
+    client = app.test_client()
+    resp = client.get('/auth/dashboard/discussions', follow_redirects=False)
+    assert resp.status_code == 302
+    assert '/auth/login' in resp.headers['Location']
+
+
+def test_my_discussions_shows_only_current_users_discussions(app, db):
+    with app.app_context():
+        current = _create_user(db, 'current_disc_user', 'current_disc_user@example.com')
+        other = _create_user(db, 'other_disc_user', 'other_disc_user@example.com')
+        _create_discussion(db, current.id, title='My Visible Discussion')
+        _create_discussion(db, other.id, title='Should Not Appear')
+        db.session.commit()
+        current_id = current.id
+
+    client = app.test_client()
+    _login(client, current_id)
+    resp = client.get('/auth/dashboard/discussions')
+    assert resp.status_code == 200
+    body = resp.get_data(as_text=True)
+    assert 'My Visible Discussion' in body
+    assert 'Should Not Appear' not in body
+
+
+def test_my_discussions_search_filters_by_title(app, db):
+    with app.app_context():
+        user = _create_user(db, 'search_disc_user', 'search_disc_user@example.com')
+        _create_discussion(db, user.id, title='Climate Policy Debate')
+        _create_discussion(db, user.id, title='Housing Affordability')
+        db.session.commit()
+        user_id = user.id
+
+    client = app.test_client()
+    _login(client, user_id)
+    resp = client.get('/auth/dashboard/discussions?q=climate')
+    assert resp.status_code == 200
+    body = resp.get_data(as_text=True)
+    assert 'Climate Policy Debate' in body
+    assert 'Housing Affordability' not in body
+    assert '1 result for' in body
+
+
+def test_my_discussions_paginates_and_shows_second_page(app, db):
+    with app.app_context():
+        user = _create_user(db, 'paginate_disc_user', 'paginate_disc_user@example.com')
+        for i in range(13):
+            _create_discussion(db, user.id, title=f'Paged Discussion {i}')
+        db.session.commit()
+        user_id = user.id
+
+    client = app.test_client()
+    _login(client, user_id)
+    resp = client.get('/auth/dashboard/discussions?page=2')
+    assert resp.status_code == 200
+    body = resp.get_data(as_text=True)
+    assert 'Showing 13' in body
+    assert 'of 13' in body
+    assert 'Paged Discussion 0' in body
+    assert 'Paged Discussion 12' not in body
+
+
+def test_my_discussions_clamps_invalid_page_to_first_page(app, db):
+    with app.app_context():
+        user = _create_user(db, 'clamp_disc_user', 'clamp_disc_user@example.com')
+        for i in range(13):
+            _create_discussion(db, user.id, title=f'Clamp Discussion {i}')
+        db.session.commit()
+        user_id = user.id
+
+    client = app.test_client()
+    _login(client, user_id)
+    resp = client.get('/auth/dashboard/discussions?page=-9')
+    assert resp.status_code == 200
+    body = resp.get_data(as_text=True)
+    assert 'Showing 1' in body
+    assert 'of 13' in body
+    assert 'Clamp Discussion 12' in body
+    assert 'Clamp Discussion 0' not in body
