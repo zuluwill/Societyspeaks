@@ -863,11 +863,6 @@
                     alt="Profile photo"
                     onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-avatar.png') }}';"
                   />
-                  <span class="ml-2"
-                    >{{ current_user.individual_profile.full_name if
-                    current_user.individual_profile else current_user.username
-                    }}</span
-                  >
                   {% elif current_user.profile_type == 'company' %}
                   <img
                     class="h-8 w-8 rounded-lg object-cover"
@@ -875,11 +870,6 @@
                     alt="Company logo"
                     onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';"
                   />
-                  <span class="ml-2"
-                    >{{ current_user.company_profile.company_name if
-                    current_user.company_profile else current_user.username
-                    }}</span
-                  >
                   {% else %}
                   <div
                     class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center"
@@ -888,7 +878,6 @@
                       {{ current_user.username[:1].upper() }}
                     </span>
                   </div>
-                  <span class="ml-2">{{ current_user.username }}</span>
                   {% endif %}
                 </div>
                 <div class="ml-3">
@@ -927,6 +916,11 @@
                   >Create Profile</a
                 >
                 {% endif %}
+                <a
+                  href="{{ url_for('auth.dashboard') }}"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  >Dashboard</a
+                >
                 <a
                   href="{{ url_for('briefing.list_briefings') }}"
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
@@ -1187,45 +1181,20 @@
           });
         }
 
-        // Desktop user menu toggle - improved for mobile/touch
+        // Desktop user menu toggle
         const userMenuButton = document.getElementById("desktop-user-menu");
         const userMenuDropdown = document.getElementById(
           "desktop-dropdown-menu",
         );
 
         if (userMenuButton && userMenuDropdown) {
-          let touchHandled = false;
-
-          function toggleUserMenu(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            userMenuDropdown.classList.toggle("hidden");
-
-            // Update aria-expanded for accessibility
-            const isExpanded = !userMenuDropdown.classList.contains("hidden");
-            userMenuButton.setAttribute("aria-expanded", isExpanded);
-          }
-
-          userMenuButton.addEventListener(
-            "touchend",
-            function (e) {
-              e.preventDefault();
-              touchHandled = true;
-              toggleUserMenu(e);
-              setTimeout(function () {
-                touchHandled = false;
-              }, 300);
-            },
-            { passive: false },
-          );
-
           userMenuButton.addEventListener("click", function (e) {
-            if (!touchHandled) {
-              toggleUserMenu(e);
-            }
+            e.stopPropagation();
+            const isExpanded = userMenuDropdown.classList.toggle("hidden") === false;
+            userMenuButton.setAttribute("aria-expanded", isExpanded);
           });
 
-          // Close the dropdown when clicking/touching outside
+          // Close when clicking outside
           document.addEventListener("click", function (e) {
             if (
               !userMenuButton.contains(e.target) &&
