@@ -604,6 +604,82 @@ def init_scheduler(app):
                 logger.error(f"Scheduled X processing error: {e}", exc_info=True)
     
     
+    @scheduler.scheduled_job('cron', hour='10,18', id='social_posting_health_check')
+    def social_posting_health_check():
+        """
+        Monitor social posting health and send ops alerts if posts have stalled.
+        Runs twice daily at 10am and 6pm UTC.
+        Alerts if:
+        - No Bluesky post in >26 hours and posts are overdue/scheduled
+        - No X post in >26 hours and posts are overdue/scheduled
+        - Posts are stuck in the queue (scheduled time passed >4 hours ago, not yet posted)
+        """
+        if not _is_production_environment():
+            return
+
+        with app.app_context():
+            from app import db
+            from app.models import Discussion
+            from sqlalchemy import func
+
+            now = utcnow_naive()
+            alert_messages = []
+
+            try:
+                # Check last Bluesky post time
+                last_bluesky = db.session.query(
+                    func.max(Discussion.bluesky_posted_at)
+                ).scalar()
+
+                bluesky_overdue_count = db.session.query(func.count(Discussion.id)).filter(
+                    Discussion.bluesky_scheduled_at <= now - timedelta(hours=4),
+                    Discussion.bluesky_posted_at.is_(None)
+                ).scalar() or 0
+
+                if bluesky_overdue_count > 0:
+                    last_str = last_bluesky.strftime('%Y-%m-%d %H:%M UTC') if last_bluesky else 'never'
+                    hours_since = round((now - last_bluesky).total_seconds() / 3600, 1) if last_bluesky else None
+                    age_str = f"{hours_since}h ago" if hours_since else "never"
+                    alert_messages.append(
+                        f"BLUESKY POSTING STALLED: {bluesky_overdue_count} post(s) are overdue "
+                        f"(scheduled >4h ago, not yet posted). Last successful post: {last_str} ({age_str})."
+                    )
+
+                # Check last X post time
+                last_x = db.session.query(
+                    func.max(Discussion.x_posted_at)
+                ).scalar()
+
+                x_overdue_count = db.session.query(func.count(Discussion.id)).filter(
+                    Discussion.x_scheduled_at <= now - timedelta(hours=4),
+                    Discussion.x_posted_at.is_(None)
+                ).scalar() or 0
+
+                if x_overdue_count > 0:
+                    last_str = last_x.strftime('%Y-%m-%d %H:%M UTC') if last_x else 'never'
+                    hours_since = round((now - last_x).total_seconds() / 3600, 1) if last_x else None
+                    age_str = f"{hours_since}h ago" if hours_since else "never"
+                    alert_messages.append(
+                        f"X/TWITTER POSTING STALLED: {x_overdue_count} post(s) are overdue "
+                        f"(scheduled >4h ago, not yet posted). Last successful post: {last_str} ({age_str}). "
+                        f"Check X developer account status at developer.twitter.com."
+                    )
+
+                if alert_messages:
+                    full_message = (
+                        "Social Posting Health Check FAILED\n\n"
+                        + "\n\n".join(alert_messages)
+                        + "\n\nPlease investigate immediately via the admin dashboard."
+                    )
+                    logger.warning(f"Social posting health alert: {full_message}")
+                    _send_ops_alert(full_message)
+                else:
+                    logger.info("Social posting health check passed")
+
+            except Exception as e:
+                logger.error(f"Social posting health check error: {e}", exc_info=True)
+
+
     @scheduler.scheduled_job('cron', hour='9,15,21', id='backfill_orphan_articles')
     def backfill_orphan_articles_job():
         """
