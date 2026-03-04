@@ -21,10 +21,13 @@ depends_on = None
 
 
 def upgrade():
-    op.add_column('discussion', sa.Column('bluesky_claimed_at', sa.DateTime(), nullable=True))
-    op.add_column('discussion', sa.Column('bluesky_skipped', sa.Boolean(), nullable=False, server_default=sa.false()))
-    op.add_column('discussion', sa.Column('x_claimed_at', sa.DateTime(), nullable=True))
-    op.add_column('discussion', sa.Column('x_skipped', sa.Boolean(), nullable=False, server_default=sa.false()))
+    op.execute("""
+        ALTER TABLE discussion
+            ADD COLUMN IF NOT EXISTS bluesky_claimed_at TIMESTAMP,
+            ADD COLUMN IF NOT EXISTS bluesky_skipped BOOLEAN NOT NULL DEFAULT FALSE,
+            ADD COLUMN IF NOT EXISTS x_claimed_at TIMESTAMP,
+            ADD COLUMN IF NOT EXISTS x_skipped BOOLEAN NOT NULL DEFAULT FALSE
+    """)
 
     op.execute("""
         UPDATE discussion
