@@ -57,6 +57,15 @@ All scikit-learn imports are centralised in `app/lib/sklearn_compat.py`. This mo
 ### Billing & Subscriptions
 - **Stripe**: For subscription billing and payment processing, including pricing tiers, free trials, webhooks, and a customer portal.
 
+### Programme Management
+- **Visibility hierarchy**: public → unlisted (link, no auth) → invite_only (ProgrammeAccessGrant) → private (owners/stewards only)
+- **Public catalogue** shows all active public programmes regardless of whether they have live discussions (removed live-discussion gate in commit e781880)
+- **Invite-only + anonymous**: unauthenticated visitors are redirected to `/login` with a flash message instead of getting 404
+- **Pending steward invites**: inviting an unregistered email creates a `ProgrammeSteward` with `user_id=NULL` and `pending_email`. The record auto-links when the recipient registers. Token is preserved in the Flask session through the login/register flow and consumed on first use.
+- **DB migration head**: `t9u0v1w2x3y4` (adds `pending_email VARCHAR(150) NULL`, makes `user_id` nullable on `programme_steward`)
+- **`can_view_programme`**: stewards/editors bypass status check (can view archived programmes). Unknown visibility defaults to False (safe).
+- `revoke_programme_access`, `remove_steward` both have try/except + rollback.
+
 ### Development & Security Tools
 - **Flask Extensions**: For security, forms, and database management.
 - **Tailwind CSS**: Utility-first CSS framework.
