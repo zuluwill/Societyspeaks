@@ -1,14 +1,22 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="max-w-6xl mx-auto py-8 px-4 sm:px-6">
+
+  {# Breadcrumb #}
+  <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
+    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+    <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="text-gray-900 font-medium">Workspace</span>
+  </nav>
+
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
     <div>
       <h1 class="text-3xl font-bold text-gray-900">My Programmes Workspace</h1>
       <p class="mt-1 text-sm text-gray-500">Programmes you own, steward, or have invited participant access to.</p>
     </div>
     <div class="flex items-center gap-2">
-      <a href="{{ url_for('programmes.list_programmes') }}" class="inline-flex items-center justify-center px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">Public catalogue</a>
-      <a href="{{ url_for('programmes.create_programme') }}" class="inline-flex items-center justify-center px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">New programme</a>
+      <a href="{{ url_for('programmes.list_programmes') }}" class="inline-flex items-center justify-center px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 text-gray-700">Public catalogue</a>
+      <a href="{{ url_for('programmes.create_programme') }}" class="inline-flex items-center justify-center px-4 py-2 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium">New programme</a>
     </div>
   </div>
 
@@ -16,10 +24,10 @@
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for row in programmes %}
     {% set programme = row.programme %}
-    <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}" class="block bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition">
+    <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}" class="block bg-white rounded-lg border border-gray-200 p-5 hover:shadow-md transition">
       <div class="flex items-start justify-between gap-2 mb-2">
         <h2 class="text-lg font-semibold text-gray-900">{{ programme.name }}</h2>
-        <span class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">{{ row.access_label }}</span>
+        <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">{{ row.access_label }}</span>
       </div>
       {% if programme.description %}
       <p class="text-sm text-gray-600 line-clamp-3 mb-3">{{ programme.description }}</p>

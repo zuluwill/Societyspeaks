@@ -1,6 +1,15 @@
 {% extends "layout.html" %}
 {% block content %}
 <div class="max-w-4xl mx-auto py-8 px-4 space-y-6">
+  <nav class="flex items-center gap-1.5 text-sm text-gray-500">
+    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+    <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <a href="{{ url_for('programmes.workspace_programmes') }}" class="hover:text-gray-700">Workspace</a>
+    <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}" class="hover:text-gray-700">{{ programme.name }}</a>
+    <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="text-gray-900 font-medium">Settings</span>
+  </nav>
   <div class="bg-white rounded-lg shadow p-6">
     <h1 class="text-2xl font-bold text-gray-900">Programme settings</h1>
     <p class="text-sm text-gray-500">{{ programme.name }} · Status: {{ programme.status }} · Visibility: {{ programme.visibility|replace('_', ' ')|title }}</p>
