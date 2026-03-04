@@ -23,24 +23,54 @@
   <div class="space-y-5">
     <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Location &amp; Access</h2>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div>
-        {{ form.geographic_scope.label(class="block text-sm font-semibold text-gray-700 mb-1") }}
-        <p class="text-xs text-gray-500 mb-1.5">Used for discovery and filtering.</p>
-        {{ form.geographic_scope(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-blue-500 focus:border-blue-500", id="prog_scope_select") }}
-        {% if form.geographic_scope.errors %}{% for error in form.geographic_scope.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
+    <!-- Geographic Scope — segmented toggle -->
+    <div>
+      <p class="block text-sm font-semibold text-gray-700 mb-1">Geographic Scope</p>
+      <p class="text-xs text-gray-500 mb-2">Used for discovery and filtering.</p>
+      <div class="flex rounded-md border border-gray-300 overflow-hidden" role="group">
+        {% for value, label in form.geographic_scope.choices %}
+        <label class="flex-1 {% if not loop.last %}border-r border-gray-300{% endif %}">
+          <input type="radio" name="{{ form.geographic_scope.name }}" value="{{ value }}"
+            class="sr-only peer" id="prog_scope_select"
+            {% if form.geographic_scope.data == value or (not form.geographic_scope.data and value == 'global') %}checked{% endif %}
+            onchange="toggleCountry(this)">
+          <span class="block text-center py-2.5 px-4 text-sm font-medium cursor-pointer transition-colors
+            bg-white text-gray-700
+            peer-checked:bg-blue-600 peer-checked:text-white">
+            {{ label }}
+          </span>
+        </label>
+        {% endfor %}
       </div>
-      <div id="prog_country_wrapper">
-        {{ form.country.label(class="block text-sm font-semibold text-gray-700 mb-1") }}
-        {{ form.country(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-blue-500 focus:border-blue-500 sm:mt-7") }}
-        {% if form.country.errors %}{% for error in form.country.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
-      </div>
+      {% if form.geographic_scope.errors %}{% for error in form.geographic_scope.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
 
+    <!-- Country (shown only when scope = country) -->
+    <div id="prog_country_wrapper">
+      {{ form.country.label(class="block text-sm font-semibold text-gray-700 mb-1") }}
+      {{ form.country(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-blue-500 focus:border-blue-500") }}
+      {% if form.country.errors %}{% for error in form.country.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
+    </div>
+
+    <!-- Visibility — radio cards -->
     <div>
-      {{ form.visibility.label(class="block text-sm font-semibold text-gray-700 mb-1") }}
-      <p class="text-xs text-gray-500 mb-1.5">Controls who can discover and access this programme.</p>
-      {{ form.visibility(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-blue-500 focus:border-blue-500") }}
+      <p class="block text-sm font-semibold text-gray-700 mb-1">Visibility</p>
+      <p class="text-xs text-gray-500 mb-2">Controls who can discover and access this programme.</p>
+      <div class="space-y-2">
+        {% for value, label in form.visibility.choices %}
+        <label class="block cursor-pointer">
+          <input type="radio" name="{{ form.visibility.name }}" value="{{ value }}"
+            class="sr-only peer"
+            {% if form.visibility.data == value or (not form.visibility.data and value == 'public') %}checked{% endif %}>
+          <span class="flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all text-sm font-medium
+            border-gray-200 text-gray-700 bg-white
+            peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-800
+            hover:border-gray-300">
+            {{ label }}
+          </span>
+        </label>
+        {% endfor %}
+      </div>
       {% if form.visibility.errors %}{% for error in form.visibility.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
   </div>
@@ -51,10 +81,25 @@
   <div class="space-y-5">
     <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Ownership</h2>
 
+    <!-- Owner type — segmented toggle -->
     <div>
-      {{ form.owner_type.label(class="block text-sm font-semibold text-gray-700 mb-1") }}
-      <p class="text-xs text-gray-500 mb-1.5">Who owns this programme — your personal account or an organisation.</p>
-      {{ form.owner_type(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm text-base py-2.5 px-3 focus:ring-blue-500 focus:border-blue-500", id="owner_type_select") }}
+      <p class="block text-sm font-semibold text-gray-700 mb-1">Owner</p>
+      <p class="text-xs text-gray-500 mb-2">Who owns this programme — your personal account or an organisation.</p>
+      <div class="flex rounded-md border border-gray-300 overflow-hidden" role="group">
+        {% for value, label in form.owner_type.choices %}
+        <label class="flex-1 {% if not loop.last %}border-r border-gray-300{% endif %}">
+          <input type="radio" name="{{ form.owner_type.name }}" value="{{ value }}"
+            class="sr-only peer"
+            {% if form.owner_type.data == value or (not form.owner_type.data and value == 'user') %}checked{% endif %}
+            onchange="toggleCompany(this)">
+          <span class="block text-center py-2.5 px-4 text-sm font-medium cursor-pointer transition-colors
+            bg-white text-gray-700
+            peer-checked:bg-blue-600 peer-checked:text-white">
+            {{ label }}
+          </span>
+        </label>
+        {% endfor %}
+      </div>
       {% if form.owner_type.errors %}{% for error in form.owner_type.errors %}<p class="mt-1 text-sm text-red-600">{{ error }}</p>{% endfor %}{% endif %}
     </div>
 
@@ -108,24 +153,27 @@
 
 <script>
   (function () {
-    const ownerSelect = document.getElementById("owner_type_select");
-    const companyWrapper = document.getElementById("company_profile_wrapper");
-    if (ownerSelect && companyWrapper) {
-      function toggleCompany() {
-        companyWrapper.style.display = ownerSelect.value === "company" ? "" : "none";
-      }
-      ownerSelect.addEventListener("change", toggleCompany);
-      toggleCompany();
+    function toggleCompany(radio) {
+      var wrapper = document.getElementById("company_profile_wrapper");
+      if (wrapper) wrapper.style.display = radio.value === "company" ? "" : "none";
     }
 
-    const scopeSelect = document.getElementById("prog_scope_select");
-    const countryWrapper = document.getElementById("prog_country_wrapper");
-    if (scopeSelect && countryWrapper) {
-      function toggleCountry() {
-        countryWrapper.style.display = scopeSelect.value === "global" ? "none" : "";
-      }
-      scopeSelect.addEventListener("change", toggleCountry);
-      toggleCountry();
+    function toggleCountry(radio) {
+      var wrapper = document.getElementById("prog_country_wrapper");
+      if (wrapper) wrapper.style.display = radio.value === "global" ? "none" : "";
     }
+
+    // Expose for onchange handlers
+    window.toggleCompany = toggleCompany;
+    window.toggleCountry = toggleCountry;
+
+    // Set initial visibility state on page load
+    document.addEventListener("DOMContentLoaded", function () {
+      var scopeChecked = document.querySelector('[name="geographic_scope"]:checked');
+      if (scopeChecked) toggleCountry(scopeChecked);
+
+      var ownerChecked = document.querySelector('[name="owner_type"]:checked');
+      if (ownerChecked) toggleCompany(ownerChecked);
+    });
   })();
 </script>
