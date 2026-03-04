@@ -193,6 +193,28 @@ def register():
         # Auto-login the new user for frictionless checkout flow
         login_user(new_user)
 
+        # Auto-link any pending steward invites sent to this email address
+        from app.models import ProgrammeSteward
+        from app.lib.time import utcnow_naive as _utcnow
+        _pending_stewards = ProgrammeSteward.query.filter_by(
+            pending_email=new_user.email.lower(),
+            status='pending',
+        ).all()
+        if _pending_stewards:
+            for _ps in _pending_stewards:
+                _ps.user_id = new_user.id
+                _ps.pending_email = None
+                _ps.status = 'active'
+                _ps.accepted_at = _utcnow()
+                _ps.invite_token = None
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                current_app.logger.warning('Failed to auto-link pending steward invites on registration')
+        # Consume any pending steward invite token so it is not re-processed on login
+        session.pop('pending_steward_invite_token', None)
+
         # Check for pending checkout (user came from pricing page)
         pending_plan = session.pop('pending_checkout_plan', None)
         pending_interval = session.pop('pending_checkout_interval', 'month')
@@ -260,6 +282,11 @@ def login():
                 current_app.logger.info(f"Merged {merged} anonymous votes for user {user.id}")
         
         flash("Logged in successfully!", "success")
+
+        # Check for pending steward invite stored before login redirect
+        pending_steward_token = session.pop('pending_steward_invite_token', None)
+        if pending_steward_token:
+            return redirect(url_for('programmes.accept_steward_invite', token=pending_steward_token))
 
         # Check for pending organization invitation
         pending_invite_token = session.pop('pending_invitation_token', None)

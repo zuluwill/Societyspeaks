@@ -114,6 +114,14 @@
     </div>
   </div>
 
+  {% if cohort_slug and discussion.programme and discussion.programme.cohorts %}
+  {% set cohort_ns = namespace(label=cohort_slug) %}
+  {% for cohort in discussion.programme.cohorts %}
+    {% if cohort.slug == cohort_slug %}{% set cohort_ns.label = cohort.label %}{% endif %}
+  {% endfor %}
+  <div class="mb-4 text-xs text-gray-500">Taking part as: <span class="font-medium text-gray-700">{{ cohort_ns.label }}</span></div>
+  {% endif %}
+
   <!-- Stats Overview with Progress Indicator -->
   {# Threshold for showing counts - hide low numbers to avoid cold start
   perception #} {% set vote_display_threshold = 50 %} {% set total_votes_all =

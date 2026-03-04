@@ -615,7 +615,8 @@ class ProgrammeSteward(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     programme_id = db.Column(db.Integer, db.ForeignKey('programme.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    pending_email = db.Column(db.String(150), nullable=True)  # set when inviting unregistered users
     role = db.Column(db.String(20), nullable=False, default='steward')
     invited_by_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='SET NULL'), nullable=True)
     status = db.Column(db.String(20), nullable=False, default='pending')

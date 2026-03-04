@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import distinct, func, literal, or_
 from sqlalchemy.orm import load_only
@@ -122,15 +122,9 @@ def _assign_programme_fields(programme, form):
 @programmes_bp.route('/')
 def list_programmes():
     page = request.args.get('page', 1, type=int)
-    live_discussion_exists = db.session.query(Discussion.id).filter(
-        Discussion.programme_id == Programme.id,
-        Discussion.partner_env != 'test',
-        Discussion.is_closed.is_(False)
-    ).exists()
     programmes = Programme.query.filter(
         Programme.status == 'active',
         Programme.visibility == 'public',
-        live_discussion_exists
     ).order_by(Programme.created_at.desc()).paginate(page=page, per_page=12, error_out=False)
     return render_template('programmes/list.html', programmes=programmes)
 
@@ -267,6 +261,10 @@ def create_programme():
 def view_programme(slug):
     programme = Programme.query.filter_by(slug=slug).first_or_404()
     if not can_view_programme(programme, current_user):
+        visibility = getattr(programme, 'visibility', 'public')
+        if visibility == 'invite_only' and not current_user.is_authenticated:
+            flash('Please log in to access this programme.', 'info')
+            return redirect(url_for('auth.login'))
         abort(404)
     theme = request.args.get('theme', '').strip() or None
     phase = request.args.get('phase', '').strip() or None
@@ -431,6 +429,24 @@ def _send_steward_invite_email(programme, email, invite_url):
     return client._send_with_retry(email_data)
 
 
+def _send_pending_steward_invite_email(programme, email, invite_url, inviter_name):
+    from app.resend_client import get_resend_client
+
+    client = get_resend_client()
+    email_data = {
+        'from': f"Society Speaks <noreply@{current_app.config.get('RESEND_DOMAIN', 'societyspeaks.io')}>",
+        'to': [email],
+        'subject': f"You're invited to steward programme: {programme.name}",
+        'html': render_template(
+            'emails/programme_steward_invite_pending.html',
+            programme=programme,
+            invite_url=invite_url,
+            inviter_name=inviter_name,
+        ),
+    }
+    return client._send_with_retry(email_data)
+
+
 @programmes_bp.route('/<slug>/stewards/invite', methods=['POST'])
 @login_required
 @limiter.limit("10 per hour")
@@ -449,7 +465,43 @@ def invite_steward(slug):
     from app.models import User
     user = User.query.filter(db.func.lower(User.email) == email).first()
     if not user:
-        flash('No existing user found with that email. They must register first.', 'warning')
+        # User not registered yet — create a pending steward record
+        existing_pending = ProgrammeSteward.query.filter_by(
+            programme_id=programme.id,
+            pending_email=email,
+        ).first()
+        token = ProgrammeSteward.generate_invite_token()
+        if existing_pending:
+            existing_pending.invite_token = token
+            existing_pending.invited_by_id = current_user.id
+            existing_pending.invited_at = utcnow_naive()
+            existing_pending.status = 'pending'
+        else:
+            pending_steward = ProgrammeSteward(
+                programme_id=programme.id,
+                user_id=None,
+                pending_email=email,
+                status='pending',
+                invited_by_id=current_user.id,
+                invited_at=utcnow_naive(),
+                invite_token=token,
+            )
+            db.session.add(pending_steward)
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('Failed to save pending steward invite')
+            flash('Could not create steward invite.', 'danger')
+            return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+        invite_url = url_for('programmes.accept_steward_invite', token=token, _external=True)
+        try:
+            _send_pending_steward_invite_email(programme, email, invite_url, current_user.username)
+        except Exception:
+            current_app.logger.exception('Failed to send pending steward invite email')
+            flash('Invite saved but email failed. Please retry.', 'warning')
+            return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+        flash(f'Invite sent to {email}. They will need to register an account first.', 'success')
         return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
     active_steward = ProgrammeSteward.query.filter_by(
@@ -608,13 +660,47 @@ def revoke_programme_access(slug, grant_id):
     return redirect(url_for('programmes.programme_settings', slug=programme.slug))
 
 
-@programmes_bp.route('/stewards/accept/<token>', methods=['GET'])
+@programmes_bp.route('/<slug>/stewards/<int:steward_id>/remove', methods=['POST'])
 @login_required
+def remove_steward(slug, steward_id):
+    programme = Programme.query.filter_by(slug=slug).first_or_404()
+    if not can_edit_programme(programme, current_user):
+        flash("You don't have permission to remove stewards.", "danger")
+        return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+
+    steward = ProgrammeSteward.query.filter_by(id=steward_id, programme_id=programme.id).first_or_404()
+    db.session.delete(steward)
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Failed to remove steward')
+        flash('Could not remove steward. Please try again.', 'danger')
+        return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+    flash('Steward removed.', 'success')
+    return redirect(url_for('programmes.programme_settings', slug=programme.slug))
+
+
+@programmes_bp.route('/stewards/accept/<token>', methods=['GET'])
 def accept_steward_invite(token):
     steward = ProgrammeSteward.query.filter_by(invite_token=token, status='pending').first_or_404()
-    if steward.user_id != current_user.id:
-        flash('This invite is for another user account.', 'danger')
-        return redirect(url_for('main.index'))
+
+    if not current_user.is_authenticated:
+        session['pending_steward_invite_token'] = token
+        flash('Please log in or register to accept the steward invitation.', 'info')
+        return redirect(url_for('auth.login'))
+
+    if steward.user_id is not None:
+        if steward.user_id != current_user.id:
+            flash('This invite is for another user account.', 'danger')
+            return redirect(url_for('main.index'))
+    else:
+        # Pending invite for an unregistered email
+        if not steward.pending_email or current_user.email.lower() != steward.pending_email.lower():
+            flash('This invite is for a different email address.', 'danger')
+            return redirect(url_for('main.index'))
+        steward.user_id = current_user.id
+        steward.pending_email = None
 
     steward.status = 'active'
     steward.accepted_at = utcnow_naive()
