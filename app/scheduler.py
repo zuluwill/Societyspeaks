@@ -645,25 +645,29 @@ def init_scheduler(app):
                         f"(scheduled >4h ago, not yet posted). Last successful post: {last_str} ({age_str})."
                     )
 
-                # Check last X post time
-                last_x = db.session.query(
-                    func.max(Discussion.x_posted_at)
-                ).scalar()
+                # Check X posting only if it's enabled
+                from app.trending.social_poster import is_x_posting_enabled
+                if is_x_posting_enabled():
+                    last_x = db.session.query(
+                        func.max(Discussion.x_posted_at)
+                    ).scalar()
 
-                x_overdue_count = db.session.query(func.count(Discussion.id)).filter(
-                    Discussion.x_scheduled_at <= now - timedelta(hours=4),
-                    Discussion.x_posted_at.is_(None)
-                ).scalar() or 0
+                    x_overdue_count = db.session.query(func.count(Discussion.id)).filter(
+                        Discussion.x_scheduled_at <= now - timedelta(hours=4),
+                        Discussion.x_posted_at.is_(None)
+                    ).scalar() or 0
 
-                if x_overdue_count > 0:
-                    last_str = last_x.strftime('%Y-%m-%d %H:%M UTC') if last_x else 'never'
-                    hours_since = round((now - last_x).total_seconds() / 3600, 1) if last_x else None
-                    age_str = f"{hours_since}h ago" if hours_since else "never"
-                    alert_messages.append(
-                        f"X/TWITTER POSTING STALLED: {x_overdue_count} post(s) are overdue "
-                        f"(scheduled >4h ago, not yet posted). Last successful post: {last_str} ({age_str}). "
-                        f"Check X developer account status at developer.twitter.com."
-                    )
+                    if x_overdue_count > 0:
+                        last_str = last_x.strftime('%Y-%m-%d %H:%M UTC') if last_x else 'never'
+                        hours_since = round((now - last_x).total_seconds() / 3600, 1) if last_x else None
+                        age_str = f"{hours_since}h ago" if hours_since else "never"
+                        alert_messages.append(
+                            f"X/TWITTER POSTING STALLED: {x_overdue_count} post(s) are overdue "
+                            f"(scheduled >4h ago, not yet posted). Last successful post: {last_str} ({age_str}). "
+                            f"Check X developer account status at developer.twitter.com."
+                        )
+                else:
+                    logger.debug("X health check skipped (X_POSTING_ENABLED != true)")
 
                 if alert_messages:
                     full_message = (

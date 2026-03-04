@@ -30,6 +30,18 @@ class DuplicatePostError(Exception):
 # X/Twitter account handle
 X_HANDLE = "societyspeaksio"
 
+
+def is_x_posting_enabled() -> bool:
+    """
+    Return True only if X posting is explicitly enabled via environment variable.
+
+    X deprecated their free API tier in March 2026. Until the account is upgraded
+    to a paid plan, all posting attempts return 503 and waste resources.
+    Set X_POSTING_ENABLED=true to re-enable once a paid plan is active.
+    """
+    return os.environ.get('X_POSTING_ENABLED', 'false').lower() == 'true'
+
+
 # =============================================================================
 # RATE LIMIT CONFIGURATION
 # =============================================================================
@@ -1209,16 +1221,22 @@ X_POST_HOURS_UTC = [14, 16, 18, 20, 22]
 def schedule_x_post(discussion, slot_index: int = 0) -> Optional[datetime]:
     """
     Schedule a discussion for staggered X posting.
-    
+
+    Returns None immediately if X posting is disabled (X_POSTING_ENABLED != 'true').
+
     Args:
         discussion: Discussion model instance
         slot_index: Which time slot to use (0-4 for the 5 daily slots)
-    
+
     Returns:
-        The scheduled datetime, or None if scheduling failed
+        The scheduled datetime, or None if scheduling failed or disabled
     """
+    if not is_x_posting_enabled():
+        logger.debug("X posting disabled (X_POSTING_ENABLED != true), skipping schedule")
+        return None
+
     from app import db
-    
+
     try:
         now = utcnow_naive()
         
@@ -1252,6 +1270,9 @@ def process_scheduled_x_posts() -> int:
     Process any discussions that are due to be posted to X.
     Called by the scheduler every 15 minutes.
 
+    Returns 0 immediately if X posting is disabled (X_POSTING_ENABLED != 'true').
+    To re-enable: set X_POSTING_ENABLED=true after upgrading to a paid X API plan.
+
     Uses FOR UPDATE SKIP LOCKED to prevent double-posting when multiple
     scheduler instances (Replit autoscale) run concurrently. Each instance
     processes only unlocked rows, ensuring no duplicates.
@@ -1259,6 +1280,10 @@ def process_scheduled_x_posts() -> int:
     Returns:
         Number of posts sent
     """
+    if not is_x_posting_enabled():
+        logger.debug("X posting disabled (X_POSTING_ENABLED != true), skipping")
+        return 0
+
     from app import db
     from app.models import Discussion
 
