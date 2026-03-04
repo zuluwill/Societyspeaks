@@ -3,17 +3,13 @@
 {% from "components/discussion_card.html" import discussion_card %}
 {% block content %}
 
-{# Derive a friendly display name from the profile #}
-{% if profile %}
-  {% if current_user.profile_type == 'individual' and current_user.individual_profile %}
-    {% set display_name = current_user.individual_profile.full_name.split(' ')[0] %}
-  {% elif current_user.profile_type == 'company' and current_user.company_profile %}
-    {% set display_name = current_user.company_profile.company_name %}
-  {% else %}
-    {% set display_name = current_user.username %}
-  {% endif %}
-{% else %}
-  {% set display_name = current_user.username %}
+{# Derive a friendly display name — fall back to username if anything is missing/empty #}
+{% set display_name = current_user.username %}
+{% if current_user.profile_type == 'individual' and current_user.individual_profile and current_user.individual_profile.full_name %}
+  {% set _first = current_user.individual_profile.full_name.split(' ')[0] %}
+  {% if _first %}{% set display_name = _first %}{% endif %}
+{% elif current_user.profile_type == 'company' and current_user.company_profile and current_user.company_profile.company_name %}
+  {% set display_name = current_user.company_profile.company_name %}
 {% endif %}
 
 {# Hero #}
@@ -69,9 +65,16 @@
             </div>
         </div>
 
+        {% set _profile_url = none %}
         {% if profile %}
-        <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) if current_user.profile_type == 'individual' else url_for('profiles.view_company_profile', company_name=profile.slug) }}"
-           class="bg-white rounded-lg shadow p-6 flex items-center hover:shadow-md transition-shadow">
+          {% if current_user.profile_type == 'individual' %}
+            {% set _profile_url = url_for('profiles.view_individual_profile', username=profile.slug) %}
+          {% else %}
+            {% set _profile_url = url_for('profiles.view_company_profile', company_name=profile.slug) %}
+          {% endif %}
+        {% endif %}
+        {% if _profile_url %}
+        <a href="{{ _profile_url }}" class="bg-white rounded-lg shadow p-6 flex items-center hover:shadow-md transition-shadow">
         {% else %}
         <div class="bg-white rounded-lg shadow p-6 flex items-center">
         {% endif %}
@@ -84,7 +87,7 @@
                 <p class="text-gray-500 text-sm">Profile Views</p>
                 <p class="text-2xl font-bold text-gray-800">{{ profile_views }}</p>
             </div>
-        {% if profile %}</a>{% else %}</div>{% endif %}
+        {% if _profile_url %}</a>{% else %}</div>{% endif %}
 
     </div>
 
@@ -259,9 +262,13 @@
                 <p class="text-xs text-gray-400 mt-0.5">Discussions you have created</p>
             </div>
             <div class="flex items-center gap-2">
-                {% if profile and total_discussions > 6 %}
-                <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) if current_user.profile_type == 'individual' else url_for('profiles.view_company_profile', company_name=profile.slug) }}"
-                   class="text-sm text-blue-600 hover:text-blue-700 font-medium">View all {{ total_discussions }}</a>
+                {% if total_discussions > 6 %}
+                  {% if profile %}
+                    <a href="{{ url_for('profiles.view_individual_profile', username=profile.slug) if current_user.profile_type == 'individual' else url_for('profiles.view_company_profile', company_name=profile.slug) }}"
+                       class="text-sm text-blue-600 hover:text-blue-700 font-medium">View all {{ total_discussions }}</a>
+                  {% else %}
+                    <span class="text-sm text-gray-400">{{ total_discussions }} total</span>
+                  {% endif %}
                 {% endif %}
                 <a href="{{ url_for('discussions.create_discussion') }}"
                    class="inline-flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
