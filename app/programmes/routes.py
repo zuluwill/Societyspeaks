@@ -1,6 +1,6 @@
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user, login_required
-from sqlalchemy import distinct, func, literal, or_
+from sqlalchemy import distinct, func
 from sqlalchemy.orm import load_only
 
 from app import cache, db, limiter
@@ -9,12 +9,12 @@ from app.lib.time import utcnow_naive
 from app.models import (
     CompanyProfile,
     Discussion,
-    OrganizationMember,
     Programme,
     ProgrammeAccessGrant,
     ProgrammeSteward,
     StatementVote,
 )
+from app.programmes.access import editable_company_profiles, programme_access_labels, query_accessible_programmes
 from app.programmes.export import stream_programme_export_csv, stream_programme_export_json
 from app.programmes.forms import InviteProgrammeAccessForm, InviteStewardForm, ProgrammeForm
 from app.programmes.permissions import can_edit_programme, can_steward_programme, can_view_programme
@@ -86,25 +86,6 @@ def get_programme_summary(programme_id):
     return summary
 
 
-def _editable_company_profiles(user):
-    if not user.is_authenticated:
-        return []
-
-    editable_org_ids = {
-        row.org_id
-        for row in OrganizationMember.query.filter_by(user_id=user.id, status='active').all()
-        if row.can_edit
-    }
-    if user.company_profile:
-        editable_org_ids.add(user.company_profile.id)
-
-    if not editable_org_ids:
-        return []
-
-    return CompanyProfile.query.filter(CompanyProfile.id.in_(list(editable_org_ids))).order_by(
-        CompanyProfile.company_name.asc()
-    ).all()
-
 
 def _assign_programme_fields(programme, form):
     programme.name = (form.name.data or '').strip()
@@ -133,47 +114,7 @@ def list_programmes():
 @login_required
 def workspace_programmes():
     page = request.args.get('page', 1, type=int)
-    org_ids = {org.id for org in _editable_company_profiles(current_user)}
-    editable_predicate = or_(
-        Programme.creator_id == current_user.id,
-        Programme.company_profile_id.in_(list(org_ids)) if org_ids else Programme.id == -1
-    )
-
-    editable_programme_ids = db.session.query(
-        Programme.id.label('programme_id'),
-        literal(3).label('access_rank')
-    ).filter(editable_predicate)
-    stewarded_programme_ids = db.session.query(
-        ProgrammeSteward.programme_id.label('programme_id'),
-        literal(2).label('access_rank')
-    ).filter(
-        ProgrammeSteward.user_id == current_user.id,
-        ProgrammeSteward.status == 'active'
-    )
-    invited_programme_ids = db.session.query(
-        ProgrammeAccessGrant.programme_id.label('programme_id'),
-        literal(1).label('access_rank')
-    ).filter(
-        ProgrammeAccessGrant.user_id == current_user.id,
-        ProgrammeAccessGrant.status == 'active'
-    )
-
-    access_union = editable_programme_ids.union_all(
-        stewarded_programme_ids,
-        invited_programme_ids
-    ).subquery()
-    ranked_access = db.session.query(
-        access_union.c.programme_id,
-        func.max(access_union.c.access_rank).label('access_rank')
-    ).group_by(access_union.c.programme_id).subquery()
-
-    workspace_pagination = db.session.query(
-        Programme,
-        ranked_access.c.access_rank
-    ).join(
-        ranked_access,
-        ranked_access.c.programme_id == Programme.id
-    ).options(
+    workspace_pagination = query_accessible_programmes(current_user).options(
         load_only(
             Programme.id,
             Programme.slug,
@@ -192,11 +133,7 @@ def workspace_programmes():
         error_out=False
     )
 
-    access_labels = {
-        3: "Owner/Editor",
-        2: "Steward",
-        1: "Invited participant",
-    }
+    access_labels = programme_access_labels()
     programmes = [
         {
             "programme": programme,
@@ -216,7 +153,7 @@ def workspace_programmes():
 @limiter.limit("5 per hour", methods=["POST"])
 def create_programme():
     form = ProgrammeForm()
-    orgs = _editable_company_profiles(current_user)
+    orgs = editable_company_profiles(current_user)
     form.company_profile_id.choices = [(0, 'Select organization')] + [
         (org.id, org.company_name) for org in orgs
     ]
@@ -301,7 +238,7 @@ def edit_programme(slug):
         return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
     form = ProgrammeForm(obj=programme)
-    orgs = _editable_company_profiles(current_user)
+    orgs = editable_company_profiles(current_user)
     form.company_profile_id.choices = [(0, 'Select organization')] + [
         (org.id, org.company_name) for org in orgs
     ]

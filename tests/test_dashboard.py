@@ -1,9 +1,12 @@
+import re
+
 from app.models import (
     User,
     Discussion,
     DiscussionView,
     IndividualProfile,
     CompanyProfile,
+    ProfileView,
     Programme,
     generate_slug,
 )
@@ -33,6 +36,12 @@ def _create_discussion(db, creator_id, title='Test Discussion'):
     db.session.add(d)
     db.session.flush()
     return d
+
+
+def _assert_dashboard_stat(body, label, value):
+    # Match stat label followed by the value paragraph; tolerates responsive size classes
+    pattern = rf"{re.escape(label)}</p>\s*<p class=\"[^\"]*font-bold text-gray-800[^\"]*\">{value}</p>"
+    assert re.search(pattern, body), f"Expected {label} stat to equal {value}"
 
 
 def test_dashboard_redirects_unauthenticated(app, db):
@@ -137,8 +146,7 @@ def test_dashboard_limits_discussions_to_six(app, db):
     resp = client.get('/auth/dashboard')
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
-    # Stat card must show all 8
-    assert '8' in body
+    _assert_dashboard_stat(body, 'Discussions', 8)
     # "View all" text appears when total > 6
     assert '8 total' in body or 'View all 8' in body
 
@@ -161,9 +169,7 @@ def test_dashboard_discussion_views_counts_all_not_just_displayed(app, db):
     resp = client.get('/auth/dashboard')
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
-    # 8 views must appear somewhere in the page (in the stat card)
-    assert 'Discussion Views' in body
-    assert '8' in body
+    _assert_dashboard_stat(body, 'Discussion Views', 8)
 
 
 def test_dashboard_stat_counts_are_zero_for_new_user(app, db):
@@ -177,8 +183,10 @@ def test_dashboard_stat_counts_are_zero_for_new_user(app, db):
     resp = client.get('/auth/dashboard')
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
-    assert 'Programmes' in body
-    assert 'Discussions' in body
+    _assert_dashboard_stat(body, 'Programmes', 0)
+    _assert_dashboard_stat(body, 'Discussions', 0)
+    _assert_dashboard_stat(body, 'Discussion Views', 0)
+    _assert_dashboard_stat(body, 'Profile Views', 0)
     assert 'No programmes yet' in body
     assert 'No discussions yet' in body
 
@@ -210,3 +218,39 @@ def test_dashboard_profile_create_prompt_shown_without_profile(app, db):
     assert resp.status_code == 200
     body = resp.get_data(as_text=True)
     assert 'Create profile' in body
+
+
+def test_dashboard_profile_views_only_count_active_profile_type(app, db):
+    with app.app_context():
+        indiv_user = _create_user(db, 'indiv_profile_views', 'indiv_profile_views@example.com')
+        indiv_user.profile_type = 'individual'
+        indiv_profile = IndividualProfile(
+            user_id=indiv_user.id,
+            full_name='Ada Lovelace',
+            slug=generate_slug('Ada Lovelace'),
+        )
+        db.session.add(indiv_profile)
+        db.session.flush()
+
+        company_user = _create_user(db, 'company_profile_views', 'company_profile_views@example.com')
+        company_user.profile_type = 'company'
+        company_profile = CompanyProfile(
+            user_id=company_user.id,
+            company_name='Overlap Corp',
+            slug=generate_slug('Overlap Corp'),
+        )
+        db.session.add(company_profile)
+        db.session.flush()
+
+        # Add a view for the company profile only. This should never count
+        # toward the individual user's profile view total.
+        db.session.add(ProfileView(company_profile_id=company_profile.id, viewer_id=company_user.id))
+        db.session.commit()
+        indiv_user_id = indiv_user.id
+
+    client = app.test_client()
+    _login(client, indiv_user_id)
+    resp = client.get('/auth/dashboard')
+    assert resp.status_code == 200
+    body = resp.get_data(as_text=True)
+    _assert_dashboard_stat(body, 'Profile Views', 0)
