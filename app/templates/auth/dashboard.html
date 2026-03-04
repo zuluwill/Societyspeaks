@@ -3,28 +3,44 @@
 {% from "components/discussion_card.html" import discussion_card %}
 {% block content %}
 
-{# Hero Section with Gradient Background #}
+{# Hero Section #}
 <div class="bg-gradient-to-r from-purple-900 to-indigo-600 pb-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <h1 class="text-3xl font-bold text-white">Welcome, {{ current_user.username }}!</h1>
-        <p class="mt-2 text-blue-100">Manage your discussions and track engagement</p>
+        <p class="mt-2 text-blue-100">Manage your programmes, discussions, and track engagement</p>
     </div>
 </div>
 
 {# Main Content #}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
-    {# Stats Grid #}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+
+    {# Stats Grid — 4 columns #}
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {# Active Programmes #}
+        <div class="bg-white rounded-lg shadow p-6 transform hover:scale-105 transition-transform duration-200">
+            <div class="flex items-center">
+                <div class="p-3 bg-indigo-100 rounded-lg">
+                    <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                </div>
+                <div class="ml-4">
+                    <p class="text-gray-500 text-sm">Programmes</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ total_programmes }}</p>
+                </div>
+            </div>
+        </div>
+
         {# Total Discussions #}
         <div class="bg-white rounded-lg shadow p-6 transform hover:scale-105 transition-transform duration-200">
             <div class="flex items-center">
                 <div class="p-3 bg-blue-100 rounded-lg">
                     <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                     </svg>
                 </div>
                 <div class="ml-4">
-                    <p class="text-gray-500 text-sm">Total Discussions</p>
+                    <p class="text-gray-500 text-sm">Discussions</p>
                     <p class="text-2xl font-bold text-gray-800">{{ total_discussions }}</p>
                 </div>
             </div>
@@ -35,8 +51,8 @@
             <div class="flex items-center">
                 <div class="p-3 bg-green-100 rounded-lg">
                     <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                     </svg>
                 </div>
                 <div class="ml-4">
@@ -51,8 +67,7 @@
             <div class="flex items-center">
                 <div class="p-3 bg-purple-100 rounded-lg">
                     <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                     </svg>
                 </div>
                 <div class="ml-4">
@@ -63,10 +78,9 @@
         </div>
     </div>
 
-    {# Profile and Actions Section #}
+    {# Profile and Quick Actions #}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {# Profile Card #}
-    
         <div class="bg-white rounded-lg shadow-lg p-6">
             <h3 class="text-xl font-semibold text-gray-900 mb-4">Your Profile</h3>
             {% if profile %}
@@ -112,7 +126,7 @@
             {% else %}
                 <div class="text-center py-6">
                     <p class="text-gray-600 mb-4">Complete your profile to get started</p>
-                    <a href="{{ url_for('profiles.select_profile_type') }}" 
+                    <a href="{{ url_for('profiles.select_profile_type') }}"
                        class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                         Create Profile
                     </a>
@@ -120,19 +134,27 @@
             {% endif %}
         </div>
 
-        {# Quick Actions #}
+        {# Quick Actions — 3 tiles #}
         <div class="bg-white rounded-lg shadow-lg p-6 md:col-span-2">
             <h3 class="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-2 gap-4">
-                <a href="{{ url_for('discussions.create_discussion') }}" 
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <a href="{{ url_for('programmes.create_programme') }}"
+                   class="flex items-center p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+                    <svg class="w-6 h-6 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    <span class="ml-3 font-medium text-indigo-600">New Programme</span>
+                </a>
+                <a href="{{ url_for('discussions.create_discussion') }}"
                    class="flex items-center p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    <svg class="w-6 h-6 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
                     <span class="ml-3 font-medium text-blue-600">New Discussion</span>
                 </a>
-                <a href="{{ url_for('settings.view_settings') }}" class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
-                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <a href="{{ url_for('settings.view_settings') }}"
+                   class="flex items-center p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                    <svg class="w-6 h-6 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
@@ -142,9 +164,69 @@
         </div>
     </div>
 
-    {# Recent Discussions Section #}
+    {# My Programmes Section #}
     <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-        <h2 class="text-xl font-semibold text-gray-900 mb-6">Your Discussions</h2>
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">My Programmes</h2>
+            <div class="flex items-center gap-3">
+                <a href="{{ url_for('programmes.workspace_programmes') }}"
+                   class="text-sm text-indigo-600 hover:text-indigo-700 font-medium">View workspace</a>
+                <a href="{{ url_for('programmes.create_programme') }}"
+                   class="inline-flex items-center px-3 py-1.5 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-medium">
+                    New programme
+                </a>
+            </div>
+        </div>
+
+        {% if workspace_programmes %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for row in workspace_programmes %}
+                {% set prog = row.programme %}
+                <a href="{{ url_for('programmes.view_programme', slug=prog.slug) }}"
+                   class="block border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                    <div class="flex items-start justify-between gap-2 mb-1">
+                        <p class="font-medium text-gray-900 text-sm leading-snug">{{ prog.name }}</p>
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 shrink-0">{{ row.access_label }}</span>
+                    </div>
+                    <div class="text-xs text-gray-400 flex gap-x-2">
+                        <span>{{ prog.visibility | replace('_', ' ') | title }}</span>
+                        <span>·</span>
+                        <span>{{ prog.status | capitalize }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% if total_programmes > 6 %}
+            <div class="mt-4 text-center">
+                <a href="{{ url_for('programmes.workspace_programmes') }}"
+                   class="text-sm text-indigo-600 hover:text-indigo-700">
+                    View all {{ total_programmes }} programmes in workspace
+                </a>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-10">
+                <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+                <p class="text-gray-500 text-sm mb-4">No programmes yet. Programmes group discussions into structured engagement campaigns.</p>
+                <a href="{{ url_for('programmes.create_programme') }}"
+                   class="inline-block bg-indigo-600 text-white px-5 py-2 rounded-md hover:bg-indigo-700 text-sm font-medium">
+                    Create your first programme
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    {# Your Discussions Section #}
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-semibold text-gray-900">Your Discussions</h2>
+            <a href="{{ url_for('discussions.create_discussion') }}"
+               class="inline-flex items-center px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium">
+                New discussion
+            </a>
+        </div>
         {% if discussions %}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for discussion in discussions %}
@@ -154,29 +236,13 @@
         {% else %}
             <div class="text-center py-12">
                 <p class="text-gray-600 mb-4">No discussions started yet</p>
-                <a href="#" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                    Start Your First Discussion
+                <a href="{{ url_for('discussions.create_discussion') }}"
+                   class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    Start your first discussion
                 </a>
             </div>
         {% endif %}
     </div>
-</div>
 
+</div>
 {% endblock %}
-
-
-
-<!-- Recent Discussions Section -->
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h2 class="text-2xl font-bold text-gray-900 mb-6">Your recent discussions</h2>
-
-    {% if discussions %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {% for discussion in discussions %}
-                {{ discussion_card(discussion) }}
-            {% endfor %}
-        </div>
-    {% else %}
-        <p class="text-gray-600">No discussions started yet.Start one now</p>
-    {% endif %}
-</div>

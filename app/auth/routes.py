@@ -1,9 +1,9 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, cache
-from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView, StatementVote, OrganizationMember
+from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView, StatementVote, OrganizationMember, Programme, ProgrammeSteward, ProgrammeAccessGrant
 from flask_login import login_user, login_required, logout_user, current_user
-from sqlalchemy import func
+from sqlalchemy import func, literal, or_
 from datetime import datetime, timedelta
 from app.storage_utils import get_recent_activity
 from itsdangerous import URLSafeTimedSerializer
@@ -379,13 +379,54 @@ def dashboard():
             DiscussionView.discussion_id.in_(discussion_ids)
         ).count()
 
+    # Build workspace programmes (same union logic as the workspace page)
+    org_ids = set()
+    if current_user.company_profile:
+        org_ids.add(current_user.company_profile.id)
+    for m in OrganizationMember.query.filter_by(user_id=current_user.id, status='active').all():
+        if m.can_edit:
+            org_ids.add(m.company_profile_id)
+
+    editable_predicate = or_(
+        Programme.creator_id == current_user.id,
+        Programme.company_profile_id.in_(list(org_ids)) if org_ids else Programme.id == -1
+    )
+    editable_q = db.session.query(
+        Programme.id.label('programme_id'), literal(3).label('access_rank')
+    ).filter(editable_predicate)
+    stewarded_q = db.session.query(
+        ProgrammeSteward.programme_id.label('programme_id'), literal(2).label('access_rank')
+    ).filter(ProgrammeSteward.user_id == current_user.id, ProgrammeSteward.status == 'active')
+    invited_q = db.session.query(
+        ProgrammeAccessGrant.programme_id.label('programme_id'), literal(1).label('access_rank')
+    ).filter(ProgrammeAccessGrant.user_id == current_user.id, ProgrammeAccessGrant.status == 'active')
+
+    access_union = editable_q.union_all(stewarded_q, invited_q).subquery()
+    ranked_access = db.session.query(
+        access_union.c.programme_id,
+        func.max(access_union.c.access_rank).label('access_rank')
+    ).group_by(access_union.c.programme_id).subquery()
+
+    total_programmes = db.session.query(func.count()).select_from(ranked_access).scalar() or 0
+
+    _access_labels = {3: 'Owner/Editor', 2: 'Steward', 1: 'Invited participant'}
+    _prog_rows = db.session.query(Programme, ranked_access.c.access_rank).join(
+        ranked_access, ranked_access.c.programme_id == Programme.id
+    ).order_by(Programme.updated_at.desc()).limit(6).all()
+    workspace_programmes = [
+        {'programme': prog, 'access_label': _access_labels.get(int(rank or 1), 'Invited participant')}
+        for prog, rank in _prog_rows
+    ]
+
     return render_template(
         'auth/dashboard.html',
         profile=profile,
         discussions=discussions,
         total_discussions=total_discussions,
         profile_views=profile_views,
-        discussion_views=discussion_views
+        discussion_views=discussion_views,
+        workspace_programmes=workspace_programmes,
+        total_programmes=total_programmes,
     )
 
 
