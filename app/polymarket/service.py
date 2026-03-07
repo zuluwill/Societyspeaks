@@ -172,13 +172,13 @@ class PolymarketService:
             return None
         return response.get('price')
 
-    MAX_TOKEN_IDS_PER_BATCH = 50
+    MAX_TOKEN_IDS_PER_BATCH = 20
 
     @safe_api_call(default_return={})
     def get_prices_batch(self, token_ids: List[str]) -> Dict[str, float]:
         """
         Get prices for multiple tokens, automatically chunking to avoid
-        HTTP 414 URI Too Large errors from the CLOB API.
+        HTTP 400/414 errors from the CLOB API.
 
         Returns:
             Dict mapping token_id -> price
@@ -189,7 +189,8 @@ class PolymarketService:
         results: Dict[str, float] = {}
         for i in range(0, len(token_ids), self.MAX_TOKEN_IDS_PER_BATCH):
             chunk = token_ids[i:i + self.MAX_TOKEN_IDS_PER_BATCH]
-            response = self._clob_request('/prices', params={'token_ids': ','.join(chunk)})
+            params = [('token_ids', tid) for tid in chunk]
+            response = self._clob_request('/prices', params=params)
             if response:
                 for item in response.get('prices', []):
                     results[item['token_id']] = item['price']
