@@ -677,8 +677,17 @@ class BriefEmailScheduler:
                 now_utc = utcnow_naive().replace(tzinfo=pytz.utc)
                 now_local = now_utc.astimezone(local_tz)
 
-                # Check if it's their preferred send hour in their timezone
-                if now_local.hour == subscriber.preferred_send_hour:
+                # Check if it's their preferred send hour in their timezone,
+                # or within a 2-hour catch-up window for missed sends.
+                # can_receive_brief (checked above) prevents any duplicates.
+                CATCHUP_HOURS = 2
+                hours_since_preferred = (now_local.hour - subscriber.preferred_send_hour) % 24
+                if hours_since_preferred <= CATCHUP_HOURS:
+                    if hours_since_preferred > 0:
+                        logger.info(
+                            f"Catch-up send: subscriber {subscriber.id} missed their "
+                            f"{subscriber.preferred_send_hour:02d}:00 window by {hours_since_preferred}h"
+                        )
                     subscribers_to_send.append(subscriber)
 
             except Exception as e:

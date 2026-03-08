@@ -9,17 +9,13 @@ channel = "stable-24_05"
 packages = ["cargo", "glibcLocales", "libiconv", "libxcrypt", "openssl", "pkg-config", "rustc"]
 
 [deployment]
-run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--timeout=120", "run:app"]
+run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--timeout=600", "run:app"]
 deploymentTarget = "vm"
 build = ["bash", "scripts/build.sh"]
 
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 5904
-externalPort = 3000
 
 [objectStorage]
 defaultBucketID = "replit-objstore-14f1b847-9243-4a51-b979-b86c328f7947"
@@ -45,7 +41,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=120 run:app"
+args = "gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=600 run:app"
 waitForPort = 5000
 
 [agent]

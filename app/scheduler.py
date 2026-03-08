@@ -1801,7 +1801,7 @@ def init_scheduler(app):
         """
         return
 
-    @scheduler.scheduled_job('interval', minutes=15, id='process_briefing_runs')
+    @scheduler.scheduled_job('interval', minutes=15, id='process_briefing_runs', max_instances=1, coalesce=True)
     def process_briefing_runs_job():
         """
         Process scheduled briefings and generate runs.
@@ -2293,7 +2293,7 @@ def init_scheduler(app):
                 logger.error(f"Auto-publish failed: {e}", exc_info=True)
 
 
-    @scheduler.scheduled_job('cron', minute=10, id='send_brief_emails')
+    @scheduler.scheduled_job('cron', minute=10, id='send_brief_emails', max_instances=1, coalesce=True)
     def send_brief_emails_hourly():
         """
         Send brief emails 10 minutes past each hour
