@@ -86,10 +86,10 @@ class Config:
     STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
 
     # Enhanced Database Connection Settings (configurable for scaling)
-    # When using Neon's PgBouncer pooler (pgbouncer=true in DATABASE_URL), SQLAlchemy's
+    # When using Neon's PgBouncer pooler ("-pooler" in DATABASE_URL hostname), SQLAlchemy's
     # own pool sits in front of PgBouncer, so smaller sizes are appropriate — the pooler
     # handles multiplexing to the real database.
-    _using_pooler = 'pgbouncer=true' in (os.getenv('DATABASE_URL') or '')
+    _using_pooler = '-pooler' in (os.getenv('DATABASE_URL') or '')
     _default_pool_size = '5' if _using_pooler else '10'
     _default_max_overflow = '10' if _using_pooler else '20'
 
