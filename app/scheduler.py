@@ -2348,7 +2348,7 @@ def init_scheduler(app):
                     "Today's ready brief may remain unpublished until manually corrected."
                 )
 
-    @scheduler.scheduled_job('cron', hour=18, minute=30, id='auto_publish_brief_catchup')
+    @scheduler.scheduled_job('cron', hour=18, minute=15, id='auto_publish_brief_catchup')
     def auto_publish_daily_brief_catchup():
         """
         Catch-up publisher for today's briefs.
@@ -2356,6 +2356,10 @@ def init_scheduler(app):
         If the primary 18:00 UTC auto-publish failed, this job promotes any
         remaining 'ready' briefs for today to 'published' so delivery can
         recover automatically without manual intervention.
+
+        Runs at 18:15 UTC — after emails go out at 18:10 (email job accepts
+        'ready' status) and before the social post at 18:30 (which requires
+        'published' status).
         """
         with app.app_context():
             from app import db
