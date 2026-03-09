@@ -107,12 +107,6 @@ class Config:
         'keepalives_interval': 10,
         'keepalives_count': 5,
     }
-    if _using_pooler:
-        # PgBouncer transaction mode does not support prepared statements.
-        # Disabling the cache ensures SQLAlchemy never tries to reuse a
-        # prepared statement across what PgBouncer may route to different
-        # backend connections.
-        _connect_args['options'] = '-c prepared_statements=off'
 
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,  # Verify connections before use (prevents stale connection errors)
