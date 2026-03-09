@@ -228,9 +228,14 @@ def _handle_x_rate_limit_error(error) -> Tuple[bool, int]:
     
     return False, 0
 
-# Staggered posting times (in UTC hours) targeting US audience
-# These are: 2pm, 4pm, 6pm, 8pm, 10pm UTC = 9am, 11am, 1pm, 3pm, 5pm EST
-BLUESKY_POST_HOURS_UTC = [14, 16, 18, 20, 22]
+# Staggered posting times (in UTC hours) for the 3 daily discussion slots.
+# Full 5-post daily schedule (UTC):
+#   09:00 - Discussion 1  (UK morning, overnight US feeds)
+#   14:00 - Daily Question (separate direct post, not this queue)
+#   17:00 - Discussion 2  (UK afternoon, US East lunch, US West morning)
+#   18:30 - Daily Brief   (separate direct post, not this queue)
+#   21:00 - Discussion 3  (UK evening, US East afternoon, US West lunch)
+BLUESKY_POST_HOURS_UTC = [9, 17, 21]
 
 PODCAST_HANDLES_X = [
     "@RestIsPolitics",
@@ -1073,9 +1078,10 @@ def schedule_bluesky_post(discussion, slot_index: int = 0) -> Optional[datetime]
         return None
 
 
-BLUESKY_MAX_POSTS_PER_DAY = 15
-BLUESKY_MAX_POSTS_PER_RUN = 3
+BLUESKY_MAX_POSTS_PER_DAY = 3
+BLUESKY_MAX_POSTS_PER_RUN = 1
 BLUESKY_STALE_CLAIM_MINUTES = 30
+BLUESKY_BACKLOG_SKIP_HOURS = 36
 
 
 def _recover_stale_bluesky_claims(db, Discussion):
@@ -1117,6 +1123,44 @@ def _recover_stale_bluesky_claims(db, Discussion):
     return 0
 
 
+def _skip_old_backlogged_posts(db, Discussion) -> int:
+    """
+    Mark as skipped any posts that have been sitting in the queue for longer than
+    BLUESKY_BACKLOG_SKIP_HOURS without being posted.
+
+    This prevents a backlog (e.g. caused by worker crashes) from flooding Bluesky
+    with stale content once the system recovers. Only posts from previous days are
+    affected — today's scheduled posts are preserved.
+    """
+    cutoff = utcnow_naive() - timedelta(hours=BLUESKY_BACKLOG_SKIP_HOURS)
+
+    try:
+        old = Discussion.query.filter(
+            Discussion.bluesky_scheduled_at.isnot(None),
+            Discussion.bluesky_scheduled_at < cutoff,
+            Discussion.bluesky_posted_at.is_(None),
+            Discussion.bluesky_skipped.is_(False)
+        ).all()
+
+        if old:
+            logger.warning(
+                f"Skipping {len(old)} backlogged Bluesky posts scheduled "
+                f">{BLUESKY_BACKLOG_SKIP_HOURS}h ago (stale content, will not post)"
+            )
+            for d in old:
+                d.bluesky_skipped = True
+                d.bluesky_claimed_at = None
+            db.session.commit()
+            return len(old)
+    except Exception as e:
+        logger.error(f"Error skipping old backlogged Bluesky posts: {e}")
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+    return 0
+
+
 def _count_bluesky_posts_today(db, Discussion) -> int:
     """Count confirmed successful Bluesky posts today (bluesky_posted_at is the source of truth)."""
     from datetime import date
@@ -1149,6 +1193,7 @@ def process_scheduled_bluesky_posts() -> int:
     posted_count = 0
 
     _recover_stale_bluesky_claims(db, Discussion)
+    _skip_old_backlogged_posts(db, Discussion)
 
     today_count = _count_bluesky_posts_today(db, Discussion)
     remaining_today = BLUESKY_MAX_POSTS_PER_DAY - today_count

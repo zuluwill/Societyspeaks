@@ -525,9 +525,15 @@ def init_scheduler(app):
     @scheduler.scheduled_job('cron', hour=8, id='daily_auto_publish')
     def daily_auto_publish():
         """
-        Auto-publish up to 15 diverse topics daily.
+        Auto-publish the 3 best discussion topics daily for social posting.
         Runs once at 8am UTC.
-        Bluesky and X posts are scheduled for staggered times throughout the day.
+
+        Social schedule for the day (5 posts total):
+          09:00 UTC - Discussion 1 (Bluesky/X queue)
+          14:00 UTC - Daily Question (direct post, separate job)
+          17:00 UTC - Discussion 2 (Bluesky/X queue)
+          18:30 UTC - Daily Brief   (direct post, separate job)
+          21:00 UTC - Discussion 3 (Bluesky/X queue)
         """
         with app.app_context():
             from app.trending.pipeline import auto_publish_daily
@@ -535,7 +541,7 @@ def init_scheduler(app):
             logger.info("Starting daily auto-publish")
             
             try:
-                published = auto_publish_daily(max_topics=15, schedule_bluesky=True, schedule_x=True)
+                published = auto_publish_daily(max_topics=3, schedule_bluesky=True, schedule_x=True)
                 logger.info(f"Auto-published {published} topics (Bluesky and X posts scheduled)")
             except Exception as e:
                 logger.error(f"Daily auto-publish error: {e}", exc_info=True)
