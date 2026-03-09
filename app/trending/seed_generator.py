@@ -14,6 +14,8 @@ import logging
 import json
 from typing import List, Dict, Optional
 from functools import partial
+import re
+import hashlib
 
 from app.models import TrendingTopic
 
@@ -85,6 +87,42 @@ def _looks_specific_enough(content: str) -> bool:
     return has_alpha and has_claim_structure
 
 
+def _is_rate_limit_error(error: Exception) -> bool:
+    text = str(error).lower()
+    return (
+        "rate limit" in text
+        or "too many requests" in text
+        or "429" in text
+        or "quota" in text
+    )
+
+
+def _fallback_seed_statements(
+    title: Optional[str],
+    excerpt: Optional[str],
+    count: int
+) -> List[Dict]:
+    """
+    Deterministic fallback statements when providers are unavailable/rate-limited.
+    Keeps create-discussion endpoints functional under quota pressure.
+    """
+    subject = _trim_text(title or "this issue", 120)
+    summary = _trim_text(excerpt or "", 220)
+    summary_tail = f" Context: {summary}" if summary else ""
+
+    templates = [
+        ("pro", f"Public institutions should take stronger action on {subject} within the next year.{summary_tail}"),
+        ("con", f"Current proposals on {subject} risk unintended harms and should be scaled back until evidence improves.{summary_tail}"),
+        ("neutral", f"What measurable outcomes should define success for policies related to {subject}, and over what timeframe?{summary_tail}"),
+        ("pro", f"Targeted investment on {subject} could improve long-term social and economic resilience if delivered transparently.{summary_tail}"),
+        ("con", f"Mandating major changes on {subject} now may overburden communities without delivering proportional benefits.{summary_tail}"),
+    ]
+    return [
+        {"content": content[:500], "position": position}
+        for position, content in templates[:max(1, min(count, len(templates)))]
+    ]
+
+
 def generate_seed_statements(
     topic: Optional[TrendingTopic] = None,
     title: Optional[str] = None,
@@ -114,28 +152,35 @@ def generate_seed_statements(
     if not topic and not title:
         raise ValueError("Either topic or title must be provided")
 
-    api_key = os.environ.get('OPENAI_API_KEY')
-    if not api_key:
-        api_key = os.environ.get('ANTHROPIC_API_KEY')
-        if api_key:
-            return _generate_with_anthropic(
-                topic=topic,
-                title=title,
-                excerpt=excerpt,
-                source_name=source_name,
-                count=count,
-                api_key=api_key
-            )
-        return []
+    openai_key = os.environ.get('OPENAI_API_KEY')
+    anthropic_key = os.environ.get('ANTHROPIC_API_KEY')
 
-    return _generate_with_openai(
-        topic=topic,
-        title=title,
-        excerpt=excerpt,
-        source_name=source_name,
-        count=count,
-        api_key=api_key
-    )
+    if openai_key:
+        statements = _generate_with_openai(
+            topic=topic,
+            title=title,
+            excerpt=excerpt,
+            source_name=source_name,
+            count=count,
+            api_key=openai_key
+        )
+        if statements:
+            return statements
+
+    if anthropic_key:
+        statements = _generate_with_anthropic(
+            topic=topic,
+            title=title,
+            excerpt=excerpt,
+            source_name=source_name,
+            count=count,
+            api_key=anthropic_key
+        )
+        if statements:
+            return statements
+
+    logger.warning("LLM seed generation unavailable; using deterministic fallback statements")
+    return _fallback_seed_statements(title=title, excerpt=excerpt, count=count)
 
 
 # Convenience alias for raw content mode
@@ -270,7 +315,10 @@ def _generate_with_openai(
         logger.error("OpenAI call was interrupted (SystemExit/KeyboardInterrupt)")
         return []
     except Exception as e:
-        logger.error(f"Seed generation failed: {e}")
+        if _is_rate_limit_error(e):
+            logger.warning(f"OpenAI seed generation rate-limited/quota-limited: {e}")
+        else:
+            logger.error(f"Seed generation failed: {e}")
         return []
 
 
@@ -311,5 +359,8 @@ def _generate_with_anthropic(
         logger.error("Anthropic call was interrupted (SystemExit/KeyboardInterrupt)")
         return []
     except Exception as e:
-        logger.error(f"Seed generation failed: {e}")
+        if _is_rate_limit_error(e):
+            logger.warning(f"Anthropic seed generation rate-limited/quota-limited: {e}")
+        else:
+            logger.error(f"Seed generation failed: {e}")
         return []

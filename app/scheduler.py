@@ -2036,6 +2036,22 @@ def init_scheduler(app):
                     "See scheduler logs for traceback."
                 )
 
+    @scheduler.scheduled_job('interval', seconds=5, id='process_source_ingestion_queue')
+    def process_source_ingestion_queue_job():
+        """
+        Process queued briefing source ingestion jobs with backpressure controls.
+        """
+        with app.app_context():
+            from app.briefing.ingestion.jobs import process_pending_ingestion_jobs
+            try:
+                process_pending_ingestion_jobs(max_jobs=30)
+            except Exception as e:
+                logger.error(f"Source ingestion queue processing failed: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Briefing source ingestion queue processor failed. "
+                    "See scheduler logs for traceback."
+                )
+
     @scheduler.scheduled_job('interval', seconds=10, id='process_audio_generation_queue')
     def process_audio_generation_queue_job():
         """
@@ -2064,8 +2080,8 @@ def init_scheduler(app):
             
         with app.app_context():
             from app.briefing.generator import generate_brief_run_for_briefing
-            from app.briefing.ingestion.source_ingester import SourceIngester
-            from app.models import Briefing, BriefRun, InputSource
+            from app.briefing.ingestion.jobs import queue_ingestion_job, process_pending_ingestion_jobs
+            from app.models import Briefing, BriefRun
             from app import db
             from datetime import datetime, timedelta
             import pytz
@@ -2205,21 +2221,40 @@ def init_scheduler(app):
                             logger.warning(f"Unknown cadence '{briefing.cadence}' for briefing {briefing.id}, skipping")
                             continue
                         
-                        ingester = SourceIngester()
                         ingestion_errors = 0
+                        queued_jobs = 0
+                        source_count = 0
                         for source_link in briefing.sources:
                             source = source_link.input_source
                             if source and source.enabled:
+                                source_count += 1
                                 try:
-                                    ingester.ingest_source(source)
+                                    queued = queue_ingestion_job(
+                                        source_id=source.id,
+                                        days_back=7,
+                                        reason=f"briefing:{briefing.id}"
+                                    )
+                                    if queued:
+                                        queued_jobs += 1
+                                    else:
+                                        ingestion_errors += 1
                                 except Exception as e:
                                     ingestion_errors += 1
-                                    logger.error(f"Error ingesting source {source.id} for briefing {briefing.id}: {e}")
+                                    logger.error(f"Error queueing source {source.id} for briefing {briefing.id}: {e}")
+
+                        # Drain a bounded number of jobs immediately to keep fresh content
+                        # available without waiting for the next queue tick.
+                        if queued_jobs > 0:
+                            process_pending_ingestion_jobs(max_jobs=min(max(queued_jobs, 1), 20))
                         
                         if ingestion_errors > 0:
                             logger.warning(
                                 f"Briefing {briefing.id}: {ingestion_errors} source ingestion errors, "
                                 f"proceeding with available content"
+                            )
+                        elif source_count > 0:
+                            logger.info(
+                                f"Briefing {briefing.id}: queued {queued_jobs}/{source_count} source ingestion jobs"
                             )
                         
                         brief_run = generate_brief_run_for_briefing(

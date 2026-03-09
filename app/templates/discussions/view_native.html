@@ -438,6 +438,13 @@
     align-items: center;
     justify-content: center;
   }
+
+  /* Optimistic selected state shown immediately on click, before server confirms */
+  .vote-btn--optimistic {
+    outline: 3px solid currentColor;
+    outline-offset: 2px;
+    opacity: 0.85;
+  }
 </style>
 
 <!-- AJAX Voting Script -->
@@ -513,105 +520,119 @@
       const statementDiv = document.querySelector(`[data-statement-id="${statementId}"]`);
       const buttons = statementDiv.querySelectorAll('.vote-btn');
       const clickedButton = statementDiv.querySelector(`[data-vote="${voteValue}"]`);
-
-      // Disable all vote buttons to prevent double-clicking
-      buttons.forEach(btn => btn.disabled = true);
-
-      // Show loading state
       const loadingSpinner = clickedButton.querySelector('.vote-loading');
       const voteContent = clickedButton.querySelector('.vote-content');
+
+      // Disable all buttons to prevent double-submit
+      buttons.forEach(btn => btn.disabled = true);
+
+      // Optimistic update: mark selected button immediately so the UI feels instant
+      clickedButton.classList.add('vote-btn--optimistic');
       loadingSpinner.classList.add('is-loading');
       voteContent.classList.add('hidden');
 
-      try {
-          const response = await fetch(`/statements/${statementId}/vote`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'X-CSRFToken': '{{ csrf_token() }}'
-              },
-              credentials: 'same-origin',
-              body: JSON.stringify({
-                  vote: voteValue,
-                  confidence: confidence,
-                  cohort: {{ cohort_slug|tojson }}
-              })
-          });
+      function revertOptimistic() {
+          clickedButton.classList.remove('vote-btn--optimistic');
+          loadingSpinner.classList.remove('is-loading');
+          voteContent.classList.remove('hidden');
+          buttons.forEach(btn => btn.disabled = false);
+      }
 
-          // Try to parse JSON response
-          let data;
-          try {
-              data = await response.json();
-          } catch (e) {
-              throw new Error('Invalid response from server');
-          }
+      function applyServerCounts(data) {
+          statementDiv.querySelector('[data-count-type="agree"]').textContent = data.vote_count_agree;
+          statementDiv.querySelector('[data-count-type="disagree"]').textContent = data.vote_count_disagree;
+          statementDiv.querySelector('[data-count-type="unsure"]').textContent = data.vote_count_unsure;
 
-          if (response.ok && data.success) {
-              // Update vote counts on buttons
-              statementDiv.querySelector('[data-count-type="agree"]').textContent = data.vote_count_agree;
-              statementDiv.querySelector('[data-count-type="disagree"]').textContent = data.vote_count_disagree;
-              statementDiv.querySelector('[data-count-type="unsure"]').textContent = data.vote_count_unsure;
-
-              // Update total votes and stats
-              const statsContainer = document.querySelector(`#statement-${statementId} .statement-stats`);
-              if (statsContainer && data.total_votes !== undefined) {
-                  const agreementPct = Math.round(data.agreement_rate * 100);
-                  let statsHTML = `<span class="font-semibold total-votes">${data.total_votes}</span> total votes`;
-
-                  if (data.total_votes > 0) {
-                      statsHTML += ` · <span class="font-semibold agreement-rate">${agreementPct}%</span> agreement`;
-
-                      if (data.controversy_score > 0.7) {
-                          statsHTML += ' · <span class="text-red-600 font-semibold">🔥 Controversial</span>';
-                      }
+          const statsContainer = document.querySelector(`#statement-${statementId} .statement-stats`);
+          if (statsContainer && data.total_votes !== undefined) {
+              const agreementPct = Math.round(data.agreement_rate * 100);
+              statsContainer.textContent = '';
+              const totalSpan = document.createElement('span');
+              totalSpan.className = 'font-semibold total-votes';
+              totalSpan.textContent = data.total_votes;
+              statsContainer.appendChild(totalSpan);
+              statsContainer.appendChild(document.createTextNode(' total votes'));
+              if (data.total_votes > 0) {
+                  statsContainer.appendChild(document.createTextNode(' \u00B7 '));
+                  const pctSpan = document.createElement('span');
+                  pctSpan.className = 'font-semibold agreement-rate';
+                  pctSpan.textContent = agreementPct + '%';
+                  statsContainer.appendChild(pctSpan);
+                  statsContainer.appendChild(document.createTextNode(' agreement'));
+                  if (data.controversy_score > 0.7) {
+                      statsContainer.appendChild(document.createTextNode(' \u00B7 '));
+                      const controversySpan = document.createElement('span');
+                      controversySpan.className = 'text-red-600 font-semibold';
+                      controversySpan.textContent = '\uD83D\uDD25 Controversial';
+                      statsContainer.appendChild(controversySpan);
                   }
-
-                  statsContainer.innerHTML = statsHTML;
               }
+          }
+      }
 
-              // Visual feedback with pulse animation
+      try {
+          const data = await window.VoteResilience.submitVoteWithResilience(
+              `/statements/${statementId}/vote`,
+              { vote: voteValue, confidence: confidence, cohort: {{ cohort_slug|tojson }} },
+              '{{ csrf_token() }}'
+          );
+
+          if (data.success) {
+              // Reconcile UI with authoritative server counts
+              applyServerCounts(data);
+
+              // Pulse animation to confirm
               clickedButton.style.transform = 'scale(1.05)';
               clickedButton.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.5)';
               setTimeout(() => {
-                  clickedButton.style.transform = 'scale(1)';
-                  clickedButton.style.boxShadow = 'none';
+                  clickedButton.style.transform = '';
+                  clickedButton.style.boxShadow = '';
               }, 300);
 
-              // Gamification: Show progress toward unlocking analysis
-              // Track votes in this session (persists across AJAX calls on same page)
+              // Gamification: progress toward unlocking analysis
               const threshold = {{ participation_threshold|default(5) }};
               const serverVoteCount = {{ user_vote_count|default(0) }};
               window.sessionVoteCount = (window.sessionVoteCount !== undefined)
                   ? window.sessionVoteCount + 1
                   : serverVoteCount + 1;
               const votesNeeded = Math.max(0, threshold - window.sessionVoteCount);
+              showToast(
+                  votesNeeded > 0
+                      ? `Vote recorded! ${votesNeeded} more to unlock full analysis`
+                      : 'Vote recorded! Analysis unlocked',
+                  'success'
+              );
 
-              if (votesNeeded > 0) {
-                  showToast(`Vote recorded! ${votesNeeded} more to unlock full analysis`, 'success');
-              } else {
-                  showToast('Vote recorded! Analysis unlocked', 'success');
-              }
-
-              // Show inline argument prompt for disagree/agree votes (not unsure)
               {% if current_user.is_authenticated %}
               if (voteValue !== 0) {
                   showArgumentPrompt(statementId, voteValue);
               }
               {% endif %}
 
+              loadingSpinner.classList.remove('is-loading');
+              voteContent.classList.remove('hidden');
+              buttons.forEach(btn => btn.disabled = false);
           } else {
-              const errorMsg = data.error || 'Failed to record vote';
-              showToast(errorMsg, 'error');
+              revertOptimistic();
+              showToast(data.error || 'Failed to record vote', 'error');
           }
-
       } catch (error) {
-          console.error('Vote error:', error);
-          showToast('Unable to connect. Please check your connection and try again.', 'error');
-      } finally {
-          // Hide loading state and re-enable buttons
-          loadingSpinner.classList.remove('is-loading');
-          voteContent.classList.remove('hidden');
-          buttons.forEach(btn => btn.disabled = false);
+          revertOptimistic();
+          if (error.status === 429) {
+              showToast("You're voting too fast. Please wait a moment.", 'warning');
+          } else if (error.data && error.data.error === 'discussion_closed') {
+              showToast('This discussion is closed.', 'warning');
+          } else {
+              // Max retries exhausted or unrecoverable error — offer manual retry
+              const retryToast = showToast('Could not save vote. Tap to retry.', 'error', 0);
+              if (retryToast) {
+                  retryToast.style.cursor = 'pointer';
+                  retryToast.addEventListener('click', () => {
+                      retryToast.remove();
+                      voteOnStatement(statementId, voteValue, confidence);
+                  });
+              }
+          }
       }
   }
 

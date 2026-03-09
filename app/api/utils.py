@@ -334,6 +334,12 @@ def invalidate_partner_snapshot_cache(discussion_id: int):
     """Invalidate cached partner snapshot payload for a discussion."""
     try:
         from app import cache
+        from app.lib.counter_utils import increment_counter
         cache.delete(f"snapshot:{discussion_id}")
+        increment_counter(
+            f"snapshot:version:{discussion_id}",
+            ttl_seconds=30 * 24 * 3600,
+            fallback_cache=cache
+        )
     except Exception as e:
         logger.warning(f"Snapshot cache invalidation failed for discussion {discussion_id}: {e}")

@@ -1032,6 +1032,23 @@ class Statement(db.Model):
         db.Index('idx_statement_user', 'user_id'),
         db.Index('idx_statement_session', 'session_fingerprint'),
         db.Index('idx_statement_source', 'source'),
+        # Read-path indexes for paginated/sorted statement lists.
+        db.Index(
+            'idx_statement_discussion_visibility_recent',
+            'discussion_id',
+            'is_deleted',
+            'mod_status',
+            'created_at',
+            'id'
+        ),
+        db.Index(
+            'idx_statement_discussion_visibility_agree',
+            'discussion_id',
+            'is_deleted',
+            'mod_status',
+            'vote_count_agree',
+            'id'
+        ),
         db.UniqueConstraint('discussion_id', 'content', name='uq_discussion_statement'),
     )
     

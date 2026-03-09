@@ -6,7 +6,7 @@ Adapted from pol.is patterns with Society Speaks enhancements
 """
 from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app, session
 from flask_login import login_required, current_user
-from app import db, limiter, csrf
+from app import db, limiter, csrf, cache
 from app.db_retry import with_db_retry
 from app.discussions.statement_forms import StatementForm, VoteForm, ResponseForm, FlagStatementForm
 from app.models import Discussion, Statement, StatementVote, Response, StatementFlag, DiscussionParticipant
@@ -15,6 +15,7 @@ from app.programmes.permissions import can_view_programme
 from app.programmes.utils import validate_cohort_for_discussion
 from app.discussions.sorting import apply_statement_sort
 from app.analytics.events import record_event
+from app.lib.counter_utils import increment_counter
 from sqlalchemy import func, desc, or_, text
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
@@ -22,6 +23,7 @@ from app.lib.time import utcnow_naive
 import hashlib
 import re
 import secrets
+import json
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import validate_csrf, CSRFError
 try:
@@ -422,6 +424,8 @@ def create_statement(discussion_id):
         
         db.session.add(statement)
         db.session.commit()
+        from app.api.utils import invalidate_partner_snapshot_cache
+        invalidate_partner_snapshot_cache(discussion_id)
         
         # Track statement creation with PostHog
         if posthog and getattr(posthog, 'project_api_key', None):
@@ -560,9 +564,116 @@ def after_request_set_statement_cookie(response):
 
 
 def get_vote_rate_limit():
-    """Default rate limit for the vote endpoint (30/min per IP).
-    Stricter per-discussion limits for integrity_mode are enforced in check_integrity_rate_limit()."""
-    return "30 per minute"
+    """
+    Dynamic vote rate limit by route context and partner class.
+
+    Priority:
+    1) Integrity-mode discussions -> strict cap
+    2) Partner tier-specific cap (if partner ref resolves to active partner)
+    3) Default public cap
+    """
+    default_limit = current_app.config.get('VOTE_RATE_LIMIT_DEFAULT', '30 per minute')
+    integrity_limit = current_app.config.get('VOTE_RATE_LIMIT_INTEGRITY', '10 per minute')
+    tier_limits = current_app.config.get('VOTE_RATE_LIMIT_BY_PARTNER_TIER') or {
+        'free': '30 per minute',
+        'starter': '45 per minute',
+        'professional': '60 per minute',
+        'enterprise': '90 per minute',
+    }
+
+    statement_id = request.view_args.get('statement_id') if request.view_args else None
+    if statement_id:
+        statement = db.session.get(Statement, statement_id)
+        if statement and statement.discussion and statement.discussion.integrity_mode:
+            return integrity_limit
+
+    ref = extract_partner_ref_from_request()
+    if not ref:
+        return default_limit
+    try:
+        from app.models import Partner
+        partner = Partner.query.filter_by(slug=ref, status='active').first()
+        if partner and partner.tier in tier_limits:
+            return tier_limits[partner.tier]
+    except Exception as e:
+        current_app.logger.debug(f"Could not resolve partner tier for vote rate limit: {e}")
+    return default_limit
+
+
+def _normalize_idempotency_key(value):
+    """Normalize optional idempotency key for write dedupe."""
+    if not value or not isinstance(value, str):
+        return None
+    normalized = value.strip()
+    if not normalized:
+        return None
+    # Keep bounded key size to avoid unbounded cache key expansion.
+    return normalized[:128]
+
+
+def _vote_request_hash(vote_value, confidence, partner_ref, cohort_slug):
+    payload = json.dumps(
+        {
+            'vote': vote_value,
+            'confidence': confidence,
+            'ref': partner_ref or '',
+            'cohort': cohort_slug or ''
+        },
+        sort_keys=True,
+        separators=(',', ':')
+    )
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+def _safe_cache_increment(key, timeout=3600):
+    """Increment counter using atomic Redis when available."""
+    return increment_counter(key, ttl_seconds=timeout, fallback_cache=cache)
+
+
+def _record_vote_anomaly_signals(discussion_id, session_fingerprint=None):
+    """
+    Record vote burst/collision telemetry using short-lived cache counters.
+    """
+    ip = get_remote_address() or 'unknown'
+    now = utcnow_naive()
+    minute_bucket = now.strftime('%Y%m%d%H%M')
+    day_bucket = now.strftime('%Y%m%d')
+
+    ip_threshold = int(current_app.config.get('VOTE_ANOMALY_IP_PER_MINUTE_THRESHOLD', 60))
+    collision_threshold = int(current_app.config.get('FINGERPRINT_COLLISION_DISCUSSIONS_PER_DAY_THRESHOLD', 15))
+
+    ip_key = f"vote_anomaly:ip:{minute_bucket}:{ip}"
+    ip_count = _safe_cache_increment(ip_key, timeout=120)
+    if ip_count and ip_count >= ip_threshold:
+        current_app.logger.warning(
+            f"Vote anomaly: high IP velocity detected ip={ip} count={ip_count}/min discussion={discussion_id}"
+        )
+
+    if not session_fingerprint:
+        return
+
+    fp_prefix = session_fingerprint[:16]
+    fp_minute_key = f"vote_anomaly:fingerprint:{minute_bucket}:{fp_prefix}"
+    fp_count = _safe_cache_increment(fp_minute_key, timeout=120)
+    if fp_count and fp_count >= ip_threshold:
+        current_app.logger.warning(
+            f"Vote anomaly: high fingerprint velocity detected fp={fp_prefix} count={fp_count}/min discussion={discussion_id}"
+        )
+
+    # Collision telemetry: approximate "distinct discussions per fingerprint/day"
+    marker_key = f"vote_collision:marker:{day_bucket}:{fp_prefix}:{discussion_id}"
+    try:
+        already_seen = cache.get(marker_key)
+        if not already_seen:
+            cache.set(marker_key, 1, timeout=2 * 24 * 3600)
+            distinct_key = f"vote_collision:distinct_discussions:{day_bucket}:{fp_prefix}"
+            distinct_count = _safe_cache_increment(distinct_key, timeout=2 * 24 * 3600)
+            if distinct_count and distinct_count >= collision_threshold:
+                current_app.logger.warning(
+                    f"Fingerprint collision anomaly: fp={fp_prefix} touched {distinct_count} discussions/day"
+                )
+    except Exception:
+        pass
 
 
 def check_integrity_rate_limit(discussion, user_identifier):
@@ -756,6 +867,27 @@ def vote_statement(statement_id):
 
     user_id = current_user.id if current_user.is_authenticated else None
     session_fingerprint = None if user_id else (embed_fingerprint or get_statement_vote_fingerprint())
+    idempotency_key = _normalize_idempotency_key(
+        request.headers.get('Idempotency-Key') or request.headers.get('X-Idempotency-Key')
+    )
+    idempotency_cache_key = None
+    request_hash = None
+    if idempotency_key and not is_form_post:
+        actor_key = f"user:{user_id}" if user_id else f"anon:{(session_fingerprint or '')[:16]}"
+        request_hash = _vote_request_hash(vote_value, confidence, partner_ref, cohort_slug)
+        idempotency_cache_key = f"vote-idempotency:{statement_id}:{actor_key}:{idempotency_key}"
+        try:
+            prior = cache.get(idempotency_cache_key)
+            if prior:
+                if prior.get('request_hash') != request_hash:
+                    return jsonify({
+                        'error': 'idempotency_key_reused',
+                        'message': 'This Idempotency-Key was already used with a different payload.'
+                    }), 409
+                return jsonify(prior.get('response', {})), int(prior.get('status_code', 200))
+        except Exception:
+            pass
+
     try:
         _persist_vote_with_upsert(
             statement=statement,
@@ -784,6 +916,14 @@ def vote_statement(statement_id):
                 flash('Vote could not be recorded due to a temporary conflict. Please try again.', 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))
             return jsonify({'error': 'vote_conflict', 'message': 'Temporary conflict while saving vote'}), 409
+
+    _record_vote_anomaly_signals(statement.discussion_id, session_fingerprint=session_fingerprint)
+    from app.api.utils import invalidate_partner_snapshot_cache
+    invalidate_partner_snapshot_cache(statement.discussion_id)
+    try:
+        cache.delete(f"statement-votes:{statement.id}")
+    except Exception:
+        pass
 
     record_event(
         'statement_voted',
@@ -884,7 +1024,7 @@ def vote_statement(statement_id):
         flash('Vote recorded.', 'success')
         return redirect(url_for('statements.view_statement', statement_id=statement_id))
 
-    return jsonify({
+    response_payload = {
         'success': True,
         'vote': vote_value,
         'vote_count_agree': statement.vote_count_agree,
@@ -893,7 +1033,19 @@ def vote_statement(statement_id):
         'total_votes': statement.total_votes,
         'agreement_rate': statement.agreement_rate,
         'controversy_score': statement.controversy_score
-    })
+    }
+
+    if idempotency_cache_key and request_hash:
+        try:
+            cache.set(
+                idempotency_cache_key,
+                {'request_hash': request_hash, 'response': response_payload, 'status_code': 200},
+                timeout=300
+            )
+        except Exception:
+            pass
+
+    return jsonify(response_payload)
 
 
 @statements_bp.route('/statements/<int:statement_id>')
@@ -975,6 +1127,8 @@ def delete_statement(statement_id):
     
     statement.is_deleted = True
     db.session.commit()
+    from app.api.utils import invalidate_partner_snapshot_cache
+    invalidate_partner_snapshot_cache(statement.discussion_id)
     
     flash("Statement deleted", "success")
     return redirect(url_for('discussions.view_discussion', 
@@ -1070,12 +1224,22 @@ def list_statements(discussion_id):
 @statements_bp.route('/api/statements/<int:statement_id>/votes')
 def get_statement_votes(statement_id):
     """Get vote breakdown for a statement (API endpoint)"""
+    cache_key = f"statement-votes:{statement_id}"
+    try:
+        cached = cache.get(cache_key)
+        if cached:
+            _safe_cache_increment("cache_metrics:statement_votes:hit", timeout=24 * 3600)
+            return jsonify(cached)
+    except Exception:
+        pass
+
+    _safe_cache_increment("cache_metrics:statement_votes:miss", timeout=24 * 3600)
     statement = Statement.query.get_or_404(statement_id)
     discussion = statement.discussion
     if discussion and discussion.programme and not can_view_programme(discussion.programme, current_user):
         return jsonify({'error': 'forbidden'}), 403
-    
-    return jsonify({
+
+    payload = {
         'statement_id': statement.id,
         'counts': {
             'agree': statement.vote_count_agree,
@@ -1087,7 +1251,12 @@ def get_statement_votes(statement_id):
             'agreement_rate': statement.agreement_rate,
             'controversy_score': statement.controversy_score
         }
-    })
+    }
+    try:
+        cache.set(cache_key, payload, timeout=60)
+    except Exception:
+        pass
+    return jsonify(payload)
 
 
 # =============================================================================

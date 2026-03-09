@@ -27,6 +27,7 @@ from app.api.utils import (
     is_partner_origin_allowed
 )
 from app.partner.keys import find_partner_api_key
+from app.lib.counter_utils import increment_counter
 
 
 partner_bp = Blueprint('partner_api', __name__)
@@ -196,13 +197,36 @@ def get_snapshot(discussion_id):
 
     # Try cache first
     cache_key = f"snapshot:{discussion_id}"
+    version_key = f"snapshot:version:{discussion_id}"
+    try:
+        current_snapshot_version = int(cache.get(version_key) or 0)
+    except Exception:
+        current_snapshot_version = 0
     cached = cache.get(cache_key)
     if cached:
-        response_data = cached
-        if ref_normalized:
-            response_data = dict(cached)
-            response_data['consensus_url'] = append_ref_param(response_data['consensus_url'], ref_normalized)
-        return jsonify(response_data)
+        cached_version = 0
+        if isinstance(cached, dict):
+            try:
+                cached_version = int(cached.get('_snapshot_version') or 0)
+            except Exception:
+                cached_version = 0
+        if cached_version == current_snapshot_version:
+            increment_counter("cache_metrics:snapshot:hit", ttl_seconds=24 * 3600, fallback_cache=cache)
+            response_data = dict(cached) if isinstance(cached, dict) else cached
+            if isinstance(response_data, dict):
+                response_data.pop('_snapshot_version', None)
+                if ref_normalized:
+                    response_data['consensus_url'] = append_ref_param(response_data['consensus_url'], ref_normalized)
+            track_partner_event('partner_api_snapshot', {
+                'discussion_id': discussion_id,
+                'has_analysis': bool(response_data.get('has_analysis')) if isinstance(response_data, dict) else False,
+                'participant_count': response_data.get('participant_count') if isinstance(response_data, dict) else None,
+                'cache_hit': True
+            })
+            return jsonify(response_data)
+
+        increment_counter("cache_metrics:snapshot:stale_read", ttl_seconds=24 * 3600, fallback_cache=cache)
+    increment_counter("cache_metrics:snapshot:miss", ttl_seconds=24 * 3600, fallback_cache=cache)
 
     # Load discussion
     discussion = db.session.get(Discussion, discussion_id)
@@ -253,7 +277,9 @@ def get_snapshot(discussion_id):
                 response_data['teaser_text'] = teaser
 
     # Cache base response (without ref) for 10 minutes (invalidated when new analysis is created)
-    cache.set(cache_key, response_data, timeout=600)
+    cache_payload = dict(response_data)
+    cache_payload['_snapshot_version'] = current_snapshot_version
+    cache.set(cache_key, cache_payload, timeout=600)
 
     # Add ref to consensus_url for this request only
     if ref_normalized:
