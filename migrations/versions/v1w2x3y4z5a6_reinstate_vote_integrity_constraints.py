@@ -21,6 +21,9 @@ depends_on = None
 
 
 def upgrade():
+    bind = op.get_bind()
+    is_postgres = bind.dialect.name == 'postgresql'
+
     # ------------------------------------------------------------------ #
     # 1. Deduplicate statement_vote by (statement_id, user_id)            #
     #    Keep the row with the latest updated_at; break ties by higher id #
@@ -87,18 +90,34 @@ def upgrade():
 
     # ------------------------------------------------------------------ #
     # 4. Restore partial unique indexes on statement_vote                 #
+    #    Use CONCURRENTLY on Postgres to avoid write blocking on hot tbls #
     # ------------------------------------------------------------------ #
-    op.execute("""
-        CREATE UNIQUE INDEX uq_statement_user_vote
-            ON statement_vote (statement_id, user_id)
-            WHERE user_id IS NOT NULL
-    """)
+    if is_postgres:
+        with op.get_context().autocommit_block():
+            op.execute("""
+                CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS uq_statement_user_vote
+                    ON statement_vote (statement_id, user_id)
+                    WHERE user_id IS NOT NULL
+            """)
 
-    op.execute("""
-        CREATE UNIQUE INDEX uq_statement_session_vote
-            ON statement_vote (statement_id, session_fingerprint)
-            WHERE session_fingerprint IS NOT NULL
-    """)
+        with op.get_context().autocommit_block():
+            op.execute("""
+                CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS uq_statement_session_vote
+                    ON statement_vote (statement_id, session_fingerprint)
+                    WHERE session_fingerprint IS NOT NULL
+            """)
+    else:
+        op.execute("""
+            CREATE UNIQUE INDEX uq_statement_user_vote
+                ON statement_vote (statement_id, user_id)
+                WHERE user_id IS NOT NULL
+        """)
+
+        op.execute("""
+            CREATE UNIQUE INDEX uq_statement_session_vote
+                ON statement_vote (statement_id, session_fingerprint)
+                WHERE session_fingerprint IS NOT NULL
+        """)
 
     # ------------------------------------------------------------------ #
     # 5. Deduplicate discussion_participant by (discussion_id, user_id)   #
@@ -122,16 +141,34 @@ def upgrade():
     # ------------------------------------------------------------------ #
     # 6. Add UNIQUE(discussion_id, user_id) partial index                 #
     # ------------------------------------------------------------------ #
-    op.execute("""
-        CREATE UNIQUE INDEX uq_discussion_participant_user
-            ON discussion_participant (discussion_id, user_id)
-            WHERE user_id IS NOT NULL
-    """)
+    if is_postgres:
+        with op.get_context().autocommit_block():
+            op.execute("""
+                CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS uq_discussion_participant_user
+                    ON discussion_participant (discussion_id, user_id)
+                    WHERE user_id IS NOT NULL
+            """)
+    else:
+        op.execute("""
+            CREATE UNIQUE INDEX uq_discussion_participant_user
+                ON discussion_participant (discussion_id, user_id)
+                WHERE user_id IS NOT NULL
+        """)
 
 
 def downgrade():
-    op.execute("DROP INDEX IF EXISTS uq_discussion_participant_user")
-    op.execute("DROP INDEX IF EXISTS uq_statement_session_vote")
-    op.execute("DROP INDEX IF EXISTS uq_statement_user_vote")
+    bind = op.get_bind()
+    is_postgres = bind.dialect.name == 'postgresql'
+    if is_postgres:
+        with op.get_context().autocommit_block():
+            op.execute("DROP INDEX CONCURRENTLY IF EXISTS uq_discussion_participant_user")
+        with op.get_context().autocommit_block():
+            op.execute("DROP INDEX CONCURRENTLY IF EXISTS uq_statement_session_vote")
+        with op.get_context().autocommit_block():
+            op.execute("DROP INDEX CONCURRENTLY IF EXISTS uq_statement_user_vote")
+    else:
+        op.execute("DROP INDEX IF EXISTS uq_discussion_participant_user")
+        op.execute("DROP INDEX IF EXISTS uq_statement_session_vote")
+        op.execute("DROP INDEX IF EXISTS uq_statement_user_vote")
     # Counter reconciliation and deduplication are not reversible.
     # Downgrade removes only the constraints; data changes are permanent.

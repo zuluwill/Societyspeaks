@@ -89,7 +89,7 @@ def reconcile_statement_vote_counters():
         unsure_count.label('actual_unsure'),
     ).group_by(StatementVote.statement_id).subquery()
 
-    drifted_statement_ids = db.session.query(Statement.id).outerjoin(
+    drifted_statement_rows = db.session.query(Statement.id).outerjoin(
         counts_subquery, counts_subquery.c.statement_id == Statement.id
     ).filter(
         (Statement.vote_count_agree != func.coalesce(counts_subquery.c.actual_agree, 0)) |
@@ -97,11 +97,14 @@ def reconcile_statement_vote_counters():
         (Statement.vote_count_unsure != func.coalesce(counts_subquery.c.actual_unsure, 0))
     ).all()
 
+    drifted_statement_ids = [int(row[0]) for row in drifted_statement_rows]
     drifted_count = len(drifted_statement_ids)
     if drifted_count == 0:
         return 0
 
-    db.session.query(Statement).update({
+    db.session.query(Statement).filter(
+        Statement.id.in_(drifted_statement_ids)
+    ).update({
         Statement.vote_count_agree: db.session.query(
             func.coalesce(func.sum(case((StatementVote.vote == 1, 1), else_=0)), 0)
         ).filter(StatementVote.statement_id == Statement.id).scalar_subquery(),
