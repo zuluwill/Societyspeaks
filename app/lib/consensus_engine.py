@@ -201,9 +201,26 @@ def can_cluster(discussion_id, db):
     Criteria (from pol.is analysis):
     - At least 7 participants (users + anonymous)
     - At least 7 statements
-    - At least 50 total votes
+    - At least 20 total votes
     - Each statement has at least 3 votes
     """
+    plan = get_consensus_execution_plan(discussion_id, db)
+    if not plan['is_ready']:
+        return False, plan['message']
+    if plan['mode'] != 'full_matrix':
+        return False, plan['message']
+    return True, "Ready for clustering"
+
+
+def get_consensus_execution_plan(discussion_id, db):
+    """
+    Build an execution plan for consensus analysis.
+
+    Modes:
+    - full_matrix: regular PCA + clustering path
+    - sampled_incremental: oversized fallback path
+    """
+    from flask import current_app
     from app.models import StatementVote, Statement
     from sqlalchemy import case, func
     
@@ -248,17 +265,195 @@ def can_cluster(discussion_id, db):
     
     min_votes = min([v[1] for v in min_votes_per_statement])
     
-    # Apply criteria
+    # Apply minimum readiness criteria first.
     if participant_count < 7:
-        return False, f"Need at least 7 participants (have {participant_count})"
+        return {
+            'is_ready': False,
+            'mode': 'not_ready',
+            'message': f"Need at least 7 participants (have {participant_count})",
+        }
     if statement_count < 7:
-        return False, f"Need at least 7 statements (have {statement_count})"
-    if vote_count < 50:
-        return False, f"Need at least 50 votes (have {vote_count})"
+        return {
+            'is_ready': False,
+            'mode': 'not_ready',
+            'message': f"Need at least 7 statements (have {statement_count})",
+        }
+    if vote_count < 20:
+        return {
+            'is_ready': False,
+            'mode': 'not_ready',
+            'message': f"Need at least 20 votes (have {vote_count})",
+        }
     if min_votes < 3:
-        return False, f"Some statements have fewer than 3 votes"
-    
-    return True, "Ready for clustering"
+        return {
+            'is_ready': False,
+            'mode': 'not_ready',
+            'message': "Some statements have fewer than 3 votes",
+        }
+
+    # Oversize guardrails for discussion-level safety caps.
+    max_votes_for_full = current_app.config.get('MAX_CONSENSUS_FULL_MATRIX_VOTES', 500000)
+    max_statements_for_full = current_app.config.get('MAX_CONSENSUS_FULL_MATRIX_STATEMENTS', 2000)
+    max_participants_for_sync = current_app.config.get('MAX_SYNC_ANALYTICS_PARTICIPANTS', 50000)
+    oversized_reasons = []
+    if vote_count > max_votes_for_full:
+        oversized_reasons.append(
+            f"votes={vote_count} exceeds cap={max_votes_for_full}"
+        )
+    if statement_count > max_statements_for_full:
+        oversized_reasons.append(
+            f"statements={statement_count} exceeds cap={max_statements_for_full}"
+        )
+    if participant_count > max_participants_for_sync:
+        oversized_reasons.append(
+            f"participants={participant_count} exceeds cap={max_participants_for_sync}"
+        )
+
+    if oversized_reasons:
+        return {
+            'is_ready': True,
+            'mode': 'sampled_incremental',
+            'message': (
+                "Oversize mode required. Running sampled/incremental strategy with precomputed aggregates "
+                f"({'; '.join(oversized_reasons)})."
+            ),
+            'metrics': {
+                'participants_count': participant_count,
+                'statements_count': statement_count,
+                'votes_count': vote_count,
+            },
+            'thresholds': {
+                'max_votes_for_full': max_votes_for_full,
+                'max_statements_for_full': max_statements_for_full,
+                'max_participants_for_sync': max_participants_for_sync,
+            }
+        }
+
+    return {
+        'is_ready': True,
+        'mode': 'full_matrix',
+        'message': "Ready for full-matrix clustering",
+        'metrics': {
+            'participants_count': participant_count,
+            'statements_count': statement_count,
+            'votes_count': vote_count,
+        },
+        'thresholds': {
+            'max_votes_for_full': max_votes_for_full,
+            'max_statements_for_full': max_statements_for_full,
+            'max_participants_for_sync': max_participants_for_sync,
+        }
+    }
+
+
+def build_oversize_consensus_results(discussion_id, db, plan):
+    """
+    Oversize fallback that avoids full matrix/PCA clustering.
+    Uses sampled cohorts + precomputed aggregates from statement counters.
+    """
+    from app.models import Statement, StatementVote
+
+    statement_rows = db.session.query(
+        Statement.id,
+        Statement.vote_count_agree,
+        Statement.vote_count_disagree,
+        Statement.vote_count_unsure,
+    ).filter(
+        Statement.discussion_id == discussion_id,
+        Statement.is_deleted.is_(False),
+    ).all()
+    if not statement_rows:
+        return None
+
+    scored = []
+    for row in statement_rows:
+        agree = int(row.vote_count_agree or 0)
+        disagree = int(row.vote_count_disagree or 0)
+        unsure = int(row.vote_count_unsure or 0)
+        total = agree + disagree + unsure
+        decisive = agree + disagree
+        agreement_rate = (agree / decisive) if decisive > 0 else 0.0
+        controversy_score = (1.0 - abs(agreement_rate - 0.5) * 2.0) if decisive > 0 else 0.0
+        scored.append({
+            'statement_id': int(row.id),
+            'agreement_rate': float(agreement_rate),
+            'mean_agreement': float(agreement_rate),
+            'variance': 0.0,
+            'controversy_score': float(controversy_score),
+            'agree_rate': float(agreement_rate),
+            'total_votes': int(total),
+        })
+
+    # Precomputed aggregate strategy: no PCA/cluster assignments in oversize mode.
+    consensus_stmts = [
+        {'statement_id': s['statement_id'], 'agreement_rate': s['agreement_rate'], 'cluster_agreements': []}
+        for s in sorted(scored, key=lambda x: (x['agreement_rate'], x['total_votes']), reverse=True)[:20]
+        if s['total_votes'] >= 10 and s['agreement_rate'] >= 0.7
+    ]
+    bridge_stmts = [
+        {'statement_id': s['statement_id'], 'mean_agreement': s['mean_agreement'], 'variance': s['variance'], 'cluster_agreements': []}
+        for s in sorted(scored, key=lambda x: (x['mean_agreement'], x['total_votes']), reverse=True)[:20]
+        if s['total_votes'] >= 10 and 0.6 <= s['mean_agreement'] <= 0.8
+    ]
+    divisive_stmts = [
+        {'statement_id': s['statement_id'], 'controversy_score': s['controversy_score'], 'agree_rate': s['agree_rate']}
+        for s in sorted(scored, key=lambda x: (x['controversy_score'], x['total_votes']), reverse=True)[:20]
+        if s['total_votes'] >= 10 and s['controversy_score'] >= 0.7
+    ]
+
+    top_statement_ids = [s['statement_id'] for s in sorted(scored, key=lambda x: x['total_votes'], reverse=True)[:250]]
+    sampled_votes = db.session.query(
+        StatementVote.user_id,
+        StatementVote.session_fingerprint,
+        StatementVote.statement_id,
+        StatementVote.vote,
+    ).filter(
+        StatementVote.discussion_id == discussion_id,
+        StatementVote.statement_id.in_(top_statement_ids),
+    ).all()
+
+    participant_vote_counts = {}
+    for vote in sampled_votes:
+        if vote.user_id:
+            pid = f"u_{vote.user_id}"
+        elif vote.session_fingerprint:
+            pid = f"a_{vote.session_fingerprint[:16]}"
+        else:
+            continue
+        participant_vote_counts[pid] = participant_vote_counts.get(pid, 0) + 1
+
+    sampled_participants = sorted(participant_vote_counts.items(), key=lambda x: x[1], reverse=True)[:5000]
+    sampled_participant_ids = [p[0] for p in sampled_participants]
+    if sampled_participant_ids:
+        half = max(1, len(sampled_participant_ids) // 2)
+        cluster_assignments = {
+            pid: (0 if idx < half else 1)
+            for idx, pid in enumerate(sampled_participant_ids)
+        }
+    else:
+        cluster_assignments = {}
+
+    return {
+        'cluster_assignments': cluster_assignments,
+        'pca_coordinates': {},
+        'consensus_statements': consensus_stmts,
+        'bridge_statements': bridge_stmts,
+        'divisive_statements': divisive_stmts,
+        'representative_statements': {},
+        'metadata': {
+            'num_clusters': int(len(set(cluster_assignments.values())) if cluster_assignments else 0),
+            'silhouette_score': 0.0,
+            'method': 'sampled_incremental_aggregate',
+            'participants_count': int(plan['metrics']['participants_count']),
+            'statements_count': int(plan['metrics']['statements_count']),
+            'analyzed_at': utcnow_naive().isoformat(),
+            'oversize_mode': True,
+            'oversize_reason': plan['message'],
+            'oversize_thresholds': plan.get('thresholds', {}),
+            'sampled_statement_count': len(top_statement_ids),
+            'sampled_participant_count': len(sampled_participant_ids),
+        }
+    }
 
 
 def _numpy_pca(matrix, n_components=2):
@@ -696,11 +891,16 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
         - representative_statements: dict of cluster_id -> top statements that group agrees on
         - metadata: clustering metadata (n_clusters, silhouette_score, etc.)
     """
-    # Check if ready for clustering
-    ready, message = can_cluster(discussion_id, db)
-    if not ready:
-        logger.warning(f"Cannot cluster discussion {discussion_id}: {message}")
+    # Check if ready and select execution plan.
+    plan = get_consensus_execution_plan(discussion_id, db)
+    if not plan['is_ready']:
+        logger.warning(f"Cannot cluster discussion {discussion_id}: {plan['message']}")
         return None
+    if plan['mode'] != 'full_matrix':
+        logger.info(
+            f"Running oversize consensus fallback for discussion {discussion_id}: {plan['message']}"
+        )
+        return build_oversize_consensus_results(discussion_id, db, plan)
     
     # Build vote matrices (filled for PCA, real for consensus metrics)
     vote_matrix_filled, vote_matrix_real, user_ids, statement_ids = build_vote_matrix(discussion_id, db)

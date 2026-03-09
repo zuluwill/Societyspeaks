@@ -623,7 +623,13 @@ def create_app():
         return r
 
     _is_deployed = os.environ.get('REPLIT_DEPLOYMENT') == '1'
-    _skip_scheduler = app.config.get('TESTING') or os.environ.get('SQLALCHEMY_MIGRATE')
+    # Treat DISABLE_SCHEDULER=1/true/yes as skip; empty/0/false/no → don't skip.
+    _disable_scheduler_env = os.environ.get('DISABLE_SCHEDULER', '').strip().lower()
+    _skip_scheduler = (
+        app.config.get('TESTING')
+        or os.environ.get('SQLALCHEMY_MIGRATE')
+        or _disable_scheduler_env not in ('', '0', 'false', 'no')
+    )
     _scheduler_lock_key = 'scheduler_lock'
     _scheduler_heartbeat_key = 'scheduler:last_heartbeat_at'
     _scheduler_state = {

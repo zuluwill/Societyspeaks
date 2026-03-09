@@ -9,10 +9,12 @@ from itsdangerous import URLSafeTimedSerializer as Serializer
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy.orm import validates
 from sqlalchemy import event
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.dialects.postgresql import JSONB
 from typing import Optional
 
 import re
+import time
 
 
 
@@ -350,14 +352,88 @@ class DiscussionParticipant(db.Model):
         is_new = existing is None
 
         if not existing:
-            participant = cls(
-                discussion_id=discussion_id,
-                user_id=user_id,
-                participant_identifier=participant_identifier
-            )
-            db.session.add(participant)
-            # Flush to get the ID even if not committing (needed for increment_response_count)
-            db.session.flush()
+            savepoint = None
+            try:
+                # Use a savepoint so an IntegrityError here does not wipe
+                # unrelated pending work in the caller's transaction
+                # (important when commit=False is used in a larger unit of work).
+                savepoint = db.session.begin_nested()
+                participant = cls(
+                    discussion_id=discussion_id,
+                    user_id=user_id,
+                    participant_identifier=participant_identifier
+                )
+                db.session.add(participant)
+                # Flush to get the ID even if not committing (needed for increment_response_count)
+                db.session.flush()
+                savepoint.commit()
+            except IntegrityError:
+                # Concurrent request inserted the same participant first;
+                # roll back only to the savepoint, leaving the rest of the
+                # session intact, then fetch whichever row won the race.
+                if savepoint is not None:
+                    savepoint.rollback()
+                # The conflict can come from either the user_id unique index
+                # or the participant_identifier unique index.  Query by only
+                # the relevant key so we always find the winning row even when
+                # the other column differs.
+                for _ in range(3):
+                    if user_id is not None:
+                        existing = cls.query.filter_by(
+                            discussion_id=discussion_id,
+                            user_id=user_id,
+                        ).first()
+                    else:
+                        existing = cls.query.filter_by(
+                            discussion_id=discussion_id,
+                            participant_identifier=participant_identifier,
+                        ).first()
+                    if existing:
+                        break
+                    # Give the winning concurrent transaction a moment to become visible.
+                    db.session.expire_all()
+                    time.sleep(0.02)
+
+                if existing:
+                    existing.last_activity = utcnow_naive()
+                    participant = existing
+                    is_new = False
+                else:
+                    # If no winner is visible, try one more insert attempt in a new
+                    # savepoint. This handles cases where the competing transaction
+                    # rolled back after our initial conflict.
+                    retry_savepoint = None
+                    try:
+                        retry_savepoint = db.session.begin_nested()
+                        participant = cls(
+                            discussion_id=discussion_id,
+                            user_id=user_id,
+                            participant_identifier=participant_identifier
+                        )
+                        db.session.add(participant)
+                        db.session.flush()
+                        retry_savepoint.commit()
+                        is_new = True
+                    except IntegrityError:
+                        if retry_savepoint is not None:
+                            retry_savepoint.rollback()
+                        if user_id is not None:
+                            existing = cls.query.filter_by(
+                                discussion_id=discussion_id,
+                                user_id=user_id,
+                            ).first()
+                        else:
+                            existing = cls.query.filter_by(
+                                discussion_id=discussion_id,
+                                participant_identifier=participant_identifier,
+                            ).first()
+                        if existing:
+                            existing.last_activity = utcnow_naive()
+                            participant = existing
+                            is_new = False
+                        else:
+                            # Fail loudly only after both recovery paths are exhausted.
+                            raise
         else:
             # Update last activity
             existing.last_activity = utcnow_naive()
@@ -1226,6 +1302,181 @@ class ConsensusAnalysis(db.Model):
     
     # Relationships
     discussion = db.relationship('Discussion', backref='consensus_analyses')
+
+
+class ConsensusJob(db.Model):
+    """
+    Persisted queue item for consensus computation.
+
+    Supports deduping requests across manual triggers and scheduler sweeps,
+    status-based lifecycle tracking, retries, and stale/dead-letter handling.
+    """
+    __tablename__ = 'consensus_job'
+    __table_args__ = (
+        db.Index('idx_consensus_job_status_queued_at', 'status', 'queued_at'),
+        db.Index('idx_consensus_job_discussion', 'discussion_id', 'created_at'),
+        db.Index('idx_consensus_job_dedupe', 'dedupe_key'),
+    )
+
+    STATUS_QUEUED = 'queued'
+    STATUS_RUNNING = 'running'
+    STATUS_COMPLETED = 'completed'
+    STATUS_FAILED = 'failed'
+    STATUS_STALE = 'stale'
+    STATUS_DEAD_LETTER = 'dead_letter'
+    ACTIVE_STATUSES = {STATUS_QUEUED, STATUS_RUNNING}
+
+    id = db.Column(db.Integer, primary_key=True)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
+    requested_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    analysis_id = db.Column(db.Integer, db.ForeignKey('consensus_analysis.id'), nullable=True)
+
+    # Stable dedupe key, e.g. discussion + vote-window bucket.
+    dedupe_key = db.Column(db.String(255), nullable=False)
+    reason = db.Column(db.String(50), nullable=False, default='manual')
+    status = db.Column(db.String(20), nullable=False, default=STATUS_QUEUED)
+
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    max_attempts = db.Column(db.Integer, nullable=False, default=3)
+    timeout_seconds = db.Column(db.Integer, nullable=False, default=900)
+    error_message = db.Column(db.Text, nullable=True)
+
+    queued_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
+    started_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive, onupdate=utcnow_naive)
+
+    discussion = db.relationship('Discussion', backref='consensus_jobs')
+    requested_by = db.relationship('User', backref='consensus_jobs_requested')
+    analysis = db.relationship('ConsensusAnalysis', foreign_keys=[analysis_id], backref='consensus_jobs')
+
+    @property
+    def is_active(self):
+        return self.status in self.ACTIVE_STATUSES
+
+    @property
+    def is_timed_out(self):
+        if self.status != self.STATUS_RUNNING or not self.started_at:
+            return False
+        return (utcnow_naive() - self.started_at) > timedelta(seconds=max(0, self.timeout_seconds or 0))
+
+
+class ProgrammeExportJob(db.Model):
+    """Asynchronous programme export job + audit trail."""
+    __tablename__ = 'programme_export_job'
+    __table_args__ = (
+        db.Index('idx_export_job_status_queued_at', 'status', 'queued_at'),
+        db.Index('idx_export_job_programme_created', 'programme_id', 'created_at'),
+        db.Index('idx_export_job_requested_by', 'requested_by_user_id', 'created_at'),
+        db.Index('idx_export_job_dedupe', 'dedupe_key'),
+    )
+
+    STATUS_QUEUED = 'queued'
+    STATUS_RUNNING = 'running'
+    STATUS_COMPLETED = 'completed'
+    STATUS_FAILED = 'failed'
+    STATUS_STALE = 'stale'
+    STATUS_DEAD_LETTER = 'dead_letter'
+    ACTIVE_STATUSES = {STATUS_QUEUED, STATUS_RUNNING}
+
+    id = db.Column(db.Integer, primary_key=True)
+    programme_id = db.Column(db.Integer, db.ForeignKey('programme.id'), nullable=False)
+    requested_by_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    export_format = db.Column(db.String(10), nullable=False, default='csv')
+    cohort_slug = db.Column(db.String(80), nullable=True)
+    dedupe_key = db.Column(db.String(255), nullable=False)
+
+    status = db.Column(db.String(20), nullable=False, default=STATUS_QUEUED)
+    attempts = db.Column(db.Integer, nullable=False, default=0)
+    max_attempts = db.Column(db.Integer, nullable=False, default=3)
+    timeout_seconds = db.Column(db.Integer, nullable=False, default=900)
+    error_message = db.Column(db.Text, nullable=True)
+
+    storage_key = db.Column(db.String(500), nullable=True)
+    artifact_filename = db.Column(db.String(255), nullable=True)
+    content_type = db.Column(db.String(100), nullable=True)
+    artifact_size_bytes = db.Column(db.Integer, nullable=True)
+
+    queued_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
+    started_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive, onupdate=utcnow_naive)
+
+    programme = db.relationship('Programme', backref='export_jobs')
+    requested_by = db.relationship('User', backref='programme_export_jobs')
+
+    @property
+    def is_active(self):
+        return self.status in self.ACTIVE_STATUSES
+
+    @property
+    def is_timed_out(self):
+        if self.status != self.STATUS_RUNNING or not self.started_at:
+            return False
+        return (utcnow_naive() - self.started_at) > timedelta(seconds=max(0, self.timeout_seconds or 0))
+
+
+class AnalyticsEvent(db.Model):
+    """Immutable raw analytics event stream for warehouse-style processing."""
+    __tablename__ = 'analytics_event'
+    __table_args__ = (
+        db.Index('idx_analytics_event_name_created', 'event_name', 'created_at'),
+        db.Index('idx_analytics_event_programme_created', 'programme_id', 'created_at'),
+        # Covers the funnel COUNT(DISTINCT user_id) queries that filter on both
+        # programme_id and event_name — avoids full-programme table scans at scale.
+        db.Index('idx_analytics_event_programme_name_user', 'programme_id', 'event_name', 'user_id'),
+        db.Index('idx_analytics_event_discussion_created', 'discussion_id', 'created_at'),
+        db.Index('idx_analytics_event_user_created', 'user_id', 'created_at'),
+        db.Index('idx_analytics_event_cohort_created', 'cohort_slug', 'created_at'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    event_name = db.Column(db.String(64), nullable=False)
+
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    programme_id = db.Column(db.Integer, db.ForeignKey('programme.id'), nullable=True)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=True)
+    statement_id = db.Column(db.Integer, db.ForeignKey('statement.id'), nullable=True)
+    cohort_slug = db.Column(db.String(80), nullable=True)
+    country = db.Column(db.String(80), nullable=True)
+
+    source = db.Column(db.String(50), nullable=True)
+    event_metadata = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive)
+
+
+class AnalyticsDailyAggregate(db.Model):
+    """Curated aggregate table for NSP dashboard queries."""
+    __tablename__ = 'analytics_daily_aggregate'
+    __table_args__ = (
+        db.Index('idx_analytics_daily_lookup', 'event_date', 'event_name', 'programme_id'),
+        db.Index('idx_analytics_daily_discussion', 'discussion_id', 'event_date'),
+        db.UniqueConstraint(
+            'event_date',
+            'event_name',
+            'programme_id',
+            'discussion_id',
+            'cohort_slug',
+            'country',
+            name='uq_analytics_daily_dims'
+        ),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    event_date = db.Column(db.Date, nullable=False)
+    event_name = db.Column(db.String(64), nullable=False)
+
+    programme_id = db.Column(db.Integer, db.ForeignKey('programme.id'), nullable=True)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=True)
+    cohort_slug = db.Column(db.String(80), nullable=True)
+    country = db.Column(db.String(80), nullable=True)
+
+    event_count = db.Column(db.Integer, nullable=False, default=0)
+    unique_users = db.Column(db.Integer, nullable=False, default=0)
+    updated_at = db.Column(db.DateTime, nullable=False, default=utcnow_naive, onupdate=utcnow_naive)
 
 
 class StatementFlag(db.Model):

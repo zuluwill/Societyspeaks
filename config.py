@@ -268,6 +268,36 @@ class Config:
     # Will be updated based on actual Redis availability
     RATELIMIT_STORAGE_URL = 'memory://'  # Default fallback
     RATELIMIT_DEFAULT = "1000 per hour"  # Default rate limit
+    # Ops alert threshold for automated integrity repair job.
+    # 0 means alert on any repaired row.
+    INTEGRITY_REPAIR_ALERT_THRESHOLD = int(os.getenv('INTEGRITY_REPAIR_ALERT_THRESHOLD', '0'))
+    # Counter drift alert threshold based on total absolute drift across statements.
+    # 0 means alert on any detected drift before reconciliation.
+    COUNTER_DRIFT_ALERT_THRESHOLD = int(os.getenv('COUNTER_DRIFT_ALERT_THRESHOLD', '0'))
+
+    # Discussion scale guardrails and pagination defaults.
+    DISCUSSION_STATEMENTS_PER_PAGE = int(os.getenv('DISCUSSION_STATEMENTS_PER_PAGE', '20'))
+    EMBED_STATEMENTS_PER_PAGE = int(os.getenv('EMBED_STATEMENTS_PER_PAGE', '25'))
+    MAX_STATEMENTS_PER_DISCUSSION = int(os.getenv('MAX_STATEMENTS_PER_DISCUSSION', '5000'))
+    # AgglomerativeClustering is O(n²) on participants. At n=5000 participants
+    # the linkage matrix is ~200 MB and takes seconds; at n=50k it OOMs.
+    # These defaults are conservative upper bounds for a single synchronous run.
+    # Raise them only after profiling on your actual cluster hardware.
+    MAX_CONSENSUS_FULL_MATRIX_VOTES = int(os.getenv('MAX_CONSENSUS_FULL_MATRIX_VOTES', '100000'))
+    MAX_CONSENSUS_FULL_MATRIX_STATEMENTS = int(os.getenv('MAX_CONSENSUS_FULL_MATRIX_STATEMENTS', '2000'))
+    MAX_SYNC_ANALYTICS_PARTICIPANTS = int(os.getenv('MAX_SYNC_ANALYTICS_PARTICIPANTS', '5000'))
+
+    # Phase 3 worker separation controls.
+    # Default off in scheduler so heavy consensus compute only runs in dedicated workers.
+    CONSENSUS_QUEUE_PROCESS_IN_SCHEDULER = os.getenv('CONSENSUS_QUEUE_PROCESS_IN_SCHEDULER', 'false').lower() == 'true'
+    CONSENSUS_ALLOW_IN_PROCESS_EXECUTION = os.getenv('CONSENSUS_ALLOW_IN_PROCESS_EXECUTION', 'false').lower() == 'true'
+    CONSENSUS_WORKER_IDLE_SLEEP_SECONDS = float(os.getenv('CONSENSUS_WORKER_IDLE_SLEEP_SECONDS', '2.0'))
+    CONSENSUS_WORKER_ACTIVE_SLEEP_SECONDS = float(os.getenv('CONSENSUS_WORKER_ACTIVE_SLEEP_SECONDS', '0.2'))
+    CONSENSUS_WORKER_METRICS_INTERVAL_SECONDS = int(os.getenv('CONSENSUS_WORKER_METRICS_INTERVAL_SECONDS', '30'))
+
+    # Async programme export queue controls.
+    EXPORT_QUEUE_PROCESS_IN_SCHEDULER = os.getenv('EXPORT_QUEUE_PROCESS_IN_SCHEDULER', 'false').lower() == 'true'
+    EXPORT_DOWNLOAD_TOKEN_MAX_AGE_SECONDS = int(os.getenv('EXPORT_DOWNLOAD_TOKEN_MAX_AGE_SECONDS', '3600'))
     
 class DevelopmentConfig(Config):
     FLASK_ENV = 'development'

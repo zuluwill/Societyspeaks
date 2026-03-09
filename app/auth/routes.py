@@ -7,6 +7,7 @@ from sqlalchemy import func
 from datetime import datetime, timedelta
 from app.storage_utils import get_recent_activity
 from itsdangerous import URLSafeTimedSerializer
+from app.analytics.events import record_event
 # Email functions (migrated from Loops to Resend)
 from app.resend_client import send_password_reset_email, send_welcome_email
 # Profile utilities (not email-related)
@@ -171,6 +172,12 @@ def register():
         new_user.email_verified = False
         db.session.add(new_user)
         db.session.commit()
+        record_event(
+            'account_created',
+            user_id=new_user.id,
+            source='web',
+            event_metadata={'username': username}
+        )
         
         # Track user signup with PostHog
         if posthog and getattr(posthog, 'project_api_key', None):

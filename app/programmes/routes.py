@@ -1,21 +1,30 @@
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, session, url_for
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, session, url_for, jsonify, send_file
 from flask_login import current_user, login_required
 from sqlalchemy import distinct, func
 from sqlalchemy.orm import load_only
+from io import BytesIO
 
 from app import cache, db, limiter
 from app.lib.auth_utils import normalize_email
 from app.lib.time import utcnow_naive
 from app.models import (
+    AnalyticsDailyAggregate,
+    AnalyticsEvent,
     CompanyProfile,
     Discussion,
     Programme,
     ProgrammeAccessGrant,
+    ProgrammeExportJob,
     ProgrammeSteward,
     StatementVote,
 )
 from app.programmes.access import editable_company_profiles, programme_access_labels, query_accessible_programmes
-from app.programmes.export import stream_programme_export_csv, stream_programme_export_json
+from app.programmes.export_jobs import (
+    enqueue_programme_export_job,
+    generate_export_download_token,
+    verify_export_download_token,
+    read_export_artifact_bytes,
+)
 from app.programmes.forms import InviteProgrammeAccessForm, InviteStewardForm, ProgrammeForm
 from app.programmes.permissions import can_edit_programme, can_steward_programme, can_view_programme
 from app.programmes.utils import (
@@ -84,6 +93,140 @@ def get_programme_summary(programme_id):
         current_app.logger.warning("Failed to write programme summary cache", exc_info=True)
 
     return summary
+
+
+def _programme_nsp_dashboard_payload(programme):
+    tracked_events = ['discussion_viewed', 'statement_voted', 'response_created', 'analysis_generated']
+
+    timeseries_rows = db.session.query(
+        AnalyticsDailyAggregate.event_date,
+        AnalyticsDailyAggregate.event_name,
+        func.sum(AnalyticsDailyAggregate.event_count).label('event_count')
+    ).filter(
+        AnalyticsDailyAggregate.programme_id == programme.id,
+        AnalyticsDailyAggregate.event_name.in_(tracked_events)
+    ).group_by(
+        AnalyticsDailyAggregate.event_date,
+        AnalyticsDailyAggregate.event_name
+    ).order_by(AnalyticsDailyAggregate.event_date.asc()).all()
+
+    participation_by_time = {}
+    for row in timeseries_rows:
+        day = row.event_date.isoformat()
+        if day not in participation_by_time:
+            participation_by_time[day] = {'date': day}
+        participation_by_time[day][row.event_name] = int(row.event_count or 0)
+
+    geography_rows = db.session.query(
+        AnalyticsDailyAggregate.country,
+        func.sum(AnalyticsDailyAggregate.event_count)
+    ).filter(
+        AnalyticsDailyAggregate.programme_id == programme.id,
+        AnalyticsDailyAggregate.event_name == 'statement_voted',
+        AnalyticsDailyAggregate.country.isnot(None)
+    ).group_by(AnalyticsDailyAggregate.country).all()
+
+    cohort_rows = db.session.query(
+        AnalyticsDailyAggregate.cohort_slug,
+        func.sum(AnalyticsDailyAggregate.event_count)
+    ).filter(
+        AnalyticsDailyAggregate.programme_id == programme.id,
+        AnalyticsDailyAggregate.event_name == 'statement_voted',
+        AnalyticsDailyAggregate.cohort_slug.isnot(None)
+    ).group_by(AnalyticsDailyAggregate.cohort_slug).all()
+
+    vote_rows = db.session.query(
+        func.date(func.coalesce(StatementVote.updated_at, StatementVote.created_at)).label('event_date'),
+        StatementVote.vote_value,
+        func.count(StatementVote.id).label('vote_count')
+    ).join(
+        Discussion, Discussion.id == StatementVote.discussion_id
+    ).filter(
+        Discussion.programme_id == programme.id
+    ).group_by(
+        func.date(func.coalesce(StatementVote.updated_at, StatementVote.created_at)),
+        StatementVote.vote_value
+    ).order_by(func.date(func.coalesce(StatementVote.updated_at, StatementVote.created_at)).asc()).all()
+
+    trend_map = {}
+    for row in vote_rows:
+        day = row.event_date.isoformat()
+        if day not in trend_map:
+            trend_map[day] = {'agree': 0, 'disagree': 0, 'unsure': 0}
+        if row.vote_value == 1:
+            trend_map[day]['agree'] += int(row.vote_count or 0)
+        elif row.vote_value == -1:
+            trend_map[day]['disagree'] += int(row.vote_count or 0)
+        else:
+            trend_map[day]['unsure'] += int(row.vote_count or 0)
+
+    consensus_vs_divisive_trends = []
+    for day in sorted(trend_map.keys()):
+        agree = trend_map[day]['agree']
+        disagree = trend_map[day]['disagree']
+        total_decisive = agree + disagree
+        divisive_index = 0.0
+        if total_decisive > 0:
+            divisive_index = 1.0 - (abs(agree - disagree) / total_decisive)
+        consensus_vs_divisive_trends.append({
+            'date': day,
+            'agree': agree,
+            'disagree': disagree,
+            'unsure': trend_map[day]['unsure'],
+            'divisive_index': round(divisive_index, 4)
+        })
+
+    confidence_rows = db.session.query(
+        StatementVote.confidence,
+        func.count(StatementVote.id)
+    ).join(
+        Discussion, Discussion.id == StatementVote.discussion_id
+    ).filter(
+        Discussion.programme_id == programme.id,
+        StatementVote.confidence.isnot(None)
+    ).group_by(StatementVote.confidence).all()
+
+    confidence_distribution = []
+    for confidence, count in sorted(confidence_rows, key=lambda item: int(item[0] or 0)):
+        confidence_distribution.append({
+            'confidence': int(confidence or 0),
+            'count': int(count or 0),
+        })
+
+    # Single query for all three funnel counts — avoids 3 separate table scans.
+    funnel_events = ['discussion_viewed', 'statement_voted', 'response_created']
+    funnel_rows = db.session.query(
+        AnalyticsEvent.event_name,
+        func.count(distinct(AnalyticsEvent.user_id)).label('unique_users'),
+    ).filter(
+        AnalyticsEvent.programme_id == programme.id,
+        AnalyticsEvent.event_name.in_(funnel_events),
+        AnalyticsEvent.user_id.isnot(None)
+    ).group_by(AnalyticsEvent.event_name).all()
+
+    funnel_counts = {row.event_name: int(row.unique_users or 0) for row in funnel_rows}
+    viewer_count = funnel_counts.get('discussion_viewed', 0)
+    voter_count = funnel_counts.get('statement_voted', 0)
+    responder_count = funnel_counts.get('response_created', 0)
+
+    return {
+        'participation_by_time': [participation_by_time[day] for day in sorted(participation_by_time.keys())],
+        'participation_by_geography': [
+            {'country': row[0], 'vote_count': int(row[1] or 0)}
+            for row in geography_rows
+        ],
+        'participation_by_cohort': [
+            {'cohort_slug': row[0], 'vote_count': int(row[1] or 0)}
+            for row in cohort_rows
+        ],
+        'consensus_vs_divisive_trends': consensus_vs_divisive_trends,
+        'statement_confidence_distribution': confidence_distribution,
+        'discussion_completion_funnel': {
+            'viewers_authenticated': int(viewer_count),
+            'voters_authenticated': int(voter_count),
+            'responders_authenticated': int(responder_count),
+        }
+    }
 
 
 
@@ -662,6 +805,116 @@ def export_programme(slug):
             return redirect(url_for('programmes.view_programme', slug=programme.slug))
 
     export_format = (request.args.get('format') or 'csv').strip().lower()
-    if export_format == 'json':
-        return stream_programme_export_json(programme, cohort_slug=cohort_slug)
-    return stream_programme_export_csv(programme, cohort_slug=cohort_slug)
+    if export_format not in ('csv', 'json'):
+        export_format = 'csv'
+
+    job, created, message = enqueue_programme_export_job(
+        programme_id=programme.id,
+        requested_by_user_id=current_user.id,
+        export_format=export_format,
+        cohort_slug=cohort_slug
+    )
+
+    if request.args.get('json') == '1':
+        return jsonify({
+            'success': True,
+            'queued': bool(created),
+            'message': message,
+            'job_id': job.id,
+            'status_url': url_for('programmes.export_job_status', slug=programme.slug, job_id=job.id, _external=True)
+        }), 202
+
+    flash(message or "Export queued.", "success" if created else "info")
+    return redirect(url_for('programmes.view_programme', slug=programme.slug))
+
+
+@programmes_bp.route('/<slug>/export/jobs/<int:job_id>', methods=['GET'])
+@login_required
+def export_job_status(slug, job_id):
+    programme = Programme.query.filter_by(slug=slug).first_or_404()
+    if not can_steward_programme(programme, current_user):
+        return jsonify({'success': False, 'error': 'forbidden'}), 403
+
+    job = ProgrammeExportJob.query.filter_by(id=job_id, programme_id=programme.id).first()
+    if not job:
+        return jsonify({'success': False, 'error': 'not_found'}), 404
+
+    download_url = None
+    if job.status == ProgrammeExportJob.STATUS_COMPLETED and job.storage_key:
+        ttl = int(current_app.config.get('EXPORT_DOWNLOAD_TOKEN_MAX_AGE_SECONDS', 3600))
+        token = generate_export_download_token(current_app.config['SECRET_KEY'], job.id, current_user.id)
+        download_url = url_for('programmes.download_export_artifact', token=token, _external=True)
+
+    return jsonify({
+        'success': True,
+        'job': {
+            'id': job.id,
+            'status': job.status,
+            'export_format': job.export_format,
+            'cohort_slug': job.cohort_slug,
+            'attempts': job.attempts,
+            'max_attempts': job.max_attempts,
+            'error_message': job.error_message,
+            'artifact_filename': job.artifact_filename,
+            'artifact_size_bytes': job.artifact_size_bytes,
+            'queued_at': job.queued_at.isoformat() if job.queued_at else None,
+            'started_at': job.started_at.isoformat() if job.started_at else None,
+            'completed_at': job.completed_at.isoformat() if job.completed_at else None,
+            'download_url': download_url,
+            'download_expires_in_seconds': ttl if download_url else None,
+        }
+    })
+
+
+@programmes_bp.route('/export/download/<token>', methods=['GET'])
+@login_required
+def download_export_artifact(token):
+    max_age = int(current_app.config.get('EXPORT_DOWNLOAD_TOKEN_MAX_AGE_SECONDS', 3600))
+    payload, error = verify_export_download_token(
+        current_app.config['SECRET_KEY'],
+        token,
+        max_age_seconds=max_age
+    )
+    if error:
+        abort(403)
+
+    job_id = int(payload.get('job_id', 0))
+    user_id = int(payload.get('user_id', 0))
+    if not job_id or not user_id or current_user.id != user_id:
+        abort(403)
+
+    job = ProgrammeExportJob.query.filter_by(id=job_id, requested_by_user_id=current_user.id).first()
+    if not job or job.status != ProgrammeExportJob.STATUS_COMPLETED:
+        abort(404)
+
+    programme = db.session.get(Programme, job.programme_id)
+    if not programme or not can_steward_programme(programme, current_user):
+        abort(403)
+
+    data = read_export_artifact_bytes(job)
+    if not data:
+        abort(404)
+
+    return send_file(
+        BytesIO(data),
+        mimetype=job.content_type or 'application/octet-stream',
+        as_attachment=True,
+        download_name=job.artifact_filename or f"programme-export-{job.id}.{job.export_format}"
+    )
+
+
+@programmes_bp.route('/<slug>/nsp-dashboard', methods=['GET'])
+@login_required
+def programme_nsp_dashboard(slug):
+    programme = Programme.query.filter_by(slug=slug).first_or_404()
+    if not can_steward_programme(programme, current_user):
+        return jsonify({'success': False, 'error': 'forbidden'}), 403
+
+    payload = _programme_nsp_dashboard_payload(programme)
+    return jsonify({
+        'success': True,
+        'schema_version': '1.0.0',
+        'programme': {'id': programme.id, 'slug': programme.slug, 'name': programme.name},
+        'generated_at': utcnow_naive().isoformat(),
+        'dashboard': payload,
+    })

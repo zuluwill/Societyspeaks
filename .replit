@@ -32,6 +32,10 @@ author = "agent"
 task = "workflow.run"
 args = "Flask App"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Consensus Worker"
+
 [[workflows.workflow]]
 name = "Flask App"
 author = "agent"
@@ -43,6 +47,44 @@ outputType = "webview"
 task = "shell.exec"
 args = "gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=600 run:app"
 waitForPort = 5000
+
+[[workflows.workflow]]
+name = "Consensus Worker"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 scripts/run_consensus_worker.py"
+
+[[workflows.workflow]]
+name = "Consensus Worker Pool (x3)"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "CONSENSUS_WORKER_ID=worker-1 python3 scripts/run_consensus_worker.py"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "CONSENSUS_WORKER_ID=worker-2 python3 scripts/run_consensus_worker.py"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "CONSENSUS_WORKER_ID=worker-3 python3 scripts/run_consensus_worker.py"
+
+[[workflows.workflow]]
+name = "Project (Worker Pool x3)"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Flask App"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Consensus Worker Pool (x3)"
 
 [agent]
 expertMode = true

@@ -7,9 +7,10 @@ Provides endpoints for running consensus analysis and viewing results
 from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
 from flask_login import login_required, current_user
 from app import db, limiter
-from app.models import Discussion, ConsensusAnalysis, Statement, StatementVote
+from app.models import Discussion, ConsensusAnalysis, ConsensusJob, Statement, StatementVote
 from app.discussions.statements import get_statement_vote_fingerprint
-from app.lib.consensus_engine import run_consensus_analysis, save_consensus_analysis, can_cluster
+from app.lib.consensus_engine import can_cluster, get_consensus_execution_plan
+from app.discussions.jobs import enqueue_consensus_job
 from app.programmes.permissions import can_view_programme
 from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
@@ -112,10 +113,10 @@ def trigger_analysis(discussion_id):
                               discussion_id=discussion.id,
                               slug=discussion.slug))
     
-    # Check if ready for clustering
-    ready, message = can_cluster(discussion_id, db)
-    if not ready:
-        flash(f"Cannot run analysis: {message}", "warning")
+    # Check if ready for queueing (full matrix OR oversize fallback mode).
+    plan = get_consensus_execution_plan(discussion_id, db)
+    if not plan['is_ready']:
+        flash(f"Cannot run analysis: {plan['message']}", "warning")
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id,
                               slug=discussion.slug))
@@ -132,26 +133,27 @@ def trigger_analysis(discussion_id):
             return redirect(url_for('consensus.view_results', discussion_id=discussion_id))
     
     try:
-        # Run analysis
-        logger.info(f"Starting consensus analysis for discussion {discussion_id}")
-        results = run_consensus_analysis(discussion_id, db, method='agglomerative')
-        
-        if results is None:
-            flash("Unable to perform analysis with current data", "danger")
-            return redirect(url_for('discussions.view_discussion', 
-                                  discussion_id=discussion.id,
-                                  slug=discussion.slug))
-        
-        # Save results
-        analysis = save_consensus_analysis(discussion_id, results, db)
-        
-        flash(f"Consensus analysis complete! Found {results['metadata']['num_clusters']} opinion groups", "success")
+        job, created, message = enqueue_consensus_job(
+            discussion_id=discussion_id,
+            requested_by_user_id=current_user.id,
+            reason='manual_trigger'
+        )
+        if created:
+            if plan.get('mode') == 'sampled_incremental':
+                flash(
+                    "Consensus analysis queued in oversize mode (sampled/incremental aggregates). "
+                    "Results will appear once processing completes.",
+                    "success"
+                )
+                return redirect(url_for('consensus.view_results', discussion_id=discussion_id))
+            flash("Consensus analysis queued. Results will appear once processing completes.", "success")
+        else:
+            flash(message or "Analysis is already queued for this discussion.", "info")
         return redirect(url_for('consensus.view_results', discussion_id=discussion_id))
-        
     except Exception as e:
-        logger.error(f"Error running consensus analysis: {e}", exc_info=True)
-        flash("An error occurred during analysis. Please try again later.", "danger")
-        return redirect(url_for('discussions.view_discussion', 
+        logger.error(f"Error queueing consensus analysis: {e}", exc_info=True)
+        flash("An error occurred while queueing analysis. Please try again later.", "danger")
+        return redirect(url_for('discussions.view_discussion',
                               discussion_id=discussion.id,
                               slug=discussion.slug))
 
@@ -199,9 +201,9 @@ def view_results(discussion_id):
     
     if not analysis:
         # Check if ready for first analysis
-        ready, message = can_cluster(discussion_id, db)
-        can_analyze = ready
-        ready_message = message
+        plan = get_consensus_execution_plan(discussion_id, db)
+        can_analyze = plan.get('is_ready', False)
+        ready_message = plan.get('message', 'Not ready')
         
         return render_template('discussions/consensus_not_ready.html',
                              discussion=discussion,
@@ -371,7 +373,7 @@ def get_analysis_status(discussion_id):
         return jsonify({'error': 'forbidden'}), 403
 
     # Check if ready
-    ready, message = can_cluster(discussion_id, db)
+    plan = get_consensus_execution_plan(discussion_id, db)
     
     # Get latest analysis if exists
     latest_analysis = ConsensusAnalysis.query.filter_by(
@@ -379,10 +381,26 @@ def get_analysis_status(discussion_id):
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
     
     response = {
-        'can_analyze': ready,
-        'message': message,
+        'can_analyze': plan.get('is_ready', False),
+        'message': plan.get('message'),
+        'analysis_mode': plan.get('mode'),
         'has_analysis': latest_analysis is not None
     }
+
+    latest_job = ConsensusJob.query.filter_by(
+        discussion_id=discussion_id
+    ).order_by(ConsensusJob.created_at.desc()).first()
+    if latest_job:
+        response['job'] = {
+            'id': latest_job.id,
+            'status': latest_job.status,
+            'attempts': latest_job.attempts,
+            'max_attempts': latest_job.max_attempts,
+            'queued_at': latest_job.queued_at.isoformat() if latest_job.queued_at else None,
+            'started_at': latest_job.started_at.isoformat() if latest_job.started_at else None,
+            'completed_at': latest_job.completed_at.isoformat() if latest_job.completed_at else None,
+            'error_message': latest_job.error_message,
+        }
     
     if latest_analysis:
         response['analysis'] = {

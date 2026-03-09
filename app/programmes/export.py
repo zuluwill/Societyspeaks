@@ -1,7 +1,7 @@
 import csv
 import json
 import re
-from io import StringIO
+from io import StringIO, BytesIO
 
 from flask import Response
 from sqlalchemy import distinct, func
@@ -69,6 +69,107 @@ def _export_filename(programme_slug, cohort_slug, extension):
             parts.append(safe_cohort)
     parts.append(ts)
     return f"{'-'.join(parts)}.{extension}"
+
+
+def generate_programme_export_json_bytes(programme, cohort_slug=None, chunk_size=50):
+    payload = {
+        "programme_id": programme.id,
+        "programme_slug": programme.slug,
+        "programme_name": programme.name,
+        "discussions": []
+    }
+    if cohort_slug:
+        payload["cohort_slug"] = cohort_slug
+
+    page = 1
+    while True:
+        pagination = Discussion.query.filter(
+            Discussion.programme_id == programme.id,
+            Discussion.partner_env != 'test'
+        ).order_by(Discussion.created_at.asc()).paginate(
+            page=page,
+            per_page=chunk_size,
+            error_out=False
+        )
+        if not pagination.items:
+            break
+        for discussion in pagination.items:
+            payload["discussions"].append(
+                build_discussion_export_payload(discussion, cohort_slug=cohort_slug)
+            )
+        if not pagination.has_next:
+            break
+        page += 1
+
+    return json.dumps(payload).encode("utf-8")
+
+
+def generate_programme_export_csv_bytes(programme, cohort_slug=None, chunk_size=200):
+    headers = [
+        'programme_id',
+        'programme_slug',
+        'programme_name',
+        'cohort_slug',
+        'discussion_id',
+        'discussion_title',
+        'programme_theme',
+        'programme_phase',
+        'participant_count',
+        'analysis_date',
+        'consensus_statement_count',
+        'bridge_statement_count',
+        'divisive_statement_count',
+        'consensus_statements_json',
+        'bridge_statements_json',
+        'divisive_statements_json',
+    ]
+
+    buf = BytesIO()
+    text_buf = StringIO()
+    writer = csv.writer(text_buf)
+    writer.writerow(headers)
+
+    page = 1
+    while True:
+        pagination = Discussion.query.filter(
+            Discussion.programme_id == programme.id,
+            Discussion.partner_env != 'test'
+        ).order_by(Discussion.created_at.asc()).paginate(
+            page=page,
+            per_page=chunk_size,
+            error_out=False
+        )
+        if not pagination.items:
+            break
+
+        for discussion in pagination.items:
+            payload = build_discussion_export_payload(discussion, cohort_slug=cohort_slug)
+            row = {
+                'programme_id': programme.id,
+                'programme_slug': programme.slug,
+                'programme_name': programme.name,
+                'cohort_slug': cohort_slug or '',
+                'discussion_id': payload.get('discussion_id'),
+                'discussion_title': payload.get('title') or '',
+                'programme_theme': payload.get('programme_theme') or '',
+                'programme_phase': payload.get('programme_phase') or '',
+                'participant_count': payload.get('participant_count') or 0,
+                'analysis_date': payload.get('analysis_date') or '',
+                'consensus_statement_count': len(payload.get('consensus_statements') or []),
+                'bridge_statement_count': len(payload.get('bridge_statements') or []),
+                'divisive_statement_count': len(payload.get('divisive_statements') or []),
+                'consensus_statements_json': json.dumps(payload.get('consensus_statements') or []),
+                'bridge_statements_json': json.dumps(payload.get('bridge_statements') or []),
+                'divisive_statements_json': json.dumps(payload.get('divisive_statements') or []),
+            }
+            writer.writerow([row.get(col, '') for col in headers])
+
+        if not pagination.has_next:
+            break
+        page += 1
+
+    buf.write(text_buf.getvalue().encode("utf-8"))
+    return buf.getvalue()
 
 
 def stream_programme_export_json(programme, cohort_slug=None, chunk_size=50):

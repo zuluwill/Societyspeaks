@@ -3,6 +3,7 @@ from flask import request, current_app
 from flask_login import current_user
 from app import db
 from app.models import ProfileView, DiscussionView, Discussion, IndividualProfile, CompanyProfile
+from app.analytics.events import record_event
 
 def track_profile_view(f):
     @wraps(f)
@@ -55,6 +56,14 @@ def track_discussion_view(f):
                     )
                     db.session.add(discussion_view)
                     db.session.commit()
+                    record_event(
+                        'discussion_viewed',
+                        user_id=current_user.id if current_user.is_authenticated else None,
+                        discussion_id=discussion.id,
+                        programme_id=discussion.programme_id,
+                        country=discussion.country,
+                        source='web'
+                    )
                 except Exception as e:
                     # Log the error but don't crash the application
                     current_app.logger.error(f"Failed to track discussion view for discussion {discussion_id}: {e}")

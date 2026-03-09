@@ -621,7 +621,7 @@
     <header class="embed-header">
       <h1 class="embed-title">{{ discussion.title }}</h1>
       <p class="embed-meta">
-        {{ statements|length }} statement{% if statements|length != 1 %}s{% endif %} to vote on
+        {{ total_statement_count|default(statements|length) }} statement{% if (total_statement_count|default(statements|length)) != 1 %}s{% endif %} to vote on
       </p>
     </header>
 
@@ -750,6 +750,34 @@
     </div>
     {% endif %}
 
+    {% if statement_page and statement_page.pages > 1 %}
+    <nav class="mb-4 flex items-center justify-between" aria-label="Statement pages">
+      <span class="embed-meta">Page {{ statement_page.page }} of {{ statement_page.pages }}</span>
+      <div style="display:flex; gap:8px;">
+        {% if statement_page.has_prev %}
+        <a
+          class="embed-cta"
+          href="{{ url_for('discussions.embed_discussion', discussion_id=discussion.id, page=statement_page.prev_num, ref=ref, theme=theme, primary=primary_color, bg=bg_color, font=font) }}"
+          target="_self"
+          rel="nofollow"
+        >
+          Previous
+        </a>
+        {% endif %}
+        {% if statement_page.has_next %}
+        <a
+          class="embed-cta"
+          href="{{ url_for('discussions.embed_discussion', discussion_id=discussion.id, page=statement_page.next_num, ref=ref, theme=theme, primary=primary_color, bg=bg_color, font=font) }}"
+          target="_self"
+          rel="nofollow"
+        >
+          Next
+        </a>
+        {% endif %}
+      </div>
+    </nav>
+    {% endif %}
+
     <!-- Footer with CTA -->
     <footer class="embed-footer">
       <a href="{{ consensus_url }}" class="embed-cta" target="_blank" rel="noopener" id="consensusLink">
@@ -801,7 +829,7 @@
     // Configuration
     const config = {
       discussionId: {{ discussion.id }},
-      statementCount: {{ statements|length }},
+      statementCount: {{ total_statement_count|default(statements|length) }},
       csrfToken: '{{ csrf_token() }}',
       partnerRef: '{{ ref|e }}',
       consensusUrl: '{{ consensus_url }}',

@@ -1,5 +1,5 @@
 # app/admin/routes.py
-from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
+from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session, jsonify
 from flask_login import login_required, current_user
 from app import db
 from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan, StatementVote, Partner, PartnerDomain, PartnerApiKey, PartnerMember, PartnerUsageEvent
@@ -23,6 +23,12 @@ except ImportError:
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 import time
+import os
+
+try:
+    import redis as redis_lib
+except Exception:  # pragma: no cover - optional runtime dependency
+    redis_lib = None
 
 
 def _admin_request_ip():
@@ -60,6 +66,98 @@ def dashboard():
         company_profiles_count=company_profiles_count,
         discussions_count=discussions_count
     )
+
+
+def _load_worker_heartbeats():
+    """
+    Read worker heartbeat keys from Redis for launch-room visibility.
+    Returns {'workers': [...], 'errors': [...]} and never raises.
+    """
+    payload = {'workers': [], 'errors': []}
+    redis_url = (os.getenv("REDIS_URL") or "").strip()
+    if not redis_url:
+        payload['errors'].append("REDIS_URL not configured")
+        return payload
+    if redis_lib is None:
+        payload['errors'].append("redis client unavailable")
+        return payload
+
+    try:
+        client = redis_lib.from_url(redis_url, socket_timeout=2, socket_connect_timeout=2)
+        keys = client.keys("consensus_worker:heartbeat:*") or []
+        now_ts = int(time.time())
+        workers = []
+        for raw_key in keys:
+            key = raw_key.decode("utf-8") if isinstance(raw_key, bytes) else str(raw_key)
+            worker_id = key.split("consensus_worker:heartbeat:", 1)[-1]
+            raw_val = client.get(raw_key)
+            val = raw_val.decode("utf-8") if isinstance(raw_val, bytes) else str(raw_val or "")
+            last_seen = int(val) if val.isdigit() else None
+            lag = (now_ts - last_seen) if last_seen else None
+            workers.append({
+                "worker_id": worker_id,
+                "last_seen_unix": last_seen,
+                "lag_seconds": lag,
+                "healthy": bool(lag is not None and lag <= 120),
+            })
+        payload['workers'] = sorted(workers, key=lambda item: item["worker_id"])
+        return payload
+    except Exception as exc:
+        payload['errors'].append(f"heartbeat probe failed: {exc}")
+        return payload
+
+
+@admin_bp.route('/launch-room/health.json')
+@login_required
+@admin_required
+def launch_room_health():
+    """
+    Executive launch-room health snapshot for Phase 6 SLO monitoring.
+    """
+    from app.discussions.jobs import get_consensus_queue_metrics
+    from app.programmes.export_jobs import get_programme_export_queue_metrics
+    from app.discussions.counter_integrity import get_statement_counter_drift_metrics
+    from app.models import ConsensusJob, ProgrammeExportJob
+
+    consensus_metrics = get_consensus_queue_metrics()
+    export_metrics = get_programme_export_queue_metrics()
+    drift = get_statement_counter_drift_metrics(sample_limit=5)
+    heartbeats = _load_worker_heartbeats()
+
+    response = {
+        "generated_at": utcnow_naive().isoformat(),
+        "queue": {
+            "consensus": consensus_metrics,
+            "exports": export_metrics,
+        },
+        "integrity": {
+            "statement_counter_drift": {
+                "statements_with_drift": drift["statements_with_drift"],
+                "total_abs_drift": drift["total_abs_drift"],
+                "max_abs_drift": drift["max_abs_drift"],
+                "max_abs_drift_statement_id": drift["max_abs_drift_statement_id"],
+                "sample": drift["sample"],
+            },
+            "dead_letter": {
+                "consensus_jobs": ConsensusJob.query.filter_by(status=ConsensusJob.STATUS_DEAD_LETTER).count(),
+                "export_jobs": ProgrammeExportJob.query.filter_by(status=ProgrammeExportJob.STATUS_DEAD_LETTER).count(),
+            },
+        },
+        "worker_pool": {
+            "heartbeats": heartbeats["workers"],
+            "errors": heartbeats["errors"],
+        },
+        "slo_targets": {
+            "api_latency_ms": {"p95": 500, "vote_p95": 200},
+            "error_rate_max": 0.005,
+            "queue_lag_seconds_max": {
+                "consensus": 120,
+                "exports": 300,
+            },
+            "dead_letter_max": 0,
+        },
+    }
+    return jsonify(response)
 
 
 # Profile Management Routes

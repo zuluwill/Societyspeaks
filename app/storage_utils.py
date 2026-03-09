@@ -113,3 +113,22 @@ def get_image_from_storage(filename):
     except Exception as e:
         current_app.logger.error(f"Error retrieving image {filename}: {str(e)}")
         return None, None
+
+
+def upload_bytes_to_object_storage(storage_path, content_bytes):
+    """Upload raw bytes to object storage at an explicit key."""
+    try:
+        client.upload_from_bytes(storage_path, content_bytes)
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Error uploading bytes to {storage_path}: {str(e)}")
+        return False
+
+
+def download_bytes_from_object_storage(storage_path):
+    """Download raw bytes from object storage by key."""
+    try:
+        return client.download_as_bytes(storage_path)
+    except Exception as e:
+        current_app.logger.error(f"Error downloading bytes from {storage_path}: {str(e)}")
+        return None

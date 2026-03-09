@@ -230,7 +230,8 @@ def test_steward_can_export_permissions(app, db):
         assert can_steward_programme(programme, steward_user) is True
 
 
-def test_programme_export_defaults_to_csv_and_supports_json(app, db):
+def test_programme_export_queues_async_job(app, db):
+    """Export route enqueues async jobs instead of streaming synchronously."""
     with app.app_context():
         creator = _create_user(db, 'exportcreator', 'exportcreator@example.com')
         steward_user = _create_user(db, 'exportsteward', 'exportsteward@example.com')
@@ -264,18 +265,28 @@ def test_programme_export_defaults_to_csv_and_supports_json(app, db):
     client = app.test_client()
     _login(client, steward_id)
 
+    # HTML path: queues job, redirects back to programme view.
     csv_resp = client.get(f'/programmes/{programme_slug}/export')
-    csv_body = csv_resp.get_data(as_text=True)
-    assert csv_resp.status_code == 200
-    assert csv_resp.mimetype == 'text/csv'
-    assert 'programme_id,programme_slug,programme_name' in csv_body
-    assert 'Export discussion one' in csv_body
+    assert csv_resp.status_code == 302, (
+        "Export route should redirect after async enqueue, not stream CSV directly."
+    )
+    assert '/programmes/' in csv_resp.headers['Location']
 
-    json_resp = client.get(f'/programmes/{programme_slug}/export?format=json')
-    json_body = json_resp.get_data(as_text=True)
-    assert json_resp.status_code == 200
-    assert json_resp.mimetype == 'application/json'
-    assert '"programme_id"' in json_body
+    # JSON API path (?json=1): returns 202 with job metadata.
+    json_resp = client.get(f'/programmes/{programme_slug}/export?format=json&json=1')
+    assert json_resp.status_code == 202
+    body = json_resp.get_json()
+    assert body['success'] is True
+    assert 'job_id' in body
+    assert 'status_url' in body
+
+    # A second identical request is deduped — same job_id returned.
+    dedup_resp = client.get(f'/programmes/{programme_slug}/export?format=json&json=1')
+    assert dedup_resp.status_code == 202
+    dedup_body = dedup_resp.get_json()
+    assert dedup_body['job_id'] == body['job_id'], (
+        "Duplicate export request should return the existing job, not create a new one."
+    )
 
 
 def test_search_discussions_filters_by_programme(app, db):

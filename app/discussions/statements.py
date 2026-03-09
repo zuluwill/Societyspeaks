@@ -13,7 +13,9 @@ from app.models import Discussion, Statement, StatementVote, Response, Statement
 from app.email_utils import create_discussion_notification
 from app.programmes.permissions import can_view_programme
 from app.programmes.utils import validate_cohort_for_discussion
-from sqlalchemy import func, desc, or_
+from app.discussions.sorting import apply_statement_sort
+from app.analytics.events import record_event
+from sqlalchemy import func, desc, or_, text
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
@@ -37,6 +39,181 @@ EMBED_FINGERPRINT_MAX_LENGTH = 128
 def _enforce_programme_visibility_for_discussion(discussion):
     if discussion and discussion.programme and not can_view_programme(discussion.programme, current_user):
         abort(403)
+
+
+def _apply_vote_counter_delta(statement_id, old_vote, new_vote):
+    """
+    Atomically update statement vote counters using SQL delta arithmetic.
+
+    Replaces Python read-modify-write (race-prone) with a single SQL UPDATE.
+    Returns a Row with (vote_count_agree, vote_count_disagree, vote_count_unsure)
+    from RETURNING so the caller can refresh the in-memory object without a
+    second SELECT. Returns None when old_vote == new_vote (no counter change).
+    """
+    agree_delta = disagree_delta = unsure_delta = 0
+    if old_vote == 1:
+        agree_delta -= 1
+    elif old_vote == -1:
+        disagree_delta -= 1
+    elif old_vote == 0:
+        unsure_delta -= 1
+    if new_vote == 1:
+        agree_delta += 1
+    elif new_vote == -1:
+        disagree_delta += 1
+    elif new_vote == 0:
+        unsure_delta += 1
+    if agree_delta == 0 and disagree_delta == 0 and unsure_delta == 0:
+        return None
+    return db.session.execute(text("""
+        UPDATE statement
+        SET
+            vote_count_agree    = GREATEST(0, vote_count_agree    + :agree_delta),
+            vote_count_disagree = GREATEST(0, vote_count_disagree + :disagree_delta),
+            vote_count_unsure   = GREATEST(0, vote_count_unsure   + :unsure_delta)
+        WHERE id = :statement_id
+        RETURNING vote_count_agree, vote_count_disagree, vote_count_unsure
+    """), {
+        'agree_delta': agree_delta,
+        'disagree_delta': disagree_delta,
+        'unsure_delta': unsure_delta,
+        'statement_id': statement_id,
+    }).fetchone()
+
+
+def _lock_vote_identity(statement_id, user_id=None, session_fingerprint=None):
+    """
+    Acquire a transaction-scoped advisory lock for one vote identity.
+
+    This serializes concurrent updates for the same `(statement_id, voter)` key
+    in Postgres, preventing race windows where two requests compute deltas from
+    stale old_vote values.
+    """
+    bind = db.session.get_bind()
+    if not bind or bind.dialect.name != 'postgresql':
+        return
+
+    if user_id is not None:
+        key = f"vote:{statement_id}:u:{user_id}"
+    else:
+        key = f"vote:{statement_id}:a:{session_fingerprint or ''}"
+
+    db.session.execute(
+        text("SELECT pg_advisory_xact_lock(hashtext(:lock_key))"),
+        {"lock_key": key}
+    )
+
+
+def _upsert_statement_vote_row(
+    statement_id,
+    discussion_id,
+    vote_value,
+    confidence,
+    partner_ref,
+    cohort_slug,
+    user_id=None,
+    session_fingerprint=None
+):
+    """
+    Persist vote row via INSERT ... ON CONFLICT ... DO UPDATE.
+    """
+    bind = db.session.get_bind()
+    dialect_name = bind.dialect.name if bind else ''
+
+    if dialect_name == 'postgresql':
+        from sqlalchemy.dialects.postgresql import insert as dialect_insert
+    elif dialect_name == 'sqlite':
+        from sqlalchemy.dialects.sqlite import insert as dialect_insert
+    else:
+        raise RuntimeError(f"Unsupported database dialect for vote upsert: {dialect_name}")
+
+    now = utcnow_naive()
+    insert_values = {
+        'statement_id': statement_id,
+        'discussion_id': discussion_id,
+        'vote': vote_value,
+        'confidence': confidence,
+        'partner_ref': partner_ref,
+        'cohort_slug': cohort_slug,
+        # created_at must be set explicitly: raw dialect insert() does not
+        # trigger SQLAlchemy ORM column defaults, so omitting it produces NULL.
+        'created_at': now,
+        'updated_at': now,
+    }
+    if user_id is not None:
+        insert_values['user_id'] = user_id
+    else:
+        insert_values['session_fingerprint'] = session_fingerprint
+
+    stmt = dialect_insert(StatementVote).values(**insert_values)
+    set_values = {
+        'vote': vote_value,
+        'confidence': confidence,
+        'partner_ref': partner_ref,
+        'cohort_slug': cohort_slug,
+        'updated_at': now,
+    }
+
+    if user_id is not None:
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[StatementVote.statement_id, StatementVote.user_id],
+            index_where=StatementVote.user_id.isnot(None),
+            set_=set_values
+        )
+    else:
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[StatementVote.statement_id, StatementVote.session_fingerprint],
+            index_where=StatementVote.session_fingerprint.isnot(None),
+            set_=set_values
+        )
+
+    db.session.execute(stmt)
+
+
+def _persist_vote_with_upsert(
+    statement,
+    vote_value,
+    confidence,
+    partner_ref,
+    cohort_slug,
+    user_id=None,
+    session_fingerprint=None
+):
+    """
+    Persist vote and update denormalized counters in one transaction.
+    """
+    _lock_vote_identity(
+        statement_id=statement.id,
+        user_id=user_id,
+        session_fingerprint=session_fingerprint
+    )
+
+    vote_lookup = StatementVote.query.filter(StatementVote.statement_id == statement.id)
+    if user_id is not None:
+        vote_lookup = vote_lookup.filter(StatementVote.user_id == user_id)
+    else:
+        vote_lookup = vote_lookup.filter(StatementVote.session_fingerprint == session_fingerprint)
+
+    existing_vote = vote_lookup.with_entities(StatementVote.vote).first()
+    old_vote = existing_vote[0] if existing_vote else None
+
+    _upsert_statement_vote_row(
+        statement_id=statement.id,
+        discussion_id=statement.discussion_id,
+        vote_value=vote_value,
+        confidence=confidence,
+        partner_ref=partner_ref,
+        cohort_slug=cohort_slug,
+        user_id=user_id,
+        session_fingerprint=session_fingerprint
+    )
+
+    counts = _apply_vote_counter_delta(statement.id, old_vote, vote_value)
+    db.session.commit()
+    if counts:
+        statement.vote_count_agree = counts[0]
+        statement.vote_count_disagree = counts[1]
+        statement.vote_count_unsure = counts[2]
 
 
 def calculate_wilson_score(agree, disagree, confidence=0.95):
@@ -162,6 +339,22 @@ def create_statement(discussion_id):
     form = StatementForm()
     
     if form.validate_on_submit():
+        max_statements = current_app.config.get('MAX_STATEMENTS_PER_DISCUSSION', 5000)
+        current_statement_count = Statement.query.filter_by(
+            discussion_id=discussion_id,
+            is_deleted=False
+        ).count()
+        if current_statement_count >= max_statements:
+            flash(
+                "This discussion has reached the statement limit. New submissions are paused while moderation and analysis catch up.",
+                "warning"
+            )
+            return redirect(url_for(
+                'discussions.view_discussion',
+                discussion_id=discussion.id,
+                slug=discussion.slug
+            ))
+
         # Check for duplicate content (pol.is pattern)
         existing = Statement.query.filter_by(
             discussion_id=discussion_id,
@@ -561,127 +754,48 @@ def vote_statement(statement_id):
 
     cohort_slug = validate_cohort_for_discussion(discussion, cohort_slug)
 
+    user_id = current_user.id if current_user.is_authenticated else None
+    session_fingerprint = None if user_id else (embed_fingerprint or get_statement_vote_fingerprint())
     try:
-        if current_user.is_authenticated:
-            existing_vote = StatementVote.query.filter_by(
-                statement_id=statement_id,
-                user_id=current_user.id
-            ).first()
-
-            if existing_vote:
-                old_vote = existing_vote.vote
-                existing_vote.vote = vote_value
-                existing_vote.confidence = confidence
-                existing_vote.updated_at = utcnow_naive()
-                existing_vote.cohort_slug = cohort_slug
-
-                if old_vote == 1:
-                    statement.vote_count_agree -= 1
-                elif old_vote == -1:
-                    statement.vote_count_disagree -= 1
-                elif old_vote == 0:
-                    statement.vote_count_unsure -= 1
-            else:
-                existing_vote = StatementVote(
-                    statement_id=statement_id,
-                    user_id=current_user.id,
-                    discussion_id=statement.discussion_id,
-                    vote=vote_value,
-                    confidence=confidence,
-                    partner_ref=partner_ref,
-                    cohort_slug=cohort_slug
-                )
-                db.session.add(existing_vote)
-
-            if vote_value == 1:
-                statement.vote_count_agree += 1
-            elif vote_value == -1:
-                statement.vote_count_disagree += 1
-            elif vote_value == 0:
-                statement.vote_count_unsure += 1
-
-            db.session.commit()
-
-        else:
-            fingerprint = embed_fingerprint or get_statement_vote_fingerprint()
-            
-            existing_vote = StatementVote.query.filter_by(
-                statement_id=statement_id,
-                session_fingerprint=fingerprint,
-                user_id=None
-            ).first()
-
-            if existing_vote:
-                old_vote = existing_vote.vote
-                existing_vote.vote = vote_value
-                existing_vote.confidence = confidence
-                existing_vote.updated_at = utcnow_naive()
-                existing_vote.cohort_slug = cohort_slug
-
-                if old_vote == 1:
-                    statement.vote_count_agree -= 1
-                elif old_vote == -1:
-                    statement.vote_count_disagree -= 1
-                elif old_vote == 0:
-                    statement.vote_count_unsure -= 1
-            else:
-                existing_vote = StatementVote(
-                    statement_id=statement_id,
-                    session_fingerprint=fingerprint,
-                    discussion_id=statement.discussion_id,
-                    vote=vote_value,
-                    confidence=confidence,
-                    partner_ref=partner_ref,
-                    cohort_slug=cohort_slug
-                )
-                db.session.add(existing_vote)
-
-            if vote_value == 1:
-                statement.vote_count_agree += 1
-            elif vote_value == -1:
-                statement.vote_count_disagree += 1
-            elif vote_value == 0:
-                statement.vote_count_unsure += 1
-
-            db.session.commit()
-            
+        _persist_vote_with_upsert(
+            statement=statement,
+            vote_value=vote_value,
+            confidence=confidence,
+            partner_ref=partner_ref,
+            cohort_slug=cohort_slug,
+            user_id=user_id,
+            session_fingerprint=session_fingerprint
+        )
     except IntegrityError:
         db.session.rollback()
-        statement = db.session.get(Statement, statement_id)
-        if current_user.is_authenticated:
-            existing_vote = StatementVote.query.filter_by(
-                statement_id=statement_id,
-                user_id=current_user.id
-            ).first()
-        else:
-            existing_vote = StatementVote.query.filter_by(
-                statement_id=statement_id,
-                session_fingerprint=get_statement_vote_fingerprint(),
-                user_id=None
-            ).first()
-        
-        if existing_vote and existing_vote.vote != vote_value:
-            old_vote = existing_vote.vote
-            existing_vote.vote = vote_value
-            existing_vote.confidence = confidence
-            existing_vote.updated_at = utcnow_naive()
-            existing_vote.cohort_slug = cohort_slug
-            
-            if old_vote == 1:
-                statement.vote_count_agree = max(0, statement.vote_count_agree - 1)
-            elif old_vote == -1:
-                statement.vote_count_disagree = max(0, statement.vote_count_disagree - 1)
-            elif old_vote == 0:
-                statement.vote_count_unsure = max(0, statement.vote_count_unsure - 1)
-            
-            if vote_value == 1:
-                statement.vote_count_agree += 1
-            elif vote_value == -1:
-                statement.vote_count_disagree += 1
-            elif vote_value == 0:
-                statement.vote_count_unsure += 1
-            
-            db.session.commit()
+        try:
+            _persist_vote_with_upsert(
+                statement=statement,
+                vote_value=vote_value,
+                confidence=confidence,
+                partner_ref=partner_ref,
+                cohort_slug=cohort_slug,
+                user_id=user_id,
+                session_fingerprint=session_fingerprint
+            )
+        except IntegrityError:
+            db.session.rollback()
+            if is_form_post:
+                flash('Vote could not be recorded due to a temporary conflict. Please try again.', 'error')
+                return redirect(url_for('statements.view_statement', statement_id=statement_id))
+            return jsonify({'error': 'vote_conflict', 'message': 'Temporary conflict while saving vote'}), 409
+
+    record_event(
+        'statement_voted',
+        user_id=current_user.id if current_user.is_authenticated else None,
+        discussion_id=statement.discussion_id,
+        programme_id=statement.discussion.programme_id if statement.discussion else None,
+        statement_id=statement.id,
+        cohort_slug=cohort_slug,
+        country=statement.discussion.country if statement.discussion else None,
+        source='embed' if is_embed_request else 'web',
+        event_metadata={'vote_value': vote_value, 'confidence': confidence}
+    )
 
     # Track vote with PostHog (also track if from social media)
     if posthog and getattr(posthog, 'project_api_key', None):
@@ -744,6 +858,15 @@ def vote_statement(statement_id):
         if cohort_slug:
             participant.cohort_slug = cohort_slug
             db.session.commit()
+            record_event(
+                'cohort_assigned',
+                user_id=user_id,
+                discussion_id=discussion.id,
+                programme_id=discussion.programme_id,
+                cohort_slug=cohort_slug,
+                country=discussion.country,
+                source='vote_flow'
+            )
 
         # Notify discussion creator about new participant (not for their own votes)
         if is_new and discussion.creator_id and discussion.creator_id != user_id:
@@ -929,45 +1052,9 @@ def list_statements(discussion_id):
         query = query.filter(Statement.mod_status >= 0)
     
     # Apply sorting
-    if sort == 'best':
-        # Wilson score ranking (needs to be calculated in Python)
-        # For now, use simple agreement rate
-        query = query.order_by(desc(Statement.vote_count_agree))
-    elif sort == 'controversial':
-        # Order by controversy score (calculated in model)
-        statements = query.all()
-        statements.sort(key=lambda s: s.controversy_score, reverse=True)
-        # Convert to paginated format
-        start = (page - 1) * per_page
-        end = start + per_page
-        paginated_statements = statements[start:end]
-        total = len(statements)
-        return render_template('discussions/list_statements.html',
-                             discussion=discussion,
-                             statements=paginated_statements,
-                             sort=sort,
-                             page=page,
-                             total=total,
-                             per_page=per_page)
-    elif sort == 'recent':
-        query = query.order_by(desc(Statement.created_at))
-    elif sort == 'most_voted':
-        # Order by total votes
-        query = query.order_by(
-            desc(Statement.vote_count_agree + 
-                 Statement.vote_count_disagree + 
-                 Statement.vote_count_unsure))
-    elif sort == 'progressive':
-        # Progressive disclosure: prioritize statements with fewer votes
-        # This is the pol.is pattern
-        query = query.order_by(
-            (Statement.vote_count_agree + 
-             Statement.vote_count_disagree + 
-             Statement.vote_count_unsure).asc(),
-            func.random()  # Shuffle within same vote count
-        )
-    else:
-        query = query.order_by(desc(Statement.created_at))
+    # Keep one canonical sorter shared with discussion routes for all sort modes,
+    # including controversial, to avoid full-table loads in Python.
+    query = apply_statement_sort(query, sort, discussion_id, db.session)
     
     # Paginate
     statements = query.paginate(page=page, per_page=per_page, error_out=False)
@@ -1046,6 +1133,15 @@ def quick_response(statement_id):
             )
             db.session.add(response)
             db.session.commit()
+            record_event(
+                'response_created',
+                user_id=current_user.id,
+                discussion_id=statement.discussion_id,
+                programme_id=statement.discussion.programme_id if statement.discussion else None,
+                statement_id=statement.id,
+                country=statement.discussion.country if statement.discussion else None,
+                source='quick_response'
+            )
             flash("Your thought has been added!", "success")
         except Exception as e:
             db.session.rollback()
@@ -1090,6 +1186,15 @@ def create_response(statement_id):
             )
             db.session.add(response)
             db.session.commit()
+            record_event(
+                'response_created',
+                user_id=current_user.id,
+                discussion_id=statement.discussion_id,
+                programme_id=statement.discussion.programme_id if statement.discussion else None,
+                statement_id=statement.id,
+                country=statement.discussion.country if statement.discussion else None,
+                source='response_form'
+            )
             
             flash("Response posted successfully!", "success")
             return redirect(url_for('statements.view_statement', statement_id=statement.id))

@@ -227,13 +227,14 @@ def init_scheduler(app):
     @scheduler.scheduled_job('interval', hours=6, id='auto_cluster_discussions')
     def auto_cluster_active_discussions():
         """
-        Automatically run clustering on active discussions
+        Queue clustering jobs for active discussions.
         Runs every 6 hours
         """
         with app.app_context():
             from app import db
             from app.models import Discussion, StatementVote, ConsensusAnalysis
-            from app.lib.consensus_engine import run_consensus_analysis, save_consensus_analysis, can_cluster
+            from app.lib.consensus_engine import get_consensus_execution_plan
+            from app.discussions.jobs import enqueue_consensus_job
             
             logger.info("Starting automated clustering task")
             
@@ -262,10 +263,10 @@ def init_scheduler(app):
                     if not discussion or not discussion.has_native_statements:
                         continue
                     
-                    # Check if ready for clustering
-                    ready, message = can_cluster(discussion_id, db)
-                    if not ready:
-                        logger.debug(f"Discussion {discussion_id} not ready: {message}")
+                    # Check if ready for clustering (full-matrix OR oversize fallback).
+                    plan = get_consensus_execution_plan(discussion_id, db)
+                    if not plan['is_ready']:
+                        logger.debug(f"Discussion {discussion_id} not ready: {plan['message']}")
                         continue
                     
                     # Check last analysis
@@ -289,19 +290,118 @@ def init_scheduler(app):
                             logger.debug(f"Discussion {discussion_id} has only {new_votes} new votes, skipping")
                             continue
                     
-                    # Run analysis
-                    logger.info(f"Running automated clustering for discussion {discussion_id}")
-                    results = run_consensus_analysis(discussion_id, db, method='agglomerative')
-                    
-                    if results:
-                        save_consensus_analysis(discussion_id, results, db)
-                        logger.info(f"Successfully clustered discussion {discussion_id}")
+                    # Queue analysis instead of running heavy compute in this scheduler thread.
+                    job, created, _ = enqueue_consensus_job(
+                        discussion_id=discussion_id,
+                        requested_by_user_id=None,
+                        reason='auto_scheduler'
+                    )
+                    if created:
+                        logger.info(f"Queued clustering job {job.id} for discussion {discussion_id}")
+                    else:
+                        logger.debug(f"Discussion {discussion_id} already has active queued/running job")
                     
                 except Exception as e:
                     logger.error(f"Error clustering discussion {discussion_id}: {e}", exc_info=True)
                     continue
             
             logger.info("Automated clustering task complete")
+
+
+    @scheduler.scheduled_job('interval', minutes=1, id='process_consensus_job_queue', max_instances=1, coalesce=True)
+    def process_consensus_job_queue():
+        """
+        Process queued consensus jobs.
+        Single-run cadence to keep scheduler responsive and avoid long job monopolization.
+        """
+        if not app.config.get('CONSENSUS_QUEUE_PROCESS_IN_SCHEDULER', False):
+            return
+        if not app.config.get('CONSENSUS_ALLOW_IN_PROCESS_EXECUTION', False):
+            # Worker-only execution guardrail: keep scheduler as orchestration by default.
+            return
+        with app.app_context():
+            from app.discussions.jobs import process_next_consensus_job
+            processed = process_next_consensus_job()
+            if processed:
+                logger.info("Processed one consensus job from queue")
+
+
+    @scheduler.scheduled_job('interval', minutes=5, id='mark_stale_consensus_jobs', max_instances=1, coalesce=True)
+    def mark_stale_consensus_jobs_job():
+        """Mark timed-out running consensus jobs as stale."""
+        with app.app_context():
+            from app.discussions.jobs import mark_stale_consensus_jobs
+            stale_count = mark_stale_consensus_jobs()
+            if stale_count:
+                logger.warning(f"Marked {stale_count} consensus jobs as stale")
+
+
+    @scheduler.scheduled_job('interval', minutes=1, id='process_programme_export_queue', max_instances=1, coalesce=True)
+    def process_programme_export_queue():
+        """Process queued async programme export jobs."""
+        if not app.config.get('EXPORT_QUEUE_PROCESS_IN_SCHEDULER', False):
+            return
+        with app.app_context():
+            from app.programmes.export_jobs import process_next_programme_export_job
+            processed = process_next_programme_export_job()
+            if processed:
+                logger.info("Processed one programme export job from queue")
+
+
+    @scheduler.scheduled_job('interval', minutes=5, id='mark_stale_programme_export_jobs', max_instances=1, coalesce=True)
+    def mark_stale_programme_export_jobs_job():
+        """Mark timed-out running programme export jobs as stale."""
+        with app.app_context():
+            from app.programmes.export_jobs import mark_stale_programme_export_jobs
+            stale_count = mark_stale_programme_export_jobs()
+            if stale_count:
+                logger.warning(f"Marked {stale_count} programme export jobs as stale")
+
+
+    @scheduler.scheduled_job('interval', minutes=15, id='rollup_analytics_daily', max_instances=1, coalesce=True)
+    def rollup_analytics_daily_job():
+        """Refresh curated analytics aggregates from immutable raw event stream."""
+        with app.app_context():
+            from app.analytics.events import rollup_analytics_daily
+            rows = rollup_analytics_daily(days_back=21)
+            if rows:
+                logger.info(f"Refreshed analytics daily aggregates ({rows} grouped rows)")
+
+
+    @scheduler.scheduled_job('interval', minutes=10, id='statement_counter_reconciliation', max_instances=1, coalesce=True)
+    def statement_counter_reconciliation():
+        """
+        Periodic counter drift monitor + reconciliation.
+        Keeps denormalized statement counters aligned with authoritative vote rows.
+        """
+        with app.app_context():
+            from app import db
+            from app.discussions.counter_integrity import (
+                get_statement_counter_drift_metrics,
+                reconcile_statement_vote_counters,
+            )
+            try:
+                drift = get_statement_counter_drift_metrics(sample_limit=10)
+                logger.info(
+                    "Statement counter drift metrics: "
+                    f"drifted_statements={drift['statements_with_drift']}, "
+                    f"total_abs_drift={drift['total_abs_drift']}, "
+                    f"max_abs_drift={drift['max_abs_drift']}"
+                )
+
+                repaired_count = reconcile_statement_vote_counters()
+                if repaired_count > 0:
+                    msg = (
+                        f"STATEMENT COUNTER RECONCILIATION APPLIED: repaired {repaired_count} statement rows "
+                        f"(pre-repair total_abs_drift={drift['total_abs_drift']})."
+                    )
+                    logger.warning(msg)
+                    alert_threshold = int(app.config.get('COUNTER_DRIFT_ALERT_THRESHOLD', 0) or 0)
+                    if drift['total_abs_drift'] > alert_threshold:
+                        _send_ops_alert(msg)
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Statement counter reconciliation failed: {e}", exc_info=True)
     
     
     @scheduler.scheduled_job('cron', hour=3, id='cleanup_old_analyses')
@@ -2396,6 +2496,226 @@ def init_scheduler(app):
                     "Today's briefs may remain unsent without manual intervention."
                 )
 
+
+    @scheduler.scheduled_job('cron', hour=2, minute=0, id='vote_integrity_check', max_instances=1, coalesce=True)
+    def vote_integrity_check():
+        """
+        Daily integrity audit: detect duplicate votes and participant rows.
+
+        Runs at 02:00 UTC, before the 03:00 UTC cleanup job.
+        Emits a warning log and ops alert if duplicates are found so they can
+        be investigated and repaired before they corrupt consensus results.
+        Duplicates should not exist once the Phase-0 migration has been applied;
+        any found after that indicate a constraint or write-path regression.
+        """
+        with app.app_context():
+            from app import db
+            from sqlalchemy import text
+
+            logger.info("Starting vote integrity check")
+            try:
+                dup_user_votes = db.session.execute(text("""
+                    SELECT COUNT(*) AS cnt
+                    FROM (
+                        SELECT statement_id, user_id
+                        FROM statement_vote
+                        WHERE user_id IS NOT NULL
+                        GROUP BY statement_id, user_id
+                        HAVING COUNT(*) > 1
+                    ) dupes
+                """)).scalar() or 0
+
+                dup_fingerprint_votes = db.session.execute(text("""
+                    SELECT COUNT(*) AS cnt
+                    FROM (
+                        SELECT statement_id, session_fingerprint
+                        FROM statement_vote
+                        WHERE session_fingerprint IS NOT NULL
+                        GROUP BY statement_id, session_fingerprint
+                        HAVING COUNT(*) > 1
+                    ) dupes
+                """)).scalar() or 0
+
+                dup_participants = db.session.execute(text("""
+                    SELECT COUNT(*) AS cnt
+                    FROM (
+                        SELECT discussion_id, user_id
+                        FROM discussion_participant
+                        WHERE user_id IS NOT NULL
+                        GROUP BY discussion_id, user_id
+                        HAVING COUNT(*) > 1
+                    ) dupes
+                """)).scalar() or 0
+
+                if dup_user_votes > 0 or dup_fingerprint_votes > 0 or dup_participants > 0:
+                    msg = (
+                        f"INTEGRITY ALERT: duplicate votes/participants detected — "
+                        f"user vote dupes: {dup_user_votes}, "
+                        f"fingerprint vote dupes: {dup_fingerprint_votes}, "
+                        f"participant dupes: {dup_participants}. "
+                        f"Check statement_vote and discussion_participant tables."
+                    )
+                    logger.error(msg)
+                    _send_ops_alert(msg)
+                else:
+                    logger.info("Vote integrity check passed — no duplicates found")
+
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Vote integrity check failed: {e}", exc_info=True)
+                _send_ops_alert(
+                    "WARNING: Daily vote integrity check could not complete. "
+                    "See scheduler logs for traceback."
+                )
+
+    @scheduler.scheduled_job('cron', hour=2, minute=15, id='vote_integrity_repair', max_instances=1, coalesce=True)
+    def vote_integrity_repair():
+        """
+        Daily integrity repair for duplicate vote/participant rows.
+
+        Runs after vote_integrity_check. If duplicates are detected, it:
+        - deduplicates statement_vote by (statement_id, user_id)
+        - deduplicates statement_vote by (statement_id, session_fingerprint)
+        - deduplicates discussion_participant by (discussion_id, user_id)
+        - reconciles denormalized statement vote counters from real vote data
+
+        This is a defensive backstop. In normal operation with constraints in
+        place, repaired row counts should remain zero.
+        """
+        with app.app_context():
+            from app import db
+            from sqlalchemy import text
+
+            logger.info("Starting vote integrity repair")
+            try:
+                dup_user_votes = db.session.execute(text("""
+                    SELECT COUNT(*) AS cnt
+                    FROM (
+                        SELECT statement_id, user_id
+                        FROM statement_vote
+                        WHERE user_id IS NOT NULL
+                        GROUP BY statement_id, user_id
+                        HAVING COUNT(*) > 1
+                    ) dupes
+                """)).scalar() or 0
+
+                dup_fingerprint_votes = db.session.execute(text("""
+                    SELECT COUNT(*) AS cnt
+                    FROM (
+                        SELECT statement_id, session_fingerprint
+                        FROM statement_vote
+                        WHERE session_fingerprint IS NOT NULL
+                        GROUP BY statement_id, session_fingerprint
+                        HAVING COUNT(*) > 1
+                    ) dupes
+                """)).scalar() or 0
+
+                dup_participants = db.session.execute(text("""
+                    SELECT COUNT(*) AS cnt
+                    FROM (
+                        SELECT discussion_id, user_id
+                        FROM discussion_participant
+                        WHERE user_id IS NOT NULL
+                        GROUP BY discussion_id, user_id
+                        HAVING COUNT(*) > 1
+                    ) dupes
+                """)).scalar() or 0
+
+                if dup_user_votes == 0 and dup_fingerprint_votes == 0 and dup_participants == 0:
+                    logger.info("Vote integrity repair: no duplicates detected; continuing with counter reconciliation check")
+
+                repaired_user_votes = db.session.execute(text("""
+                    WITH ranked AS (
+                        SELECT id,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY statement_id, user_id
+                                   ORDER BY COALESCE(updated_at, created_at) DESC NULLS LAST, id DESC
+                               ) AS rn
+                        FROM statement_vote
+                        WHERE user_id IS NOT NULL
+                    ),
+                    to_delete AS (
+                        SELECT id FROM ranked WHERE rn > 1
+                    ),
+                    deleted AS (
+                        DELETE FROM statement_vote sv
+                        USING to_delete td
+                        WHERE sv.id = td.id
+                        RETURNING sv.id
+                    )
+                    SELECT COUNT(*) FROM deleted
+                """)).scalar() or 0
+
+                repaired_fingerprint_votes = db.session.execute(text("""
+                    WITH ranked AS (
+                        SELECT id,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY statement_id, session_fingerprint
+                                   ORDER BY COALESCE(updated_at, created_at) DESC NULLS LAST, id DESC
+                               ) AS rn
+                        FROM statement_vote
+                        WHERE session_fingerprint IS NOT NULL
+                    ),
+                    to_delete AS (
+                        SELECT id FROM ranked WHERE rn > 1
+                    ),
+                    deleted AS (
+                        DELETE FROM statement_vote sv
+                        USING to_delete td
+                        WHERE sv.id = td.id
+                        RETURNING sv.id
+                    )
+                    SELECT COUNT(*) FROM deleted
+                """)).scalar() or 0
+
+                repaired_participants = db.session.execute(text("""
+                    WITH ranked AS (
+                        SELECT id,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY discussion_id, user_id
+                                   ORDER BY last_activity DESC NULLS LAST, id DESC
+                               ) AS rn
+                        FROM discussion_participant
+                        WHERE user_id IS NOT NULL
+                    ),
+                    to_delete AS (
+                        SELECT id FROM ranked WHERE rn > 1
+                    ),
+                    deleted AS (
+                        DELETE FROM discussion_participant dp
+                        USING to_delete td
+                        WHERE dp.id = td.id
+                        RETURNING dp.id
+                    )
+                    SELECT COUNT(*) FROM deleted
+                """)).scalar() or 0
+
+                # Reconcile denormalized vote counters after deduplication
+                # and also when no duplicates were found (drift-only defects).
+                from app.discussions.counter_integrity import reconcile_statement_vote_counters
+                reconciled_statements = reconcile_statement_vote_counters()
+                db.session.commit()
+
+                msg = (
+                    f"INTEGRITY REPAIR APPLIED: removed duplicates — "
+                    f"user vote rows: {repaired_user_votes}, "
+                    f"fingerprint vote rows: {repaired_fingerprint_votes}, "
+                    f"participant rows: {repaired_participants}. "
+                    f"statement counters reconciled: {reconciled_statements}."
+                )
+                logger.warning(msg)
+                total_repaired = repaired_user_votes + repaired_fingerprint_votes + repaired_participants
+                alert_threshold = int(app.config.get('INTEGRITY_REPAIR_ALERT_THRESHOLD', 0) or 0)
+                if total_repaired > alert_threshold:
+                    _send_ops_alert(msg)
+
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Vote integrity repair failed: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Daily vote integrity repair failed. "
+                    "Manual intervention may be required."
+                )
 
     @scheduler.scheduled_job('cron', minute=10, id='send_brief_emails', max_instances=1, coalesce=True)
     def send_brief_emails_hourly():

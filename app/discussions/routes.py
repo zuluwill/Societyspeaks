@@ -2,7 +2,7 @@ from flask import abort, render_template, redirect, url_for, flash, request, Blu
 from flask_login import login_required, current_user
 from app import db, limiter, talisman
 from app.discussions.forms import CreateDiscussionForm, EditDiscussionForm
-from app.models import Discussion, DiscussionParticipant, Programme, TrendingTopic, DiscussionSourceArticle, NewsArticle, NewsSource
+from app.models import Discussion, DiscussionParticipant, Programme, TrendingTopic, DiscussionSourceArticle, NewsArticle, NewsSource, Statement
 from app.storage_utils import get_recent_activity
 from app.middleware import track_discussion_view 
 from app.email_utils import create_discussion_notification
@@ -14,7 +14,9 @@ from app.lib.time import utcnow_naive
 from app.programmes.permissions import can_add_discussion_to_programme
 from app.programmes.permissions import can_view_programme
 from app.programmes.utils import render_safe_information_markdown, safe_information_links, validate_cohort_for_discussion
+from app.discussions.sorting import apply_statement_sort
 from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy import func
 import json
 import os
 import re
@@ -29,6 +31,29 @@ discussions_bp = Blueprint('discussions', __name__)
 
 def _exclude_test_discussions(query):
     return query.filter(Discussion.partner_env != 'test')
+
+
+def _statement_queries_for_discussion(discussion):
+    """Build filtered statement queries used by HTML + API read paths."""
+    from app.models import Response
+
+    base_query = Statement.query.filter_by(
+        discussion_id=discussion.id,
+        is_deleted=False
+    )
+    query = Statement.query.options(
+        joinedload(Statement.user),
+        joinedload(Statement.responses).joinedload(Response.user)
+    ).filter_by(
+        discussion_id=discussion.id,
+        is_deleted=False
+    )
+
+    if not (current_user.is_authenticated and (current_user.id == discussion.creator_id or current_user.is_admin)):
+        query = query.filter(Statement.mod_status >= 0)
+        base_query = base_query.filter(Statement.mod_status >= 0)
+
+    return base_query, query
 
 
 @discussions_bp.route('/news')
@@ -518,8 +543,6 @@ def embed_discussion(discussion_id):
     The route sets special CSP headers to allow framing from partner origins.
     """
     from flask import make_response
-    from app.models import Statement
-
     # Check if embed feature is enabled
     if not current_app.config.get('EMBED_ENABLED', True):
         base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
@@ -602,13 +625,23 @@ def embed_discussion(discussion_id):
     if ref_normalized:
         consensus_url = append_ref_param(consensus_url, ref_normalized)
 
-    # Get statements for voting
+    # Get statements for voting (paginated for large discussions)
     statements = []
+    statement_page = None
+    page = max(1, request.args.get('page', 1, type=int))
+    per_page = current_app.config.get('EMBED_STATEMENTS_PER_PAGE', 25)
+    total_statement_count = 0
     if discussion.has_native_statements:
-        statements = Statement.query.filter(
+        statement_page = Statement.query.filter(
             Statement.discussion_id == discussion.id,
             Statement.is_deleted == False
-        ).order_by(Statement.created_at.asc()).all()
+        ).order_by(Statement.created_at.asc(), Statement.id.asc()).paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
+        statements = statement_page.items
+        total_statement_count = statement_page.total
 
     # Track embed load event
     try:
@@ -616,7 +649,7 @@ def embed_discussion(discussion_id):
         track_partner_event('partner_embed_loaded', {
             'discussion_id': discussion.id,
             'discussion_title': discussion.title,
-            'statement_count': len(statements),
+            'statement_count': total_statement_count or len(statements),
             'theme': theme,
             'has_custom_colors': bool(primary_color or bg_color),
             'has_custom_font': bool(font)
@@ -636,7 +669,9 @@ def embed_discussion(discussion_id):
         primary_color=primary_color,
         bg_color=bg_color,
         font=font,
-        is_closed=discussion.is_closed
+        is_closed=discussion.is_closed,
+        statement_page=statement_page,
+        total_statement_count=total_statement_count
     ))
 
     # Set CSP frame-ancestors header for partner allowlist
@@ -672,9 +707,6 @@ def view_discussion(discussion_id, slug):
     user_id = str(current_user.id) if current_user.is_authenticated else None
     track_social_click(request, user_id)
     
-    from app.models import Statement
-    from sqlalchemy import desc, func
-    
     # Eager load creator and source_article_links with nested article.source to prevent N+1 queries
     # Using selectinload for nested relationships to ensure proper eager loading
     discussion = Discussion.query.options(
@@ -698,60 +730,45 @@ def view_discussion(discussion_id, slug):
     statements = []
     sort = 'progressive'
     form = None
+    statements_pagination = None
+    statement_metrics = {
+        'statement_count': 0,
+        'agree_votes': 0,
+        'disagree_votes': 0,
+        'unsure_votes': 0,
+        'total_votes': 0,
+    }
     
     if discussion.has_native_statements:
         from app.discussions.statement_forms import StatementForm
         form = StatementForm()
         sort = request.args.get('sort', 'progressive')
+        page = max(1, request.args.get('page', 1, type=int))
+        per_page = current_app.config.get('DISCUSSION_STATEMENTS_PER_PAGE', 20)
         
-        # Base query with eager loading of user data and responses (with their users) to prevent N+1 queries
-        from app.models import Response
-        query = Statement.query.options(
-            joinedload(Statement.user),
-            joinedload(Statement.responses).joinedload(Response.user)
-        ).filter_by(
-            discussion_id=discussion_id,
-            is_deleted=False
-        )
-        
-        # Apply moderation filter for non-owners
-        if not (current_user.is_authenticated and 
-                (current_user.id == discussion.creator_id or current_user.is_admin)):
-            query = query.filter(Statement.mod_status >= 0)
-        
-        # Apply sorting
-        if sort == 'progressive':
-            # Prioritize statements with fewer votes (pol.is pattern)
-            query = query.order_by(
-                (Statement.vote_count_agree + 
-                 Statement.vote_count_disagree + 
-                 Statement.vote_count_unsure).asc(),
-                func.random()
+        base_query, query = _statement_queries_for_discussion(discussion)
+
+        aggregates = base_query.with_entities(
+            func.count(Statement.id),
+            func.coalesce(func.sum(Statement.vote_count_agree), 0),
+            func.coalesce(func.sum(Statement.vote_count_disagree), 0),
+            func.coalesce(func.sum(Statement.vote_count_unsure), 0),
+        ).first()
+        if aggregates:
+            statement_metrics['statement_count'] = int(aggregates[0] or 0)
+            statement_metrics['agree_votes'] = int(aggregates[1] or 0)
+            statement_metrics['disagree_votes'] = int(aggregates[2] or 0)
+            statement_metrics['unsure_votes'] = int(aggregates[3] or 0)
+            statement_metrics['total_votes'] = (
+                statement_metrics['agree_votes'] +
+                statement_metrics['disagree_votes'] +
+                statement_metrics['unsure_votes']
             )
-        elif sort == 'best':
-            query = query.order_by(desc(Statement.vote_count_agree))
-        elif sort == 'recent':
-            query = query.order_by(desc(Statement.created_at))
-        elif sort == 'most_voted':
-            query = query.order_by(
-                desc(Statement.vote_count_agree + 
-                     Statement.vote_count_disagree + 
-                     Statement.vote_count_unsure))
-        elif sort == 'controversial':
-            # Fetch all and sort by controversy score in Python
-            statements = query.all()
-            statements.sort(key=lambda s: s.controversy_score, reverse=True)
-            user_vote_count, _ = get_user_vote_count(discussion_id)
-            return render_template('discussions/view_discussion.html', 
-                                 discussion=discussion,
-                                 statements=statements,
-                                 sort=sort,
-                                 form=form,
-                                 user_vote_count=user_vote_count,
-                                 participation_threshold=PARTICIPATION_THRESHOLD)
         
-        # Default pagination
-        statements = query.limit(20).all()
+        # Apply sorting — all sort modes including 'controversial' handled in SQL.
+        query = apply_statement_sort(query, sort, discussion_id, db.session)
+        statements_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        statements = statements_pagination.items
     
     # Get user's vote count for participation gate display
     user_vote_count, _ = get_user_vote_count(discussion_id)
@@ -769,6 +786,8 @@ def view_discussion(discussion_id, slug):
     return render_template('discussions/view_discussion.html', 
                          discussion=discussion,
                          statements=statements,
+                         statements_pagination=statements_pagination,
+                         statement_metrics=statement_metrics,
                          sort=sort,
                          form=form,
                          user_vote_count=user_vote_count,
@@ -776,6 +795,53 @@ def view_discussion(discussion_id, slug):
                          safe_information_html=safe_information_html,
                          safe_information_links=safe_info_links,
                          cohort_slug=cohort_slug)
+
+
+@discussions_bp.route('/api/discussions/<int:discussion_id>/statements', methods=['GET'])
+def api_discussion_statements(discussion_id):
+    discussion = db.session.get(Discussion, discussion_id)
+    if not discussion or discussion.partner_env == 'test':
+        return jsonify({'success': False, 'error': 'not_found'}), 404
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        return jsonify({'success': False, 'error': 'forbidden'}), 403
+    if not discussion.has_native_statements:
+        return jsonify({'success': False, 'error': 'native_statements_disabled'}), 400
+
+    page = max(1, request.args.get('page', 1, type=int))
+    sort = request.args.get('sort', 'progressive')
+    per_page = current_app.config.get('DISCUSSION_STATEMENTS_PER_PAGE', 20)
+
+    cohort_slug = (request.args.get('cohort') or '').strip() or None
+    if cohort_slug and not validate_cohort_for_discussion(discussion, cohort_slug):
+        cohort_slug = None
+
+    _, query = _statement_queries_for_discussion(discussion)
+    query = apply_statement_sort(query, sort, discussion.id, db.session)
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    html = ''.join(
+        render_template(
+            'discussions/_statement_card.html',
+            statement=statement,
+            discussion=discussion,
+            cohort_slug=cohort_slug
+        )
+        for statement in pagination.items
+    )
+
+    return jsonify({
+        'success': True,
+        'html': html,
+        'pagination': {
+            'page': pagination.page,
+            'pages': pagination.pages,
+            'per_page': per_page,
+            'total': pagination.total,
+            'has_next': pagination.has_next,
+            'next_page': pagination.next_num if pagination.has_next else None,
+            'loaded_count': min(pagination.page * per_page, pagination.total),
+        }
+    })
 
 
 @discussions_bp.route('/<int:discussion_id>/information-continue', methods=['POST'])
