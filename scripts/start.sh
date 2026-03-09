@@ -8,4 +8,4 @@ else
 fi
 
 echo "Starting Gunicorn..."
-exec gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=120 run:app
+exec gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=600 --workers=4 run:app
