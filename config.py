@@ -86,26 +86,41 @@ class Config:
     STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
 
     # Enhanced Database Connection Settings (configurable for scaling)
-    # Pool size can be adjusted via environment variables for different deployment tiers
-    DB_POOL_SIZE = int(os.getenv('DB_POOL_SIZE', '10'))  # Base pool size
-    DB_MAX_OVERFLOW = int(os.getenv('DB_MAX_OVERFLOW', '20'))  # Additional connections when pool exhausted
+    # When using Neon's PgBouncer pooler (pgbouncer=true in DATABASE_URL), SQLAlchemy's
+    # own pool sits in front of PgBouncer, so smaller sizes are appropriate — the pooler
+    # handles multiplexing to the real database.
+    _using_pooler = 'pgbouncer=true' in (os.getenv('DATABASE_URL') or '')
+    _default_pool_size = '5' if _using_pooler else '10'
+    _default_max_overflow = '10' if _using_pooler else '20'
+
+    DB_POOL_SIZE = int(os.getenv('DB_POOL_SIZE', _default_pool_size))
+    DB_MAX_OVERFLOW = int(os.getenv('DB_MAX_OVERFLOW', _default_max_overflow))
     DB_POOL_TIMEOUT = int(os.getenv('DB_POOL_TIMEOUT', '30'))  # Seconds to wait for connection
     DB_POOL_RECYCLE = int(os.getenv('DB_POOL_RECYCLE', '300'))  # Recycle connections after N seconds
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    _connect_args = {
+        'connect_timeout': 10,
+        'keepalives': 1,
+        'keepalives_idle': 60,
+        'keepalives_interval': 10,
+        'keepalives_count': 5,
+    }
+    if _using_pooler:
+        # PgBouncer transaction mode does not support prepared statements.
+        # Disabling the cache ensures SQLAlchemy never tries to reuse a
+        # prepared statement across what PgBouncer may route to different
+        # backend connections.
+        _connect_args['options'] = '-c prepared_statements=off'
+
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_pre_ping': True,  # Verify connections before use (prevents stale connection errors)
         'pool_recycle': DB_POOL_RECYCLE,
         'pool_size': DB_POOL_SIZE,
         'max_overflow': DB_MAX_OVERFLOW,
         'pool_timeout': DB_POOL_TIMEOUT,
-        'connect_args': {
-            'connect_timeout': 10,
-            'keepalives': 1,
-            'keepalives_idle': 60,
-            'keepalives_interval': 10,
-            'keepalives_count': 5
-        }
+        'connect_args': _connect_args,
     }
     
     
