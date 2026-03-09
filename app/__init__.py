@@ -196,7 +196,26 @@ def create_app():
 
     # Determine environment
     env = os.getenv('FLASK_ENV', 'development')
+    is_replit_deployment = os.environ.get('REPLIT_DEPLOYMENT') == '1'
     app.config.from_object(config_dict[env])
+
+    # Replit deployments must never silently degrade to local-memory/filesystem
+    # fallbacks for Redis-backed subsystems (sessions, rate limits, job queues).
+    if is_replit_deployment:
+        redis_url = (os.getenv('REDIS_URL') or '').strip()
+        if not redis_url:
+            raise RuntimeError(
+                "REDIS_URL is required when REPLIT_DEPLOYMENT=1. "
+                "Refusing to start with non-Redis fallbacks."
+            )
+        try:
+            import redis as redis_lib
+            redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3).ping()
+        except Exception as redis_error:
+            raise RuntimeError(
+                f"Redis connectivity check failed in deployed environment: {redis_error}. "
+                "Refusing to start with non-Redis fallbacks."
+            ) from redis_error
     
     # Configure PostHog for both server-side and frontend analytics
     posthog_api_key = os.getenv("POSTHOG_API_KEY")
@@ -236,11 +255,22 @@ def create_app():
                 Config.SESSION_REDIS.ping()
                 app.config['SESSION_REDIS'] = Config.SESSION_REDIS
             except Exception as e:
+                if is_replit_deployment:
+                    raise RuntimeError(
+                        f"Redis session ping failed in deployed environment: {type(e).__name__}: {e}"
+                    ) from e
                 app.logger.warning(f"Redis session ping failed ({type(e).__name__}): {e}, falling back to filesystem")
                 app.config['SESSION_TYPE'] = 'filesystem'
+        elif is_replit_deployment:
+            raise RuntimeError(
+                "SESSION_REDIS is not configured in deployed environment. "
+                "Refusing to start with filesystem sessions."
+            )
         
         sess.init_app(app)
     except Exception as e:
+        if is_replit_deployment:
+            raise
         app.logger.error(f"Session initialization error: {e}")
         app.config['SESSION_TYPE'] = 'filesystem'
         sess.init_app(app)
@@ -351,10 +381,14 @@ def create_app():
                     app.logger.info("Using REDIS_URL from environment variable for rate limiting")
                 else:
                     # In production, we need Redis for security, but allow graceful degradation with warning
+                    if is_replit_deployment:
+                        raise RuntimeError(
+                            "REDIS_URL is required for shared production rate limits "
+                            "when REPLIT_DEPLOYMENT=1."
+                        )
                     app.logger.error("CRITICAL: Redis-backed rate limiting is strongly recommended in production.")
                     app.logger.error("REDIS_URL environment variable is not set or empty.")
                     app.logger.error("Falling back to memory-based rate limiting - this is not recommended for production.")
-                    # Don't raise an exception, but allow memory fallback with strong warning
             
             # Test Redis connectivity in production if we have a URL
             if redis_url and not redis_url.startswith('memory://'):
@@ -366,6 +400,10 @@ def create_app():
                     app.config['RATELIMIT_STORAGE_URL'] = redis_url
                     app.logger.info("Rate limiter configured with Redis (production)")
                 except Exception as redis_error:
+                    if is_replit_deployment:
+                        raise RuntimeError(
+                            f"Redis connection failed for rate limiting in deployed environment: {redis_error}"
+                        ) from redis_error
                     app.logger.error(f"Redis connection failed in production: {redis_error}")
                     app.logger.error("Falling back to memory-based rate limiting - this is not ideal for production.")
                     app.config['RATELIMIT_STORAGE_URL'] = 'memory://'
@@ -405,6 +443,8 @@ def create_app():
         
     except Exception as e:
         app.logger.error(f"Rate limiter initialization failed: {e}")
+        if is_replit_deployment:
+            raise
         # Always initialize limiter to prevent startup failure
         limiter.init_app(app)
         if env == 'production':

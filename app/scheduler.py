@@ -1486,7 +1486,12 @@ def init_scheduler(app):
                 logger.info(f"Daily brief generated: {brief.title} ({brief.item_count} items)")
 
                 if brief.item_count < 3:
-                    logger.warning(f"Brief only has {brief.item_count} items, below minimum!")
+                    warning_msg = (
+                        f"Daily brief generated with low item count ({brief.item_count}). "
+                        "Content quality may be degraded; investigate source ingestion/topic selection."
+                    )
+                    logger.warning(warning_msg)
+                    _send_ops_alert(warning_msg)
 
             except Exception as e:
                 msg = f"CRITICAL: Daily brief generation failed with unhandled error: {e}"
@@ -1836,10 +1841,32 @@ def init_scheduler(app):
             logger.info("Processing briefing runs")
             
             try:
+                # PostgreSQL advisory lock namespace for briefing generation.
+                # This prevents duplicate run generation if more than one app instance
+                # ever executes this job at the same time.
+                BRIEFING_RUN_LOCK_NAMESPACE = 73001
+
                 active_briefings = Briefing.query.filter_by(status='active').all()
                 
                 for briefing in active_briefings:
+                    lock_conn = None
+                    lock_key = None
+                    lock_acquired = False
                     try:
+                        lock_key = (BRIEFING_RUN_LOCK_NAMESPACE << 32) + int(briefing.id)
+                        lock_conn = db.engine.connect()
+                        lock_acquired = bool(
+                            lock_conn.execute(
+                                db.text("SELECT pg_try_advisory_lock(CAST(:key AS BIGINT))"),
+                                {"key": lock_key}
+                            ).scalar()
+                        )
+                        if not lock_acquired:
+                            logger.info(
+                                f"Skipping briefing {briefing.id} - another worker already holds lock"
+                            )
+                            continue
+
                         from app.billing.service import get_active_subscription
                         from app.models import User, Subscription
                         
@@ -1977,6 +2004,25 @@ def init_scheduler(app):
                         logger.error(f"Error processing briefing {briefing.id}: {e}", exc_info=True)
                         db.session.rollback()
                         continue
+                    finally:
+                        if lock_conn is not None:
+                            if lock_acquired and lock_key is not None:
+                                try:
+                                    lock_conn.execute(
+                                        db.text("SELECT pg_advisory_unlock(CAST(:key AS BIGINT))"),
+                                        {"key": lock_key}
+                                    )
+                                except Exception as unlock_error:
+                                    logger.warning(
+                                        f"Failed to release advisory lock for briefing {briefing.id}: {unlock_error}"
+                                    )
+                                    try:
+                                        # Ensure this DBAPI connection is not returned to pool
+                                        # with a potentially still-held advisory lock.
+                                        lock_conn.invalidate()
+                                    except Exception:
+                                        pass
+                            lock_conn.close()
                         
             except Exception as e:
                 logger.error(f"Error in briefing runs processor: {e}", exc_info=True)
@@ -2297,6 +2343,54 @@ def init_scheduler(app):
             except Exception as e:
                 db.session.rollback()
                 logger.error(f"Auto-publish failed: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Daily brief auto-publish failed at 18:00 UTC. "
+                    "Today's ready brief may remain unpublished until manually corrected."
+                )
+
+    @scheduler.scheduled_job('cron', hour=18, minute=30, id='auto_publish_brief_catchup')
+    def auto_publish_daily_brief_catchup():
+        """
+        Catch-up publisher for today's briefs.
+
+        If the primary 18:00 UTC auto-publish failed, this job promotes any
+        remaining 'ready' briefs for today to 'published' so delivery can
+        recover automatically without manual intervention.
+        """
+        with app.app_context():
+            from app import db
+            from app.models import DailyBrief
+            from datetime import date
+
+            try:
+                ready_briefs = DailyBrief.query.filter_by(
+                    date=date.today(),
+                    status='ready'
+                ).all()
+
+                if not ready_briefs:
+                    logger.info("Catch-up publisher: no ready briefs found for today")
+                    return
+
+                for brief in ready_briefs:
+                    brief.status = 'published'
+                    brief.published_at = utcnow_naive()
+                    logger.warning(
+                        f"Catch-up publisher promoted {brief.brief_type} brief to published: {brief.title}"
+                    )
+
+                db.session.commit()
+                _send_ops_alert(
+                    f"RECOVERY: Catch-up publisher auto-published {len(ready_briefs)} "
+                    "brief(s) that were still in 'ready' status after the primary publish window."
+                )
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Catch-up auto-publish failed: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Catch-up brief auto-publish failed. "
+                    "Today's briefs may remain unsent without manual intervention."
+                )
 
 
     @scheduler.scheduled_job('cron', minute=10, id='send_brief_emails', max_instances=1, coalesce=True)
@@ -2343,6 +2437,10 @@ def init_scheduler(app):
 
             except Exception as e:
                 logger.error(f"Brief email sending failed: {e}", exc_info=True)
+                _send_ops_alert(
+                    "CRITICAL: Hourly brief email send job failed. "
+                    "Subscriber delivery may be delayed; check scheduler and email provider logs."
+                )
 
 
     @scheduler.scheduled_job('cron', day=1, hour=2, id='update_allsides_ratings')

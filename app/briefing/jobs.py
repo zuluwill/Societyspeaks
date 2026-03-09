@@ -23,6 +23,7 @@ import redis
 logger = logging.getLogger(__name__)
 
 REDIS_URL = os.environ.get('REDIS_URL')
+IS_REPLIT_DEPLOYMENT = os.environ.get('REPLIT_DEPLOYMENT') == '1'
 JOB_PREFIX = 'briefing:job:'
 JOB_EXPIRY = 3600  # Jobs expire after 1 hour
 
@@ -172,6 +173,11 @@ class GenerationJob:
         self.updated_at = utcnow_naive().isoformat()
 
         if not client:
+            if IS_REPLIT_DEPLOYMENT:
+                logger.error(
+                    f"Redis unavailable in deployed environment; refusing in-memory fallback for job {self.job_id}"
+                )
+                return False
             try:
                 with _IN_MEMORY_JOBS_LOCK:
                     _IN_MEMORY_JOBS[self.job_id] = self.to_dict()
@@ -193,6 +199,11 @@ class GenerationJob:
         """Get job from Redis."""
         client = get_redis_client()
         if not client:
+            if IS_REPLIT_DEPLOYMENT:
+                logger.error(
+                    f"Redis unavailable in deployed environment; job lookup aborted for {job_id}"
+                )
+                return None
             try:
                 with _IN_MEMORY_JOBS_LOCK:
                     data = _IN_MEMORY_JOBS.get(job_id)
@@ -271,6 +282,11 @@ def queue_brief_generation(briefing_id: int, user_id: int) -> Optional[str]:
 
     client = get_redis_client()
     if not client:
+        if IS_REPLIT_DEPLOYMENT:
+            logger.error(
+                "Redis unavailable in deployed environment; refusing to queue brief generation in-memory fallback"
+            )
+            return None
         job_id = str(uuid.uuid4())
         job = GenerationJob(job_id, briefing_id, user_id)
         if not job.save():
