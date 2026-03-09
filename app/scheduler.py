@@ -1667,6 +1667,69 @@ def init_scheduler(app):
                     f"CRITICAL: Daily brief safety-net raised an unhandled error: {e}"
                 )
 
+    @scheduler.scheduled_job('cron', hour=21, minute=30, id='daily_brief_safety_net_2', misfire_grace_time=21600)
+    def daily_brief_safety_net_2_job():
+        """
+        Second (last-resort) safety-net at 21:30 UTC.
+
+        Guards against the edge case where both the primary 17:00 UTC generation
+        job AND the first 19:30 UTC safety-net were missed (e.g. the app was down
+        for several hours spanning both windows).  At this point subscribers in
+        later time-zones (Americas) still haven't received today's brief, so
+        generating it now is worthwhile.
+
+        Identical logic to daily_brief_safety_net_job; intentionally duplicated
+        so the two safety-nets are independently scheduled.
+        """
+        with app.app_context():
+            from app.brief.generator import generate_daily_brief
+            from app.models import DailyBrief
+            from datetime import date
+
+            today = date.today()
+            existing = DailyBrief.query.filter_by(
+                date=today, brief_type='daily'
+            ).filter(
+                DailyBrief.status.in_(['ready', 'published'])
+            ).first()
+
+            if existing:
+                logger.debug(f"Daily brief safety-net-2: brief already exists ({existing.status}), skipping")
+                return
+
+            msg = (
+                f"CRITICAL: Last-resort daily brief safety-net-2 triggered for {today}. "
+                "Both the primary 17:00 job and the 19:30 safety-net were missed. "
+                "Check deployment history and scheduler health urgently."
+            )
+            logger.error(msg)
+            _send_ops_alert(msg)
+
+            try:
+                brief = generate_daily_brief(brief_date=today, auto_publish=True)
+                if brief:
+                    logger.info(f"Safety-net-2 brief generated: {brief.title}")
+                else:
+                    try:
+                        from app.trending.pipeline import run_pipeline, auto_publish_daily
+                        articles, topics, ready = run_pipeline(hold_minutes=0)
+                        logger.info(f"Safety-net-2 pipeline: {articles} articles, {topics} topics, {ready} ready")
+                        auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
+                        brief = generate_daily_brief(brief_date=today, auto_publish=True)
+                        if brief:
+                            logger.info(f"Safety-net-2 self-healing succeeded: {brief.title}")
+                        else:
+                            logger.error(f"CRITICAL: No brief for {today} even after safety-net-2 pipeline run")
+                            _send_ops_alert(
+                                f"CRITICAL: Safety-net-2 also failed for {today}. "
+                                "Manual intervention required immediately."
+                            )
+                    except Exception as heal_err:
+                        logger.error(f"Safety-net-2 self-healing failed: {heal_err}", exc_info=True)
+            except Exception as e:
+                logger.error(f"Daily brief safety-net-2 failed: {e}", exc_info=True)
+                _send_ops_alert(f"CRITICAL: Daily brief safety-net-2 raised an unhandled error: {e}")
+
     @scheduler.scheduled_job('interval', seconds=5, id='check_emergency_brief_generate')
     def check_emergency_brief_generate_job():
         """
@@ -2475,7 +2538,7 @@ def init_scheduler(app):
                     "See scheduler logs for traceback."
                 )
 
-    @scheduler.scheduled_job('cron', hour=18, minute=0, id='auto_publish_brief')
+    @scheduler.scheduled_job('cron', hour=18, minute=0, id='auto_publish_brief', misfire_grace_time=10800)
     def auto_publish_daily_brief():
         """
         Auto-publish today's briefs at 6:00pm UTC if still in 'ready' status.
@@ -2517,7 +2580,7 @@ def init_scheduler(app):
                     "Today's ready brief may remain unpublished until manually corrected."
                 )
 
-    @scheduler.scheduled_job('cron', hour=18, minute=15, id='auto_publish_brief_catchup')
+    @scheduler.scheduled_job('cron', hour=18, minute=15, id='auto_publish_brief_catchup', misfire_grace_time=10800)
     def auto_publish_daily_brief_catchup():
         """
         Catch-up publisher for today's briefs.
@@ -2786,7 +2849,7 @@ def init_scheduler(app):
                     "Manual intervention may be required."
                 )
 
-    @scheduler.scheduled_job('cron', minute=10, id='send_brief_emails', max_instances=1, coalesce=True)
+    @scheduler.scheduled_job('cron', minute=10, id='send_brief_emails', max_instances=1, coalesce=True, misfire_grace_time=7200)
     def send_brief_emails_hourly():
         """
         Send brief emails 10 minutes past each hour

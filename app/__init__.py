@@ -770,6 +770,74 @@ def create_app():
                 _scheduler_state['running'] = True
                 _scheduler_state['last_error'] = None
                 app.logger.info(f"Background scheduler started (pid={pid})")
+
+                # ------------------------------------------------------------------
+                # Startup brief recovery check
+                # ------------------------------------------------------------------
+                # Runs once, in the scheduler worker only, right after the scheduler
+                # starts.  If the app restarts during the 17:00–22:00 UTC brief
+                # generation window and today's brief is missing, we generate it
+                # immediately rather than waiting up to an hour for APScheduler to
+                # fire the next misfire or safety-net cron.  This is the most direct
+                # fix for the observed failure pattern (deployment at ~17:00 causing
+                # the generation job to be missed).
+                # ------------------------------------------------------------------
+                from datetime import datetime, timezone as _tz
+                _now_utc = datetime.now(_tz.utc)
+                if 17 <= _now_utc.hour < 22:
+                    def _startup_brief_recovery():
+                        import time as _t
+                        _t.sleep(10)  # Let scheduler fully settle first
+                        with app.app_context():
+                            try:
+                                from app.models import DailyBrief
+                                from datetime import date as _date
+                                _today = _date.today()
+                                _existing = DailyBrief.query.filter_by(
+                                    date=_today, brief_type='daily'
+                                ).filter(
+                                    DailyBrief.status.in_(['ready', 'published'])
+                                ).first()
+                                if _existing:
+                                    app.logger.debug(
+                                        f"Startup brief recovery: brief already exists "
+                                        f"(id={_existing.id}, status={_existing.status})"
+                                    )
+                                    return
+                                app.logger.warning(
+                                    f"Startup brief recovery: no brief found for {_today} "
+                                    f"at {_now_utc.strftime('%H:%M')} UTC — generating now"
+                                )
+                                from app.brief.generator import generate_daily_brief
+                                _brief = generate_daily_brief(brief_date=_today, auto_publish=True)
+                                if _brief:
+                                    app.logger.info(
+                                        f"Startup brief recovery: generated '{_brief.title}' "
+                                        f"({_brief.item_count} items)"
+                                    )
+                                    try:
+                                        from app.scheduler import _send_ops_alert
+                                        _send_ops_alert(
+                                            f"ALERT: Startup brief recovery generated today's brief "
+                                            f"at {_now_utc.strftime('%H:%M')} UTC. "
+                                            "The scheduled 17:00 job was missed — check deployment logs."
+                                        )
+                                    except Exception:
+                                        pass
+                                else:
+                                    app.logger.warning(
+                                        "Startup brief recovery: generation returned None "
+                                        "(no topics available yet)"
+                                    )
+                            except Exception as _e:
+                                app.logger.error(
+                                    f"Startup brief recovery failed: {_e}", exc_info=True
+                                )
+                    threading.Thread(
+                        target=_startup_brief_recovery,
+                        daemon=True,
+                        name="startup-brief-recovery"
+                    ).start()
             except Exception as start_error:
                 _scheduler_state['running'] = False
                 _scheduler_state['lock_acquired'] = False
