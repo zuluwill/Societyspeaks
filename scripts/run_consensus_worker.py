@@ -17,6 +17,10 @@ try:
 except Exception:  # pragma: no cover - optional runtime dependency
     redis_lib = None
 
+# Ensure the workspace root is on sys.path so `app` can be imported
+# regardless of the working directory the workflow runner uses.
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Ensure this process never starts the in-app scheduler.
 os.environ.setdefault("DISABLE_SCHEDULER", "1")
 # Mark this process as the approved heavy-consensus worker context.
