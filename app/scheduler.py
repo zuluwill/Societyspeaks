@@ -1523,7 +1523,7 @@ def init_scheduler(app):
             except Exception as e:
                 logger.error(f"Pre-brief Polymarket matching failed: {e}", exc_info=True)
 
-    @scheduler.scheduled_job('cron', hour=17, minute=0, id='generate_daily_brief')
+    @scheduler.scheduled_job('cron', hour=17, minute=0, id='generate_daily_brief', misfire_grace_time=21600)
     def generate_daily_brief_job():
         """
         Generate daily brief at 5:00pm UTC.
@@ -1597,6 +1597,75 @@ def init_scheduler(app):
                 msg = f"CRITICAL: Daily brief generation failed with unhandled error: {e}"
                 logger.error(msg, exc_info=True)
                 _send_ops_alert(msg)
+
+    @scheduler.scheduled_job('cron', hour=19, minute=30, id='daily_brief_safety_net', misfire_grace_time=21600)
+    def daily_brief_safety_net_job():
+        """
+        Safety-net job that generates today's daily brief if it is missing at 19:30 UTC.
+
+        Runs 2.5 hours after the primary generation window (17:00 UTC) to cover
+        cases where the primary job was skipped due to a deployment restart or
+        APScheduler misfire (e.g. app was down at 17:00 for more than 60 minutes).
+
+        Idempotent: exits immediately if a ready or published brief already exists.
+        Sends an ops alert if it has to generate, so the team knows the primary
+        job is unreliable.
+        """
+        with app.app_context():
+            from app.brief.generator import generate_daily_brief
+            from app.models import DailyBrief
+            from datetime import date
+
+            today = date.today()
+            existing = DailyBrief.query.filter_by(
+                date=today, brief_type='daily'
+            ).filter(
+                DailyBrief.status.in_(['ready', 'published'])
+            ).first()
+
+            if existing:
+                logger.debug(f"Daily brief safety-net: brief already exists ({existing.status}), skipping")
+                return
+
+            msg = (
+                f"ALERT: Daily brief safety-net triggered for {today}. "
+                "The primary 17:00 UTC generation job was missed (likely due to a deployment "
+                "restart). Generating now — check scheduler health."
+            )
+            logger.warning(msg)
+            _send_ops_alert(msg)
+
+            try:
+                brief = generate_daily_brief(brief_date=today, auto_publish=True)
+                if brief:
+                    logger.info(f"Safety-net brief generated: {brief.title}")
+                else:
+                    logger.warning("No topics available - attempting self-healing pipeline run")
+                    try:
+                        from app.trending.pipeline import run_pipeline, auto_publish_daily
+                        articles, topics, ready = run_pipeline(hold_minutes=0)
+                        logger.info(f"Safety-net pipeline: {articles} articles, {topics} topics, {ready} ready")
+                        auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
+                        brief = generate_daily_brief(brief_date=today, auto_publish=True)
+                        if brief:
+                            logger.info(f"Safety-net self-healing succeeded: {brief.title}")
+                        else:
+                            recovery_fail_msg = (
+                                f"CRITICAL: Daily brief safety-net also failed for {today}. "
+                                "Manual intervention required — no topics found even after pipeline run."
+                            )
+                            logger.error(recovery_fail_msg)
+                            _send_ops_alert(recovery_fail_msg)
+                    except Exception as heal_err:
+                        logger.error(f"Safety-net self-healing failed: {heal_err}", exc_info=True)
+                        _send_ops_alert(
+                            f"CRITICAL: Daily brief safety-net self-healing failed: {heal_err}"
+                        )
+            except Exception as e:
+                logger.error(f"Daily brief safety-net failed: {e}", exc_info=True)
+                _send_ops_alert(
+                    f"CRITICAL: Daily brief safety-net raised an unhandled error: {e}"
+                )
 
     @scheduler.scheduled_job('interval', seconds=5, id='check_emergency_brief_generate')
     def check_emergency_brief_generate_job():
@@ -1839,7 +1908,7 @@ def init_scheduler(app):
                     f"CRITICAL: Emergency brief generation worker failed — {type(e).__name__}: {str(e)[:300]}"
                 )
 
-    @scheduler.scheduled_job('cron', day_of_week='sat', hour=17, minute=0, id='generate_weekly_brief')
+    @scheduler.scheduled_job('cron', day_of_week='sat', hour=17, minute=0, id='generate_weekly_brief', misfire_grace_time=21600)
     def generate_weekly_brief_job():
         """
         Generate weekly brief every Saturday at 5:00pm UTC.
