@@ -742,7 +742,7 @@ def create_app():
             if redis_url:
                 try:
                     import redis as redis_lib
-                    health_redis = redis_lib.from_url(redis_url, socket_timeout=1, socket_connect_timeout=1)
+                    health_redis = _get_redis_client(redis_url)
                     owner_pid = health_redis.get(_scheduler_lock_key)
                     lock_ttl = health_redis.ttl(_scheduler_lock_key)
                     shared_heartbeat = health_redis.get(_scheduler_heartbeat_key)
