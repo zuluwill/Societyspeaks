@@ -177,11 +177,14 @@ class PolymarketService:
     @safe_api_call(default_return={})
     def get_prices_batch(self, token_ids: List[str]) -> Dict[str, float]:
         """
-        Get prices for multiple tokens, automatically chunking to avoid
-        HTTP 400/414 errors from the CLOB API.
+        Get midpoint prices for multiple tokens using POST /midpoints.
+
+        The CLOB API requires POST with a JSON body; GET with query params is
+        not supported and returns 400. Responses are chunked to stay within
+        reasonable request sizes.
 
         Returns:
-            Dict mapping token_id -> price
+            Dict mapping token_id -> midpoint price (float)
         """
         if not token_ids:
             return {}
@@ -189,11 +192,14 @@ class PolymarketService:
         results: Dict[str, float] = {}
         for i in range(0, len(token_ids), self.MAX_TOKEN_IDS_PER_BATCH):
             chunk = token_ids[i:i + self.MAX_TOKEN_IDS_PER_BATCH]
-            params = [('token_ids', tid) for tid in chunk]
-            response = self._clob_request('/prices', params=params)
-            if response:
-                for item in response.get('prices', []):
-                    results[item['token_id']] = item['price']
+            body = [{"token_id": tid} for tid in chunk]
+            response = self._clob_post('/midpoints', data=body)
+            if response and isinstance(response, dict):
+                for token_id, price_str in response.items():
+                    try:
+                        results[token_id] = float(price_str)
+                    except (ValueError, TypeError):
+                        logger.warning(f"Could not parse price '{price_str}' for token {token_id}")
 
         return results
 
@@ -474,7 +480,7 @@ class PolymarketService:
             return None
 
     def _clob_request(self, endpoint: str, params: Dict = None) -> Optional[Dict]:
-        """Make request to CLOB API with rate limiting."""
+        """Make a GET request to the CLOB API with rate limiting."""
         self._rate_limit_clob()
 
         url = f"{self.CLOB_BASE_URL}{endpoint}"
@@ -484,6 +490,19 @@ class PolymarketService:
             return response.json()
         except requests.exceptions.RequestException as e:
             logger.warning(f"CLOB API request failed: {endpoint} - {e}")
+            return None
+
+    def _clob_post(self, endpoint: str, data: Any = None) -> Optional[Dict]:
+        """Make a POST request to the CLOB API with rate limiting and a JSON body."""
+        self._rate_limit_clob()
+
+        url = f"{self.CLOB_BASE_URL}{endpoint}"
+        try:
+            response = requests.post(url, json=data, timeout=self.REQUEST_TIMEOUT)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"CLOB API POST request failed: {endpoint} - {e}")
             return None
 
     def _rate_limit_gamma(self):
