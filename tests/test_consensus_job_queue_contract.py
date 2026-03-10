@@ -79,6 +79,44 @@ def test_replit_workflow_includes_worker_pool_topology():
     assert "Project (Worker Pool x3)" in source
 
 
+def test_worker_pool_runs_in_parallel_not_sequential():
+    """
+    Worker Pool (x3) must start workers in parallel.
+
+    The workflow must either:
+    (a) use Replit's native mode = "parallel" with 3 separate shell.exec tasks, OR
+    (b) use a bash command with background (&) operators — NOT && which is sequential.
+
+    The && operator would start worker-2 only when worker-1 exits, making the pool
+    effectively single-worker under normal operation.
+    """
+    source = _read(".replit")
+    # Find the Worker Pool *definition* block (name = "..."), not an args reference
+    pool_start = source.index('name = "Consensus Worker Pool (x3)"')
+    # Grab everything from the definition until the next workflow section or EOF
+    next_workflow = source.find("\n[[workflows.workflow]]", pool_start + 1)
+    pool_section = source[pool_start: next_workflow if next_workflow != -1 else len(source)]
+
+    # If there are multiple tasks (native parallel), verify no && usage
+    # If single task (bash wrapper), verify & parallel not && sequential
+    if pool_section.count("shell.exec") >= 3:
+        # Native 3-task parallel mode — sequential chaining forbidden
+        assert "&&" not in pool_section, (
+            "Worker pool tasks must not use && (sequential). Use separate tasks with mode=parallel."
+        )
+    else:
+        # Single bash task — must use & background operators, not && sequential chaining
+        assert "&&" not in pool_section, (
+            "Worker pool bash command must not use && (sequential). "
+            "Use & to background workers so all 3 start simultaneously."
+        )
+        # Must have at least 2 background operator & references for worker-2 and worker-3
+        bg_count = pool_section.count(" & ")
+        assert bg_count >= 2, (
+            f"Worker pool bash command must background workers with &, found only {bg_count} & operators."
+        )
+
+
 def test_get_consensus_queue_metrics_exists():
     """get_consensus_queue_metrics() must exist for health telemetry."""
     source = _read("app/discussions/jobs.py")
