@@ -404,7 +404,7 @@ def init_scheduler(app):
                 logger.error(f"Statement counter reconciliation failed: {e}", exc_info=True)
     
     
-    @scheduler.scheduled_job('cron', hour=3, id='cleanup_old_analyses')
+    @scheduler.scheduled_job('cron', hour=3, id='cleanup_old_analyses', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def cleanup_old_consensus_analyses():
         """
         Clean up old consensus analyses and news data
@@ -585,7 +585,7 @@ def init_scheduler(app):
 
             logger.info("Cleanup task complete")
 
-    @scheduler.scheduled_job('cron', hour=4, id='reconcile_partner_billing')
+    @scheduler.scheduled_job('cron', hour=4, id='reconcile_partner_billing', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def reconcile_partner_billing():
         """
         Reconcile partner billing status with Stripe daily.
@@ -596,7 +596,7 @@ def init_scheduler(app):
             logger.info(f"Partner billing reconciliation complete (updated={updated})")
     
     
-    @scheduler.scheduled_job('cron', hour='7,12,18,22', id='trending_topics_pipeline')
+    @scheduler.scheduled_job('cron', hour='7,12,18,22', id='trending_topics_pipeline', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def run_trending_topics_pipeline():
         """
         Fetch news and process trending topics
@@ -622,7 +622,7 @@ def init_scheduler(app):
             logger.info("Trending topics pipeline complete")
     
     
-    @scheduler.scheduled_job('cron', hour=6, minute=30, id='daily_auto_publish')
+    @scheduler.scheduled_job('cron', hour=6, minute=30, id='daily_auto_publish', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def daily_auto_publish():
         """
         Auto-publish the 3 best discussion topics daily for social posting.
@@ -649,7 +649,7 @@ def init_scheduler(app):
             logger.info("Daily auto-publish complete")
     
     
-    @scheduler.scheduled_job('cron', hour=9, id='single_source_to_discussions')
+    @scheduler.scheduled_job('cron', hour=9, id='single_source_to_discussions', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def single_source_to_discussions():
         """
         Process single-source content (podcasts, newsletters) into discussions.
@@ -672,7 +672,7 @@ def init_scheduler(app):
                 logger.error(f"Single-source pipeline error: {e}", exc_info=True)
     
     
-    @scheduler.scheduled_job('cron', minute='*/15', id='process_scheduled_bluesky')
+    @scheduler.scheduled_job('cron', minute='*/15', id='process_scheduled_bluesky', max_instances=1, coalesce=True)
     def process_scheduled_bluesky():
         """
         Process scheduled Bluesky posts.
@@ -691,7 +691,7 @@ def init_scheduler(app):
                 logger.error(f"Scheduled Bluesky processing error: {e}", exc_info=True)
     
     
-    @scheduler.scheduled_job('cron', minute='*/15', id='process_scheduled_x')
+    @scheduler.scheduled_job('cron', minute='*/15', id='process_scheduled_x', max_instances=1, coalesce=True)
     def process_scheduled_x():
         """
         Process scheduled X/Twitter posts.
@@ -710,7 +710,7 @@ def init_scheduler(app):
                 logger.error(f"Scheduled X processing error: {e}", exc_info=True)
     
     
-    @scheduler.scheduled_job('cron', hour='10,18', id='social_posting_health_check')
+    @scheduler.scheduled_job('cron', hour='10,18', id='social_posting_health_check', max_instances=1, coalesce=True)
     def social_posting_health_check():
         """
         Monitor social posting health and send ops alerts if posts have stalled.
@@ -792,7 +792,7 @@ def init_scheduler(app):
                 logger.error(f"Social posting health check error: {e}", exc_info=True)
 
 
-    @scheduler.scheduled_job('cron', hour='9,15,21', id='backfill_orphan_articles')
+    @scheduler.scheduled_job('cron', hour='9,15,21', id='backfill_orphan_articles', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def backfill_orphan_articles_job():
         """
         Backfill orphan articles to existing topics.
@@ -812,11 +812,11 @@ def init_scheduler(app):
             logger.info("Orphan article backfill complete")
     
 
-    @scheduler.scheduled_job('cron', hour=7, minute=30, id='daily_question_publish')
+    @scheduler.scheduled_job('cron', hour=7, minute=0, id='daily_question_publish', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def daily_question_publish():
         """
         Auto-publish today's daily question and schedule upcoming questions.
-        Runs at 7:30am UTC (before email send).
+        Runs at 7:00am UTC (before email send at 7:30am).
         
         Idempotency: auto_publish_todays_question checks if question already published
         """
@@ -894,11 +894,11 @@ def init_scheduler(app):
             _email_send_in_progress.clear()
             logger.info("Background thread: Daily question email send complete")
     
-    @scheduler.scheduled_job('cron', hour=7, minute=0, id='daily_question_email')
+    @scheduler.scheduled_job('cron', hour=7, minute=30, id='daily_question_email', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def daily_question_email():
         """
         Send daily question email to all subscribers.
-        Runs at 7:00am UTC (moved from 8am to stagger job load; 7am UTC = 7am GMT for UK users).
+        Runs at 7:30am UTC (7am GMT UK morning; question published at 7:00am UTC).
         Launches in background thread to not block other scheduled jobs.
         
         IMPORTANT: Only sends in production to prevent duplicate emails from dev environment.
@@ -1117,7 +1117,7 @@ def init_scheduler(app):
             _monthly_digest_in_progress.clear()
             logger.info("Background thread: Monthly digest processing complete")
 
-    @scheduler.scheduled_job('cron', minute=0, id='process_weekly_digest_sends')
+    @scheduler.scheduled_job('cron', minute=0, id='process_weekly_digest_sends', max_instances=1, coalesce=True)
     def process_weekly_digest_sends():
         """
         Process weekly digest sends. Runs every hour on the hour.
@@ -1153,7 +1153,7 @@ def init_scheduler(app):
         digest_thread.start()
         logger.info("Weekly digest thread launched, scheduler continuing")
 
-    @scheduler.scheduled_job('cron', minute=0, id='process_monthly_digest_sends')
+    @scheduler.scheduled_job('cron', minute=0, id='process_monthly_digest_sends', max_instances=1, coalesce=True)
     def process_monthly_digest_sends():
         """
         Process monthly digest sends. Runs every hour on the hour.
@@ -1186,7 +1186,7 @@ def init_scheduler(app):
         email_thread.start()
         logger.info("Monthly digest thread launched, scheduler continuing")
 
-    @scheduler.scheduled_job('cron', hour=14, minute=0, id='post_daily_question_to_social')
+    @scheduler.scheduled_job('cron', hour=14, minute=0, id='post_daily_question_to_social', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def post_daily_question_to_social():
         """
         Post today's daily question to social media.
@@ -1297,7 +1297,7 @@ def init_scheduler(app):
                 logger.error(f"Error posting daily question to social media: {e}", exc_info=True)
     
     
-    @scheduler.scheduled_job('cron', day_of_week='sun', hour=17, minute=0, id='post_weekly_insights')
+    @scheduler.scheduled_job('cron', day_of_week='sun', hour=17, minute=0, id='post_weekly_insights', max_instances=1, coalesce=True, misfire_grace_time=7200)
     def post_weekly_insights():
         """
         Post weekly insights (value-first content, 80/20 rule).
@@ -1393,7 +1393,7 @@ def init_scheduler(app):
                 logger.error(f"Error posting weekly insights: {e}", exc_info=True)
     
     
-    @scheduler.scheduled_job('cron', hour=18, minute=30, id='post_daily_brief_to_social')
+    @scheduler.scheduled_job('cron', hour=18, minute=30, id='post_daily_brief_to_social', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def post_daily_brief_to_social():
         """
         Post today's daily brief to social media.
@@ -1507,7 +1507,7 @@ def init_scheduler(app):
     # DAILY BRIEF JOBS
     # ==============================================================================
 
-    @scheduler.scheduled_job('cron', hour=16, minute=30, id='pre_brief_polymarket_matching')
+    @scheduler.scheduled_job('cron', hour=16, minute=30, id='pre_brief_polymarket_matching', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def pre_brief_polymarket_matching():
         """
         Run Polymarket matching 30 minutes before brief generation (4:30pm UTC).
@@ -1523,7 +1523,7 @@ def init_scheduler(app):
             except Exception as e:
                 logger.error(f"Pre-brief Polymarket matching failed: {e}", exc_info=True)
 
-    @scheduler.scheduled_job('cron', hour=17, minute=0, id='generate_daily_brief', misfire_grace_time=21600)
+    @scheduler.scheduled_job('cron', hour=17, minute=0, id='generate_daily_brief', max_instances=1, coalesce=True, misfire_grace_time=21600)
     def generate_daily_brief_job():
         """
         Generate daily brief at 5:00pm UTC.
@@ -1598,7 +1598,7 @@ def init_scheduler(app):
                 logger.error(msg, exc_info=True)
                 _send_ops_alert(msg)
 
-    @scheduler.scheduled_job('cron', hour=19, minute=30, id='daily_brief_safety_net', misfire_grace_time=21600)
+    @scheduler.scheduled_job('cron', hour=19, minute=30, id='daily_brief_safety_net', max_instances=1, coalesce=True, misfire_grace_time=21600)
     def daily_brief_safety_net_job():
         """
         Safety-net job that generates today's daily brief if it is missing at 19:30 UTC.
@@ -1667,7 +1667,7 @@ def init_scheduler(app):
                     f"CRITICAL: Daily brief safety-net raised an unhandled error: {e}"
                 )
 
-    @scheduler.scheduled_job('cron', hour=21, minute=30, id='daily_brief_safety_net_2', misfire_grace_time=21600)
+    @scheduler.scheduled_job('cron', hour=21, minute=30, id='daily_brief_safety_net_2', max_instances=1, coalesce=True, misfire_grace_time=21600)
     def daily_brief_safety_net_2_job():
         """
         Second (last-resort) safety-net at 21:30 UTC.
@@ -1971,7 +1971,7 @@ def init_scheduler(app):
                     f"CRITICAL: Emergency brief generation worker failed — {type(e).__name__}: {str(e)[:300]}"
                 )
 
-    @scheduler.scheduled_job('cron', day_of_week='sat', hour=17, minute=0, id='generate_weekly_brief', misfire_grace_time=21600)
+    @scheduler.scheduled_job('cron', day_of_week='sat', hour=17, minute=0, id='generate_weekly_brief', max_instances=1, coalesce=True, misfire_grace_time=21600)
     def generate_weekly_brief_job():
         """
         Generate weekly brief every Saturday at 5:00pm UTC.
@@ -2573,7 +2573,7 @@ def init_scheduler(app):
                     "See scheduler logs for traceback."
                 )
 
-    @scheduler.scheduled_job('cron', hour=18, minute=0, id='auto_publish_brief', misfire_grace_time=10800)
+    @scheduler.scheduled_job('cron', hour=18, minute=0, id='auto_publish_brief', max_instances=1, coalesce=True, misfire_grace_time=10800)
     def auto_publish_daily_brief():
         """
         Auto-publish today's briefs at 6:00pm UTC if still in 'ready' status.
@@ -2615,7 +2615,7 @@ def init_scheduler(app):
                     "Today's ready brief may remain unpublished until manually corrected."
                 )
 
-    @scheduler.scheduled_job('cron', hour=18, minute=15, id='auto_publish_brief_catchup', misfire_grace_time=10800)
+    @scheduler.scheduled_job('cron', hour=18, minute=15, id='auto_publish_brief_catchup', max_instances=1, coalesce=True, misfire_grace_time=10800)
     def auto_publish_daily_brief_catchup():
         """
         Catch-up publisher for today's briefs.
@@ -2934,7 +2934,7 @@ def init_scheduler(app):
                 )
 
 
-    @scheduler.scheduled_job('cron', day=1, hour=2, id='update_allsides_ratings')
+    @scheduler.scheduled_job('cron', day=1, hour=2, id='update_allsides_ratings', max_instances=1, coalesce=True, misfire_grace_time=7200)
     def update_allsides_ratings_monthly():
         """
         Update AllSides political leaning ratings monthly
@@ -2956,7 +2956,7 @@ def init_scheduler(app):
                 logger.error(f"AllSides update failed: {e}", exc_info=True)
 
 
-    @scheduler.scheduled_job('cron', day='*/2', hour=10, minute=30, id='update_social_engagement')
+    @scheduler.scheduled_job('cron', day='*/2', hour=10, minute=30, id='update_social_engagement', max_instances=1, coalesce=True, misfire_grace_time=7200)
     def update_social_engagement():
         """
         Update engagement metrics for recent social media posts.
@@ -2980,7 +2980,7 @@ def init_scheduler(app):
                 logger.error(f"Social engagement update failed: {e}", exc_info=True)
 
 
-    @scheduler.scheduled_job('cron', hour=6, id='daily_diversity_check')
+    @scheduler.scheduled_job('cron', hour=6, id='daily_diversity_check', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def daily_diversity_check():
         """
         Run daily diversity check to monitor political balance.
