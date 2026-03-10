@@ -622,11 +622,11 @@ def init_scheduler(app):
             logger.info("Trending topics pipeline complete")
     
     
-    @scheduler.scheduled_job('cron', hour=8, id='daily_auto_publish')
+    @scheduler.scheduled_job('cron', hour=6, minute=30, id='daily_auto_publish')
     def daily_auto_publish():
         """
         Auto-publish the 3 best discussion topics daily for social posting.
-        Runs once at 8am UTC.
+        Runs at 6:30am UTC (moved from 8am to stagger job load).
 
         Social schedule for the day (5 posts total):
           09:00 UTC - Discussion 1 (Bluesky/X queue)
@@ -894,11 +894,11 @@ def init_scheduler(app):
             _email_send_in_progress.clear()
             logger.info("Background thread: Daily question email send complete")
     
-    @scheduler.scheduled_job('cron', hour=8, minute=0, id='daily_question_email')
+    @scheduler.scheduled_job('cron', hour=7, minute=0, id='daily_question_email')
     def daily_question_email():
         """
         Send daily question email to all subscribers.
-        Runs at 8:00am UTC (after question is published).
+        Runs at 7:00am UTC (moved from 8am to stagger job load; 7am UTC = 7am GMT for UK users).
         Launches in background thread to not block other scheduled jobs.
         
         IMPORTANT: Only sends in production to prevent duplicate emails from dev environment.
