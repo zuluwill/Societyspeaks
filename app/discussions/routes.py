@@ -90,7 +90,8 @@ def news_feed():
                 Discussion.id, Discussion.title, Discussion.description,
                 Discussion.topic, Discussion.slug, Discussion.created_at,
                 Discussion.participant_count, Discussion.has_native_statements,
-                Discussion.is_featured, Discussion.geographic_scope, Discussion.country
+                Discussion.is_featured, Discussion.geographic_scope, Discussion.country,
+                Discussion.city
             )
         )).filter(
             Discussion.id.in_(news_discussion_ids)
@@ -124,7 +125,8 @@ def news_feed():
                 Discussion.id, Discussion.title, Discussion.description,
                 Discussion.topic, Discussion.slug, Discussion.created_at,
                 Discussion.participant_count, Discussion.has_native_statements,
-                Discussion.is_featured, Discussion.geographic_scope, Discussion.country
+                Discussion.is_featured, Discussion.geographic_scope, Discussion.country,
+                Discussion.city
             )
         )).filter(
             Discussion.id.in_(news_discussion_ids)
