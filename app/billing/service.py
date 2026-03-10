@@ -11,6 +11,7 @@ VALID_BILLING_INTERVALS = {'month', 'year'}
 def get_stripe():
     """Get configured Stripe module with API key from Flask config."""
     stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
+    stripe.max_network_retries = 3
     return stripe
 
 
