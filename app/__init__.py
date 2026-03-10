@@ -809,8 +809,9 @@ def create_app():
                         return True
                     existing = redis_client.get(_SCHEDULER_LOCK_KEY)
                     existing_ttl = redis_client.ttl(_SCHEDULER_LOCK_KEY)
+                    existing_str = existing.decode() if isinstance(existing, bytes) else existing
                     app.logger.info(
-                        f"Scheduler lock held by pid={existing}, ttl={existing_ttl}s, "
+                        f"Scheduler lock held by pid={existing_str}, ttl={existing_ttl}s, "
                         f"retrying ({attempt}/{attempts})..."
                     )
                 except Exception as acquire_error:
@@ -844,8 +845,11 @@ def create_app():
                 return False
 
             if not _acquire_scheduler_lock(redis_client, pid):
-                _scheduler_state['last_error'] = "Unable to acquire scheduler lock"
-                app.logger.error(f"Failed to acquire scheduler lock after retries (pid={pid})")
+                _scheduler_state['last_error'] = None
+                app.logger.info(
+                    f"Scheduler lock not acquired (pid={pid}) — another worker holds it. "
+                    "This is expected with multi-worker gunicorn; scheduler is running in that worker."
+                )
                 return False
 
             try:
