@@ -128,7 +128,11 @@ def checkout():
         flash(str(e), 'error')
         return redirect(url_for('briefing.landing'))
     except stripe.error.StripeError as e:
-        current_app.logger.error(f"Stripe error: {e}")
+        current_app.logger.error(f"Stripe error in checkout (user={current_user.id}, plan={plan_code}): {e}")
+        flash('Payment system error. Please try again.', 'error')
+        return redirect(url_for('briefing.landing'))
+    except Exception as e:
+        current_app.logger.error(f"Unexpected error in checkout (user={current_user.id}, plan={plan_code}): {type(e).__name__}: {e}", exc_info=True)
         flash('Payment system error. Please try again.', 'error')
         return redirect(url_for('briefing.landing'))
 
@@ -709,6 +713,10 @@ def pending_checkout():
         return redirect(url_for('briefing.landing'))
     except stripe.error.StripeError as e:
         current_app.logger.error(f"Stripe error in pending checkout: {e}")
+        flash('Payment system error. Please try again.', 'error')
+        return redirect(url_for('briefing.landing'))
+    except Exception as e:
+        current_app.logger.error(f"Unexpected error in pending checkout (user={current_user.id}, plan={plan_code}): {type(e).__name__}: {e}", exc_info=True)
         flash('Payment system error. Please try again.', 'error')
         return redirect(url_for('briefing.landing'))
 
