@@ -90,3 +90,23 @@ def test_consensus_execution_is_worker_only_by_default():
     source = _read("app/discussions/jobs.py")
     assert "CONSENSUS_WORKER_PROCESS" in source
     assert "CONSENSUS_ALLOW_IN_PROCESS_EXECUTION" in source
+
+
+def test_app_role_bootstrap_translates_to_low_level_flags():
+    """
+    APP_ROLE must be resolved at the top of create_app() before any flag reads.
+    The bootstrap must cover web, scheduler, and worker roles.
+    """
+    source = _read("app/__init__.py")
+    assert "APP_ROLE" in source
+    create_app_pos = source.index("def create_app()")
+    role_pos = source.index("APP_ROLE", create_app_pos)
+    scheduler_gate_pos = source.index("DISABLE_SCHEDULER", create_app_pos)
+    assert role_pos < scheduler_gate_pos, (
+        "APP_ROLE bootstrap must appear before DISABLE_SCHEDULER gate in create_app()"
+    )
+    # All three roles must be covered
+    role_section = source[role_pos: role_pos + 700]
+    assert "DISABLE_SCHEDULER" in role_section
+    assert "REPLIT_DEPLOYMENT" in role_section
+    assert "CONSENSUS_WORKER_PROCESS" in role_section

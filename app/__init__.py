@@ -82,6 +82,19 @@ def try_connect_db(app, retries=3):
 
 def create_app():
 
+    # --- Runtime role bootstrap ---
+    # Translate APP_ROLE into the low-level flags used throughout the codebase.
+    # Using setdefault preserves any explicit overrides already in the environment.
+    _role = os.environ.get('APP_ROLE', '').strip().lower()
+    if _role == 'web':
+        os.environ.setdefault('DISABLE_SCHEDULER', '1')
+    elif _role == 'scheduler':
+        os.environ.setdefault('REPLIT_DEPLOYMENT', '1')
+    elif _role == 'worker':
+        os.environ.setdefault('DISABLE_SCHEDULER', '1')
+        os.environ.setdefault('CONSENSUS_WORKER_PROCESS', '1')
+    # APP_ROLE unset → current behavior preserved (backward-compatible legacy mode)
+
     # Check for production environment and initialize Sentry only in production
     if os.getenv("FLASK_ENV") == "production":
         def _sentry_before_send(event, hint):
