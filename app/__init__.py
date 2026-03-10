@@ -746,13 +746,16 @@ def create_app():
                     lock_ttl = health_redis.ttl(_scheduler_lock_key)
                     shared_heartbeat = health_redis.get(_scheduler_heartbeat_key)
 
-                    has_owner = bool(owner_pid) and (lock_ttl is None or lock_ttl > 0)
+                    owner_pid_str = owner_pid.decode('utf-8') if isinstance(owner_pid, bytes) else owner_pid
+                    heartbeat_str = shared_heartbeat.decode('utf-8') if isinstance(shared_heartbeat, bytes) else shared_heartbeat
+
+                    has_owner = bool(owner_pid_str) and (lock_ttl is None or lock_ttl > 0)
                     scheduler_snapshot['running'] = has_owner
                     scheduler_snapshot['lock_acquired'] = has_owner
-                    scheduler_snapshot['owner_pid'] = owner_pid
+                    scheduler_snapshot['owner_pid'] = owner_pid_str
                     scheduler_snapshot['lock_ttl_seconds'] = lock_ttl
                     scheduler_snapshot['last_heartbeat_at'] = (
-                        int(shared_heartbeat) if shared_heartbeat and str(shared_heartbeat).isdigit() else shared_heartbeat
+                        int(heartbeat_str) if heartbeat_str and str(heartbeat_str).isdigit() else heartbeat_str
                     )
                     scheduler_snapshot['source'] = 'redis'
                 except Exception as health_error:
