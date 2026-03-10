@@ -9,7 +9,7 @@ channel = "stable-24_05"
 packages = ["cargo", "glibcLocales", "libiconv", "libxcrypt", "openssl", "pkg-config", "rustc"]
 
 [deployment]
-run = ["bash", "-c", "APP_ROLE=scheduler python3 scripts/run_scheduler.py & APP_ROLE=web gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=600 --workers=4 run:app"]
+run = ["bash", "-c", "APP_ROLE=scheduler python3 scripts/run_scheduler.py & SCHED_PID=$!; APP_ROLE=web gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=600 --workers=4 run:app & WEB_PID=$!; trap 'kill $SCHED_PID $WEB_PID 2>/dev/null' INT TERM; wait -n $SCHED_PID $WEB_PID; EXIT_CODE=$?; kill $SCHED_PID $WEB_PID 2>/dev/null; wait; exit $EXIT_CODE"]
 deploymentTarget = "vm"
 build = ["bash", "scripts/build.sh"]
 

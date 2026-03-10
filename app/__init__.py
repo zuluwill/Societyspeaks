@@ -13,6 +13,7 @@ import json
 import time
 import logging
 from logging.config import dictConfig
+from functools import lru_cache
 import sentry_sdk
 from sentry_sdk.integrations.flask import FlaskIntegration
 from flask_session import Session
@@ -66,6 +67,13 @@ limiter = Limiter(
     default_limits=["1000 per hour"]
 )
 talisman = Talisman()
+
+
+@lru_cache(maxsize=2)
+def _get_redis_client(redis_url: str):
+    """Reuse Redis client for low-latency observability paths."""
+    import redis as redis_lib
+    return redis_lib.from_url(redis_url, socket_timeout=1, socket_connect_timeout=1)
 
 
 def try_connect_db(app, retries=3):
@@ -678,8 +686,7 @@ def create_app():
             redis_url = os.getenv('REDIS_URL')
             if redis_url:
                 try:
-                    import redis as _redis_lib
-                    _r = _redis_lib.from_url(redis_url, socket_timeout=0.5, socket_connect_timeout=0.5)
+                    _r = _get_redis_client(redis_url)
                     _r.lpush(_LATENCY_KEY, duration_ms)
                     _r.ltrim(_LATENCY_KEY, 0, _LATENCY_MAX_SAMPLES - 1)
                 except Exception:
@@ -693,8 +700,7 @@ def create_app():
         if not redis_url:
             return {'error': 'REDIS_URL not configured'}, 503
         try:
-            import redis as _redis_lib
-            _r = _redis_lib.from_url(redis_url, socket_timeout=1, socket_connect_timeout=1)
+            _r = _get_redis_client(redis_url)
             raw = _r.lrange(_LATENCY_KEY, 0, -1)
             if not raw:
                 return {'sample_count': 0, 'message': 'no samples yet'}, 200

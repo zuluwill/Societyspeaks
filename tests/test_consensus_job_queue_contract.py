@@ -188,3 +188,18 @@ def test_deployment_run_command_uses_role_separation():
     assert "run_scheduler.py" in source, (
         "Deployment run command must reference scripts/run_scheduler.py"
     )
+
+
+def test_deployment_run_command_supervises_scheduler_and_web_lifecycle():
+    """
+    Deployment shell should fail fast if either scheduler or web exits.
+
+    This avoids a silent degraded mode where web stays up but scheduler has died.
+    """
+    source = _read(".replit")
+    assert "wait -n" in source, (
+        "Deployment command should use wait -n to watch both scheduler and web processes."
+    )
+    assert "trap 'kill $SCHED_PID $WEB_PID" in source, (
+        "Deployment command should trap shutdown signals and terminate both child processes."
+    )
