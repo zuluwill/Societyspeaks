@@ -282,6 +282,13 @@ class ResendClient:
             bool: True if sent successfully
         """
         try:
+            # Validate email address before any API call
+            if not subscriber.email or not isinstance(subscriber.email, str) or '@' not in subscriber.email:
+                logger.error(
+                    f"Subscriber {subscriber.id} has invalid email address: {repr(subscriber.email)} — skipping send"
+                )
+                return False
+
             # Render email HTML
             html_content = self._render_email(subscriber, brief)
 
@@ -728,6 +735,17 @@ class BriefEmailScheduler:
                 if not current_subscriber:
                     results['failed'] += 1
                     results['errors'].append(f"Subscriber {subscriber.id} no longer exists")
+                    db.session.rollback()
+                    continue
+
+                if not current_subscriber.email or '@' not in str(current_subscriber.email):
+                    results['failed'] += 1
+                    results['errors'].append(
+                        f"Subscriber {current_subscriber.id} has invalid email: {repr(current_subscriber.email)}"
+                    )
+                    logger.error(
+                        f"Skipping subscriber {current_subscriber.id} — invalid email: {repr(current_subscriber.email)}"
+                    )
                     db.session.rollback()
                     continue
 

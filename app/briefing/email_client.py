@@ -151,6 +151,13 @@ class BriefingEmailClient:
         old_expires = recipient.magic_token_expires_at
         self._last_send_resend_id = None
         try:
+            # Validate email address before any database or API work
+            if not recipient.email or not isinstance(recipient.email, str) or '@' not in recipient.email:
+                logger.error(
+                    f"Recipient {recipient.id} has invalid email address: {repr(recipient.email)} — skipping send"
+                )
+                return False
+
             # Get briefing for configuration
             briefing = brief_run.briefing
             
