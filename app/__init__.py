@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, abort, jsonify, make_response
+from flask import Flask, render_template, redirect, url_for, flash, request, abort, jsonify, make_response, g
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, current_user
@@ -653,6 +653,70 @@ def create_app():
         'last_error': None,
     }
     app.config['SCHEDULER_RUNTIME'] = _scheduler_state
+
+    # ---------------------------------------------------------------------------
+    # Request latency tracking — sampled, Redis-backed P95 telemetry
+    # ---------------------------------------------------------------------------
+    _LATENCY_KEY = 'web:latency:samples'
+    _LATENCY_SAMPLE_RATE = 0.1   # record 10 % of requests
+    _LATENCY_MAX_SAMPLES = 2000  # rolling window size
+
+    import random as _random
+
+    @app.before_request
+    def _record_request_start():
+        import time as _t
+        if _random.random() < _LATENCY_SAMPLE_RATE:
+            g._latency_start = _t.perf_counter()
+
+    @app.after_request
+    def _record_request_latency(response):
+        import time as _t
+        start = getattr(g, '_latency_start', None)
+        if start is not None:
+            duration_ms = round((_t.perf_counter() - start) * 1000, 1)
+            redis_url = os.getenv('REDIS_URL')
+            if redis_url:
+                try:
+                    import redis as _redis_lib
+                    _r = _redis_lib.from_url(redis_url, socket_timeout=0.5, socket_connect_timeout=0.5)
+                    _r.lpush(_LATENCY_KEY, duration_ms)
+                    _r.ltrim(_LATENCY_KEY, 0, _LATENCY_MAX_SAMPLES - 1)
+                except Exception:
+                    pass
+        return response
+
+    @app.route('/metrics')
+    def metrics():
+        """Request latency percentiles from the rolling Redis sample window."""
+        redis_url = os.getenv('REDIS_URL')
+        if not redis_url:
+            return {'error': 'REDIS_URL not configured'}, 503
+        try:
+            import redis as _redis_lib
+            _r = _redis_lib.from_url(redis_url, socket_timeout=1, socket_connect_timeout=1)
+            raw = _r.lrange(_LATENCY_KEY, 0, -1)
+            if not raw:
+                return {'sample_count': 0, 'message': 'no samples yet'}, 200
+            samples = sorted(float(v) for v in raw)
+            n = len(samples)
+
+            def _pct(p):
+                idx = max(0, int(p / 100.0 * n) - 1)
+                return samples[idx]
+
+            return {
+                'sample_count': n,
+                'p50_ms': _pct(50),
+                'p75_ms': _pct(75),
+                'p95_ms': _pct(95),
+                'p99_ms': _pct(99),
+                'max_ms': samples[-1],
+                'min_ms': samples[0],
+                'window': f'last {n} sampled requests (1-in-10)',
+            }, 200
+        except Exception as metrics_err:
+            return {'error': str(metrics_err)}, 503
 
     # Health check endpoint - must respond immediately for deployment health checks
     @app.route('/health')

@@ -9,7 +9,7 @@ channel = "stable-24_05"
 packages = ["cargo", "glibcLocales", "libiconv", "libxcrypt", "openssl", "pkg-config", "rustc"]
 
 [deployment]
-run = ["gunicorn", "--bind=0.0.0.0:5000", "--reuse-port", "--timeout=600", "--workers=4", "run:app"]
+run = ["bash", "-c", "APP_ROLE=scheduler python3 scripts/run_scheduler.py & APP_ROLE=web gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=600 --workers=4 run:app"]
 deploymentTarget = "vm"
 build = ["bash", "scripts/build.sh"]
 
@@ -36,6 +36,10 @@ args = "Flask App"
 task = "workflow.run"
 args = "Consensus Worker"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Consensus Worker Pool (x3)"
+
 [[workflows.workflow]]
 name = "Flask App"
 author = "agent"
@@ -45,7 +49,7 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=600 --workers=4 run:app"
+args = "APP_ROLE=web gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=600 --workers=4 run:app"
 waitForPort = 5000
 
 [[workflows.workflow]]
@@ -54,7 +58,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python3 scripts/run_consensus_worker.py"
+args = "APP_ROLE=worker python3 scripts/run_consensus_worker.py"
+
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[workflows.workflow]]
 name = "Consensus Worker Pool (x3)"
@@ -63,15 +70,10 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "CONSENSUS_WORKER_ID=worker-1 python3 scripts/run_consensus_worker.py"
+args = "APP_ROLE=worker CONSENSUS_WORKER_ID=worker-1 python3 scripts/run_consensus_worker.py && APP_ROLE=worker CONSENSUS_WORKER_ID=worker-2 python3 scripts/run_consensus_worker.py && APP_ROLE=worker CONSENSUS_WORKER_ID=worker-3 python3 scripts/run_consensus_worker.py"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "CONSENSUS_WORKER_ID=worker-2 python3 scripts/run_consensus_worker.py"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "CONSENSUS_WORKER_ID=worker-3 python3 scripts/run_consensus_worker.py"
+[workflows.workflow.metadata]
+outputType = "console"
 
 [[workflows.workflow]]
 name = "Project (Worker Pool x3)"

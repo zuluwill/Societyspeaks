@@ -110,3 +110,43 @@ def test_app_role_bootstrap_translates_to_low_level_flags():
     assert "DISABLE_SCHEDULER" in role_section
     assert "REPLIT_DEPLOYMENT" in role_section
     assert "CONSENSUS_WORKER_PROCESS" in role_section
+
+
+def test_run_scheduler_sets_app_role_before_import():
+    """
+    scripts/run_scheduler.py must set APP_ROLE=scheduler before importing the
+    Flask app so create_app() receives the correct role at bootstrap time.
+    """
+    source = _read("scripts/run_scheduler.py")
+    role_pos = source.index("APP_ROLE")
+    import_pos = source.index("from app import create_app")
+    assert role_pos < import_pos, (
+        "APP_ROLE must be set before 'from app import create_app' in run_scheduler.py"
+    )
+    assert "scheduler" in source[role_pos: role_pos + 60], (
+        "run_scheduler.py must set APP_ROLE to 'scheduler'"
+    )
+
+
+def test_run_scheduler_has_clean_shutdown():
+    """Scheduler process must handle SIGTERM for clean shutdown."""
+    source = _read("scripts/run_scheduler.py")
+    assert "SIGTERM" in source
+    assert "signal.signal" in source
+
+
+def test_deployment_run_command_uses_role_separation():
+    """
+    The .replit deployment run command must start the scheduler with APP_ROLE=scheduler
+    and gunicorn with APP_ROLE=web as separate processes.
+    """
+    source = _read(".replit")
+    assert "APP_ROLE=scheduler" in source, (
+        "Deployment run command must pass APP_ROLE=scheduler to the scheduler process"
+    )
+    assert "APP_ROLE=web" in source, (
+        "Deployment run command must pass APP_ROLE=web to gunicorn"
+    )
+    assert "run_scheduler.py" in source, (
+        "Deployment run command must reference scripts/run_scheduler.py"
+    )
