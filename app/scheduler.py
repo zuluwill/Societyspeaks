@@ -224,7 +224,7 @@ def init_scheduler(app):
     )
     
     # Add jobs with app context
-    @scheduler.scheduled_job('interval', hours=6, id='auto_cluster_discussions')
+    @scheduler.scheduled_job('interval', hours=6, id='auto_cluster_discussions', max_instances=1, coalesce=True)
     def auto_cluster_active_discussions():
         """
         Queue clustering jobs for active discussions.
@@ -2298,7 +2298,7 @@ def init_scheduler(app):
                     "See scheduler logs for traceback."
                 )
 
-    @scheduler.scheduled_job('interval', minutes=5, id='send_approved_brief_runs')
+    @scheduler.scheduled_job('interval', minutes=5, id='send_approved_brief_runs', max_instances=1, coalesce=True)
     def send_approved_brief_runs_job():
         """
         Send approved BriefRuns that are ready to send.
@@ -3004,7 +3004,7 @@ def init_scheduler(app):
     # POLYMARKET INTEGRATION JOBS
     # ==============================================================================
 
-    @scheduler.scheduled_job('interval', hours=2, id='polymarket_sync')
+    @scheduler.scheduled_job('interval', hours=2, id='polymarket_sync', max_instances=1, coalesce=True)
     def polymarket_sync_job():
         """
         Full sync of Polymarket markets.
@@ -3057,7 +3057,7 @@ def init_scheduler(app):
                 logger.error(f"Polymarket price refresh failed: {e}", exc_info=True)
 
 
-    @scheduler.scheduled_job('interval', minutes=30, id='polymarket_matching')
+    @scheduler.scheduled_job('interval', minutes=30, id='polymarket_matching', max_instances=1, coalesce=True)
     def polymarket_matching_job():
         """
         Match trending topics to Polymarket markets.
