@@ -20,46 +20,82 @@ def post_fork(server, worker):
     """Reset all inherited connection pools in each worker after forking.
 
     With preload_app=True the master process runs create_app() (via run.py)
-    before forking, so Redis pools, the SQLAlchemy engine, and Flask-Caching's
-    Redis client all exist before any worker is created.  After fork() the
-    parent and child share the same socket file descriptors.  Using those
-    sockets from multiple processes simultaneously corrupts protocol streams.
+    before forking, so every connection pool — SQLAlchemy, session Redis,
+    Flask-Caching Redis — is open before any worker is created.  After fork()
+    the parent and child share the same underlying socket file descriptors.
+    Using those sockets from multiple processes simultaneously corrupts
+    protocol streams (Redis) or libpq state (PostgreSQL).
 
     This hook runs in each worker immediately after the fork, before the
-    first request, and discards every inherited socket so the worker opens
-    its own fresh connections on first use.
+    first request is handled, and discards every inherited socket so the
+    worker opens its own fresh connections on first use.
+
+    Each reset is isolated in its own try/except so a failure in one does
+    not prevent the others from running.
     """
     _log = logging.getLogger("gunicorn.error")
 
-    # SQLAlchemy engine — dispose() closes all inherited DB connections so
-    # the worker's connection pool starts empty and opens fresh sockets.
+    def _reset_redis_pool(label, pool):
+        """Disconnect all sockets in a Redis ConnectionPool.
+
+        ConnectionPool.reset() closes every socket in the pool without
+        waiting for in-flight commands.  The next command issued by this
+        worker will open a fresh socket owned solely by this process.
+        Logs at INFO so the reset is visible in production startup output.
+        """
+        if pool is None:
+            _log.debug("post_fork [%s]: %s — no pool (Redis not configured)", worker.pid, label)
+            return
+        pool.reset()
+        _log.info("post_fork [%s]: %s pool reset OK", worker.pid, label)
+
+    # ------------------------------------------------------------------
+    # 1. SQLAlchemy connection pool
+    #    db.engine is a Flask-SQLAlchemy 3.x property that resolves through
+    #    current_app, so it must be called inside an application context.
+    #    We import the Flask app from run (the module gunicorn loaded via
+    #    run:app) to build that context without re-running create_app().
+    #    dispose(close=False) discards inherited sockets; SQLAlchemy will
+    #    open fresh ones on the next query in this worker.
+    # ------------------------------------------------------------------
     try:
-        from app import db
-        db.engine.dispose()
-        _log.debug("post_fork [%s]: SQLAlchemy engine disposed", worker.pid)
+        from run import app as _flask_app
+        from app import db as _db
+        with _flask_app.app_context():
+            _db.engine.dispose()
+        _log.info("post_fork [%s]: SQLAlchemy engine disposed OK", worker.pid)
     except Exception as exc:
         _log.warning("post_fork [%s]: SQLAlchemy engine dispose failed: %s", worker.pid, exc)
 
-    # Session Redis — created in Config class body at module import time.
+    # ------------------------------------------------------------------
+    # 2. Session Redis pool
+    #    Config.SESSION_REDIS is created at class-body execution time
+    #    (before create_app()), so it is always pre-fork.
+    # ------------------------------------------------------------------
     try:
         from config import Config
         pool = getattr(getattr(Config, "SESSION_REDIS", None), "connection_pool", None)
-        if pool is not None:
-            pool.reset()
-            _log.debug("post_fork [%s]: SESSION_REDIS pool reset", worker.pid)
+        _reset_redis_pool("SESSION_REDIS", pool)
     except Exception as exc:
         _log.warning("post_fork [%s]: SESSION_REDIS pool reset failed: %s", worker.pid, exc)
 
-    # Flask-Caching RedisCache — created inside create_app().
+    # ------------------------------------------------------------------
+    # 3. Flask-Caching Redis pool
+    #    Flask-Caching's RedisCache backend exposes _read_client and
+    #    _write_client.  In a single-server setup they are the same object
+    #    sharing one ConnectionPool, so resetting either one covers both.
+    #    This client is created inside create_app() which runs in the master
+    #    with preload_app=True, so it is pre-fork.
+    # ------------------------------------------------------------------
     try:
         from app import cache as _cache
         backend = getattr(_cache, "cache", None)
-        pool = getattr(getattr(backend, "_client", None), "connection_pool", None)
-        if pool is not None:
-            pool.reset()
-            _log.debug("post_fork [%s]: cache pool reset", worker.pid)
+        # Prefer _write_client; fall back to _read_client for read-only configs.
+        client = getattr(backend, "_write_client", None) or getattr(backend, "_read_client", None)
+        pool = getattr(client, "connection_pool", None)
+        _reset_redis_pool("Flask-Caching", pool)
     except Exception as exc:
-        _log.warning("post_fork [%s]: cache pool reset failed: %s", worker.pid, exc)
+        _log.warning("post_fork [%s]: Flask-Caching pool reset failed: %s", worker.pid, exc)
 
 
 class _NoWinchFilter(logging.Filter):
