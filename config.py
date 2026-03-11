@@ -307,10 +307,9 @@ class Config:
     elif not WEBHOOK_SECRET:
         WEBHOOK_SECRET = 'dev-webhook-secret-change-in-production'  # Development only
     
-    # Rate Limiting Configuration - set after Redis validation above
-    # Will be updated based on actual Redis availability
-    RATELIMIT_STORAGE_URL = 'memory://'  # Default fallback
-    RATELIMIT_DEFAULT = "1000 per hour"  # Default rate limit
+    # RATELIMIT_STORAGE_URL is set in the Redis block above (to the Redis URL
+    # on success, or 'memory://' on failure/absence). Do not reassign it here.
+    RATELIMIT_DEFAULT = "1000 per hour"
     # Ops alert threshold for automated integrity repair job.
     # 0 means alert on any repaired row.
     INTEGRITY_REPAIR_ALERT_THRESHOLD = int(os.getenv('INTEGRITY_REPAIR_ALERT_THRESHOLD', '0'))
