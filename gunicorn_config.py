@@ -1,6 +1,46 @@
 import logging
 
 bind = "0.0.0.0:5000"
+
+
+def post_fork(server, worker):
+    """Reset all inherited Redis connection pools after forking.
+
+    gunicorn forks workers from the master process.  run.py calls
+    create_app() in the master, so Redis connection pools (session,
+    cache) are open before any worker is forked.  After fork() the
+    parent and child share the same socket file descriptors.  If two
+    workers send commands on the same socket simultaneously they corrupt
+    each other's Redis protocol stream — this surfaces much more readily
+    under gevent's higher concurrency than with sync workers.
+
+    ConnectionPool.reset() disconnects every inherited socket so the
+    worker opens its own fresh connections on first use.
+    """
+    _log = logging.getLogger("gunicorn.error")
+
+    # Session Redis — created in Config class body at module import time,
+    # which is before create_app() and therefore before any fork.
+    try:
+        from config import Config
+        pool = getattr(getattr(Config, "SESSION_REDIS", None), "connection_pool", None)
+        if pool is not None:
+            pool.reset()
+            _log.debug("post_fork [%s]: SESSION_REDIS pool reset", worker.pid)
+    except Exception as exc:
+        _log.warning("post_fork [%s]: SESSION_REDIS pool reset failed: %s", worker.pid, exc)
+
+    # Flask-Caching RedisCache — created inside create_app() which is called
+    # in run.py before gunicorn forks.  The backend client sits at cache.cache._client.
+    try:
+        from app import cache as _cache
+        backend = getattr(_cache, "cache", None)
+        pool = getattr(getattr(backend, "_client", None), "connection_pool", None)
+        if pool is not None:
+            pool.reset()
+            _log.debug("post_fork [%s]: cache pool reset", worker.pid)
+    except Exception as exc:
+        _log.warning("post_fork [%s]: cache pool reset failed: %s", worker.pid, exc)
 workers = 4
 reuse_port = True
 timeout = 120
