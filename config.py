@@ -141,65 +141,99 @@ class Config:
     # Use Redis for session management
     SESSION_TYPE = 'redis'
     SESSION_PERMANENT = True
-    SESSION_USE_SIGNER = True  # Adds a layer of security to session cookies
-    PERMANENT_SESSION_LIFETIME = timedelta(hours=3)
-    # Redis URL will be handled in connection logic below
+    SESSION_USE_SIGNER = True
+    # 24 hours keeps users logged in across a normal day without forcing
+    # frequent re-authentication; adjust upward for "remember me" style UX.
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
     SESSION_REDIS_RETRY_ON_TIMEOUT = True
-    SESSION_REDIS_RETRY_NUMBER = 5  # Increased retry attempts
+    SESSION_REDIS_RETRY_NUMBER = 3
     LOG_TO_STDOUT = os.getenv('LOG_TO_STDOUT', 'False').lower() == 'true'
 
-    # Add session directory for filesystem fallback
+    # Filesystem fallback directory (used when Redis is unavailable in non-production)
     SESSION_FILE_DIR = './flask_session'
-    
-    # Use Redis for session management with connection pooling and better error handling
-    redis_url = os.getenv('REDIS_URL')
-    if redis_url:
+
+    _redis_url = os.getenv('REDIS_URL')
+    _is_production = os.getenv('FLASK_ENV') == 'production'
+
+    # Hard-fail in production if Redis is not configured.
+    # Redis is required for sessions, distributed rate limiting, distributed
+    # locks, and the briefing job queue.  A filesystem/memory fallback is
+    # acceptable in development but would silently degrade all of those
+    # subsystems in production.
+    if not _redis_url and _is_production:
+        raise RuntimeError(
+            "REDIS_URL is not set. Redis is required in production for sessions, "
+            "rate limiting, distributed locks, and the job queue. "
+            "Set REDIS_URL in Replit secrets (use a rediss:// TLS URL from Upstash or similar)."
+        )
+
+    if _redis_url:
+        _redis_url = _redis_url.strip()
         try:
-            # Validate and clean up Redis URL
-            redis_url = redis_url.strip()
-            if not redis_url.startswith(('redis://', 'rediss://')):
-                logging.warning(f"Invalid Redis URL format: {redis_url}, falling back to filesystem sessions")
-                raise ValueError("Invalid Redis URL format")
-            
-            # Configure Redis connection pool with more conservative parameters
+            if not _redis_url.startswith(('redis://', 'rediss://')):
+                raise ValueError(f"Invalid Redis URL scheme: {_redis_url}")
+
+            # Warn loudly if unencrypted Redis is used in production.
+            # Managed HA providers (Upstash, Redis Cloud) always provide rediss://.
+            if _is_production and _redis_url.startswith('redis://'):
+                logging.warning(
+                    "REDIS_URL uses unencrypted redis:// in production. "
+                    "Switch to rediss:// (TLS) — all managed HA providers support it."
+                )
+
+            # Pool sizing for gevent workers:
+            # Each gunicorn worker runs up to worker_connections=1000 greenlets.
+            # Redis ops complete in ~1-3 ms, so sustained concurrency against the
+            # pool is low, but spikes during traffic bursts can exhaust a small pool
+            # and cause greenlets to wait for a connection.  100 connections per
+            # worker is a safe upper bound without over-subscribing the Redis server.
             redis_pool = redis.ConnectionPool.from_url(
-                redis_url,
-                max_connections=20,  # Further reduced to prevent connection issues
-                socket_timeout=10.0,  # Reduced timeout for quicker fallback
-                socket_connect_timeout=5.0,  # Reduced connect timeout
+                _redis_url,
+                max_connections=int(os.getenv('REDIS_MAX_CONNECTIONS', '100')),
+                # Fail fast: 3 s to establish, 3 s per operation.
+                # The Retry wrapper below handles transient failures.
+                socket_connect_timeout=2.0,
+                socket_timeout=3.0,
                 socket_keepalive=True,
-                # Remove socket_keepalive_options to prevent "Invalid argument" errors
-                health_check_interval=60,  # Less frequent health checks to reduce load
-                retry_on_timeout=True
+                # Re-validate idle connections every 30 s so stale sockets from
+                # a Redis failover are detected and replaced quickly.
+                health_check_interval=30,
+                retry_on_timeout=True,
             )
-            
-            # Configure Redis client with simpler retry mechanism
+
             SESSION_REDIS = redis.Redis(
                 connection_pool=redis_pool,
-                retry=Retry(ExponentialBackoff(0.1), 3),  # Simpler backoff, fewer retries
-                retry_on_error=[TimeoutError, ConnectionError],  # Retry on these errors
-                socket_timeout=5.0,
-                socket_connect_timeout=3.0
+                # Exponential backoff capped at 500 ms; 3 attempts covers a
+                # transient network blip or HA failover without hanging for long.
+                retry=Retry(ExponentialBackoff(cap=0.5, base=0.05), 3),
+                retry_on_error=[TimeoutError, ConnectionError],
             )
-            
-            # Test connection with timeout
-            SESSION_REDIS.ping()  # Will raise an exception if connection fails
+
+            SESSION_REDIS.ping()
             logging.info("Redis connection established successfully")
-            # Set Redis URL for rate limiting
-            REDIS_URL = redis_url
-            RATELIMIT_STORAGE_URL = redis_url  # Use validated Redis URL
+            REDIS_URL = _redis_url
+            RATELIMIT_STORAGE_URL = _redis_url
         except Exception as e:
-            logging.warning(f"Failed to connect to Redis ({redis_url}): {e}, falling back to filesystem sessions")
-            SESSION_TYPE = 'filesystem'  # Fallback to filesystem sessions
+            if _is_production:
+                # Re-raise: a production process must not silently degrade.
+                raise RuntimeError(
+                    f"Failed to connect to Redis at startup ({e}). "
+                    "Resolve the Redis connectivity issue before deploying."
+                ) from e
+            logging.warning(
+                f"Failed to connect to Redis ({e}), falling back to filesystem sessions. "
+                "This is acceptable in development but must not happen in production."
+            )
+            SESSION_TYPE = 'filesystem'
             SESSION_REDIS = None
             REDIS_URL = None
-            RATELIMIT_STORAGE_URL = 'memory://'  # Use memory fallback for rate limiting
+            RATELIMIT_STORAGE_URL = 'memory://'
     else:
-        logging.info("No REDIS_URL provided, using filesystem sessions")
-        SESSION_TYPE = 'filesystem'  # Explicitly set filesystem sessions
+        logging.info("No REDIS_URL provided, using filesystem sessions (development mode)")
+        SESSION_TYPE = 'filesystem'
         SESSION_REDIS = None
         REDIS_URL = None
-        RATELIMIT_STORAGE_URL = 'memory://'  # Use memory fallback for rate limiting
+        RATELIMIT_STORAGE_URL = 'memory://'
 
     # ===========================================================================
     # EMAIL CONFIGURATION
