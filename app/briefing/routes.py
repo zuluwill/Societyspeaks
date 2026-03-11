@@ -1572,9 +1572,6 @@ def upload_source():
             file_content = file.read()
             client.upload_from_bytes(storage_key, file_content)
             
-            # Get public URL (if available)
-            storage_url = f"https://replitstorage.com/{storage_key}"  # Adjust based on actual URL pattern
-            
             # Create InputSource with status='extracting'
             source = InputSource(
                 owner_type='user',
@@ -1582,7 +1579,7 @@ def upload_source():
                 name=filename.rsplit('.', 1)[0],  # Name without extension
                 type='upload',
                 storage_key=storage_key,
-                storage_url=storage_url,
+                storage_url=None,  # Files are served via the SDK key; no public URL available
                 status='extracting',  # Will be processed by background job
                 enabled=True
             )

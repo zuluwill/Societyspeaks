@@ -274,41 +274,81 @@ def get_user_identifier():
 
 def check_statement_rate_limit(identifier):
     """
-    Check if user has exceeded statement rate limit
-    
+    Check if user has exceeded statement rate limit.
+
     Rate limits (per hour):
     - Anonymous users: 5 statements
     - Authenticated users: 10 statements
-    
+
+    Primary path: Redis INCR with ~1-hour TTL — atomic, no DB query.
+    Fallback path: DB COUNT (original behaviour) if Redis is unavailable.
+
     Returns: (allowed: bool, remaining: int, message: str)
     """
-    one_hour_ago = utcnow_naive() - timedelta(hours=1)
-    
-    # Build query based on user type
     if identifier['user_id']:
-        # Authenticated user - 10 per hour
         rate_limit = 10
+        actor_key = f"u:{identifier['user_id']}"
+    else:
+        rate_limit = 5
+        actor_key = f"a:{(identifier['session_fingerprint'] or '')[:16]}"
+
+    now = utcnow_naive()
+    hour_bucket = now.strftime('%Y%m%d%H')
+    redis_key = f"stmt_rl:{actor_key}:{hour_bucket}"
+
+    try:
+        from datetime import timedelta as _td
+        from app.lib.counter_utils import _get_redis_client as _get_rl_redis
+        rl_redis = _get_rl_redis()
+        if rl_redis is not None:
+            # Increment current bucket and read previous bucket in one pipeline.
+            # Summing both prevents the boundary exploit where a user posts at
+            # HH:59:59 and again at (HH+1):00:00 for 2x the limit in ~1 second.
+            prev_bucket = (now - _td(hours=1)).strftime('%Y%m%d%H')
+            prev_key = f"stmt_rl:{actor_key}:{prev_bucket}"
+            pipe = rl_redis.pipeline()
+            pipe.incr(redis_key)
+            pipe.expire(redis_key, 3601)
+            pipe.get(prev_key)
+            results = pipe.execute()
+            current_count = int(results[0])
+            prev_count = int(results[2] or 0)
+            # Weight previous bucket by how far we are into the current hour.
+            minutes_into_hour = now.minute + now.second / 60.0
+            prev_weight = max(0.0, 1.0 - minutes_into_hour / 60.0)
+            weighted_count = current_count + int(prev_count * prev_weight)
+            remaining = max(0, rate_limit - weighted_count)
+            allowed = weighted_count <= rate_limit
+            if not allowed:
+                user_type = "logged-in users" if identifier['user_id'] else "anonymous users"
+                message = f"Rate limit exceeded. {user_type.capitalize()} can post {rate_limit} statements per hour. Please try again later."
+            else:
+                message = None
+            return allowed, remaining, message
+        # Redis client unavailable — fall through to DB
+    except Exception:
+        pass
+
+    # Fallback: DB COUNT when Redis is unavailable
+    one_hour_ago = utcnow_naive() - timedelta(hours=1)
+    if identifier['user_id']:
         recent_count = Statement.query.filter(
             Statement.user_id == identifier['user_id'],
             Statement.created_at > one_hour_ago
         ).count()
     else:
-        # Anonymous user - 5 per hour
-        rate_limit = 5
         recent_count = Statement.query.filter(
             Statement.session_fingerprint == identifier['session_fingerprint'],
             Statement.created_at > one_hour_ago
         ).count()
-    
-    remaining = rate_limit - recent_count
+
+    remaining = max(0, rate_limit - recent_count)
     allowed = recent_count < rate_limit
-    
     if not allowed:
         user_type = "logged-in users" if identifier['user_id'] else "anonymous users"
         message = f"Rate limit exceeded. {user_type.capitalize()} can post {rate_limit} statements per hour. Please try again later."
     else:
         message = None
-    
     return allowed, remaining, message
 
 
@@ -329,18 +369,18 @@ def create_statement(discussion_id):
     
     # Get user identifier (authenticated or anonymous)
     identifier = get_user_identifier()
-    
-    # Check rate limits (5/hour for anonymous, 10/hour for authenticated)
-    allowed, remaining, rate_message = check_statement_rate_limit(identifier)
-    if not allowed:
-        flash(rate_message, "error")
-        return redirect(url_for('discussions.view_discussion', 
-                              discussion_id=discussion.id, 
-                              slug=discussion.slug))
-    
+
     form = StatementForm()
     
     if form.validate_on_submit():
+        # Check rate limits only on POST — the Redis path increments a counter,
+        # so calling it on GET would burn slots every time the form page is viewed.
+        allowed, remaining, rate_message = check_statement_rate_limit(identifier)
+        if not allowed:
+            flash(rate_message, "error")
+            return redirect(url_for('discussions.view_discussion',
+                                  discussion_id=discussion.id,
+                                  slug=discussion.slug))
         max_statements = current_app.config.get('MAX_STATEMENTS_PER_DISCUSSION', 5000)
         current_statement_count = Statement.query.filter_by(
             discussion_id=discussion_id,
@@ -563,9 +603,15 @@ def after_request_set_statement_cookie(response):
     return response
 
 
+_VOTE_RL_CACHE_MISS = '__vote_rl_miss__'
+
+
 def get_vote_rate_limit():
     """
     Dynamic vote rate limit by route context and partner class.
+
+    Results are cached for 60 seconds so the DB is not queried on every vote request.
+    Cache miss sentinel (_VOTE_RL_CACHE_MISS) distinguishes "not found" from None.
 
     Priority:
     1) Integrity-mode discussions -> strict cap
@@ -583,20 +629,44 @@ def get_vote_rate_limit():
 
     statement_id = request.view_args.get('statement_id') if request.view_args else None
     if statement_id:
-        statement = db.session.get(Statement, statement_id)
-        if statement and statement.discussion and statement.discussion.integrity_mode:
-            return integrity_limit
+        stmt_cache_key = f"vote_rl_limit:stmt:{statement_id}"
+        try:
+            cached = cache.get(stmt_cache_key)
+            if cached is not None:
+                if cached != _VOTE_RL_CACHE_MISS:
+                    return cached
+            else:
+                statement = db.session.get(Statement, statement_id)
+                if statement and statement.discussion and statement.discussion.integrity_mode:
+                    cache.set(stmt_cache_key, integrity_limit, timeout=60)
+                    return integrity_limit
+                cache.set(stmt_cache_key, _VOTE_RL_CACHE_MISS, timeout=60)
+        except Exception:
+            statement = db.session.get(Statement, statement_id)
+            if statement and statement.discussion and statement.discussion.integrity_mode:
+                return integrity_limit
 
     ref = extract_partner_ref_from_request()
     if not ref:
         return default_limit
+
+    partner_cache_key = f"vote_rl_limit:partner:{ref}"
     try:
-        from app.models import Partner
-        partner = Partner.query.filter_by(slug=ref, status='active').first()
-        if partner and partner.tier in tier_limits:
-            return tier_limits[partner.tier]
+        cached = cache.get(partner_cache_key)
+        if cached is not None:
+            if cached != _VOTE_RL_CACHE_MISS:
+                return cached
+        else:
+            from app.models import Partner
+            partner = Partner.query.filter_by(slug=ref, status='active').first()
+            if partner and partner.tier in tier_limits:
+                limit = tier_limits[partner.tier]
+                cache.set(partner_cache_key, limit, timeout=60)
+                return limit
+            cache.set(partner_cache_key, _VOTE_RL_CACHE_MISS, timeout=60)
     except Exception as e:
         current_app.logger.debug(f"Could not resolve partner tier for vote rate limit: {e}")
+
     return default_limit
 
 
@@ -680,14 +750,39 @@ def check_integrity_rate_limit(discussion, user_identifier):
     """
     Check stricter rate limits for discussions with integrity_mode enabled.
 
+    Primary path: Redis INCR with 61-second TTL — one atomic operation, no DB query.
+    Fallback path: DB COUNT (original behaviour) if Redis is unavailable.
+
     Returns: (allowed: bool, message: str or None)
     """
     if not discussion.integrity_mode:
         return True, None
 
-    # Stricter limits for integrity mode: 10 votes per minute per discussion
-    one_minute_ago = utcnow_naive() - timedelta(minutes=1)
+    integrity_limit = int(current_app.config.get('INTEGRITY_VOTES_PER_MINUTE', 10))
 
+    actor_key = (
+        f"u:{user_identifier['user_id']}"
+        if user_identifier['user_id']
+        else f"a:{(user_identifier['session_fingerprint'] or '')[:16]}"
+    )
+    minute_bucket = utcnow_naive().strftime('%Y%m%d%H%M')
+    redis_key = f"integrity_rl:{discussion.id}:{actor_key}:{minute_bucket}"
+
+    try:
+        count = increment_counter(redis_key, ttl_seconds=61, fallback_cache=cache)
+        if count is not None:
+            if count > integrity_limit:
+                current_app.logger.warning(
+                    f"Integrity rate limit triggered (Redis): discussion={discussion.id}, "
+                    f"actor={actor_key}, count={count}"
+                )
+                return False, "Rate limit exceeded for this discussion. Please slow down."
+            return True, None
+    except Exception:
+        pass
+
+    # Fallback: DB COUNT when Redis is unavailable
+    one_minute_ago = utcnow_naive() - timedelta(minutes=1)
     if user_identifier['user_id']:
         recent_votes = StatementVote.query.filter(
             StatementVote.user_id == user_identifier['user_id'],
@@ -701,9 +796,9 @@ def check_integrity_rate_limit(discussion, user_identifier):
             StatementVote.created_at > one_minute_ago
         ).count()
 
-    if recent_votes >= 10:
+    if recent_votes >= integrity_limit:
         current_app.logger.warning(
-            f"Integrity rate limit triggered: discussion={discussion.id}, "
+            f"Integrity rate limit triggered (DB fallback): discussion={discussion.id}, "
             f"user_id={user_identifier['user_id']}, fingerprint={user_identifier['session_fingerprint'][:8] if user_identifier['session_fingerprint'] else None}"
         )
         return False, "Rate limit exceeded for this discussion. Please slow down."
@@ -1644,7 +1739,7 @@ def add_evidence(response_id):
                     
                     # Get public URL
                     evidence.storage_key = storage_key
-                    evidence.storage_url = f"https://replitstorage.com/{storage_key}"  # Adjust based on Replit's actual URL pattern
+                    evidence.storage_url = None  # Files are served via /api/evidence/<id>/download using the SDK key
                     
                 except Exception as e:
                     current_app.logger.error(f"Error uploading to Replit storage: {e}")

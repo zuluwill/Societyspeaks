@@ -150,8 +150,8 @@ def create_app():
         sentry_sdk.init(
             dsn=os.getenv("SENTRY_DSN"),
             integrations=[FlaskIntegration()],
-            traces_sample_rate=1.0,
-            profiles_sample_rate=1.0,
+            traces_sample_rate=float(os.getenv("SENTRY_TRACES_SAMPLE_RATE", "0.1")),
+            profiles_sample_rate=float(os.getenv("SENTRY_PROFILES_SAMPLE_RATE", "0.1")),
             before_send=_sentry_before_send,
             _experiments={
                 "continuous_profiling_auto_start": True,
