@@ -1,26 +1,46 @@
 import logging
 
 bind = "0.0.0.0:5000"
+workers = 4
+reuse_port = True
+timeout = 120
+worker_class = "gevent"
+worker_connections = 1000
+
+# Load the application in the master process before forking workers.
+# This ensures gevent's monkey.patch_all() (called at the top of run.py)
+# executes before any worker or library imports ssl/socket/threading.
+# Without this, gunicorn's own internals pull in urllib3 → ssl before each
+# worker runs run.py, so gevent can't patch ssl and outbound HTTPS calls
+# (Stripe, Resend, PostHog) block the worker during the network wait.
+preload_app = True
 
 
 def post_fork(server, worker):
-    """Reset all inherited Redis connection pools after forking.
+    """Reset all inherited connection pools in each worker after forking.
 
-    gunicorn forks workers from the master process.  run.py calls
-    create_app() in the master, so Redis connection pools (session,
-    cache) are open before any worker is forked.  After fork() the
-    parent and child share the same socket file descriptors.  If two
-    workers send commands on the same socket simultaneously they corrupt
-    each other's Redis protocol stream — this surfaces much more readily
-    under gevent's higher concurrency than with sync workers.
+    With preload_app=True the master process runs create_app() (via run.py)
+    before forking, so Redis pools, the SQLAlchemy engine, and Flask-Caching's
+    Redis client all exist before any worker is created.  After fork() the
+    parent and child share the same socket file descriptors.  Using those
+    sockets from multiple processes simultaneously corrupts protocol streams.
 
-    ConnectionPool.reset() disconnects every inherited socket so the
-    worker opens its own fresh connections on first use.
+    This hook runs in each worker immediately after the fork, before the
+    first request, and discards every inherited socket so the worker opens
+    its own fresh connections on first use.
     """
     _log = logging.getLogger("gunicorn.error")
 
-    # Session Redis — created in Config class body at module import time,
-    # which is before create_app() and therefore before any fork.
+    # SQLAlchemy engine — dispose() closes all inherited DB connections so
+    # the worker's connection pool starts empty and opens fresh sockets.
+    try:
+        from app import db
+        db.engine.dispose()
+        _log.debug("post_fork [%s]: SQLAlchemy engine disposed", worker.pid)
+    except Exception as exc:
+        _log.warning("post_fork [%s]: SQLAlchemy engine dispose failed: %s", worker.pid, exc)
+
+    # Session Redis — created in Config class body at module import time.
     try:
         from config import Config
         pool = getattr(getattr(Config, "SESSION_REDIS", None), "connection_pool", None)
@@ -30,8 +50,7 @@ def post_fork(server, worker):
     except Exception as exc:
         _log.warning("post_fork [%s]: SESSION_REDIS pool reset failed: %s", worker.pid, exc)
 
-    # Flask-Caching RedisCache — created inside create_app() which is called
-    # in run.py before gunicorn forks.  The backend client sits at cache.cache._client.
+    # Flask-Caching RedisCache — created inside create_app().
     try:
         from app import cache as _cache
         backend = getattr(_cache, "cache", None)
@@ -41,11 +60,6 @@ def post_fork(server, worker):
             _log.debug("post_fork [%s]: cache pool reset", worker.pid)
     except Exception as exc:
         _log.warning("post_fork [%s]: cache pool reset failed: %s", worker.pid, exc)
-workers = 4
-reuse_port = True
-timeout = 120
-worker_class = "gevent"
-worker_connections = 1000
 
 
 class _NoWinchFilter(logging.Filter):
