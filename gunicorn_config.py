@@ -3,8 +3,9 @@ import logging
 bind = "0.0.0.0:5000"
 workers = 4
 reuse_port = True
-timeout = 600
-worker_class = "sync"
+timeout = 120
+worker_class = "gevent"
+worker_connections = 1000
 
 
 class _NoWinchFilter(logging.Filter):
