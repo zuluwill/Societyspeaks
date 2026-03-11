@@ -55,8 +55,8 @@ def post_fork(server, worker):
     #    current_app, so it must be called inside an application context.
     #    We import the Flask app from run (the module gunicorn loaded via
     #    run:app) to build that context without re-running create_app().
-    #    dispose(close=False) discards inherited sockets; SQLAlchemy will
-    #    open fresh ones on the next query in this worker.
+    #    dispose() (close=True by default) actively closes inherited sockets.
+    #    SQLAlchemy opens fresh ones on the next query in this worker.
     # ------------------------------------------------------------------
     try:
         from run import app as _flask_app
@@ -80,7 +80,22 @@ def post_fork(server, worker):
         _log.warning("post_fork [%s]: SESSION_REDIS pool reset failed: %s", worker.pid, exc)
 
     # ------------------------------------------------------------------
-    # 3. Flask-Caching Redis pool
+    # 3. counter_utils lru_cache'd Redis client
+    #    increment_counter() is only called during request handling so the
+    #    lru_cache is normally empty at fork time and there is nothing to
+    #    reset.  We clear it defensively so that if a warm-startup health
+    #    check or future startup hook ever calls increment_counter(), any
+    #    cached client with inherited sockets is discarded.
+    # ------------------------------------------------------------------
+    try:
+        from app.lib.counter_utils import _get_redis_client as _counter_rc
+        _counter_rc.cache_clear()
+        _log.info("post_fork [%s]: counter_utils Redis client cache cleared", worker.pid)
+    except Exception as exc:
+        _log.warning("post_fork [%s]: counter_utils cache clear failed: %s", worker.pid, exc)
+
+    # ------------------------------------------------------------------
+    # 4. Flask-Caching Redis pool
     #    Flask-Caching's RedisCache backend exposes _read_client and
     #    _write_client.  In a single-server setup they are the same object
     #    sharing one ConnectionPool, so resetting either one covers both.
