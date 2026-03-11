@@ -829,11 +829,21 @@ def post_to_x(
         DuplicatePostError: If X rejects the post as duplicate (content already exists).
             Callers should treat this as success and NOT retry.
     """
+    # Guard: X posting is disabled until a paid API plan is active.
+    # X deprecated their free tier in early 2024; all posting attempts on the
+    # free tier return 503.  This check is intentionally inside post_to_x()
+    # rather than only in the scheduler callers so that no code path — direct
+    # call, scheduler job, or future integration — can bypass it.
+    # Set X_POSTING_ENABLED=true to re-enable once the account is upgraded.
+    if not is_x_posting_enabled():
+        logger.debug("X posting disabled (X_POSTING_ENABLED != true), skipping post")
+        return None
+
     api_key = os.environ.get('X_API_KEY')
     api_secret = os.environ.get('X_API_SECRET')
     access_token = os.environ.get('X_ACCESS_TOKEN')
     access_token_secret = os.environ.get('X_ACCESS_TOKEN_SECRET')
-    
+
     if not all([api_key, api_secret, access_token, access_token_secret]):
         logger.warning("X API credentials not set, skipping X post")
         return None

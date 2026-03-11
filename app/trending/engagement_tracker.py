@@ -129,12 +129,20 @@ def fetch_x_engagement(tweet_id: str) -> Optional[Dict]:
     Returns dict with likes, retweets, replies, quotes, impressions.
     """
     global _x_rate_limited_until
-    
+
+    # Guard: honour the same X_POSTING_ENABLED flag used by post_to_x().
+    # The X free API tier was deprecated; both posting and metric-fetching
+    # return errors until the account is on a paid plan.
+    # Checked via os.environ directly to avoid a circular import with social_poster.
+    if os.environ.get('X_POSTING_ENABLED', 'false').lower() != 'true':
+        logger.debug("X posting disabled (X_POSTING_ENABLED != true), skipping engagement fetch")
+        return None
+
     # Check if we're currently rate limited - skip all X fetches until reset
     if _x_rate_limited_until and utcnow_naive() < _x_rate_limited_until:
         logger.debug(f"X rate limited until {_x_rate_limited_until}, skipping fetch for {tweet_id}")
         return None
-    
+
     api_key = os.environ.get('X_API_KEY')
     api_secret = os.environ.get('X_API_SECRET')
     access_token = os.environ.get('X_ACCESS_TOKEN')
