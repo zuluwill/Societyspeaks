@@ -1296,7 +1296,6 @@
         var reason = event.reason;
         if (!(reason instanceof Error)) {
           console.error('Unhandled rejection (non-Error value):', reason);
-          event.preventDefault();
         }
       });
     </script>
