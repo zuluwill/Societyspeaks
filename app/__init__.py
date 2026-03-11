@@ -896,8 +896,43 @@ def create_app():
                                     f"Startup brief recovery: no brief found for {_today} "
                                     f"at {_now_utc.strftime('%H:%M')} UTC — generating now"
                                 )
+
+                                # Run Polymarket matching before generating so the brief
+                                # has fresh market signals.  Failures are non-fatal.
+                                try:
+                                    from app.polymarket.matcher import market_matcher
+                                    app.logger.info("Startup brief recovery: running Polymarket matching")
+                                    market_matcher.run_batch_matching(days_back=3, reprocess_existing=False)
+                                except Exception as _pm_err:
+                                    app.logger.warning(
+                                        f"Startup brief recovery: Polymarket matching failed (non-fatal): {_pm_err}"
+                                    )
+
                                 from app.brief.generator import generate_daily_brief
                                 _brief = generate_daily_brief(brief_date=_today, auto_publish=True)
+
+                                # If no topics were available, run a self-healing pipeline
+                                # pass to ingest fresh content and try once more.
+                                if _brief is None:
+                                    app.logger.warning(
+                                        "Startup brief recovery: no topics available — "
+                                        "attempting self-healing pipeline run"
+                                    )
+                                    try:
+                                        from app.trending.pipeline import run_pipeline, auto_publish_daily
+                                        _arts, _tops, _ready = run_pipeline(hold_minutes=0)
+                                        app.logger.info(
+                                            f"Startup brief recovery pipeline: "
+                                            f"{_arts} articles, {_tops} topics, {_ready} ready"
+                                        )
+                                        auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
+                                        _brief = generate_daily_brief(brief_date=_today, auto_publish=True)
+                                    except Exception as _heal_err:
+                                        app.logger.error(
+                                            f"Startup brief recovery self-healing failed: {_heal_err}",
+                                            exc_info=True
+                                        )
+
                                 if _brief:
                                     app.logger.info(
                                         f"Startup brief recovery: generated '{_brief.title}' "
@@ -907,7 +942,8 @@ def create_app():
                                         from app.scheduler import _send_ops_alert
                                         _send_ops_alert(
                                             f"ALERT: Startup brief recovery generated today's brief "
-                                            f"at {_now_utc.strftime('%H:%M')} UTC. "
+                                            f"at {_now_utc.strftime('%H:%M')} UTC "
+                                            f"({_brief.item_count} items). "
                                             "The scheduled 17:00 job was missed — check deployment logs."
                                         )
                                     except Exception:
@@ -915,7 +951,7 @@ def create_app():
                                 else:
                                     app.logger.warning(
                                         "Startup brief recovery: generation returned None "
-                                        "(no topics available yet)"
+                                        "even after self-healing pipeline — no topics available"
                                     )
                             except Exception as _e:
                                 app.logger.error(

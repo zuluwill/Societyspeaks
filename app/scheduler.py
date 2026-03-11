@@ -1604,8 +1604,12 @@ def init_scheduler(app):
         Safety-net job that generates today's daily brief if it is missing at 19:30 UTC.
 
         Runs 2.5 hours after the primary generation window (17:00 UTC) to cover
-        cases where the primary job was skipped due to a deployment restart or
-        APScheduler misfire (e.g. app was down at 17:00 for more than 60 minutes).
+        cases where the primary job was skipped due to a deployment restart, Redis
+        outage, or APScheduler misfire.
+
+        Resilient to Redis outages: the existence check and brief generation use the
+        database directly. Polymarket matching is attempted but failures are swallowed
+        so the brief is never blocked by market-data unavailability.
 
         Idempotent: exits immediately if a ready or published brief already exists.
         Sends an ops alert if it has to generate, so the team knows the primary
@@ -1617,11 +1621,17 @@ def init_scheduler(app):
             from datetime import date
 
             today = date.today()
-            existing = DailyBrief.query.filter_by(
-                date=today, brief_type='daily'
-            ).filter(
-                DailyBrief.status.in_(['ready', 'published'])
-            ).first()
+
+            # Database-only check — works even when Redis is completely unavailable.
+            try:
+                existing = DailyBrief.query.filter_by(
+                    date=today, brief_type='daily'
+                ).filter(
+                    DailyBrief.status.in_(['ready', 'published'])
+                ).first()
+            except Exception as db_err:
+                logger.error(f"Daily brief safety-net: DB check failed: {db_err}", exc_info=True)
+                return
 
             if existing:
                 logger.debug(f"Daily brief safety-net: brief already exists ({existing.status}), skipping")
@@ -1629,18 +1639,27 @@ def init_scheduler(app):
 
             msg = (
                 f"ALERT: Daily brief safety-net triggered for {today}. "
-                "The primary 17:00 UTC generation job was missed (likely due to a deployment "
-                "restart). Generating now — check scheduler health."
+                "The primary 17:00 UTC generation job was missed (deployment restart, "
+                "Redis outage, or scheduler misfire). Generating now — check scheduler health."
             )
             logger.warning(msg)
             _send_ops_alert(msg)
 
+            # Run Polymarket matching first so the brief has fresh market signals.
+            # Failure here must never block brief generation.
+            try:
+                from app.polymarket.matcher import market_matcher
+                logger.info("Safety-net: running Polymarket matching before brief generation")
+                market_matcher.run_batch_matching(days_back=3, reprocess_existing=False)
+            except Exception as pm_err:
+                logger.warning(f"Safety-net: Polymarket matching failed (non-fatal): {pm_err}")
+
             try:
                 brief = generate_daily_brief(brief_date=today, auto_publish=True)
                 if brief:
-                    logger.info(f"Safety-net brief generated: {brief.title}")
+                    logger.info(f"Safety-net brief generated: {brief.title} ({brief.item_count} items)")
                 else:
-                    logger.warning("No topics available - attempting self-healing pipeline run")
+                    logger.warning("Safety-net: no topics available — attempting self-healing pipeline run")
                     try:
                         from app.trending.pipeline import run_pipeline, auto_publish_daily
                         articles, topics, ready = run_pipeline(hold_minutes=0)
@@ -1648,7 +1667,7 @@ def init_scheduler(app):
                         auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
                         brief = generate_daily_brief(brief_date=today, auto_publish=True)
                         if brief:
-                            logger.info(f"Safety-net self-healing succeeded: {brief.title}")
+                            logger.info(f"Safety-net self-healing succeeded: {brief.title} ({brief.item_count} items)")
                         else:
                             recovery_fail_msg = (
                                 f"CRITICAL: Daily brief safety-net also failed for {today}. "
@@ -1674,12 +1693,15 @@ def init_scheduler(app):
 
         Guards against the edge case where both the primary 17:00 UTC generation
         job AND the first 19:30 UTC safety-net were missed (e.g. the app was down
-        for several hours spanning both windows).  At this point subscribers in
-        later time-zones (Americas) still haven't received today's brief, so
-        generating it now is worthwhile.
+        for several hours, or Redis was unavailable, spanning both windows).
+        At this point subscribers in later time-zones (Americas) still haven't
+        received today's brief, so generating it now is worthwhile.
 
-        Identical logic to daily_brief_safety_net_job; intentionally duplicated
-        so the two safety-nets are independently scheduled.
+        Resilient to Redis outages: uses database-only checks. Polymarket matching
+        is attempted but failures are swallowed so the brief is never blocked.
+
+        Intentionally mirrors daily_brief_safety_net_job logic so the two
+        safety-nets are fully independently scheduled.
         """
         with app.app_context():
             from app.brief.generator import generate_daily_brief
@@ -1687,11 +1709,17 @@ def init_scheduler(app):
             from datetime import date
 
             today = date.today()
-            existing = DailyBrief.query.filter_by(
-                date=today, brief_type='daily'
-            ).filter(
-                DailyBrief.status.in_(['ready', 'published'])
-            ).first()
+
+            # Database-only check — works even when Redis is completely unavailable.
+            try:
+                existing = DailyBrief.query.filter_by(
+                    date=today, brief_type='daily'
+                ).filter(
+                    DailyBrief.status.in_(['ready', 'published'])
+                ).first()
+            except Exception as db_err:
+                logger.error(f"Daily brief safety-net-2: DB check failed: {db_err}", exc_info=True)
+                return
 
             if existing:
                 logger.debug(f"Daily brief safety-net-2: brief already exists ({existing.status}), skipping")
@@ -1699,17 +1727,28 @@ def init_scheduler(app):
 
             msg = (
                 f"CRITICAL: Last-resort daily brief safety-net-2 triggered for {today}. "
-                "Both the primary 17:00 job and the 19:30 safety-net were missed. "
+                "Both the primary 17:00 job and the 19:30 safety-net were missed "
+                "(possible causes: Redis outage, deployment restart, scheduler misfire). "
                 "Check deployment history and scheduler health urgently."
             )
             logger.error(msg)
             _send_ops_alert(msg)
 
+            # Run Polymarket matching first so the brief has fresh market signals.
+            # Failure here must never block brief generation.
+            try:
+                from app.polymarket.matcher import market_matcher
+                logger.info("Safety-net-2: running Polymarket matching before brief generation")
+                market_matcher.run_batch_matching(days_back=3, reprocess_existing=False)
+            except Exception as pm_err:
+                logger.warning(f"Safety-net-2: Polymarket matching failed (non-fatal): {pm_err}")
+
             try:
                 brief = generate_daily_brief(brief_date=today, auto_publish=True)
                 if brief:
-                    logger.info(f"Safety-net-2 brief generated: {brief.title}")
+                    logger.info(f"Safety-net-2 brief generated: {brief.title} ({brief.item_count} items)")
                 else:
+                    logger.warning("Safety-net-2: no topics available — attempting self-healing pipeline run")
                     try:
                         from app.trending.pipeline import run_pipeline, auto_publish_daily
                         articles, topics, ready = run_pipeline(hold_minutes=0)
@@ -1717,7 +1756,7 @@ def init_scheduler(app):
                         auto_publish_daily(max_topics=10, schedule_bluesky=False, schedule_x=False)
                         brief = generate_daily_brief(brief_date=today, auto_publish=True)
                         if brief:
-                            logger.info(f"Safety-net-2 self-healing succeeded: {brief.title}")
+                            logger.info(f"Safety-net-2 self-healing succeeded: {brief.title} ({brief.item_count} items)")
                         else:
                             logger.error(f"CRITICAL: No brief for {today} even after safety-net-2 pipeline run")
                             _send_ops_alert(
@@ -1726,6 +1765,9 @@ def init_scheduler(app):
                             )
                     except Exception as heal_err:
                         logger.error(f"Safety-net-2 self-healing failed: {heal_err}", exc_info=True)
+                        _send_ops_alert(
+                            f"CRITICAL: Daily brief safety-net-2 self-healing failed: {heal_err}"
+                        )
             except Exception as e:
                 logger.error(f"Daily brief safety-net-2 failed: {e}", exc_info=True)
                 _send_ops_alert(f"CRITICAL: Daily brief safety-net-2 raised an unhandled error: {e}")
@@ -1757,7 +1799,14 @@ def init_scheduler(app):
             
             try:
                 r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                status = (r.get(status_key) or b'').decode()
+                try:
+                    status = (r.get(status_key) or b'').decode()
+                except (redis_lib.exceptions.ConnectionError, redis_lib.exceptions.TimeoutError,
+                        ConnectionError, OSError):
+                    # Redis is temporarily unavailable (e.g. TLS migration, restart).
+                    # This job is purely a Redis-coordination helper — silently skip
+                    # rather than flooding Sentry with connection errors every 5 seconds.
+                    return
 
                 if status == 'running':
                     heartbeat_raw = (r.get(heartbeat_key) or b'').decode()
