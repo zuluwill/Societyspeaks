@@ -872,7 +872,7 @@ def create_app():
                 # ------------------------------------------------------------------
                 from datetime import datetime, timezone as _tz
                 _now_utc = datetime.now(_tz.utc)
-                if 17 <= _now_utc.hour < 22:
+                if 17 <= _now_utc.hour <= 23:
                     def _startup_brief_recovery():
                         import time as _t
                         _t.sleep(10)  # Let scheduler fully settle first
