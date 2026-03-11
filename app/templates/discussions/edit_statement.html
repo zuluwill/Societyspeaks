@@ -76,7 +76,7 @@ discussion.title }}{% endblock %} {% block content %}
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
   document.addEventListener("DOMContentLoaded", function () {
     const textarea = document.querySelector('textarea[name="content"]');
     const currentCount = document.getElementById("currentCount");

@@ -166,7 +166,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     const voteBtns = document.querySelectorAll('.vote-btn');
     const reasonSection = document.getElementById('reasonSection');

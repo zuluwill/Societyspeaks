@@ -190,7 +190,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
   const programmeMeta = {{ programme_meta|default([])|tojson }};
   let cityChoices;
 

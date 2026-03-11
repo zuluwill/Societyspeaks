@@ -131,7 +131,7 @@
                   </div>
                 </div>
               </div>
-              <script>
+              <script nonce="{{ csp_nonce() }}">
               (function() {
                 var voted = false;
                 var autoTimer;
@@ -815,7 +815,7 @@
     </div>
   </div>
 </div>
-<script>
+<script nonce="{{ csp_nonce() }}">
 function calcROI() {
   var pv = parseInt(document.getElementById('roiPageviews').value);
   var rawCpm = parseFloat(document.getElementById('roiCPM').value);

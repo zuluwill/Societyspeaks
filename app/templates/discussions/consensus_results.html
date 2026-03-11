@@ -321,7 +321,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
 <!-- Cluster Visualization Script -->
-<script>
+<script nonce="{{ csp_nonce() }}">
   document.addEventListener("DOMContentLoaded", async function () {
     const canvas = document.getElementById("clusterChart");
     if (!canvas) return;

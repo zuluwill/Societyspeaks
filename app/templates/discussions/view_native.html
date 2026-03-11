@@ -448,7 +448,7 @@
 </style>
 
 <!-- AJAX Voting Script -->
-<script>
+<script nonce="{{ csp_nonce() }}">
   let isLoadingMoreStatements = false;
 
   function buildLazyLoadUrl(page) {

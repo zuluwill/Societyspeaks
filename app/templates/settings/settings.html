@@ -194,7 +194,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 function confirmDelete() {
     if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
         // Add your delete account logic here

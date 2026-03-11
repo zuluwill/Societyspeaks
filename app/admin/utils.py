@@ -1,11 +1,19 @@
 # app/admin/utils.py
-from replit.object_storage import Client
 from werkzeug.utils import secure_filename
 import uuid
+import os
 from flask import current_app
 import io
 
-client = Client()
+_storage_client = None
+
+
+def _get_client():
+    global _storage_client
+    if _storage_client is None:
+        from replit.object_storage import Client
+        _storage_client = Client()
+    return _storage_client
 
 def save_profile_image(file, file_type):
     """
@@ -28,7 +36,7 @@ def save_profile_image(file, file_type):
         unique_filename = f"{file_type}/{name}_{uuid.uuid4().hex[:8]}{ext}"
 
         # Upload to Replit object storage
-        client.upload_from_bytes(unique_filename, file.read())
+        _get_client().upload_from_bytes(unique_filename, file.read())
 
         return unique_filename
     except Exception as e:
@@ -49,7 +57,7 @@ def delete_profile_image(filename):
         return True
 
     try:
-        client.delete(filename)
+        _get_client().delete(filename)
         return True
     except Exception as e:
         current_app.logger.error(f"Error deleting profile image: {str(e)}")
@@ -58,7 +66,7 @@ def delete_profile_image(filename):
 def get_file_url(filename):
     """Get the URL for accessing a file from Replit object storage."""
     try:
-        return client.get_url(filename)
+        return _get_client().get_url(filename)
     except Exception as e:
         current_app.logger.error(f"Error getting file URL: {str(e)}")
         return None

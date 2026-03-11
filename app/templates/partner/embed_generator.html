@@ -345,7 +345,7 @@ window.addEventListener('message', (event) =&gt; {
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
   const BASE_URL = '{{ base_url }}';
 
   // Look up article URL via API

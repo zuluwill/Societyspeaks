@@ -203,7 +203,7 @@
     </style>
 
     <!-- Google Tag Manager -->
-    <script>
+    <script nonce="{{ csp_nonce() }}">
       (function (w, d, s, l, i) {
         w[l] = w[l] || [];
         w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
@@ -218,7 +218,7 @@
     <!-- End Google Tag Manager -->
 
     <!-- PostHog Analytics -->
-    <script>
+    <script nonce="{{ csp_nonce() }}">
       !(function (t, e) {
         var o, n, p, r;
         e.__SV ||
@@ -1143,7 +1143,7 @@
 
     <!-- Toast Notifications - handled by toast.js loaded below -->
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
       document.addEventListener("DOMContentLoaded", function () {
         // Shared helper: wire toggle + outside-click-close + aria for a button/menu pair.
         // Returns a setOpen(bool) fn so callers can drive state (e.g. touchend).
@@ -1291,7 +1291,7 @@
 
     <!-- Global error handler: catches unhandled promise rejections and ensures
          non-Error values are normalised before surfacing to the console. -->
-    <script>
+    <script nonce="{{ csp_nonce() }}">
       window.addEventListener('unhandledrejection', function (event) {
         var reason = event.reason;
         if (!(reason instanceof Error)) {

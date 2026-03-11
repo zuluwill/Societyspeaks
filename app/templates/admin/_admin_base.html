@@ -136,7 +136,7 @@
         </div>
     </nav>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
     document.addEventListener('DOMContentLoaded', function() {
         const menuBtn = document.getElementById('admin-mobile-menu-btn');
         const mobileMenu = document.getElementById('admin-mobile-menu');

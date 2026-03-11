@@ -176,7 +176,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 // Show/hide weekly options based on frequency selection
 document.addEventListener('DOMContentLoaded', function() {
     const frequencyInputs = document.querySelectorAll('input[name="email_frequency"]');

@@ -213,7 +213,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('source-search');
     const typeFilter = document.getElementById('source-type-filter');

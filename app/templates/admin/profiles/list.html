@@ -188,7 +188,7 @@
 </div>
 
 <!-- JavaScript for Search and Filters -->
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search');
     const profileTypeSelect = document.getElementById('profile-type');

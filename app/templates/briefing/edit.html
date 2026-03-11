@@ -327,7 +327,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Choices.js for timezone dropdown (DRY - using reusable macro)
     {{ init_choices_dropdown('timezone', 'Search timezones...', 'Select a timezone...') }}

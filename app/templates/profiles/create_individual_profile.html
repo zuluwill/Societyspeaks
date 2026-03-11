@@ -62,7 +62,7 @@
 </div>
 
 {% block form_scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.getElementById('profileForm').addEventListener('submit', function(e) {
     const fullName = document.querySelector('input[name="full_name"]');
     if (!fullName.value.trim()) {

@@ -440,7 +440,7 @@
                                 </svg>
                             </button>
                         </form>
-                        <script>
+                        <script nonce="{{ csp_nonce() }}">
                         function handleTestEmailSubmit(form) {
                             if (!confirm('Send test email to {{ current_user.email }}?')) {
                                 return false;
@@ -506,7 +506,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     const generateForm = document.getElementById('generate-form');
     if (!generateForm) return;
@@ -605,7 +605,7 @@
 })();
 </script>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     try {
         {{ init_choices_dropdown('source_id', 'Search sources...', 'Select a source...') }}

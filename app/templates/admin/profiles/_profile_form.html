@@ -40,7 +40,7 @@
 {% endmacro %}
 
 {% macro render_user_assignment_script() %}
-<script>
+<script nonce="{{ csp_nonce() }}">
     document.addEventListener('DOMContentLoaded', function() {
         // Get all the radio buttons for assignment type
         const assignmentTypeOptions = document.querySelectorAll('input[name="assignment_type"]');

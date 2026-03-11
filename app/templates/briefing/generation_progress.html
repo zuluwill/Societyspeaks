@@ -57,7 +57,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function() {
     const statusUrl = "{{ status_url }}";
     const progressBar = document.getElementById('progress-bar');

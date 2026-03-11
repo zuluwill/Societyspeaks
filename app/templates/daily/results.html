@@ -351,7 +351,7 @@
             </div>
 
             <!-- Carousel JavaScript -->
-            <script>
+            <script nonce="{{ csp_nonce() }}">
                 document.addEventListener('DOMContentLoaded', function() {
                     const carousel = document.getElementById('comments-carousel');
                     const dots = document.querySelectorAll('.carousel-dot');
@@ -723,7 +723,7 @@
 </div>
 
 <!-- Modal JavaScript -->
-<script>
+<script nonce="{{ csp_nonce() }}">
     const modal = document.getElementById('comments-modal');
     const modalContent = document.getElementById('comments-modal-content');
     const questionDate = '{{ question.question_date.strftime("%Y-%m-%d") }}';
@@ -865,7 +865,7 @@
 </div>
 
 <!-- Report Modal JavaScript -->
-<script>
+<script nonce="{{ csp_nonce() }}">
     const reportModal = document.getElementById('report-modal');
     const reportModalContent = document.getElementById('report-modal-content');
     const reportForm = document.getElementById('report-form');
@@ -1006,7 +1006,7 @@
 <!-- html2canvas library for share card generation -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTRE8Xg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
     function downloadShareCard() {
         const btn = event.currentTarget;
         const originalContent = btn.innerHTML;

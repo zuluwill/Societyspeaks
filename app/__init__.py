@@ -38,7 +38,6 @@ csp = {
     ],
     'script-src': [
         "'self'",
-        "'unsafe-inline'",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com",
         "https://www.googletagmanager.com",
@@ -247,7 +246,7 @@ def create_app():
         force_https=False,  # Replit proxy handles HTTPS
         session_cookie_secure=env == 'production',
         content_security_policy=csp,
-        content_security_policy_nonce_in=None  # Disable nonces
+        content_security_policy_nonce_in=['script-src']
     )
 
     # Initialize extensions with better session handling

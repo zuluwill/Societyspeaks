@@ -78,7 +78,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 function toggleShareMenu(button) {
     const menu = button.nextElementSibling;
     const isHidden = menu.classList.contains('hidden');

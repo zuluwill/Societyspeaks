@@ -1,14 +1,23 @@
 # app/utils.py
 import os
 from flask import current_app
-from replit.object_storage import Client
 import io
 import time
 from werkzeug.utils import secure_filename
 from app.models import Discussion
 
 
-client = Client()
+# Lazy client — only instantiated on first call so that importing this module
+# outside of Replit (local dev, CI, non-Replit hosting) does not crash.
+_storage_client = None
+
+
+def _get_client():
+    global _storage_client
+    if _storage_client is None:
+        from replit.object_storage import Client
+        _storage_client = Client()
+    return _storage_client
 
 # Default base URL for the application
 DEFAULT_BASE_URL = 'https://societyspeaks.io'
@@ -76,7 +85,7 @@ def upload_to_object_storage(file_data, filename, user_id=None):
         storage_path = f"profile_images/{filename}"
 
         file_content = file_data.read()
-        client.upload_from_bytes(storage_path, file_content)
+        _get_client().upload_from_bytes(storage_path, file_content)
 
         current_app.logger.info(f"Successfully uploaded {filename} to object storage")
         return filename
@@ -88,7 +97,7 @@ def delete_from_object_storage(filename):
     """Delete a file from Replit's object storage"""
     try:
         storage_path = f"profile_images/{filename}"
-        client.delete(storage_path)
+        _get_client().delete(storage_path)
         current_app.logger.info(f"Successfully deleted {filename} from object storage")
         return True
     except Exception as e:
@@ -99,7 +108,7 @@ def get_image_from_storage(filename):
     """Retrieve image from Replit's object storage"""
     try:
         storage_path = f"profile_images/{filename}"
-        file_data = client.download_as_bytes(storage_path)
+        file_data = _get_client().download_as_bytes(storage_path)
 
         if file_data:
             file_like = io.BytesIO(file_data)
@@ -118,7 +127,7 @@ def get_image_from_storage(filename):
 def upload_bytes_to_object_storage(storage_path, content_bytes):
     """Upload raw bytes to object storage at an explicit key."""
     try:
-        client.upload_from_bytes(storage_path, content_bytes)
+        _get_client().upload_from_bytes(storage_path, content_bytes)
         return True
     except Exception as e:
         current_app.logger.error(f"Error uploading bytes to {storage_path}: {str(e)}")
@@ -128,7 +137,7 @@ def upload_bytes_to_object_storage(storage_path, content_bytes):
 def download_bytes_from_object_storage(storage_path):
     """Download raw bytes from object storage by key."""
     try:
-        return client.download_as_bytes(storage_path)
+        return _get_client().download_as_bytes(storage_path)
     except Exception as e:
         current_app.logger.error(f"Error downloading bytes from {storage_path}: {str(e)}")
         return None

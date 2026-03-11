@@ -165,7 +165,7 @@
   </div>
 </form>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
   (function () {
     function toggleCompany(radio) {
       var wrapper = document.getElementById("company_profile_wrapper");

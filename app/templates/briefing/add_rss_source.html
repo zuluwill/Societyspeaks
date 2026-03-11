@@ -75,7 +75,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.getElementById('add-rss-form').addEventListener('submit', function(e) {
     var submitBtn = document.getElementById('submit-btn');
     if (submitBtn.disabled) {

@@ -175,7 +175,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 function checkDomainStatus() {
     const btn = document.getElementById('refresh-status-btn');
     const text = document.getElementById('refresh-status-text');

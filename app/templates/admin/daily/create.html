@@ -131,7 +131,7 @@
     </form>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
 document.addEventListener('DOMContentLoaded', function() {
     const sourceType = document.getElementById('source_type');
     const discussionSource = document.getElementById('discussionSource');

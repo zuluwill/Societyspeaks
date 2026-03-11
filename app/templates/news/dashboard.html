@@ -552,7 +552,7 @@ content %}
 </div>
 
 <script src="{{ url_for('static', filename='js/search-filter.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
   // Server-side search with auto-submit, clear button and Escape key
   document.addEventListener("DOMContentLoaded", function() {
     setupServerSearch({

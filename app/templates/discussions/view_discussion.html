@@ -535,7 +535,7 @@
     {% endif %} {% endif %}
   </div>
 
-  <script>
+  <script nonce="{{ csp_nonce() }}">
     document.addEventListener("DOMContentLoaded", function () {
       // Share Button Logic - improved to prevent double-toggle on touch devices
       const shareButton = document.getElementById("shareButton");

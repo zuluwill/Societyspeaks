@@ -766,7 +766,7 @@
       </button>
     </div>
 
-    <script>
+    <script nonce="{{ csp_nonce() }}">
       function toggleTemplates() {
         var moreTemplates = document.getElementById('more-templates');
         var btnText = document.getElementById('templates-btn-text');
@@ -1115,7 +1115,7 @@
   </section>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
   function showPricingTab(tab) {
     document.querySelectorAll('.pricing-tab').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('[id^="tab-"]').forEach(el => {
@@ -1348,7 +1348,7 @@
 </div>
 
 <!-- Checkout loading feedback -->
-<script>
+<script nonce="{{ csp_nonce() }}">
   document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('form[action*="checkout"]').forEach(function(form) {
       form.addEventListener('submit', function(e) {

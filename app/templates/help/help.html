@@ -281,7 +281,7 @@
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
   // Simple tab functionality
   document.addEventListener("DOMContentLoaded", function () {
     const tabButtons = document.querySelectorAll("[data-tab]");

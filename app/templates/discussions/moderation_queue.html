@@ -226,7 +226,7 @@ discussion.title }}{% endblock %} {% block content %}
   </div>
 </div>
 
-<script>
+<script nonce="{{ csp_nonce() }}">
   function selectAll() {
     document
       .querySelectorAll('input[name="flag_ids"]')

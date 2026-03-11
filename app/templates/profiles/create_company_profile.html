@@ -64,7 +64,7 @@
 </div>
 
 {% block form_scripts %}
-<script>
+<script nonce="{{ csp_nonce() }}">
 function previewImage(input, previewId) {
     const preview = document.getElementById(previewId);
     const file = input.files[0];

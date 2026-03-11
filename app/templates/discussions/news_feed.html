@@ -483,7 +483,7 @@ discussion_card %} {% block head %}
 </div>
 {% endblock %} {% block scripts %} {{ super() }}
 <script src="{{ url_for('static', filename='js/search-filter.js') }}"></script>
-<script>
+<script nonce="{{ csp_nonce() }}">
   document.addEventListener("DOMContentLoaded", function () {
     // Server-side search with auto-submit
     setupServerSearch({
