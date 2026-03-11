@@ -115,7 +115,7 @@ function compressImage(file, options) {
                 resolve(result);
             },
             error(err) {
-                reject(err);
+                reject(err instanceof Error ? err : new Error(String(err)));
             },
             progress(percent) {
                 if (options.onProgress) {

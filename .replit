@@ -34,10 +34,6 @@ args = "Flask App"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Consensus Worker"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
 args = "Consensus Worker Pool (x3)"
 
 [[workflows.workflow]]
@@ -49,19 +45,8 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "APP_ROLE=web gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=600 --workers=4 run:app"
+args = "APP_ROLE=web gunicorn -c gunicorn_config.py run:app"
 waitForPort = 5000
-
-[[workflows.workflow]]
-name = "Consensus Worker"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "APP_ROLE=worker python3 scripts/run_consensus_worker.py"
-
-[workflows.workflow.metadata]
-outputType = "console"
 
 [[workflows.workflow]]
 name = "Consensus Worker Pool (x3)"

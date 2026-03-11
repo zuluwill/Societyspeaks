@@ -1289,6 +1289,18 @@
       });
     </script>
 
+    <!-- Global error handler: catches unhandled promise rejections and ensures
+         non-Error values are normalised before surfacing to the console. -->
+    <script>
+      window.addEventListener('unhandledrejection', function (event) {
+        var reason = event.reason;
+        if (!(reason instanceof Error)) {
+          console.error('Unhandled rejection (non-Error value):', reason);
+          event.preventDefault();
+        }
+      });
+    </script>
+
     <!-- Shared JavaScript Components -->
     <script src="{{ url_for('static', filename='js/toast.js') }}"></script>
     <script src="{{ url_for('static', filename='js/vote-resilience.js') }}"></script>
