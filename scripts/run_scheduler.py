@@ -54,8 +54,8 @@ app = create_app()
 logger.info("Scheduler process initialised — APScheduler supervisor running in background threads")
 
 _START_TIME = time.time()
-_MAX_RUNTIME_SECONDS = 3600  # Proactively restart after 1 hour to keep memory in check
-_GC_INTERVAL_TICKS = 6       # gc.collect() every 6 ticks × 5 s = every 30 seconds
+_MAX_RUNTIME_SECONDS = 1800  # Proactively restart after 30 min — SIGBUS crashes occur at ~45 min
+_GC_INTERVAL_TICKS = 2       # gc.collect() every 2 ticks × 5 s = every 10 seconds
 _MEM_LOG_INTERVAL_TICKS = 60 # Log RSS every 60 ticks × 5 s = every 5 minutes
 _tick = 0
 
@@ -101,8 +101,8 @@ while not _SHUTDOWN:
     # prevents the gradual growth that caused the ~45-minute SIGBUS crash.
     if time.time() - _START_TIME > _MAX_RUNTIME_SECONDS:
         logger.info(
-            "Scheduler process reached max runtime (%dh) — exiting cleanly for restart",
-            _MAX_RUNTIME_SECONDS // 3600,
+            "Scheduler process reached max runtime (%d min) — exiting cleanly for restart",
+            _MAX_RUNTIME_SECONDS // 60,
         )
         break
 
