@@ -192,14 +192,32 @@ def test_deployment_run_command_uses_role_separation():
 
 def test_deployment_run_command_supervises_scheduler_and_web_lifecycle():
     """
-    Deployment shell should fail fast if either scheduler or web exits.
+    Deployment shell ties the deployment lifetime to the web process, not the scheduler.
 
-    This avoids a silent degraded mode where web stays up but scheduler has died.
+    The scheduler runs inside a `while true` restart loop so it recovers from crashes
+    (including SIGBUS) without bringing down the web server.  Only a gunicorn exit
+    triggers a full deployment restart.  On any signal the trap ensures both child
+    processes are terminated cleanly.
+
+    Old behaviour (wait -n) failed the deployment whenever *either* process exited,
+    meaning a scheduler SIGBUS crash would kill the web server too.  The current
+    strategy keeps gunicorn alive across scheduler restarts.
     """
     source = _read(".replit")
-    assert "wait -n" in source, (
-        "Deployment command should use wait -n to watch both scheduler and web processes."
+
+    # Scheduler must self-restart — a plain exec without a loop is not acceptable.
+    assert "while true" in source, (
+        "Deployment command must wrap the scheduler in a 'while true' restart loop "
+        "so scheduler crashes do not bring down the web server."
     )
+
+    # Deployment lifetime is tied to the web process, not to the scheduler.
+    assert "wait $WEB_PID" in source, (
+        "Deployment command must use 'wait $WEB_PID' so only a gunicorn exit "
+        "triggers a full deployment restart — scheduler restarts are transparent."
+    )
+
+    # Both child processes must be cleaned up on SIGTERM/SIGINT.
     assert "trap 'kill $SCHED_PID $WEB_PID" in source, (
         "Deployment command should trap shutdown signals and terminate both child processes."
     )
