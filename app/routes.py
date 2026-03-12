@@ -95,7 +95,6 @@ def about():
 
 @main_bp.route('/platform')
 def platform():
-    from app.models import Discussion
     demo_discussion = db.session.get(Discussion, 25)
     return render_template('platform.html', demo_discussion=demo_discussion)
 
