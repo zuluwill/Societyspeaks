@@ -1,8 +1,10 @@
 {% extends "layout.html" %}
 {% from "components/discussion_card.html" import discussion_card %}
 
-{% block title %}Discussions & Programmes — Society Speaks{% endblock %}
+{% block title %}The Platform — Society Speaks{% endblock %}
 {% block meta_description %}Nuanced debate backed by rigorous analysis. Society Speaks discussions and programmes give individuals a voice and organisations the tools to run structured deliberation at any scale — from a single conversation to a national consultation.{% endblock %}
+{% block og_title %}The Platform — Society Speaks{% endblock %}
+{% block og_description %}Vote on statements. Discover where you agree with people you thought you didn't. Society Speaks reveals how opinion actually clusters — not just percentages, but the real structure of public views.{% endblock %}
 
 {% block content %}
 
@@ -33,12 +35,23 @@
         Vote on statements. Discover where you agree with people you thought you didn't. See what the data actually reveals — not percentages, but clusters of real opinion.
       </p>
       <div class="mt-10 flex flex-wrap justify-center gap-4">
-        <a href="{{ url_for('discussions.search_discussions') }}"
+        {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('auth.register') }}"
            class="inline-flex items-center rounded-md bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
-          Explore Discussions
+          Get started — it's free
           <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
+        </a>
+        {% endif %}
+        <a href="{{ url_for('discussions.search_discussions') }}"
+           class="inline-flex items-center rounded-md {% if current_user.is_authenticated %}bg-blue-600 text-white shadow-sm hover:bg-blue-500{% else %}bg-white text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50{% endif %} px-6 py-3 text-sm font-semibold transition-colors">
+          Explore Discussions
+          {% if current_user.is_authenticated %}
+          <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+          {% endif %}
         </a>
         <a href="{{ url_for('programmes.list_programmes') }}"
            class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
@@ -1099,7 +1112,43 @@
   </div>
 </div>
 
-{# ── Better than a poll ── #}
+{# ── Explore further ── #}
+<div class="bg-white py-14 border-t border-gray-100">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <h2 class="text-2xl font-bold text-gray-900 text-center mb-2">Explore further</h2>
+    <p class="text-gray-500 text-center text-sm mb-8">See it in action, read the docs, or set up an embed.</p>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {% if demo_discussion %}
+      <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}"
+         class="block rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all group">
+        <p class="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">Live demo</p>
+        <h3 class="font-semibold text-gray-900 text-sm group-hover:text-blue-700 transition-colors">See a live discussion</h3>
+        <p class="text-xs text-gray-500 mt-1">Vote on statements and see real results</p>
+      </a>
+      <a href="{{ url_for('consensus.view_results', discussion_id=demo_discussion.id) }}"
+         class="block rounded-xl border border-gray-200 p-5 hover:border-emerald-300 hover:shadow-sm transition-all group">
+        <p class="text-xs font-semibold text-emerald-600 mb-1.5 uppercase tracking-wide">Live demo</p>
+        <h3 class="font-semibold text-gray-900 text-sm group-hover:text-emerald-700 transition-colors">See consensus analysis</h3>
+        <p class="text-xs text-gray-500 mt-1">Clusters, bridges, and divisions revealed</p>
+      </a>
+      {% endif %}
+      <a href="{{ url_for('help.programmes') }}"
+         class="block rounded-xl border border-gray-200 p-5 hover:border-purple-300 hover:shadow-sm transition-all group">
+        <p class="text-xs font-semibold text-purple-600 mb-1.5 uppercase tracking-wide">Help</p>
+        <h3 class="font-semibold text-gray-900 text-sm group-hover:text-purple-700 transition-colors">How Programmes work</h3>
+        <p class="text-xs text-gray-500 mt-1">Phases, cohorts, visibility, and exports</p>
+      </a>
+      <a href="{{ url_for('partner.hub') }}"
+         class="block rounded-xl border border-gray-200 p-5 hover:border-gray-400 hover:shadow-sm transition-all group">
+        <p class="text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">For publishers</p>
+        <h3 class="font-semibold text-gray-900 text-sm group-hover:text-gray-700 transition-colors">Embed discussions</h3>
+        <p class="text-xs text-gray-500 mt-1">Add a voting widget to any article</p>
+      </a>
+    </div>
+  </div>
+</div>
+
+{# ── Better than a poll — final CTA ── #}
 <div class="bg-blue-600 py-14">
   <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
     <h2 class="text-2xl font-bold text-white sm:text-3xl">More than a poll. Better than a comment section.</h2>
@@ -1137,41 +1186,6 @@
       <a href="{{ url_for('help.help') }}"
          class="inline-flex items-center rounded-md bg-blue-500 px-6 py-3 text-sm font-semibold text-white ring-1 ring-white/30 hover:bg-blue-400 transition-colors min-h-11">
         Read the docs
-      </a>
-    </div>
-  </div>
-</div>
-
-{# ── Explore further ── #}
-<div class="bg-white py-14">
-  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">Explore further</h2>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {% if demo_discussion %}
-      <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}"
-         class="block rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all group">
-        <p class="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">Live demo</p>
-        <h3 class="font-semibold text-gray-900 text-sm group-hover:text-blue-700 transition-colors">See a native discussion</h3>
-        <p class="text-xs text-gray-500 mt-1">Vote on statements about climate action</p>
-      </a>
-      <a href="{{ url_for('consensus.view_results', discussion_id=demo_discussion.id) }}"
-         class="block rounded-xl border border-gray-200 p-5 hover:border-emerald-300 hover:shadow-sm transition-all group">
-        <p class="text-xs font-semibold text-emerald-600 mb-1.5 uppercase tracking-wide">Live demo</p>
-        <h3 class="font-semibold text-gray-900 text-sm group-hover:text-emerald-700 transition-colors">See consensus analysis</h3>
-        <p class="text-xs text-gray-500 mt-1">Clusters, bridges, and divisions revealed</p>
-      </a>
-      {% endif %}
-      <a href="{{ url_for('help.programmes') }}"
-         class="block rounded-xl border border-gray-200 p-5 hover:border-purple-300 hover:shadow-sm transition-all group">
-        <p class="text-xs font-semibold text-purple-600 mb-1.5 uppercase tracking-wide">Help</p>
-        <h3 class="font-semibold text-gray-900 text-sm group-hover:text-purple-700 transition-colors">How Programmes work</h3>
-        <p class="text-xs text-gray-500 mt-1">Phases, cohorts, visibility, and exports</p>
-      </a>
-      <a href="{{ url_for('partner.hub') }}"
-         class="block rounded-xl border border-gray-200 p-5 hover:border-gray-400 hover:shadow-sm transition-all group">
-        <p class="text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">For publishers</p>
-        <h3 class="font-semibold text-gray-900 text-sm group-hover:text-gray-700 transition-colors">Embed discussions</h3>
-        <p class="text-xs text-gray-500 mt-1">Add a voting widget to any article</p>
       </a>
     </div>
   </div>
