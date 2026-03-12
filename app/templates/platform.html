@@ -636,9 +636,9 @@
       <div>
         <div class="rounded-2xl border border-gray-200 shadow-lg bg-white overflow-hidden">
           <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5">
-            <p class="text-purple-200 text-xs font-semibold uppercase tracking-widest mb-1">Programme</p>
-            <h3 class="text-white font-bold text-lg">National Strategy Project</h3>
-            <p class="text-purple-200 text-sm mt-1">UK long-term future — mapping citizen opinion at scale</p>
+            <p class="text-purple-200 text-xs font-semibold uppercase tracking-widest mb-1">Programme · Example</p>
+            <h3 class="text-white font-bold text-lg">Housing &amp; Planning Consultation</h3>
+            <p class="text-purple-200 text-sm mt-1">Regional consultation on housing supply, planning reform, and affordability</p>
           </div>
           <div class="p-5">
             {# Phase indicator #}
@@ -650,35 +650,43 @@
             </div>
             {# Theme pills #}
             <div class="flex flex-wrap gap-2 mb-5">
-              <span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">🏠 Housing</span>
-              <span class="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">🌱 Environment</span>
-              <span class="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">📈 Economy</span>
-              <span class="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">+5 more</span>
+              <span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">🏠 Supply</span>
+              <span class="px-2.5 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">📋 Planning</span>
+              <span class="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">💷 Affordability</span>
+              <span class="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">+2 more</span>
             </div>
             {# Stats row #}
             <div class="grid grid-cols-3 gap-3 mb-5">
               <div class="text-center rounded-lg bg-gray-50 border border-gray-100 py-3">
-                <p class="text-2xl font-bold text-gray-900">12</p>
+                <p class="text-2xl font-bold text-gray-900">8</p>
                 <p class="text-xs text-gray-500 mt-0.5">Discussions</p>
               </div>
               <div class="text-center rounded-lg bg-gray-50 border border-gray-100 py-3">
-                <p class="text-2xl font-bold text-gray-900">4,831</p>
+                <p class="text-2xl font-bold text-gray-900">2,419</p>
                 <p class="text-xs text-gray-500 mt-0.5">Participants</p>
               </div>
               <div class="text-center rounded-lg bg-gray-50 border border-gray-100 py-3">
-                <p class="text-2xl font-bold text-gray-900">3</p>
+                <p class="text-2xl font-bold text-gray-900">4</p>
                 <p class="text-xs text-gray-500 mt-0.5">Cohorts</p>
               </div>
             </div>
-            {# Callout #}
-            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3.5">
-              <p class="text-xs font-semibold text-emerald-800 mb-0.5">In use: National Strategy Project</p>
-              <p class="text-xs text-emerald-700">Running national dialogue on the UK's long-term future — mapping where citizens agree, disagree, and where common ground exists.</p>
-              <a href="https://www.nationalstrategy.uk/" target="_blank" rel="noopener"
-                 class="inline-flex items-center mt-2 text-xs font-semibold text-emerald-800 hover:underline">
-                Visit nationalstrategy.uk
-                <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-              </a>
+            {# Export info #}
+            <div class="bg-purple-50 border border-purple-100 rounded-lg p-3.5">
+              <p class="text-xs font-semibold text-purple-800 mb-2">What this generates</p>
+              <div class="flex flex-wrap gap-2">
+                <span class="inline-flex items-center gap-1 text-xs text-purple-700 bg-white border border-purple-200 rounded px-2 py-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                  Consensus report per discussion
+                </span>
+                <span class="inline-flex items-center gap-1 text-xs text-purple-700 bg-white border border-purple-200 rounded px-2 py-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+                  Full CSV/JSON export
+                </span>
+                <span class="inline-flex items-center gap-1 text-xs text-purple-700 bg-white border border-purple-200 rounded px-2 py-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  Cohort breakdown
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -893,13 +901,13 @@
   </div>
 </div>
 
-{# ── Profiles: individual and organisation ── #}
+{# ── Profiles: set up your presence ── #}
 <div class="bg-blue-50 py-16 border-t border-blue-100">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
-      <p class="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">Profiles</p>
-      <h2 class="text-3xl font-bold text-gray-900">Create a profile. Host discussions under your name.</h2>
-      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Whether you're an individual with something to say or an organisation running a structured consultation, you can create a profile and host discussions on Society Speaks.</p>
+      <p class="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">Get set up</p>
+      <h2 class="text-3xl font-bold text-gray-900">Set up your presence on Society Speaks</h2>
+      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Profiles take a few minutes to create and are free. Choose the type that fits how you want to use the platform.</p>
     </div>
 
     <div class="grid lg:grid-cols-2 gap-8">
@@ -915,28 +923,28 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-white">Individual Profile</h3>
-              <p class="text-blue-200 text-sm">For citizens, researchers, journalists, activists</p>
+              <p class="text-blue-200 text-sm">Best for: citizens, researchers, journalists, activists</p>
             </div>
           </div>
         </div>
         <div class="p-8">
-          <p class="text-gray-600 leading-relaxed mb-6">Create a personal profile with your name, bio, and areas of interest. Start discussions, vote, and build a public record of the conversations you've contributed to — or keep it private and participate anonymously.</p>
+          <p class="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-3">What your profile includes</p>
           <ul class="space-y-3 mb-8">
             <li class="flex items-start gap-3">
               <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-sm text-gray-700">A public profile page listing all your discussions</span>
+              <span class="text-sm text-gray-700">A public page with your name, bio, and all hosted discussions</span>
             </li>
             <li class="flex items-start gap-3">
               <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-sm text-gray-700">Host discussions under your own name and identity</span>
+              <span class="text-sm text-gray-700">Links to your website, newsletter, or social profiles</span>
             </li>
             <li class="flex items-start gap-3">
               <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-sm text-gray-700">Link to your social media, newsletter, or website</span>
+              <span class="text-sm text-gray-700">Areas of interest — so people can find discussions you run</span>
             </li>
             <li class="flex items-start gap-3">
               <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-sm text-gray-700">Free — no subscription needed</span>
+              <span class="text-sm text-gray-700">Free — no subscription, no time limit</span>
             </li>
           </ul>
           <a href="{{ url_for('profiles.create_individual_profile') }}"
@@ -958,16 +966,16 @@
             </div>
             <div>
               <h3 class="text-xl font-bold text-white">Organisation Profile</h3>
-              <p class="text-purple-200 text-sm">For NGOs, councils, think tanks, companies, media, podcasts</p>
+              <p class="text-purple-200 text-sm">Best for: NGOs, councils, think tanks, media, podcasts</p>
             </div>
           </div>
         </div>
         <div class="p-8">
-          <p class="text-gray-600 leading-relaxed mb-6">Create a verified organisation profile with your logo, description, and mission. Host discussions and Programmes under your brand — participants see who is running the consultation and why, which builds trust and increases engagement.</p>
+          <p class="text-sm text-gray-500 font-semibold uppercase tracking-wide mb-3">What your profile includes</p>
           <ul class="space-y-3 mb-8">
             <li class="flex items-start gap-3">
               <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-sm text-gray-700">A branded organisation page with logo and description</span>
+              <span class="text-sm text-gray-700">A branded page with your logo, description, and mission</span>
             </li>
             <li class="flex items-start gap-3">
               <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -975,11 +983,11 @@
             </li>
             <li class="flex items-start gap-3">
               <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-sm text-gray-700">Invite team members as co-managers and stewards</span>
+              <span class="text-sm text-gray-700">Team access — invite co-managers and stewards</span>
             </li>
             <li class="flex items-start gap-3">
               <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span class="text-sm text-gray-700">Embed discussions on your own website under your brand</span>
+              <span class="text-sm text-gray-700">Embed discussions on your own site under your brand</span>
             </li>
           </ul>
           <a href="{{ url_for('profiles.create_company_profile') }}"
