@@ -10,6 +10,7 @@ Uses APScheduler to run periodic tasks:
 Designed for Replit deployment (single-instance friendly)
 """
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.executors.pool import ThreadPoolExecutor as APSThreadPoolExecutor
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MISSED
 from datetime import datetime, timedelta
@@ -216,6 +217,13 @@ def init_scheduler(app):
     # Configure scheduler with generous misfire handling
     # This allows jobs to run even if app restarts around scheduled time
     scheduler = BackgroundScheduler(
+        executors={
+            # Cap at 8 threads.  Default is 10; keeping it lower reduces the
+            # peak number of concurrent Flask/SQLAlchemy contexts alive at once
+            # which is the primary driver of the scheduler process's memory
+            # growth and the ~45-minute SIGBUS crash seen in production.
+            'default': APSThreadPoolExecutor(8),
+        },
         job_defaults={
             'coalesce': True,  # Combine multiple missed runs into one
             'max_instances': 1,  # Only one instance of each job at a time
@@ -363,7 +371,7 @@ def init_scheduler(app):
         """Refresh curated analytics aggregates from immutable raw event stream."""
         with app.app_context():
             from app.analytics.events import rollup_analytics_daily
-            rows = rollup_analytics_daily(days_back=21)
+            rows = rollup_analytics_daily(days_back=14)
             if rows:
                 logger.info(f"Refreshed analytics daily aggregates ({rows} grouped rows)")
 
@@ -2093,7 +2101,7 @@ def init_scheduler(app):
         with app.app_context():
             from app.briefing.ingestion.jobs import process_pending_ingestion_jobs
             try:
-                process_pending_ingestion_jobs(max_jobs=30)
+                process_pending_ingestion_jobs(max_jobs=10)
             except Exception as e:
                 logger.error(f"Source ingestion queue processing failed: {e}", exc_info=True)
                 _send_ops_alert(

@@ -40,6 +40,12 @@ The full bash run command for the deployment is:
 
 The scheduler runs inside a `while true` restart loop so any crash (including SIGBUS from memory exhaustion) auto-restarts the scheduler without killing the web server. `wait $WEB_PID` (not `wait -n`) means only a gunicorn exit triggers a full deployment restart. The scheduler process itself has a 1-hour max-runtime cap (`_MAX_RUNTIME_SECONDS = 3600` in `scripts/run_scheduler.py`) — it exits cleanly at the hour mark so the restart loop gives it a fresh memory slate, preventing the ~45-minute Bus-error cycle seen in production before this fix.
 
+**Scheduler memory hardening** (applied to prevent the SIGBUS crash):
+- `BackgroundScheduler` is initialised with an explicit `APSThreadPoolExecutor(8)` (was default 10) — capping the number of concurrent Flask/SQLAlchemy app contexts alive at once.
+- `process_pending_ingestion_jobs(max_jobs=10)` (was 30) — limits peak transient memory from concurrent HTTP/RSS fetches that fire every 5 s.
+- `rollup_analytics_daily(days_back=14)` (was 21) — reduces the analytics query window and the size of the in-memory result set materialised every 15 min.
+- `scripts/run_scheduler.py` calls `gc.collect()` every 30 seconds (every 6 sleep ticks) and logs RSS memory usage every 5 minutes via `resource.getrusage()` so memory growth trends are visible in deployment logs.
+
 **APP_ROLE bootstrap** (in `create_app()` top, `app/__init__.py`): Maps role to low-level flags via `os.environ.setdefault`. All three roles (web, scheduler, worker) are covered and enforced by contract tests in `tests/test_consensus_job_queue_contract.py` (13 tests).
 
 **Scheduler lock**: Redis SETNX (`scheduler_lock` key), 120s TTL, heartbeat every 20s to `scheduler:last_heartbeat_at`. In the role-separated architecture, only the dedicated scheduler process contests the lock. Non-scheduler workers never attempt to acquire it.
