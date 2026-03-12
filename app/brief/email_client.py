@@ -276,6 +276,14 @@ class ResendClient:
                     f"Subscriber {subscriber.id} has invalid email address: {repr(subscriber.email)} — skipping send"
                 )
                 return False
+            # Strip whitespace and validate format to catch addresses that pass the
+            # '@' check but are rejected by Resend (spaces, newlines, angle brackets, etc.)
+            cleaned_email = subscriber.email.strip()
+            if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', cleaned_email):
+                logger.error(
+                    f"Subscriber {subscriber.id} email fails format validation: {repr(subscriber.email)} — skipping send"
+                )
+                return False
 
             # Render email HTML
             html_content = self._render_email(subscriber, brief)
@@ -675,7 +683,8 @@ class BriefEmailScheduler:
                     db.session.rollback()
                     continue
 
-                if not current_subscriber.email or '@' not in str(current_subscriber.email):
+                email_str = str(current_subscriber.email or '').strip()
+                if not email_str or '@' not in email_str or not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email_str):
                     results['failed'] += 1
                     results['errors'].append(
                         f"Subscriber {current_subscriber.id} has invalid email: {repr(current_subscriber.email)}"

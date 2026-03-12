@@ -172,6 +172,8 @@ class TopicSelector:
 
         # Filter by quality criteria with compensation for single-source topics
         filtered = []
+        coverage_cache = {}  # Avoid double-calculating per topic
+
         for topic in candidates:
             # Apply compensating quality checks for single-source topics
             if topic.source_count == 1:
@@ -180,14 +182,14 @@ class TopicSelector:
                     logger.debug(f"Excluding single-source topic '{topic.title[:50]}...' - "
                                 f"civic_score {topic.civic_score:.2f} < {self.MIN_CIVIC_SCORE_SINGLE_SOURCE}")
                     continue
-                
+
                 # Single-source topics need higher quality_score
                 quality_score = getattr(topic, 'quality_score', 0) or 0
                 if quality_score < self.MIN_QUALITY_SCORE_SINGLE_SOURCE:
                     logger.debug(f"Excluding single-source topic '{topic.title[:50]}...' - "
                                 f"quality_score {quality_score:.2f} < {self.MIN_QUALITY_SCORE_SINGLE_SOURCE}")
                     continue
-                    
+
                 logger.info(f"Accepting single-source topic '{topic.title[:50]}...' - "
                            f"meets quality thresholds (civic={topic.civic_score:.2f}, quality={quality_score:.2f})")
             else:
@@ -196,10 +198,11 @@ class TopicSelector:
                     logger.debug(f"Excluding topic '{topic.title[:50]}...' - "
                                 f"civic_score {topic.civic_score:.2f} < {self.MIN_CIVIC_SCORE}")
                     continue
-            
+
             # Check coverage balance
             analyzer = CoverageAnalyzer(topic)
             coverage = analyzer.calculate_distribution()
+            coverage_cache[topic.id] = coverage
 
             # Only include if coverage is sufficient and not too imbalanced
             if coverage['has_sufficient_coverage']:
@@ -209,6 +212,35 @@ class TopicSelector:
                     logger.info(f"Excluding topic '{topic.title}' due to coverage imbalance: {coverage['imbalance_score']}")
 
         logger.info(f"Topic selection: {len(candidates)} candidates -> {len(filtered)} after quality filters")
+
+        # Relaxed fallback: if strict filtering left us below MIN_ITEMS, accept any
+        # topic that has sufficient coverage regardless of imbalance score.  This
+        # prevents the brief from generating with only 1-2 items on days where all
+        # available topics happen to come from a single ideological perspective.
+        if len(filtered) < self.MIN_ITEMS:
+            already_included = {t.id for t in filtered}
+            for topic in candidates:
+                if topic.id in already_included:
+                    continue
+                coverage = coverage_cache.get(topic.id)
+                if coverage is None:
+                    analyzer = CoverageAnalyzer(topic)
+                    coverage = analyzer.calculate_distribution()
+                if coverage['has_sufficient_coverage']:
+                    filtered.append(topic)
+                    logger.info(
+                        f"Relaxed-filter fallback: accepting '{topic.title[:50]}...' "
+                        f"(imbalance={coverage['imbalance_score']:.2f}, civic={topic.civic_score:.2f})"
+                    )
+                    if len(filtered) >= self.MIN_ITEMS:
+                        break
+
+            if len(filtered) > len(already_included):
+                logger.warning(
+                    f"Relaxed imbalance filter applied — {len(filtered)} candidates now available "
+                    f"(was {len(already_included)} after strict filter)"
+                )
+
         return filtered
 
     def _calculate_brief_score(self, topic: TrendingTopic) -> float:
