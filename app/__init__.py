@@ -124,6 +124,13 @@ def create_app():
                     return None
                 if "Error fetching asset" in msg and (".php" in msg or "filemanager" in msg.lower() or "server/php" in msg.lower()):
                     return None
+                # Gunicorn arbiter logs "Worker (pid:N) exited with code 128" twice for
+                # the same event (two separate error() calls in reap_workers).  Code 128
+                # is gevent's hub fatal-error exit, caused by a transient overlay-fs EIO
+                # during SSL cert loading at worker startup.  Gunicorn auto-respawns the
+                # worker; no user impact.  Suppress to avoid alert fatigue.
+                if drop_if(msg, "exited with code 128"):
+                    return None
             exc_info = hint.get("exc_info")
             if exc_info:
                 exc_msg = str(exc_info[1] or "")

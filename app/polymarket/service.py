@@ -447,10 +447,13 @@ class PolymarketService:
                         market.probability = price
 
                     # Update outcomes array
+                    # Outcomes may be stored as dicts ({"price": ..., "label": ...})
+                    # or as plain strings (["Yes", "No"]) — only write price into dicts.
                     if market.outcomes and len(market.outcomes) > outcome_idx:
                         outcomes = list(market.outcomes)  # Make mutable copy
-                        outcomes[outcome_idx]['price'] = price
-                        market.outcomes = outcomes
+                        if isinstance(outcomes[outcome_idx], dict):
+                            outcomes[outcome_idx]['price'] = price
+                            market.outcomes = outcomes
 
                     market.last_price_update_at = utcnow_naive()
                     stats['updated'] += 1
