@@ -14,6 +14,8 @@ from app.resend_client import send_password_reset_email, send_welcome_email
 from app.email_utils import get_missing_individual_profile_fields, get_missing_company_profile_fields
 # Billing service for invitation handling
 from app.billing.service import accept_invitation, get_active_subscription
+from app.brief.subscription import process_subscription as process_brief_subscription
+from app.daily.utils import process_daily_question_subscription
 from app.programmes.access import programme_access_labels, query_accessible_programmes, ranked_programme_access_subquery
 try:
     import posthog
@@ -440,7 +442,6 @@ def dashboard_subscribe():
     email = current_user.email
 
     if sub_type == 'brief':
-        from app.brief.routes import process_subscription
         try:
             preferred_hour = int(request.form.get('preferred_hour', 8))
         except (ValueError, TypeError):
@@ -451,7 +452,7 @@ def dashboard_subscribe():
         if preferred_hour not in (6, 8, 18):
             preferred_hour = 8
 
-        result = process_subscription(
+        result = process_brief_subscription(
             email=email,
             timezone='UTC',
             preferred_hour=preferred_hour,
@@ -472,7 +473,6 @@ def dashboard_subscribe():
             flash('Something went wrong. Please try again.', 'error')
 
     elif sub_type == 'daily_question':
-        from app.daily.utils import process_daily_question_subscription
         frequency = request.form.get('email_frequency', 'weekly')
         if frequency not in ('daily', 'weekly'):
             frequency = 'weekly'

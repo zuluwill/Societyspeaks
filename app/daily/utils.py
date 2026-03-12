@@ -28,7 +28,12 @@ def process_daily_question_subscription(
         if user and existing.user_id != user.id:
             existing.user_id = user.id
         if existing.is_active:
-            db.session.commit()
+            try:
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                from flask import current_app
+                current_app.logger.error(f"Failed to persist user_id link for {email}: {e}")
             return {
                 'status': 'already_active',
                 'subscriber': existing,
@@ -39,7 +44,18 @@ def process_daily_question_subscription(
         if update_frequency_on_reactivate:
             existing.email_frequency = email_frequency
         existing.generate_magic_token()
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            from flask import current_app
+            current_app.logger.error(f"Reactivation DB error for {email}: {e}")
+            return {
+                'status': 'error',
+                'subscriber': None,
+                'message': 'An error occurred. Please try again.',
+                'error': str(e),
+            }
         return {
             'status': 'reactivated',
             'subscriber': existing,
