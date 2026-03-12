@@ -199,48 +199,26 @@ class TopicSelector:
                                 f"civic_score {topic.civic_score:.2f} < {self.MIN_CIVIC_SCORE}")
                     continue
 
-            # Check coverage balance
+            # Coverage check — include topic as long as it has at least one article.
+            # We intentionally do NOT filter by imbalance_score here: one-sided coverage
+            # (e.g. only left-leaning or only right-leaning sources) is still worth
+            # including because the blindspot / coverage-bar sections in the brief
+            # explicitly call this out to readers.  Filtering it out means readers
+            # never even see the story, which is the wrong trade-off for a
+            # transparency-first platform.
             analyzer = CoverageAnalyzer(topic)
             coverage = analyzer.calculate_distribution()
             coverage_cache[topic.id] = coverage
 
-            # Only include if coverage is sufficient and not too imbalanced
             if coverage['has_sufficient_coverage']:
-                if coverage['imbalance_score'] <= self.MAX_IMBALANCE or topic.civic_score >= 0.8:
-                    filtered.append(topic)
-                else:
-                    logger.info(f"Excluding topic '{topic.title}' due to coverage imbalance: {coverage['imbalance_score']}")
+                if coverage['imbalance_score'] > self.MAX_IMBALANCE:
+                    logger.info(
+                        f"Including '{topic.title[:50]}...' despite coverage imbalance "
+                        f"({coverage['imbalance_score']:.2f}) — blindspot section will flag this"
+                    )
+                filtered.append(topic)
 
         logger.info(f"Topic selection: {len(candidates)} candidates -> {len(filtered)} after quality filters")
-
-        # Relaxed fallback: if strict filtering left us below MIN_ITEMS, accept any
-        # topic that has sufficient coverage regardless of imbalance score.  This
-        # prevents the brief from generating with only 1-2 items on days where all
-        # available topics happen to come from a single ideological perspective.
-        if len(filtered) < self.MIN_ITEMS:
-            already_included = {t.id for t in filtered}
-            for topic in candidates:
-                if topic.id in already_included:
-                    continue
-                coverage = coverage_cache.get(topic.id)
-                if coverage is None:
-                    analyzer = CoverageAnalyzer(topic)
-                    coverage = analyzer.calculate_distribution()
-                if coverage['has_sufficient_coverage']:
-                    filtered.append(topic)
-                    logger.info(
-                        f"Relaxed-filter fallback: accepting '{topic.title[:50]}...' "
-                        f"(imbalance={coverage['imbalance_score']:.2f}, civic={topic.civic_score:.2f})"
-                    )
-                    if len(filtered) >= self.MIN_ITEMS:
-                        break
-
-            if len(filtered) > len(already_included):
-                logger.warning(
-                    f"Relaxed imbalance filter applied — {len(filtered)} candidates now available "
-                    f"(was {len(already_included)} after strict filter)"
-                )
-
         return filtered
 
     def _calculate_brief_score(self, topic: TrendingTopic) -> float:

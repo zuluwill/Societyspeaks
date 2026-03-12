@@ -199,7 +199,26 @@ class BriefGenerator:
                 logger.info("No story met lens check criteria - section will be omitted")
         except Exception as e:
             logger.warning(f"Failed to generate lens check: {e}")
-            # Non-critical - continue without it
+
+        # Generate "Market Pulse" — Polymarket prediction markets linked to brief topics
+        market_pulse_market_ids = set()
+        try:
+            market_pulse_data = self._generate_market_pulse(selected_topics)
+            if market_pulse_data:
+                brief.market_pulse = market_pulse_data
+                market_pulse_market_ids = {m['market_id'] for m in market_pulse_data if 'market_id' in m}
+                logger.info(f"Generated Market Pulse with {len(market_pulse_data)} markets")
+        except Exception as e:
+            logger.warning(f"Failed to generate Market Pulse: {e}")
+
+        # Generate "What the World is Watching" — broader Polymarket world events
+        try:
+            world_events_data = self._generate_world_events(seen_market_ids=market_pulse_market_ids)
+            if world_events_data:
+                brief.world_events = world_events_data
+                logger.info(f"Generated World Events with {len(world_events_data)} markets")
+        except Exception as e:
+            logger.warning(f"Failed to generate World Events: {e}")
 
         # Set status
         brief.status = 'ready' if auto_publish else 'draft'
