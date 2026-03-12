@@ -10,11 +10,11 @@
 <div class="relative isolate overflow-hidden bg-gradient-to-b from-blue-50 to-white">
   {# Background image #}
   <div class="absolute inset-0 -z-10 overflow-hidden">
-    <img src="{{ url_for('main.serve_asset', filename='images/hero-optimized.jpg') }}"
+    <img src="{{ url_for('main.serve_asset', filename='images/rod-long-optimized-1200x628.jpg') }}"
          alt=""
-         class="h-full w-full object-cover opacity-10"
+         class="h-full w-full object-cover opacity-15"
          loading="eager">
-    <div class="absolute inset-0 bg-gradient-to-b from-blue-50/80 via-blue-50/60 to-white"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-blue-50/70 via-blue-50/50 to-white"></div>
   </div>
 
   <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
@@ -876,6 +876,225 @@
         </div>
       </div>
 
+    </div>
+  </div>
+</div>
+
+{# ── Profiles: individual and organisation ── #}
+<div class="bg-blue-50 py-16 border-t border-blue-100">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <p class="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">Profiles</p>
+      <h2 class="text-3xl font-bold text-gray-900">Create a profile. Host discussions under your name.</h2>
+      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Whether you're an individual with something to say or an organisation running a structured consultation, you can create a profile and host discussions on Society Speaks.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8">
+
+      {# Individual profile #}
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-white">Individual Profile</h3>
+              <p class="text-blue-200 text-sm">For citizens, researchers, journalists, activists</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-8">
+          <p class="text-gray-600 leading-relaxed mb-6">Create a personal profile with your name, bio, and areas of interest. Start discussions, vote, and build a public record of the conversations you've contributed to — or keep it private and participate anonymously.</p>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span class="text-sm text-gray-700">A public profile page listing all your discussions</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span class="text-sm text-gray-700">Host discussions under your own name and identity</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span class="text-sm text-gray-700">Link to your social media, newsletter, or website</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span class="text-sm text-gray-700">Free — no subscription needed</span>
+            </li>
+          </ul>
+          <a href="{{ url_for('profiles.create_individual_profile') }}"
+             class="inline-flex items-center rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 transition-colors">
+            Create an individual profile
+            <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+      {# Organisation profile #}
+      <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-8 py-6">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center">
+              <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-xl font-bold text-white">Organisation Profile</h3>
+              <p class="text-purple-200 text-sm">For NGOs, councils, think tanks, companies, media, podcasts</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-8">
+          <p class="text-gray-600 leading-relaxed mb-6">Create a verified organisation profile with your logo, description, and mission. Host discussions and Programmes under your brand — participants see who is running the consultation and why, which builds trust and increases engagement.</p>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span class="text-sm text-gray-700">A branded organisation page with logo and description</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span class="text-sm text-gray-700">All discussions and Programmes listed under your brand</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span class="text-sm text-gray-700">Invite team members as co-managers and stewards</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span class="text-sm text-gray-700">Embed discussions on your own website under your brand</span>
+            </li>
+          </ul>
+          <a href="{{ url_for('profiles.create_company_profile') }}"
+             class="inline-flex items-center rounded-md bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 transition-colors">
+            Create an organisation profile
+            <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{# ── FAQs ── #}
+<div class="bg-white py-16 border-t border-gray-100">
+  <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3">Common questions</p>
+      <h2 class="text-3xl font-bold text-gray-900">Frequently asked questions</h2>
+    </div>
+
+    <div class="divide-y divide-gray-200">
+
+      <details class="group py-5">
+        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
+          <span class="text-base font-semibold text-gray-900">Is Society Speaks free to use?</span>
+          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </span>
+        </summary>
+        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Yes — participating in discussions, creating discussions, and creating individual and organisation profiles are all free. Programmes are also free for most use cases. For large-scale institutional deployments with dedicated support, white-labelling, or advanced integrations, <a href="mailto:info@societyspeaks.io" class="text-blue-600 hover:underline font-medium">get in touch</a>.</p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
+          <span class="text-base font-semibold text-gray-900">How do I start a discussion?</span>
+          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </span>
+        </summary>
+        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Sign in or register, then click "Start a discussion". You'll give it a title, description, topic, and geographic scope. You can either write the opening statements yourself or use our AI assistant to generate a balanced set of statements. You choose whether the discussion is public, unlisted, invite-only, or private.</p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
+          <span class="text-base font-semibold text-gray-900">Can I host discussions as my organisation rather than as an individual?</span>
+          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </span>
+        </summary>
+        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Yes. Create an organisation profile and then link discussions and Programmes to it. Participants will see your organisation's name, logo, and description as the host — rather than your personal account. You can also invite colleagues as co-managers so the whole team can administer discussions under one brand.</p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
+          <span class="text-base font-semibold text-gray-900">How many participants do I need before the consensus analysis works?</span>
+          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </span>
+        </summary>
+        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">The clustering algorithm needs enough data to identify meaningful groups. In practice, you'll start to see clear patterns from around 30–40 active participants (people who have voted on at least 5 statements). The analysis becomes significantly more reliable with 100+ participants, and very robust at 500+. Each participant needs to vote on at least 5 statements to be included in their cluster.</p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
+          <span class="text-base font-semibold text-gray-900">Are votes anonymous? Who can see what I voted?</span>
+          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </span>
+        </summary>
+        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Individual votes are private — no one can see how you specifically voted on any statement. What is visible is the aggregate result: the percentage breakdown of agree/disagree/unsure across all participants, and the cluster groupings. The consensus analysis shows which cluster you belong to, but does not reveal your individual votes to other participants or the discussion host.</p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
+          <span class="text-base font-semibold text-gray-900">What is a Programme and how does it differ from a discussion?</span>
+          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </span>
+        </summary>
+        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">A discussion is a single conversation on one topic. A Programme is a structured campaign that groups many discussions together — for example, a national consultation on housing policy might have separate discussions on planning, affordability, social housing, and landlord regulation. Programmes support phases (e.g. Listening → Deliberation → Recommendations), themes, and participant cohorts, with a single export of all data.</p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
+          <span class="text-base font-semibold text-gray-900">Can I embed Society Speaks discussions on my own website?</span>
+          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </span>
+        </summary>
+        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Yes. Publishers and partners can embed a voting widget directly into any webpage — a news article, policy document, or campaign page. Participants can vote without leaving your site. All votes feed into the same consensus analysis. See the <a href="{{ url_for('partner.hub') }}" class="text-blue-600 hover:underline font-medium">publisher hub</a> for setup instructions.</p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
+          <span class="text-base font-semibold text-gray-900">Can I keep my discussion private or invite-only?</span>
+          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </span>
+        </summary>
+        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Yes. When creating a discussion you choose the visibility: <strong>Public</strong> (anyone can find and join), <strong>Unlisted</strong> (accessible via link but not listed publicly), <strong>Invite-only</strong> (participants must be invited by email), or <strong>Private</strong> (only accessible to the creator and invited participants). This applies to Programmes too.</p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
+          <span class="text-base font-semibold text-gray-900">Can I export the data from my discussion?</span>
+          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </span>
+        </summary>
+        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Yes. Discussion creators and Programme managers can export all vote data as CSV or JSON — including per-statement results, participant clusters, and cohort breakdowns. This lets you do your own analysis, feed results into reports, or archive everything outside the platform.</p>
+      </details>
+
+      <details class="group py-5">
+        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
+          <span class="text-base font-semibold text-gray-900">How is Society Speaks different from a standard survey tool like SurveyMonkey?</span>
+          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </span>
+        </summary>
+        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Survey tools give you aggregate responses — percentages and averages. Society Speaks reveals the <em>structure</em> of opinion: how views cluster, which ideas bridge opposing groups, and where genuine fault lines lie. It's also open to public participation by default, and participants can add their own statements and reasoning — making it a genuine deliberative tool rather than a data collection exercise.</p>
+      </details>
+
+    </div>
+
+    <div class="mt-10 text-center">
+      <p class="text-gray-500 text-sm">Still have questions? <a href="mailto:info@societyspeaks.io" class="text-blue-600 font-semibold hover:underline">Email us</a> or <a href="{{ url_for('help.help') }}" class="text-blue-600 font-semibold hover:underline">read the docs</a>.</p>
     </div>
   </div>
 </div>
