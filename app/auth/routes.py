@@ -13,7 +13,7 @@ from app.resend_client import send_password_reset_email, send_welcome_email
 # Profile utilities (not email-related)
 from app.email_utils import get_missing_individual_profile_fields, get_missing_company_profile_fields
 # Billing service for invitation handling
-from app.billing.service import accept_invitation
+from app.billing.service import accept_invitation, get_active_subscription
 from app.programmes.access import programme_access_labels, query_accessible_programmes, ranked_programme_access_subquery
 try:
     import posthog
@@ -415,6 +415,7 @@ def dashboard():
 
     brief_sub = DailyBriefSubscriber.query.filter_by(email=current_user.email).first()
     dq_sub = DailyQuestionSubscriber.query.filter_by(email=current_user.email).first()
+    has_briefings_plan = bool(get_active_subscription(current_user))
 
     return render_template(
         'auth/dashboard.html',
@@ -427,6 +428,7 @@ def dashboard():
         total_programmes=total_programmes,
         brief_sub=brief_sub,
         dq_sub=dq_sub,
+        has_briefings_plan=has_briefings_plan,
     )
 
 
