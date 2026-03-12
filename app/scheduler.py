@@ -1780,7 +1780,7 @@ def init_scheduler(app):
                 logger.error(f"Daily brief safety-net-2 failed: {e}", exc_info=True)
                 _send_ops_alert(f"CRITICAL: Daily brief safety-net-2 raised an unhandled error: {e}")
 
-    @scheduler.scheduled_job('interval', seconds=5, id='check_emergency_brief_generate')
+    @scheduler.scheduled_job('interval', seconds=15, id='check_emergency_brief_generate')
     def check_emergency_brief_generate_job():
         """
         Check for emergency brief generation requests queued via admin dashboard.
@@ -2076,7 +2076,7 @@ def init_scheduler(app):
                     "See scheduler logs for traceback."
                 )
 
-    @scheduler.scheduled_job('interval', seconds=3, id='process_brief_generation_queue')
+    @scheduler.scheduled_job('interval', seconds=10, id='process_brief_generation_queue')
     def process_brief_generation_queue_job():
         """
         Process pending brief generation jobs.
@@ -2093,7 +2093,7 @@ def init_scheduler(app):
                     "See scheduler logs for traceback."
                 )
 
-    @scheduler.scheduled_job('interval', seconds=5, id='process_source_ingestion_queue')
+    @scheduler.scheduled_job('interval', seconds=15, id='process_source_ingestion_queue')
     def process_source_ingestion_queue_job():
         """
         Process queued briefing source ingestion jobs with backpressure controls.

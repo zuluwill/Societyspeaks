@@ -44,7 +44,8 @@ The scheduler runs inside a `while true` restart loop so any crash (including SI
 - `BackgroundScheduler` is initialised with an explicit `APSThreadPoolExecutor(8)` (was default 10) — capping the number of concurrent Flask/SQLAlchemy app contexts alive at once.
 - `process_pending_ingestion_jobs(max_jobs=10)` (was 30) — limits peak transient memory from concurrent HTTP/RSS fetches that fire every 5 s.
 - `rollup_analytics_daily(days_back=14)` (was 21) — reduces the analytics query window and the size of the in-memory result set materialised every 15 min.
-- `scripts/run_scheduler.py` calls `gc.collect()` every 30 seconds (every 6 sleep ticks) and logs RSS memory usage every 5 minutes via `resource.getrusage()` so memory growth trends are visible in deployment logs.
+- `scripts/run_scheduler.py` calls `gc.collect()` every 30 seconds (every 6 sleep ticks), followed immediately by `ctypes.CDLL("libc.so.6").malloc_trim(0)` to return freed glibc heap arenas back to the OS — `gc.collect()` alone does not reduce RSS. Also logs RSS via `resource.getrusage()` every 5 minutes.
+- Sub-minute polling intervals were raised after the first production deployment showed the scheduler crashing at ~15 min (faster than the pre-fix ~45 min), caused by too many Flask app contexts being created per minute under real production load: `process_brief_generation_queue` 3 s → 10 s; `check_emergency_brief_generate` and `process_source_ingestion_queue` 5 s → 15 s. Max user-visible latency for triggered actions increased from 3-5 s to 10-15 s.
 
 **APP_ROLE bootstrap** (in `create_app()` top, `app/__init__.py`): Maps role to low-level flags via `os.environ.setdefault`. All three roles (web, scheduler, worker) are covered and enforced by contract tests in `tests/test_consensus_job_queue_contract.py` (13 tests).
 

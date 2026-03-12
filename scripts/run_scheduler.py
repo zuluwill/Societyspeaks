@@ -68,8 +68,18 @@ while not _SHUTDOWN:
     # fall behind.  Forcing a full collection every 30 s keeps cyclic garbage
     # (e.g. SQLAlchemy result proxy chains, traceback frames held by exc_info
     # loggers) from accumulating between ticks.
+    #
+    # gc.collect() alone does not shrink the process RSS — Python's allocator
+    # holds freed arenas for reuse.  malloc_trim(0) tells glibc to release
+    # contiguous free pages at the top of the heap back to the OS, which is
+    # the only way to lower the measured RSS without restarting the process.
     if _tick % _GC_INTERVAL_TICKS == 0:
         gc.collect()
+        try:
+            import ctypes
+            ctypes.CDLL("libc.so.6").malloc_trim(0)
+        except Exception:
+            pass  # Not available on non-glibc platforms (macOS, musl) — safe to skip
 
     # Memory monitoring: log RSS usage every 5 minutes so we can track growth
     # trends across deployments.  resource.getrusage().ru_maxrss is in KB on
