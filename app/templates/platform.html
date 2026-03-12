@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/discussion_card.html" import discussion_card %}
 
 {% block title %}Discussions & Programmes — Society Speaks{% endblock %}
 {% block meta_description %}Nuanced debate backed by rigorous analysis. Society Speaks discussions and programmes give individuals a voice and organisations the tools to run structured deliberation at any scale — from a single conversation to a national consultation.{% endblock %}
@@ -7,6 +8,15 @@
 
 {# ── Hero ── #}
 <div class="relative isolate overflow-hidden bg-gradient-to-b from-blue-50 to-white">
+  {# Background image #}
+  <div class="absolute inset-0 -z-10 overflow-hidden">
+    <img src="{{ url_for('main.serve_asset', filename='images/hero-optimized.jpg') }}"
+         alt=""
+         class="h-full w-full object-cover opacity-10"
+         loading="eager">
+    <div class="absolute inset-0 bg-gradient-to-b from-blue-50/80 via-blue-50/60 to-white"></div>
+  </div>
+
   <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
     <div class="mx-auto max-w-3xl text-center">
       <div class="inline-flex items-center gap-2 rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700 mb-6">
@@ -20,7 +30,7 @@
         Nuanced debate.<br>Rigorous analysis.
       </h1>
       <p class="mt-6 text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-        Discussions are where the conversation happens. Programmes are how you structure many discussions into a campaign. Together they're one platform for deliberative democracy — from a single question to a national consultation.
+        Vote on statements. Discover where you agree with people you thought you didn't. See what the data actually reveals — not percentages, but clusters of real opinion.
       </p>
       <div class="mt-10 flex flex-wrap justify-center gap-4">
         <a href="{{ url_for('discussions.search_discussions') }}"
@@ -40,7 +50,7 @@
           <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
           </svg>
-          See Live Demo
+          Try a Live Demo
         </a>
         {% endif %}
       </div>
@@ -48,133 +58,419 @@
   </div>
 </div>
 
-{# ── How it works: the 3 parts ── #}
+{# ── What a discussion looks like ── #}
 <div class="bg-white py-16 border-y border-gray-100">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
-      <h2 class="text-3xl font-bold text-gray-900">How it works</h2>
-      <p class="mt-3 text-lg text-gray-600">Three parts. One rigorous system.</p>
+      <h2 class="text-3xl font-bold text-gray-900">What does it actually look like?</h2>
+      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Each discussion presents clear statements on a real issue. You vote agree, disagree, or unsure — then see how your view compares to everyone else.</p>
     </div>
 
-    <div class="grid gap-8 lg:grid-cols-3">
+    <div class="grid lg:grid-cols-2 gap-12 items-start">
 
-      {# Native Discussions #}
-      <div class="rounded-xl bg-gradient-to-br from-blue-50 to-white border border-blue-100 p-8">
-        <div class="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center mb-5">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-          </svg>
+      {# Left: Statement mockup #}
+      <div>
+        <p class="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-4">A discussion statement</p>
+
+        {# Mock statement card #}
+        <div class="rounded-2xl border border-gray-200 shadow-lg overflow-hidden bg-white">
+          <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500 text-white">🌱 Environment</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-white/20 text-white">Featured</span>
+            </div>
+            <h3 class="text-white font-bold text-lg leading-snug">The UK's approach to net zero</h3>
+          </div>
+
+          <div class="p-6">
+            <div class="rounded-xl bg-gray-50 border border-gray-200 p-5 mb-5">
+              <p class="text-gray-800 font-medium text-base leading-relaxed mb-1">
+                "The UK should bring forward its net zero target from 2050 to 2040 to maintain climate leadership."
+              </p>
+              <p class="text-xs text-gray-400 mt-2">Statement 3 of 8</p>
+            </div>
+
+            {# Vote buttons #}
+            <div class="grid grid-cols-3 gap-3 mb-5">
+              <button class="flex flex-col items-center justify-center gap-1.5 rounded-xl bg-green-50 border-2 border-green-400 px-3 py-4 text-green-700 font-semibold text-sm transition-all shadow-sm">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"/>
+                </svg>
+                Agree
+              </button>
+              <button class="flex flex-col items-center justify-center gap-1.5 rounded-xl bg-red-50 border-2 border-gray-200 px-3 py-4 text-gray-500 font-semibold text-sm transition-all">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14H5.236a2 2 0 01-1.789-2.894l3.5-7A2 2 0 018.736 3h4.018a2 2 0 01.485.06l3.76.94m-7 10v5a2 2 0 002 2h.096c.5 0 .905-.405.905-.904 0-.715.211-1.413.608-2.008L17 13V4m-7 10h2m5-10h2a2 2 0 012 2v6a2 2 0 01-2 2h-2.5"/>
+                </svg>
+                Disagree
+              </button>
+              <button class="flex flex-col items-center justify-center gap-1.5 rounded-xl bg-amber-50 border-2 border-gray-200 px-3 py-4 text-gray-500 font-semibold text-sm transition-all">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Unsure
+              </button>
+            </div>
+
+            {# After-vote bar chart #}
+            <div class="space-y-2">
+              <div class="flex items-center gap-3 text-sm">
+                <span class="text-gray-500 w-16 text-right shrink-0">Agree</span>
+                <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                  <div class="bg-green-400 h-3 rounded-full" style="width:62%"></div>
+                </div>
+                <span class="text-gray-700 font-semibold w-8 shrink-0">62%</span>
+              </div>
+              <div class="flex items-center gap-3 text-sm">
+                <span class="text-gray-500 w-16 text-right shrink-0">Disagree</span>
+                <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                  <div class="bg-red-400 h-3 rounded-full" style="width:27%"></div>
+                </div>
+                <span class="text-gray-700 font-semibold w-8 shrink-0">27%</span>
+              </div>
+              <div class="flex items-center gap-3 text-sm">
+                <span class="text-gray-500 w-16 text-right shrink-0">Unsure</span>
+                <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
+                  <div class="bg-amber-300 h-3 rounded-full" style="width:11%"></div>
+                </div>
+                <span class="text-gray-700 font-semibold w-8 shrink-0">11%</span>
+              </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-3 text-center">Based on 1,247 votes — vote on 5 statements to unlock your cluster</p>
+          </div>
         </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-3">Native Discussions</h3>
-        <p class="text-gray-600 mb-5 text-sm leading-relaxed">Each discussion presents clear, balanced statements on a real issue. Participants vote agree, disagree, or unsure — and can add evidence or reasoning. No shouting. No comment threads. Structured deliberation.</p>
-        <ul class="space-y-2.5 text-sm text-gray-700">
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            AI-generated or manually crafted seed statements
+      </div>
+
+      {# Right: explanation steps #}
+      <div class="flex flex-col gap-8 pt-2">
+        <div>
+          <p class="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-4">How it works in 3 steps</p>
+        </div>
+        <div class="flex gap-5">
+          <div class="w-10 h-10 rounded-full bg-blue-600 text-white font-bold text-lg flex items-center justify-center flex-shrink-0">1</div>
+          <div>
+            <h3 class="font-bold text-gray-900 text-lg mb-1">Read a statement</h3>
+            <p class="text-gray-600 text-sm leading-relaxed">Each discussion presents clear, balanced statements on a real issue — written to be fair to all sides. No leading questions, no loaded language.</p>
+          </div>
+        </div>
+        <div class="flex gap-5">
+          <div class="w-10 h-10 rounded-full bg-blue-600 text-white font-bold text-lg flex items-center justify-center flex-shrink-0">2</div>
+          <div>
+            <h3 class="font-bold text-gray-900 text-lg mb-1">Vote agree, disagree, or unsure</h3>
+            <p class="text-gray-600 text-sm leading-relaxed">One tap. No essays, no point-scoring. Just your genuine position. You can add reasoning or evidence, but it's optional. Vote on 5 statements to unlock your cluster.</p>
+          </div>
+        </div>
+        <div class="flex gap-5">
+          <div class="w-10 h-10 rounded-full bg-blue-600 text-white font-bold text-lg flex items-center justify-center flex-shrink-0">3</div>
+          <div>
+            <h3 class="font-bold text-gray-900 text-lg mb-1">See how opinion actually clusters</h3>
+            <p class="text-gray-600 text-sm leading-relaxed">Once enough people have voted, machine learning groups participants by their actual voting patterns. You'll see which group you're in, what your group agrees on, and where surprising common ground exists.</p>
+          </div>
+        </div>
+
+        {% if demo_discussion %}
+        <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-5">
+          <p class="font-semibold text-emerald-900 text-sm mb-1">Try it yourself — takes 2 minutes</p>
+          <p class="text-xs text-emerald-700 mb-4">Vote on our live demo discussion, then see what the consensus analysis reveals about how opinion clusters.</p>
+          <div class="flex flex-wrap gap-3">
+            <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}"
+               class="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">
+              Vote on the demo
+            </a>
+            <a href="{{ url_for('consensus.view_results', discussion_id=demo_discussion.id) }}"
+               class="inline-flex items-center rounded-md bg-white border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">
+              See the analysis
+            </a>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Consensus Analysis Visual Mockup ── #}
+<div class="bg-gray-50 py-16">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold text-gray-900">What consensus analysis reveals</h2>
+      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Traditional polling gives you percentages. We show you how views actually cluster — revealing what divides people and, crucially, where they agree across lines.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-10 items-start">
+
+      {# Left: Clusters visual #}
+      <div>
+        <p class="text-xs font-semibold text-purple-600 uppercase tracking-widest mb-4">Opinion clusters</p>
+        <div class="rounded-2xl border border-gray-200 shadow-lg bg-white overflow-hidden">
+          <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+            <p class="font-semibold text-gray-800 text-sm">Consensus Analysis — UK Net Zero Discussion</p>
+            <span class="text-xs text-gray-500">1,247 participants</span>
+          </div>
+          <div class="p-6">
+            {# Cluster scatter-plot visual #}
+            <div class="relative bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl border border-gray-200 h-48 mb-5 overflow-hidden">
+              <div class="absolute inset-0 flex items-center justify-center">
+                {# Cluster A blob #}
+                <div class="absolute" style="top:25%;left:20%">
+                  <div class="relative">
+                    <div class="w-28 h-24 bg-blue-200/70 rounded-full blur-xl"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <div class="text-center">
+                        <div class="w-3 h-3 bg-blue-500 rounded-full mx-auto mb-1"></div>
+                        <span class="text-xs font-bold text-blue-700 bg-white/80 rounded px-1.5">Group A</span>
+                        <p class="text-xs text-blue-600 mt-0.5">612 people</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {# Cluster B blob #}
+                <div class="absolute" style="top:30%;right:18%">
+                  <div class="relative">
+                    <div class="w-24 h-20 bg-purple-200/70 rounded-full blur-xl"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <div class="text-center">
+                        <div class="w-3 h-3 bg-purple-500 rounded-full mx-auto mb-1"></div>
+                        <span class="text-xs font-bold text-purple-700 bg-white/80 rounded px-1.5">Group B</span>
+                        <p class="text-xs text-purple-600 mt-0.5">412 people</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {# Cluster C blob #}
+                <div class="absolute" style="bottom:15%;left:42%">
+                  <div class="relative">
+                    <div class="w-16 h-14 bg-emerald-200/70 rounded-full blur-lg"></div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <div class="text-center">
+                        <div class="w-2.5 h-2.5 bg-emerald-500 rounded-full mx-auto mb-1"></div>
+                        <span class="text-xs font-bold text-emerald-700 bg-white/80 rounded px-1">Group C</span>
+                        <p class="text-xs text-emerald-600 mt-0.5">223</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="absolute bottom-2 right-3 text-xs text-gray-400">ML clustering by voting pattern</p>
+            </div>
+
+            {# Statement type badges #}
+            <div class="space-y-3">
+              <div class="flex gap-3 rounded-lg bg-green-50 border border-green-200 p-3.5">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="text-xs font-bold text-green-700 uppercase tracking-wide">Consensus</span>
+                    <span class="text-xs text-green-600 bg-green-100 rounded-full px-2 py-0.5">All groups agree</span>
+                  </div>
+                  <p class="text-sm text-gray-700 leading-snug">"Investment in renewable energy creates more jobs than it destroys."</p>
+                  <div class="mt-1.5 flex items-center gap-2">
+                    <div class="flex-1 bg-green-200 rounded-full h-1.5">
+                      <div class="bg-green-500 h-1.5 rounded-full" style="width:84%"></div>
+                    </div>
+                    <span class="text-xs font-semibold text-green-700">84% agree</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex gap-3 rounded-lg bg-blue-50 border border-blue-200 p-3.5">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="text-xs font-bold text-blue-700 uppercase tracking-wide">Bridge</span>
+                    <span class="text-xs text-blue-600 bg-blue-100 rounded-full px-2 py-0.5">Unites opposing groups</span>
+                  </div>
+                  <p class="text-sm text-gray-700 leading-snug">"Energy security and climate action can and should be pursued together."</p>
+                </div>
+              </div>
+
+              <div class="flex gap-3 rounded-lg bg-amber-50 border border-amber-200 p-3.5">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-0.5">
+                    <span class="text-xs font-bold text-amber-700 uppercase tracking-wide">Division</span>
+                    <span class="text-xs text-amber-600 bg-amber-100 rounded-full px-2 py-0.5">Real fault line</span>
+                  </div>
+                  <p class="text-sm text-gray-700 leading-snug">"The cost of the transition should fall primarily on high-income households."</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {# Right: explanation #}
+      <div class="flex flex-col gap-7 pt-2">
+        <div>
+          <p class="text-xs font-semibold text-purple-600 uppercase tracking-widest mb-3">Why this matters</p>
+          <p class="text-gray-600 leading-relaxed">Opinion polls tell you that 62% of people agree with something. We tell you <em>which</em> people — and what those people agree on, disagree on, and what surprising common ground exists between groups who seem to be in opposition.</p>
+        </div>
+
+        <div class="space-y-5">
+          <div class="flex gap-4">
+            <div class="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div>
+              <h4 class="font-bold text-gray-900 text-sm">Consensus statements</h4>
+              <p class="text-gray-600 text-sm mt-0.5">Ideas with broad agreement across all groups — the genuine common ground that polls often miss.</p>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <div class="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+            </div>
+            <div>
+              <h4 class="font-bold text-gray-900 text-sm">Bridge statements</h4>
+              <p class="text-gray-600 text-sm mt-0.5">Ideas that unite people who otherwise disagree — the foundation for productive conversation across divides.</p>
+            </div>
+          </div>
+          <div class="flex gap-4">
+            <div class="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <div>
+              <h4 class="font-bold text-gray-900 text-sm">Genuine divisions</h4>
+              <p class="text-gray-600 text-sm mt-0.5">Real fault lines — the places where groups genuinely differ. Understanding these is the start of honest public debate.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-xl bg-blue-50 border border-blue-200 p-5">
+          <p class="text-sm font-semibold text-blue-900 mb-1">Inspired by Pol.is — built for the UK</p>
+          <p class="text-sm text-blue-700 leading-relaxed">Our clustering approach is inspired by the open-source <a href="https://pol.is" target="_blank" rel="noopener" class="underline font-semibold">Pol.is</a> methodology, adapted for deliberative democracy at any scale — from a local council to a national strategy consultation.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── Real discussions happening now ── #}
+{% if featured_discussions %}
+<div class="bg-white py-16">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+      <div>
+        <h2 class="text-3xl font-bold text-gray-900">Discussions happening now</h2>
+        <p class="mt-2 text-lg text-gray-600">Real discussions on real issues — join in and see where opinion clusters.</p>
+      </div>
+      <a href="{{ url_for('discussions.search_discussions') }}"
+         class="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800 shrink-0">
+        See all discussions
+        <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {% for discussion in featured_discussions %}
+        {{ discussion_card(discussion) }}
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{# ── Programmes — the bigger picture ── #}
+<div class="bg-gray-50 py-16 border-t border-gray-100">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="grid lg:grid-cols-2 gap-12 items-center">
+      <div>
+        <p class="text-xs font-semibold text-purple-600 uppercase tracking-widest mb-3">Programmes</p>
+        <h2 class="text-3xl font-bold text-gray-900 mb-4">One discussion is a conversation.<br>A Programme is a consultation.</h2>
+        <p class="text-gray-600 leading-relaxed mb-6">A Programme groups multiple discussions into one structured campaign — with shared themes, phases, participant cohorts, and full data export. Used by organisations and governments for everything from stakeholder consultations to national strategy dialogues.</p>
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span class="text-gray-700 text-sm"><strong>Themes</strong> — Housing, Transport, Economy. Filter and compare across topics.</span>
           </li>
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            Threaded responses with evidence linking
+          <li class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span class="text-gray-700 text-sm"><strong>Phases</strong> — Listening → Deliberation → Recommendations. Structured consultation flow.</span>
           </li>
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            Real-time voting — no page refresh
+          <li class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span class="text-gray-700 text-sm"><strong>Cohorts</strong> — Compare views across regions, demographics, or stakeholder groups.</span>
           </li>
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            Public, unlisted, invite-only, or private
+          <li class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span class="text-gray-700 text-sm"><strong>Export</strong> — Full CSV/JSON data export per cohort for your own analysis.</span>
           </li>
         </ul>
-      </div>
-
-      {# Consensus Analysis #}
-      <div class="rounded-xl bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 p-8">
-        <div class="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center mb-5">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-          </svg>
-        </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-3">Consensus Analysis</h3>
-        <p class="text-gray-600 mb-5 text-sm leading-relaxed">Once enough people have voted, machine learning clusters participants by their actual voting patterns — not by who they are. This reveals what polls never show: how views genuinely form and overlap.</p>
-        <div class="space-y-3">
-          <div class="flex gap-3 p-3 bg-green-50 rounded-lg border border-green-100">
-            <svg class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <div>
-              <p class="text-sm font-semibold text-gray-900">Consensus statements</p>
-              <p class="text-xs text-gray-600">Broad agreement across all groups</p>
-            </div>
-          </div>
-          <div class="flex gap-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-            <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-            <div>
-              <p class="text-sm font-semibold text-gray-900">Bridge statements</p>
-              <p class="text-xs text-gray-600">Ideas that unite people who otherwise disagree</p>
-            </div>
-          </div>
-          <div class="flex gap-3 p-3 bg-amber-50 rounded-lg border border-amber-100">
-            <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            <div>
-              <p class="text-sm font-semibold text-gray-900">Genuine divisions</p>
-              <p class="text-xs text-gray-600">Real fault lines worth understanding and addressing</p>
-            </div>
-          </div>
+        <div class="flex flex-wrap gap-3">
+          <a href="{{ url_for('programmes.list_programmes') }}"
+             class="inline-flex items-center rounded-md bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 transition-colors">
+            Browse Programmes
+          </a>
+          <a href="{{ url_for('help.programmes') }}"
+             class="inline-flex items-center rounded-md bg-white border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+            How Programmes work
+          </a>
         </div>
       </div>
 
-      {# Programmes #}
-      <div class="rounded-xl bg-gradient-to-br from-purple-50 to-white border border-purple-100 p-8">
-        <div class="w-12 h-12 rounded-xl bg-purple-600 flex items-center justify-center mb-5">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-          </svg>
+      {# Programme visual mockup #}
+      <div>
+        <div class="rounded-2xl border border-gray-200 shadow-lg bg-white overflow-hidden">
+          <div class="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-5">
+            <p class="text-purple-200 text-xs font-semibold uppercase tracking-widest mb-1">Programme</p>
+            <h3 class="text-white font-bold text-lg">National Strategy Project</h3>
+            <p class="text-purple-200 text-sm mt-1">UK long-term future — mapping citizen opinion at scale</p>
+          </div>
+          <div class="p-5">
+            {# Phase indicator #}
+            <div class="flex items-center gap-2 mb-5">
+              <div class="flex-1 h-2 bg-emerald-400 rounded-full"></div>
+              <div class="flex-1 h-2 bg-purple-400 rounded-full"></div>
+              <div class="flex-1 h-2 bg-gray-200 rounded-full"></div>
+              <span class="text-xs text-gray-500 ml-1">Phase 2 of 3</span>
+            </div>
+            {# Theme pills #}
+            <div class="flex flex-wrap gap-2 mb-5">
+              <span class="px-2.5 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">🏠 Housing</span>
+              <span class="px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">🌱 Environment</span>
+              <span class="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full">📈 Economy</span>
+              <span class="px-2.5 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">+5 more</span>
+            </div>
+            {# Stats row #}
+            <div class="grid grid-cols-3 gap-3 mb-5">
+              <div class="text-center rounded-lg bg-gray-50 border border-gray-100 py-3">
+                <p class="text-2xl font-bold text-gray-900">12</p>
+                <p class="text-xs text-gray-500 mt-0.5">Discussions</p>
+              </div>
+              <div class="text-center rounded-lg bg-gray-50 border border-gray-100 py-3">
+                <p class="text-2xl font-bold text-gray-900">4,831</p>
+                <p class="text-xs text-gray-500 mt-0.5">Participants</p>
+              </div>
+              <div class="text-center rounded-lg bg-gray-50 border border-gray-100 py-3">
+                <p class="text-2xl font-bold text-gray-900">3</p>
+                <p class="text-xs text-gray-500 mt-0.5">Cohorts</p>
+              </div>
+            </div>
+            {# Callout #}
+            <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3.5">
+              <p class="text-xs font-semibold text-emerald-800 mb-0.5">In use: National Strategy Project</p>
+              <p class="text-xs text-emerald-700">Running national dialogue on the UK's long-term future — mapping where citizens agree, disagree, and where common ground exists.</p>
+              <a href="https://www.nationalstrategy.uk/" target="_blank" rel="noopener"
+                 class="inline-flex items-center mt-2 text-xs font-semibold text-emerald-800 hover:underline">
+                Visit nationalstrategy.uk
+                <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </a>
+            </div>
+          </div>
         </div>
-        <h3 class="text-xl font-bold text-gray-900 mb-3">Programmes</h3>
-        <p class="text-gray-600 mb-5 text-sm leading-relaxed">A Programme groups many discussions into one structured campaign with shared themes, phases, and participant access controls. Everything stays connected, and you can export it all together.</p>
-        <ul class="space-y-2.5 text-sm text-gray-700">
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            Themes: Housing, Transport, Economy — filter and compare
-          </li>
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            Phases: Listening → Deliberation → Recommendations
-          </li>
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            Cohorts: compare views across regions or groups
-          </li>
-          <li class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            Export all data as CSV/JSON for further analysis
-          </li>
-        </ul>
       </div>
     </div>
-
-    {# Demo callout #}
-    {% if demo_discussion %}
-    <div class="mt-10 rounded-xl bg-emerald-50 border border-emerald-200 p-6 flex flex-col sm:flex-row sm:items-center gap-5">
-      <div class="flex-1">
-        <p class="font-semibold text-gray-900">See it in action — live demo</p>
-        <p class="text-sm text-gray-600 mt-1">Vote on our demo discussion, then see what the consensus analysis reveals. Takes about 2 minutes. Vote on 5 statements to unlock the full analysis.</p>
-      </div>
-      <div class="flex flex-col sm:flex-row gap-3 flex-shrink-0">
-        <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}"
-           class="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors min-h-11">
-          View Discussion
-        </a>
-        <a href="{{ url_for('consensus.view_results', discussion_id=demo_discussion.id) }}"
-           class="inline-flex items-center justify-center rounded-md bg-white border border-emerald-600 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors min-h-11">
-          View Consensus Analysis
-        </a>
-      </div>
-    </div>
-    {% endif %}
   </div>
 </div>
 
 {# ── Who it's for ── #}
-<div class="bg-gray-50 py-16">
+<div class="bg-white py-16 border-t border-gray-100">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
       <h2 class="text-3xl font-bold text-gray-900">Who it's for</h2>
@@ -196,7 +492,7 @@
             <p class="text-sm text-gray-500">Citizens, activists, students, curious people</p>
           </div>
         </div>
-        <p class="text-gray-600 mb-5 text-sm leading-relaxed">Take a position on issues that matter to you. See where you stand relative to others — not just as a percentage, but as part of a cluster of people who think like you. Discover where you have more in common with other groups than expected. Disagree agreeably.</p>
+        <p class="text-gray-600 mb-5 text-sm leading-relaxed">Take a position on issues that matter to you. See where you stand relative to others — not just as a percentage, but as part of a cluster of people who think like you. Discover where you have more in common with other groups than expected.</p>
         <ul class="space-y-2.5 text-sm text-gray-700 mb-7">
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -244,7 +540,7 @@
             <p class="text-sm text-gray-500">Brands, media, podcasters, newsletter writers</p>
           </div>
         </div>
-        <p class="text-gray-600 mb-5 text-sm leading-relaxed">Your audience has opinions. Society Speaks lets you surface them properly — not with a poll or a comment section, but with structured debate and real analysis. Find out what your audience actually agrees on around your content, and what divides them.</p>
+        <p class="text-gray-600 mb-5 text-sm leading-relaxed">Your audience has opinions. Society Speaks lets you surface them properly — not with a poll or a comment section, but with structured debate and real analysis. Find out what your audience actually agrees on, and what genuinely divides them.</p>
         <ul class="space-y-2.5 text-sm text-gray-700 mb-5">
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -263,7 +559,6 @@
             Embed discussions on your own site — no moderation needed
           </li>
         </ul>
-        {# Podcast profile example note #}
         <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5 text-xs text-amber-800">
           <strong>Example:</strong> A podcast creates a discussion around a controversial episode topic. Listeners vote on statements, and the hosts see where their audience clusters — who agrees on what, and what genuinely divides them. Better signal than comments. Citable data.
         </div>
@@ -292,7 +587,7 @@
             <p class="text-sm text-gray-500">NGOs, councils, research bodies, companies</p>
           </div>
         </div>
-        <p class="text-gray-600 mb-5 text-sm leading-relaxed">Run structured public or stakeholder consultations with full control over who participates and what gets asked. Create a Programme to group discussions by theme, organise them into phases, invite co-managers, and export the full dataset for your own analysis.</p>
+        <p class="text-gray-600 mb-5 text-sm leading-relaxed">Run structured public or stakeholder consultations with full control over who participates and what gets asked. Create a Programme to group discussions by theme, organise them into phases, and export the full dataset for your own analysis.</p>
         <ul class="space-y-2.5 text-sm text-gray-700 mb-7">
           <li class="flex items-start gap-2.5">
             <svg class="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -355,7 +650,6 @@
             Used for national strategy, citizen assemblies, public consultation
           </li>
         </ul>
-        {# NSP callout #}
         <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-5">
           <p class="text-sm font-semibold text-emerald-900">In use: National Strategy Project</p>
           <p class="text-xs text-emerald-700 mt-1">The National Strategy Project is using Society Speaks to run national dialogue on the UK's long-term future — mapping where citizens agree, disagree, and where common ground exists across divides.</p>

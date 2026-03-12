@@ -96,7 +96,8 @@ def about():
 @main_bp.route('/platform')
 def platform():
     demo_discussion = db.session.get(Discussion, 25)
-    return render_template('platform.html', demo_discussion=demo_discussion)
+    featured_discussions = Discussion.get_featured(limit=3)
+    return render_template('platform.html', demo_discussion=demo_discussion, featured_discussions=featured_discussions)
 
 
 def _is_scanner_or_bogus_asset_path(filename: str) -> bool:
