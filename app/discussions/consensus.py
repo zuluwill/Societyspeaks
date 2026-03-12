@@ -497,10 +497,91 @@ def export_analysis(discussion_id):
     export_format = request.args.get('format', 'json')
     
     if export_format == 'csv':
-        # TODO: Implement CSV export
-        flash("CSV export coming soon", "info")
-        return redirect(url_for('consensus.view_results', discussion_id=discussion_id))
-    
+        import csv
+        import io
+
+        cluster_data = analysis.cluster_data or {}
+
+        # Build a lookup: statement_id -> (classification, metrics) from cluster_data
+        classification_map = {}
+        for label, stmts in (
+            ('consensus', cluster_data.get('consensus_statements', [])),
+            ('bridge',    cluster_data.get('bridge_statements', [])),
+            ('divisive',  cluster_data.get('divisive_statements', [])),
+        ):
+            for entry in stmts:
+                sid = entry.get('statement_id')
+                if sid is not None:
+                    # Normalise field names: bridge uses mean_agreement, divisive uses agree_rate
+                    agreement_rate = (
+                        entry.get('agreement_rate')
+                        or entry.get('mean_agreement')
+                        or entry.get('agree_rate')
+                        or ''
+                    )
+                    classification_map[sid] = {
+                        'classification': label,
+                        'agreement_rate': agreement_rate,
+                        'strength':       entry.get('strength', ''),
+                        'vote_count':     entry.get('vote_count', ''),
+                    }
+
+        # Collect all statement IDs mentioned in the analysis
+        all_stmt_ids = set(classification_map.keys())
+        # Also include any that appear only in representative_statements
+        for stmts in cluster_data.get('representative_statements', {}).values():
+            for entry in stmts:
+                sid = entry.get('statement_id')
+                if sid is not None:
+                    all_stmt_ids.add(sid)
+
+        statements_by_id = {
+            s.id: s
+            for s in Statement.query.filter(Statement.id.in_(all_stmt_ids)).all()
+        } if all_stmt_ids else {}
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow([
+            'statement_id',
+            'content',
+            'classification',
+            'agree_count',
+            'disagree_count',
+            'total_votes',
+            'agreement_rate',
+            'strength',
+        ])
+
+        for sid in sorted(all_stmt_ids):
+            stmt = statements_by_id.get(sid)
+            meta = classification_map.get(sid, {})
+            agree   = getattr(stmt, 'agree_count',    0) if stmt else ''
+            disagree = getattr(stmt, 'disagree_count', 0) if stmt else ''
+            total   = (agree + disagree) if isinstance(agree, int) and isinstance(disagree, int) else ''
+            writer.writerow([
+                sid,
+                stmt.content if stmt else '',
+                meta.get('classification', 'unclassified'),
+                agree,
+                disagree,
+                total,
+                meta.get('agreement_rate', ''),
+                meta.get('strength', ''),
+            ])
+
+        # UTF-8 BOM ensures Excel on Windows detects encoding correctly
+        csv_bytes = b'\xef\xbb\xbf' + output.getvalue().encode('utf-8')
+        safe_title = ''.join(c if c.isalnum() or c in ('-', '_') else '_' for c in discussion.title)
+        filename = f"consensus_{discussion_id}_{safe_title[:40].strip('_')}.csv"
+
+        from flask import Response
+        return Response(
+            csv_bytes,
+            mimetype='text/csv',
+            headers={'Content-Disposition': f'attachment; filename="{filename}"'},
+        )
+
     # Return full JSON data
     return jsonify({
         'discussion_id': discussion_id,

@@ -8,16 +8,47 @@
             {'label': 'My Briefings', 'url': '#'}
         ]) }}
 
-        {% if active_sub and active_sub.status == 'past_due' %}
-        <div class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4">
+        {% if activation_pending %}
+        <div class="mb-6 rounded-lg border border-blue-300 bg-blue-50 p-4" role="status" aria-live="polite">
             <div class="flex items-start gap-3">
-                <svg class="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0 motion-safe:animate-spin" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <div>
+                    <h3 class="text-sm font-semibold text-blue-800">Your subscription is activating</h3>
+                    <p class="text-sm text-blue-700 mt-1">Payment confirmed — your access is being set up. This usually takes under a minute. Refresh the page to check.</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if trial_days_remaining is not none %}
+        <div class="mb-6 rounded-lg border border-indigo-300 bg-indigo-50 p-4" role="alert" aria-live="assertive">
+            <div class="flex items-start gap-3">
+                <svg class="h-5 w-5 text-indigo-600 mt-0.5 flex-shrink-0" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <h3 class="text-sm font-semibold text-indigo-800">
+                        {% if trial_days_remaining == 0 %}Your free trial ends today{% else %}Your free trial ends in {{ trial_days_remaining }} day{{ 's' if trial_days_remaining != 1 else '' }}{% endif %}
+                    </h3>
+                    <p class="text-sm text-indigo-700 mt-1">Add a payment method now to keep your briefs running without interruption.</p>
+                    <a href="{{ url_for('billing.customer_portal') }}" class="inline-flex items-center mt-2 text-sm font-medium text-indigo-800 hover:text-indigo-900 underline">Manage subscription <span aria-hidden="true">&rarr;</span></a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if is_past_due %}
+        <div class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4" role="alert" aria-live="assertive">
+            <div class="flex items-start gap-3">
+                <svg class="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
                 <div>
                     <h3 class="text-sm font-semibold text-amber-800">Payment issue</h3>
                     <p class="text-sm text-amber-700 mt-1">We couldn't process your latest payment. Please update your payment method to keep your briefs running.</p>
-                    <a href="{{ url_for('billing.customer_portal') }}" class="inline-flex items-center mt-2 text-sm font-medium text-amber-800 hover:text-amber-900 underline">Update payment method &rarr;</a>
+                    <a href="{{ url_for('billing.customer_portal') }}" class="inline-flex items-center mt-2 text-sm font-medium text-amber-800 hover:text-amber-900 underline">Update payment method <span aria-hidden="true">&rarr;</span></a>
                 </div>
             </div>
         </div>
@@ -32,64 +63,28 @@
                 </div>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <a href="{{ url_for('billing.customer_portal') }}"
-                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="-ml-1 mr-2 h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                         </svg>
                         Manage Billing
                     </a>
                     {% if current_user.company_profile %}
                     <a href="{{ url_for('briefing.list_domains') }}"
-                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                        <svg class="-ml-1 mr-2 h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
                         Domains
                     </a>
                     {% endif %}
-                    <div class="relative" id="create-briefing-container">
-                        <button id="create-briefing-btn"
-                                class="inline-flex items-center px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                                aria-expanded="false"
-                                aria-haspopup="true">
-                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            Create Briefing
-                            <svg class="ml-2 -mr-1 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        <div id="create-briefing-menu"
-                             class="hidden absolute right-0 mt-2 w-64 rounded-xl shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
-                            <div class="py-2">
-                                <a href="{{ url_for('briefing.marketplace') }}" 
-                                   class="flex items-start px-4 py-3 hover:bg-gray-50 transition-colors">
-                                    <div class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                                        </svg>
-                                    </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-medium text-gray-900">Browse Templates</p>
-                                        <p class="text-xs text-gray-500">Start from a pre-built template</p>
-                                    </div>
-                                </a>
-                                <a href="{{ url_for('briefing.create_briefing') }}" 
-                                   class="flex items-start px-4 py-3 hover:bg-gray-50 transition-colors">
-                                    <div class="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                                        <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                    </div>
-                                    <div class="ml-3">
-                                        <p class="text-sm font-medium text-gray-900">Create from Scratch</p>
-                                        <p class="text-xs text-gray-500">Build a custom briefing</p>
-                                    </div>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    <a href="{{ url_for('briefing.marketplace') }}"
+                       class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        <svg class="-ml-1 mr-2 h-5 w-5" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Create Briefing
+                    </a>
                 </div>
             </div>
         </div>
@@ -269,27 +264,4 @@
     </div>
 </div>
 
-<script nonce="{{ csp_nonce() }}">
-document.addEventListener('DOMContentLoaded', function() {
-    const createBriefingBtn = document.getElementById('create-briefing-btn');
-    const createBriefingMenu = document.getElementById('create-briefing-menu');
-    
-    if (createBriefingBtn && createBriefingMenu) {
-        createBriefingBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const isHidden = createBriefingMenu.classList.contains('hidden');
-            createBriefingMenu.classList.toggle('hidden');
-            createBriefingBtn.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
-        });
-        
-        document.addEventListener('click', function(e) {
-            if (!createBriefingBtn.contains(e.target) && !createBriefingMenu.contains(e.target)) {
-                createBriefingMenu.classList.add('hidden');
-                createBriefingBtn.setAttribute('aria-expanded', 'false');
-            }
-        });
-    }
-});
-</script>
 {% endblock %}

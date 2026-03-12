@@ -205,6 +205,7 @@ def checkout_success():
     sub = get_active_subscription(current_user)
     if sub or sync_success:
         if is_org_plan:
+            session.pop('post_checkout_template_id', None)
             flash('Welcome! Your team subscription is now active. You can invite team members from your organization settings.', 'success')
             return redirect(url_for('briefing.organization_settings'))
         else:
@@ -219,10 +220,18 @@ def checkout_success():
                     msg += f' You\'re on the {interval_label} plan.'
             msg += ' You can start creating your first brief!'
             flash(msg, 'success')
+            # Resume the template the user was trying to use before checkout, if any
+            pending_template_id = session.pop('post_checkout_template_id', None)
+            if pending_template_id:
+                from app.models import BriefTemplate
+                if BriefTemplate.query.filter_by(id=pending_template_id, is_active=True).first():
+                    return redirect(url_for('briefing.use_template', template_id=pending_template_id))
+                # Template no longer available — fall through to dashboard
             return redirect(url_for('briefing.list_briefings'))
     else:
-        # If we reach here, subscription wasn't synced properly
-        # Store a flag to show a helpful onboarding message
+        # Subscription not yet synced — webhook is still in flight.
+        # Clear the template redirect so it doesn't fire on a future checkout.
+        session.pop('post_checkout_template_id', None)
         session['pending_subscription_activation'] = True
         flash('Welcome! Your subscription is being activated. This usually takes just a few seconds - you\'ll be able to create briefs momentarily.', 'info')
         return redirect(url_for('briefing.list_briefings'))

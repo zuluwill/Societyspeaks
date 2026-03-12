@@ -19,7 +19,7 @@ from app import db, limiter, csrf
 from app.models import (
     Briefing, BriefRun, BriefRunItem, BriefTemplate, InputSource, IngestedItem,
     BriefingSource, BriefRecipient, SendingDomain, User, CompanyProfile, NewsSource,
-    BriefEmailOpen, BriefLinkClick, OrganizationMember
+    BriefEmailOpen, BriefLinkClick, OrganizationMember, Subscription
 )
 from app.billing.enforcement import (
     get_subscription_context, check_can_create_brief, enforce_brief_limit,
@@ -453,7 +453,19 @@ def source_owner_required(f):
 @briefing_bp.route('/landing')
 @limiter.limit("60/minute")
 def landing():
-    """Public landing page for Briefing System - marketing/sales page"""
+    """Public landing page for Briefing System - marketing/sales page.
+    Users who already have a subscription (including past_due) are sent to their
+    dashboard. Logged-in users with no subscription still see pricing to start a trial."""
+    if current_user.is_authenticated:
+        if get_active_subscription(current_user):
+            return redirect(url_for('briefing.list_briefings'))
+        # past_due is excluded from get_active_subscription but these users still have
+        # a subscription — send them to the dashboard where the payment warning banner is shown
+        if Subscription.query.filter(
+            Subscription.user_id == current_user.id,
+            Subscription.status == 'past_due'
+        ).first():
+            return redirect(url_for('briefing.list_briefings'))
     return render_template('briefing/landing.html')
 
 
@@ -487,12 +499,43 @@ def list_briefings():
 
     active_sub = get_active_subscription(current_user)
 
+    # Resolve subscription activation race: if webhook has now synced, clear the flag
+    activation_pending = False
+    if session.get('pending_subscription_activation'):
+        if active_sub:
+            session.pop('pending_subscription_activation', None)
+        else:
+            activation_pending = True
+
+    # Show in-app trial ending warning when 7 or fewer days remain
+    trial_days_remaining = None
+    if active_sub and active_sub.status == 'trialing' and active_sub.trial_end:
+        days = (active_sub.trial_end - utcnow_naive()).days
+        if 0 <= days <= 7:
+            trial_days_remaining = days
+
+    # Check for past_due separately — get_active_subscription only returns trialing/active,
+    # so the past_due banner must be driven by an explicit query here.
+    is_past_due = bool(
+        Subscription.query.filter(
+            Subscription.user_id == current_user.id,
+            Subscription.status == 'past_due'
+        ).first()
+        or (user_org and Subscription.query.filter(
+            Subscription.org_id == user_org.id,
+            Subscription.status == 'past_due'
+        ).first())
+    )
+
     return render_template(
         'briefing/list.html',
         user_briefings=user_briefings,
         org_briefings=org_briefings,
         featured_templates=featured_templates,
-        active_sub=active_sub
+        active_sub=active_sub,
+        activation_pending=activation_pending,
+        trial_days_remaining=trial_days_remaining,
+        is_past_due=is_past_due,
     )
 
 
@@ -601,8 +644,9 @@ def use_template(template_id):
                 session.pop('pending_subscription_activation', None)
                 flash('Your subscription is still activating. Please wait a few seconds and try again. You can also check "Manage Billing" to verify.', 'info')
                 return redirect(url_for('briefing.list_briefings'))
+            session['post_checkout_template_id'] = template_id
             flash('You need an active subscription to create briefings. Start your free trial today!', 'info')
-            return redirect(url_for('briefing.landing'))
+            return redirect(url_for('briefing.landing') + '#pricing')
         
         limit_error = enforce_brief_limit(current_user)
         if limit_error:
@@ -772,7 +816,7 @@ def create_briefing():
                 flash('Your subscription is still activating. Please wait a few seconds and try again. You can also check "Manage Billing" to verify.', 'info')
                 return redirect(url_for('briefing.list_briefings'))
             flash('You need an active subscription to create briefings. Start your free trial today!', 'info')
-            return redirect(url_for('briefing.landing'))
+            return redirect(url_for('briefing.landing') + '#pricing')
         
         limit_error = enforce_brief_limit(current_user)
         if limit_error:

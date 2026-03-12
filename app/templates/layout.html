@@ -463,7 +463,7 @@
                   Premium
                 </div>
                 <a
-                  href="{{ url_for('briefing.landing') }}"
+                  href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                 >
@@ -785,7 +785,7 @@
                 >Daily Brief</a
               >
               <a
-                href="{{ url_for('briefing.landing') }}"
+                href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
               >
                 Personal Briefs
@@ -1023,7 +1023,7 @@
               </li>
               <li>
                 <a
-                  href="{{ url_for('briefing.landing') }}"
+                  href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
                   class="text-gray-400 hover:text-white transition"
                   >Personal Briefs
                   <span class="text-xs text-blue-400">Pro</span></a
