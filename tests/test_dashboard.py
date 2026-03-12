@@ -133,6 +133,29 @@ def test_dashboard_shows_user_programme(app, db):
     assert 'Owner/Editor' in body
 
 
+def test_dashboard_owner_programme_shows_settings_link(app, db):
+    with app.app_context():
+        owner = _create_user(db, 'dash_prog_owner', 'dash_prog_owner@example.com')
+        owner_programme = Programme(
+            name='Owner Programme',
+            slug=generate_slug('Owner Programme'),
+            creator_id=owner.id,
+            visibility='public',
+            status='active',
+        )
+        db.session.add(owner_programme)
+        db.session.commit()
+        owner_id = owner.id
+        owner_slug = owner_programme.slug
+
+    client = app.test_client()
+    _login(client, owner_id)
+    resp = client.get('/auth/dashboard')
+    body = resp.get_data(as_text=True)
+    assert resp.status_code == 200
+    assert f'/programmes/{owner_slug}/settings' in body
+
+
 def test_dashboard_limits_discussions_to_six(app, db):
     with app.app_context():
         user = _create_user(db, 'disc_user', 'disc_user@example.com')

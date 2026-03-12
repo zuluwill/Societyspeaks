@@ -401,10 +401,17 @@ def dashboard():
     _prog_rows = db.session.query(Programme, ranked_access.c.access_rank).join(
         ranked_access, ranked_access.c.programme_id == Programme.id
     ).order_by(Programme.updated_at.desc()).limit(6).all()
-    workspace_programmes = [
-        {'programme': prog, 'access_label': _access_labels.get(int(rank or 1), 'Invited participant')}
-        for prog, rank in _prog_rows
-    ]
+    workspace_programmes = []
+    for prog, rank in _prog_rows:
+        access_rank = int(rank or 1)
+        workspace_programmes.append(
+            {
+                'programme': prog,
+                'access_label': _access_labels.get(access_rank, 'Invited participant'),
+                'access_rank': access_rank,
+                'can_manage_settings': access_rank >= 3,
+            }
+        )
 
     return render_template(
         'auth/dashboard.html',

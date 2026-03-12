@@ -277,13 +277,17 @@ def workspace_programmes():
     )
 
     access_labels = programme_access_labels()
-    programmes = [
-        {
-            "programme": programme,
-            "access_label": access_labels.get(int(access_rank or 1), "Invited participant")
-        }
-        for programme, access_rank in workspace_pagination.items
-    ]
+    programmes = []
+    for programme, access_rank in workspace_pagination.items:
+        rank = int(access_rank or 1)
+        programmes.append(
+            {
+                "programme": programme,
+                "access_label": access_labels.get(rank, "Invited participant"),
+                "access_rank": rank,
+                "can_manage_settings": rank >= 3,
+            }
+        )
     return render_template(
         'programmes/workspace.html',
         programmes=programmes,

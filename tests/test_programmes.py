@@ -207,6 +207,31 @@ def test_workspace_shows_invited_label(app, db):
     assert 'Invited participant' in body
 
 
+def test_workspace_owner_programme_shows_settings_link(app, db):
+    with app.app_context():
+        owner = _create_user(db, 'ws_settings_owner', 'ws_settings_owner@example.com')
+
+        owner_programme = Programme(
+            name='Workspace Settings Owner Programme',
+            slug=generate_slug('Workspace Settings Owner Programme'),
+            creator_id=owner.id,
+            visibility='public',
+            status='active',
+        )
+        db.session.add(owner_programme)
+        db.session.commit()
+
+        owner_id = owner.id
+        owner_slug = owner_programme.slug
+
+    client = app.test_client()
+    _login(client, owner_id)
+    resp = client.get('/programmes/workspace')
+    body = resp.get_data(as_text=True)
+    assert resp.status_code == 200
+    assert f'/programmes/{owner_slug}/settings' in body
+
+
 def test_steward_can_export_permissions(app, db):
     with app.app_context():
         creator = _create_user(db, 'creator2', 'creator2@example.com')
