@@ -8,7 +8,6 @@ import os
 import re
 import time
 import secrets
-import requests
 import threading
 import logging
 import pytz
@@ -20,6 +19,7 @@ from flask import render_template, current_app
 from app.models import DailyBrief, DailyBriefSubscriber, BriefItem, db
 from app.brief.sections import SECTIONS, TOPIC_DISPLAY_LABELS, TOPIC_DISPLAY_COLORS
 from app.email_utils import RateLimiter
+from app.resend_client import _resend_post_with_retry
 from app.storage_utils import get_base_url
 
 logger = logging.getLogger(__name__)
@@ -365,62 +365,26 @@ class ResendClient:
 
     def _send_with_retry(self, email_data: dict) -> bool:
         """
-        Send email with retry logic.
+        Send a daily brief email via Resend with retry.
 
         Args:
             email_data: Email payload for Resend API
 
         Returns:
-            bool: Success status
+            bool: True on success, False on failure
         """
-        headers = {
-            'Authorization': f'Bearer {self.api_key}',
-            'Content-Type': 'application/json'
-        }
-
         if self._disabled:
             recipient = (email_data.get('to') or ['unknown'])[0]
             logger.info(f"Daily brief email skipped (non-production guard): {recipient}")
             return True
 
-        for attempt in range(self.MAX_RETRIES):
-            try:
-                response = requests.post(
-                    self.API_URL,
-                    json=email_data,
-                    headers=headers,
-                    timeout=30
-                )
-
-                if response.status_code == 200:
-                    return True
-                elif response.status_code == 429:
-                    # Rate limited - wait and retry
-                    if attempt < self.MAX_RETRIES - 1:
-                        wait_time = self.RETRY_DELAY * (attempt + 2)
-                        logger.warning(f"Rate limited, waiting {wait_time}s...")
-                        time.sleep(wait_time)
-                        continue
-                    else:
-                        logger.error(f"Rate limited after {self.MAX_RETRIES} attempts")
-                        return False
-                else:
-                    logger.error(f"Resend API error: {response.status_code} - {response.text}")
-                    return False
-
-            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError, OSError, IOError) as e:
-                if attempt < self.MAX_RETRIES - 1:
-                    logger.warning(f"Transient error (attempt {attempt + 1}/{self.MAX_RETRIES}): {type(e).__name__}: {e}, retrying...")
-                    time.sleep(self.RETRY_DELAY * (attempt + 1))
-                else:
-                    logger.error(f"Transient error after {self.MAX_RETRIES} attempts: {e}")
-                    return False
-
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Request error (non-retryable): {e}")
-                return False
-
-        return False
+        success, _ = _resend_post_with_retry(
+            self.api_key,
+            email_data,
+            max_retries=self.MAX_RETRIES,
+            retry_delay=self.RETRY_DELAY,
+        )
+        return success
 
     def _render_email(
         self,

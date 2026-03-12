@@ -12,12 +12,12 @@ Replaces Loops.so integration with a single, simpler provider.
 import os
 import time
 import logging
-import threading
 from datetime import datetime
 from app.lib.time import utcnow_naive
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Tuple
 from flask import render_template, current_app, url_for
 import requests
+from app.email_utils import RateLimiter  # single definition, shared across all email clients
 
 logger = logging.getLogger(__name__)
 
@@ -34,22 +34,128 @@ def _email_sending_allowed_for_environment() -> bool:
     return os.environ.get('REPLIT_DEPLOYMENT') == '1'
 
 
-class RateLimiter:
-    """Thread-safe rate limiter for API calls"""
-    def __init__(self, rate_per_second: float):
-        self.rate = rate_per_second
-        self.min_interval = 1.0 / rate_per_second
-        self.last_call = 0.0
-        self.lock = threading.Lock()
-    
-    def acquire(self):
-        """Wait until we can make another call"""
-        with self.lock:
-            now = time.time()
-            time_since_last = now - self.last_call
-            if time_since_last < self.min_interval:
-                time.sleep(self.min_interval - time_since_last)
-            self.last_call = time.time()
+_RESEND_API_URL = 'https://api.resend.com/emails'
+_RESEND_BATCH_API_URL = 'https://api.resend.com/emails/batch'
+
+_RETRYABLE_ERRORS = (
+    requests.exceptions.Timeout,
+    requests.exceptions.ConnectionError,
+    OSError,
+    IOError,
+)
+
+
+def _resend_post_with_retry(
+    api_key: str,
+    payload: dict,
+    url: str = _RESEND_API_URL,
+    max_retries: int = 3,
+    retry_delay: float = 2.0,
+    timeout: int = 30,
+) -> Tuple[bool, Optional[str]]:
+    """
+    POST a single email to the Resend API with exponential-backoff retry.
+
+    Retries on transient OS/network errors (OSError/IOError/Timeout/ConnectionError)
+    that can occur when TLS certificate files are read from the overlay filesystem.
+
+    Returns:
+        (success, message_id)  — message_id is None on failure or if Resend omits it.
+    """
+    headers = {
+        'Authorization': f'Bearer {api_key}',
+        'Content-Type': 'application/json',
+    }
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=timeout)
+            if response.status_code == 200:
+                try:
+                    message_id = response.json().get('id')
+                except Exception:
+                    message_id = None
+                return True, message_id
+            elif response.status_code == 429:
+                if attempt < max_retries - 1:
+                    wait = retry_delay * (2 ** attempt)
+                    logger.warning(
+                        f"Resend rate limited — waiting {wait:.1f}s "
+                        f"(attempt {attempt + 1}/{max_retries})"
+                    )
+                    time.sleep(wait)
+                    continue
+                logger.error(f"Resend rate limited after {max_retries} attempts")
+                return False, None
+            else:
+                logger.error(f"Resend API error: {response.status_code} - {response.text}")
+                return False, None
+        except _RETRYABLE_ERRORS as e:
+            if attempt < max_retries - 1:
+                wait = retry_delay * (2 ** attempt)
+                logger.warning(
+                    f"Resend transient error (attempt {attempt + 1}/{max_retries}): "
+                    f"{type(e).__name__}: {e} — retrying in {wait:.1f}s"
+                )
+                time.sleep(wait)
+            else:
+                logger.error(f"Resend transient error after {max_retries} attempts: {e}")
+                return False, None
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Resend request error (non-retryable): {e}")
+            return False, None
+    return False, None
+
+
+def _resend_batch_with_retry(
+    api_key: str,
+    payloads: list,
+    url: str = _RESEND_BATCH_API_URL,
+    max_retries: int = 3,
+    retry_delay: float = 2.0,
+    timeout: int = 60,
+) -> Tuple[bool, int, List[str]]:
+    """
+    POST a batch of emails to the Resend batch API with exponential-backoff retry.
+
+    Returns:
+        (success, sent_count, errors)
+    """
+    headers = {
+        'Authorization': f'Bearer {api_key}',
+        'Content-Type': 'application/json',
+    }
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(url, json=payloads, headers=headers, timeout=timeout)
+            if response.status_code == 200:
+                data = response.json()
+                sent = len(data['data']) if 'data' in data else len(payloads)
+                return True, sent, []
+            elif response.status_code == 429:
+                if attempt < max_retries - 1:
+                    wait = retry_delay * (2 ** attempt)
+                    logger.warning(
+                        f"Resend batch rate limited — waiting {wait:.1f}s "
+                        f"(attempt {attempt + 1}/{max_retries})"
+                    )
+                    time.sleep(wait)
+                    continue
+                return False, 0, [f"Rate limited after {max_retries} attempts"]
+            else:
+                return False, 0, [f"API error: {response.status_code} - {response.text}"]
+        except _RETRYABLE_ERRORS as e:
+            if attempt < max_retries - 1:
+                wait = retry_delay * (2 ** attempt)
+                logger.warning(
+                    f"Resend batch transient error (attempt {attempt + 1}/{max_retries}): "
+                    f"{type(e).__name__}: {e} — retrying in {wait:.1f}s"
+                )
+                time.sleep(wait)
+            else:
+                return False, 0, [f"Transient error after {max_retries} attempts: {e}"]
+        except requests.exceptions.RequestException as e:
+            return False, 0, [str(e)]
+    return False, 0, []
 
 
 class ResendEmailClient:
@@ -105,148 +211,68 @@ class ResendEmailClient:
         # Base URL for building links
         self.base_url = os.environ.get('BASE_URL', 'https://societyspeaks.io')
 
-    def _get_headers(self) -> Dict[str, str]:
-        """Get API request headers"""
-        return {
-            'Authorization': f'Bearer {self.api_key}',
-            'Content-Type': 'application/json'
-        }
-
     def _send_with_retry(self, email_data: Dict[str, Any], use_rate_limit: bool = True) -> bool:
         """
-        Send single email with retry logic.
+        Send a single email via Resend with rate limiting and retry.
 
         Args:
             email_data: Email payload for Resend API
-            use_rate_limit: Whether to apply rate limiting
+            use_rate_limit: Whether to apply rate limiting (default True)
 
         Returns:
-            bool: Success status
+            bool: True on success, False on failure
         """
-        # Skip sending if disabled (dev mode without API key)
         if self._disabled:
-            logger.info(f"Email skipped (RESEND_API_KEY not set): {email_data.get('to', ['unknown'])[0]}")
+            logger.info(f"Email skipped (disabled): {email_data.get('to', ['unknown'])[0]}")
             self.last_message_id = None
-            return True  # Return True to not break flows
-        
-        self.last_message_id = None
+            return True
 
-        for attempt in range(self.MAX_RETRIES):
-            try:
-                if use_rate_limit:
-                    self.rate_limiter.acquire()
+        if use_rate_limit:
+            self.rate_limiter.acquire()
 
-                response = requests.post(
-                    self.API_URL,
-                    json=email_data,
-                    headers=self._get_headers(),
-                    timeout=30
-                )
-
-                if response.status_code == 200:
-                    try:
-                        self.last_message_id = response.json().get('id')
-                    except Exception:
-                        self.last_message_id = None
-                    return True
-                elif response.status_code == 429:
-                    # Rate limited - wait and retry
-                    if attempt < self.MAX_RETRIES - 1:
-                        wait_time = self.RETRY_DELAY * (2 ** attempt)
-                        logger.warning(f"Rate limited, waiting {wait_time}s...")
-                        time.sleep(wait_time)
-                        continue
-                    else:
-                        logger.error(f"Rate limited after {self.MAX_RETRIES} attempts")
-                        return False
-                else:
-                    logger.error(f"Resend API error: {response.status_code} - {response.text}")
-                    return False
-
-            except (requests.exceptions.Timeout, OSError, IOError) as e:
-                if attempt < self.MAX_RETRIES - 1:
-                    logger.warning(f"Transient error (attempt {attempt + 1}/{self.MAX_RETRIES}): {type(e).__name__}: {e}, retrying...")
-                    time.sleep(self.RETRY_DELAY * (2 ** attempt))
-                else:
-                    logger.error(f"Transient error after {self.MAX_RETRIES} attempts: {e}")
-                    return False
-
-            except requests.exceptions.RequestException as e:
-                logger.error(f"Request error: {e}")
-                return False
-
-        return False
+        success, message_id = _resend_post_with_retry(
+            self.api_key,
+            email_data,
+            max_retries=self.MAX_RETRIES,
+            retry_delay=self.RETRY_DELAY,
+        )
+        self.last_message_id = message_id
+        return success
 
     def _send_batch(self, emails: List[Dict[str, Any]]) -> Dict[str, Any]:
         """
-        Send batch of emails using Resend Batch API.
+        Send a batch of emails via the Resend Batch API.
 
         Args:
-            emails: List of email payloads (max 100)
+            emails: List of email payloads (max 100 per Resend limit)
 
         Returns:
             dict: {'sent': count, 'failed': count, 'errors': list}
         """
-        results = {'sent': 0, 'failed': 0, 'errors': []}
+        results: Dict[str, Any] = {'sent': 0, 'failed': 0, 'errors': []}
 
         if not emails:
             return results
-        
-        # Skip sending if disabled (dev mode without API key)
+
         if self._disabled:
-            logger.info(f"Batch of {len(emails)} emails skipped (RESEND_API_KEY not set)")
-            results['sent'] = len(emails)  # Pretend success to not break flows
+            logger.info(f"Batch of {len(emails)} emails skipped (disabled)")
+            results['sent'] = len(emails)
             return results
 
         if len(emails) > self.BATCH_SIZE:
             raise ValueError(f"Batch size {len(emails)} exceeds maximum {self.BATCH_SIZE}")
 
-        for attempt in range(self.MAX_RETRIES):
-            try:
-                response = requests.post(
-                    self.BATCH_API_URL,
-                    json=emails,
-                    headers=self._get_headers(),
-                    timeout=60  # Longer timeout for batch
-                )
-
-                if response.status_code == 200:
-                    data = response.json()
-                    # Resend returns {"data": [{"id": "..."}, ...]}
-                    if 'data' in data:
-                        results['sent'] = len(data['data'])
-                    else:
-                        results['sent'] = len(emails)
-                    return results
-                elif response.status_code == 429:
-                    if attempt < self.MAX_RETRIES - 1:
-                        wait_time = self.RETRY_DELAY * (2 ** attempt)
-                        logger.warning(f"Batch rate limited, waiting {wait_time}s...")
-                        time.sleep(wait_time)
-                        continue
-                    else:
-                        results['failed'] = len(emails)
-                        results['errors'].append(f"Rate limited after {self.MAX_RETRIES} attempts")
-                        return results
-                else:
-                    results['failed'] = len(emails)
-                    results['errors'].append(f"API error: {response.status_code} - {response.text}")
-                    return results
-
-            except (requests.exceptions.Timeout, OSError, IOError) as e:
-                if attempt < self.MAX_RETRIES - 1:
-                    logger.warning(f"Batch transient error (attempt {attempt + 1}/{self.MAX_RETRIES}): {type(e).__name__}: {e}, retrying...")
-                    time.sleep(self.RETRY_DELAY * (2 ** attempt))
-                else:
-                    results['failed'] = len(emails)
-                    results['errors'].append(f"Transient error after retries: {e}")
-                    return results
-
-            except requests.exceptions.RequestException as e:
-                results['failed'] = len(emails)
-                results['errors'].append(str(e))
-                return results
-
+        success, sent_count, errors = _resend_batch_with_retry(
+            self.api_key,
+            emails,
+            max_retries=self.MAX_RETRIES,
+            retry_delay=self.RETRY_DELAY,
+        )
+        if success:
+            results['sent'] = sent_count
+        else:
+            results['failed'] = len(emails)
+            results['errors'] = errors
         return results
 
     # =========================================================================
