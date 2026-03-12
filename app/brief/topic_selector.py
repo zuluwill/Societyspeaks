@@ -56,6 +56,9 @@ class TopicSelector:
     def __init__(self, brief_date: Optional[date] = None):
         self.brief_date = brief_date or date.today()
         self.recent_topic_ids, self.recent_headlines = self._get_recent_brief_topics()
+        # Coverage results keyed by topic.id, populated during _get_candidate_topics()
+        # so _calculate_brief_score() can reuse them without a second DB round-trip.
+        self._coverage_cache: dict = {}
 
     HEADLINE_SIMILARITY_THRESHOLD = 0.7
 
@@ -207,6 +210,7 @@ class TopicSelector:
             # transparency-first platform.
             analyzer = CoverageAnalyzer(topic)
             coverage = analyzer.calculate_distribution()
+            self._coverage_cache[topic.id] = coverage
 
             if coverage['has_sufficient_coverage']:
                 if coverage['imbalance_score'] > self.MAX_IMBALANCE:
@@ -255,10 +259,13 @@ class TopicSelector:
             min(source_count / 10, 1.0) * 0.15  # Cap at 10 sources
         )
 
-        # Coverage balance bonus (with error handling)
+        # Coverage balance bonus — use cached result from _get_candidate_topics() if
+        # available so we don't re-query articles from the database a second time.
         try:
-            analyzer = CoverageAnalyzer(topic)
-            coverage = analyzer.calculate_distribution()
+            coverage = self._coverage_cache.get(topic.id)
+            if coverage is None:
+                coverage = CoverageAnalyzer(topic).calculate_distribution()
+                self._coverage_cache[topic.id] = coverage
             imbalance_score = coverage.get('imbalance_score', 0.5)
             balance_bonus = (1 - imbalance_score) * 0.1
         except Exception as e:
