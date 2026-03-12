@@ -61,7 +61,7 @@
                             </svg>
                             Read Daily Brief
                         </a>
-                        <a href="{{ url_for('auth.register') }}" 
+                        <a href="{{ url_for('discussions.create_discussion') if current_user.is_authenticated else url_for('auth.register') }}"
                            class="inline-flex items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
                             <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>

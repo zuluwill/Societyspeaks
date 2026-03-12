@@ -4,7 +4,7 @@
 {% block head %}
     <title>{{ profile.company_name }} - Profile on SocietySpeaks</title>
     <meta name="description" content="Explore the profile of {{ profile.company_name }}, a leader in public discourse on SocietySpeaks. Join their discussions on pressing societal issues and policy solutions.">
-    <meta name="keywords" content="company profile, {{ profile.company_name }}, SocietySpeaks{% if profile.city %}, {{ profile.city }}{% endif %}{% if profile.country %}, {{ profile.country }}{% endif %}">
+    <meta name="keywords" content="organisation profile, company profile, {{ profile.company_name }}, SocietySpeaks{% if profile.city %}, {{ profile.city }}{% endif %}{% if profile.country %}, {{ profile.country }}{% endif %}">
     <link rel="canonical" href="{{ url_for('profiles.view_company_profile', company_name=profile.slug, _external=True) }}">
 
     <!-- Structured Data for SEO -->

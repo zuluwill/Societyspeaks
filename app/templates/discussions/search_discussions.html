@@ -26,9 +26,18 @@
 {% block content %}
 <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     <!-- Search Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900">Explore Discussions</h1>
-        <p class="mt-2 text-gray-600">Join conversations that matter to you</p>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Explore Discussions</h1>
+            <p class="mt-2 text-gray-600">Join conversations that matter to you</p>
+        </div>
+        <a href="{{ url_for('discussions.create_discussion') }}"
+           class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-semibold transition-colors min-h-11">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Start a Discussion
+        </a>
     </div>
 
     <!-- Search and Filters -->

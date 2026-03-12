@@ -233,8 +233,8 @@ def create_individual_profile():
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
 
-            flash("Individual profile created successfully!", "success")
-            return redirect(url_for('profiles.view_individual_profile', username=profile.slug))
+            flash("Profile created! You're all set — start a discussion or create a programme from your dashboard.", "success")
+            return redirect(url_for('auth.dashboard'))
 
         except Exception as e:
             db.session.rollback()
@@ -302,8 +302,8 @@ def create_company_profile():
             except Exception as e:
                 current_app.logger.warning(f"PostHog tracking error: {e}")
 
-            flash("Company profile created successfully!", "success")
-            return redirect(url_for('profiles.view_company_profile', company_name=profile.slug))
+            flash("Profile created! You're all set — start a discussion or create a programme from your dashboard.", "success")
+            return redirect(url_for('auth.dashboard'))
 
         except Exception as e:
             db.session.rollback()

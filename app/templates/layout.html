@@ -445,6 +445,12 @@
                   Free
                 </div>
                 <a
+                  href="{{ url_for('main.platform') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Discussions &amp; Programmes</a
+                >
+                <a
                   href="{{ url_for('daily.today') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
@@ -775,6 +781,11 @@
                 >Products</span
               >
               <a
+                href="{{ url_for('main.platform') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                >Discussions &amp; Programmes</a
+              >
+              <a
                 href="{{ url_for('daily.today') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
                 >Today's Question</a
@@ -1005,6 +1016,13 @@
               <li>
                 <a href="/" class="text-gray-400 hover:text-white transition"
                   >Home</a
+                >
+              </li>
+              <li>
+                <a
+                  href="{{ url_for('main.platform') }}"
+                  class="text-gray-400 hover:text-white transition"
+                  >Discussions &amp; Programmes</a
                 >
               </li>
               <li>

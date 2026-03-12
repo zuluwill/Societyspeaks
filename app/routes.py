@@ -93,6 +93,11 @@ def about():
     return render_template('about.html')
 
 
+@main_bp.route('/platform')
+def platform():
+    return render_template('platform.html')
+
+
 def _is_scanner_or_bogus_asset_path(filename: str) -> bool:
     """
     Return True if the path looks like a vulnerability scanner (e.g. .php probes), not a real asset.
