@@ -12,7 +12,10 @@ Designed for Replit deployment (single-instance friendly)
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor as APSThreadPoolExecutor
 from apscheduler.triggers.cron import CronTrigger
-from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MISSED
+from apscheduler.events import (
+    EVENT_JOB_ERROR, EVENT_JOB_MISSED,
+    EVENT_JOB_SUBMITTED, EVENT_JOB_EXECUTED,
+)
 from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 import logging
@@ -47,6 +50,24 @@ _shutdown_registered = False
 _shutting_down = False
 _ops_alert_lock = threading.Lock()
 _ops_alert_last_sent: dict[str, datetime] = {}
+
+# Thread-safe set of currently-executing job IDs.
+# Updated by APScheduler event listeners registered in start_scheduler().
+# run_scheduler.py reads this to avoid restarting while a job is mid-flight.
+_running_jobs: set = set()
+_running_jobs_lock = threading.Lock()
+
+
+def _on_job_submitted(event):
+    """Record that a job has started executing."""
+    with _running_jobs_lock:
+        _running_jobs.add(event.job_id)
+
+
+def _on_job_done(event):
+    """Remove a job from the running set when it finishes (success, error, or missed)."""
+    with _running_jobs_lock:
+        _running_jobs.discard(event.job_id)
 
 
 def _ops_alert_fingerprint(message: str) -> str:
@@ -611,22 +632,32 @@ def init_scheduler(app):
         Runs 4 times daily: 7am, 12pm, 6pm, 10pm UTC
         Optimized for cost efficiency while catching major news cycles
         """
+        import gc as _gc
         with app.app_context():
+            from app import db
             from app.trending.pipeline import run_pipeline, process_held_topics
-            
+
             logger.info("Starting trending topics pipeline")
-            
+
             try:
                 articles, topics, ready = run_pipeline(hold_minutes=60)
                 logger.info(f"Pipeline result: {articles} articles, {topics} new topics, {ready} ready for review")
-                
+
                 held_ready = process_held_topics()
                 if held_ready > 0:
                     logger.info(f"Processed {held_ready} held topics")
-                    
+
             except Exception as e:
                 logger.error(f"Trending topics pipeline error: {e}", exc_info=True)
-            
+            finally:
+                # Release SQLAlchemy identity map (article content, topic data, etc.)
+                # before the app context teardown so Python can GC large objects now.
+                try:
+                    db.session.expunge_all()
+                except Exception:
+                    pass
+                _gc.collect()
+
             logger.info("Trending topics pipeline complete")
     
     
@@ -1545,7 +1576,9 @@ def init_scheduler(app):
         Self-healing: If no topics available, automatically runs the trending
         pipeline and retries generation to prevent missed briefs.
         """
+        import gc as _gc
         with app.app_context():
+            from app import db
             from app.brief.generator import generate_daily_brief
             from app.models import DailyBrief
             from datetime import date
@@ -1559,7 +1592,7 @@ def init_scheduler(app):
                 if existing and existing.status in ('ready', 'published'):
                     logger.info(f"Brief already exists with status '{existing.status}', skipping")
                     return
-                
+
                 brief = generate_daily_brief(
                     brief_date=date.today(),
                     auto_publish=True
@@ -1605,6 +1638,15 @@ def init_scheduler(app):
                 msg = f"CRITICAL: Daily brief generation failed with unhandled error: {e}"
                 logger.error(msg, exc_info=True)
                 _send_ops_alert(msg)
+            finally:
+                # LLM responses and article content can be large; release the
+                # SQLAlchemy identity map before context teardown so GC can
+                # reclaim that memory promptly.
+                try:
+                    db.session.expunge_all()
+                except Exception:
+                    pass
+                _gc.collect()
 
     @scheduler.scheduled_job('cron', hour=19, minute=30, id='daily_brief_safety_net', max_instances=1, coalesce=True, misfire_grace_time=21600)
     def daily_brief_safety_net_job():
@@ -3161,10 +3203,14 @@ def start_scheduler():
     
     if not scheduler.running:
         _register_shutdown_handlers()
-        # Add error listener to handle shutdown errors gracefully
+        # Error listener suppresses harmless shutdown noise
         scheduler.add_listener(_job_error_listener, EVENT_JOB_ERROR)
+        # Running-job trackers: let run_scheduler.py know when jobs are active
+        # so it never restarts mid-execution (email send, brief generation, etc.)
+        scheduler.add_listener(_on_job_submitted, EVENT_JOB_SUBMITTED)
+        scheduler.add_listener(_on_job_done, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR | EVENT_JOB_MISSED)
         scheduler.start()
-        logger.info("Scheduler started with shutdown handlers and error listener")
+        logger.info("Scheduler started with shutdown handlers and running-job trackers")
     else:
         logger.warning("Scheduler already running")
 

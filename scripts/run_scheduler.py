@@ -51,6 +51,9 @@ from app import create_app  # noqa: E402
 
 app = create_app()
 
+# Import running-job tracker AFTER create_app() so init_scheduler() has run
+from app.scheduler import _running_jobs, _running_jobs_lock  # noqa: E402
+
 logger.info("Scheduler process initialised — APScheduler supervisor running in background threads")
 
 _START_TIME = time.time()
@@ -96,10 +99,36 @@ while not _SHUTDOWN:
         except Exception:
             pass
 
-    # Proactive clean restart: exit cleanly so the restart loop in the
-    # deployment command gives this process a fresh memory slate.  This
-    # prevents the gradual growth that caused the ~45-minute SIGBUS crash.
+    # Proactive clean restart: exit cleanly so the deployment restart loop
+    # gives this process a fresh memory slate.  This prevents the gradual
+    # growth that caused the ~45-minute SIGBUS crash.
+    #
+    # Safety: we never restart while a job is mid-flight (email sends, brief
+    # generation, trending pipeline).  We wait up to 5 extra minutes for any
+    # active job to finish, then exit regardless to avoid being permanently
+    # stuck behind a stalled job.
     if time.time() - _START_TIME > _MAX_RUNTIME_SECONDS:
+        _SAFE_RESTART_DEADLINE = _MAX_RUNTIME_SECONDS + 300  # +5 min grace
+        with _running_jobs_lock:
+            active = set(_running_jobs)
+        if active:
+            elapsed = time.time() - _START_TIME
+            if elapsed < _SAFE_RESTART_DEADLINE:
+                logger.info(
+                    "Max runtime reached but %d job(s) still running (%s) — "
+                    "waiting for clean completion (grace period: %ds left)",
+                    len(active),
+                    ", ".join(sorted(active)),
+                    int(_SAFE_RESTART_DEADLINE - elapsed),
+                )
+                continue  # stay in loop, check again next tick
+            else:
+                logger.warning(
+                    "Grace period expired with %d job(s) still running (%s) — "
+                    "forcing restart to prevent memory growth",
+                    len(active),
+                    ", ".join(sorted(active)),
+                )
         logger.info(
             "Scheduler process reached max runtime (%d min) — exiting cleanly for restart",
             _MAX_RUNTIME_SECONDS // 60,
