@@ -1,4 +1,5 @@
 import stripe
+import time
 from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 from flask import current_app
@@ -6,6 +7,27 @@ from app import db
 from app.models import User, CompanyProfile, PricingPlan, Subscription, OrganizationMember, generate_slug, Partner
 
 VALID_BILLING_INTERVALS = {'month', 'year'}
+
+_STRIPE_TRANSIENT_ERRORS = (OSError, IOError, ConnectionError, TimeoutError)
+
+
+def _stripe_call(fn, *args, retries=3, backoff=0.5, **kwargs):
+    """Call a Stripe API function with retry logic for transient network errors."""
+    for attempt in range(retries):
+        try:
+            return fn(*args, **kwargs)
+        except _STRIPE_TRANSIENT_ERRORS as e:
+            if attempt < retries - 1:
+                time.sleep(backoff * (2 ** attempt))
+            else:
+                raise stripe.error.APIConnectionError(
+                    f"Network error after {retries} attempts: {e}"
+                ) from e
+        except stripe.error.APIConnectionError:
+            if attempt < retries - 1:
+                time.sleep(backoff * (2 ** attempt))
+            else:
+                raise
 
 
 def get_stripe():
@@ -21,13 +43,14 @@ def get_or_create_stripe_customer(user):
     
     if user.stripe_customer_id:
         try:
-            customer = s.Customer.retrieve(user.stripe_customer_id)
+            customer = _stripe_call(s.Customer.retrieve, user.stripe_customer_id)
             if not customer.get('deleted'):
                 return customer
         except s.error.InvalidRequestError:
             pass
     
-    customer = s.Customer.create(
+    customer = _stripe_call(
+        s.Customer.create,
         email=user.email,
         name=user.username,
         metadata={'user_id': str(user.id)}
@@ -58,7 +81,8 @@ def create_checkout_session(user, plan_code, billing_interval='month', success_u
     
     base_url = current_app.config.get('APP_BASE_URL', 'https://societyspeaks.io')
     
-    session = s.checkout.Session.create(
+    session = _stripe_call(
+        s.checkout.Session.create,
         customer=customer.id,
         payment_method_types=['card'],
         mode='subscription',
@@ -150,13 +174,14 @@ def get_or_create_partner_customer(partner):
     s = get_stripe()
     if partner.stripe_customer_id:
         try:
-            customer = s.Customer.retrieve(partner.stripe_customer_id)
+            customer = _stripe_call(s.Customer.retrieve, partner.stripe_customer_id)
             if not customer.get('deleted'):
                 return customer
         except s.error.InvalidRequestError:
             pass
 
-    customer = s.Customer.create(
+    customer = _stripe_call(
+        s.Customer.create,
         email=partner.contact_email,
         name=partner.name,
         metadata={'partner_id': str(partner.id), 'partner_slug': partner.slug}
@@ -193,7 +218,8 @@ def create_partner_checkout_session(partner, tier=None, success_url=None, cancel
     customer = get_or_create_partner_customer(partner)
     base_url = current_app.config.get('APP_BASE_URL', 'https://societyspeaks.io')
 
-    session = s.checkout.Session.create(
+    session = _stripe_call(
+        s.checkout.Session.create,
         customer=customer.id,
         payment_method_types=['card'],
         mode='subscription',
