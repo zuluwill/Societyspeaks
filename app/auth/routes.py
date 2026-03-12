@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, cache
-from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView, StatementVote, OrganizationMember, Programme
+from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
 from datetime import datetime, timedelta
@@ -413,6 +413,9 @@ def dashboard():
             }
         )
 
+    brief_sub = DailyBriefSubscriber.query.filter_by(email=current_user.email).first()
+    dq_sub = DailyQuestionSubscriber.query.filter_by(email=current_user.email).first()
+
     return render_template(
         'auth/dashboard.html',
         profile=profile,
@@ -422,9 +425,112 @@ def dashboard():
         discussion_views=discussion_views,
         workspace_programmes=workspace_programmes,
         total_programmes=total_programmes,
+        brief_sub=brief_sub,
+        dq_sub=dq_sub,
     )
 
 
+@auth_bp.route('/dashboard/subscribe', methods=['POST'])
+@login_required
+def dashboard_subscribe():
+    """One-click subscription to daily email products from the dashboard."""
+    sub_type = request.form.get('subscription_type', '')
+    email = current_user.email
+
+    if sub_type == 'brief':
+        try:
+            preferred_hour = int(request.form.get('preferred_hour', 8))
+        except (ValueError, TypeError):
+            preferred_hour = 8
+        cadence = request.form.get('cadence', 'daily')
+        if cadence not in ('daily', 'weekly'):
+            cadence = 'daily'
+        if preferred_hour not in (6, 8, 18):
+            preferred_hour = 8
+
+        existing = DailyBriefSubscriber.query.filter_by(email=email).first()
+        if existing:
+            if existing.status == 'active':
+                flash('You\'re already subscribed to the Daily Brief!', 'info')
+            else:
+                existing.status = 'active'
+                existing.preferred_send_hour = preferred_hour
+                existing.cadence = cadence
+                existing.user_id = current_user.id
+                existing.generate_magic_token()
+                existing.grant_free_access()
+                existing.welcome_email_sent_at = None
+                db.session.commit()
+                try:
+                    from app.brief.email_client import ResendClient
+                    ResendClient().send_welcome(existing)
+                except Exception as e:
+                    current_app.logger.warning(f"Brief welcome email error: {e}")
+                flash('Welcome back! Your Daily Brief subscription has been reactivated.', 'success')
+        else:
+            try:
+                subscriber = DailyBriefSubscriber(
+                    email=email,
+                    user_id=current_user.id,
+                    preferred_send_hour=preferred_hour,
+                    cadence=cadence,
+                )
+                subscriber.generate_magic_token()
+                subscriber.grant_free_access()
+                db.session.add(subscriber)
+                db.session.commit()
+                try:
+                    from app.brief.email_client import ResendClient
+                    ResendClient().send_welcome(subscriber)
+                except Exception as e:
+                    current_app.logger.warning(f"Brief welcome email error: {e}")
+                flash(f'Subscribed! Your first Daily Brief will arrive at {email}.', 'success')
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f"Dashboard brief subscription error: {e}")
+                flash('Something went wrong. Please try again.', 'error')
+
+    elif sub_type == 'daily_question':
+        frequency = request.form.get('email_frequency', 'weekly')
+        if frequency not in ('daily', 'weekly'):
+            frequency = 'weekly'
+
+        existing = DailyQuestionSubscriber.query.filter_by(email=email).first()
+        if existing:
+            if existing.is_active:
+                flash('You\'re already subscribed to the Daily Question!', 'info')
+            else:
+                existing.is_active = True
+                existing.email_frequency = frequency
+                existing.user_id = current_user.id
+                existing.generate_magic_token()
+                db.session.commit()
+                flash('Welcome back! Your Daily Question subscription has been reactivated.', 'success')
+        else:
+            try:
+                subscriber = DailyQuestionSubscriber(
+                    email=email,
+                    user_id=current_user.id,
+                    email_frequency=frequency,
+                )
+                subscriber.generate_magic_token()
+                db.session.add(subscriber)
+                db.session.commit()
+                try:
+                    from app.resend_client import send_daily_question_welcome_email
+                    send_daily_question_welcome_email(subscriber)
+                except Exception as e:
+                    current_app.logger.warning(f"Daily question welcome email error: {e}")
+                flash(f'Subscribed! Your first Daily Question will arrive at {email}.', 'success')
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f"Dashboard daily question subscription error: {e}")
+                flash('Something went wrong. Please try again.', 'error')
+
+    else:
+        flash('Unknown subscription type.', 'error')
+
+    return redirect(url_for('auth.dashboard') + '#email-subscriptions')
 
 
 @auth_bp.route('/dashboard/discussions')
