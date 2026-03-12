@@ -36,7 +36,9 @@ Sets `REPLIT_DEPLOYMENT=1` via the bootstrap, starts Flask app context + APSched
 Sets `DISABLE_SCHEDULER=1` and `CONSENSUS_WORKER_PROCESS=1`. Polls the consensus job queue and runs heavy sklearn clustering without blocking HTTP or scheduler threads.
 
 The full bash run command for the deployment is:
-`bash -c "APP_ROLE=scheduler python3 scripts/run_scheduler.py & APP_ROLE=web gunicorn --bind=0.0.0.0:5000 --reuse-port --timeout=600 --workers=4 run:app"`
+`bash -c "(while true; do APP_ROLE=scheduler python3 scripts/run_scheduler.py; echo 'Scheduler exited, restarting in 5s...'; sleep 5; done) & SCHED_PID=$!; APP_ROLE=web gunicorn run:app & WEB_PID=$!; trap 'kill $SCHED_PID $WEB_PID 2>/dev/null' INT TERM; wait $WEB_PID; EXIT_CODE=$?; kill $SCHED_PID 2>/dev/null; wait; exit $EXIT_CODE"`
+
+The scheduler runs inside a `while true` restart loop so any crash (including SIGBUS from memory exhaustion) auto-restarts the scheduler without killing the web server. `wait $WEB_PID` (not `wait -n`) means only a gunicorn exit triggers a full deployment restart. The scheduler process itself has a 1-hour max-runtime cap (`_MAX_RUNTIME_SECONDS = 3600` in `scripts/run_scheduler.py`) — it exits cleanly at the hour mark so the restart loop gives it a fresh memory slate, preventing the ~45-minute Bus-error cycle seen in production before this fix.
 
 **APP_ROLE bootstrap** (in `create_app()` top, `app/__init__.py`): Maps role to low-level flags via `os.environ.setdefault`. All three roles (web, scheduler, worker) are covered and enforced by contract tests in `tests/test_consensus_job_queue_contract.py` (13 tests).
 

@@ -51,8 +51,17 @@ app = create_app()
 
 logger.info("Scheduler process initialised — APScheduler supervisor running in background threads")
 
+_START_TIME = time.time()
+_MAX_RUNTIME_SECONDS = 3600
+
 while not _SHUTDOWN:
     time.sleep(5)
+    if time.time() - _START_TIME > _MAX_RUNTIME_SECONDS:
+        logger.info(
+            "Scheduler process reached max runtime (%dh) — exiting cleanly for restart",
+            _MAX_RUNTIME_SECONDS // 3600,
+        )
+        break
 
 logger.info("Scheduler process exiting cleanly")
 sys.exit(0)
