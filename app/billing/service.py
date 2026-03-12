@@ -1,5 +1,8 @@
 import stripe
 import time
+import os
+import shutil
+import threading
 from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 from flask import current_app
@@ -9,6 +12,34 @@ from app.models import User, CompanyProfile, PricingPlan, Subscription, Organiza
 VALID_BILLING_INTERVALS = {'month', 'year'}
 
 _STRIPE_TRANSIENT_ERRORS = (OSError, IOError, ConnectionError, TimeoutError)
+
+_ca_bundle_lock = threading.Lock()
+_ca_bundle_initialised = False
+
+
+def _ensure_stripe_ca_on_tmpfs():
+    """
+    Copy Stripe's CA bundle to /tmp once at startup so SSL connections read
+    from a RAM-backed filesystem rather than the overlay-fs used for
+    Python packages in production (which can intermittently raise EIO).
+    """
+    global _ca_bundle_initialised
+    if _ca_bundle_initialised:
+        return
+    with _ca_bundle_lock:
+        if _ca_bundle_initialised:
+            return
+        tmp_path = '/tmp/stripe-ca-bundle.crt'
+        try:
+            src = stripe.ca_bundle_path
+            if not os.path.exists(tmp_path):
+                shutil.copy2(src, tmp_path)
+            stripe.ca_bundle_path = tmp_path
+            _ca_bundle_initialised = True
+        except Exception:
+            # If copying fails, leave stripe.ca_bundle_path as-is and let
+            # the retry logic handle any subsequent transient errors.
+            _ca_bundle_initialised = True
 
 
 def _stripe_call(fn, *args, retries=3, backoff=0.5, **kwargs):
@@ -32,6 +63,7 @@ def _stripe_call(fn, *args, retries=3, backoff=0.5, **kwargs):
 
 def get_stripe():
     """Get configured Stripe module with API key from Flask config."""
+    _ensure_stripe_ca_on_tmpfs()
     stripe.api_key = current_app.config.get('STRIPE_SECRET_KEY')
     stripe.max_network_retries = 3
     return stripe
