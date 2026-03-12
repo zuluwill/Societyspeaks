@@ -408,16 +408,16 @@ class ResendClient:
                     logger.error(f"Resend API error: {response.status_code} - {response.text}")
                     return False
 
-            except requests.exceptions.Timeout:
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError, OSError, IOError) as e:
                 if attempt < self.MAX_RETRIES - 1:
-                    logger.warning(f"Timeout (attempt {attempt + 1}/{self.MAX_RETRIES}), retrying...")
+                    logger.warning(f"Transient error (attempt {attempt + 1}/{self.MAX_RETRIES}): {type(e).__name__}: {e}, retrying...")
                     time.sleep(self.RETRY_DELAY * (attempt + 1))
                 else:
-                    logger.error(f"Timeout after {self.MAX_RETRIES} attempts")
+                    logger.error(f"Transient error after {self.MAX_RETRIES} attempts: {e}")
                     return False
 
             except requests.exceptions.RequestException as e:
-                logger.error(f"Request error: {e}")
+                logger.error(f"Request error (non-retryable): {e}")
                 return False
 
         return False

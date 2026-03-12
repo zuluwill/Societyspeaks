@@ -10,6 +10,7 @@ from app.billing.service import (
     get_active_subscription,
     get_stripe,
     resolve_plan_from_stripe_subscription,
+    _stripe_call,
 )
 from app.models import User, PricingPlan, Subscription, Partner
 from app import db, csrf
@@ -70,7 +71,8 @@ def checkout():
                 try:
                     s = get_stripe()
                     # Cancel existing subscription at period end (user keeps access until then)
-                    s.Subscription.modify(
+                    _stripe_call(
+                        s.Subscription.modify,
                         existing_sub.stripe_subscription_id,
                         cancel_at_period_end=True
                     )
@@ -148,7 +150,7 @@ def checkout_success():
 
     if session_id:
         try:
-            checkout_session = s.checkout.Session.retrieve(session_id)
+            checkout_session = _stripe_call(s.checkout.Session.retrieve, session_id)
 
             # Security: Verify the checkout session belongs to this user
             if checkout_session.customer and current_user.stripe_customer_id:
@@ -162,7 +164,7 @@ def checkout_success():
 
             if checkout_session.subscription:
                 sub_id = checkout_session.subscription if isinstance(checkout_session.subscription, str) else checkout_session.subscription.id
-                stripe_sub = s.Subscription.retrieve(sub_id)
+                stripe_sub = _stripe_call(s.Subscription.retrieve, sub_id)
                 sub = sync_subscription_with_org(stripe_sub, current_user)
                 sync_success = True
                 if sub and sub.plan and sub.plan.is_organisation:
@@ -417,7 +419,7 @@ def webhook():
 def handle_subscription_created(subscription_data):
     """Handle new subscription creation."""
     s = get_stripe()
-    stripe_sub = s.Subscription.retrieve(subscription_data['id'])
+    stripe_sub = _stripe_call(s.Subscription.retrieve, subscription_data['id'])
     customer_id = subscription_data['customer']
 
     existing_sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
@@ -441,7 +443,7 @@ def handle_subscription_created(subscription_data):
 def handle_subscription_updated(subscription_data):
     """Handle subscription updates (plan changes, status changes)."""
     s = get_stripe()
-    stripe_sub = s.Subscription.retrieve(subscription_data['id'])
+    stripe_sub = _stripe_call(s.Subscription.retrieve, subscription_data['id'])
 
     sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
     if sub:
@@ -561,7 +563,7 @@ def _handle_partner_checkout_completed(checkout_data):
 
     s = get_stripe()
     try:
-        stripe_sub = s.Subscription.retrieve(sub_id)
+        stripe_sub = _stripe_call(s.Subscription.retrieve, sub_id)
     except Exception as exc:
         current_app.logger.warning(f"Failed to retrieve partner subscription {sub_id} from checkout webhook: {exc}")
         db.session.commit()
@@ -577,7 +579,7 @@ def _handle_partner_subscription(subscription_data):
     metadata = _get_stripe_metadata(subscription_data)
 
     try:
-        stripe_sub = s.Subscription.retrieve(sub_id)
+        stripe_sub = _stripe_call(s.Subscription.retrieve, sub_id)
         metadata = _get_stripe_metadata(stripe_sub)
     except Exception as exc:
         # Deleted/canceled subscriptions may fail retrieval; fallback to webhook payload.

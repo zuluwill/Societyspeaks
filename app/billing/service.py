@@ -150,11 +150,12 @@ def create_portal_session(user, return_url=None):
     
     base_url = current_app.config.get('APP_BASE_URL', 'https://societyspeaks.io')
     
-    session = s.billing_portal.Session.create(
+    session = _stripe_call(
+        s.billing_portal.Session.create,
         customer=user.stripe_customer_id,
         return_url=return_url or f"{base_url}/briefings"
     )
-    
+
     return session
 
 
@@ -284,7 +285,8 @@ def create_partner_portal_session(partner, return_url=None):
     if not partner.stripe_customer_id:
         raise ValueError("Partner has no Stripe customer ID")
     base_url = current_app.config.get('APP_BASE_URL', 'https://societyspeaks.io')
-    session = s.billing_portal.Session.create(
+    session = _stripe_call(
+        s.billing_portal.Session.create,
         customer=partner.stripe_customer_id,
         return_url=return_url or f"{base_url}/for-publishers/portal/dashboard"
     )
@@ -306,7 +308,7 @@ def reconcile_partner_subscriptions():
     partners = Partner.query.filter(Partner.stripe_subscription_id.isnot(None)).all()
     for partner in partners:
         try:
-            subscription = s.Subscription.retrieve(partner.stripe_subscription_id)
+            subscription = _stripe_call(s.Subscription.retrieve, partner.stripe_subscription_id)
         except Exception as e:
             logger.warning(f"Partner reconciliation: failed to retrieve subscription {partner.stripe_subscription_id} for {partner.slug}: {e}")
             continue
