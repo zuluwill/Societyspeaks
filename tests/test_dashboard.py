@@ -1,4 +1,5 @@
 import re
+from unittest.mock import patch
 
 from app.models import (
     User,
@@ -8,6 +9,8 @@ from app.models import (
     CompanyProfile,
     ProfileView,
     Programme,
+    DailyBriefSubscriber,
+    DailyQuestionSubscriber,
     generate_slug,
 )
 
@@ -154,6 +157,132 @@ def test_dashboard_owner_programme_shows_settings_link(app, db):
     body = resp.get_data(as_text=True)
     assert resp.status_code == 200
     assert f'/programmes/{owner_slug}/settings' in body
+
+
+def test_dashboard_stay_informed_section_shows_three_cards(app, db):
+    with app.app_context():
+        user = _create_user(db, 'informed_user', 'informed@example.com')
+        db.session.commit()
+        user_id = user.id
+
+    client = app.test_client()
+    _login(client, user_id)
+    resp = client.get('/auth/dashboard')
+    body = resp.get_data(as_text=True)
+    assert resp.status_code == 200
+    assert 'Stay informed' in body
+    assert 'Daily Brief' in body
+    assert 'Daily Question' in body
+    assert 'Paid Briefings' in body
+
+
+def test_dashboard_detects_existing_email_subscriptions_and_active_briefings_plan(app, db):
+    with app.app_context():
+        user = _create_user(db, 'existing_subs_user', 'existing_subs@example.com')
+        brief_sub = DailyBriefSubscriber(
+            email=user.email,
+            status='active',
+            cadence='weekly',
+            preferred_send_hour=6,
+            timezone='UTC',
+        )
+        brief_sub.generate_magic_token()
+        dq_sub = DailyQuestionSubscriber(
+            email=user.email,
+            is_active=True,
+            email_frequency='daily',
+            current_streak=3,
+        )
+        dq_sub.generate_magic_token()
+        db.session.add_all([brief_sub, dq_sub])
+        db.session.commit()
+        user_id = user.id
+
+    client = app.test_client()
+    _login(client, user_id)
+    with patch('app.auth.routes.get_active_subscription', return_value=object()):
+        resp = client.get('/auth/dashboard')
+    body = resp.get_data(as_text=True)
+    assert resp.status_code == 200
+    assert 'Manage preferences' in body
+    assert 'Go to my Briefings' in body
+    assert 'Start a free trial' not in body
+
+
+def test_dashboard_subscribe_brief_creates_subscription_record(app, db):
+    with app.app_context():
+        user = _create_user(db, 'dash_brief_sub_user', 'dash_brief_sub@example.com')
+        db.session.commit()
+        user_id = user.id
+
+    client = app.test_client()
+    _login(client, user_id)
+    with patch('app.brief.email_client.ResendClient.send_welcome', return_value=True):
+        resp = client.post(
+            '/auth/dashboard/subscribe',
+            data={'subscription_type': 'brief', 'preferred_hour': '6', 'cadence': 'weekly'},
+            follow_redirects=False,
+        )
+    assert resp.status_code == 302
+    assert resp.headers['Location'].endswith('/auth/dashboard#email-subscriptions')
+
+    with app.app_context():
+        sub = DailyBriefSubscriber.query.filter_by(email='dash_brief_sub@example.com').first()
+        assert sub is not None
+        assert sub.user_id == user_id
+        assert sub.status == 'active'
+        assert sub.cadence == 'weekly'
+        assert sub.preferred_send_hour == 6
+
+
+def test_dashboard_subscribe_daily_question_creates_subscription_record(app, db):
+    with app.app_context():
+        user = _create_user(db, 'dash_dq_sub_user', 'dash_dq_sub@example.com')
+        db.session.commit()
+        user_id = user.id
+
+    client = app.test_client()
+    _login(client, user_id)
+    with patch('app.resend_client.send_daily_question_welcome_email', return_value=True):
+        resp = client.post(
+            '/auth/dashboard/subscribe',
+            data={'subscription_type': 'daily_question', 'email_frequency': 'daily'},
+            follow_redirects=False,
+        )
+    assert resp.status_code == 302
+    assert resp.headers['Location'].endswith('/auth/dashboard#email-subscriptions')
+
+    with app.app_context():
+        sub = DailyQuestionSubscriber.query.filter_by(email='dash_dq_sub@example.com').first()
+        assert sub is not None
+        assert sub.user_id == user_id
+        assert sub.is_active is True
+        assert sub.email_frequency == 'daily'
+
+
+def test_dashboard_subscribe_links_existing_active_brief_subscriber_to_user(app, db):
+    with app.app_context():
+        user = _create_user(db, 'dash_link_user', 'dash_link@example.com')
+        existing = DailyBriefSubscriber(email=user.email, status='active', user_id=None)
+        existing.generate_magic_token()
+        db.session.add(existing)
+        db.session.commit()
+        user_id = user.id
+
+    client = app.test_client()
+    _login(client, user_id)
+    with patch('app.brief.email_client.ResendClient.send_welcome', return_value=True):
+        resp = client.post(
+            '/auth/dashboard/subscribe',
+            data={'subscription_type': 'brief', 'preferred_hour': '8', 'cadence': 'daily'},
+            follow_redirects=False,
+        )
+    assert resp.status_code == 302
+
+    with app.app_context():
+        refreshed = DailyBriefSubscriber.query.filter_by(email='dash_link@example.com').first()
+        assert refreshed is not None
+        assert refreshed.user_id == user_id
 
 
 def test_dashboard_limits_discussions_to_six(app, db):

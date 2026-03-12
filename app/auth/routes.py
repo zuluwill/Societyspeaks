@@ -440,6 +440,7 @@ def dashboard_subscribe():
     email = current_user.email
 
     if sub_type == 'brief':
+        from app.brief.routes import process_subscription
         try:
             preferred_hour = int(request.form.get('preferred_hour', 8))
         except (ValueError, TypeError):
@@ -450,84 +451,46 @@ def dashboard_subscribe():
         if preferred_hour not in (6, 8, 18):
             preferred_hour = 8
 
-        existing = DailyBriefSubscriber.query.filter_by(email=email).first()
-        if existing:
-            if existing.status == 'active':
-                flash('You\'re already subscribed to the Daily Brief!', 'info')
-            else:
-                existing.status = 'active'
-                existing.preferred_send_hour = preferred_hour
-                existing.cadence = cadence
-                existing.user_id = current_user.id
-                existing.generate_magic_token()
-                existing.grant_free_access()
-                existing.welcome_email_sent_at = None
-                db.session.commit()
-                try:
-                    from app.brief.email_client import ResendClient
-                    ResendClient().send_welcome(existing)
-                except Exception as e:
-                    current_app.logger.warning(f"Brief welcome email error: {e}")
-                flash('Welcome back! Your Daily Brief subscription has been reactivated.', 'success')
+        result = process_subscription(
+            email=email,
+            timezone='UTC',
+            preferred_hour=preferred_hour,
+            cadence=cadence,
+            preferred_weekly_day=6,
+            update_preferences_on_reactivate=True,
+            set_session=False,
+            track_posthog=False,
+            source='dashboard',
+        )
+        if result['status'] == 'already_active':
+            flash('You\'re already subscribed to the Daily Brief!', 'info')
+        elif result['status'] == 'reactivated':
+            flash('Welcome back! Your Daily Brief subscription has been reactivated.', 'success')
+        elif result['status'] == 'created':
+            flash(f'Subscribed! Your first Daily Brief will arrive at {email}.', 'success')
         else:
-            try:
-                subscriber = DailyBriefSubscriber(
-                    email=email,
-                    user_id=current_user.id,
-                    preferred_send_hour=preferred_hour,
-                    cadence=cadence,
-                )
-                subscriber.generate_magic_token()
-                subscriber.grant_free_access()
-                db.session.add(subscriber)
-                db.session.commit()
-                try:
-                    from app.brief.email_client import ResendClient
-                    ResendClient().send_welcome(subscriber)
-                except Exception as e:
-                    current_app.logger.warning(f"Brief welcome email error: {e}")
-                flash(f'Subscribed! Your first Daily Brief will arrive at {email}.', 'success')
-            except Exception as e:
-                db.session.rollback()
-                current_app.logger.error(f"Dashboard brief subscription error: {e}")
-                flash('Something went wrong. Please try again.', 'error')
+            flash('Something went wrong. Please try again.', 'error')
 
     elif sub_type == 'daily_question':
+        from app.daily.utils import process_daily_question_subscription
         frequency = request.form.get('email_frequency', 'weekly')
         if frequency not in ('daily', 'weekly'):
             frequency = 'weekly'
 
-        existing = DailyQuestionSubscriber.query.filter_by(email=email).first()
-        if existing:
-            if existing.is_active:
-                flash('You\'re already subscribed to the Daily Question!', 'info')
-            else:
-                existing.is_active = True
-                existing.email_frequency = frequency
-                existing.user_id = current_user.id
-                existing.generate_magic_token()
-                db.session.commit()
-                flash('Welcome back! Your Daily Question subscription has been reactivated.', 'success')
+        result = process_daily_question_subscription(
+            email,
+            email_frequency=frequency,
+            update_frequency_on_reactivate=True,
+            track_posthog=False,
+        )
+        if result['status'] == 'already_active':
+            flash('You\'re already subscribed to the Daily Question!', 'info')
+        elif result['status'] == 'reactivated':
+            flash('Welcome back! Your Daily Question subscription has been reactivated.', 'success')
+        elif result['status'] == 'created':
+            flash(f'Subscribed! Your first Daily Question will arrive at {email}.', 'success')
         else:
-            try:
-                subscriber = DailyQuestionSubscriber(
-                    email=email,
-                    user_id=current_user.id,
-                    email_frequency=frequency,
-                )
-                subscriber.generate_magic_token()
-                db.session.add(subscriber)
-                db.session.commit()
-                try:
-                    from app.resend_client import send_daily_question_welcome_email
-                    send_daily_question_welcome_email(subscriber)
-                except Exception as e:
-                    current_app.logger.warning(f"Daily question welcome email error: {e}")
-                flash(f'Subscribed! Your first Daily Question will arrive at {email}.', 'success')
-            except Exception as e:
-                db.session.rollback()
-                current_app.logger.error(f"Dashboard daily question subscription error: {e}")
-                flash('Something went wrong. Please try again.', 'error')
+            flash('Something went wrong. Please try again.', 'error')
 
     else:
         flash('Unknown subscription type.', 'error')

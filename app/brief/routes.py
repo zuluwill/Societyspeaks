@@ -126,7 +126,7 @@ def _items_with_topic_articles(brief):
     return items, topic_articles_by_topic_id
 
 
-def _process_subscription(
+def process_subscription(
     email: str,
     timezone: str = 'UTC',
     preferred_hour: int = DEFAULT_SEND_HOUR,
@@ -172,7 +172,14 @@ def _process_subscription(
     existing = DailyBriefSubscriber.query.filter_by(email=email).first()
 
     if existing:
+        # Ensure a pre-existing email subscriber is linked to their account
+        # once they log in and subscribe from an authenticated surface.
+        user = User.query.filter_by(email=email).first()
+        if user and existing.user_id != user.id:
+            existing.user_id = user.id
+
         if existing.status == 'active':
+            db.session.commit()
             return {
                 'status': 'already_active',
                 'subscriber': existing,
@@ -593,7 +600,7 @@ def subscribe():
             preferred_hour = DEFAULT_SEND_HOUR
 
         # Process subscription using shared helper
-        result = _process_subscription(
+        result = process_subscription(
             email=email,
             timezone=timezone,
             preferred_hour=preferred_hour,
@@ -657,7 +664,7 @@ def subscribe_inline():
 
     # Process subscription using shared helper
     # Note: update_preferences_on_reactivate=False to keep existing preferences
-    result = _process_subscription(
+    result = process_subscription(
         email=email,
         timezone='UTC',
         preferred_hour=DEFAULT_SEND_HOUR,

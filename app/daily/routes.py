@@ -12,6 +12,7 @@ from app.daily.constants import (
 from app import db, limiter
 from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionResponseFlag, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant
 from app.trending.conversion_tracking import track_social_click
+from app.daily.utils import process_daily_question_subscription
 import hashlib
 import re
 import secrets
@@ -801,57 +802,20 @@ def subscribe():
             flash('Please enter a valid email address.', 'error')
             return redirect(url_for('daily.subscribe'))
         
-        existing = DailyQuestionSubscriber.query.filter_by(email=email).first()
-        if existing:
-            if existing.is_active:
-                flash('This email is already subscribed to daily questions.', 'info')
-            else:
-                existing.is_active = True
-                existing.generate_magic_token()
-                db.session.commit()
-                flash('Welcome back! Your subscription has been reactivated.', 'success')
-            return redirect(url_for('daily.subscribe_success'))
-        
-        user = User.query.filter_by(email=email).first()
-        
-        try:
-            subscriber = DailyQuestionSubscriber(
-                email=email,
-                user_id=user.id if user else None
-            )
-            subscriber.generate_magic_token()
-            db.session.add(subscriber)
-            db.session.commit()
-            
-            from app.resend_client import send_daily_question_welcome_email
-            send_daily_question_welcome_email(subscriber)
-            
-            # Track conversion with PostHog
-            try:
-                import posthog
-                if posthog and getattr(posthog, 'project_api_key', None):
-                    ref = request.referrer or ''
-                    posthog.capture(
-                        distinct_id=str(user.id) if user else email,
-                        event='daily_question_subscribed',
-                        properties={
-                            'subscription_tier': 'free',
-                            'plan_name': 'Daily Question',
-                            'email': email,
-                            'source': 'social' if ('utm_source' in ref or any(d in ref for d in ['twitter.com', 'x.com', 'bsky.social'])) else 'direct',
-                            'referrer': request.referrer,
-                        }
-                    )
-                    posthog.flush()
-            except Exception as e:
-                current_app.logger.warning(f"PostHog tracking error: {e}")
-            
-            flash('You have successfully subscribed to daily civic questions!', 'success')
-            return redirect(url_for('daily.subscribe_success'))
-        except Exception as e:
-            db.session.rollback()
-            current_app.logger.error(f"Error creating daily subscriber: {e}")
-            flash('There was an error processing your subscription. Please try again.', 'error')
+        result = process_daily_question_subscription(
+            email,
+            email_frequency='weekly',
+            update_frequency_on_reactivate=False,
+            track_posthog=True,
+        )
+        if result['status'] == 'already_active':
+            flash(result['message'], 'info')
+        elif result['status'] in ('reactivated', 'created'):
+            flash(result['message'], 'success')
+        else:
+            flash(result['message'], 'error')
+            return redirect(url_for('daily.subscribe'))
+        return redirect(url_for('daily.subscribe_success'))
     
     return render_template('daily/subscribe.html')
 
