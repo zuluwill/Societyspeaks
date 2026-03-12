@@ -45,7 +45,7 @@ _RETRYABLE_ERRORS = (
 )
 
 
-def _resend_post_with_retry(
+def resend_post_with_retry(
     api_key: str,
     payload: dict,
     url: str = _RESEND_API_URL,
@@ -106,7 +106,7 @@ def _resend_post_with_retry(
     return False, None
 
 
-def _resend_batch_with_retry(
+def resend_batch_with_retry(
     api_key: str,
     payloads: list,
     url: str = _RESEND_BATCH_API_URL,
@@ -230,7 +230,7 @@ class ResendEmailClient:
         if use_rate_limit:
             self.rate_limiter.acquire()
 
-        success, message_id = _resend_post_with_retry(
+        success, message_id = resend_post_with_retry(
             self.api_key,
             email_data,
             max_retries=self.MAX_RETRIES,
@@ -262,7 +262,7 @@ class ResendEmailClient:
         if len(emails) > self.BATCH_SIZE:
             raise ValueError(f"Batch size {len(emails)} exceeds maximum {self.BATCH_SIZE}")
 
-        success, sent_count, errors = _resend_batch_with_retry(
+        success, sent_count, errors = resend_batch_with_retry(
             self.api_key,
             emails,
             max_retries=self.MAX_RETRIES,

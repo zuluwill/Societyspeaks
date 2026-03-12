@@ -6,7 +6,6 @@ Handles email delivery via Resend API with timezone support.
 
 import os
 import re
-import time
 import secrets
 import threading
 import logging
@@ -19,7 +18,7 @@ from flask import render_template, current_app
 from app.models import DailyBrief, DailyBriefSubscriber, BriefItem, db
 from app.brief.sections import SECTIONS, TOPIC_DISPLAY_LABELS, TOPIC_DISPLAY_COLORS
 from app.email_utils import RateLimiter
-from app.resend_client import _resend_post_with_retry
+from app.resend_client import resend_post_with_retry
 from app.storage_utils import get_base_url
 
 logger = logging.getLogger(__name__)
@@ -378,7 +377,7 @@ class ResendClient:
             logger.info(f"Daily brief email skipped (non-production guard): {recipient}")
             return True
 
-        success, _ = _resend_post_with_retry(
+        success, _ = resend_post_with_retry(
             self.api_key,
             email_data,
             max_retries=self.MAX_RETRIES,
