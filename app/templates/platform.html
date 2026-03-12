@@ -351,6 +351,211 @@
   </div>
 </div>
 
+{# ── Why this matters / Methodology ── #}
+<div class="bg-white py-16 border-t border-gray-100">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+    {# Opening statement #}
+    <div class="max-w-3xl mx-auto text-center mb-16">
+      <p class="text-xs font-semibold text-red-500 uppercase tracking-widest mb-3">Why this matters now</p>
+      <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl mb-5">
+        We are living through a crisis of public discourse.
+      </h2>
+      <p class="text-xl text-gray-600 leading-relaxed">
+        Social media rewards outrage over nuance. Opinion polls flatten complexity into percentages. Comment sections amplify the loudest voices. And governments run "consultations" that nobody reads. We built Society Speaks because the infrastructure for genuine public deliberation is broken.
+      </p>
+    </div>
+
+    {# Three problems, three solutions #}
+    <div class="grid gap-6 lg:grid-cols-3 mb-16">
+      <div class="rounded-xl bg-red-50 border border-red-100 p-7">
+        <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
+          </svg>
+        </div>
+        <h3 class="font-bold text-gray-900 mb-2">The problem with polls</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">A poll tells you 62% of people agree with something. It doesn't tell you <em>which</em> 62%, how strongly they feel, whether they have anything else in common, or whether that 62% is actually six different groups who agree for completely different reasons.</p>
+      </div>
+      <div class="rounded-xl bg-amber-50 border border-amber-100 p-7">
+        <div class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
+          </svg>
+        </div>
+        <h3 class="font-bold text-gray-900 mb-2">The problem with comment sections</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">Comment sections are dominated by the most motivated, most extreme, and most available voices. They create the illusion of discourse while actively suppressing it. The quiet majority rarely speaks — and when it does, it's drowned out.</p>
+      </div>
+      <div class="rounded-xl bg-blue-50 border border-blue-100 p-7">
+        <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center mb-4">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <h3 class="font-bold text-gray-900 mb-2">The problem with consultations</h3>
+        <p class="text-sm text-gray-600 leading-relaxed">Government and corporate consultations generate thousands of unstructured submissions. They are expensive to analyse, easy to game with organised campaigns, and almost never result in a usable picture of where genuine public agreement lies.</p>
+      </div>
+    </div>
+
+    {# Methodology #}
+    <div class="grid lg:grid-cols-2 gap-12 items-start mb-16">
+      <div>
+        <p class="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-3">Our methodology</p>
+        <h3 class="text-2xl font-bold text-gray-900 mb-4">Built on opinion clustering — not polling</h3>
+        <p class="text-gray-600 leading-relaxed mb-5">Society Speaks uses a machine learning technique called <strong>opinion clustering</strong> (based on principal component analysis of voting patterns) to group participants not by who they are, but by how they actually vote on statements. This reveals the genuine structure of public opinion.</p>
+        <p class="text-gray-600 leading-relaxed mb-5">Once participants vote on enough statements, the algorithm identifies natural clusters — groups of people who vote similarly. It then classifies each statement as:</p>
+        <ul class="space-y-3 mb-6">
+          <li class="flex items-start gap-3">
+            <span class="w-2 h-2 rounded-full bg-green-500 mt-2 flex-shrink-0"></span>
+            <span class="text-sm text-gray-700"><strong>Consensus</strong> — agreed on across all groups, regardless of other differences</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></span>
+            <span class="text-sm text-gray-700"><strong>Bridge statements</strong> — where otherwise opposing groups converge, revealing unexpected common ground</span>
+          </li>
+          <li class="flex items-start gap-3">
+            <span class="w-2 h-2 rounded-full bg-amber-500 mt-2 flex-shrink-0"></span>
+            <span class="text-sm text-gray-700"><strong>Genuine divisions</strong> — where groups strongly diverge, identifying real fault lines worth understanding</span>
+          </li>
+        </ul>
+        <p class="text-gray-600 leading-relaxed text-sm">This approach is resistant to organised manipulation — coordinated campaigns show up as a distinct cluster rather than distorting the overall picture. It also surfaces the silent majority: participants who never comment but whose votes carry equal weight.</p>
+      </div>
+
+      <div>
+        <p class="text-xs font-semibold text-purple-600 uppercase tracking-widest mb-3">Built on Pol.is — and beyond</p>
+        <h3 class="text-2xl font-bold text-gray-900 mb-4">We stand on the shoulders of pioneers</h3>
+        <p class="text-gray-600 leading-relaxed mb-5"><a href="https://pol.is" target="_blank" rel="noopener" class="text-blue-600 font-semibold hover:underline">Pol.is</a> pioneered this approach and used it for Taiwan's vTaiwan participatory democracy process — one of the most successful examples of digital deliberation in history. We are inspired by that work and the open-source research behind it.</p>
+        <p class="text-gray-600 leading-relaxed mb-5">Society Speaks builds on the core clustering insight and takes it further for structured, institutional use:</p>
+        <div class="space-y-3">
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-purple-50 border border-purple-100">
+            <svg class="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            <div>
+              <p class="text-sm font-semibold text-gray-800">Native statement curation</p>
+              <p class="text-xs text-gray-600 mt-0.5">Statements are reviewed, balanced, and AI-assisted — ensuring quality and fairness rather than surfacing the most popular submitted statements</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-purple-50 border border-purple-100">
+            <svg class="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            <div>
+              <p class="text-sm font-semibold text-gray-800">Programmes — structured multi-discussion campaigns</p>
+              <p class="text-xs text-gray-600 mt-0.5">Group many discussions into phases, themes, and cohorts — enabling full consultation campaigns, not just one-off conversations</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-purple-50 border border-purple-100">
+            <svg class="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            <div>
+              <p class="text-sm font-semibold text-gray-800">Evidence-linked reasoning</p>
+              <p class="text-xs text-gray-600 mt-0.5">Participants can attach evidence and reasoning to their votes — moving beyond a binary to a richer record of why people think what they think</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-purple-50 border border-purple-100">
+            <svg class="w-4 h-4 text-purple-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            <div>
+              <p class="text-sm font-semibold text-gray-800">Publisher and partner integration</p>
+              <p class="text-xs text-gray-600 mt-0.5">Embed discussions directly in news articles, policy documents, and websites — meeting participants where they already are</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# Comparison table #}
+    <div>
+      <p class="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-6 text-center">How we compare</p>
+      <div class="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-200">
+              <th class="text-left px-5 py-4 text-gray-600 font-semibold w-48">Feature</th>
+              <th class="text-center px-4 py-4 text-blue-700 font-bold">Society Speaks</th>
+              <th class="text-center px-4 py-4 text-gray-500 font-semibold">Pol.is</th>
+              <th class="text-center px-4 py-4 text-gray-500 font-semibold">YouGov / Polling</th>
+              <th class="text-center px-4 py-4 text-gray-500 font-semibold">Stanford Deliberation</th>
+              <th class="text-center px-4 py-4 text-gray-500 font-semibold">Standard Consultation</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr class="hover:bg-gray-50">
+              <td class="px-5 py-3.5 text-gray-700 font-medium">Opinion clustering (ML)</td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-5 py-3.5 text-gray-700 font-medium">Structured programmes / phases</td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-gray-400 text-base">~</span></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-5 py-3.5 text-gray-700 font-medium">Embeddable in websites</td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-5 py-3.5 text-gray-700 font-medium">Evidence-linked reasoning</td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-5 py-3.5 text-gray-700 font-medium">Open to public participation</td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Panel only</td>
+              <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Invited only</td>
+              <td class="px-4 py-3.5 text-center"><span class="text-gray-400 text-base">~</span></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-5 py-3.5 text-gray-700 font-medium">Free to use</td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-5 py-3.5 text-gray-700 font-medium">Curated, balanced statements</td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-gray-400 text-base">~</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+            </tr>
+            <tr class="hover:bg-gray-50">
+              <td class="px-5 py-3.5 text-gray-700 font-medium">Full data export (CSV/JSON)</td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Paid only</td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
+            </tr>
+            <tr class="bg-blue-50 border-t-2 border-blue-200">
+              <td class="px-5 py-3.5 text-gray-700 font-semibold">Scalable — from 10 to 100,000 participants</td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Expensive at scale</td>
+              <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Academic, small-scale</td>
+              <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Unwieldy at scale</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-gray-400 mt-3 text-center">~ = partial or limited capability</p>
+    </div>
+
+  </div>
+</div>
+
 {# ── Real discussions happening now ── #}
 {% if featured_discussions %}
 <div class="bg-white py-16">
