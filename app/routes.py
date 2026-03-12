@@ -95,7 +95,9 @@ def about():
 
 @main_bp.route('/platform')
 def platform():
-    return render_template('platform.html')
+    from app.models import Discussion
+    demo_discussion = db.session.get(Discussion, 25)
+    return render_template('platform.html', demo_discussion=demo_discussion)
 
 
 def _is_scanner_or_bogus_asset_path(filename: str) -> bool:

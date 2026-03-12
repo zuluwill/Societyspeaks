@@ -163,7 +163,11 @@ def news_feed():
 @login_required
 def create_discussion():
     from app.models import Statement
-    
+
+    if not current_user.profile_type:
+        flash("Please complete your profile before creating a discussion.", "info")
+        return redirect(url_for('profiles.select_profile_type'))
+
     form = CreateDiscussionForm()
     editable_programmes = []
     for programme in Programme.query.filter_by(status='active').order_by(Programme.name.asc()).all():
@@ -250,8 +254,8 @@ def create_discussion():
             keywords=form.keywords.data,
             geographic_scope=form.geographic_scope.data,
             creator_id=current_user.id,
-            individual_profile_id=current_user.individual_profile.id if current_user.profile_type == 'individual' else None,
-            company_profile_id=current_user.company_profile.id if current_user.profile_type == 'company' else None,
+            individual_profile_id=current_user.individual_profile.id if (current_user.profile_type == 'individual' and current_user.individual_profile) else None,
+            company_profile_id=current_user.company_profile.id if (current_user.profile_type == 'company' and current_user.company_profile) else None,
             programme_id=chosen_programme.id if chosen_programme else None,
             programme_theme=(form.programme_theme.data or None) if chosen_programme else None,
             programme_phase=(form.programme_phase.data or None) if chosen_programme else None,

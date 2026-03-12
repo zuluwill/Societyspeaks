@@ -34,13 +34,15 @@
            class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
           Browse Programmes
         </a>
-        <a href="/discussions/25/climate-action-finding-common-ground"
+        {% if demo_discussion %}
+        <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}"
            class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-emerald-700 shadow-sm ring-1 ring-inset ring-emerald-300 hover:bg-emerald-50 transition-colors">
           <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
           </svg>
           See Live Demo
         </a>
+        {% endif %}
       </div>
     </div>
   </div>
@@ -150,22 +152,24 @@
     </div>
 
     {# Demo callout #}
+    {% if demo_discussion %}
     <div class="mt-10 rounded-xl bg-emerald-50 border border-emerald-200 p-6 flex flex-col sm:flex-row sm:items-center gap-5">
       <div class="flex-1">
         <p class="font-semibold text-gray-900">See it in action — live demo</p>
         <p class="text-sm text-gray-600 mt-1">Vote on our demo discussion, then see what the consensus analysis reveals. Takes about 2 minutes. Vote on 5 statements to unlock the full analysis.</p>
       </div>
       <div class="flex flex-col sm:flex-row gap-3 flex-shrink-0">
-        <a href="/discussions/25/climate-action-finding-common-ground"
+        <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}"
            class="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors min-h-11">
           View Discussion
         </a>
-        <a href="/discussions/25/consensus"
+        <a href="{{ url_for('consensus.view_results', discussion_id=demo_discussion.id) }}"
            class="inline-flex items-center justify-center rounded-md bg-white border border-emerald-600 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors min-h-11">
           View Consensus Analysis
         </a>
       </div>
     </div>
+    {% endif %}
   </div>
 </div>
 
@@ -425,18 +429,20 @@
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <h2 class="text-2xl font-bold text-gray-900 text-center mb-8">Explore further</h2>
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <a href="/discussions/25/climate-action-finding-common-ground"
+      {% if demo_discussion %}
+      <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}"
          class="block rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all group">
         <p class="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">Live demo</p>
         <h3 class="font-semibold text-gray-900 text-sm group-hover:text-blue-700 transition-colors">See a native discussion</h3>
         <p class="text-xs text-gray-500 mt-1">Vote on statements about climate action</p>
       </a>
-      <a href="/discussions/25/consensus"
+      <a href="{{ url_for('consensus.view_results', discussion_id=demo_discussion.id) }}"
          class="block rounded-xl border border-gray-200 p-5 hover:border-emerald-300 hover:shadow-sm transition-all group">
         <p class="text-xs font-semibold text-emerald-600 mb-1.5 uppercase tracking-wide">Live demo</p>
         <h3 class="font-semibold text-gray-900 text-sm group-hover:text-emerald-700 transition-colors">See consensus analysis</h3>
         <p class="text-xs text-gray-500 mt-1">Clusters, bridges, and divisions revealed</p>
       </a>
+      {% endif %}
       <a href="{{ url_for('help.programmes') }}"
          class="block rounded-xl border border-gray-200 p-5 hover:border-purple-300 hover:shadow-sm transition-all group">
         <p class="text-xs font-semibold text-purple-600 mb-1.5 uppercase tracking-wide">Help</p>
