@@ -1,0 +1,58 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}You're invited to {{ org_name }} on Society Speaks{% endblock %}
+
+{% block preheader %}{{ inviter_name }} has invited you to join {{ org_name }} on Society Speaks{% endblock %}
+
+{% block header_title %}You're invited to {{ org_name }}{% endblock %}
+
+{% block header_subtitle %}
+<tr>
+    <td align="center" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #bfdbfe; padding-top: 6px;">
+        Join your team's briefings workspace
+    </td>
+</tr>
+{% endblock %}
+
+{% block content %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #374151; padding-bottom: 20px;">
+            Hi{% if invitee_name %} {{ invitee_name }}{% endif %},
+        </td>
+    </tr>
+    <tr>
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; color: #374151; padding-bottom: 20px;">
+            <strong>{{ inviter_name }}</strong> has invited you to join <strong>{{ org_name }}</strong> on Society Speaks as a <strong>{{ role }}</strong>.
+        </td>
+    </tr>
+    <tr>
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 15px; color: #6b7280; padding-bottom: 28px;">
+            As a team member you'll be able to access, create, and collaborate on AI-powered briefings together.
+        </td>
+    </tr>
+    <tr>
+        <td align="center" style="padding-bottom: 28px;">
+            <a href="{{ invite_url }}"
+               style="display: inline-block; background-color: #1e40af; color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 600; text-decoration: none; padding: 14px 32px; border-radius: 8px;">
+                Accept invitation
+            </a>
+        </td>
+    </tr>
+    <tr>
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #9ca3af; padding-bottom: 8px;">
+            If the button doesn't work, copy and paste this link:
+        </td>
+    </tr>
+    <tr>
+        <td style="font-family: monospace; font-size: 12px; color: #6b7280; word-break: break-all; padding-bottom: 24px;">
+            <a href="{{ invite_url }}" style="color: #2563eb;">{{ invite_url }}</a>
+        </td>
+    </tr>
+    <tr>
+        <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+            This invitation expires in {{ expiry_days }} days. If you didn't expect this email, you can safely ignore it.
+        </td>
+    </tr>
+</table>
+{% endblock %}

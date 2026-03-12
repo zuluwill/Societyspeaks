@@ -3395,6 +3395,18 @@ def invite_member():
 
     try:
         membership = invite_team_member(org, email, role, current_user)
+        invite_url = url_for('auth.handle_invitation', token=membership.invite_token, _external=True)
+        try:
+            from app.resend_client import send_org_invitation_email
+            send_org_invitation_email(
+                email=email,
+                org_name=org.company_name,
+                inviter_name=current_user.username,
+                invite_url=invite_url,
+                role=role,
+            )
+        except Exception as e:
+            logger.warning(f"Invitation email failed for {email}: {e}")
         try:
             import posthog
             if posthog and getattr(posthog, 'project_api_key', None):
@@ -3410,8 +3422,7 @@ def invite_member():
                 )
         except Exception as e:
             logger.warning(f"PostHog tracking error: {e}")
-        # TODO: Send invitation email with link containing membership.invite_token
-        flash(f"Invitation sent to {email}. They can join using the invitation link.", "success")
+        flash(f"Invitation sent to {email}.", "success")
     except ValueError as e:
         flash(str(e), "error")
 

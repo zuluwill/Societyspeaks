@@ -649,10 +649,23 @@ def handle_payment_failed(invoice_data):
 
 
 def handle_trial_ending(subscription_data):
-    """Handle trial ending soon notification (3 days before)."""
+    """Handle trial ending soon notification (3 days before trial end).
+
+    Stripe fires customer.subscription.trial_will_end three days before the
+    trial expires.  This applies to the paid Briefings product only — it is
+    unrelated to the Daily Brief newsletter subscription managed in app/brief/.
+    """
     sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
-    if sub and sub.user:
-        current_app.logger.info(f"Trial ending soon for user {sub.user_id}")
+    if not sub or not sub.user:
+        return
+
+    current_app.logger.info(f"Trial ending soon for user {sub.user_id}")
+    try:
+        from app.resend_client import send_trial_ending_email
+        upgrade_url = url_for('briefing.landing', _external=True)
+        send_trial_ending_email(sub.user, days_remaining=3, upgrade_url=upgrade_url)
+    except Exception as e:
+        current_app.logger.error(f"Failed to send trial ending email to user {sub.user_id}: {e}")
 
 
 def handle_subscription_paused(subscription_data):

@@ -1020,6 +1020,102 @@ def send_discussion_notification_email(user, discussion, notification_type: str,
         return False
 
 
+def send_org_invitation_email(email: str, org_name: str, inviter_name: str, invite_url: str, role: str = 'editor', invitee_name: str = '') -> bool:
+    """
+    Send an organisation team invitation email for the paid Briefings product.
+
+    This is used when a company-profile owner or admin invites a new member to
+    their paid briefings workspace (Team / Enterprise plan). It is distinct from
+    the Daily Brief subscription emails and from programme steward invites.
+
+    Args:
+        email:        Recipient email address.
+        org_name:     Company/organisation name shown in the email.
+        inviter_name: Display name of the person who sent the invite.
+        invite_url:   Full URL the recipient clicks to accept (contains the token).
+        role:         Role being granted – 'admin', 'editor', or 'viewer'.
+        invitee_name: Optional first name for a personalised greeting.
+
+    Returns:
+        bool: True if the email was sent successfully, False otherwise.
+    """
+    try:
+        client = get_resend_client()
+        expiry_days = int(os.environ.get('PARTNER_INVITE_EXPIRY_DAYS', '7'))
+        html = render_template(
+            'emails/org_member_invite.html',
+            org_name=org_name,
+            inviter_name=inviter_name,
+            invite_url=invite_url,
+            role=role.capitalize(),
+            invitee_name=invitee_name,
+            expiry_days=expiry_days,
+            base_url=client.base_url,
+        )
+        email_data = {
+            'from': client.from_email,
+            'to': [email],
+            'subject': f"You've been invited to join {org_name} on Society Speaks",
+            'html': html,
+        }
+        success = client._send_with_retry(email_data, use_rate_limit=False)
+        if success:
+            logger.info(f"Org invitation email sent to {email} for org '{org_name}'")
+        else:
+            logger.error(f"Failed to send org invitation email to {email}")
+        return success
+    except Exception as e:
+        logger.error(f"Failed to send org invitation email to {email}: {e}")
+        return False
+
+
+def send_trial_ending_email(user, days_remaining: int = 3, upgrade_url: Optional[str] = None) -> bool:
+    """
+    Notify a paid-briefings subscriber that their 30-day free trial is ending soon.
+
+    Triggered by the Stripe `customer.subscription.trial_will_end` webhook (fires
+    3 days before trial end).  This is for the paid Briefings product only — it is
+    unrelated to the Daily Brief newsletter subscription.
+
+    Args:
+        user:           User object (must have .email and .username).
+        days_remaining: Days left in the trial (typically 3 from Stripe webhook).
+        upgrade_url:    Full URL to the plans/pricing page.  Callers in a request
+                        context should pass url_for('briefing.landing', _external=True).
+                        Defaults to base_url + '/briefings/landing' for contexts
+                        where url_for is unavailable (e.g. scheduled jobs).
+
+    Returns:
+        bool: True if sent successfully.
+    """
+    try:
+        client = get_resend_client()
+        if not upgrade_url:
+            upgrade_url = f"{client.base_url}/briefings/landing"
+        html = render_template(
+            'emails/trial_ending.html',
+            username=user.username or 'there',
+            days_remaining=days_remaining,
+            upgrade_url=upgrade_url,
+            base_url=client.base_url,
+        )
+        email_data = {
+            'from': client.from_email,
+            'to': [user.email],
+            'subject': f"Your free trial ends in {days_remaining} day{'s' if days_remaining != 1 else ''} — keep your briefings going",
+            'html': html,
+        }
+        success = client._send_with_retry(email_data, use_rate_limit=False)
+        if success:
+            logger.info(f"Trial ending email sent to {user.email} ({days_remaining} days remaining)")
+        else:
+            logger.error(f"Failed to send trial ending email to {user.email}")
+        return success
+    except Exception as e:
+        logger.error(f"Failed to send trial ending email to {user.email}: {e}")
+        return False
+
+
 def send_profile_completion_reminder_email(user, missing_fields: list, profile_url: str) -> bool:
     """
     Send profile completion reminder email via Resend.

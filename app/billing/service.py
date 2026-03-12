@@ -144,16 +144,18 @@ def create_checkout_session(user, plan_code, billing_interval='month', success_u
 def create_portal_session(user, return_url=None):
     """Create a Stripe Customer Portal session for self-service billing management."""
     s = get_stripe()
-    
+
     if not user.stripe_customer_id:
         raise ValueError("User has no Stripe customer ID")
-    
-    base_url = current_app.config.get('APP_BASE_URL', 'https://societyspeaks.io')
-    
+
+    if return_url is None:
+        from flask import url_for
+        return_url = url_for('briefing.list_briefings', _external=True)
+
     session = _stripe_call(
         s.billing_portal.Session.create,
         customer=user.stripe_customer_id,
-        return_url=return_url or f"{base_url}/briefings"
+        return_url=return_url,
     )
 
     return session
@@ -663,10 +665,10 @@ def invite_team_member(org, email, role, invited_by):
     if role not in ('admin', 'editor', 'viewer'):
         raise ValueError(f"Invalid role: {role}")
 
-    # Check seat limits
+    # Check seat limits — include past_due: payment failed but still in grace period
     sub = Subscription.query.filter(
         Subscription.org_id == org.id,
-        Subscription.status.in_(['trialing', 'active'])
+        Subscription.status.in_(['trialing', 'active', 'past_due'])
     ).first()
 
     if not sub:
@@ -749,6 +751,15 @@ def accept_invitation(token, user):
 
     if not membership:
         raise ValueError("Invalid or expired invitation")
+
+    # Reject invitations older than the configured expiry window
+    from datetime import timedelta as _timedelta
+    expiry_days = int(current_app.config.get('PARTNER_INVITE_EXPIRY_DAYS', 7))
+    if membership.invited_at and (utcnow_naive() - membership.invited_at) > _timedelta(days=expiry_days):
+        raise ValueError(
+            f"This invitation has expired (invitations are valid for {expiry_days} days). "
+            "Please ask your organisation owner to send a new one."
+        )
 
     # Verify email matches if specified
     if membership.invite_email and membership.invite_email.lower() != user.email.lower():
@@ -879,7 +890,7 @@ def check_team_seat_limit(org):
     """
     sub = Subscription.query.filter(
         Subscription.org_id == org.id,
-        Subscription.status.in_(['trialing', 'active'])
+        Subscription.status.in_(['trialing', 'active', 'past_due'])
     ).first()
 
     if not sub:

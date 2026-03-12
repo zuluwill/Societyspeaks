@@ -134,8 +134,8 @@ def register():
             flash("All fields are required.", "error")
             return redirect(url_for('auth.register'))
 
-        if len(password) < 6:
-            flash("Password must be at least 6 characters.", "error")
+        if len(password) < 8:
+            flash("Password must be at least 8 characters.", "error")
             return redirect(url_for('auth.register'))
 
         if User.query.filter_by(email=email).first():
@@ -330,23 +330,31 @@ def login():
             else get_missing_company_profile_fields(profile)
         )
 
-        # Send profile completion reminder if there are missing fields
+        # Send profile completion reminder if there are missing fields, at most once per 7 days
         if missing_fields:
-            from app.resend_client import send_profile_completion_reminder_email
-            
-            # Build profile edit URL
-            if isinstance(profile, IndividualProfile):
-                profile_url = url_for('profiles.edit_individual_profile', 
-                                     username=profile.slug, _external=True)
-            else:
-                profile_url = url_for('profiles.edit_company_profile', 
-                                     company_name=profile.slug, _external=True)
-            
-            # Send reminder (don't block login on email failure)
+            _reminder_cache_key = f"profile_reminder_sent:{user.id}"
+            _already_sent = False
             try:
-                send_profile_completion_reminder_email(user, missing_fields, profile_url)
-            except Exception as e:
-                current_app.logger.error(f"Failed to send profile reminder: {e}")
+                _already_sent = bool(cache.get(_reminder_cache_key))
+            except Exception:
+                pass
+
+            if not _already_sent:
+                from app.resend_client import send_profile_completion_reminder_email
+
+                if isinstance(profile, IndividualProfile):
+                    profile_url = url_for('profiles.edit_individual_profile',
+                                         username=profile.slug, _external=True)
+                else:
+                    profile_url = url_for('profiles.edit_company_profile',
+                                         company_name=profile.slug, _external=True)
+
+                try:
+                    send_profile_completion_reminder_email(user, missing_fields, profile_url)
+                    # Suppress further reminders for 7 days
+                    cache.set(_reminder_cache_key, '1', timeout=7 * 24 * 3600)
+                except Exception as e:
+                    current_app.logger.error(f"Failed to send profile reminder: {e}")
 
         # Redirect to the dashboard if the user has a complete or partially complete profile
         return redirect(url_for('auth.dashboard'))
@@ -510,8 +518,8 @@ def password_reset(token):
         new_password = request.form.get('new_password')
 
         # Validate the new password (for example, check minimum length)
-        if not new_password or len(new_password) < 6:
-            flash("Password must be at least 6 characters long.", "error")
+        if not new_password or len(new_password) < 8:
+            flash("Password must be at least 8 characters long.", "error")
             return render_template('auth/password_reset.html', token=token)
 
         # Set the new password
