@@ -2571,37 +2571,12 @@ class DailyBriefSubscriber(db.Model):
         return 'Unknown'
 
     def is_subscribed_eligible(self):
-        """Check if subscriber should receive emails
-        
-        Tier values:
-        - 'trial': 30-day free trial, expires at trial_ends_at
-        - 'free': Admin-granted permanent free access (never expires)
-        - 'individual': Paid individual subscription via Stripe
-        - 'team': Team subscription via Stripe
+        """Check if subscriber should receive emails.
+
+        The Daily Brief is free for all active subscribers — no tier or
+        payment check is required.  Only the status field matters.
         """
-        if self.status != 'active':
-            return False
-
-        # Admin-granted free tier: always eligible
-        if self.tier == 'free':
-            return True
-
-        # During test phase: everyone gets access (check env var)
-        import os
-        if not os.environ.get('BILLING_ENFORCEMENT_ENABLED'):
-            return True
-
-        # Post-launch: check subscription status
-        if self.tier == 'trial':
-            if not self.trial_ends_at:
-                return False
-            return utcnow_naive() < self.trial_ends_at
-
-        if self.tier in ['individual', 'team']:
-            # Check Stripe subscription status
-            return self.subscription_expires_at and utcnow_naive() < self.subscription_expires_at
-
-        return False
+        return self.status == 'active'
 
     def has_received_brief_today(self, brief_date=None):
         """Check if subscriber already received brief for given date (prevents duplicate sends)"""

@@ -229,24 +229,13 @@ class ResendClient:
         magic_link_url: str,
         preferences_url: str,
         unsubscribe_url: str,
-        is_free_tier: bool,
-        trial_end_date: str,
-        trial_days: Optional[int],
     ) -> str:
         """Render a plain-text welcome email alternative."""
         cadence_label = 'Weekly Brief' if subscriber.cadence == 'weekly' else 'Daily Brief'
         lines = [
             f"Welcome to Society Speaks {cadence_label}",
             "",
-            "Your access is active.",
-        ]
-
-        if not is_free_tier:
-            lines.append(f"Trial ends: {trial_end_date}")
-            if trial_days is not None:
-                lines.append(f"Days remaining: {trial_days}")
-
-        lines.extend([
+            "Your free access is active.",
             "",
             f"Preferred send hour: {subscriber.preferred_send_hour}:00",
             f"Timezone: {subscriber.timezone}",
@@ -254,7 +243,7 @@ class ResendClient:
             f"Open your brief: {magic_link_url}",
             f"Manage preferences: {preferences_url}",
             f"Unsubscribe: {unsubscribe_url}",
-        ])
+        ]
         return "\n".join(lines).strip() + "\n"
 
     def _from_for_brief(self, brief: DailyBrief = None) -> str:
@@ -517,11 +506,6 @@ class ResendClient:
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
             unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
 
-            # Determine subscription type for email content
-            is_free_tier = subscriber.tier == 'free'
-            trial_end_date = subscriber.trial_ends_at.strftime('%B %d, %Y') if subscriber.trial_ends_at else 'N/A'
-            trial_days = subscriber.trial_days_remaining if subscriber.tier == 'trial' else None
-
             html_content = render_template(
                 'emails/daily_brief_welcome.html',
                 subscriber=subscriber,
@@ -531,17 +515,10 @@ class ResendClient:
                 base_url=base_url,
                 preferred_hour=subscriber.preferred_send_hour,
                 timezone=subscriber.timezone,
-                trial_end_date=trial_end_date,
-                trial_days=trial_days,
-                is_free_tier=is_free_tier
             )
 
-            # Customize subject based on tier and cadence
             cadence_label = 'Weekly Brief' if subscriber.cadence == 'weekly' else 'Daily Brief'
-            if is_free_tier:
-                subject = f'Welcome to the {cadence_label} - Your Free Access is Active!'
-            else:
-                subject = f'Welcome to the {cadence_label} - Your Trial Has Started!'
+            subject = f'Welcome to the {cadence_label} - Your Free Access is Active!'
 
             email_data = {
                 'from': self.from_email,
@@ -553,9 +530,6 @@ class ResendClient:
                     magic_link_url=magic_link_url,
                     preferences_url=preferences_url,
                     unsubscribe_url=unsubscribe_url,
-                    is_free_tier=is_free_tier,
-                    trial_end_date=trial_end_date,
-                    trial_days=trial_days
                 ),
                 'reply_to': self.reply_to,
                 'tags': [

@@ -280,25 +280,6 @@ class Config:
         if not all([X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET]):
             logging.info("X API credentials not fully configured - X posting will be skipped")
 
-    # ===========================================================================
-    # BILLING ENFORCEMENT
-    # ===========================================================================
-    # CRITICAL: Must be set to "true" in production Replit secrets.
-    # When unset or falsy, all subscription tier checks are bypassed and every
-    # user gets full feature access regardless of their plan.  This flag exists
-    # to allow a soft launch without gating, but must be enabled before
-    # monetisation goes live.
-    #
-    # Set in Replit secrets:  BILLING_ENFORCEMENT_ENABLED = true
-    BILLING_ENFORCEMENT_ENABLED = os.getenv('BILLING_ENFORCEMENT_ENABLED', '').lower() in ('1', 'true', 'yes')
-
-    if not BILLING_ENFORCEMENT_ENABLED and os.getenv('FLASK_ENV') == 'production':
-        logging.warning(
-            "BILLING_ENFORCEMENT_ENABLED is not set to true in production. "
-            "All subscription checks are currently bypassed — users have free access to paid features. "
-            "Set BILLING_ENFORCEMENT_ENABLED=true in Replit secrets before monetisation goes live."
-        )
-
     # Admin Security Settings
     ADMIN_LOGIN_ATTEMPTS = int(os.getenv('ADMIN_LOGIN_ATTEMPTS', '3'))  # Max failed login attempts
     ADMIN_LOGIN_TIMEOUT = int(os.getenv('ADMIN_LOGIN_TIMEOUT', '1800'))  # Timeout in seconds (30 minutes)
