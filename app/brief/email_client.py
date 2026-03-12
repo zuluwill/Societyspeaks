@@ -298,7 +298,7 @@ class ResendClient:
             # Prepare email data with List-Unsubscribe headers for compliance
             email_data = {
                 'from': self._from_for_brief(brief),
-                'to': [subscriber.email],
+                'to': [cleaned_email],
                 'subject': brief.title,
                 'html': html_content,
                 'text': self._render_brief_text(

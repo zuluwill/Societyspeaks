@@ -66,7 +66,7 @@ class TopicSelector:
         recent_items = BriefItem.query.join(DailyBrief).filter(
             DailyBrief.date >= cutoff_date,
             DailyBrief.status.in_(['published', 'ready'])
-        ).all()
+        ).limit(500).all()
 
         topic_ids = [item.trending_topic_id for item in recent_items if item.trending_topic_id]
         headlines = [item.headline.lower().strip() for item in recent_items if item.headline]
@@ -172,7 +172,6 @@ class TopicSelector:
 
         # Filter by quality criteria with compensation for single-source topics
         filtered = []
-        coverage_cache = {}  # Avoid double-calculating per topic
 
         for topic in candidates:
             # Apply compensating quality checks for single-source topics
@@ -208,7 +207,6 @@ class TopicSelector:
             # transparency-first platform.
             analyzer = CoverageAnalyzer(topic)
             coverage = analyzer.calculate_distribution()
-            coverage_cache[topic.id] = coverage
 
             if coverage['has_sufficient_coverage']:
                 if coverage['imbalance_score'] > self.MAX_IMBALANCE:

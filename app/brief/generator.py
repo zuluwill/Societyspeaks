@@ -90,9 +90,17 @@ class BriefGenerator:
     def __init__(self):
         self.api_key, self.provider = get_system_api_key()
         self.llm_available = bool(self.api_key)
-        
+        self._openai_client = None
+        self._anthropic_client = None
+
         if not self.llm_available:
             logger.warning("No LLM API key found. Brief will use fallback content generation.")
+        elif self.provider == 'openai':
+            import openai
+            self._openai_client = openai.OpenAI(api_key=self.api_key)
+        elif self.provider == 'anthropic':
+            import anthropic
+            self._anthropic_client = anthropic.Anthropic(api_key=self.api_key)
 
     def generate_brief(
         self,
@@ -1760,7 +1768,12 @@ Guidelines:
         import openai
 
         key = api_key or self.api_key or os.environ.get('OPENAI_API_KEY')
-        client = openai.OpenAI(api_key=key)
+        # Reuse the shared client to avoid creating a new HTTP connection pool per call.
+        # Fall back to a fresh client only if a caller passes a different api_key.
+        if self._openai_client and not api_key:
+            client = self._openai_client
+        else:
+            client = openai.OpenAI(api_key=key)
         sys_msg = system_prompt or "You are a news editor creating calm, neutral briefings. Respond only in valid JSON."
         tokens = max_tokens or 500
 
@@ -1810,7 +1823,11 @@ Guidelines:
         import anthropic
 
         key = api_key or self.api_key or os.environ.get('ANTHROPIC_API_KEY')
-        client = anthropic.Anthropic(api_key=key)
+        # Reuse the shared client to avoid creating a new HTTP connection pool per call.
+        if self._anthropic_client and not api_key:
+            client = self._anthropic_client
+        else:
+            client = anthropic.Anthropic(api_key=key)
         sys_msg = system_prompt or "You are a news editor creating calm, neutral briefings. Respond only in valid JSON."
         tokens = max_tokens or 500
 

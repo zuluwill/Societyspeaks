@@ -1639,11 +1639,13 @@ def init_scheduler(app):
                 logger.error(msg, exc_info=True)
                 _send_ops_alert(msg)
             finally:
-                # LLM responses and article content can be large; release the
-                # SQLAlchemy identity map before context teardown so GC can
-                # reclaim that memory promptly.
+                # Release all ORM objects and return the DB connection to the pool.
+                # remove() closes and disposes the scoped session for this thread,
+                # which includes expunge_all() internally — so large ORM object graphs
+                # (articles, LLM responses, topic data) can be GC'd promptly rather
+                # than waiting for app context teardown.
                 try:
-                    db.session.expunge_all()
+                    db.session.remove()
                 except Exception:
                     pass
                 _gc.collect()
