@@ -650,10 +650,12 @@ def init_scheduler(app):
             except Exception as e:
                 logger.error(f"Trending topics pipeline error: {e}", exc_info=True)
             finally:
-                # Release SQLAlchemy identity map (article content, topic data, etc.)
-                # before the app context teardown so Python can GC large objects now.
+                # Release all ORM objects and return the DB connection to the pool.
+                # remove() closes and disposes the scoped session for this thread
+                # (which is a superset of expunge_all()), so article content and
+                # topic data can be GC'd promptly rather than waiting for teardown.
                 try:
-                    db.session.expunge_all()
+                    db.session.remove()
                 except Exception:
                     pass
                 _gc.collect()
