@@ -77,14 +77,14 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             {{ form.geographic_scope.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.geographic_scope(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm", onchange="handleScopeChange()") }}
+            {{ form.geographic_scope(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
             {% if form.geographic_scope.errors %}{% for error in form.geographic_scope.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
           </div>
           <div id="country_wrapper">
             {{ form.country.label(class="block text-sm font-medium text-gray-700") }}
-            {{ form.country(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm", onchange="fetchCities()") }}
+            {{ form.country(class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }}
             {% if form.country.errors %}{% for error in form.country.errors %}
             <p class="mt-1 text-sm text-red-600">{{ error }}</p>
             {% endfor %}{% endif %}
@@ -332,6 +332,11 @@
         .catch(() => {});
     }
   }
+
+  const geographicScopeEl = document.getElementById('geographic_scope');
+  if (geographicScopeEl) geographicScopeEl.addEventListener('change', handleScopeChange);
+  const countryEl = document.getElementById('country');
+  if (countryEl) countryEl.addEventListener('change', fetchCities);
 </script>
 
 {% endblock %}

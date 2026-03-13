@@ -108,7 +108,7 @@
             </div>
             {% if available_users %}
             <form action="{{ url_for('admin.bulk_subscribe_users') }}" method="POST" class="inline"
-                  onsubmit="return confirm('This will subscribe ALL remaining {{ available_users|length }} users. Continue?');">
+                  data-confirm="This will subscribe ALL remaining {{ available_users|length }} users. Continue?">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="text-sm text-blue-600 hover:text-blue-800">
                     Add all {{ available_users|length }} remaining users
@@ -119,7 +119,7 @@
         
         {% if subscribers %}
         <form action="{{ url_for('admin.bulk_remove_subscribers') }}" method="POST" id="bulk-remove-form"
-              onsubmit="return confirm('Remove selected subscribers? This cannot be undone.');">
+              data-confirm="Remove selected subscribers? This cannot be undone.">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -155,7 +155,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="relative inline-block freq-dropdown">
-                                <button type="button" onclick="toggleFreqDropdown(this)" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80
+                                <button type="button" class="freq-toggle-btn inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80
                                     {% if sub.email_frequency == 'daily' %}bg-blue-100 text-blue-800
                                     {% elif sub.email_frequency == 'weekly' %}bg-green-100 text-green-800
                                     {% elif sub.email_frequency == 'monthly' %}bg-purple-100 text-purple-800
@@ -223,7 +223,7 @@
                                 </form>
                                 {% if sub.is_active %}
                                 <form action="{{ url_for('admin.resend_daily_question', subscriber_id=sub.id) }}" method="POST" class="inline"
-                                      onsubmit="return confirm('Resend today\\'s daily question to {{ sub.email }}?');">
+                                      data-confirm="Resend today's daily question to {{ sub.email }}?">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="text-blue-600 hover:text-blue-800" title="Resend Today's Question">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -233,7 +233,7 @@
                                 </form>
                                 {% endif %}
                                 <form action="{{ url_for('admin.delete_subscriber', subscriber_id=sub.id) }}" method="POST" class="inline"
-                                      onsubmit="return confirm('Remove {{ sub.email }} from subscribers? This cannot be undone.');">
+                                      data-confirm="Remove {{ sub.email }} from subscribers? This cannot be undone.">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="text-red-600 hover:text-red-800" title="Remove">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -284,10 +284,12 @@ function toggleFreqDropdown(btn) {
     menu.classList.toggle('hidden');
 }
 
-// Close dropdowns when clicking outside
+// Close dropdowns when clicking outside; also open on freq-toggle-btn
 document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.freq-toggle-btn');
+    if (btn) { toggleFreqDropdown(btn); return; }
     if (!e.target.closest('.freq-dropdown')) {
-        document.querySelectorAll('.freq-menu').forEach(menu => {
+        document.querySelectorAll('.freq-menu').forEach(function(menu) {
             menu.classList.add('hidden');
         });
     }

@@ -79,8 +79,7 @@
           <form
             method="POST"
             action="{{ url_for('api_keys.delete_api_key', key_id=key.id) }}"
-            class="inline"
-            onsubmit="return confirm('Delete this API key?')"
+            class="inline api-key-delete-form"
           >
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="text-red-600 hover:underline text-sm">
@@ -160,4 +159,10 @@
     </a>
   </div>
 </div>
+<script nonce="{{ csp_nonce() }}">
+  document.addEventListener('submit', function(e) {
+    var form = e.target.closest('.api-key-delete-form');
+    if (form && !confirm('Delete this API key?')) e.preventDefault();
+  });
+</script>
 {% endblock %}

@@ -30,16 +30,16 @@
 
     <div class="mt-1 relative">
         <!-- Single file input with correct ID -->
-        {{ field(class="hidden", 
-                id=field.id, 
+        {{ field(class="hidden",
+                id=field.id,
                 accept="image/*",
-                onchange="handleImageUpload(this, '" + preview_id + "')",
+                data_preview_id=preview_id,
                 **({'required': ''} if field.flags.required else {})) }}
 
         <!-- Image preview container -->
         {% if 'profile' in preview_id or 'logo' in preview_id %}
             <div class="w-32 h-32 {% if 'profile' in preview_id %}rounded-full{% else %}rounded-lg{% endif %} overflow-hidden bg-gray-100 border border-gray-200 relative group cursor-pointer"
-                 onclick="document.getElementById('{{ field.id }}').click()">
+                 data-trigger-id="{{ field.id }}">
                 <img id="{{ preview_id }}" 
                      class="w-full h-full object-cover" 
                      src="{{ url_for('main.serve_asset', filename='images/default-' + ('avatar' if 'profile' in preview_id else 'logo') + '.png') }}" 
@@ -50,7 +50,7 @@
             </div>
         {% else %}
             <div class="w-full h-48 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 relative group cursor-pointer"
-                 onclick="document.getElementById('{{ field.id }}').click()">
+                 data-trigger-id="{{ field.id }}">
                 <img id="{{ preview_id }}" 
                      class="w-full h-full object-cover" 
                      src="{{ url_for('main.serve_asset', filename='images/default-banner.png') }}" 
@@ -73,9 +73,9 @@
         </div>
 
         <!-- Crop button -->
-        <button type="button" 
+        <button type="button"
                 id="crop-{{ preview_id }}"
-                onclick="openCropModal('{{ preview_id }}')"
+                data-open-crop="{{ preview_id }}"
                 class="hidden mt-2 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
             <svg class="-ml-1 mr-2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -109,7 +109,7 @@
         <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full sm:p-6">
             <div class="absolute top-0 right-0 pt-4 pr-4">
-                <button type="button" onclick="closeCropModal('{{ preview_id }}')" class="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                <button type="button" data-close-crop="{{ preview_id }}" class="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                     <span class="sr-only">Close</span>
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -127,13 +127,13 @@
                 </div>
             </div>
             <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                <button type="button" 
-                        onclick="applyCrop('{{ preview_id }}')"
+                <button type="button"
+                        data-apply-crop="{{ preview_id }}"
                         class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
                     Apply
                 </button>
-                <button type="button" 
-                        onclick="closeCropModal('{{ preview_id }}')"
+                <button type="button"
+                        data-close-crop="{{ preview_id }}"
                         class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm">
                     Cancel
                 </button>

@@ -129,7 +129,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <div class="flex items-center space-x-2">
                                     <form action="{{ url_for('admin.review_response_flag', flag_id=flag.id) }}" method="POST" class="inline"
-                                          onsubmit="return confirm('Mark this flag as valid and hide the response?');">
+                                          data-confirm="Mark this flag as valid and hide the response?">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <input type="hidden" name="action" value="valid">
                                         <button type="submit" class="text-green-600 hover:text-green-800" title="Mark Valid & Hide">
@@ -139,7 +139,7 @@
                                         </button>
                                     </form>
                                     <form action="{{ url_for('admin.review_response_flag', flag_id=flag.id) }}" method="POST" class="inline"
-                                          onsubmit="return confirm('Mark this flag as invalid and restore the response?');">
+                                          data-confirm="Mark this flag as invalid and restore the response?">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <input type="hidden" name="action" value="invalid">
                                         <button type="submit" class="text-red-600 hover:text-red-800" title="Mark Invalid & Restore">
@@ -149,7 +149,7 @@
                                         </button>
                                     </form>
                                     <form action="{{ url_for('admin.review_response_flag', flag_id=flag.id) }}" method="POST" class="inline"
-                                          onsubmit="return confirm('Dismiss this flag?');">
+                                          data-confirm="Dismiss this flag?">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <input type="hidden" name="action" value="dismiss">
                                         <button type="submit" class="text-gray-600 hover:text-gray-800" title="Dismiss">
@@ -182,7 +182,7 @@
                     <button type="submit" name="action" value="valid"
                             class="inline-flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             id="bulk-valid-btn" disabled
-                            onclick="return confirm('Mark selected flags as valid and hide responses?');">
+                            data-confirm="Mark selected flags as valid and hide responses?">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
@@ -191,7 +191,7 @@
                     <button type="submit" name="action" value="invalid"
                             class="inline-flex items-center px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             id="bulk-invalid-btn" disabled
-                            onclick="return confirm('Mark selected flags as invalid?');">
+                            data-confirm="Mark selected flags as invalid?">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -200,7 +200,7 @@
                     <button type="submit" name="action" value="dismiss"
                             class="inline-flex items-center px-4 py-2 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                             id="bulk-dismiss-btn" disabled
-                            onclick="return confirm('Dismiss selected flags?');">
+                            data-confirm="Dismiss selected flags?">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
                         </svg>

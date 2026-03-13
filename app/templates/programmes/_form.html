@@ -33,7 +33,7 @@
           <input type="radio" name="{{ form.geographic_scope.name }}" value="{{ value }}"
             class="sr-only peer"
             {% if form.geographic_scope.data == value or (not form.geographic_scope.data and value == 'global') %}checked{% endif %}
-            onchange="toggleCountry(this)">
+>
           <span class="block text-center py-2.5 px-4 text-sm font-medium cursor-pointer transition-colors
             bg-white text-gray-700
             peer-checked:bg-blue-600 peer-checked:text-white">
@@ -98,7 +98,7 @@
           <input type="radio" name="{{ form.owner_type.name }}" value="{{ value }}"
             class="sr-only peer"
             {% if form.owner_type.data == value or (not form.owner_type.data and value == 'user') %}checked{% endif %}
-            onchange="toggleCompany(this)">
+>
           <span class="block text-center py-2.5 px-4 text-sm font-medium cursor-pointer transition-colors
             bg-white text-gray-700
             peer-checked:bg-blue-600 peer-checked:text-white">
@@ -177,17 +177,18 @@
       if (wrapper) wrapper.style.display = radio.value === "global" ? "none" : "";
     }
 
-    // Expose for onchange handlers
-    window.toggleCompany = toggleCompany;
-    window.toggleCountry = toggleCountry;
-
-    // Set initial visibility state on page load
+    // Set initial visibility and bind change events
     document.addEventListener("DOMContentLoaded", function () {
       var scopeChecked = document.querySelector('[name="geographic_scope"]:checked');
       if (scopeChecked) toggleCountry(scopeChecked);
 
       var ownerChecked = document.querySelector('[name="owner_type"]:checked');
       if (ownerChecked) toggleCompany(ownerChecked);
+    });
+
+    document.addEventListener("change", function (e) {
+      if (e.target.name === "geographic_scope") toggleCountry(e.target);
+      if (e.target.name === "owner_type") toggleCompany(e.target);
     });
   })();
 </script>

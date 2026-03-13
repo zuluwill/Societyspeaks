@@ -164,7 +164,7 @@
         </div>
         <form method="POST"
               action="{{ url_for('admin.admin_remove_org_member', profile_id=profile.id, member_id=member.id) }}"
-              onsubmit="return confirm('Remove {{ member.user.username }} from this organisation?')">
+              data-confirm="Remove {{ member.user.username }} from this organisation?">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="text-sm text-red-600 hover:text-red-800">Remove</button>
         </form>

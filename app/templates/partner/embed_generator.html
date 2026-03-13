@@ -126,7 +126,7 @@
               >
               <button
                 type="button"
-                onclick="lookupArticle()"
+                
                 id="lookupBtn"
                 class="w-full sm:w-auto px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
@@ -145,7 +145,7 @@
               id="discussionId"
               placeholder="e.g., 123"
               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              onchange="updatePreview()"
+              
             >
             <p class="text-xs text-gray-500 mt-1">Returned by the API when a discussion is created or found.</p>
           </div>
@@ -174,7 +174,7 @@
               data-font="{{ theme.font }}"
               class="peer sr-only"
               {% if loop.first %}checked{% endif %}
-              onchange="applyThemePreset(this); updatePreview()"
+              
             >
             <div class="p-3 border-2 border-gray-200 rounded-lg peer-checked:border-blue-600 peer-checked:bg-blue-50 transition-colors">
               <div class="flex items-center gap-2 mb-1.5">
@@ -202,7 +202,7 @@
                 id="primaryColor"
                 value="#1e40af"
                 class="w-full h-10 rounded border border-gray-200 cursor-pointer"
-                onchange="selectCustomTheme()"
+                
               >
             </div>
             <div>
@@ -212,7 +212,7 @@
                 id="bgColor"
                 value="#ffffff"
                 class="w-full h-10 rounded border border-gray-200 cursor-pointer"
-                onchange="selectCustomTheme()"
+                
               >
             </div>
           </div>
@@ -221,7 +221,7 @@
             <select
               id="fontSelect"
               class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
-              onchange="updatePreview()"
+              
             >
               {% for font in fonts %}
               <option value="{{ font }}">{{ font }}</option>
@@ -241,7 +241,7 @@
             id="partnerRef"
             placeholder="e.g., observer, time, mysite"
             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            onchange="updatePreview()"
+            
           >
           <p class="text-xs text-gray-500 mt-1">Used for analytics. Lowercase, no spaces.</p>
         </div>
@@ -270,7 +270,7 @@
           <h2 class="font-semibold text-gray-900">Embed Code</h2>
           <button
             type="button"
-            onclick="copyCodeFrom('embedCode', 'copyBtn')"
+            
             id="copyBtn"
             class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
           >
@@ -289,7 +289,7 @@
           <h2 class="font-semibold text-gray-900">Auto-resize Snippet</h2>
           <button
             type="button"
-            onclick="copyCodeFrom('resizeSnippet', 'copyResizeBtn')"
+            
             id="copyResizeBtn"
             class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
           >
@@ -315,7 +315,7 @@ window.addEventListener('message', (event) =&gt; {
           <h2 class="font-semibold text-gray-900">Performance Hints</h2>
           <button
             type="button"
-            onclick="copyCodeFrom('preconnectSnippet', 'copyPreconnectBtn')"
+            
             id="copyPreconnectBtn"
             class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
           >
@@ -529,6 +529,20 @@ window.addEventListener('message', (event) =&gt; {
       e.preventDefault();
       lookupArticle();
     }
+  });
+
+  // Replacing removed inline event handlers
+  document.getElementById('lookupBtn')?.addEventListener('click', lookupArticle);
+  document.getElementById('discussionId')?.addEventListener('change', updatePreview);
+  document.getElementById('fontSelect')?.addEventListener('change', updatePreview);
+  document.getElementById('partnerRef')?.addEventListener('change', updatePreview);
+  document.getElementById('primaryColor')?.addEventListener('change', selectCustomTheme);
+  document.getElementById('bgColor')?.addEventListener('change', selectCustomTheme);
+  document.getElementById('copyBtn')?.addEventListener('click', () => copyCodeFrom('embedCode', 'copyBtn'));
+  document.getElementById('copyResizeBtn')?.addEventListener('click', () => copyCodeFrom('resizeSnippet', 'copyResizeBtn'));
+  document.getElementById('copyPreconnectBtn')?.addEventListener('click', () => copyCodeFrom('preconnectSnippet', 'copyPreconnectBtn'));
+  document.addEventListener('change', (e) => {
+    if (e.target.name === 'theme') { applyThemePreset(e.target); updatePreview(); }
   });
 </script>
 {% endblock %}

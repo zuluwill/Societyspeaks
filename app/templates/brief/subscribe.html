@@ -69,15 +69,13 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">How often?</label>
                         <div class="grid grid-cols-2 gap-3">
                             <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
-                                <input type="radio" name="cadence" value="daily" class="sr-only" checked
-                                       onchange="document.getElementById('signup-weekly-day').classList.add('hidden'); document.getElementById('signup-delivery-label').textContent = 'When should we deliver?';">
+                                <input type="radio" name="cadence" value="daily" class="sr-only" checked id="sub-cadence-daily">
                                 <span class="text-2xl mb-1">📰</span>
                                 <span class="text-sm font-bold text-gray-900">Daily</span>
                                 <span class="text-xs text-gray-500 text-center">Every day</span>
                             </label>
                             <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
-                                <input type="radio" name="cadence" value="weekly" class="sr-only"
-                                       onchange="document.getElementById('signup-weekly-day').classList.remove('hidden'); document.getElementById('signup-delivery-label').textContent = 'What time on delivery day?';">
+                                <input type="radio" name="cadence" value="weekly" class="sr-only" id="sub-cadence-weekly">
                                 <span class="text-2xl mb-1">📬</span>
                                 <span class="text-sm font-bold text-gray-900">Weekly</span>
                                 <span class="text-xs text-gray-500 text-center">Sunday digest</span>
@@ -332,4 +330,16 @@
         </div>
     </div>
 </div>
+<script nonce="{{ csp_nonce() }}">
+  document.getElementById('sub-cadence-daily')?.addEventListener('change', function() {
+    document.getElementById('signup-weekly-day').classList.add('hidden');
+    const lbl = document.getElementById('signup-delivery-label');
+    if (lbl) lbl.textContent = 'When should we deliver?';
+  });
+  document.getElementById('sub-cadence-weekly')?.addEventListener('change', function() {
+    document.getElementById('signup-weekly-day').classList.remove('hidden');
+    const lbl = document.getElementById('signup-delivery-label');
+    if (lbl) lbl.textContent = 'What time on delivery day?';
+  });
+</script>
 {% endblock %}

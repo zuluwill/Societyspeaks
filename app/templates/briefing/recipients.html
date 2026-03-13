@@ -81,7 +81,7 @@
                 {% if recipients %}
                 <form method="POST" action="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}"
                       id="bulk-remove-form"
-                      onsubmit="return confirm('Remove selected recipients? This cannot be undone.');">
+                      data-confirm="Remove selected recipients? This cannot be undone.">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="action" value="bulk_remove">
                     <button type="submit" id="bulk-remove-btn" disabled
@@ -98,7 +98,7 @@
             {% if recipients %}
             <form method="POST" action="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}"
                   id="bulk-remove-form"
-                  onsubmit="return confirm('Remove selected recipients? This cannot be undone.');">
+                  data-confirm="Remove selected recipients? This cannot be undone.">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="action" value="bulk_remove">
                 <div class="overflow-x-auto">
@@ -163,7 +163,7 @@
                                         
                                         <!-- Remove -->
                                         <form method="POST" action="{{ url_for('briefing.manage_recipients', briefing_id=briefing.id) }}"
-                                              onsubmit="return confirm('Remove this recipient?');" class="inline">
+                                              data-confirm="Remove this recipient?" class="inline">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <input type="hidden" name="action" value="remove">
                                             <input type="hidden" name="recipient_id" value="{{ recipient.id }}">

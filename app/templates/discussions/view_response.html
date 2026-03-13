@@ -66,12 +66,12 @@ endblock %} {% block content %}
           method="POST"
           action="{{ url_for('statements.delete_response', response_id=response.id) }}"
           class="inline"
+          id="delete-response-form"
         >
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <button
             type="submit"
-            class="text-red-600 hover:underline text-sm"
-            onclick="return confirm('Delete this response?');"
+            class="text-red-600 hover:underline text-sm delete-response-btn"
           >
             Delete
           </button>
@@ -202,4 +202,12 @@ endblock %} {% block content %}
   </div>
   {% endif %}
 </div>
+<script nonce="{{ csp_nonce() }}">
+  var deleteForm = document.getElementById('delete-response-form');
+  if (deleteForm) {
+    deleteForm.addEventListener('submit', function(e) {
+      if (!confirm('Delete this response?')) e.preventDefault();
+    });
+  }
+</script>
 {% endblock %}

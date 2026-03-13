@@ -376,7 +376,8 @@
 
               <!-- Copy Link -->
               <button
-                onclick="copyLink('{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}')"
+                id="copyLinkBtn"
+                data-copy-url="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, _external=True) }}"
                 class="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
                 <svg
@@ -651,16 +652,27 @@
     async function copyLink(url) {
       try {
         await navigator.clipboard.writeText(url);
-        const button = event.currentTarget;
-        const textSpan = button.querySelector(".copy-text");
-        if (textSpan) {
-          const originalText = textSpan.textContent;
-          textSpan.textContent = "Copied!";
-          setTimeout(() => (textSpan.textContent = originalText), 2000);
-        }
       } catch (err) {
         console.error("Failed to copy text: ", err);
       }
+    }
+
+    const copyLinkBtn = document.getElementById("copyLinkBtn");
+    if (copyLinkBtn) {
+      copyLinkBtn.addEventListener("click", async function() {
+        const url = this.getAttribute("data-copy-url");
+        try {
+          await navigator.clipboard.writeText(url);
+          const textSpan = this.querySelector(".copy-text");
+          if (textSpan) {
+            const originalText = textSpan.textContent;
+            textSpan.textContent = "Copied!";
+            setTimeout(() => (textSpan.textContent = originalText), 2000);
+          }
+        } catch (err) {
+          console.error("Failed to copy text: ", err);
+        }
+      });
     }
   </script>
   {% endblock %}

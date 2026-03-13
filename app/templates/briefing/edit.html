@@ -134,7 +134,7 @@
                                         <option value="2" {% if weight == 2 %}selected{% endif %}>Medium</option>
                                         <option value="3" {% if weight == 3 %}selected{% endif %}>High</option>
                                     </select>
-                                    <button type="button" onclick="this.closest('.topic-row').remove()" class="text-red-500 hover:text-red-700">
+                                    <button type="button" class="remove-topic-row-btn text-red-500 hover:text-red-700">
                                         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                                         </svg>
@@ -142,7 +142,7 @@
                                 </div>
                                 {% endfor %}
                             </div>
-                            <button type="button" onclick="addTopicRow()" class="mt-2 text-sm text-blue-600 hover:text-blue-800">
+                            <button type="button" class="add-topic-row-btn mt-2 text-sm text-blue-600 hover:text-blue-800">
                                 + Add topic priority
                             </button>
                         </div>
@@ -519,7 +519,7 @@ function addTopicRow() {
             <option value="2">Medium</option>
             <option value="3" selected>High</option>
         </select>
-        <button type="button" onclick="this.closest('.topic-row').remove()" class="text-red-500 hover:text-red-700">
+        <button type="button" class="remove-topic-row-btn text-red-500 hover:text-red-700">
             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
@@ -527,5 +527,14 @@ function addTopicRow() {
     `;
     container.appendChild(row);
 }
+
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.remove-topic-row-btn')) {
+        e.target.closest('.topic-row').remove();
+    }
+    if (e.target.closest('.add-topic-row-btn')) {
+        addTopicRow();
+    }
+});
 </script>
 {% endblock %}

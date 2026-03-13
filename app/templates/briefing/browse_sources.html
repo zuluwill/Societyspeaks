@@ -120,7 +120,7 @@
                     <p class="text-xs text-red-600 italic">Extraction failed. Please check the source.</p>
                     {% else %}
                     <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}"
-                          class="inline" onsubmit="return confirm('Add {{ source_info.name }} to briefing?');">
+                          class="inline" data-confirm="Add {{ source_info.name }} to briefing?">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="source_id" value="{{ source_info.id }}">
                         <button type="submit"
@@ -176,7 +176,7 @@
                     <p class="text-xs text-red-600 italic">Extraction failed. Please check the source.</p>
                     {% else %}
                     <form method="POST" action="{{ url_for('briefing.add_source_to_briefing', briefing_id=briefing_id) }}"
-                          class="inline" onsubmit="return confirm('Add {{ source_info.name }} to briefing?');">
+                          class="inline" data-confirm="Add {{ source_info.name }} to briefing?">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="source_id" value="{{ source_info.id }}">
                         <button type="submit"

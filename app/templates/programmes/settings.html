@@ -84,7 +84,7 @@
           {% endif %}
           <span class="ml-1 text-xs text-gray-400">{{ steward.status }}</span>
         </div>
-        <form method="POST" action="{{ url_for('programmes.remove_steward', slug=programme.slug, steward_id=steward.id) }}" onsubmit="return confirm('Remove this steward?')">
+        <form method="POST" action="{{ url_for('programmes.remove_steward', slug=programme.slug, steward_id=steward.id) }}" data-confirm="Remove this steward?">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200">Remove</button>
         </form>

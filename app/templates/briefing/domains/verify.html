@@ -41,8 +41,7 @@
                         </button>
                     </form>
                     <button type="button" id="refresh-status-btn"
-                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            onclick="checkDomainStatus()">
+                            class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                         <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                         </svg>
@@ -108,7 +107,7 @@
                             <label class="block text-xs font-medium text-gray-500">Name / Host</label>
                             <div class="mt-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                 <code class="flex-1 text-sm bg-gray-50 p-2 rounded border font-mono break-all">{{ record.name }}</code>
-                                <button onclick="navigator.clipboard.writeText('{{ record.name }}')"
+                                <button data-copy-text="{{ record.name }}"
                                         class="sm:ml-2 p-2 text-gray-400 hover:text-gray-600 rounded border border-gray-300 hover:border-gray-400" title="Copy">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
@@ -120,7 +119,7 @@
                             <label class="block text-xs font-medium text-gray-500">Value / Content</label>
                             <div class="mt-1 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                                 <code class="flex-1 text-sm bg-gray-50 p-2 rounded border font-mono break-all">{{ record.value }}</code>
-                                <button onclick="navigator.clipboard.writeText('{{ record.value }}')"
+                                <button data-copy-text="{{ record.value }}"
                                         class="sm:ml-2 p-2 text-gray-400 hover:text-gray-600 rounded border border-gray-300 hover:border-gray-400" title="Copy">
                                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
@@ -165,7 +164,7 @@
                 &larr; Back to Domains
             </a>
             <form action="{{ url_for('briefing.delete_domain', domain_id=domain.id) }}" method="POST"
-                  onsubmit="return confirm('Are you sure you want to delete this domain?');">
+                  data-confirm="Are you sure you want to delete this domain?">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="text-sm text-red-600 hover:text-red-900">
                     Delete Domain
@@ -291,6 +290,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+});
+
+var refreshBtn = document.getElementById('refresh-status-btn');
+if (refreshBtn) refreshBtn.addEventListener('click', checkDomainStatus);
+
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-copy-text]');
+    if (btn) navigator.clipboard.writeText(btn.dataset.copyText);
 });
 </script>
 {% endblock %}

@@ -161,8 +161,7 @@
                         {% if today_brief.status == 'published' %}
                         <form action="{{ url_for('brief_admin.send_missed') }}" method="POST" class="inline">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit"
-                                    onclick="this.disabled=true; this.innerText='Sending to missed subscribers...'; this.form.submit();"
+                            <button type="submit" id="send-missed-btn"
                                     class="inline-flex items-center px-4 py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition"
                                     title="Send today's published brief to all eligible subscribers who haven't received it yet">
                                 Send to Missed Subscribers
@@ -359,5 +358,13 @@
         });
     }
 })();
+var sendMissedBtn = document.getElementById('send-missed-btn');
+if (sendMissedBtn) {
+    sendMissedBtn.addEventListener('click', function() {
+        this.disabled = true;
+        this.innerText = 'Sending to missed subscribers...';
+        this.form.submit();
+    });
+}
 </script>
 {% endblock %}

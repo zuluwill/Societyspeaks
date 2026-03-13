@@ -124,28 +124,24 @@ content %}
       <!-- Leaning Filter Buttons -->
       <div class="flex flex-wrap gap-2">
         <button
-          onclick="filterByLeaning('all')"
           data-filter="all"
           class="leaning-btn px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 text-white"
         >
           All
         </button>
         <button
-          onclick="filterByLeaning('left')"
           data-filter="left"
           class="leaning-btn px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-blue-100"
         >
           Left ({{ left_sources|length }})
         </button>
         <button
-          onclick="filterByLeaning('center')"
           data-filter="center"
           class="leaning-btn px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-purple-100"
         >
           Center ({{ center_sources|length }})
         </button>
         <button
-          onclick="filterByLeaning('right')"
           data-filter="right"
           class="leaning-btn px-4 py-2 rounded-lg font-medium transition-all bg-gray-100 text-gray-700 hover:bg-red-100"
         >
@@ -156,21 +152,18 @@ content %}
       <!-- Content Type Filter -->
       <div class="flex gap-2 border-l pl-4 ml-2">
         <button
-          onclick="filterByType('all')"
           data-type="all"
           class="type-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-gray-800 text-white"
         >
           All Content
         </button>
         <button
-          onclick="filterByType('news')"
           data-type="news"
           class="type-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
         >
           News Only
         </button>
         <button
-          onclick="filterByType('podcast')"
           data-type="podcast"
           class="type-btn px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-gray-100 text-gray-700 hover:bg-gray-200"
         >
@@ -181,7 +174,7 @@ content %}
       <!-- Source Filter Dropdown -->
       <div class="relative">
         <button
-          onclick="toggleSourceFilter()"
+          id="source-filter-toggle"
           class="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors"
         >
           <svg
@@ -213,13 +206,13 @@ content %}
               <span class="font-medium text-gray-900">Select Sources</span>
               <div class="flex gap-2">
                 <button
-                  onclick="selectAllSources()"
+                  id="select-all-sources-btn"
                   class="text-xs text-blue-600 hover:underline"
                 >
                   All
                 </button>
                 <button
-                  onclick="clearAllSources()"
+                  id="clear-all-sources-btn"
                   class="text-xs text-gray-500 hover:underline"
                 >
                   Clear
@@ -231,7 +224,6 @@ content %}
               id="source-search"
               placeholder="Search sources..."
               class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              onkeyup="filterSourceList()"
             />
           </div>
 
@@ -250,7 +242,7 @@ content %}
                 value="{{ source.id }}"
                 class="source-checkbox rounded text-blue-600"
                 checked
-                onchange="applyAllFilters()"
+
               />
               <span class="text-sm text-gray-700">{{ source.name }}</span>
             </label>
@@ -272,7 +264,7 @@ content %}
                 value="{{ source.id }}"
                 class="source-checkbox rounded text-purple-600"
                 checked
-                onchange="applyAllFilters()"
+
               />
               <span class="text-sm text-gray-700">{{ source.name }}</span>
             </label>
@@ -294,7 +286,7 @@ content %}
                 value="{{ source.id }}"
                 class="source-checkbox rounded text-red-600"
                 checked
-                onchange="applyAllFilters()"
+
               />
               <span class="text-sm text-gray-700">{{ source.name }}</span>
             </label>
@@ -629,7 +621,7 @@ content %}
     const btn = e.target.closest("button");
     if (
       !e.target.closest("#source-filter-dropdown") &&
-      (!btn || !btn.onclick?.toString().includes("toggleSourceFilter"))
+      (!btn || btn.id !== "source-filter-toggle")
     ) {
       dropdown.classList.add("hidden");
     }
@@ -692,6 +684,24 @@ content %}
       card.style.display = isVisible ? "" : "none";
     });
   }
+
+  // Replace removed inline onclick/onchange handlers
+  document.addEventListener('click', function(e) {
+    var leaningBtn = e.target.closest('.leaning-btn');
+    if (leaningBtn) { filterByLeaning(leaningBtn.dataset.filter); return; }
+    var typeBtn = e.target.closest('.type-btn');
+    if (typeBtn) { filterByType(typeBtn.dataset.type); return; }
+  });
+
+  document.getElementById('source-filter-toggle')?.addEventListener('click', toggleSourceFilter);
+  document.getElementById('select-all-sources-btn')?.addEventListener('click', selectAllSources);
+  document.getElementById('clear-all-sources-btn')?.addEventListener('click', clearAllSources);
+
+  document.getElementById('source-filter-dropdown')?.addEventListener('change', function(e) {
+    if (e.target.classList.contains('source-checkbox')) applyAllFilters();
+  });
+
+  document.getElementById('source-search')?.addEventListener('input', filterSourceList);
 
 </script>
 

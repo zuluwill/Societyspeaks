@@ -28,10 +28,9 @@
                             <span class="text-xs text-gray-500">Recommended: 400x400px</span>
                         </div>
                         <div class="mt-1 relative">
-                            {{ form.logo(class="hidden", id=form.logo.id, accept="image/*", onchange="handleImageUpload(this, 'logo-preview')") }}
+                            {{ form.logo(class="hidden", id=form.logo.id, accept="image/*") }}
 
-                            <div class="w-32 h-32 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 relative group cursor-pointer"
-                                 onclick="document.getElementById('{{ form.logo.id }}').click()">
+                            <div id="logo-image-click" class="w-32 h-32 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 relative group cursor-pointer">
                                 <img id="logo-preview" 
                                      class="w-full h-full object-cover" 
                                      src="{{ url_for('profiles.get_image', filename=profile.logo) if profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}"
@@ -53,10 +52,9 @@
                             <span class="text-xs text-gray-500">Recommended: 1200x400px</span>
                         </div>
                         <div class="mt-1 relative">
-                            {{ form.banner_image(class="hidden", id=form.banner_image.id, accept="image/*", onchange="handleImageUpload(this, 'banner-preview')") }}
+                            {{ form.banner_image(class="hidden", id=form.banner_image.id, accept="image/*") }}
 
-                            <div class="w-full h-48 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 relative group cursor-pointer"
-                                 onclick="document.getElementById('{{ form.banner_image.id }}').click()">
+                            <div id="company-banner-image-click" class="w-full h-48 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 relative group cursor-pointer">
                                 <img id="banner-preview" 
                                      class="w-full h-full object-cover" 
                                      src="{{ url_for('profiles.get_image', filename=profile.banner_image) if profile.banner_image else url_for('main.serve_asset', filename='images/default-banner.png') }}" 
@@ -129,5 +127,13 @@
 <!-- Include necessary JavaScript for image handling -->
 
 <script src="{{ url_for('static', filename='js/image-upload.js') }}"></script>
+<script nonce="{{ csp_nonce() }}">
+  document.addEventListener('DOMContentLoaded', function() {
+    const logoInput = document.getElementById('{{ form.logo.id }}');
+    const bannerInput = document.getElementById('{{ form.banner_image.id }}');
+    document.getElementById('logo-image-click')?.addEventListener('click', function() { logoInput?.click(); });
+    document.getElementById('company-banner-image-click')?.addEventListener('click', function() { bannerInput?.click(); });
+  });
+</script>
 
 {% endblock %}

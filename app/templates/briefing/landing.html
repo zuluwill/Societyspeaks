@@ -758,7 +758,7 @@
     </div>
 
     <div class="text-center">
-      <button id="show-more-templates" onclick="toggleTemplates()" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium" data-ph-capture-attribute-cta="show-all-templates">
+      <button id="show-more-templates" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium" data-ph-capture-attribute-cta="show-all-templates">
         <span id="templates-btn-text">Show all 12 templates</span>
         <svg id="templates-btn-icon" class="ml-1 w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -782,6 +782,7 @@
           btnIcon.style.transform = 'rotate(0deg)';
         }
       }
+      document.getElementById('show-more-templates').addEventListener('click', toggleTemplates);
     </script>
   </section>
 </div>
@@ -857,10 +858,10 @@
     <!-- Pricing toggle -->
     <div class="flex justify-center mb-8">
       <div class="inline-flex rounded-lg border border-slate-200 p-1 bg-slate-50">
-        <button onclick="showPricingTab('individuals')" id="tab-individuals" class="px-6 py-2 text-sm font-medium rounded-md bg-white shadow-sm text-slate-900">
+        <button id="tab-individuals" class="px-6 py-2 text-sm font-medium rounded-md bg-white shadow-sm text-slate-900">
           For individuals
         </button>
-        <button onclick="showPricingTab('organisations')" id="tab-organisations" class="px-6 py-2 text-sm font-medium rounded-md text-slate-600 hover:text-slate-900">
+        <button id="tab-organisations" class="px-6 py-2 text-sm font-medium rounded-md text-slate-600 hover:text-slate-900">
           For organisations
         </button>
       </div>
@@ -1128,6 +1129,10 @@
     tabButton.classList.add('bg-white', 'shadow-sm', 'text-slate-900');
   }
 
+  document.getElementById('tab-individuals').addEventListener('click', function() { showPricingTab('individuals'); });
+  document.getElementById('tab-organisations').addEventListener('click', function() { showPricingTab('organisations'); });
+  var orgPlanLink = document.getElementById('org-plan-link');
+  if (orgPlanLink) orgPlanLink.addEventListener('click', function() { showPricingTab('organisations'); });
   document.addEventListener('DOMContentLoaded', function() {
     if (window.location.hash === '#pricing-organisations') {
       showPricingTab('organisations');
@@ -1260,7 +1265,7 @@
           <h3 class="font-semibold text-slate-900 mb-1">For organisations: additional controls</h3>
           <p class="text-slate-600 text-sm">Team and Enterprise plans include approval workflows, audit logs, custom data retention, and SSO/SAML integration.</p>
         </div>
-        <a href="#pricing-organisations" onclick="showPricingTab('organisations')" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm whitespace-nowrap" data-ph-capture-attribute-cta="security-view-org-plans">
+        <a href="#pricing-organisations" id="org-plan-link" class="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm whitespace-nowrap" data-ph-capture-attribute-cta="security-view-org-plans">
           View organisation plans →
         </a>
       </div>

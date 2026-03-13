@@ -79,17 +79,15 @@
                     </label>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-amber-500 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 transition-all">
-                            <input type="radio" name="cadence" value="daily" class="sr-only"
-                                   {% if not subscriber.cadence or subscriber.cadence == 'daily' %}checked{% endif %}
-                                   onchange="document.getElementById('weekly-day-options').classList.add('hidden')">
+                            <input type="radio" name="cadence" value="daily" class="sr-only" id="cadence-daily"
+                                   {% if not subscriber.cadence or subscriber.cadence == 'daily' %}checked{% endif %}>
                             <span class="text-2xl mb-1">📰</span>
                             <span class="text-sm font-semibold text-gray-900">Daily</span>
                             <span class="text-xs text-gray-500 text-center mt-1">Every day</span>
                         </label>
                         <label class="relative flex flex-col items-center p-4 border-2 rounded-xl cursor-pointer hover:border-amber-500 has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50 transition-all">
-                            <input type="radio" name="cadence" value="weekly" class="sr-only"
-                                   {% if subscriber.cadence == 'weekly' %}checked{% endif %}
-                                   onchange="document.getElementById('weekly-day-options').classList.remove('hidden')">
+                            <input type="radio" name="cadence" value="weekly" class="sr-only" id="cadence-weekly"
+                                   {% if subscriber.cadence == 'weekly' %}checked{% endif %}>
                             <span class="text-2xl mb-1">📬</span>
                             <span class="text-sm font-semibold text-gray-900">Weekly</span>
                             <span class="text-xs text-gray-500 text-center mt-1">Once a week</span>
@@ -193,4 +191,12 @@
         </div>
     </div>
 </div>
+<script nonce="{{ csp_nonce() }}">
+  document.getElementById('cadence-daily')?.addEventListener('change', function() {
+    document.getElementById('weekly-day-options').classList.add('hidden');
+  });
+  document.getElementById('cadence-weekly')?.addEventListener('change', function() {
+    document.getElementById('weekly-day-options').classList.remove('hidden');
+  });
+</script>
 {% endblock %}

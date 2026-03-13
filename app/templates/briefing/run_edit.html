@@ -61,7 +61,7 @@
             <div class="flex space-x-3">
                 {% if brief_run.status in ['generated_draft', 'awaiting_approval'] %}
                 <form method="POST" action="{{ url_for('briefing.edit_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
-                      onsubmit="return confirm('Approve and send this brief?');">
+                      data-confirm="Approve and send this brief?">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="hidden" name="action" value="approve">
                     <input type="hidden" name="send_now" value="true">
@@ -80,7 +80,7 @@
                 </form>
                 {% elif brief_run.status == 'approved' %}
                 <form method="POST" action="{{ url_for('briefing.send_run', briefing_id=briefing.id, run_id=brief_run.id) }}"
-                      onsubmit="return confirm('Send this brief to all recipients?');">
+                      data-confirm="Send this brief to all recipients?">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit"
                             class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">

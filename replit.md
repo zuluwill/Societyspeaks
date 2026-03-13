@@ -23,6 +23,21 @@ A unified content ingestion system uses `InputSource` (tracking provenance, doma
 ### Feature Specifications
 The platform integrates Pol.is for discussion dynamics, supports topic categorization, and geographic filtering. A dedicated News feed page displays trending discussions with source transparency. Security is handled by Flask-Talisman (CSP), Flask-Limiter (rate limiting), Flask-SeaSurf (CSRF protection), and Werkzeug for password hashing. Replit Object Storage manages user-uploaded images. The platform supports dual individual and company profiles. Daily question emails include one-click voting with privacy-controlled comment sharing. Source pages provide metadata and "Engagement Scores." A political diversity system monitors and balances political leanings across content.
 
+### CSP Compliance (March 2026)
+The CSP `unsafe-inline` directive was removed (commit `3d32026`, March 11, 2026), requiring all inline `onclick`/`onchange`/`onsubmit` HTML event handlers to be migrated. The following patterns are now used across all 40+ templates:
+
+1. **`data-confirm="message"` pattern**: Global capture-phase handlers in `layout.html` intercept form submit and button click events. Replaces all `onsubmit="return confirm(...)"` and `onclick="return confirm(...)"` patterns.
+
+2. **`class="auto-submit-select"` pattern**: Global `change` delegation in `layout.html` submits the nearest `<form>` when a select with this class changes. Replaces `onchange="this.form.submit()"`.
+
+3. **`data-*` attribute delegation**: Complex handlers (e.g., crop modal, image upload, subscriber actions, pricing tabs) use data attributes (`data-open-crop`, `data-close-crop`, `data-apply-crop`, `data-trigger-id`, `data-copy-text`, `data-action`, etc.) with delegated listeners in nonce-protected `<script>` blocks or external `.js` files.
+
+4. **Direct `addEventListener` calls**: When elements have IDs, listeners are attached directly in nonce-protected script blocks instead of using inline attributes.
+
+5. **Template literal HTML**: Dynamically injected HTML (via `innerHTML`) must also avoid inline handlers — use classes for delegation instead.
+
+External `.js` files (e.g., `image-upload.js`) do NOT require nonces — only inline `<script>` blocks do.
+
 ### Deployment Architecture
 The application runs as a Replit Reserved VM deployment with two processes started by a single bash run command:
 

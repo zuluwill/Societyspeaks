@@ -253,7 +253,7 @@
                                 <form method="POST" action="{{ url_for('briefing.update_source_priority', briefing_id=briefing.id, source_id=source.id) }}" class="flex items-center space-x-1">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <label class="text-xs text-gray-500">Priority:</label>
-                                    <select name="priority" onchange="this.form.submit()" class="text-xs border-gray-300 rounded py-1 px-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <select name="priority" class="auto-submit-select text-xs border-gray-300 rounded py-1 px-2 focus:ring-blue-500 focus:border-blue-500">
                                         <option value="1" {% if source._priority == 1 %}selected{% endif %}>Low</option>
                                         <option value="2" {% if source._priority == 2 %}selected{% endif %}>Medium</option>
                                         <option value="3" {% if source._priority == 3 %}selected{% endif %}>High</option>
@@ -268,7 +268,7 @@
                                     {{ source.status|title }}
                                 </span>
                                 <form method="POST" action="{{ url_for('briefing.remove_source_from_briefing', briefing_id=briefing.id, source_id=source.id) }}"
-                                      onsubmit="return confirm('Remove this source?');">
+                                      data-confirm="Remove this source?">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="text-sm text-red-600 hover:text-red-800">Remove</button>
                                 </form>
@@ -424,8 +424,7 @@
                             </div>
                         </div>
                         
-                        <form method="POST" action="{{ url_for('briefing.test_send', briefing_id=briefing.id) }}" id="test-send-form"
-                              onsubmit="return handleTestEmailSubmit(this);">
+                        <form method="POST" action="{{ url_for('briefing.test_send', briefing_id=briefing.id) }}" id="test-send-form">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="hidden" name="email" value="{{ current_user.email }}">
                             <button type="submit" id="test-send-btn"
@@ -456,11 +455,14 @@
                             spinner.classList.remove('hidden');
                             return true;
                         }
+                        document.getElementById('test-send-form').addEventListener('submit', function(e) {
+                            if (!handleTestEmailSubmit(this)) e.preventDefault();
+                        });
                         </script>
                         {% endif %}
                         
                         <form method="POST" action="{{ url_for('briefing.duplicate_briefing', briefing_id=briefing.id) }}"
-                              onsubmit="return confirm('Duplicate this briefing? All sources will be copied.');">
+                              data-confirm="Duplicate this briefing? All sources will be copied.">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit"
                                     class="w-full text-left px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50 rounded-md hover:bg-gray-100 flex items-center justify-between">
@@ -491,7 +493,7 @@
 
                         <div class="pt-3 border-t border-gray-200">
                             <form method="POST" action="{{ url_for('briefing.delete', briefing_id=briefing.id) }}"
-                                  onsubmit="return confirm('Are you sure you want to delete this briefing? This action cannot be undone.');">
+                                  data-confirm="Are you sure you want to delete this briefing? This action cannot be undone.">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit"
                                         class="w-full text-left px-4 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100">

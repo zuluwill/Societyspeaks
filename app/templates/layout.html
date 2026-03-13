@@ -1324,5 +1324,24 @@
     <script src="{{ url_for('static', filename='js/brief-audio.js') }}"></script>
     <script src="{{ url_for('static', filename='js/listen_with.js') }}"></script>
     <script src="{{ url_for('static', filename='js/code-copy.js') }}"></script>
+    <!-- Global handlers replacing unsafe-inline patterns (CSP compliance) -->
+    <script nonce="{{ csp_nonce() }}">
+    (function() {
+      document.addEventListener('click', function(e) {
+        var btn = e.target.closest('button[data-confirm], input[type="submit"][data-confirm]');
+        if (btn && !confirm(btn.dataset.confirm)) e.preventDefault();
+      }, true);
+      document.addEventListener('submit', function(e) {
+        var msg = e.target.dataset.confirm;
+        if (msg && !confirm(msg)) e.preventDefault();
+      }, true);
+      document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('auto-submit-select')) {
+          var form = e.target.closest('form');
+          if (form) form.submit();
+        }
+      });
+    })();
+    </script>
   </body>
 </html>

@@ -168,7 +168,7 @@
             <form action="{{ url_for('trending.discard', topic_id=topic.id) }}" method="post" class="inline-block">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
-                    onclick="return confirm('Are you sure you want to discard this topic?')">
+                    data-confirm="Are you sure you want to discard this topic?">
                     Discard
                 </button>
             </form>
@@ -205,7 +205,7 @@
             <form action="{{ url_for('trending.unpublish', topic_id=topic.id) }}" method="post">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200 text-sm"
-                    onclick="return confirm('This will delete the live discussion and revert the topic to the review queue. Continue?')">
+                    data-confirm="This will delete the live discussion and revert the topic to the review queue. Continue?">
                     Unpublish
                 </button>
             </form>

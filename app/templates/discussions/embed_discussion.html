@@ -653,7 +653,6 @@
             type="button"
             class="vote-btn vote-btn--agree"
             data-vote="1"
-            onclick="vote({{ statement.id }}, 1, this)"
             aria-label="Agree with this statement"
             {% if is_closed %}disabled{% endif %}
           >
@@ -674,7 +673,6 @@
             type="button"
             class="vote-btn vote-btn--disagree"
             data-vote="-1"
-            onclick="vote({{ statement.id }}, -1, this)"
             aria-label="Disagree with this statement"
             {% if is_closed %}disabled{% endif %}
           >
@@ -695,7 +693,6 @@
             type="button"
             class="vote-btn vote-btn--unsure"
             data-vote="0"
-            onclick="vote({{ statement.id }}, 0, this)"
             aria-label="Unsure about this statement"
             {% if is_closed %}disabled{% endif %}
           >
@@ -724,7 +721,6 @@
             type="button"
             class="flag-btn"
             data-statement-id="{{ statement.id }}"
-            onclick="openFlagModal({{ statement.id }})"
             aria-label="Report this statement"
           >
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -818,7 +814,7 @@
           </label>
         </div>
         <div class="flag-modal__buttons">
-          <button type="button" class="flag-modal__btn flag-modal__btn--cancel" onclick="closeFlagModal()">Cancel</button>
+          <button type="button" class="flag-modal__btn flag-modal__btn--cancel" id="flagCancelBtn">Cancel</button>
           <button type="submit" class="flag-modal__btn flag-modal__btn--submit" id="flagSubmitBtn" disabled>Submit Report</button>
         </div>
       </form>
@@ -1420,6 +1416,31 @@
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
           closeFlagModal();
+        }
+      });
+
+      // Delegated click handler for vote buttons, flag buttons, and cancel button
+      document.addEventListener('click', function(e) {
+        const voteBtn = e.target.closest('.vote-btn');
+        if (voteBtn) {
+          const card = voteBtn.closest('[data-statement-id]');
+          if (card) {
+            const statementId = parseInt(card.getAttribute('data-statement-id'), 10);
+            const voteValue = parseInt(voteBtn.getAttribute('data-vote'), 10);
+            vote(statementId, voteValue, voteBtn);
+          }
+          return;
+        }
+        const flagBtn = e.target.closest('.flag-btn');
+        if (flagBtn) {
+          const statementId = parseInt(flagBtn.getAttribute('data-statement-id'), 10);
+          openFlagModal(statementId);
+          return;
+        }
+        const cancelBtn = e.target.closest('#flagCancelBtn');
+        if (cancelBtn) {
+          closeFlagModal();
+          return;
         }
       });
     });

@@ -344,8 +344,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${researchToolsHtml}
                 ${discussionHtml}
 
-                <button onclick="showNextQuestion()" 
-                        class="w-full py-2 px-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-semibold text-sm">
+                <button class="show-next-question-btn w-full py-2 px-4 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition font-semibold text-sm">
                     Next Question →
                 </button>
             </div>
@@ -376,6 +375,10 @@ document.addEventListener('DOMContentLoaded', function() {
             showCompletionMessage();
         }
     }
+
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.show-next-question-btn')) showNextQuestion();
+    });
 
     voteButtons.forEach(btn => {
         btn.addEventListener('click', async function() {

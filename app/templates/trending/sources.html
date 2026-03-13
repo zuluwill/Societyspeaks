@@ -83,7 +83,7 @@
                     <form action="{{ url_for('trending.delete_source', source_id=source.id) }}" method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="px-3 py-1 rounded text-sm bg-red-100 text-red-800 hover:bg-red-200"
-                            onclick="return confirm('Delete this source?')">
+                            data-confirm="Delete this source?">
                             Delete
                         </button>
                     </form>

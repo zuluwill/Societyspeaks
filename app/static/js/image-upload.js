@@ -226,3 +226,19 @@ async function applyCrop(previewId) {
         }
     }
 }
+
+document.addEventListener('change', function(e) {
+    var pid = e.target.dataset.previewId;
+    if (pid) handleImageUpload(e.target, pid);
+});
+
+document.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-trigger-id]');
+    if (el) { var inp = document.getElementById(el.dataset.triggerId); if (inp) inp.click(); return; }
+    el = e.target.closest('[data-open-crop]');
+    if (el) { openCropModal(el.dataset.openCrop); return; }
+    el = e.target.closest('[data-close-crop]');
+    if (el) { closeCropModal(el.dataset.closeCrop); return; }
+    el = e.target.closest('[data-apply-crop]');
+    if (el) { applyCrop(el.dataset.applyCrop); }
+});

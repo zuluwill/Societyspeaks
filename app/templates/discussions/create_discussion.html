@@ -249,8 +249,7 @@
                 </p>
                 {{ form.geographic_scope(class="mt-1 block w-full px-3 py-2
                 border border-gray-300 rounded-md shadow-sm focus:outline-none
-                focus:ring-blue-500 focus:border-blue-500 sm:text-sm",
-                onchange="handleScopeChange()") }} {% if
+                focus:ring-blue-500 focus:border-blue-500 sm:text-sm") }} {% if
                 form.geographic_scope.errors %} {% for error in
                 form.geographic_scope.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ error }}</p>
@@ -265,7 +264,7 @@
                 text-gray-700") }} {{ form.country(class="mt-1 block w-full px-3
                 py-2 border border-gray-300 rounded-md shadow-sm
                 focus:outline-none focus:ring-blue-500 focus:border-blue-500
-                sm:text-sm", onchange="fetchCities()") }} {% if
+                sm:text-sm") }} {% if
                 form.country.errors %} {% for error in form.country.errors %}
                 <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                 {% endfor %} {% endif %}
@@ -424,7 +423,7 @@
             />
             <button
               type="button"
-              onclick="addStatement()"
+              id="addStatementBtn"
               class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Add
@@ -448,7 +447,6 @@
     <div class="mt-8 flex justify-between items-center">
       <button
         id="backButton"
-        onclick="handleBack()"
         class="hidden inline-flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
       >
         <svg
@@ -470,7 +468,6 @@
       <div class="ml-auto flex gap-4">
         <button
           id="nextButton"
-          onclick="handleNext()"
           class="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           Next
@@ -491,7 +488,6 @@
 
         <button
           id="submitButton"
-          onclick="handleSubmit()"
           class="hidden px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           Publish Discussion
@@ -836,8 +832,8 @@
         </div>
         <button
           type="button"
-          onclick="removeStatement(${i})"
-          class="text-red-600 hover:text-red-800 flex-shrink-0"
+          data-remove-index="${i}"
+          class="remove-statement-btn text-red-600 hover:text-red-800 flex-shrink-0"
           title="Remove statement"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -856,6 +852,28 @@
         addStatement();
       }
     });
+
+    document.getElementById("addStatementBtn")?.addEventListener("click", addStatement);
+    document.getElementById("backButton")?.addEventListener("click", handleBack);
+    document.getElementById("nextButton")?.addEventListener("click", handleNext);
+    document.getElementById("submitButton")?.addEventListener("click", handleSubmit);
+
+    const geographicScope = document.getElementById("geographic_scope");
+    if (geographicScope) geographicScope.addEventListener("change", handleScopeChange);
+
+    const countrySelect = document.getElementById("country");
+    if (countrySelect) countrySelect.addEventListener("change", fetchCities);
+
+    const statementsList = document.getElementById("statementsList");
+    if (statementsList) {
+      statementsList.addEventListener("click", function(e) {
+        const btn = e.target.closest(".remove-statement-btn");
+        if (btn) {
+          const index = parseInt(btn.getAttribute("data-remove-index"), 10);
+          removeStatement(index);
+        }
+      });
+    }
   });
 
   function validateAndProcessInput() {

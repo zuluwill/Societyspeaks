@@ -86,7 +86,8 @@
           background-position: right 0.75rem center;
           background-size: 1.25rem 1.25rem;
         "
-        onchange="window.location.href = '{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}?sort=' + this.value + '{% if cohort_slug %}&cohort={{ cohort_slug }}{% endif %}'"
+        data-base-url="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
+        data-cohort-slug="{{ cohort_slug or '' }}"
       >
         <option value="progressive" {% if sort == 'progressive' %}selected{% endif %}>
           Progressive (Pol.is Style)
@@ -343,7 +344,6 @@
       type="button"
       {% if not statements_pagination.has_next %}hidden{% endif %}
       class="px-3 py-2 rounded-lg border border-blue-300 text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-60 disabled:cursor-not-allowed"
-      onclick="loadMoreStatements()"
     >
       Load more
     </button>
@@ -375,7 +375,7 @@
       </ul>
     </div>
     <button
-      onclick="showKeyboardHelp()"
+      id="keyboardHelpBtn"
       class="ml-4 px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
     >
       ⌨️ Shortcuts
@@ -641,6 +641,23 @@
       voteOnStatement(statementId, voteValue);
   });
 
+  const loadMoreBtn = document.getElementById('loadMoreStatementsBtn');
+  if (loadMoreBtn) loadMoreBtn.addEventListener('click', loadMoreStatements);
+
+  const kbHelpBtn = document.getElementById('keyboardHelpBtn');
+  if (kbHelpBtn) kbHelpBtn.addEventListener('click', showKeyboardHelp);
+
+  const sortSelect = document.getElementById('sortSelect');
+  if (sortSelect) {
+      sortSelect.addEventListener('change', function() {
+          const baseUrl = this.getAttribute('data-base-url');
+          const cohortSlug = this.getAttribute('data-cohort-slug');
+          let url = baseUrl + '?sort=' + encodeURIComponent(this.value);
+          if (cohortSlug) url += '&cohort=' + encodeURIComponent(cohortSlug);
+          window.location.href = url;
+      });
+  }
+
   // Keyboard Shortcuts for Power Users
   document.addEventListener('keydown', function(e) {
       // Only activate if not typing in an input/textarea
@@ -707,8 +724,7 @@
                           </button>
                       </form>
                   </div>
-                  <button onclick="this.closest('.argument-prompt').remove()"
-                          class="flex-shrink-0 text-purple-400 hover:text-purple-600 p-1 min-h-[44px] min-w-[44px] flex items-center justify-center sm:min-h-0 sm:min-w-0"
+                  <button class="argument-prompt-dismiss flex-shrink-0 text-purple-400 hover:text-purple-600 p-1 min-h-[44px] min-w-[44px] flex items-center justify-center sm:min-h-0 sm:min-w-0"
                           aria-label="Dismiss">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -724,6 +740,12 @@
       // Insert after the vote buttons
       const voteSection = statementDiv.querySelector('.vote-buttons-grid').parentElement;
       voteSection.insertAdjacentHTML('afterend', promptHTML);
+      const dismissBtn = voteSection.nextElementSibling.querySelector('.argument-prompt-dismiss');
+      if (dismissBtn) {
+          dismissBtn.addEventListener('click', function() {
+              this.closest('.argument-prompt').remove();
+          });
+      }
 
       // Auto-dismiss after 30 seconds
       setTimeout(() => {
@@ -739,7 +761,7 @@
   // Show keyboard shortcuts help
   function showKeyboardHelp() {
       const helpHTML = `
-          <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); z-index: 1000; max-width: 400px;">
+          <div id="keyboard-help-panel" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 24px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); z-index: 1000; max-width: 400px;">
               <h3 style="font-size: 18px; font-weight: bold; margin-bottom: 16px;">⌨️ Keyboard Shortcuts</h3>
               <div style="space-y: 8px;">
                   <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e5e7eb;">
@@ -759,12 +781,20 @@
                       <span>Show this help</span>
                   </div>
               </div>
-              <button onclick="this.parentElement.remove(); document.getElementById('keyboard-overlay').remove();" style="margin-top: 16px; width: 100%; background: #3b82f6; color: white; padding: 8px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;">
+              <button id="keyboard-help-close" style="margin-top: 16px; width: 100%; background: #3b82f6; color: white; padding: 8px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;">
                   Got it!
               </button>
           </div>
-          <div id="keyboard-overlay" onclick="this.previousElementSibling.remove(); this.remove();" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999;"></div>
+          <div id="keyboard-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 999;"></div>
       `;
       document.body.insertAdjacentHTML('beforeend', helpHTML);
+      function dismissKeyboardHelp() {
+          const panel = document.getElementById('keyboard-help-panel');
+          const overlay = document.getElementById('keyboard-overlay');
+          if (panel) panel.remove();
+          if (overlay) overlay.remove();
+      }
+      document.getElementById('keyboard-help-close').addEventListener('click', dismissKeyboardHelp);
+      document.getElementById('keyboard-overlay').addEventListener('click', dismissKeyboardHelp);
   }
 </script>

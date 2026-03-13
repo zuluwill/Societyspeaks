@@ -58,14 +58,14 @@ discussion.title }}{% endblock %} {% block content %}
       <div class="mb-4 flex space-x-2">
         <button
           type="button"
-          onclick="selectAll()"
+          id="select-all-btn"
           class="text-sm text-blue-600 hover:underline"
         >
           Select All
         </button>
         <button
           type="button"
-          onclick="selectNone()"
+          id="select-none-btn"
           class="text-sm text-blue-600 hover:underline"
         >
           Select None
@@ -238,5 +238,8 @@ discussion.title }}{% endblock %} {% block content %}
       .querySelectorAll('input[name="flag_ids"]')
       .forEach((cb) => (cb.checked = false));
   }
+
+  document.getElementById('select-all-btn')?.addEventListener('click', selectAll);
+  document.getElementById('select-none-btn')?.addEventListener('click', selectNone);
 </script>
 {% endblock %}

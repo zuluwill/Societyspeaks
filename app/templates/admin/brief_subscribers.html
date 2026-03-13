@@ -206,7 +206,7 @@
             
             {% if subscribers %}
             <form action="{{ url_for('brief_admin.bulk_remove_subscribers') }}" method="POST" id="bulk-remove-form"
-                  onsubmit="return confirm('Remove selected subscribers? This cannot be undone.');">
+                  data-confirm="Remove selected subscribers? This cannot be undone.">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -272,13 +272,13 @@
                             <div class="flex items-center space-x-1">
                                 <!-- Toggle Active/Paused (using AJAX to avoid nested form issues) -->
                                 {% if subscriber.status == 'active' %}
-                                <button type="button" onclick="toggleSubscriber({{ subscriber.id }})" class="text-yellow-600 hover:text-yellow-800 p-1" title="Pause">
+                                <button type="button" data-action="toggle" data-id="{{ subscriber.id }}" class="text-yellow-600 hover:text-yellow-800 p-1" title="Pause">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </button>
                                 {% else %}
-                                <button type="button" onclick="toggleSubscriber({{ subscriber.id }})" class="text-green-600 hover:text-green-800 p-1" title="Activate">
+                                <button type="button" data-action="toggle" data-id="{{ subscriber.id }}" class="text-green-600 hover:text-green-800 p-1" title="Activate">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
@@ -286,7 +286,7 @@
                                 {% endif %}
                                 
                                 <!-- Resend Brief (using AJAX) -->
-                                <button type="button" onclick="resendBrief({{ subscriber.id }})" class="text-blue-600 hover:text-blue-800 p-1" title="Resend Today's Brief">
+                                <button type="button" data-action="resend" data-id="{{ subscriber.id }}" class="text-blue-600 hover:text-blue-800 p-1" title="Resend Today's Brief">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                     </svg>
@@ -305,7 +305,7 @@
                                             <div class="px-4 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Frequency</div>
                                             {% set current_cadence = subscriber.cadence or 'daily' %}
                                             {% if current_cadence != 'daily' %}
-                                            <button type="button" onclick="setSubscriberCadence({{ subscriber.id }}, 'daily')" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                                            <button type="button" data-action="cadence" data-cadence="daily" data-id="{{ subscriber.id }}" class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
                                                 Switch to Daily
                                             </button>
                                             {% else %}
@@ -321,7 +321,7 @@
                                                     <option value="5" {% if wd == 5 %}selected{% endif %}>Fri</option>
                                                     <option value="6" {% if wd == 6 or (wd not in [0, 5, 6]) %}selected{% endif %}>Sun</option>
                                                 </select>
-                                                <button type="button" onclick="setSubscriberCadence({{ subscriber.id }}, 'weekly')" class="text-sm text-blue-700 hover:text-blue-900 whitespace-nowrap">
+                                                <button type="button" data-action="cadence" data-cadence="weekly" data-id="{{ subscriber.id }}" class="text-sm text-blue-700 hover:text-blue-900 whitespace-nowrap">
                                                     {% if current_cadence == 'weekly' %}Update{% else %}Set Weekly{% endif %}
                                                 </button>
                                             </div>
@@ -333,7 +333,7 @@
                                             <div class="border-t border-gray-100 my-1"></div>
                                             <div class="px-4 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Subscription</div>
                                             {% if subscriber.tier != 'free' %}
-                                            <button type="button" onclick="setSubscriberTier({{ subscriber.id }}, 'free')" class="w-full text-left px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50">
+                                            <button type="button" data-action="tier" data-tier="free" data-id="{{ subscriber.id }}" class="w-full text-left px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50">
                                                 Grant Free Access
                                             </button>
                                             {% endif %}
@@ -341,13 +341,13 @@
                                             <div class="px-4 py-2 flex items-center gap-2">
                                                 <input type="number" id="extend-days-{{ subscriber.id }}" value="14" min="1" max="365" 
                                                        class="w-16 px-2 py-1 text-sm border border-gray-300 rounded">
-                                                <button type="button" onclick="extendSubscriberTrial({{ subscriber.id }})" class="text-sm text-blue-700 hover:text-blue-900">
+                                                <button type="button" data-action="extend-trial" data-id="{{ subscriber.id }}" class="text-sm text-blue-700 hover:text-blue-900">
                                                     +days
                                                 </button>
                                             </div>
                                             {% endif %}
                                             {% if subscriber.tier != 'trial' %}
-                                            <button type="button" onclick="setSubscriberTier({{ subscriber.id }}, 'trial')" class="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50">
+                                            <button type="button" data-action="tier" data-tier="trial" data-id="{{ subscriber.id }}" class="w-full text-left px-4 py-2 text-sm text-blue-700 hover:bg-blue-50">
                                                 Reset to Trial
                                             </button>
                                             {% endif %}
@@ -356,7 +356,7 @@
                                 </div>
                                 
                                 <!-- Delete (using AJAX) -->
-                                <button type="button" onclick="deleteSubscriber({{ subscriber.id }}, '{{ subscriber.email|e }}')" class="text-red-600 hover:text-red-800 p-1" title="Remove">
+                                <button type="button" data-action="delete" data-id="{{ subscriber.id }}" data-email="{{ subscriber.email|e }}" class="text-red-600 hover:text-red-800 p-1" title="Remove">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                     </svg>
@@ -638,5 +638,19 @@ function extendSubscriberTrial(subscriberId) {
         alert('Failed to extend trial');
     });
 }
+
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    var action = btn.dataset.action;
+    var id = parseInt(btn.dataset.id);
+    var email = btn.dataset.email;
+    if (action === 'toggle') toggleSubscriber(id);
+    else if (action === 'resend') resendBrief(id);
+    else if (action === 'cadence') setSubscriberCadence(id, btn.dataset.cadence);
+    else if (action === 'tier') setSubscriberTier(id, btn.dataset.tier);
+    else if (action === 'extend-trial') extendSubscriberTrial(id);
+    else if (action === 'delete') deleteSubscriber(id, email);
+});
 </script>
 {% endblock %}
