@@ -1,11 +1,19 @@
 import logging
 
 bind = "0.0.0.0:5000"
-workers = 4
+workers = 2
 reuse_port = True
 timeout = 120
 worker_class = "gevent"
 worker_connections = 1000
+
+# Recycle each worker after this many requests (± jitter). This bounds
+# per-request memory accumulation (greenlet overhead, lazy imports, SQLAlchemy
+# session fragments) that never gets freed in a long-running worker.
+# Gunicorn forks a replacement before killing the old worker, so there is no
+# gap in request handling.
+max_requests = 1000
+max_requests_jitter = 100
 
 # Load the application in the master process before forking workers.
 # This ensures gevent's monkey.patch_all() (called at the top of run.py)
