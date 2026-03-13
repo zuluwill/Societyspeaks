@@ -109,6 +109,10 @@ def get_image(filename):
                 mime_type = 'image/png'
             elif filename.lower().endswith('.gif'):
                 mime_type = 'image/gif'
+            elif filename.lower().endswith('.svg'):
+                mime_type = 'image/svg+xml'
+            elif filename.lower().endswith('.webp'):
+                mime_type = 'image/webp'
 
             return send_file(file_like, mimetype=mime_type, as_attachment=False, download_name=filename)
 
