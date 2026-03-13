@@ -933,6 +933,10 @@ def manage_preferences():
     valid_frequencies = DailyQuestionSubscriber.VALID_EMAIL_FREQUENCIES
     send_days = DailyQuestionSubscriber.SEND_DAYS
 
+    # When reached via dashboard (no URL token), fall back to the subscriber's
+    # stored magic_token so the template and POST redirect both have a valid token.
+    effective_token = token or subscriber.magic_token
+
     if request.method == 'POST':
         validation_errors = []
 
@@ -1020,14 +1024,14 @@ def manage_preferences():
                 current_app.logger.error(f"Error saving preferences: {e}")
                 flash('There was an error saving your preferences. Please try again.', 'error')
 
-        return redirect(url_for('daily.manage_preferences', token=token))
+        return redirect(url_for('daily.manage_preferences', token=effective_token))
 
     # GET: Show current preferences
     return render_template('daily/preferences.html',
         subscriber=subscriber,
         send_days=send_days,
         frequencies=valid_frequencies,
-        token=token
+        token=effective_token
     )
 
 
