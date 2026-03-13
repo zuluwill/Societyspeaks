@@ -4738,6 +4738,62 @@ class Subscription(db.Model):
         return f'<Subscription {self.id} {owner} ({self.status})>'
 
 
+class Donation(db.Model):
+    """
+    One-time public donations processed via Stripe Checkout.
+    """
+    __tablename__ = 'donation'
+    __table_args__ = (
+        db.Index('idx_donation_status', 'status'),
+        db.Index('idx_donation_created_at', 'created_at'),
+        db.Index('idx_donation_paid_at', 'paid_at'),
+        db.Index('idx_donation_email', 'donor_email'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    stripe_checkout_session_id = db.Column(db.String(255), unique=True, nullable=False)
+    stripe_payment_intent_id = db.Column(db.String(255), unique=True, nullable=True)
+    stripe_charge_id = db.Column(db.String(255), nullable=True)
+
+    amount_pence = db.Column(db.Integer, nullable=False)
+    currency = db.Column(db.String(3), nullable=False, default='gbp')
+
+    # pending | paid | failed | refunded
+    status = db.Column(db.String(30), nullable=False, default='pending')
+    paid_at = db.Column(db.DateTime, nullable=True)
+
+    donor_email = db.Column(db.String(255), nullable=True)
+    donor_name = db.Column(db.String(255), nullable=True)
+    message = db.Column(db.Text, nullable=True)
+    is_anonymous = db.Column(db.Boolean, nullable=False, default=False)
+
+    metadata_json = db.Column(db.JSON, default=dict)
+
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'stripe_checkout_session_id': self.stripe_checkout_session_id,
+            'stripe_payment_intent_id': self.stripe_payment_intent_id,
+            'stripe_charge_id': self.stripe_charge_id,
+            'amount_pence': self.amount_pence,
+            'currency': self.currency,
+            'status': self.status,
+            'paid_at': self.paid_at.isoformat() if self.paid_at else None,
+            'donor_email': self.donor_email,
+            'donor_name': self.donor_name,
+            'message': self.message,
+            'is_anonymous': self.is_anonymous,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
+
+    def __repr__(self):
+        return f'<Donation {self.id} {self.amount_pence}{self.currency} ({self.status})>'
+
+
 # =============================================================================
 # POLYMARKET INTEGRATION
 # =============================================================================

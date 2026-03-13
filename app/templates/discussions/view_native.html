@@ -409,6 +409,18 @@
 </div>
 {% endif %}
 
+<!-- Donate nudge — shown after user has engaged with the discussion -->
+<div class="rounded-lg border border-slate-200 bg-slate-50 px-5 py-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+  <p class="text-sm text-slate-600">
+    <span class="font-semibold text-slate-800">Society Speaks is open and independent.</span>
+    Your support keeps civic discussion free from advertising and commercial influence.
+  </p>
+  <a
+    href="{{ url_for('main.donate') }}"
+    class="shrink-0 inline-flex items-center justify-center rounded-full border border-slate-400 px-4 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition whitespace-nowrap"
+  >Support us</a>
+</div>
+
 <!-- Animation styles (vote button styles loaded from output.css via input.css @layer) -->
 <style>
   @keyframes fadeIn {

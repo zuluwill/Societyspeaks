@@ -84,6 +84,7 @@ class Config:
     STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
     STRIPE_PUBLISHABLE_KEY = os.getenv('STRIPE_PUBLISHABLE_KEY')
     STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+    DONATION_MIN_AMOUNT_PENCE = int(os.getenv('DONATION_MIN_AMOUNT_PENCE', '100'))  # GBP 1.00 minimum
 
     # Enhanced Database Connection Settings (configurable for scaling)
     # When using Neon's PgBouncer pooler ("-pooler" in DATABASE_URL hostname), SQLAlchemy's

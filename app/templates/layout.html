@@ -599,6 +599,12 @@
               </div>
             </div>
 
+            <!-- Donate CTA — always visible in primary nav -->
+            <a
+              href="{{ url_for('main.donate') }}"
+              class="ml-4 inline-flex items-center rounded-full border border-white/70 px-4 py-1.5 text-sm font-semibold text-white hover:bg-white hover:text-blue-700 transition"
+            >Donate</a>
+
             {% if current_user.is_authenticated %}
             <!-- Authenticated Desktop Menu -->
             <div class="relative ml-3">
@@ -861,6 +867,11 @@
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
                 >Help</a
               >
+              <a
+                href="{{ url_for('main.donate') }}"
+                class="mt-1 block rounded-full border border-white/70 px-4 py-2 text-center text-base font-semibold text-white hover:bg-white hover:text-blue-700 transition"
+                >Donate</a
+              >
             </div>
 
             {% if current_user.is_authenticated %}
@@ -1053,6 +1064,13 @@
                   class="text-gray-400 hover:text-white transition"
                   >For Publishers
                   <span class="text-xs text-blue-400">Pro</span></a
+                >
+              </li>
+              <li>
+                <a
+                  href="{{ url_for('main.donate') }}"
+                  class="text-gray-400 hover:text-white transition"
+                  >Donate</a
                 >
               </li>
               <li>

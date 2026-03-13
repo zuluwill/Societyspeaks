@@ -7,7 +7,16 @@ from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 from flask import current_app
 from app import db
-from app.models import User, CompanyProfile, PricingPlan, Subscription, OrganizationMember, generate_slug, Partner
+from app.models import (
+    User,
+    CompanyProfile,
+    PricingPlan,
+    Subscription,
+    OrganizationMember,
+    Donation,
+    generate_slug,
+    Partner,
+)
 
 VALID_BILLING_INTERVALS = {'month', 'year'}
 
@@ -159,6 +168,142 @@ def create_portal_session(user, return_url=None):
     )
 
     return session
+
+
+def create_donation_checkout_session(
+    amount_pence,
+    donor_email=None,
+    donor_name=None,
+    donor_message=None,
+    is_anonymous=False,
+    success_url=None,
+    cancel_url=None,
+):
+    """Create a Stripe Checkout session for a one-time donation."""
+    s = get_stripe()
+    base_url = current_app.config.get('APP_BASE_URL', 'https://societyspeaks.io')
+
+    min_amount = int(current_app.config.get('DONATION_MIN_AMOUNT_PENCE', 100))
+
+    if amount_pence < min_amount:
+        min_gbp = min_amount / 100
+        raise ValueError(f"Minimum donation is £{min_gbp:.2f}.")
+
+    large_threshold = 500_000  # £5,000 — log for awareness, do not block
+    if amount_pence >= large_threshold:
+        current_app.logger.info(
+            f"Large donation initiated: {amount_pence}p — Stripe Radar will apply fraud checks."
+        )
+
+    clean_name = (donor_name or '').strip()[:255] or None
+    clean_email = (donor_email or '').strip()[:255] or None
+    clean_message = (donor_message or '').strip()[:2000] or None
+    anonymous_flag = bool(is_anonymous)
+
+    metadata = {
+        'purpose': 'donation',
+        'is_anonymous': str(anonymous_flag).lower(),
+    }
+    if clean_name:
+        metadata['donor_name'] = clean_name
+    if clean_email:
+        metadata['donor_email'] = clean_email
+    if clean_message:
+        metadata['donor_message'] = clean_message
+
+    payload = {
+        'mode': 'payment',
+        'submit_type': 'donate',
+        'payment_method_types': ['card'],
+        'line_items': [{
+            'quantity': 1,
+            'price_data': {
+                'currency': 'gbp',
+                'unit_amount': amount_pence,
+                'product_data': {
+                    'name': 'Donation to Society Speaks',
+                    'description': 'Thank you for supporting Society Speaks.',
+                },
+            },
+        }],
+        'success_url': success_url or f"{base_url}/donate/success?session_id={{CHECKOUT_SESSION_ID}}",
+        'cancel_url': cancel_url or f"{base_url}/donate",
+        'metadata': metadata,
+        'payment_intent_data': {
+            'metadata': metadata,
+        },
+    }
+    if clean_email:
+        payload['customer_email'] = clean_email
+
+    return _stripe_call(s.checkout.Session.create, **payload)
+
+
+def sync_donation_from_checkout_session(checkout_session):
+    """Create/update local donation record from a Checkout Session payload."""
+    session_id = checkout_session.get('id') if isinstance(checkout_session, dict) else checkout_session.id
+    if not session_id:
+        raise ValueError("Checkout session is missing id")
+
+    donation = Donation.query.filter_by(stripe_checkout_session_id=session_id).first()
+    if not donation:
+        donation = Donation(stripe_checkout_session_id=session_id)
+        db.session.add(donation)
+
+    metadata = checkout_session.get('metadata', {}) if isinstance(checkout_session, dict) else (checkout_session.metadata or {})
+    customer_details = checkout_session.get('customer_details', {}) if isinstance(checkout_session, dict) else (checkout_session.customer_details or {})
+
+    amount_total = checkout_session.get('amount_total') if isinstance(checkout_session, dict) else getattr(checkout_session, 'amount_total', None)
+    currency = checkout_session.get('currency') if isinstance(checkout_session, dict) else getattr(checkout_session, 'currency', 'gbp')
+    payment_status = checkout_session.get('payment_status') if isinstance(checkout_session, dict) else getattr(checkout_session, 'payment_status', 'unpaid')
+    payment_intent_id = checkout_session.get('payment_intent') if isinstance(checkout_session, dict) else getattr(checkout_session, 'payment_intent', None)
+
+    if hasattr(payment_intent_id, 'id'):
+        payment_intent_id = payment_intent_id.id
+
+    donation.amount_pence = amount_total or donation.amount_pence or 0
+    donation.currency = (currency or 'gbp').lower()
+    donation.stripe_payment_intent_id = payment_intent_id or donation.stripe_payment_intent_id
+    donation.status = 'paid' if payment_status == 'paid' else 'pending'
+
+    donor_email = (
+        customer_details.get('email')
+        or metadata.get('donor_email')
+        or donation.donor_email
+    )
+    donor_name = (
+        customer_details.get('name')
+        or metadata.get('donor_name')
+        or donation.donor_name
+    )
+    donation.donor_email = (donor_email or None)
+    donation.donor_name = (donor_name or None)
+    donation.message = metadata.get('donor_message') or donation.message
+    donation.is_anonymous = str(metadata.get('is_anonymous', 'false')).lower() == 'true'
+    donation.metadata_json = dict(metadata) if isinstance(metadata, dict) else {}
+
+    if donation.status == 'paid' and donation.paid_at is None:
+        donation.paid_at = utcnow_naive()
+
+    if donation.stripe_payment_intent_id and not donation.stripe_charge_id:
+        s = get_stripe()
+        try:
+            pi = _stripe_call(
+                s.PaymentIntent.retrieve,
+                donation.stripe_payment_intent_id,
+                expand=['latest_charge'],
+            )
+            latest_charge = pi.get('latest_charge') if isinstance(pi, dict) else getattr(pi, 'latest_charge', None)
+            if hasattr(latest_charge, 'id'):
+                latest_charge = latest_charge.id
+            donation.stripe_charge_id = latest_charge or donation.stripe_charge_id
+        except Exception as exc:
+            current_app.logger.warning(
+                f"Unable to expand payment intent for donation session {session_id}: {exc}"
+            )
+
+    db.session.commit()
+    return donation
 
 
 def resolve_plan_from_stripe_subscription(stripe_subscription):

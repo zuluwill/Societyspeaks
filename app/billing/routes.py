@@ -1,19 +1,23 @@
+import re
 import stripe
+from decimal import Decimal, InvalidOperation
 from flask import request, redirect, url_for, jsonify, flash, current_app, session
 from flask_login import login_required, current_user
 from app.billing import billing_bp
 from app.billing.service import (
     create_checkout_session,
+    create_donation_checkout_session,
     create_portal_session,
     sync_subscription_from_stripe,
     sync_subscription_with_org,
+    sync_donation_from_checkout_session,
     get_active_subscription,
     get_stripe,
     resolve_plan_from_stripe_subscription,
     _stripe_call,
 )
 from app.models import User, PricingPlan, Subscription, Partner
-from app import db, csrf
+from app import db, csrf, limiter
 
 
 def _normalize_billing_interval(raw_interval):
@@ -24,6 +28,73 @@ def _normalize_billing_interval(raw_interval):
     if interval in ('month', 'monthly'):
         return 'month'
     return None
+
+
+def _parse_donation_amount_pence(raw_amount_pence, raw_amount_gbp):
+    """
+    Parse donation amount from form fields.
+    - amount_pence: integer pence string (preferred for preset amounts)
+    - amount_gbp: decimal pounds string for custom amount input
+    """
+    if raw_amount_pence:
+        try:
+            return int(str(raw_amount_pence).strip())
+        except (TypeError, ValueError):
+            raise ValueError("Invalid donation amount.")
+
+    if raw_amount_gbp:
+        candidate = str(raw_amount_gbp).strip().replace(',', '')
+        try:
+            pounds = Decimal(candidate)
+        except (InvalidOperation, ValueError):
+            raise ValueError("Invalid donation amount.")
+        if pounds <= 0:
+            raise ValueError("Donation amount must be greater than zero.")
+        return int((pounds * 100).quantize(Decimal('1')))
+
+    raise ValueError("Donation amount is required.")
+
+
+@billing_bp.route('/donate/checkout', methods=['POST'])
+@limiter.limit("10 per minute")
+def donate_checkout():
+    """Start a Stripe Checkout session for a one-time donation."""
+    try:
+        amount_pence = _parse_donation_amount_pence(
+            request.form.get('amount_pence'),
+            request.form.get('amount_gbp'),
+        )
+
+        donor_name = (request.form.get('donor_name') or '').strip() or None
+        donor_email = (request.form.get('donor_email') or '').strip() or None
+        donor_message = (request.form.get('donor_message') or '').strip() or None
+        is_anonymous = bool(request.form.get('is_anonymous'))
+
+        if donor_email:
+            if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', donor_email):
+                raise ValueError("Please provide a valid email address.")
+
+        checkout_session = create_donation_checkout_session(
+            amount_pence=amount_pence,
+            donor_email=donor_email,
+            donor_name=donor_name,
+            donor_message=donor_message,
+            is_anonymous=is_anonymous,
+        )
+        if not checkout_session or not checkout_session.url:
+            raise ValueError("Unable to start donation checkout. Please try again.")
+        return redirect(checkout_session.url, code=303)
+    except ValueError as e:
+        flash(str(e), 'error')
+        return redirect(url_for('main.donate'))
+    except stripe.error.StripeError as e:
+        current_app.logger.error(f"Stripe error in donation checkout: {e}")
+        flash("Payment system error. Please try again.", 'error')
+        return redirect(url_for('main.donate'))
+    except Exception as e:
+        current_app.logger.error(f"Unexpected donation checkout error: {type(e).__name__}: {e}", exc_info=True)
+        flash("Payment system error. Please try again.", 'error')
+        return redirect(url_for('main.donate'))
 
 
 @billing_bp.route('/checkout', methods=['POST'])
@@ -391,10 +462,15 @@ def webhook():
             metadata = _get_stripe_metadata(data)
             if metadata.get('purpose') == 'partner_subscription' or metadata.get('partner_id'):
                 _handle_partner_checkout_completed(data)
+            elif metadata.get('purpose') == 'donation':
+                _handle_donation_checkout_completed(data)
         elif event_type == 'checkout.session.expired':
             current_app.logger.info(f"Checkout session expired: {data.get('id')}")
         elif event_type == 'checkout.session.async_payment_succeeded':
             current_app.logger.info(f"Checkout async payment succeeded: {data.get('id')}")
+            metadata = _get_stripe_metadata(data)
+            if metadata.get('purpose') == 'donation':
+                _handle_donation_checkout_completed(data)
         elif event_type == 'checkout.session.async_payment_failed':
             current_app.logger.info(f"Checkout async payment failed: {data.get('id')}")
         
@@ -615,6 +691,24 @@ def _handle_partner_subscription(subscription_data):
 
     if partner.billing_status == 'active':
         current_app.logger.info(f"Partner subscription active for {partner.slug} (tier={partner.tier})")
+
+
+def _handle_donation_checkout_completed(checkout_data):
+    """Persist donation data for successful Stripe donation checkouts."""
+    try:
+        payment_status = _get_stripe_field(checkout_data, 'payment_status', 'unpaid')
+        if payment_status != 'paid':
+            current_app.logger.info(
+                f"Donation checkout {_get_stripe_field(checkout_data, 'id')} not paid yet (status={payment_status})"
+            )
+            return
+        donation = sync_donation_from_checkout_session(checkout_data)
+        current_app.logger.info(
+            f"Donation recorded: id={donation.id} amount={donation.amount_pence}{donation.currency}"
+        )
+    except Exception as exc:
+        current_app.logger.error(f"Failed to sync donation checkout: {exc}")
+        raise
 
 
 def handle_subscription_deleted(subscription_data):

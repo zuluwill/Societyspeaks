@@ -1,7 +1,8 @@
-from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for, abort, send_file, make_response, send_from_directory
+import stripe
+from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for, abort, send_file, make_response, send_from_directory, redirect, flash
 from flask_login import login_required, current_user
 from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestion, DailyBrief
-from app import db
+from app import db, limiter
 from datetime import datetime, date
 from slugify import slugify
 from app.seo import generate_sitemap
@@ -98,6 +99,49 @@ def platform():
     demo_discussion = db.session.get(Discussion, 25)
     featured_discussions = Discussion.get_featured(limit=3)
     return render_template('platform.html', demo_discussion=demo_discussion, featured_discussions=featured_discussions)
+
+
+@main_bp.route('/donate')
+def donate():
+    return render_template('donate.html')
+
+
+@main_bp.route('/donate/success')
+@limiter.limit("30 per minute")
+def donate_success():
+    from app.billing.service import get_stripe
+
+    session_id = request.args.get('session_id', '')
+    if not session_id or not session_id.startswith('cs_'):
+        flash("No valid donation session found.", 'error')
+        return redirect(url_for('main.donate'))
+
+    # Confirm with Stripe that this is a completed donation — do not trust the URL alone.
+    # Note: only card payments are currently enabled (payment_method_types=['card']),
+    # so payment_status is 'paid' immediately on success. If async payment methods
+    # (BACS, SEPA) are ever added, this check must accommodate 'unpaid' + webhook confirmation.
+    try:
+        s = get_stripe()
+        checkout_session = s.checkout.Session.retrieve(session_id)
+        metadata = getattr(checkout_session, 'metadata', None) or {}
+        payment_status = getattr(checkout_session, 'payment_status', None)
+        if metadata.get('purpose') != 'donation' or payment_status != 'paid':
+            flash("Your donation is being confirmed. Please check back in a moment.", 'info')
+            return redirect(url_for('main.donate'))
+    except stripe.error.InvalidRequestError:
+        # Unknown or test session ID — don't leak detail to the user.
+        flash("No valid donation session found.", 'error')
+        return redirect(url_for('main.donate'))
+    except stripe.error.StripeError as e:
+        current_app.logger.warning(f"Stripe verification failed for donation success session {session_id}: {e}")
+        flash("We could not verify your donation yet. Please check back in a moment.", 'info')
+        return redirect(url_for('main.donate'))
+    except Exception as e:
+        current_app.logger.warning(f"Unexpected donation success verification error for session {session_id}: {e}")
+        flash("We could not verify your donation yet. Please check back in a moment.", 'info')
+        return redirect(url_for('main.donate'))
+
+    return render_template('donate_success.html')
 
 
 def _is_scanner_or_bogus_asset_path(filename: str) -> bool:
