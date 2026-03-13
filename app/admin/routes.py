@@ -2,9 +2,9 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan, StatementVote, Partner, PartnerDomain, PartnerApiKey, PartnerMember, PartnerUsageEvent
+from app.models import User, IndividualProfile, CompanyProfile, Discussion, DailyQuestion, DailyQuestionResponse, DailyQuestionSubscriber, Statement, TrendingTopic, StatementFlag, DailyQuestionResponseFlag, NewsSource, Subscription, PricingPlan, StatementVote, Partner, PartnerDomain, PartnerApiKey, PartnerMember, PartnerUsageEvent, Programme, OrganizationMember
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
-from app.admin.forms import UserAssignmentForm
+from app.admin.forms import UserAssignmentForm, AdminProgrammeForm, AdminOrgMemberForm
 from datetime import date, datetime, timedelta
 from app.lib.time import utcnow_naive
 from werkzeug.utils import secure_filename
@@ -374,6 +374,139 @@ def delete_profile(profile_type, profile_id):
         flash('Error deleting profile. Please try again.', 'error')
 
     return redirect(url_for('admin.list_profiles'))
+
+
+@admin_bp.route('/company/<int:profile_id>/manage')
+@login_required
+@admin_required
+def manage_company_profile(profile_id):
+    profile = CompanyProfile.query.get_or_404(profile_id)
+    programme_form = AdminProgrammeForm(prefix='prog')
+    member_form = AdminOrgMemberForm(prefix='mem')
+    programmes = Programme.query.filter_by(company_profile_id=profile.id).order_by(Programme.created_at.desc()).all()
+    members = OrganizationMember.query.filter_by(org_id=profile.id).filter(
+        OrganizationMember.status != 'removed'
+    ).all()
+    return render_template(
+        'admin/profiles/manage_company.html',
+        profile=profile,
+        programme_form=programme_form,
+        member_form=member_form,
+        programmes=programmes,
+        members=members,
+    )
+
+
+@admin_bp.route('/company/<int:profile_id>/programme/create', methods=['POST'])
+@login_required
+@admin_required
+def admin_create_programme(profile_id):
+    profile = CompanyProfile.query.get_or_404(profile_id)
+    form = AdminProgrammeForm(prefix='prog')
+    if form.validate_on_submit():
+        try:
+            raw_themes = form.themes.data or ''
+            themes = [t.strip() for t in raw_themes.split(',') if t.strip()]
+            programme = Programme(
+                name=form.name.data,
+                description=form.description.data,
+                geographic_scope=form.geographic_scope.data,
+                country=form.country.data or None,
+                logo_url=form.logo_url.data or None,
+                themes=themes,
+                visibility=form.visibility.data,
+                status='active',
+                company_profile_id=profile.id,
+                creator_id=None,
+            )
+            db.session.add(programme)
+            db.session.commit()
+            _log_admin_audit_event('create_programme', target_type='programme', target_id=programme.id,
+                                   metadata={'name': programme.name, 'company_profile_id': profile.id})
+            flash(f'Programme "{programme.name}" created successfully.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Error creating programme: {e}')
+            flash('Error creating programme. Please try again.', 'error')
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{field}: {error}', 'error')
+    return redirect(url_for('admin.manage_company_profile', profile_id=profile_id))
+
+
+@admin_bp.route('/company/<int:profile_id>/members/add', methods=['POST'])
+@login_required
+@admin_required
+def admin_add_org_member(profile_id):
+    profile = CompanyProfile.query.get_or_404(profile_id)
+    form = AdminOrgMemberForm(prefix='mem')
+    if form.validate_on_submit():
+        try:
+            if form.assignment_type.data == 'new':
+                user = User(
+                    username=form.username.data,
+                    email=form.email.data,
+                    password=generate_password_hash(form.password.data),
+                )
+                db.session.add(user)
+                db.session.flush()
+                send_welcome_email(user.email, form.username.data, form.password.data)
+            else:
+                user = db.session.get(User, form.existing_user.data)
+
+            existing = OrganizationMember.query.filter_by(org_id=profile.id, user_id=user.id).first()
+            if existing:
+                existing.role = form.role.data
+                existing.status = 'active'
+                if not existing.joined_at:
+                    existing.joined_at = utcnow_naive()
+            else:
+                member = OrganizationMember(
+                    org_id=profile.id,
+                    user_id=user.id,
+                    role=form.role.data,
+                    status='active',
+                    invited_by_id=current_user.id,
+                    joined_at=utcnow_naive(),
+                )
+                db.session.add(member)
+
+            db.session.commit()
+            _log_admin_audit_event('add_org_member', target_type='org_member', target_id=profile.id,
+                                   metadata={'user_id': user.id, 'role': form.role.data})
+            flash(f'{user.username} added as {form.role.data}.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Error adding org member: {e}')
+            flash('Error adding member. Please try again.', 'error')
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{field}: {error}', 'error')
+    return redirect(url_for('admin.manage_company_profile', profile_id=profile_id))
+
+
+@admin_bp.route('/company/<int:profile_id>/members/<int:member_id>/remove', methods=['POST'])
+@login_required
+@admin_required
+def admin_remove_org_member(profile_id, member_id):
+    profile = CompanyProfile.query.get_or_404(profile_id)
+    member = OrganizationMember.query.filter_by(id=member_id, org_id=profile_id).first_or_404()
+    if member.user_id == profile.user_id:
+        flash('Cannot remove the primary account (organisation owner).', 'error')
+        return redirect(url_for('admin.manage_company_profile', profile_id=profile_id))
+    try:
+        member.status = 'removed'
+        db.session.commit()
+        _log_admin_audit_event('remove_org_member', target_type='org_member', target_id=member_id,
+                               metadata={'user_id': member.user_id, 'org_id': profile_id})
+        flash('Member removed.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f'Error removing org member: {e}')
+        flash('Error removing member.', 'error')
+    return redirect(url_for('admin.manage_company_profile', profile_id=profile_id))
 
 
 # Helper Functions

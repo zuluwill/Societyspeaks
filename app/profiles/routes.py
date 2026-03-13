@@ -2,7 +2,7 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, send_file, current_app, abort, make_response
 from flask_login import login_required, current_user
 from app import db
-from app.models import IndividualProfile, CompanyProfile, Discussion
+from app.models import IndividualProfile, CompanyProfile, Discussion, Programme
 from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from replit.object_storage import Client
 from werkzeug.utils import secure_filename
@@ -488,7 +488,12 @@ def view_company_profile(company_name):
     discussions = Discussion.query.filter_by(creator_id=profile.user_id).order_by(
         Discussion.created_at.desc()
     ).paginate(page=page, per_page=10, error_out=False)
-    return render_template('profiles/company_profile.html', profile=profile, discussions=discussions)
+    programmes = Programme.query.filter_by(
+        company_profile_id=profile.id,
+        visibility='public',
+        status='active'
+    ).order_by(Programme.created_at.desc()).all()
+    return render_template('profiles/company_profile.html', profile=profile, discussions=discussions, programmes=programmes)
 
 
 #Unified view_profile Route (This is the new route that acts as the primary link):

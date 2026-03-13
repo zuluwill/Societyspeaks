@@ -147,7 +147,9 @@
                                     </div>
                                 </div>
                                 <div class="ml-5 flex-shrink-0 flex">
-                                    <a href="{{ url_for('admin.edit_company_profile', profile_id=profile.id) }}" 
+                                    <a href="{{ url_for('admin.manage_company_profile', profile_id=profile.id) }}"
+                                       class="text-green-600 hover:text-green-900 mr-4 font-medium">Manage</a>
+                                    <a href="{{ url_for('admin.edit_company_profile', profile_id=profile.id) }}"
                                        class="text-blue-600 hover:text-blue-900 mr-4">Edit</a>
                                     <form action="{{ url_for('admin.delete_profile', profile_type='company', profile_id=profile.id) }}"
                                           method="POST"
