@@ -255,6 +255,11 @@ def fetch_bluesky_engagement(post_uri: str) -> Optional[Dict]:
             'impressions': 0,  # Bluesky doesn't expose impressions
         }
 
+    except OSError as e:
+        # [Errno 5] Input/output error and similar low-level network errors are
+        # transient socket/connection failures. Log as warning to avoid Sentry noise.
+        logger.warning(f"Transient network error fetching Bluesky engagement for {post_uri}: {e}")
+        return None
     except Exception as e:
         logger.error(f"Failed to fetch Bluesky engagement for {post_uri}: {e}")
         return None
