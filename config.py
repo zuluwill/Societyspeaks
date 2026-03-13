@@ -298,14 +298,8 @@ class Config:
     ADMIN_CAN_EDIT_PROFILES = os.getenv('ADMIN_CAN_EDIT_PROFILES', 'False').lower() == 'true'
     ADMIN_CAN_DELETE_DISCUSSIONS = os.getenv('ADMIN_CAN_DELETE_DISCUSSIONS', 'False').lower() == 'true'
     
-    # Webhook Security Configuration - temporarily optional in production
-    WEBHOOK_SECRET = os.getenv('WEBHOOK_SECRET')
-    if not WEBHOOK_SECRET and os.getenv('FLASK_ENV') == 'production':
-        # Temporarily allow missing WEBHOOK_SECRET in production with warning
-        logging.warning("WEBHOOK_SECRET environment variable not set in production - this is a temporary fallback. Please set it ASAP for security.")
-        WEBHOOK_SECRET = None  # Will be handled gracefully by webhook verification code
-    elif not WEBHOOK_SECRET:
-        WEBHOOK_SECRET = 'dev-webhook-secret-change-in-production'  # Development only
+    # Webhook Security Configuration
+    WEBHOOK_SECRET = os.getenv('WEBHOOK_SECRET', 'dev-webhook-secret-change-in-production')
     
     # RATELIMIT_STORAGE_URL is set in the Redis block above (to the Redis URL
     # on success, or 'memory://' on failure/absence). Do not reassign it here.
