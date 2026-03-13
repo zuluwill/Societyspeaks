@@ -52,7 +52,7 @@ from app import create_app  # noqa: E402
 app = create_app()
 
 # Import running-job tracker AFTER create_app() so init_scheduler() has run
-from app.scheduler import _running_jobs, _running_jobs_lock  # noqa: E402
+from app.scheduler import _running_jobs, _running_jobs_lock, scheduler as apscheduler  # noqa: E402
 
 logger.info("Scheduler process initialised — APScheduler supervisor running in background threads")
 
@@ -136,4 +136,16 @@ while not _SHUTDOWN:
         break
 
 logger.info("Scheduler process exiting cleanly")
+
+# Explicitly stop APScheduler's job-dispatch loop before sys.exit() so the
+# background thread pool is drained gracefully.  Without this, APScheduler's
+# _process_jobs loop keeps firing after Python starts tearing down the process,
+# causing "RuntimeError: cannot schedule new futures after shutdown" spam.
+try:
+    if apscheduler is not None and apscheduler.running:
+        apscheduler.shutdown(wait=False)
+        logger.info("APScheduler shut down cleanly")
+except Exception as exc:
+    logger.warning("APScheduler shutdown warning (non-fatal): %s", exc)
+
 sys.exit(0)
