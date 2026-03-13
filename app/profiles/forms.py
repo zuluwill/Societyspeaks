@@ -224,7 +224,7 @@ class CompanyProfileForm(FlaskForm):
     description = TextAreaField('Company Description', validators=[Optional()])
     city = StringField('City', validators=[DataRequired()])
     country = SelectField('Country', choices=country_choices, validators=[DataRequired()])
-    email = StringField('Email', validators=[Optional(), Email()])
+    email = StringField('Public contact email', validators=[Optional(), Email()])
     website = URLField('Website', validators=[Optional(), URL()])
     # Social Media Fields
     linkedin_url = URLField('LinkedIn', validators=[Optional(), URL()])

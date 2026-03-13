@@ -94,7 +94,10 @@
                 <!-- Contact Information -->
                 <div class="space-y-4">
                     <h2 class="text-lg font-semibold text-gray-900">Contact Information</h2>
-                    {{ render_field_with_errors(form.email, input_class="bg-white") }}
+                    <div>
+                        {{ render_field_with_errors(form.email, input_class="bg-white", container_class="mb-1") }}
+                        <p class="text-xs text-gray-500">This email will appear publicly on your profile. You can use your own address, a generic inbox (e.g. hello@…), or leave it blank to hide contact email entirely. This is separate from your login email.</p>
+                    </div>
                     {{ render_field_with_errors(form.website, input_class="bg-white") }}
                 </div>
 

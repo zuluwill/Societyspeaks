@@ -12,7 +12,7 @@
         <span class="text-gray-900">{{ profile.company_name }}</span>
       </nav>
       <h1 class="text-2xl font-bold text-gray-900">Manage: {{ profile.company_name }}</h1>
-      <p class="text-sm text-gray-500 mt-1">Primary account: <strong>{{ profile.user.username }}</strong> ({{ profile.user.email }})</p>
+      <p class="text-sm text-gray-500 mt-1">Primary account: <strong>{{ profile.user.username }}</strong> — login email: {{ profile.user.email }}{% if profile.email %} — public contact: {{ profile.email }}{% else %} — <span class="italic">no public contact email set</span>{% endif %}</p>
     </div>
     <div class="flex gap-3">
       <a href="{{ url_for('profiles.view_company_profile', company_name=profile.slug) }}" target="_blank"
