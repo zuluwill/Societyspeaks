@@ -35,27 +35,25 @@
         Vote on statements. Discover where you agree with people you thought you didn't. See what the data actually reveals — not percentages, but clusters of real opinion.
       </p>
       <div class="mt-10 flex flex-wrap justify-center gap-4">
-        {% if not current_user.is_authenticated %}
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('discussions.search_discussions') }}"
+           class="inline-flex items-center rounded-md bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
+          Explore Discussions
+          <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+        <a href="{{ url_for('programmes.list_programmes') }}"
+           class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+          Browse Programmes
+        </a>
+        {% else %}
         <a href="{{ url_for('auth.register') }}"
            class="inline-flex items-center rounded-md bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
           Get started — it's free
           <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
-        </a>
-        {% endif %}
-        <a href="{{ url_for('discussions.search_discussions') }}"
-           class="inline-flex items-center rounded-md {% if current_user.is_authenticated %}bg-blue-600 text-white shadow-sm hover:bg-blue-500{% else %}bg-white text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50{% endif %} px-6 py-3 text-sm font-semibold transition-colors">
-          Explore Discussions
-          {% if current_user.is_authenticated %}
-          <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
-          {% endif %}
-        </a>
-        <a href="{{ url_for('programmes.list_programmes') }}"
-           class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
-          Browse Programmes
         </a>
         {% if demo_discussion %}
         <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}"
@@ -65,6 +63,12 @@
           </svg>
           Try a Live Demo
         </a>
+        {% else %}
+        <a href="{{ url_for('discussions.search_discussions') }}"
+           class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+          Explore Discussions
+        </a>
+        {% endif %}
         {% endif %}
       </div>
     </div>
@@ -76,7 +80,7 @@
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
       <h2 class="text-3xl font-bold text-gray-900">What does it actually look like?</h2>
-      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Each discussion presents clear statements on a real issue. You vote agree, disagree, or unsure — then see how your view compares to everyone else.</p>
+      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">You start with a statement, cast your vote, and discover how your view fits into the wider picture — not as a raw percentage, but as part of a real opinion cluster.</p>
     </div>
 
     <div class="grid lg:grid-cols-2 gap-12 items-start">
@@ -130,26 +134,26 @@
               <div class="flex items-center gap-3 text-sm">
                 <span class="text-gray-500 w-16 text-right shrink-0">Agree</span>
                 <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
-                  <div class="bg-green-400 h-3 rounded-full" style="width:62%"></div>
+                  <div class="bg-green-400 h-3 rounded-full" style="width:76%"></div>
                 </div>
-                <span class="text-gray-700 font-semibold w-8 shrink-0">62%</span>
+                <span class="text-gray-700 font-semibold w-8 shrink-0">76%</span>
               </div>
               <div class="flex items-center gap-3 text-sm">
                 <span class="text-gray-500 w-16 text-right shrink-0">Disagree</span>
                 <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
-                  <div class="bg-red-400 h-3 rounded-full" style="width:27%"></div>
+                  <div class="bg-red-400 h-3 rounded-full" style="width:16%"></div>
                 </div>
-                <span class="text-gray-700 font-semibold w-8 shrink-0">27%</span>
+                <span class="text-gray-700 font-semibold w-8 shrink-0">16%</span>
               </div>
               <div class="flex items-center gap-3 text-sm">
                 <span class="text-gray-500 w-16 text-right shrink-0">Unsure</span>
                 <div class="flex-1 bg-gray-100 rounded-full h-3 overflow-hidden">
-                  <div class="bg-amber-300 h-3 rounded-full" style="width:11%"></div>
+                  <div class="bg-amber-300 h-3 rounded-full" style="width:8%"></div>
                 </div>
-                <span class="text-gray-700 font-semibold w-8 shrink-0">11%</span>
+                <span class="text-gray-700 font-semibold w-8 shrink-0">8%</span>
               </div>
             </div>
-            <p class="text-xs text-gray-400 mt-3 text-center">Based on 1,247 votes — vote on 5 statements to unlock your cluster</p>
+            <p class="text-xs text-gray-400 mt-3 text-center">Based on 1,247 votes</p>
           </div>
         </div>
       </div>
@@ -207,7 +211,7 @@
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <div class="text-center mb-12">
       <h2 class="text-3xl font-bold text-gray-900">What consensus analysis reveals</h2>
-      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">Traditional polling gives you percentages. We show you how views actually cluster — revealing what divides people and, crucially, where they agree across lines.</p>
+      <p class="mt-3 text-lg text-gray-600 max-w-2xl mx-auto">We show you the shape of opinion, not just the count — which groups emerge, what they share across divides, and where genuine fault lines lie.</p>
     </div>
 
     <div class="grid lg:grid-cols-2 gap-10 items-start">
@@ -322,7 +326,7 @@
       <div class="flex flex-col gap-7 pt-2">
         <div>
           <p class="text-xs font-semibold text-purple-600 uppercase tracking-widest mb-3">Why this matters</p>
-          <p class="text-gray-600 leading-relaxed">Opinion polls tell you that 62% of people agree with something. We tell you <em>which</em> people — and what those people agree on, disagree on, and what surprising common ground exists between groups who seem to be in opposition.</p>
+          <p class="text-gray-600 leading-relaxed">Traditional polls reveal how many people agree with something — but not who, or why, or what else they share. Clustered opinion data reveals the genuine structure beneath the numbers: which groups agree, which diverge, and where opposing groups find unexpected common ground.</p>
         </div>
 
         <div class="space-y-5">
@@ -355,10 +359,6 @@
           </div>
         </div>
 
-        <div class="rounded-xl bg-blue-50 border border-blue-200 p-5">
-          <p class="text-sm font-semibold text-blue-900 mb-1">Inspired by Pol.is — built for the UK</p>
-          <p class="text-sm text-blue-700 leading-relaxed">Our clustering approach is inspired by the open-source <a href="https://pol.is" target="_blank" rel="noopener" class="underline font-semibold">Pol.is</a> methodology, adapted for deliberative democracy at any scale — from a local council to a national strategy consultation.</p>
-        </div>
       </div>
     </div>
   </div>
@@ -431,7 +431,7 @@
             <span class="text-sm text-gray-700"><strong>Genuine divisions</strong> — where groups strongly diverge, identifying real fault lines worth understanding</span>
           </li>
         </ul>
-        <p class="text-gray-600 leading-relaxed text-sm">This approach is resistant to organised manipulation — coordinated campaigns show up as a distinct cluster rather than distorting the overall picture. It also surfaces the silent majority: participants who never comment but whose votes carry equal weight.</p>
+        <p class="text-gray-600 leading-relaxed text-sm">This approach is resistant to organised manipulation — coordinated campaigns show up as a distinct cluster rather than distorting the overall picture. It also surfaces the quiet majority: participants who never comment but whose votes carry equal weight.</p>
       </div>
 
       <div>
@@ -483,7 +483,7 @@
               <th class="text-center px-4 py-4 text-blue-700 font-bold">Society Speaks</th>
               <th class="text-center px-4 py-4 text-gray-500 font-semibold">Pol.is</th>
               <th class="text-center px-4 py-4 text-gray-500 font-semibold">YouGov / Polling</th>
-              <th class="text-center px-4 py-4 text-gray-500 font-semibold">Stanford Deliberation</th>
+              <th class="text-center px-4 py-4 text-gray-500 font-semibold">Citizens' Assemblies</th>
               <th class="text-center px-4 py-4 text-gray-500 font-semibold">Standard Consultation</th>
             </tr>
           </thead>
@@ -525,7 +525,7 @@
               <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
               <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
               <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Panel only</td>
-              <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Invited only</td>
+              <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Selected only</td>
               <td class="px-4 py-3.5 text-center"><span class="text-gray-400 text-base">~</span></td>
             </tr>
             <tr class="hover:bg-gray-50">
@@ -549,7 +549,7 @@
               <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
               <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
               <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Paid only</td>
-              <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
+              <td class="px-4 py-3.5 text-center"><span class="text-gray-400 text-base">~</span></td>
               <td class="px-4 py-3.5 text-center"><span class="text-red-400 text-base">✗</span></td>
             </tr>
             <tr class="bg-blue-50 border-t-2 border-blue-200">
@@ -557,7 +557,7 @@
               <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
               <td class="px-4 py-3.5 text-center"><span class="text-green-600 font-bold text-base">✓</span></td>
               <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Expensive at scale</td>
-              <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Academic, small-scale</td>
+              <td class="px-4 py-3.5 text-center text-gray-400 text-xs">100–200 people</td>
               <td class="px-4 py-3.5 text-center text-gray-400 text-xs">Unwieldy at scale</td>
             </tr>
           </tbody>
@@ -762,7 +762,7 @@
             </svg>
           </div>
           <div>
-            <h3 class="text-xl font-bold text-gray-900">Businesses, Podcasts &amp; Creators</h3>
+            <h3 class="text-xl font-bold text-gray-900">Media &amp; Creators</h3>
             <p class="text-sm text-gray-500">Brands, media, podcasters, newsletter writers</p>
           </div>
         </div>
@@ -1024,26 +1024,6 @@
 
       <details class="group py-5">
         <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
-          <span class="text-base font-semibold text-gray-900">How do I start a discussion?</span>
-          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-          </span>
-        </summary>
-        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Sign in or register, then click "Start a discussion". You'll give it a title, description, topic, and geographic scope. You can either write the opening statements yourself or use our AI assistant to generate a balanced set of statements. You choose whether the discussion is public, unlisted, invite-only, or private.</p>
-      </details>
-
-      <details class="group py-5">
-        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
-          <span class="text-base font-semibold text-gray-900">Can I host discussions as my organisation rather than as an individual?</span>
-          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-          </span>
-        </summary>
-        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Yes. Create an organisation profile and then link discussions and Programmes to it. Participants will see your organisation's name, logo, and description as the host — rather than your personal account. You can also invite colleagues as co-managers so the whole team can administer discussions under one brand.</p>
-      </details>
-
-      <details class="group py-5">
-        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
           <span class="text-base font-semibold text-gray-900">How many participants do I need before the consensus analysis works?</span>
           <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -1070,26 +1050,6 @@
           </span>
         </summary>
         <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">A discussion is a single conversation on one topic. A Programme is a structured campaign that groups many discussions together — for example, a national consultation on housing policy might have separate discussions on planning, affordability, social housing, and landlord regulation. Programmes support phases (e.g. Listening → Deliberation → Recommendations), themes, and participant cohorts, with a single export of all data.</p>
-      </details>
-
-      <details class="group py-5">
-        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
-          <span class="text-base font-semibold text-gray-900">Can I embed Society Speaks discussions on my own website?</span>
-          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-          </span>
-        </summary>
-        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Yes. Publishers and partners can embed a voting widget directly into any webpage — a news article, policy document, or campaign page. Participants can vote without leaving your site. All votes feed into the same consensus analysis. See the <a href="{{ url_for('partner.hub') }}" class="text-blue-600 hover:underline font-medium">publisher hub</a> for setup instructions.</p>
-      </details>
-
-      <details class="group py-5">
-        <summary class="flex w-full cursor-pointer list-none items-start justify-between text-left gap-6">
-          <span class="text-base font-semibold text-gray-900">Can I keep my discussion private or invite-only?</span>
-          <span class="flex-shrink-0 text-gray-400 mt-0.5 transition-transform duration-200 group-open:rotate-180">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-          </span>
-        </summary>
-        <p class="mt-4 text-sm text-gray-600 leading-relaxed pr-8">Yes. When creating a discussion you choose the visibility: <strong>Public</strong> (anyone can find and join), <strong>Unlisted</strong> (accessible via link but not listed publicly), <strong>Invite-only</strong> (participants must be invited by email), or <strong>Private</strong> (only accessible to the creator and invited participants). This applies to Programmes too.</p>
       </details>
 
       <details class="group py-5">
@@ -1125,19 +1085,13 @@
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
     <h2 class="text-2xl font-bold text-gray-900 text-center mb-2">Explore further</h2>
     <p class="text-gray-500 text-center text-sm mb-8">See it in action, read the docs, or set up an embed.</p>
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {% if demo_discussion %}
       <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}"
-         class="block rounded-xl border border-gray-200 p-5 hover:border-blue-300 hover:shadow-sm transition-all group">
-        <p class="text-xs font-semibold text-blue-600 mb-1.5 uppercase tracking-wide">Live demo</p>
-        <h3 class="font-semibold text-gray-900 text-sm group-hover:text-blue-700 transition-colors">See a live discussion</h3>
-        <p class="text-xs text-gray-500 mt-1">Vote on statements and see real results</p>
-      </a>
-      <a href="{{ url_for('consensus.view_results', discussion_id=demo_discussion.id) }}"
          class="block rounded-xl border border-gray-200 p-5 hover:border-emerald-300 hover:shadow-sm transition-all group">
         <p class="text-xs font-semibold text-emerald-600 mb-1.5 uppercase tracking-wide">Live demo</p>
-        <h3 class="font-semibold text-gray-900 text-sm group-hover:text-emerald-700 transition-colors">See consensus analysis</h3>
-        <p class="text-xs text-gray-500 mt-1">Clusters, bridges, and divisions revealed</p>
+        <h3 class="font-semibold text-gray-900 text-sm group-hover:text-emerald-700 transition-colors">Try the live demo</h3>
+        <p class="text-xs text-gray-500 mt-1">Vote on statements, then see how opinion clusters</p>
       </a>
       {% endif %}
       <a href="{{ url_for('help.programmes') }}"
@@ -1169,7 +1123,7 @@
       {% if current_user.is_authenticated %}
       <a href="{{ url_for('discussions.create_discussion') }}"
          class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-blue-700 shadow-sm hover:bg-blue-50 transition-colors min-h-11">
-        Start a Discussion
+        Start a discussion
         <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
