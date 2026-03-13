@@ -26,6 +26,7 @@ import secrets
 import json
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import validate_csrf, CSRFError
+from wtforms import ValidationError as WTFormsValidationError
 try:
     import posthog
 except ImportError:
@@ -831,7 +832,7 @@ def vote_statement(statement_id):
         )
         try:
             validate_csrf(csrf_token)
-        except CSRFError:
+        except (CSRFError, WTFormsValidationError):
             if is_form_post:
                 flash('Your session has expired. Please refresh and try again.', 'error')
                 return redirect(url_for('statements.view_statement', statement_id=statement_id))

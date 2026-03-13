@@ -20,7 +20,7 @@
 
   <div class="mb-4" style="background: #f8f9fa; padding: 16px; border-radius: 8px">
     <div class="vote-buttons-grid" role="group" aria-label="Vote options for this statement" data-statement-id="{{ statement.id }}" data-quick-response-url="{{ url_for('statements.quick_response', statement_id=statement.id) }}">
-      <button type="button" onclick="voteOnStatement({{ statement.id }}, 1)" class="vote-btn vote-btn-agree" data-vote="1" aria-label="Agree with this statement">
+      <button type="button" class="vote-btn vote-btn-agree" data-vote="1" aria-label="Agree with this statement">
         <span class="vote-loading">
           <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
             <circle style="opacity: 0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -33,7 +33,7 @@
         </span>
       </button>
 
-      <button type="button" onclick="voteOnStatement({{ statement.id }}, -1)" class="vote-btn vote-btn-disagree" data-vote="-1" aria-label="Disagree with this statement">
+      <button type="button" class="vote-btn vote-btn-disagree" data-vote="-1" aria-label="Disagree with this statement">
         <span class="vote-loading">
           <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
             <circle style="opacity: 0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -46,7 +46,7 @@
         </span>
       </button>
 
-      <button type="button" onclick="voteOnStatement({{ statement.id }}, 0)" class="vote-btn vote-btn-unsure" data-vote="0" aria-label="Unsure about this statement">
+      <button type="button" class="vote-btn vote-btn-unsure" data-vote="0" aria-label="Unsure about this statement">
         <span class="vote-loading">
           <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
             <circle style="opacity: 0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>

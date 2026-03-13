@@ -629,6 +629,18 @@
       }
   }
 
+  // Delegated click handler for vote buttons (replaces inline onclick removed for CSP compliance)
+  document.addEventListener('click', function(e) {
+      const btn = e.target.closest('.vote-btn');
+      if (!btn) return;
+      const grid = btn.closest('[data-statement-id]');
+      if (!grid) return;
+      const statementId = parseInt(grid.getAttribute('data-statement-id'), 10);
+      const voteValue = parseInt(btn.getAttribute('data-vote'), 10);
+      if (isNaN(statementId) || isNaN(voteValue)) return;
+      voteOnStatement(statementId, voteValue);
+  });
+
   // Keyboard Shortcuts for Power Users
   document.addEventListener('keydown', function(e) {
       // Only activate if not typing in an input/textarea
