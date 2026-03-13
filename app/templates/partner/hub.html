@@ -127,7 +127,7 @@
                   </div>
                   <div class="flex items-center justify-between text-xs text-gray-500">
                     <span>1,285 votes</span>
-                    <a href="#" class="text-blue-600 font-medium hover:underline" onclick="resetDemo(); return false;">Vote again</a>
+                    <a href="#" id="demoResetBtn" class="text-blue-600 font-medium hover:underline">Vote again</a>
                   </div>
                 </div>
               </div>
@@ -188,6 +188,7 @@
                 document.getElementById('btnAgree').addEventListener('click', function() { showResults('Agree'); });
                 document.getElementById('btnDisagree').addEventListener('click', function() { showResults('Disagree'); });
                 document.getElementById('btnUnsure').addEventListener('click', function() { showResults('Unsure'); });
+                document.getElementById('demoResetBtn').addEventListener('click', function(e) { e.preventDefault(); window.resetDemo(); });
                 scheduleAuto();
               })();
               </script>
