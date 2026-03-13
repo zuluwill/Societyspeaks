@@ -918,8 +918,14 @@ def manage_preferences():
                 try:
                     subscriber.user_id = current_user.id
                     db.session.commit()
-                except Exception:
+                    current_app.logger.info(
+                        f"Linked daily subscriber {subscriber.id} (email={subscriber.email}) to user {current_user.id}"
+                    )
+                except Exception as e:
                     db.session.rollback()
+                    current_app.logger.warning(
+                        f"Failed to link daily subscriber to user (subscriber_id={subscriber.id}, user_id={current_user.id}): {e}"
+                    )
 
     if not subscriber:
         flash('Please use the link from your weekly digest email to manage preferences.', 'info')
