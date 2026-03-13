@@ -905,9 +905,21 @@ def manage_preferences():
         if subscriber_id:
             subscriber = db.session.get(DailyQuestionSubscriber,subscriber_id)
 
-    # Also check if logged-in user has a subscription
+    # Also check if logged-in user has a subscription (by user_id, then by email fallback)
     if not subscriber and current_user.is_authenticated:
         subscriber = DailyQuestionSubscriber.query.filter_by(user_id=current_user.id).first()
+        if not subscriber:
+            # Fallback: subscribers created via email before account was linked
+            subscriber = DailyQuestionSubscriber.query.filter_by(
+                email=current_user.email
+            ).first()
+            if subscriber and not subscriber.user_id:
+                # Opportunistically link the subscriber to the account
+                try:
+                    subscriber.user_id = current_user.id
+                    db.session.commit()
+                except Exception:
+                    db.session.rollback()
 
     if not subscriber:
         flash('Please use the link from your weekly digest email to manage preferences.', 'info')
