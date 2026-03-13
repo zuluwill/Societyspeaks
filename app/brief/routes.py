@@ -54,18 +54,6 @@ PREFERENCES_TOKEN_EXPIRE_HOURS = 168  # 7 days
 # Helper Functions
 # =============================================================================
 
-def is_tts_available():
-    """Check if TTS is available (XTTS package installed)."""
-    try:
-        from app.brief.xtts_client import XTTSClient
-        client = XTTSClient()
-        return client.available
-    except ImportError:
-        logger.debug("XTTS package not installed")
-        return False
-    except Exception as e:
-        logger.warning(f"Error checking TTS availability: {e}")
-        return False
 
 
 def get_subscriber_status():
@@ -162,7 +150,7 @@ def today():
                 is_today=False,
                 waiting_for_today=True,
                 show_email_capture=(not is_subscriber),
-                tts_available=is_tts_available(),
+                tts_available=False,
                 latest_weekly=latest_weekly
             )
         else:
@@ -184,7 +172,7 @@ def today():
         is_subscriber=is_subscriber,
         is_today=True,
         show_email_capture=(not is_subscriber),
-        tts_available=is_tts_available(),
+        tts_available=False,
         latest_weekly=latest_weekly
     )
 
@@ -223,7 +211,7 @@ def view_date(date_str):
         is_subscriber=is_subscriber,
         is_today=(brief_date == date.today()),
         show_email_capture=(not is_subscriber),
-        tts_available=is_tts_available(),
+        tts_available=False,
         latest_weekly=latest_weekly
     )
 
@@ -316,7 +304,7 @@ def weekly_latest():
         is_subscriber=is_subscriber,
         is_today=False,
         show_email_capture=(not is_subscriber),
-        tts_available=is_tts_available()
+        tts_available=False
     )
 
 
@@ -353,7 +341,7 @@ def weekly_by_date(date_str):
         is_subscriber=is_subscriber,
         is_today=False,
         show_email_capture=(not is_subscriber),
-        tts_available=is_tts_available()
+        tts_available=False
     )
 
 
@@ -782,9 +770,8 @@ def generate_brief_audio(brief_id):
 @limiter.limit("30 per minute")
 def get_audio_job_status(job_id):
     """Get status of audio generation job"""
-    from app.brief.audio_generator import audio_generator
     from app.models import AudioGenerationJob
-    
+
     job = AudioGenerationJob.query.get_or_404(job_id)
     
     return jsonify(job.to_dict())
