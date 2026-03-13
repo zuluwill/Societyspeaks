@@ -117,6 +117,10 @@ def get_image_from_storage(filename):
                 mime_type = 'image/png'
             elif filename.lower().endswith('.gif'):
                 mime_type = 'image/gif'
+            elif filename.lower().endswith('.svg'):
+                mime_type = 'image/svg+xml'
+            elif filename.lower().endswith('.webp'):
+                mime_type = 'image/webp'
             return file_like, mime_type
         return None, None
     except Exception as e:

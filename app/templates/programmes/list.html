@@ -29,8 +29,7 @@
   {# ── Programme grid ── #}
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for programme in programmes.items %}
-    <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}"
-       class="group flex flex-col bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all overflow-hidden">
+    <div class="group relative flex flex-col bg-white rounded-xl border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all overflow-hidden">
       {% if programme.logo_url %}
       <div class="h-28 bg-gray-50 border-b border-gray-100 flex items-center justify-center p-4">
         <img src="{{ programme.logo_url }}" alt="{{ programme.name }}" class="max-h-full max-w-full object-contain">
@@ -40,7 +39,10 @@
       {% endif %}
       <div class="flex flex-col flex-1 p-5">
         <div class="flex items-start justify-between gap-2 mb-2">
-          <h2 class="text-base font-semibold text-gray-900 group-hover:text-blue-600 leading-snug transition-colors">{{ programme.name }}</h2>
+          <h2 class="text-base font-semibold text-gray-900 group-hover:text-blue-600 leading-snug transition-colors">
+            <a href="{{ url_for('programmes.view_programme', slug=programme.slug) }}"
+               class="after:absolute after:inset-0">{{ programme.name }}</a>
+          </h2>
           {% if programme.status == 'archived' %}
           <span class="flex-shrink-0 text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full">Archived</span>
           {% endif %}
@@ -52,14 +54,15 @@
         {% endif %}
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400 pt-3 border-t border-gray-100">
           {% if programme.company_profile %}
-          <span class="inline-flex items-center gap-1 font-medium text-gray-600">
+          <a href="{{ url_for('profiles.view_company_profile', company_name=programme.company_profile.slug) }}"
+             class="relative z-10 inline-flex items-center gap-1 font-medium text-gray-600 hover:text-blue-600 transition-colors">
             {% if programme.company_profile.logo %}
             <img src="{{ url_for('profiles.get_image', filename=programme.company_profile.logo) }}"
                  alt="{{ programme.company_profile.company_name }}"
                  class="h-4 w-4 rounded-full object-cover">
             {% endif %}
             {{ programme.company_profile.company_name }}
-          </span>
+          </a>
           {% endif %}
           <span class="inline-flex items-center gap-1">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -85,7 +88,7 @@
           {% endif %}
         </div>
       </div>
-    </a>
+    </div>
     {% endfor %}
   </div>
 

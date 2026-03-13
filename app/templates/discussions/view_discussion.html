@@ -60,6 +60,17 @@
           <span class="ml-1 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">{{ discussion.programme_phase }}</span>
           {% endif %}
         </a>
+        {% if discussion.programme.company_profile %}
+        <a href="{{ url_for('profiles.view_company_profile', company_name=discussion.programme.company_profile.slug) }}"
+           class="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-800 transition-colors">
+          {% if discussion.programme.company_profile.logo %}
+          <img src="{{ url_for('profiles.get_image', filename=discussion.programme.company_profile.logo) }}"
+               alt="{{ discussion.programme.company_profile.company_name }}"
+               class="h-3.5 w-3.5 rounded-full object-cover">
+          {% endif %}
+          {{ discussion.programme.company_profile.company_name }}
+        </a>
+        {% endif %}
         {% endif %}
         <a
           href="{{ url_for('discussions.search_discussions') }}"

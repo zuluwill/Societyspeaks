@@ -1,7 +1,7 @@
 from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, session, url_for, jsonify, send_file
 from flask_login import current_user, login_required
 from sqlalchemy import distinct, func
-from sqlalchemy.orm import load_only
+from sqlalchemy.orm import load_only, joinedload
 from io import BytesIO
 
 from app import cache, db, limiter
@@ -246,7 +246,9 @@ def _assign_programme_fields(programme, form):
 @programmes_bp.route('/')
 def list_programmes():
     page = request.args.get('page', 1, type=int)
-    programmes = Programme.query.filter(
+    programmes = Programme.query.options(
+        joinedload(Programme.company_profile)
+    ).filter(
         Programme.status == 'active',
         Programme.visibility == 'public',
     ).order_by(Programme.created_at.desc()).paginate(page=page, per_page=12, error_out=False)
