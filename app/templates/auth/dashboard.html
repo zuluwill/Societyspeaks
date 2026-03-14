@@ -388,14 +388,34 @@
                     {% endif %}
                 </div>
                 {% if has_briefings_plan %}
-                <div class="text-xs text-gray-500 mb-3">
-                    <p>You have an active briefings plan. View and manage your briefings below.</p>
+                <div class="text-xs text-gray-500 space-y-1 mb-3">
+                    {% if active_subscription and active_subscription.plan %}
+                    <p>Plan: <span class="font-medium text-gray-700">{{ active_subscription.plan.name }}</span></p>
+                    {% endif %}
+                    {% if active_subscription %}
+                        {% if active_subscription.status == 'trialing' and active_subscription.trial_end %}
+                        <p>Trial ends: <span class="font-medium text-amber-600">{{ active_subscription.trial_end.strftime('%d %b %Y') }}</span></p>
+                        {% elif active_subscription.cancel_at_period_end and active_subscription.current_period_end %}
+                        <p class="text-amber-600 font-medium">Cancels: {{ active_subscription.current_period_end.strftime('%d %b %Y') }}</p>
+                        {% elif active_subscription.current_period_end %}
+                        <p>Renews: <span class="font-medium text-gray-700">{{ active_subscription.current_period_end.strftime('%d %b %Y') }}</span></p>
+                        {% endif %}
+                    {% endif %}
                 </div>
-                <a href="{{ url_for('briefing.list_briefings') }}"
-                   class="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-700 font-medium py-1.5 px-3 rounded-md border border-indigo-200 hover:bg-indigo-50 transition-colors">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6m-6-4h3"/></svg>
-                    Go to my Briefings
-                </a>
+                <div class="flex flex-col gap-2">
+                    <a href="{{ url_for('briefing.list_briefings') }}"
+                       class="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-700 font-medium py-1.5 px-3 rounded-md border border-indigo-200 hover:bg-indigo-50 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6m-6-4h3"/></svg>
+                        Go to my Briefings
+                    </a>
+                    {% if active_subscription and active_subscription.stripe_subscription_id %}
+                    <a href="{{ url_for('billing.customer_portal') }}"
+                       class="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 font-medium py-1.5 px-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                        Manage Billing
+                    </a>
+                    {% endif %}
+                </div>
                 {% else %}
                 <div class="text-xs text-gray-500 mb-3">
                     <p>Get personalised AI-curated briefings delivered to your inbox. Set your topics, sources, and schedule.</p>

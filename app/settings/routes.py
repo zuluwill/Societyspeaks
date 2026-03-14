@@ -4,6 +4,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from app import db
 from app.models import User
 from .forms import ChangePasswordForm, NotificationPreferencesForm, DeleteAccountForm
+from app.billing.service import get_active_subscription
 
 settings_bp = Blueprint('settings', __name__)
 
@@ -37,10 +38,13 @@ def view_settings():
         notif_form.discussion_response_notifications.data = current_user.discussion_response_notifications
         notif_form.weekly_digest_enabled.data = current_user.weekly_digest_enabled
 
+    active_subscription = get_active_subscription(current_user)
+
     return render_template('settings/settings.html',
                            form=password_form,
                            notif_form=notif_form,
-                           delete_form=delete_form)
+                           delete_form=delete_form,
+                           active_subscription=active_subscription)
 
 @settings_bp.route('/change-password', methods=['POST'])
 @login_required

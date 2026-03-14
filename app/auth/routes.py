@@ -417,7 +417,8 @@ def dashboard():
 
     brief_sub = DailyBriefSubscriber.query.filter_by(email=current_user.email).first()
     dq_sub = DailyQuestionSubscriber.query.filter_by(email=current_user.email).first()
-    has_briefings_plan = bool(get_active_subscription(current_user))
+    active_subscription = get_active_subscription(current_user)
+    has_briefings_plan = bool(active_subscription)
 
     return render_template(
         'auth/dashboard.html',
@@ -431,6 +432,7 @@ def dashboard():
         brief_sub=brief_sub,
         dq_sub=dq_sub,
         has_briefings_plan=has_briefings_plan,
+        active_subscription=active_subscription,
     )
 
 
