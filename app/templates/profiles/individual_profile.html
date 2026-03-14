@@ -93,7 +93,7 @@
                     {% if profile.bio %}
                     <div class="mb-4">
                         <p class="text-gray-600 text-base md:text-lg line-clamp-4 md:line-clamp-none" id="profile-description">{{ profile.bio }}</p>
-                        <button onclick="toggleProfileDescription()" id="read-more-btn" aria-expanded="false" aria-controls="profile-description" class="md:hidden text-blue-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded">Read more</button>
+                        <button id="read-more-btn" aria-expanded="false" aria-controls="profile-description" class="md:hidden text-blue-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded">Read more</button>
                     </div>
                     {% endif %}
 
@@ -247,13 +247,17 @@
     </div>
 </div>
 
-<script>
-function toggleProfileDescription() {
-    const desc = document.getElementById('profile-description');
+<script nonce="{{ csp_nonce() }}">
+(function() {
     const btn = document.getElementById('read-more-btn');
-    const isClamped = desc.classList.toggle('line-clamp-4');
-    btn.textContent = isClamped ? 'Read more' : 'Read less';
-    btn.setAttribute('aria-expanded', String(!isClamped));
-}
+    if (btn) {
+        btn.addEventListener('click', function() {
+            const desc = document.getElementById('profile-description');
+            const isClamped = desc.classList.toggle('line-clamp-4');
+            btn.textContent = isClamped ? 'Read more' : 'Read less';
+            btn.setAttribute('aria-expanded', String(!isClamped));
+        });
+    }
+})();
 </script>
 {% endblock %}
