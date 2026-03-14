@@ -1,0 +1,20 @@
+/* Read-more utility classes kept outside Tailwind build to avoid purge issues. */
+.read-more-target--collapsed {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+}
+
+@media (min-width: 768px) {
+  .read-more-target--collapsed {
+    overflow: visible;
+    display: block;
+    -webkit-line-clamp: unset;
+    -webkit-box-orient: initial;
+  }
+
+  .read-more-toggle {
+    display: none;
+  }
+}

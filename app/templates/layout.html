@@ -89,6 +89,10 @@
       rel="stylesheet"
     />
     <link
+      href="{{ url_for('static', filename='css/read-more-toggle.css') }}"
+      rel="stylesheet"
+    />
+    <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css"
     />
@@ -1342,6 +1346,7 @@
     <script src="{{ url_for('static', filename='js/brief-audio.js') }}"></script>
     <script src="{{ url_for('static', filename='js/listen_with.js') }}"></script>
     <script src="{{ url_for('static', filename='js/code-copy.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/read-more-toggle.js') }}"></script>
     <!-- Global handlers replacing unsafe-inline patterns (CSP compliance) -->
     <script nonce="{{ csp_nonce() }}">
     (function() {

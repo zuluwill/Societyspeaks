@@ -24,7 +24,7 @@
         <div class="absolute bottom-0 left-1/3 w-64 h-64 rounded-full bg-indigo-900 opacity-10"></div>
         <div class="absolute top-4 left-8 w-24 h-24 rounded-full bg-blue-400 opacity-10"></div>
       </div>
-      {% if programme.status == 'archived' %}
+      {% if programme.status == 'archived' and not (can_edit or can_steward) %}
       <div class="absolute top-3 right-3">
         <span class="px-2.5 py-1 text-xs font-semibold bg-yellow-400 text-yellow-900 rounded-full shadow">Archived</span>
       </div>
@@ -98,9 +98,10 @@
       {# Description with mobile read-more #}
       {% if programme.description %}
       <div class="mb-3">
-        <p class="text-gray-700 text-sm sm:text-base leading-relaxed line-clamp-4 md:line-clamp-none" id="programme-description">{{ programme.description }}</p>
-        <button id="prog-read-more-btn" aria-expanded="false" aria-controls="programme-description"
-                class="md:hidden text-blue-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded">
+        <p class="text-gray-700 text-sm sm:text-base leading-relaxed read-more-target--collapsed" id="programme-description">{{ programme.description }}</p>
+        <button data-read-more-btn aria-expanded="false" aria-controls="programme-description"
+                type="button"
+                class="read-more-toggle text-blue-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded">
           Read more
         </button>
       </div>
@@ -110,7 +111,7 @@
       {% if programme.company_profile %}
       <div>
         <a href="{{ url_for('profiles.view_company_profile', company_name=programme.company_profile.slug) }}"
-           class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors group">
+           class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-blue-600 transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded">
           {% if programme.company_profile.logo %}
           <img src="{{ url_for('profiles.get_image', filename=programme.company_profile.logo) }}"
                alt="{{ programme.company_profile.company_name }}"
@@ -202,7 +203,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
       {% for discussion in discussions.items %}
       <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
-         class="group block border border-gray-200 rounded-xl p-4 hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm transition-all">
+         class="group block border border-gray-200 rounded-xl p-4 hover:border-blue-200 hover:bg-blue-50 hover:shadow-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
         <div class="flex items-start gap-3">
           <div class="mt-0.5 w-8 h-8 rounded-lg bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center flex-shrink-0 transition-colors">
             <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,17 +236,17 @@
     <div class="mt-6 flex justify-center gap-2">
       {% if discussions.has_prev %}
       <a href="{{ url_for('programmes.view_programme', slug=programme.slug, page=discussions.prev_num, theme=selected_theme, phase=selected_phase) }}"
-         class="inline-flex items-center gap-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+         class="inline-flex items-center gap-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
         Previous
       </a>
       {% endif %}
       <span class="px-3 py-2 text-sm text-gray-500">Page {{ discussions.page }} of {{ discussions.pages }}</span>
       {% if discussions.has_next %}
       <a href="{{ url_for('programmes.view_programme', slug=programme.slug, page=discussions.next_num, theme=selected_theme, phase=selected_phase) }}"
-         class="inline-flex items-center gap-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors">
+         class="inline-flex items-center gap-1 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1">
         Next
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7 7-7" style="transform: rotate(90deg) translateX(-4px)"/></svg>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
       </a>
       {% endif %}
     </div>
@@ -273,17 +274,4 @@
 
 </div>
 
-<script nonce="{{ csp_nonce() }}">
-(function() {
-  var btn = document.getElementById('prog-read-more-btn');
-  if (btn) {
-    btn.addEventListener('click', function() {
-      var desc = document.getElementById('programme-description');
-      var isClamped = desc.classList.toggle('line-clamp-4');
-      btn.textContent = isClamped ? 'Read more' : 'Read less';
-      btn.setAttribute('aria-expanded', String(!isClamped));
-    });
-  }
-})();
-</script>
 {% endblock %}
