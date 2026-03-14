@@ -969,35 +969,19 @@ def send_discussion_notification_email(user, discussion, notification_type: str,
             subject = f"Activity in your discussion"
             message = f"There's been activity in your discussion '{discussion.title}'"
 
-        # Build simple HTML email
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; border-bottom: 2px solid #1e40af; padding-bottom: 20px; margin-bottom: 20px;">
-                <h1 style="margin: 0; font-size: 24px; color: #1e40af;">Society Speaks</h1>
-            </div>
-            
-            <p>Hi {user.username or 'there'},</p>
-            
-            <p>{message}</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-                <a href="{discussion_url}" style="background-color: #1e40af; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600;">View Discussion</a>
-            </div>
-            
-            <p style="color: #6b7280; font-size: 14px;">
-                You're receiving this because you created this discussion and have notifications enabled.
-            </p>
-            
-            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
-            
-            <p style="color: #9ca3af; font-size: 12px; text-align: center;">
-                Society Speaks - Sense-making, not sensationalism
-            </p>
-        </body>
-        </html>
-        """
+        # Render using the standard base email template
+        settings_url = f"{base_url}/settings"
+        html_content = render_template(
+            'emails/discussion_notification.html',
+            username=user.username or 'there',
+            subject=subject,
+            message=message,
+            discussion_title=discussion.title,
+            discussion_url=discussion_url,
+            notification_type=notification_type,
+            settings_url=settings_url,
+            base_url=base_url,
+        )
 
         email_data = {
             'from': client.from_email,
