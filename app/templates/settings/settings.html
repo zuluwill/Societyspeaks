@@ -17,6 +17,20 @@
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8">
     {# Settings Card #}
     <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+
+        {# Flash Messages #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+            <div class="p-4 mb-4 rounded-lg {{ 'bg-green-100 text-green-700' if category == 'success' else 'bg-red-100 text-red-700' }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
         {# Password Change Section #}
         <div class="mb-8">
             <h3 class="text-xl font-semibold text-gray-900 mb-4">Change Password</h3>
@@ -68,7 +82,6 @@
                     </div>
                 </div>
 
-                {# Submit Button #}
                 <button type="submit" 
                         class="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg 
                                hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center min-h-11">
@@ -81,26 +94,13 @@
             </form>
         </div>
 
-        {# Flash Messages #}
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div class="mt-6">
-            {% for category, message in messages %}
-            <div class="p-4 mb-4 rounded-lg {{ 'bg-green-100 text-green-700' if category == 'success' else 'bg-red-100 text-red-700' }}">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% endwith %}
-
         {# Email Notification Preferences Section #}
         <div class="mt-12 pt-8 border-t border-gray-200">
             <h3 class="text-xl font-semibold text-gray-900 mb-2">Email Notifications</h3>
             <p class="text-gray-600 mb-6">Choose which email notifications you'd like to receive.</p>
             
             <form action="{{ url_for('settings.view_settings') }}" method="POST">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ notif_form.hidden_tag() }}
                 <input type="hidden" name="update_notifications" value="1">
                 
                 <div class="space-y-4">
@@ -108,8 +108,8 @@
                     <label class="flex items-start cursor-pointer group">
                         <div class="relative flex items-center h-6">
                             <input type="checkbox" 
-                                   name="email_notifications" 
-                                   {% if current_user.email_notifications %}checked{% endif %}
+                                   name="{{ notif_form.email_notifications.name }}"
+                                   {% if notif_form.email_notifications.data %}checked{% endif %}
                                    class="sr-only peer"
                                    id="email_notifications">
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -125,8 +125,8 @@
                         <label class="flex items-start cursor-pointer group">
                             <div class="relative flex items-center h-5">
                                 <input type="checkbox" 
-                                       name="discussion_participant_notifications" 
-                                       {% if current_user.discussion_participant_notifications %}checked{% endif %}
+                                       name="{{ notif_form.discussion_participant_notifications.name }}"
+                                       {% if notif_form.discussion_participant_notifications.data %}checked{% endif %}
                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
                             </div>
                             <div class="ml-3">
@@ -139,8 +139,8 @@
                         <label class="flex items-start cursor-pointer group">
                             <div class="relative flex items-center h-5">
                                 <input type="checkbox" 
-                                       name="discussion_response_notifications" 
-                                       {% if current_user.discussion_response_notifications %}checked{% endif %}
+                                       name="{{ notif_form.discussion_response_notifications.name }}"
+                                       {% if notif_form.discussion_response_notifications.data %}checked{% endif %}
                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
                             </div>
                             <div class="ml-3">
@@ -153,8 +153,8 @@
                         <label class="flex items-start cursor-pointer group">
                             <div class="relative flex items-center h-5">
                                 <input type="checkbox" 
-                                       name="weekly_digest_enabled" 
-                                       {% if current_user.weekly_digest_enabled %}checked{% endif %}
+                                       name="{{ notif_form.weekly_digest_enabled.name }}"
+                                       {% if notif_form.weekly_digest_enabled.data %}checked{% endif %}
                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
                             </div>
                             <div class="ml-3">
@@ -181,6 +181,9 @@
         <div class="mt-12 pt-8 border-t border-gray-200">
             <h3 class="text-xl font-semibold text-gray-900 mb-4">Delete Account</h3>
             <p class="text-gray-600 mb-4">Once you delete your account, there is no going back. Please be certain.</p>
+            <form id="delete-account-form" action="{{ url_for('settings.delete_account') }}" method="POST" class="hidden">
+                {{ delete_form.hidden_tag() }}
+            </form>
             <button id="confirm-delete-btn"
                     class="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg 
                            hover:bg-red-700 transition-colors duration-200 flex items-center min-h-11">
@@ -195,12 +198,11 @@
 </div>
 
 <script nonce="{{ csp_nonce() }}">
-function confirmDelete() {
+document.getElementById('confirm-delete-btn')?.addEventListener('click', function() {
     if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-        window.location.href = "{{ url_for('settings.delete_account') }}";
+        document.getElementById('delete-account-form').submit();
     }
-}
-document.getElementById('confirm-delete-btn')?.addEventListener('click', confirmDelete);
+});
 </script>
 
 {% endblock %}
