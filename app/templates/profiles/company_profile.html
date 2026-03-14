@@ -49,13 +49,13 @@
     </div>
 
     <!-- Company Logo and Info -->
-    <div class="relative -mt-20 px-8">
+    <div class="relative -mt-20 px-4 md:px-8">
         <div class="flex flex-col md:flex-row">
             <!-- Company Logo -->
-            <div class="w-40 h-40 bg-white rounded-lg overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
-                <img 
-                    src="{{ url_for('profiles.get_image', filename=profile.logo) if profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}" 
-                    alt="Company Logo" 
+            <div class="w-32 h-32 md:w-40 md:h-40 bg-white rounded-lg overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
+                <img
+                    src="{{ url_for('profiles.get_image', filename=profile.logo) if profile.logo else url_for('main.serve_asset', filename='images/default-logo.png') }}"
+                    alt="Company Logo"
                     class="w-full h-full object-cover"
                     onerror="this.onerror=null; this.src='{{ url_for('main.serve_asset', filename='images/default-logo.png') }}';"
                 >
@@ -63,23 +63,19 @@
 
             <!-- Company Info Card -->
             <div class="mt-4 md:ml-8 flex-grow">
-                <div class="bg-white rounded-lg shadow-sm p-6">
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <h1 class="text-3xl font-bold text-gray-900">{{ profile.company_name }}</h1>
-                            {% if profile.description %}
-                                <p class="text-gray-600 text-lg mt-2">{{ profile.description }}</p>
-                            {% endif %}
-                        </div>
-                        <div class="flex items-center gap-3">
+                <div class="bg-white rounded-lg shadow-sm p-4 md:p-6">
+                    <!-- Title row: name + action buttons -->
+                    <div class="flex justify-between items-start gap-3 mb-3">
+                        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">{{ profile.company_name }}</h1>
+                        <div class="flex items-center gap-2 flex-shrink-0">
                             <!-- Edit Profile Button (only visible to profile owner) -->
                             {% if current_user.is_authenticated and current_user.profile_type == 'company' and current_user.company_profile and current_user.company_profile.id == profile.id %}
-                            <a href="{{ url_for('profiles.edit_company_profile', company_name=profile.slug) }}" 
-                               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <a href="{{ url_for('profiles.edit_company_profile', company_name=profile.slug) }}"
+                               class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                                <svg class="w-4 h-4 md:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
-                                Edit Profile
+                                <span class="hidden md:inline">Edit Profile</span>
                             </a>
                             {% endif %}
                             <!-- Share Button -->
@@ -93,9 +89,17 @@
                         </div>
                     </div>
 
+                    <!-- Description (truncated on mobile with toggle) -->
+                    {% if profile.description %}
+                    <div class="mb-4">
+                        <p class="text-gray-600 text-base md:text-lg line-clamp-4 md:line-clamp-none" id="profile-description">{{ profile.description }}</p>
+                        <button onclick="toggleProfileDescription()" id="read-more-btn" class="md:hidden text-blue-600 text-sm mt-1 hover:underline focus:outline-none">Read more</button>
+                    </div>
+                    {% endif %}
+
                     <!-- Location -->
                     <div class="flex items-center text-gray-600">
-                        <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="h-5 w-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
@@ -291,4 +295,14 @@
             <p class="text-gray-600">No discussions started yet.</p>
         {% endif %}
     </div>
-    {% endblock %}
+</div>
+
+<script>
+function toggleProfileDescription() {
+    const desc = document.getElementById('profile-description');
+    const btn = document.getElementById('read-more-btn');
+    const isClamped = desc.classList.toggle('line-clamp-4');
+    btn.textContent = isClamped ? 'Read more' : 'Read less';
+}
+</script>
+{% endblock %}
