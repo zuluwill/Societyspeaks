@@ -93,7 +93,7 @@
                     {% if profile.description %}
                     <div class="mb-4">
                         <p class="text-gray-600 text-base md:text-lg line-clamp-4 md:line-clamp-none" id="profile-description">{{ profile.description }}</p>
-                        <button onclick="toggleProfileDescription()" id="read-more-btn" class="md:hidden text-blue-600 text-sm mt-1 hover:underline focus:outline-none">Read more</button>
+                        <button onclick="toggleProfileDescription()" id="read-more-btn" aria-expanded="false" aria-controls="profile-description" class="md:hidden text-blue-600 text-sm mt-1 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 rounded">Read more</button>
                     </div>
                     {% endif %}
 
@@ -303,6 +303,7 @@ function toggleProfileDescription() {
     const btn = document.getElementById('read-more-btn');
     const isClamped = desc.classList.toggle('line-clamp-4');
     btn.textContent = isClamped ? 'Read more' : 'Read less';
+    btn.setAttribute('aria-expanded', String(!isClamped));
 }
 </script>
 {% endblock %}
