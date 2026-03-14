@@ -26,6 +26,20 @@ except ImportError:
 auth_bp = Blueprint('auth', __name__)
 
 
+def _track_posthog(event, user_id, properties=None, flush=False, identify_properties=None):
+    """Fire a PostHog event silently — never raises."""
+    if not (posthog and getattr(posthog, 'project_api_key', None)):
+        return
+    try:
+        posthog.capture(distinct_id=str(user_id), event=event, properties=properties or {})
+        if identify_properties:
+            posthog.identify(distinct_id=str(user_id), properties=identify_properties)
+        if flush:
+            posthog.flush()
+    except Exception as e:
+        current_app.logger.warning(f"PostHog tracking error: {e}")
+
+
 from app import limiter
 
 @auth_bp.route('/verify-email/<token>', methods=['GET'])
@@ -34,16 +48,7 @@ def verify_email(token):
     if user:
         user.email_verified = True
         db.session.commit()
-        if posthog and getattr(posthog, 'project_api_key', None):
-            try:
-                posthog.capture(
-                    distinct_id=str(user.id),
-                    event='email_verified',
-                    properties={'user_id': user.id}
-                )
-                posthog.flush()  # Ensure activation event is sent
-            except Exception as e:
-                current_app.logger.warning(f"PostHog tracking error: {e}")
+        _track_posthog('email_verified', user.id, {'user_id': user.id}, flush=True)
         flash('Your email has been verified! You can now log in.', 'success')
     else:
         flash('That is an invalid or expired token', 'warning')
@@ -182,16 +187,7 @@ def register():
         )
         
         # Track user signup with PostHog
-        if posthog and getattr(posthog, 'project_api_key', None):
-            try:
-                posthog.capture(
-                    distinct_id=str(new_user.id),
-                    event='user_signed_up',
-                    properties={'username': username}
-                )
-                posthog.flush()  # Ensure signup event is sent
-            except Exception as e:
-                current_app.logger.warning(f"PostHog tracking error: {e}")
+        _track_posthog('user_signed_up', new_user.id, {'username': username}, flush=True)
 
         # Generate verification token
         token = new_user.get_reset_token()
@@ -273,16 +269,8 @@ def login():
         login_user(user)
         
         # Track login with PostHog
-        if posthog and getattr(posthog, 'project_api_key', None):
-            try:
-                posthog.capture(
-                    distinct_id=str(user.id),
-                    event='user_logged_in',
-                    properties={'email': user.email}
-                )
-                posthog.identify(distinct_id=str(user.id), properties={'email': user.email, 'username': user.username})
-            except Exception as e:
-                current_app.logger.warning(f"PostHog tracking error: {e}")
+        _track_posthog('user_logged_in', user.id, {'email': user.email},
+                       identify_properties={'email': user.email, 'username': user.username})
         
         # Merge any anonymous votes from this session to the user's account
         fingerprint = session.get('statement_vote_fingerprint')
@@ -531,11 +519,7 @@ def logout():
     session.clear()
     
     # Track logout with PostHog
-    if posthog and getattr(posthog, 'project_api_key', None):
-        try:
-            posthog.capture(distinct_id=user_id, event='user_logged_out')
-        except Exception as e:
-            current_app.logger.warning(f"PostHog tracking error: {e}")
+    _track_posthog('user_logged_out', user_id)
     
     flash("Logged out successfully.", "success")
     return redirect(url_for('main.index'))
@@ -568,15 +552,7 @@ def password_reset_request():
             # Send the password reset email with the generated token
             send_password_reset_email(user, reset_token)
 
-            if posthog and getattr(posthog, 'project_api_key', None):
-                try:
-                    posthog.capture(
-                        distinct_id=str(user.id),
-                        event='password_reset_requested',
-                        properties={'user_id': user.id}
-                    )
-                except Exception as e:
-                    current_app.logger.warning(f"PostHog tracking error: {e}")
+            _track_posthog('password_reset_requested', user.id, {'user_id': user.id})
 
         flash("Password reset instructions have been sent to your email.", "info")
         return redirect(url_for('auth.login'))
@@ -607,15 +583,7 @@ def password_reset(token):
 
         try:
             db.session.commit()  # Save changes to the database
-            if posthog and getattr(posthog, 'project_api_key', None):
-                try:
-                    posthog.capture(
-                        distinct_id=str(user.id),
-                        event='password_reset_completed',
-                        properties={'user_id': user.id}
-                    )
-                except Exception as e:
-                    current_app.logger.warning(f"PostHog tracking error: {e}")
+            _track_posthog('password_reset_completed', user.id, {'user_id': user.id})
             flash("Your password has been reset successfully!", "success")
             return redirect(url_for('auth.login'))
         except Exception as e:

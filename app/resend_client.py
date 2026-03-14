@@ -45,6 +45,65 @@ _RETRYABLE_ERRORS = (
 )
 
 
+def _resend_http_post(
+    api_key: str,
+    body: Any,
+    url: str,
+    max_retries: int = 3,
+    retry_delay: float = 2.0,
+    timeout: int = 30,
+    log_prefix: str = "Resend",
+) -> Tuple[Optional[requests.Response], Optional[str]]:
+    """
+    POST to the Resend API with exponential-backoff retry on transient errors.
+
+    Returns (response, None) on HTTP 200, or (None, error_str) on failure.
+    Logs all warnings and errors internally.
+    """
+    headers = {
+        'Authorization': f'Bearer {api_key}',
+        'Content-Type': 'application/json',
+    }
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(url, json=body, headers=headers, timeout=timeout)
+            if response.status_code == 200:
+                return response, None
+            elif response.status_code == 429:
+                if attempt < max_retries - 1:
+                    wait = retry_delay * (2 ** attempt)
+                    logger.warning(
+                        f"{log_prefix} rate limited — waiting {wait:.1f}s "
+                        f"(attempt {attempt + 1}/{max_retries})"
+                    )
+                    time.sleep(wait)
+                    continue
+                err = f"Rate limited after {max_retries} attempts"
+                logger.error(f"{log_prefix}: {err}")
+                return None, err
+            else:
+                err = f"API error: {response.status_code} - {response.text}"
+                logger.error(f"{log_prefix}: {err}")
+                return None, err
+        except _RETRYABLE_ERRORS as e:
+            if attempt < max_retries - 1:
+                wait = retry_delay * (2 ** attempt)
+                logger.warning(
+                    f"{log_prefix} transient error (attempt {attempt + 1}/{max_retries}): "
+                    f"{type(e).__name__}: {e} — retrying in {wait:.1f}s"
+                )
+                time.sleep(wait)
+            else:
+                err = f"Transient error after {max_retries} attempts: {e}"
+                logger.error(f"{log_prefix}: {err}")
+                return None, err
+        except requests.exceptions.RequestException as e:
+            err = f"Request error (non-retryable): {e}"
+            logger.error(f"{log_prefix}: {err}")
+            return None, err
+    return None, "Max retries exceeded"
+
+
 def resend_post_with_retry(
     api_key: str,
     payload: dict,
@@ -62,48 +121,14 @@ def resend_post_with_retry(
     Returns:
         (success, message_id)  — message_id is None on failure or if Resend omits it.
     """
-    headers = {
-        'Authorization': f'Bearer {api_key}',
-        'Content-Type': 'application/json',
-    }
-    for attempt in range(max_retries):
-        try:
-            response = requests.post(url, json=payload, headers=headers, timeout=timeout)
-            if response.status_code == 200:
-                try:
-                    message_id = response.json().get('id')
-                except Exception:
-                    message_id = None
-                return True, message_id
-            elif response.status_code == 429:
-                if attempt < max_retries - 1:
-                    wait = retry_delay * (2 ** attempt)
-                    logger.warning(
-                        f"Resend rate limited — waiting {wait:.1f}s "
-                        f"(attempt {attempt + 1}/{max_retries})"
-                    )
-                    time.sleep(wait)
-                    continue
-                logger.error(f"Resend rate limited after {max_retries} attempts")
-                return False, None
-            else:
-                logger.error(f"Resend API error: {response.status_code} - {response.text}")
-                return False, None
-        except _RETRYABLE_ERRORS as e:
-            if attempt < max_retries - 1:
-                wait = retry_delay * (2 ** attempt)
-                logger.warning(
-                    f"Resend transient error (attempt {attempt + 1}/{max_retries}): "
-                    f"{type(e).__name__}: {e} — retrying in {wait:.1f}s"
-                )
-                time.sleep(wait)
-            else:
-                logger.error(f"Resend transient error after {max_retries} attempts: {e}")
-                return False, None
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Resend request error (non-retryable): {e}")
-            return False, None
-    return False, None
+    response, _ = _resend_http_post(api_key, payload, url, max_retries, retry_delay, timeout)
+    if response is None:
+        return False, None
+    try:
+        message_id = response.json().get('id')
+    except Exception:
+        message_id = None
+    return True, message_id
 
 
 def resend_batch_with_retry(
@@ -120,42 +145,14 @@ def resend_batch_with_retry(
     Returns:
         (success, sent_count, errors)
     """
-    headers = {
-        'Authorization': f'Bearer {api_key}',
-        'Content-Type': 'application/json',
-    }
-    for attempt in range(max_retries):
-        try:
-            response = requests.post(url, json=payloads, headers=headers, timeout=timeout)
-            if response.status_code == 200:
-                data = response.json()
-                sent = len(data['data']) if 'data' in data else len(payloads)
-                return True, sent, []
-            elif response.status_code == 429:
-                if attempt < max_retries - 1:
-                    wait = retry_delay * (2 ** attempt)
-                    logger.warning(
-                        f"Resend batch rate limited — waiting {wait:.1f}s "
-                        f"(attempt {attempt + 1}/{max_retries})"
-                    )
-                    time.sleep(wait)
-                    continue
-                return False, 0, [f"Rate limited after {max_retries} attempts"]
-            else:
-                return False, 0, [f"API error: {response.status_code} - {response.text}"]
-        except _RETRYABLE_ERRORS as e:
-            if attempt < max_retries - 1:
-                wait = retry_delay * (2 ** attempt)
-                logger.warning(
-                    f"Resend batch transient error (attempt {attempt + 1}/{max_retries}): "
-                    f"{type(e).__name__}: {e} — retrying in {wait:.1f}s"
-                )
-                time.sleep(wait)
-            else:
-                return False, 0, [f"Transient error after {max_retries} attempts: {e}"]
-        except requests.exceptions.RequestException as e:
-            return False, 0, [str(e)]
-    return False, 0, []
+    response, error = _resend_http_post(
+        api_key, payloads, url, max_retries, retry_delay, timeout, log_prefix="Resend batch"
+    )
+    if response is None:
+        return False, 0, [error or "Unknown error"]
+    data = response.json()
+    sent = len(data['data']) if 'data' in data else len(payloads)
+    return True, sent, []
 
 
 class ResendEmailClient:
