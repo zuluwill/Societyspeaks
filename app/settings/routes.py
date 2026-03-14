@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
-from flask_login import login_required, current_user
+from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app, session
+from flask_login import login_required, current_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from app import db
 from app.models import User
@@ -252,8 +252,10 @@ def delete_account():
         db.session.commit()
         
         current_app.logger.info(f"User deleted their account (ID: {user_id})")
-        flash('Your account has been deleted successfully.', 'success')
-        return redirect(url_for('auth.logout'))
+        logout_user()
+        session.clear()
+        flash('Your account has been successfully deleted.', 'success')
+        return redirect(url_for('main.index'))
         
     except Exception as e:
         db.session.rollback()
