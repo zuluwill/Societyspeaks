@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-lg text-center">
+        <div class="flex justify-center">
+            <svg class="w-16 h-16 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+        </div>
+
+        {% if expired %}
+        <h2 class="text-2xl font-bold text-gray-800">Verification Link Expired</h2>
+        <p class="text-gray-600">Your email verification link has expired. Verification links are valid for 24 hours.</p>
+        {% else %}
+        <h2 class="text-2xl font-bold text-gray-800">Invalid Verification Link</h2>
+        <p class="text-gray-600">This verification link is not valid. It may have already been used.</p>
+        {% endif %}
+
+        {% if email and expired %}
+        <form action="{{ url_for('auth.resend_verification') }}" method="POST" class="mt-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="email" value="{{ email }}">
+            <button type="submit"
+                    class="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition min-h-11">
+                Send a New Verification Link
+            </button>
+        </form>
+        {% endif %}
+
+        <p class="text-sm text-gray-500 mt-4">
+            Already verified?
+            <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:underline">Log in</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -354,6 +354,44 @@ class ResendEmailClient:
 
         return success
 
+    def send_verification_email(self, user, verification_url: str) -> bool:
+        """
+        Send a standalone email verification email (used for resends).
+
+        Args:
+            user: User object with email and username
+            verification_url: The full verification URL
+
+        Returns:
+            bool: Success status
+        """
+        try:
+            html = render_template(
+                'emails/verify_email.html',
+                username=user.username or 'there',
+                verification_url=verification_url,
+                base_url=self.base_url
+            )
+        except Exception as e:
+            logger.error(f"Template rendering failed for verify_email: {e}")
+            return False
+
+        email_data = {
+            'from': self.from_email,
+            'to': [user.email],
+            'subject': 'Verify your Society Speaks email address',
+            'html': html
+        }
+
+        success = self._send_with_retry(email_data, use_rate_limit=False)
+
+        if success:
+            logger.info(f"Verification email sent to {user.email}")
+        else:
+            logger.error(f"Failed to send verification email to {user.email}")
+
+        return success
+
     def send_account_activation(self, user, activation_token: str) -> bool:
         """
         Send account activation email.
@@ -892,6 +930,18 @@ def send_welcome_email(user, verification_url: Optional[str] = None) -> bool:
         return client.send_welcome_email(user, verification_url)
     except Exception as e:
         logger.error(f"Failed to send welcome email: {e}")
+        return False
+
+
+def send_verification_email(user, verification_url: str) -> bool:
+    """
+    Send a standalone verification email via Resend (used for resends after expiry).
+    """
+    try:
+        client = get_resend_client()
+        return client.send_verification_email(user, verification_url)
+    except Exception as e:
+        logger.error(f"Failed to send verification email: {e}")
         return False
 
 

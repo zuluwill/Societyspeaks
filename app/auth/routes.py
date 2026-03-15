@@ -9,7 +9,7 @@ from app.storage_utils import get_recent_activity
 from itsdangerous import URLSafeTimedSerializer
 from app.analytics.events import record_event
 # Email functions (migrated from Loops to Resend)
-from app.resend_client import send_password_reset_email, send_welcome_email
+from app.resend_client import send_password_reset_email, send_welcome_email, send_verification_email
 # Profile utilities (not email-related)
 from app.email_utils import get_missing_individual_profile_fields, get_missing_company_profile_fields
 # Billing service for invitation handling
@@ -44,14 +44,41 @@ from app import limiter
 
 @auth_bp.route('/verify-email/<token>', methods=['GET'])
 def verify_email(token):
-    user = User.verify_reset_token(token)
-    if user:
-        user.email_verified = True
-        db.session.commit()
-        _track_posthog('email_verified', user.id, {'user_id': user.id}, flush=True)
+    user, expired = User.verify_email_verification_token(token)
+    if user and not expired:
+        if not user.email_verified:
+            user.email_verified = True
+            db.session.commit()
+            _track_posthog('email_verified', user.id, {'user_id': user.id}, flush=True)
         flash('Your email has been verified! You can now log in.', 'success')
+        return redirect(url_for('auth.login'))
+    return render_template(
+        'auth/verify_email_expired.html',
+        expired=expired,
+        email=user.email if user else None
+    )
+
+
+@auth_bp.route('/resend-verification', methods=['GET', 'POST'])
+@limiter.limit("3/hour")
+def resend_verification():
+    """
+    GET  — resends to the currently logged-in user (used from the post-login banner).
+    POST — resends to the email address submitted in the form (used from the expired-link page).
+    """
+    if request.method == 'GET':
+        user = current_user if current_user.is_authenticated else None
     else:
-        flash('That is an invalid or expired token', 'warning')
+        email = request.form.get('email', '').strip().lower()
+        user = User.query.filter_by(email=email).first() if email else None
+
+    if user and not user.email_verified:
+        token = user.get_email_verification_token()
+        verification_url = url_for('auth.verify_email', token=token, _external=True)
+        send_verification_email(user, verification_url)
+        current_app.logger.info(f"Verification email resent to {user.email}")
+
+    flash('If that address is registered and unverified, a new verification link has been sent.', 'info')
     return redirect(url_for('auth.login'))
 
 
@@ -189,10 +216,10 @@ def register():
         # Track user signup with PostHog
         _track_posthog('user_signed_up', new_user.id, {'username': username}, flush=True)
 
-        # Generate verification token
-        token = new_user.get_reset_token()
+        # Generate email verification token (24-hour expiry, separate salt from password reset)
+        token = new_user.get_email_verification_token()
 
-        # Send welcome/verification email using existing welcome email function
+        # Send welcome email with the verification link embedded
         verification_url = url_for('auth.verify_email', token=token, _external=True)
         send_welcome_email(new_user, verification_url=verification_url)
 
@@ -280,6 +307,10 @@ def login():
                 current_app.logger.info(f"Merged {merged} anonymous votes for user {user.id}")
         
         flash("Logged in successfully!", "success")
+
+        # Nudge unverified users to verify their email
+        if not user.email_verified:
+            flash('Your email address is not verified. Check your inbox or request a new verification link.', 'warning')
 
         # Check for pending steward invite stored before login redirect
         pending_steward_token = session.pop('pending_steward_invite_token', None)

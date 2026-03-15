@@ -50,6 +50,7 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=utcnow_naive)
+    email_verified = db.Column(db.Boolean, default=False, nullable=False)
 
     # New field to indicate profile type
     profile_type = db.Column(db.String(50))  # 'individual' or 'company'
@@ -101,6 +102,32 @@ class User(UserMixin, db.Model):
         except Exception:
             return None
         return db.session.get(User, user_id)
+
+    # Token generation and verification methods for email verification (separate from password reset)
+    def get_email_verification_token(self, expires_sec=86400):
+        """Generates an email verification token valid for expires_sec seconds (default: 24 hours)."""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.id}, salt='email-verification-salt')
+
+    @staticmethod
+    def verify_email_verification_token(token, expiration=86400):
+        """
+        Verifies the email verification token.
+        Returns (user, expired) where:
+          - user is the User object if the token signature is valid, else None
+          - expired is True if the token was valid but has timed out
+        """
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token, salt='email-verification-salt', max_age=expiration)['user_id']
+            return db.session.get(User, user_id), False
+        except Exception as e:
+            # Distinguish between expired and truly invalid tokens
+            try:
+                user_id = s.loads(token, salt='email-verification-salt', max_age=None)['user_id']
+                return db.session.get(User, user_id), True
+            except Exception:
+                return None, False
 
     # Flask-Login required methods
     def is_active(self):

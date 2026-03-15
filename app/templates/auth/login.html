@@ -8,9 +8,18 @@
         {% if messages %}
             <div class="mt-4">
                 {% for category, message in messages %}
-                    <div class="text-sm p-2 rounded-lg text-white bg-{{ 'green-500' if category == 'success' else 'red-500' }} mb-2">
-                        {{ message }}
-                    </div>
+                    {% if category == 'success' %}
+                        <div class="text-sm p-2 rounded-lg text-white bg-green-500 mb-2">{{ message }}</div>
+                    {% elif category == 'warning' %}
+                        <div class="text-sm p-3 rounded-lg text-yellow-800 bg-yellow-50 border border-yellow-200 mb-2">
+                            {{ message }}
+                            <a href="{{ url_for('auth.resend_verification') }}" class="block mt-1 font-semibold underline">Resend verification email</a>
+                        </div>
+                    {% elif category == 'info' %}
+                        <div class="text-sm p-2 rounded-lg text-white bg-blue-500 mb-2">{{ message }}</div>
+                    {% else %}
+                        <div class="text-sm p-2 rounded-lg text-white bg-red-500 mb-2">{{ message }}</div>
+                    {% endif %}
                 {% endfor %}
             </div>
         {% endif %}
