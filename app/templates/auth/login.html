@@ -1,28 +1,21 @@
 {% extends "layout.html" %}
 
+{# Suppress the global flash block — we render flashes inside the card below #}
+{% block flash_messages %}{% endblock %}
+
 {% block content %}
 <div class="max-w-md mx-auto mt-10 bg-white p-8 rounded-lg shadow-md">
     <h2 class="text-2xl font-bold text-gray-800 text-center">Login</h2>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="mt-4">
-                {% for category, message in messages %}
-                    {% if category == 'success' %}
-                        <div class="text-sm p-2 rounded-lg text-white bg-green-500 mb-2">{{ message }}</div>
-                    {% elif category == 'warning' %}
-                        <div class="text-sm p-3 rounded-lg text-yellow-800 bg-yellow-50 border border-yellow-200 mb-2">
-                            {{ message }}
-                            <a href="{{ url_for('auth.resend_verification') }}" class="block mt-1 font-semibold underline">Resend verification email</a>
-                        </div>
-                    {% elif category == 'info' %}
-                        <div class="text-sm p-2 rounded-lg text-white bg-blue-500 mb-2">{{ message }}</div>
-                    {% else %}
-                        <div class="text-sm p-2 rounded-lg text-white bg-red-500 mb-2">{{ message }}</div>
-                    {% endif %}
-                {% endfor %}
-            </div>
-        {% endif %}
+    {% if messages %}
+    <div class="mt-4 space-y-2">
+      {% for category, message in messages %}
+      {%- set _cls = {'success': 'bg-green-500 text-white', 'warning': 'bg-yellow-50 text-yellow-800 border border-yellow-200', 'info': 'bg-blue-500 text-white'}.get(category, 'bg-red-500 text-white') -%}
+      <div class="text-sm p-2 rounded-lg {{ _cls }}">{{ message }}</div>
+      {% endfor %}
+    </div>
+    {% endif %}
     {% endwith %}
 
     <form method="POST" action="{{ url_for('auth.login') }}" class="mt-6">

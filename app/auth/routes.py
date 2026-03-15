@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, current_app, session
 from werkzeug.security import generate_password_hash, check_password_hash
+from urllib.parse import urlparse
 from app import db, cache
 from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber
 from flask_login import login_user, login_required, logout_user, current_user
@@ -42,7 +43,18 @@ def _track_posthog(event, user_id, properties=None, flush=False, identify_proper
 
 from app import limiter
 
+
+def _safe_referrer_or(fallback_endpoint):
+    """Return same-origin referrer URL, otherwise fallback endpoint URL."""
+    referrer = request.referrer
+    if referrer:
+        parsed = urlparse(referrer)
+        if parsed.scheme in ('http', 'https') and parsed.netloc == request.host:
+            return referrer
+    return url_for(fallback_endpoint)
+
 @auth_bp.route('/verify-email/<token>', methods=['GET'])
+@limiter.limit("20/minute")
 def verify_email(token):
     user, expired = User.verify_email_verification_token(token)
     if user and not expired:
@@ -59,26 +71,34 @@ def verify_email(token):
     )
 
 
-@auth_bp.route('/resend-verification', methods=['GET', 'POST'])
+@auth_bp.route('/resend-verification', methods=['POST'])
 @limiter.limit("3/hour")
 def resend_verification():
     """
-    GET  — resends to the currently logged-in user (used from the post-login banner).
-    POST — resends to the email address submitted in the form (used from the expired-link page).
+    POST only:
+    - Authenticated users: resend to the current account and return in-context.
+    - Unauthenticated users: resend to the submitted address and redirect to login.
     """
-    if request.method == 'GET':
-        user = current_user if current_user.is_authenticated else None
+    # Authenticated requests always act on the current account — ignore any posted email
+    # to prevent triggering resends for other users' addresses.
+    if current_user.is_authenticated:
+        user = current_user
     else:
         email = request.form.get('email', '').strip().lower()
         user = User.query.filter_by(email=email).first() if email else None
 
     if user and not user.email_verified:
-        token = user.get_email_verification_token()
-        verification_url = url_for('auth.verify_email', token=token, _external=True)
-        send_verification_email(user, verification_url)
-        current_app.logger.info(f"Verification email resent to {user.email}")
+        try:
+            token = user.get_email_verification_token()
+            verification_url = url_for('auth.verify_email', token=token, _external=True)
+            send_verification_email(user, verification_url)
+            current_app.logger.info(f"Verification email resent to {user.email}")
+        except Exception as e:
+            current_app.logger.error(f"Failed to resend verification email: {e}")
 
     flash('If that address is registered and unverified, a new verification link has been sent.', 'info')
+    if current_user.is_authenticated:
+        return redirect(_safe_referrer_or('auth.dashboard'))
     return redirect(url_for('auth.login'))
 
 
@@ -307,10 +327,6 @@ def login():
                 current_app.logger.info(f"Merged {merged} anonymous votes for user {user.id}")
         
         flash("Logged in successfully!", "success")
-
-        # Nudge unverified users to verify their email
-        if not user.email_verified:
-            flash('Your email address is not verified. Check your inbox or request a new verification link.', 'warning')
 
         # Check for pending steward invite stored before login redirect
         pending_steward_token = session.pop('pending_steward_invite_token', None)

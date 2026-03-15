@@ -990,21 +990,39 @@
       </nav>
     </header>
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %} {% if
-    messages %} {% for category, message in messages %}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-      <div class="rounded-md bg-{{ category }}-50 p-4">
-        <div class="flex">
-          <div class="ml-3">
-            <p class="text-sm font-medium text-{{ category }}-800">
-              {{ message }}
-            </p>
-          </div>
-        </div>
+    {# Persistent email verification banner — shown until the user verifies #}
+    {% if current_user.is_authenticated and not current_user.email_verified %}
+    <div class="border-b border-yellow-200 bg-yellow-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <p class="text-sm text-yellow-800">
+          <strong>Please verify your email</strong> — check your inbox for the verification link.
+        </p>
+        <form method="POST" action="{{ url_for('auth.resend_verification') }}" class="whitespace-nowrap">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit"
+                  class="text-sm font-semibold text-yellow-900 underline hover:text-yellow-700">
+            Resend verification email
+          </button>
+        </form>
       </div>
     </div>
-    {% endfor %} {% endif %} {% endwith %}
+    {% endif %}
+
+    <!-- Flash Messages (child templates can override this block to render inline) -->
+    {% block flash_messages %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-2">
+      {% for category, message in messages %}
+      {%- set _color = {'success': 'green', 'warning': 'yellow', 'error': 'red', 'danger': 'red', 'info': 'blue'}.get(category, 'gray') -%}
+      <div class="rounded-md bg-{{ _color }}-50 p-4">
+        <p class="text-sm font-medium text-{{ _color }}-800">{{ message }}</p>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+    {% endblock %}
 
     <!-- Main Content -->
     <main id="main-content" class="flex-grow">
