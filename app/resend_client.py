@@ -1100,6 +1100,49 @@ def send_org_invitation_email(email: str, org_name: str, inviter_name: str, invi
         return False
 
 
+def _send_user_transactional_email(
+    user,
+    template: str,
+    subject: str,
+    context: Dict[str, Any],
+    client=None,
+) -> bool:
+    """Render and send a transactional email to a single user via Resend.
+
+    Handles client lookup, template rendering, sending, and logging.
+    'context' is merged with username and base_url automatically.
+    """
+    recipient = getattr(user, 'email', None)
+    if not recipient:
+        logger.error(f"Failed to send '{subject}': user has no email")
+        return False
+
+    username = getattr(user, 'username', None) or 'there'
+    try:
+        client = client or get_resend_client()
+        html = render_template(
+            template,
+            username=username,
+            base_url=client.base_url,
+            **context,
+        )
+        email_data = {
+            'from': client.from_email,
+            'to': [recipient],
+            'subject': subject,
+            'html': html,
+        }
+        success = client._send_with_retry(email_data, use_rate_limit=False)
+        if success:
+            logger.info(f"Sent '{subject}' to {recipient}")
+        else:
+            logger.error(f"Failed to send '{subject}' to {recipient}")
+        return success
+    except Exception as e:
+        logger.error(f"Failed to send '{subject}' to {recipient}: {e}")
+        return False
+
+
 def send_trial_ending_email(user, days_remaining: int = 3, upgrade_url: Optional[str] = None) -> bool:
     """
     Notify a paid-briefings subscriber that their 30-day free trial is ending soon.
@@ -1119,32 +1162,20 @@ def send_trial_ending_email(user, days_remaining: int = 3, upgrade_url: Optional
     Returns:
         bool: True if sent successfully.
     """
-    try:
-        client = get_resend_client()
-        if not upgrade_url:
+    client = None
+    if not upgrade_url:
+        try:
+            client = get_resend_client()
             upgrade_url = f"{client.base_url}/briefings/landing"
-        html = render_template(
-            'emails/trial_ending.html',
-            username=user.username or 'there',
-            days_remaining=days_remaining,
-            upgrade_url=upgrade_url,
-            base_url=client.base_url,
-        )
-        email_data = {
-            'from': client.from_email,
-            'to': [user.email],
-            'subject': f"Your free trial ends in {days_remaining} day{'s' if days_remaining != 1 else ''} — keep your briefings going",
-            'html': html,
-        }
-        success = client._send_with_retry(email_data, use_rate_limit=False)
-        if success:
-            logger.info(f"Trial ending email sent to {user.email} ({days_remaining} days remaining)")
-        else:
-            logger.error(f"Failed to send trial ending email to {user.email}")
-        return success
-    except Exception as e:
-        logger.error(f"Failed to send trial ending email to {user.email}: {e}")
-        return False
+        except Exception:
+            upgrade_url = '/briefings/landing'
+    return _send_user_transactional_email(
+        user,
+        'emails/trial_ending.html',
+        f"Your free trial ends in {days_remaining} day{'s' if days_remaining != 1 else ''} — keep your briefings going",
+        {'days_remaining': days_remaining, 'upgrade_url': upgrade_url},
+        client=client,
+    )
 
 
 def send_subscription_cancelled_email(user, resubscribe_url: Optional[str] = None, briefing_count: int = 0) -> bool:
@@ -1161,32 +1192,20 @@ def send_subscription_cancelled_email(user, resubscribe_url: Optional[str] = Non
     Returns:
         bool: True if sent successfully.
     """
-    try:
-        client = get_resend_client()
-        if not resubscribe_url:
+    client = None
+    if not resubscribe_url:
+        try:
+            client = get_resend_client()
             resubscribe_url = f"{client.base_url}/briefings/landing"
-        html = render_template(
-            'emails/subscription_cancelled.html',
-            username=user.username or 'there',
-            resubscribe_url=resubscribe_url,
-            briefing_count=briefing_count,
-            base_url=client.base_url,
-        )
-        email_data = {
-            'from': client.from_email,
-            'to': [user.email],
-            'subject': 'Your Society Speaks subscription has ended',
-            'html': html,
-        }
-        success = client._send_with_retry(email_data, use_rate_limit=False)
-        if success:
-            logger.info(f"Subscription cancelled email sent to {user.email}")
-        else:
-            logger.error(f"Failed to send subscription cancelled email to {user.email}")
-        return success
-    except Exception as e:
-        logger.error(f"Failed to send subscription cancelled email to {user.email}: {e}")
-        return False
+        except Exception:
+            resubscribe_url = '/briefings/landing'
+    return _send_user_transactional_email(
+        user,
+        'emails/subscription_cancelled.html',
+        'Your Society Speaks subscription has ended',
+        {'resubscribe_url': resubscribe_url, 'briefing_count': briefing_count},
+        client=client,
+    )
 
 
 def send_profile_completion_reminder_email(user, missing_fields: list, profile_url: str) -> bool:
