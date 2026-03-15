@@ -1,32 +1,4 @@
-import sys
-import types
-from pathlib import Path
 from types import SimpleNamespace
-
-# Load `app.resend_client` without executing `app/__init__.py`, which pulls
-# optional runtime dependencies not required for these focused unit tests.
-if 'app' not in sys.modules:
-    app_pkg = types.ModuleType('app')
-    app_pkg.__path__ = [str(Path(__file__).resolve().parents[1] / 'app')]
-    sys.modules['app'] = app_pkg
-
-# `app.resend_client` depends on RateLimiter from `app.email_utils`.
-# This stub covers every symbol imported from app.email_utils anywhere in the
-# app package so that running this file alongside integration tests (which call
-# create_app() and therefore import auth/routes.py, discussions/routes.py, etc.)
-# does not inject an incomplete module into sys.modules and break those imports.
-if 'app.email_utils' not in sys.modules:
-    email_utils_module = types.ModuleType('app.email_utils')
-
-    class _RateLimiter:  # pragma: no cover - import stub only
-        pass
-
-    email_utils_module.RateLimiter = _RateLimiter
-    email_utils_module.get_missing_individual_profile_fields = lambda profile: []
-    email_utils_module.get_missing_company_profile_fields = lambda profile: []
-    email_utils_module.create_discussion_notification = lambda *a, **kw: None
-    email_utils_module.bulk_subscribe_existing_users = lambda *a, **kw: None
-    sys.modules['app.email_utils'] = email_utils_module
 
 import app.resend_client as resend_client
 

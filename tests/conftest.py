@@ -47,19 +47,20 @@ def app():
     Config.RATELIMIT_STORAGE_URL = 'memory://'
     os.environ['FLASK_ENV'] = 'development'
 
-    from app import create_app
-    app = create_app()
-    app.config['TESTING'] = True
-    app.config['WTF_CSRF_ENABLED'] = False
-
-    # Restore Config and environment for isolation
-    Config.SQLALCHEMY_DATABASE_URI = _orig_uri
-    Config.SQLALCHEMY_ENGINE_OPTIONS = _orig_engine
-    Config.RATELIMIT_STORAGE_URL = _orig_ratelimit
-    if _orig_flask_env is None:
-        os.environ.pop('FLASK_ENV', None)
-    else:
-        os.environ['FLASK_ENV'] = _orig_flask_env
+    try:
+        from app import create_app
+        app = create_app()
+        app.config['TESTING'] = True
+        app.config['WTF_CSRF_ENABLED'] = False
+    finally:
+        # Always restore Config and environment, even if create_app() raises
+        Config.SQLALCHEMY_DATABASE_URI = _orig_uri
+        Config.SQLALCHEMY_ENGINE_OPTIONS = _orig_engine
+        Config.RATELIMIT_STORAGE_URL = _orig_ratelimit
+        if _orig_flask_env is None:
+            os.environ.pop('FLASK_ENV', None)
+        else:
+            os.environ['FLASK_ENV'] = _orig_flask_env
 
     return app
 
