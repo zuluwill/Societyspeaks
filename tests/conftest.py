@@ -34,21 +34,32 @@ def app():
     """Create application for testing."""
     from config import Config
 
-    # Override Config attributes BEFORE create_app() so the app is built with
-    # SQLite-compatible settings (SQLite does not support pool_size, etc.)
+    # Override Config attributes AND environment variables BEFORE create_app() so
+    # the app is built with SQLite-compatible settings and in-memory rate limiting.
+    # FLASK_ENV must be non-production to stop __init__.py from overriding
+    # RATELIMIT_STORAGE_URL with the real Redis URL from the environment.
     _orig_uri = Config.SQLALCHEMY_DATABASE_URI
     _orig_engine = Config.SQLALCHEMY_ENGINE_OPTIONS
+    _orig_ratelimit = Config.RATELIMIT_STORAGE_URL
+    _orig_flask_env = os.environ.get('FLASK_ENV')
     Config.SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     Config.SQLALCHEMY_ENGINE_OPTIONS = {'pool_pre_ping': True}
+    Config.RATELIMIT_STORAGE_URL = 'memory://'
+    os.environ['FLASK_ENV'] = 'development'
 
     from app import create_app
     app = create_app()
     app.config['TESTING'] = True
     app.config['WTF_CSRF_ENABLED'] = False
 
-    # Restore Config for isolation
+    # Restore Config and environment for isolation
     Config.SQLALCHEMY_DATABASE_URI = _orig_uri
     Config.SQLALCHEMY_ENGINE_OPTIONS = _orig_engine
+    Config.RATELIMIT_STORAGE_URL = _orig_ratelimit
+    if _orig_flask_env is None:
+        os.environ.pop('FLASK_ENV', None)
+    else:
+        os.environ['FLASK_ENV'] = _orig_flask_env
 
     return app
 

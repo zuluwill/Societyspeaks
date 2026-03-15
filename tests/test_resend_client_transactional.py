@@ -11,7 +11,10 @@ if 'app' not in sys.modules:
     sys.modules['app'] = app_pkg
 
 # `app.resend_client` depends on RateLimiter from `app.email_utils`.
-# For these unit tests we only need importability, not full email_utils behavior.
+# This stub covers every symbol imported from app.email_utils anywhere in the
+# app package so that running this file alongside integration tests (which call
+# create_app() and therefore import auth/routes.py, discussions/routes.py, etc.)
+# does not inject an incomplete module into sys.modules and break those imports.
 if 'app.email_utils' not in sys.modules:
     email_utils_module = types.ModuleType('app.email_utils')
 
@@ -19,6 +22,10 @@ if 'app.email_utils' not in sys.modules:
         pass
 
     email_utils_module.RateLimiter = _RateLimiter
+    email_utils_module.get_missing_individual_profile_fields = lambda profile: []
+    email_utils_module.get_missing_company_profile_fields = lambda profile: []
+    email_utils_module.create_discussion_notification = lambda *a, **kw: None
+    email_utils_module.bulk_subscribe_existing_users = lambda *a, **kw: None
     sys.modules['app.email_utils'] = email_utils_module
 
 import app.resend_client as resend_client
