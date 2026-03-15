@@ -1147,6 +1147,48 @@ def send_trial_ending_email(user, days_remaining: int = 3, upgrade_url: Optional
         return False
 
 
+def send_subscription_cancelled_email(user, resubscribe_url: Optional[str] = None, briefing_count: int = 0) -> bool:
+    """
+    Notify a user that their subscription has been cancelled and their briefings paused.
+
+    Triggered by the Stripe `customer.subscription.deleted` webhook.
+
+    Args:
+        user:             User object (must have .email and .username).
+        resubscribe_url:  Full URL to the plans/pricing page.
+        briefing_count:   Number of briefings that were paused.
+
+    Returns:
+        bool: True if sent successfully.
+    """
+    try:
+        client = get_resend_client()
+        if not resubscribe_url:
+            resubscribe_url = f"{client.base_url}/briefings/landing"
+        html = render_template(
+            'emails/subscription_cancelled.html',
+            username=user.username or 'there',
+            resubscribe_url=resubscribe_url,
+            briefing_count=briefing_count,
+            base_url=client.base_url,
+        )
+        email_data = {
+            'from': client.from_email,
+            'to': [user.email],
+            'subject': 'Your Society Speaks subscription has ended',
+            'html': html,
+        }
+        success = client._send_with_retry(email_data, use_rate_limit=False)
+        if success:
+            logger.info(f"Subscription cancelled email sent to {user.email}")
+        else:
+            logger.error(f"Failed to send subscription cancelled email to {user.email}")
+        return success
+    except Exception as e:
+        logger.error(f"Failed to send subscription cancelled email to {user.email}: {e}")
+        return False
+
+
 def send_profile_completion_reminder_email(user, missing_fields: list, profile_url: str) -> bool:
     """
     Send profile completion reminder email via Resend.

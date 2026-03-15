@@ -512,6 +512,8 @@ def handle_subscription_created(subscription_data):
         try:
             sync_subscription_from_stripe(stripe_sub, user_id=existing_sub.user_id, org_id=existing_sub.org_id)
             current_app.logger.info(f"Synced existing subscription {existing_sub.id}")
+            if existing_sub.user_id:
+                _reactivate_user_briefings(existing_sub.user_id)
         except ValueError as e:
             current_app.logger.error(f"Failed to sync subscription {subscription_data['id']}: {e}")
         return
@@ -521,6 +523,7 @@ def handle_subscription_created(subscription_data):
         try:
             sync_subscription_with_org(stripe_sub, user)
             current_app.logger.info(f"Created subscription for user {user.id}")
+            _reactivate_user_briefings(user.id)
         except ValueError as e:
             current_app.logger.error(f"Failed to create subscription for user {user.id}: {e}")
 
@@ -711,6 +714,34 @@ def _handle_donation_checkout_completed(checkout_data):
         raise
 
 
+def _pause_user_briefings(user_id):
+    """Pause all active briefings for a user. Returns the count paused."""
+    from app.models import Briefing
+    paused = Briefing.query.filter_by(
+        owner_type='user',
+        owner_id=user_id,
+        status='active',
+    ).update({'status': 'paused'})
+    if paused:
+        db.session.commit()
+        current_app.logger.info(f"Paused {paused} briefing(s) for user {user_id} after subscription cancellation")
+    return paused
+
+
+def _reactivate_user_briefings(user_id):
+    """Re-activate all paused briefings for a user. Returns the count re-activated."""
+    from app.models import Briefing
+    activated = Briefing.query.filter_by(
+        owner_type='user',
+        owner_id=user_id,
+        status='paused',
+    ).update({'status': 'active'})
+    if activated:
+        db.session.commit()
+        current_app.logger.info(f"Re-activated {activated} briefing(s) for user {user_id} after subscription creation/resumption")
+    return activated
+
+
 def handle_subscription_deleted(subscription_data):
     """Handle subscription cancellation."""
     sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
@@ -722,6 +753,18 @@ def handle_subscription_deleted(subscription_data):
         sub.canceled_at = db.func.now()
         db.session.commit()
         current_app.logger.info(f"Canceled subscription {sub.id}")
+
+        if user_id:
+            paused_count = _pause_user_briefings(user_id)
+            try:
+                user = User.query.get(user_id)
+                if user:
+                    from app.resend_client import send_subscription_cancelled_email
+                    resubscribe_url = url_for('briefing.landing', _external=True)
+                    send_subscription_cancelled_email(user, resubscribe_url=resubscribe_url, briefing_count=paused_count)
+            except Exception as e:
+                current_app.logger.error(f"Failed to send subscription cancelled email to user {user_id}: {e}")
+
         try:
             import posthog
             if posthog and getattr(posthog, 'project_api_key', None) and user_id:
@@ -787,6 +830,8 @@ def handle_subscription_resumed(subscription_data):
         sub.status = 'active'
         db.session.commit()
         current_app.logger.info(f"Subscription {sub.id} resumed")
+        if sub.user_id:
+            _reactivate_user_briefings(sub.user_id)
 
 
 @billing_bp.route('/pending-checkout')
