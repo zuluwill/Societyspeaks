@@ -63,3 +63,23 @@ def test_startup_validates_consensus_oversize_config():
     assert "_validate_consensus_oversize_config(app)" in source
     assert "CONSENSUS_OVERSIZE_MIN_STABILITY_RUNS cannot exceed " in source
     assert "CONSENSUS_OVERSIZE_STABILITY_RUNS" in source
+
+
+def test_single_stability_run_returns_full_metrics_not_empty_dict():
+    """
+    When CONSENSUS_OVERSIZE_STABILITY_RUNS=1, _compute_oversize_stability_metrics
+    must return a complete dict with stability_mean_ari=1.0 (not a bare
+    {'stability_runs': 1}) so the publishability gate does not default ARI to
+    0.0 and permanently withhold all oversize analyses.
+    """
+    source = _read("app/lib/consensus_engine.py")
+    # Find the early-return branch for runs <= 1
+    assert "if runs <= 1:" in source
+    # Verify the fix: stability_mean_ari must be present in the single-run return
+    early_return_start = source.index("if runs <= 1:")
+    early_return_block = source[early_return_start:early_return_start + 600]
+    assert "'stability_mean_ari': 1.0" in early_return_block, (
+        "_compute_oversize_stability_metrics must return stability_mean_ari=1.0 "
+        "for single-run mode, not leave it absent (which defaults to 0.0 in the "
+        "publishability gate and permanently withholds analyses)"
+    )
