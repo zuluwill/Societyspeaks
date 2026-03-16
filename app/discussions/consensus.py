@@ -11,6 +11,7 @@ from app.models import Discussion, ConsensusAnalysis, ConsensusJob, Statement, S
 from app.discussions.statements import get_statement_vote_fingerprint
 from app.lib.consensus_engine import can_cluster, get_consensus_execution_plan
 from app.discussions.jobs import enqueue_consensus_job
+from app.discussions.thresholds import consensus_thresholds_dict, CONSENSUS_VIEW_RESULTS_MIN_VOTES
 from app.programmes.permissions import can_view_programme
 from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
@@ -20,9 +21,55 @@ consensus_bp = Blueprint('consensus', __name__)
 logger = logging.getLogger(__name__)
 
 # Minimum votes required to unlock consensus analysis
-PARTICIPATION_THRESHOLD = 5
+PARTICIPATION_THRESHOLD = CONSENSUS_VIEW_RESULTS_MIN_VOTES
 
 DEMO_DISCUSSION_IDS = {25}
+
+
+def _oversize_publishability_thresholds():
+    """Centralized publication thresholds for oversize analyses."""
+    return {
+        'min_stability_runs': int(current_app.config.get('CONSENSUS_OVERSIZE_MIN_STABILITY_RUNS', 3)),
+        'min_stability_mean_ari': float(current_app.config.get('CONSENSUS_OVERSIZE_MIN_STABILITY_ARI', 0.30)),
+    }
+
+
+def _assess_analysis_publishability(analysis):
+    """
+    Determine whether analysis should be published to end users.
+
+    In oversize mode, require minimum stability to avoid publishing
+    potentially unstable cluster structures.
+    """
+    metadata = (analysis.cluster_data or {}).get('metadata', {})
+    if not metadata.get('oversize_mode'):
+        return True, None
+
+    thresholds = _oversize_publishability_thresholds()
+    runs = int(metadata.get('stability_runs', 0) or 0)
+    mean_ari_raw = metadata.get('stability_mean_ari')
+    try:
+        mean_ari = float(mean_ari_raw)
+    except (TypeError, ValueError):
+        mean_ari = 0.0
+
+    if runs < thresholds['min_stability_runs']:
+        return (
+            False,
+            (
+                "Large-scale analysis is temporarily withheld: insufficient stability runs "
+                f"(have {runs}, need {thresholds['min_stability_runs']})."
+            ),
+        )
+    if mean_ari < thresholds['min_stability_mean_ari']:
+        return (
+            False,
+            (
+                "Large-scale analysis is temporarily withheld: stability is below publication threshold "
+                f"(mean ARI {mean_ari:.3f}, need >= {thresholds['min_stability_mean_ari']:.3f})."
+            ),
+        )
+    return True, None
 
 
 def _invalidate_snapshot_cache(discussion_id):
@@ -141,7 +188,7 @@ def trigger_analysis(discussion_id):
         if created:
             if plan.get('mode') == 'sampled_incremental':
                 flash(
-                    "Consensus analysis queued in oversize mode (sampled/incremental aggregates). "
+                    "Consensus analysis queued in oversize mode (sampled clustered approximation). "
                     "Results will appear once processing completes.",
                     "success"
                 )
@@ -208,7 +255,18 @@ def view_results(discussion_id):
         return render_template('discussions/consensus_not_ready.html',
                              discussion=discussion,
                              can_analyze=can_analyze,
-                             message=ready_message)
+                             message=ready_message,
+                             consensus_thresholds=consensus_thresholds_dict())
+
+    is_publishable, withheld_reason = _assess_analysis_publishability(analysis)
+    if not is_publishable:
+        return render_template(
+            'discussions/consensus_not_ready.html',
+            discussion=discussion,
+            can_analyze=(is_creator or is_admin),
+            message=withheld_reason,
+            consensus_thresholds=consensus_thresholds_dict(),
+        )
     
     # Get statement details for consensus/bridge/divisive
     consensus_stmt_ids = [s['statement_id'] for s in analysis.cluster_data.get('consensus_statements', [])]
@@ -328,7 +386,14 @@ def get_cluster_data(discussion_id):
     
     if not analysis:
         return jsonify({'error': 'No analysis available'}), 404
-    
+
+    is_publishable, withheld_reason = _assess_analysis_publishability(analysis)
+    if not is_publishable:
+        return jsonify({
+            'error': 'analysis_withheld',
+            'message': withheld_reason,
+        }), 409
+
     # Return cluster data
     return jsonify({
         'cluster_assignments': analysis.cluster_data.get('cluster_assignments', {}),
@@ -354,6 +419,13 @@ def get_special_statements(discussion_id):
     
     if not analysis:
         return jsonify({'error': 'No analysis available'}), 404
+
+    is_publishable, withheld_reason = _assess_analysis_publishability(analysis)
+    if not is_publishable:
+        return jsonify({
+            'error': 'analysis_withheld',
+            'message': withheld_reason,
+        }), 409
     
     return jsonify({
         'consensus': analysis.cluster_data.get('consensus_statements', []),
@@ -380,11 +452,18 @@ def get_analysis_status(discussion_id):
         discussion_id=discussion_id
     ).order_by(ConsensusAnalysis.created_at.desc()).first()
     
+    publishable = False
+    withheld_reason = None
+    if latest_analysis:
+        publishable, withheld_reason = _assess_analysis_publishability(latest_analysis)
+
     response = {
         'can_analyze': plan.get('is_ready', False),
         'message': plan.get('message'),
         'analysis_mode': plan.get('mode'),
-        'has_analysis': latest_analysis is not None
+        'has_analysis': latest_analysis is not None,
+        'analysis_publishable': publishable if latest_analysis else False,
+        'analysis_withheld_reason': withheld_reason,
     }
 
     latest_job = ConsensusJob.query.filter_by(
@@ -408,7 +487,9 @@ def get_analysis_status(discussion_id):
             'num_clusters': latest_analysis.num_clusters,
             'silhouette_score': latest_analysis.silhouette_score,
             'participants_count': latest_analysis.participants_count,
-            'statements_count': latest_analysis.statements_count
+            'statements_count': latest_analysis.statements_count,
+            'is_publishable': publishable,
+            'withheld_reason': withheld_reason,
         }
     
     return jsonify(response)
@@ -455,6 +536,15 @@ def generate_report(discussion_id):
         return redirect(url_for('discussions.view_discussion', 
                               discussion_id=discussion.id,
                               slug=discussion.slug))
+
+    is_publishable, withheld_reason = _assess_analysis_publishability(analysis)
+    if not is_publishable:
+        flash(withheld_reason, "warning")
+        return redirect(url_for(
+            'consensus.view_results',
+            discussion_id=discussion.id,
+            slug=discussion.slug,
+        ))
     
     # Get all statement details
     consensus_stmt_ids = [s['statement_id'] for s in analysis.cluster_data.get('consensus_statements', [])]
@@ -493,7 +583,14 @@ def export_analysis(discussion_id):
     
     if not analysis:
         return jsonify({'error': 'No analysis available'}), 404
-    
+
+    is_publishable, withheld_reason = _assess_analysis_publishability(analysis)
+    if not is_publishable:
+        return jsonify({
+            'error': 'analysis_withheld',
+            'message': withheld_reason,
+        }), 409
+
     export_format = request.args.get('format', 'json')
     
     if export_format == 'csv':

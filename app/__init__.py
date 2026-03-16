@@ -87,6 +87,81 @@ def try_connect_db(app, retries=3):
     return False
 
 
+def _validate_consensus_oversize_config(app):
+    """
+    Validate and normalize consensus oversize settings.
+
+    In deployed production we fail fast on invalid configuration to avoid
+    silently withholding all oversize analyses due to misconfiguration.
+    """
+    defaults = {
+        'MAX_CONSENSUS_OVERSIZE_SAMPLE_STATEMENTS': 500,
+        'MAX_CONSENSUS_OVERSIZE_SAMPLE_PARTICIPANTS': 5000,
+        'CONSENSUS_OVERSIZE_STABILITY_RUNS': 5,
+        'CONSENSUS_OVERSIZE_MIN_STABILITY_RUNS': 3,
+        'CONSENSUS_OVERSIZE_MIN_STABILITY_ARI': 0.30,
+    }
+
+    normalized = {}
+    errors = []
+
+    def _parse_int(key):
+        raw = app.config.get(key, defaults[key])
+        try:
+            value = int(raw)
+        except (TypeError, ValueError):
+            errors.append(f"{key} must be an integer (got {raw!r})")
+            value = defaults[key]
+        normalized[key] = value
+        return value
+
+    def _parse_float(key):
+        raw = app.config.get(key, defaults[key])
+        try:
+            value = float(raw)
+        except (TypeError, ValueError):
+            errors.append(f"{key} must be a float (got {raw!r})")
+            value = defaults[key]
+        normalized[key] = value
+        return value
+
+    sampled_statements = _parse_int('MAX_CONSENSUS_OVERSIZE_SAMPLE_STATEMENTS')
+    sampled_participants = _parse_int('MAX_CONSENSUS_OVERSIZE_SAMPLE_PARTICIPANTS')
+    stability_runs = _parse_int('CONSENSUS_OVERSIZE_STABILITY_RUNS')
+    min_stability_runs = _parse_int('CONSENSUS_OVERSIZE_MIN_STABILITY_RUNS')
+    min_stability_ari = _parse_float('CONSENSUS_OVERSIZE_MIN_STABILITY_ARI')
+
+    if sampled_statements < 50:
+        errors.append("MAX_CONSENSUS_OVERSIZE_SAMPLE_STATEMENTS must be >= 50")
+    if sampled_participants < 500:
+        errors.append("MAX_CONSENSUS_OVERSIZE_SAMPLE_PARTICIPANTS must be >= 500")
+    if stability_runs < 1:
+        errors.append("CONSENSUS_OVERSIZE_STABILITY_RUNS must be >= 1")
+    if min_stability_runs < 1:
+        errors.append("CONSENSUS_OVERSIZE_MIN_STABILITY_RUNS must be >= 1")
+    if min_stability_runs > stability_runs:
+        errors.append(
+            "CONSENSUS_OVERSIZE_MIN_STABILITY_RUNS cannot exceed "
+            "CONSENSUS_OVERSIZE_STABILITY_RUNS"
+        )
+    if not (0.0 <= min_stability_ari <= 1.0):
+        errors.append("CONSENSUS_OVERSIZE_MIN_STABILITY_ARI must be between 0.0 and 1.0")
+
+    # Always write normalized values so runtime behavior is explicit.
+    app.config.update(normalized)
+
+    if not errors:
+        return
+
+    message = "Invalid consensus oversize configuration: " + "; ".join(errors)
+    is_deployed_production = os.environ.get('REPLIT_DEPLOYMENT') == '1'
+    if is_deployed_production:
+        raise RuntimeError(message)
+
+    app.logger.warning("%s. Falling back to safe defaults for local/dev.", message)
+    app.config.update(defaults)
+
+
 def create_app():
 
     # --- Runtime role bootstrap ---
@@ -224,6 +299,7 @@ def create_app():
     # Determine environment
     env = os.getenv('FLASK_ENV', 'development')
     app.config.from_object(config_dict[env])
+    _validate_consensus_oversize_config(app)
     
     # Configure PostHog for both server-side and frontend analytics
     posthog_api_key = os.getenv("POSTHOG_API_KEY")

@@ -117,8 +117,13 @@
   {% endif %}
 
   <!-- Stats Overview with Progress Indicator -->
-  {# Threshold for showing counts - hide low numbers to avoid cold start
-  perception #} {% set vote_display_threshold = 50 %} {% set total_votes_all =
+  {% set c = consensus_thresholds|default({}) %}
+  {% set min_participants = c.get('min_participants', 7) %}
+  {% set min_total_votes = c.get('min_total_votes', 20) %}
+  {% set min_votes_per_statement = c.get('min_votes_per_statement', 3) %}
+  {% set recommended_statements = c.get('recommended_statements', 7) %}
+  {# Threshold for showing counts - aligned with consensus readiness threshold #}
+  {% set vote_display_threshold = min_total_votes %} {% set total_votes_all =
   statement_metrics.total_votes|default(
     statements|sum(attribute='vote_count_agree') +
     statements|sum(attribute='vote_count_disagree') +
@@ -182,8 +187,7 @@
       statements|sum(attribute='vote_count_agree') +
       statements|sum(attribute='vote_count_disagree') +
       statements|sum(attribute='vote_count_unsure')
-    ) %} {% set total_statements = statement_metrics.statement_count|default(statements|length) %} {% if total_votes < 50 or
-  total_statements < 7 %}
+    ) %} {% set total_statements = statement_metrics.statement_count|default(statements|length) %} {% set participant_count = discussion.participant_count|default(0) %} {% if total_votes < min_total_votes or participant_count < min_participants %}
   <div
     class="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200"
   >
@@ -191,14 +195,14 @@
       <span class="text-sm font-semibold text-gray-700"
         >📊 Progress to Consensus Analysis</span
       >
-      <span class="text-xs text-gray-500">Need: 7+ statements, 50+ votes</span>
+      <span class="text-xs text-gray-500">Need: {{ min_participants }}+ participants, {{ min_total_votes }}+ votes, {{ min_votes_per_statement }}+ votes per statement</span>
     </div>
     <div class="space-y-2">
-      <!-- Statements Progress -->
+      <!-- Participants Progress -->
       <div>
         <div class="flex justify-between text-xs text-gray-600 mb-1">
-          <span>Statements</span>
-          <span>{{ total_statements }}/7</span>
+          <span>Participants</span>
+          <span>{{ participant_count }}/{{ min_participants }}</span>
         </div>
         <div
           style="
@@ -209,7 +213,26 @@
           "
         >
           <div
-            style="background: linear-gradient(to right, #60a5fa, #2563eb); height: 100%; width: {{ [((total_statements) / 7 * 100), 100]|min }}%; transition: width 0.3s;"
+            style="background: linear-gradient(to right, #60a5fa, #2563eb); height: 100%; width: {{ [((participant_count) / min_participants * 100), 100]|min }}%; transition: width 0.3s;"
+          ></div>
+        </div>
+      </div>
+      <!-- Statements Progress (aspirational — more statements = richer analysis) -->
+      <div>
+        <div class="flex justify-between text-xs text-gray-600 mb-1">
+          <span>Statements <span class="text-gray-400">({{ recommended_statements }}+ recommended)</span></span>
+          <span>{{ total_statements }}/{{ recommended_statements }}</span>
+        </div>
+        <div
+          style="
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+          "
+        >
+          <div
+            style="background: linear-gradient(to right, #60a5fa, #2563eb); height: 100%; width: {{ [((total_statements) / recommended_statements * 100), 100]|min }}%; transition: width 0.3s;"
           ></div>
         </div>
       </div>
@@ -217,7 +240,7 @@
       <div>
         <div class="flex justify-between text-xs text-gray-600 mb-1">
           <span>Total Votes</span>
-          <span>{{ total_votes }}/50</span>
+          <span>{{ total_votes }}/{{ min_total_votes }}</span>
         </div>
         <div
           style="
@@ -228,20 +251,14 @@
           "
         >
           <div
-            style="background: linear-gradient(to right, #60a5fa, #2563eb); height: 100%; width: {{ [(total_votes / 50 * 100), 100]|min }}%; transition: width 0.3s;"
+            style="background: linear-gradient(to right, #60a5fa, #2563eb); height: 100%; width: {{ [(total_votes / min_total_votes * 100), 100]|min }}%; transition: width 0.3s;"
           ></div>
         </div>
       </div>
     </div>
-    {% if total_votes >= 50 and total_statements >= 7 %}
-    <div class="mt-3 text-sm text-green-700 font-semibold">
-      ✅ Ready for consensus analysis!
-    </div>
-    {% else %}
     <div class="mt-3 text-sm text-gray-600">
-      💡 Keep voting and adding statements to unlock consensus insights
+      💡 Progress updates live here. Final readiness is confirmed when all three requirements are met.
     </div>
-    {% endif %}
   </div>
   {% endif %}
 
@@ -452,9 +469,31 @@
   }
 </style>
 
+<!-- Seed optimistic vote state for authenticated users -->
+<script nonce="{{ csp_nonce() }}">
+  window.userVotes = {{ user_votes_map|default({})|tojson }};
+</script>
+
 <!-- AJAX Voting Script -->
 <script nonce="{{ csp_nonce() }}">
   let isLoadingMoreStatements = false;
+  if (!window.userVotes || typeof window.userVotes !== 'object') {
+      window.userVotes = {};
+  }
+
+  function hydrateUserVotesFromDom(root = document) {
+      const voteGrids = root.querySelectorAll('[data-statement-id][data-user-vote]');
+      voteGrids.forEach((grid) => {
+          const statementId = parseInt(grid.getAttribute('data-statement-id'), 10);
+          const seededVote = grid.getAttribute('data-user-vote');
+          if (isNaN(statementId) || seededVote === null || seededVote === '') return;
+          const parsedVote = parseInt(seededVote, 10);
+          if (isNaN(parsedVote)) return;
+          if (window.userVotes[statementId] === undefined || window.userVotes[statementId] === null) {
+              window.userVotes[statementId] = parsedVote;
+          }
+      });
+  }
 
   function buildLazyLoadUrl(page) {
       const controls = document.getElementById('lazyLoadControls');
@@ -492,6 +531,7 @@
           }
 
           list.insertAdjacentHTML('beforeend', data.html || '');
+          hydrateUserVotesFromDom(list);
           controls.dataset.nextPage = data.pagination && data.pagination.next_page ? String(data.pagination.next_page) : '';
           controls.dataset.hasNext = data.pagination && data.pagination.has_next ? 'true' : 'false';
           status.textContent = `Loaded ${data.pagination.loaded_count} of ${data.pagination.total} statements (page ${data.pagination.page} of ${data.pagination.pages})`;
@@ -525,25 +565,62 @@
       const statementDiv = document.querySelector(`[data-statement-id="${statementId}"]`);
       const buttons = statementDiv.querySelectorAll('.vote-btn');
       const clickedButton = statementDiv.querySelector(`[data-vote="${voteValue}"]`);
-      const loadingSpinner = clickedButton.querySelector('.vote-loading');
-      const voteContent = clickedButton.querySelector('.vote-content');
 
       // Disable all buttons to prevent double-submit
       buttons.forEach(btn => btn.disabled = true);
 
-      // Optimistic update: mark selected button immediately so the UI feels instant
+      // Map vote integers to data-count-type attribute names
+      const countTypeMap = { '1': 'agree', '-1': 'disagree', '0': 'unsure' };
+
+      // Snapshot current counts so we can revert exactly on error
+      const snapshot = {};
+      ['agree', 'disagree', 'unsure'].forEach(type => {
+          const el = statementDiv.querySelector(`[data-count-type="${type}"]`);
+          snapshot[type] = el ? (parseInt(el.textContent, 10) || 0) : 0;
+      });
+      const previousVote = window.userVotes ? window.userVotes[statementId] : undefined;
+
+      // === Optimistic update: apply counts immediately, no waiting ===
+      // Update selection highlight
+      buttons.forEach(btn => btn.classList.remove('vote-btn--optimistic'));
       clickedButton.classList.add('vote-btn--optimistic');
-      loadingSpinner.classList.add('is-loading');
-      voteContent.classList.add('hidden');
+
+      // Adjust counts only when the vote is changing
+      if (previousVote !== voteValue) {
+          const newEl = statementDiv.querySelector(`[data-count-type="${countTypeMap[String(voteValue)]}"]`);
+          if (newEl) newEl.textContent = snapshot[countTypeMap[String(voteValue)]] + 1;
+
+          if (previousVote !== undefined && previousVote !== null) {
+              const oldEl = statementDiv.querySelector(`[data-count-type="${countTypeMap[String(previousVote)]}"]`);
+              if (oldEl) oldEl.textContent = Math.max(0, snapshot[countTypeMap[String(previousVote)]] - 1);
+          }
+      }
+
+      // Track the user's current vote in memory
+      window.userVotes[statementId] = voteValue;
 
       function revertOptimistic() {
-          clickedButton.classList.remove('vote-btn--optimistic');
-          loadingSpinner.classList.remove('is-loading');
-          voteContent.classList.remove('hidden');
+          // Restore counts from pre-click snapshot
+          ['agree', 'disagree', 'unsure'].forEach(type => {
+              const el = statementDiv.querySelector(`[data-count-type="${type}"]`);
+              if (el) el.textContent = snapshot[type];
+          });
+          // Restore selection highlight
+          buttons.forEach(btn => btn.classList.remove('vote-btn--optimistic'));
+          if (previousVote !== undefined && previousVote !== null) {
+              const prevBtn = statementDiv.querySelector(`[data-vote="${previousVote}"]`);
+              if (prevBtn) prevBtn.classList.add('vote-btn--optimistic');
+          }
+          if (previousVote === undefined || previousVote === null) {
+              delete window.userVotes[statementId];
+          } else {
+              window.userVotes[statementId] = previousVote;
+          }
           buttons.forEach(btn => btn.disabled = false);
       }
 
       function applyServerCounts(data) {
+          // Reconcile with authoritative server values
           statementDiv.querySelector('[data-count-type="agree"]').textContent = data.vote_count_agree;
           statementDiv.querySelector('[data-count-type="disagree"]').textContent = data.vote_count_disagree;
           statementDiv.querySelector('[data-count-type="unsure"]').textContent = data.vote_count_unsure;
@@ -583,7 +660,7 @@
           );
 
           if (data.success) {
-              // Reconcile UI with authoritative server counts
+              // Reconcile with authoritative server counts (usually matches optimistic values)
               applyServerCounts(data);
 
               // Pulse animation to confirm
@@ -595,12 +672,15 @@
               }, 300);
 
               // Gamification: progress toward unlocking analysis
+              // Only count first vote on each statement (re-votes don't add to unlock progress)
               const threshold = {{ participation_threshold|default(5) }};
               const serverVoteCount = {{ user_vote_count|default(0) }};
-              window.sessionVoteCount = (window.sessionVoteCount !== undefined)
-                  ? window.sessionVoteCount + 1
-                  : serverVoteCount + 1;
-              const votesNeeded = Math.max(0, threshold - window.sessionVoteCount);
+              if (previousVote === undefined || previousVote === null) {
+                  window.sessionVoteCount = (window.sessionVoteCount !== undefined)
+                      ? window.sessionVoteCount + 1
+                      : serverVoteCount + 1;
+              }
+              const votesNeeded = Math.max(0, threshold - (window.sessionVoteCount !== undefined ? window.sessionVoteCount : serverVoteCount));
               showToast(
                   votesNeeded > 0
                       ? `Vote recorded! ${votesNeeded} more to unlock full analysis`
@@ -614,8 +694,6 @@
               }
               {% endif %}
 
-              loadingSpinner.classList.remove('is-loading');
-              voteContent.classList.remove('hidden');
               buttons.forEach(btn => btn.disabled = false);
           } else {
               revertOptimistic();
@@ -655,6 +733,7 @@
 
   const loadMoreBtn = document.getElementById('loadMoreStatementsBtn');
   if (loadMoreBtn) loadMoreBtn.addEventListener('click', loadMoreStatements);
+  hydrateUserVotesFromDom(document);
 
   const kbHelpBtn = document.getElementById('keyboardHelpBtn');
   if (kbHelpBtn) kbHelpBtn.addEventListener('click', showKeyboardHelp);
@@ -718,31 +797,29 @@
 
       const promptHTML = `
           <div class="argument-prompt mt-4 p-4 bg-purple-50 rounded-lg border border-purple-200 animate-fade-in">
-              <div class="flex items-start justify-between gap-2">
-                  <div class="flex-1 min-w-0">
-                      <p class="text-sm font-medium text-purple-900 mb-2">
-                          Want to explain your ${positionLabel} view?
-                      </p>
-                      <form action="${quickResponseUrl}" method="POST" class="flex flex-col sm:flex-row gap-2">
-                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                          <input type="hidden" name="position" value="${position}">
-                          <input type="text" name="content"
-                                 class="flex-1 min-w-0 px-3 py-2 text-sm border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                                 placeholder="Quick thought (optional)..."
-                                 maxlength="500">
-                          <button type="submit"
-                                  class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors whitespace-nowrap min-h-[44px] sm:min-h-0">
-                              Add
-                          </button>
-                      </form>
-                  </div>
-                  <button class="argument-prompt-dismiss flex-shrink-0 text-purple-400 hover:text-purple-600 p-1 min-h-[44px] min-w-[44px] flex items-center justify-center sm:min-h-0 sm:min-w-0"
+              <div class="flex items-center justify-between mb-2">
+                  <p class="text-sm font-medium text-purple-900">
+                      Want to explain your ${positionLabel} view?
+                  </p>
+                  <button class="argument-prompt-dismiss text-purple-400 hover:text-purple-600 p-1 -mr-1 flex items-center justify-center min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0"
                           aria-label="Dismiss">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                       </svg>
                   </button>
               </div>
+              <form action="${quickResponseUrl}" method="POST" class="flex flex-col sm:flex-row gap-2">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="position" value="${position}">
+                  <input type="text" name="content"
+                         class="w-full sm:flex-1 min-w-0 px-3 py-2 text-sm border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                         placeholder="Quick thought (optional)..."
+                         maxlength="500">
+                  <button type="submit"
+                          class="w-full sm:w-auto px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors min-h-[44px] sm:min-h-0">
+                      Add
+                  </button>
+              </form>
               <p class="text-xs text-purple-600 mt-2">
                   Or <a href="/statements/${statementId}/responses/create?position=${position}" class="underline hover:text-purple-800">write a detailed argument</a>
               </p>

@@ -37,19 +37,55 @@
         <div class="text-3xl font-bold">{{ analysis.statements_count }}</div>
       </div>
       <div>
-        <div class="text-gray-600 text-sm">Cluster Quality</div>
+        {% set analysis_meta = analysis.cluster_data.get('metadata', {}) %}
+        <div class="text-gray-600 text-sm">
+          {% if analysis_meta.get('oversize_mode') %}
+          Sampled Cluster Quality
+          {% else %}
+          Cluster Quality
+          {% endif %}
+        </div>
         <div
           class="text-3xl font-bold {% if analysis.silhouette_score > 0.5 %}text-green-600{% elif analysis.silhouette_score > 0.3 %}text-yellow-600{% else %}text-red-600{% endif %}"
         >
           {{ "%.2f"|format(analysis.silhouette_score) }}
         </div>
-        <div class="text-xs text-gray-500">Silhouette Score</div>
+        <div class="text-xs text-gray-500">
+          {% if analysis_meta.get('oversize_mode') %}
+          Silhouette (sampled participants)
+          {% else %}
+          Silhouette Score
+          {% endif %}
+        </div>
       </div>
     </div>
     <div class="mt-4 text-sm text-gray-500">
       Analyzed: {{ analysis.created_at.strftime('%B %d, %Y at %I:%M %p') }}
     </div>
   </div>
+
+  {% set analysis_meta = analysis.cluster_data.get('metadata', {}) %}
+  {% if analysis_meta.get('oversize_mode') %}
+  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+    <h3 class="text-sm font-semibold text-amber-900 mb-1">Approximate Large-Scale Analysis</h3>
+    <p class="text-sm text-amber-800">
+      This result uses sampled clustering for scale (method:
+      <code>{{ analysis_meta.get('method', analysis.method or 'unknown') }}</code>).
+      It is suitable for directional insight, but not equivalent to full-matrix clustering.
+    </p>
+    <p class="text-xs text-amber-700 mt-2">
+      Sampled participants: {{ analysis_meta.get('sampled_participant_count', 0) }} ·
+      Sampled statements: {{ analysis_meta.get('sampled_statement_count', 0) }} ·
+      Sampling strategy: {{ analysis_meta.get('participant_sampling_strategy', 'unspecified') }}
+    </p>
+    {% if analysis_meta.get('stability_runs', 0) > 1 %}
+    <p class="text-xs text-amber-700 mt-1">
+      Stability ({{ analysis_meta.get('stability_runs') }} runs): mean ARI {{ "%.3f"|format(analysis_meta.get('stability_mean_ari', 0)) }} ·
+      consensus Jaccard {{ "%.3f"|format(analysis_meta.get('stability_consensus_jaccard_mean', 0)) }}
+    </p>
+    {% endif %}
+  </div>
+  {% endif %}
 
   <!-- AI Summary (if available) -->
   {% if analysis.cluster_data.get('ai_summary') %}

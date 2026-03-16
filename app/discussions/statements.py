@@ -1021,22 +1021,9 @@ def vote_statement(statement_id):
     except Exception:
         pass
 
-    record_event(
-        'statement_voted',
-        user_id=current_user.id if current_user.is_authenticated else None,
-        discussion_id=statement.discussion_id,
-        programme_id=statement.discussion.programme_id if statement.discussion else None,
-        statement_id=statement.id,
-        cohort_slug=cohort_slug,
-        country=statement.discussion.country if statement.discussion else None,
-        source='embed' if is_embed_request else 'web',
-        event_metadata={'vote_value': vote_value, 'confidence': confidence}
-    )
-
-    # Track vote with PostHog (also track if from social media)
+    # Track vote with PostHog (background thread — does not block response)
     if posthog and getattr(posthog, 'project_api_key', None):
         try:
-            # Check if this is from social media (conversion tracking)
             referer = request.headers.get('Referer', '') if hasattr(request, 'headers') else ''
             request_url = request.url if hasattr(request, 'url') else ''
             is_social = any(domain in referer for domain in ['twitter.com', 'x.com', 'bsky.social', 'bluesky.social']) or 'utm_source' in request_url
@@ -1047,7 +1034,6 @@ def vote_statement(statement_id):
                 distinct_id = get_statement_vote_fingerprint()
 
             vote_label = {1: 'agree', -1: 'disagree', 0: 'unsure'}.get(vote_value, 'unknown')
-
             properties = {
                 'statement_id': statement_id,
                 'discussion_id': statement.discussion_id,
@@ -1055,48 +1041,52 @@ def vote_statement(statement_id):
                 'is_authenticated': current_user.is_authenticated
             }
 
-            # Add social media tracking if applicable
             if is_social:
                 properties['source'] = 'social'
                 properties['referer'] = referer
-                # Also track as conversion event
-                posthog.capture(
-                    distinct_id=distinct_id,
-                    event='discussion_participated_from_social',
-                    properties=properties
-                )
+                posthog.capture(distinct_id=distinct_id, event='discussion_participated_from_social', properties=properties)
 
-            # Always track the vote
-            posthog.capture(
-                distinct_id=distinct_id,
-                event='statement_voted',
-                properties=properties
-            )
+            posthog.capture(distinct_id=distinct_id, event='statement_voted', properties=properties)
         except Exception as e:
             current_app.logger.warning(f"PostHog tracking error: {e}")
 
-    # Track participant and send notification to discussion creator
+    # Consolidate participant tracking + analytics event into a single commit
     try:
         discussion = statement.discussion
-        user_id = current_user.id if current_user.is_authenticated else None
-        fingerprint = embed_fingerprint if not user_id else None
-        if not fingerprint and not user_id:
-            fingerprint = get_statement_vote_fingerprint()
+        uid = current_user.id if current_user.is_authenticated else None
+        fp = embed_fingerprint if not uid else None
+        if not fp and not uid:
+            fp = get_statement_vote_fingerprint()
 
-        # Track participant (returns existing or creates new)
         participant, is_new = DiscussionParticipant.track_participant(
             discussion_id=discussion.id,
-            user_id=user_id,
-            participant_identifier=fingerprint,
-            commit=True,
+            user_id=uid,
+            participant_identifier=fp,
+            commit=False,
             return_is_new=True
         )
         if cohort_slug:
             participant.cohort_slug = cohort_slug
-            db.session.commit()
+
+        record_event(
+            'statement_voted',
+            commit=False,
+            user_id=uid,
+            discussion_id=statement.discussion_id,
+            programme_id=discussion.programme_id,
+            statement_id=statement.id,
+            cohort_slug=cohort_slug,
+            country=discussion.country,
+            source='embed' if is_embed_request else 'web',
+            event_metadata={'vote_value': vote_value, 'confidence': confidence}
+        )
+
+        db.session.commit()  # single commit for participant + analytics event
+
+        if cohort_slug:
             record_event(
                 'cohort_assigned',
-                user_id=user_id,
+                user_id=uid,
                 discussion_id=discussion.id,
                 programme_id=discussion.programme_id,
                 cohort_slug=cohort_slug,
@@ -1104,8 +1094,7 @@ def vote_statement(statement_id):
                 source='vote_flow'
             )
 
-        # Notify discussion creator about new participant (not for their own votes)
-        if is_new and discussion.creator_id and discussion.creator_id != user_id:
+        if is_new and discussion.creator_id and discussion.creator_id != uid:
             create_discussion_notification(
                 user_id=discussion.creator_id,
                 discussion_id=discussion.id,
@@ -1113,7 +1102,8 @@ def vote_statement(statement_id):
                 additional_data={'participant_count': discussion.participant_count}
             )
     except Exception as e:
-        current_app.logger.warning(f"Participant tracking error: {e}")
+        db.session.rollback()
+        current_app.logger.warning(f"Post-vote tracking error: {e}")
 
     # Form POST from view_statement page: redirect back so user sees updated page
     if is_form_post:

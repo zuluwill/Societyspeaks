@@ -2,6 +2,12 @@
   class="border border-gray-200 rounded-lg p-5 hover:border-blue-300 transition-colors"
   id="statement-{{ statement.id }}"
 >
+  {% set statement_seeded_vote = none %}
+  {% if statement_user_votes_map is defined %}
+    {% set statement_seeded_vote = statement_user_votes_map.get(statement.id) %}
+  {% elif user_votes_map is defined %}
+    {% set statement_seeded_vote = user_votes_map.get(statement.id) %}
+  {% endif %}
   <div class="flex items-start justify-between mb-3">
     <div class="flex-1">
       <div class="flex items-center space-x-2 text-sm text-gray-500 mb-2">
@@ -19,7 +25,7 @@
   </div>
 
   <div class="mb-4" style="background: #f8f9fa; padding: 16px; border-radius: 8px">
-    <div class="vote-buttons-grid" role="group" aria-label="Vote options for this statement" data-statement-id="{{ statement.id }}" data-quick-response-url="{{ url_for('statements.quick_response', statement_id=statement.id) }}">
+    <div class="vote-buttons-grid" role="group" aria-label="Vote options for this statement" data-statement-id="{{ statement.id }}" data-quick-response-url="{{ url_for('statements.quick_response', statement_id=statement.id) }}" data-user-vote="{{ statement_seeded_vote if statement_seeded_vote is not none else '' }}">
       <button type="button" class="vote-btn vote-btn-agree" data-vote="1" aria-label="Agree with this statement">
         <span class="vote-loading">
           <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">

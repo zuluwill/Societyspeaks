@@ -14,16 +14,52 @@ def test_consensus_engine_has_execution_plan_and_oversize_fallback():
     assert "'mode': 'sampled_incremental'" in source
     assert "MAX_CONSENSUS_FULL_MATRIX_STATEMENTS" in source
     assert "def build_oversize_consensus_results(" in source
-    assert "'method': 'sampled_incremental_aggregate'" in source
+    assert "'method': 'sampled_incremental_clustered'" in source
+    assert "participant_sampling_strategy" in source
+    assert "stability_mean_ari" in source
 
 
 def test_consensus_routes_use_execution_plan_for_queueing():
     source = _read("app/discussions/consensus.py")
     assert "get_consensus_execution_plan" in source
     assert "analysis_mode" in source
+    assert "_assess_analysis_publishability" in source
+    assert "CONSENSUS_OVERSIZE_MIN_STABILITY_ARI" in source
 
 
 def test_jobs_use_execution_plan_not_only_can_cluster():
     source = _read("app/discussions/jobs.py")
     assert "get_consensus_execution_plan" in source
     assert "plan['is_ready']" in source
+
+
+def test_consensus_export_respects_publishability_gate():
+    source = _read("app/discussions/consensus.py")
+    # Verify the export route exists
+    assert "@consensus_bp.route('/api/discussions/<int:discussion_id>/consensus/export')" in source
+
+    # Verify the publishability gate appears inside the export function body.
+    # Slice from the export route decorator to the next route decorator to isolate the function.
+    export_start = source.index(
+        "@consensus_bp.route('/api/discussions/<int:discussion_id>/consensus/export')"
+    )
+    next_route = source.find("@consensus_bp.route(", export_start + 1)
+    export_body = source[export_start:next_route] if next_route != -1 else source[export_start:]
+
+    assert "_assess_analysis_publishability(analysis)" in export_body, (
+        "export_analysis must call _assess_analysis_publishability"
+    )
+    assert "'error': 'analysis_withheld'" in export_body, (
+        "export_analysis must return analysis_withheld error"
+    )
+    assert "}), 409" in export_body, (
+        "export_analysis must return 409 for withheld analyses"
+    )
+
+
+def test_startup_validates_consensus_oversize_config():
+    source = _read("app/__init__.py")
+    assert "def _validate_consensus_oversize_config(app):" in source
+    assert "_validate_consensus_oversize_config(app)" in source
+    assert "CONSENSUS_OVERSIZE_MIN_STABILITY_RUNS cannot exceed " in source
+    assert "CONSENSUS_OVERSIZE_STABILITY_RUNS" in source

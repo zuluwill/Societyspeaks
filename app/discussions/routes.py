@@ -15,6 +15,7 @@ from app.programmes.permissions import can_add_discussion_to_programme
 from app.programmes.permissions import can_view_programme
 from app.programmes.utils import render_safe_information_markdown, safe_information_links, validate_cohort_for_discussion
 from app.discussions.sorting import apply_statement_sort
+from app.discussions.thresholds import consensus_thresholds_dict
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy import func
 import json
@@ -54,6 +55,19 @@ def _statement_queries_for_discussion(discussion):
         base_query = base_query.filter(Statement.mod_status >= 0)
 
     return base_query, query
+
+
+def _build_user_votes_map(statement_ids):
+    """Return {statement_id: vote} for the current authenticated user."""
+    if not current_user.is_authenticated or not statement_ids:
+        return {}
+
+    from app.models import StatementVote as SVModel
+    rows = db.session.query(SVModel.statement_id, SVModel.vote).filter(
+        SVModel.user_id == current_user.id,
+        SVModel.statement_id.in_(statement_ids)
+    ).all()
+    return {row.statement_id: row.vote for row in rows}
 
 
 @discussions_bp.route('/news')
@@ -778,6 +792,9 @@ def view_discussion(discussion_id, slug):
     
     # Get user's vote count for participation gate display
     user_vote_count, _ = get_user_vote_count(discussion_id)
+
+    # Build per-statement vote map for optimistic UI seeding (authenticated only)
+    user_votes_map = _build_user_votes_map([s.id for s in statements])
     cohort_slug = (request.args.get('cohort') or '').strip() or None
     if cohort_slug and not validate_cohort_for_discussion(discussion, cohort_slug):
         cohort_slug = None
@@ -789,7 +806,7 @@ def view_discussion(discussion_id, slug):
         safe_info_links = safe_information_links(discussion.information_links)
     
     # Render the page
-    return render_template('discussions/view_discussion.html', 
+    return render_template('discussions/view_discussion.html',
                          discussion=discussion,
                          statements=statements,
                          statements_pagination=statements_pagination,
@@ -797,7 +814,9 @@ def view_discussion(discussion_id, slug):
                          sort=sort,
                          form=form,
                          user_vote_count=user_vote_count,
+                         user_votes_map=user_votes_map,
                          participation_threshold=PARTICIPATION_THRESHOLD,
+                         consensus_thresholds=consensus_thresholds_dict(),
                          safe_information_html=safe_information_html,
                          safe_information_links=safe_info_links,
                          cohort_slug=cohort_slug)
@@ -824,13 +843,15 @@ def api_discussion_statements(discussion_id):
     _, query = _statement_queries_for_discussion(discussion)
     query = apply_statement_sort(query, sort, discussion.id, db.session)
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    statement_user_votes_map = _build_user_votes_map([s.id for s in pagination.items])
 
     html = ''.join(
         render_template(
             'discussions/_statement_card.html',
             statement=statement,
             discussion=discussion,
-            cohort_slug=cohort_slug
+            cohort_slug=cohort_slug,
+            statement_user_votes_map=statement_user_votes_map,
         )
         for statement in pagination.items
     )

@@ -19,8 +19,12 @@ CANONICAL_EVENT_NAMES = {
 }
 
 
-def record_event(event_name, **kwargs):
-    """Append-only analytics event write. Never raises into caller path."""
+def record_event(event_name, commit=True, **kwargs):
+    """Append-only analytics event write. Never raises into caller path.
+
+    Pass commit=False to add the event to the current session without
+    committing, allowing the caller to batch multiple writes into one commit.
+    """
     if event_name not in CANONICAL_EVENT_NAMES:
         return None
     try:
@@ -36,10 +40,12 @@ def record_event(event_name, **kwargs):
             event_metadata=kwargs.get('event_metadata') or {},
         )
         db.session.add(event)
-        db.session.commit()
+        if commit:
+            db.session.commit()
         return event
     except Exception as exc:
-        db.session.rollback()
+        if commit:
+            db.session.rollback()
         logger.warning(f"Failed to record analytics event '{event_name}': {exc}")
         return None
 

@@ -23,6 +23,11 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 from app.lib.time import utcnow_naive
+from app.discussions.thresholds import (
+    CONSENSUS_MIN_PARTICIPANTS,
+    CONSENSUS_MIN_TOTAL_VOTES,
+    CONSENSUS_MIN_VOTES_PER_STATEMENT,
+)
 from typing import Dict, List, Tuple, Optional
 import logging
 
@@ -199,10 +204,9 @@ def can_cluster(discussion_id, db):
     Check if discussion has enough data for meaningful clustering
     
     Criteria (from pol.is analysis):
-    - At least 7 participants (users + anonymous)
-    - At least 7 statements
-    - At least 20 total votes
-    - Each statement has at least 3 votes
+    - At least CONSENSUS_MIN_PARTICIPANTS participants (users + anonymous)
+    - At least CONSENSUS_MIN_TOTAL_VOTES total votes
+    - Each statement has at least CONSENSUS_MIN_VOTES_PER_STATEMENT votes
     """
     plan = get_consensus_execution_plan(discussion_id, db)
     if not plan['is_ready']:
@@ -251,44 +255,54 @@ def get_consensus_execution_plan(discussion_id, db):
         Statement.is_deleted.is_(False)
     ).count()
     
-    # Check minimum votes per statement (only non-deleted statements)
-    min_votes_per_statement = db.session.query(
-        StatementVote.statement_id,
+    # Check minimum votes per statement — LEFT JOIN so statements with zero votes
+    # are included; otherwise a zero-vote statement would be silently skipped.
+    votes_per_statement = db.session.query(
+        Statement.id,
         db.func.count(StatementVote.id).label('vote_count')
-    ).join(Statement, StatementVote.statement_id == Statement.id).filter(
-        StatementVote.discussion_id == discussion_id,
+    ).outerjoin(
+        StatementVote,
+        db.and_(
+            StatementVote.statement_id == Statement.id,
+            StatementVote.discussion_id == discussion_id
+        )
+    ).filter(
+        Statement.discussion_id == discussion_id,
         Statement.is_deleted.is_(False)
-    ).group_by(StatementVote.statement_id).all()
-    
-    if not min_votes_per_statement:
-        return False, "No votes yet"
-    
-    min_votes = min([v[1] for v in min_votes_per_statement])
+    ).group_by(Statement.id).all()
+
+    if not votes_per_statement:
+        return {'is_ready': False, 'mode': 'not_ready', 'message': "No statements yet"}
+
+    min_votes = min(v[1] for v in votes_per_statement)
     
     # Apply minimum readiness criteria first.
-    if participant_count < 7:
+    if participant_count < CONSENSUS_MIN_PARTICIPANTS:
         return {
             'is_ready': False,
             'mode': 'not_ready',
-            'message': f"Need at least 7 participants (have {participant_count})",
+            'message': (
+                f"Need at least {CONSENSUS_MIN_PARTICIPANTS} participants "
+                f"(have {participant_count})"
+            ),
         }
-    if statement_count < 7:
+    if vote_count < CONSENSUS_MIN_TOTAL_VOTES:
         return {
             'is_ready': False,
             'mode': 'not_ready',
-            'message': f"Need at least 7 statements (have {statement_count})",
+            'message': (
+                f"Need at least {CONSENSUS_MIN_TOTAL_VOTES} votes "
+                f"(have {vote_count})"
+            ),
         }
-    if vote_count < 20:
+    if min_votes < CONSENSUS_MIN_VOTES_PER_STATEMENT:
         return {
             'is_ready': False,
             'mode': 'not_ready',
-            'message': f"Need at least 20 votes (have {vote_count})",
-        }
-    if min_votes < 3:
-        return {
-            'is_ready': False,
-            'mode': 'not_ready',
-            'message': "Some statements have fewer than 3 votes",
+            'message': (
+                "Some statements have fewer than "
+                f"{CONSENSUS_MIN_VOTES_PER_STATEMENT} votes"
+            ),
         }
 
     # Oversize guardrails for discussion-level safety caps.
@@ -346,12 +360,81 @@ def get_consensus_execution_plan(discussion_id, db):
     }
 
 
+def _sample_participant_ids_for_oversize(participant_vote_counts, max_participants, seed):
+    """
+    Deterministically sample participants while preserving high-activity signal.
+
+    Strategy:
+    - Keep a deterministic "head" of the most-active participants.
+    - Fill remaining slots by weighted random sample from the long tail.
+    """
+    ranked = sorted(
+        participant_vote_counts.items(),
+        key=lambda item: item[1],
+        reverse=True,
+    )
+    if len(ranked) <= max_participants:
+        return [pid for pid, _ in ranked], {
+            'participant_sampling_strategy': 'full_population',
+            'deterministic_head_count': len(ranked),
+            'tail_sample_count': 0,
+        }
+
+    head_count = min(max(500, max_participants // 3), len(ranked), 5000)
+    head_ids = [pid for pid, _ in ranked[:head_count]]
+    tail = ranked[head_count:]
+    remaining_slots = max(0, max_participants - len(head_ids))
+
+    if remaining_slots == 0 or not tail:
+        return head_ids[:max_participants], {
+            'participant_sampling_strategy': 'deterministic_head_only',
+            'deterministic_head_count': min(len(head_ids), max_participants),
+            'tail_sample_count': 0,
+        }
+
+    tail_ids = [pid for pid, _ in tail]
+    # sqrt weighting reduces dominance of super-voters while preserving activity signal.
+    weights = np.array([max(1.0, float(votes)) ** 0.5 for _, votes in tail], dtype=float)
+    if weights.sum() <= 0:
+        probabilities = None
+    else:
+        probabilities = weights / weights.sum()
+
+    rng = np.random.default_rng(seed=seed)
+    sample_count = min(remaining_slots, len(tail_ids))
+    sampled_indices = rng.choice(
+        len(tail_ids),
+        size=sample_count,
+        replace=False,
+        p=probabilities,
+    )
+    sampled_tail_ids = [tail_ids[int(i)] for i in sampled_indices]
+    sampled_ids = head_ids + sampled_tail_ids
+
+    return sampled_ids, {
+        'participant_sampling_strategy': 'head_plus_weighted_tail',
+        'deterministic_head_count': len(head_ids),
+        'tail_sample_count': len(sampled_tail_ids),
+    }
+
+
 def build_oversize_consensus_results(discussion_id, db, plan):
     """
-    Oversize fallback that avoids full matrix/PCA clustering.
-    Uses sampled cohorts + precomputed aggregates from statement counters.
+    Oversize consensus pipeline for very large discussions.
+
+    Instead of a naive fixed split, this path computes a sampled participant
+    matrix, applies the same PCA + sparsity scaling + clustering pattern used
+    in full-matrix mode, and clearly marks output as approximate.
     """
+    from flask import current_app
     from app.models import Statement, StatementVote
+
+    max_sampled_statements = int(
+        current_app.config.get('MAX_CONSENSUS_OVERSIZE_SAMPLE_STATEMENTS', 500)
+    )
+    max_sampled_participants = int(
+        current_app.config.get('MAX_CONSENSUS_OVERSIZE_SAMPLE_PARTICIPANTS', 5000)
+    )
 
     statement_rows = db.session.query(
         Statement.id,
@@ -384,24 +467,13 @@ def build_oversize_consensus_results(discussion_id, db, plan):
             'total_votes': int(total),
         })
 
-    # Precomputed aggregate strategy: no PCA/cluster assignments in oversize mode.
-    consensus_stmts = [
-        {'statement_id': s['statement_id'], 'agreement_rate': s['agreement_rate'], 'cluster_agreements': []}
-        for s in sorted(scored, key=lambda x: (x['agreement_rate'], x['total_votes']), reverse=True)[:20]
-        if s['total_votes'] >= 10 and s['agreement_rate'] >= 0.7
+    top_statement_ids = [
+        s['statement_id']
+        for s in sorted(scored, key=lambda x: x['total_votes'], reverse=True)[:max_sampled_statements]
     ]
-    bridge_stmts = [
-        {'statement_id': s['statement_id'], 'mean_agreement': s['mean_agreement'], 'variance': s['variance'], 'cluster_agreements': []}
-        for s in sorted(scored, key=lambda x: (x['mean_agreement'], x['total_votes']), reverse=True)[:20]
-        if s['total_votes'] >= 10 and 0.6 <= s['mean_agreement'] <= 0.8
-    ]
-    divisive_stmts = [
-        {'statement_id': s['statement_id'], 'controversy_score': s['controversy_score'], 'agree_rate': s['agree_rate']}
-        for s in sorted(scored, key=lambda x: (x['controversy_score'], x['total_votes']), reverse=True)[:20]
-        if s['total_votes'] >= 10 and s['controversy_score'] >= 0.7
-    ]
+    if not top_statement_ids:
+        return None
 
-    top_statement_ids = [s['statement_id'] for s in sorted(scored, key=lambda x: x['total_votes'], reverse=True)[:250]]
     sampled_votes = db.session.query(
         StatementVote.user_id,
         StatementVote.session_fingerprint,
@@ -411,49 +483,104 @@ def build_oversize_consensus_results(discussion_id, db, plan):
         StatementVote.discussion_id == discussion_id,
         StatementVote.statement_id.in_(top_statement_ids),
     ).all()
+    if not sampled_votes:
+        return None
 
+    vote_data = []
     participant_vote_counts = {}
     for vote in sampled_votes:
         if vote.user_id:
-            pid = f"u_{vote.user_id}"
+            participant_id = f"u_{vote.user_id}"
         elif vote.session_fingerprint:
-            pid = f"a_{vote.session_fingerprint[:16]}"
+            participant_id = f"a_{vote.session_fingerprint[:16]}"
         else:
             continue
-        participant_vote_counts[pid] = participant_vote_counts.get(pid, 0) + 1
+        participant_vote_counts[participant_id] = participant_vote_counts.get(participant_id, 0) + 1
+        vote_data.append(
+            {
+                'participant_id': participant_id,
+                'statement_id': int(vote.statement_id),
+                'vote': int(vote.vote),
+            }
+        )
 
-    sampled_participants = sorted(participant_vote_counts.items(), key=lambda x: x[1], reverse=True)[:5000]
-    sampled_participant_ids = [p[0] for p in sampled_participants]
-    if sampled_participant_ids:
-        half = max(1, len(sampled_participant_ids) // 2)
-        cluster_assignments = {
-            pid: (0 if idx < half else 1)
-            for idx, pid in enumerate(sampled_participant_ids)
-        }
-    else:
-        cluster_assignments = {}
+    sampled_participant_ids, sampling_meta = _sample_participant_ids_for_oversize(
+        participant_vote_counts=participant_vote_counts,
+        max_participants=max_sampled_participants,
+        seed=int(discussion_id),
+    )
+    if not sampled_participant_ids:
+        return None
 
-    return {
-        'cluster_assignments': cluster_assignments,
-        'pca_coordinates': {},
-        'consensus_statements': consensus_stmts,
-        'bridge_statements': bridge_stmts,
-        'divisive_statements': divisive_stmts,
-        'representative_statements': {},
-        'metadata': {
-            'num_clusters': int(len(set(cluster_assignments.values())) if cluster_assignments else 0),
-            'silhouette_score': 0.0,
-            'method': 'sampled_incremental_aggregate',
-            'participants_count': int(plan['metrics']['participants_count']),
-            'statements_count': int(plan['metrics']['statements_count']),
-            'analyzed_at': utcnow_naive().isoformat(),
-            'oversize_mode': True,
-            'oversize_reason': plan['message'],
-            'oversize_thresholds': plan.get('thresholds', {}),
-            'sampled_statement_count': len(top_statement_ids),
-            'sampled_participant_count': len(sampled_participant_ids),
-        }
-    }
+    sample_df = pd.DataFrame(vote_data)
+    sample_df = sample_df[sample_df['participant_id'].isin(sampled_participant_ids)]
+    if sample_df.empty:
+        return None
+
+    vote_matrix_real = sample_df.pivot_table(
+        index='participant_id',
+        columns='statement_id',
+        values='vote',
+        aggfunc='mean',
+    )
+    vote_matrix_real = vote_matrix_real.reindex(columns=top_statement_ids)
+
+    # Drop columns with no sampled votes and keep a minimally informative matrix.
+    sampled_vote_counts = vote_matrix_real.notna().sum(axis=0)
+    usable_columns = sampled_vote_counts[sampled_vote_counts > 0].index.tolist()
+    if len(usable_columns) < 2:
+        return None
+    vote_matrix_real = vote_matrix_real[usable_columns]
+
+    statement_means = vote_matrix_real.mean(axis=0)
+    vote_matrix_filled = vote_matrix_real.fillna(statement_means).fillna(0)
+
+    sampled_user_ids = vote_matrix_real.index.tolist()
+    base_results, _, _, user_labels = _build_analysis_payload(
+        user_ids=sampled_user_ids,
+        statement_ids=usable_columns,
+        vote_matrix_filled=vote_matrix_filled,
+        vote_matrix_real=vote_matrix_real,
+        method='kmeans',
+        random_state=int(discussion_id),
+    )
+    if base_results is None:
+        return None
+
+    stability_runs = int(current_app.config.get('CONSENSUS_OVERSIZE_STABILITY_RUNS', 5))
+    stability_metrics = _compute_oversize_stability_metrics(
+        vote_matrix_filled=vote_matrix_filled,
+        vote_matrix_real=vote_matrix_real,
+        baseline_labels=user_labels,
+        baseline_consensus=base_results['consensus_statements'],
+        baseline_bridge=base_results['bridge_statements'],
+        baseline_divisive=base_results['divisive_statements'],
+        method='kmeans',
+        base_seed=int(discussion_id),
+        run_count=stability_runs,
+    )
+
+    base_results['metadata'].update({
+        'method': 'sampled_incremental_clustered',
+        'participants_count': int(plan['metrics']['participants_count']),
+        'statements_count': int(plan['metrics']['statements_count']),
+        'oversize_mode': True,
+        'oversize_reason': plan['message'],
+        'oversize_thresholds': plan.get('thresholds', {}),
+        'sampled_statement_count': int(len(usable_columns)),
+        'sampled_participant_count': int(len(sampled_user_ids)),
+        'sampled_vote_count': int(len(sample_df)),
+        'participant_sampling_seed': int(discussion_id),
+        'publication_min_stability_runs': int(
+            current_app.config.get('CONSENSUS_OVERSIZE_MIN_STABILITY_RUNS', 3)
+        ),
+        'publication_min_stability_mean_ari': float(
+            current_app.config.get('CONSENSUS_OVERSIZE_MIN_STABILITY_ARI', 0.30)
+        ),
+        **sampling_meta,
+        **stability_metrics,
+    })
+    return base_results
 
 
 def _numpy_pca(matrix, n_components=2):
@@ -581,7 +708,7 @@ def _numpy_agglomerative(data, n_clusters):
     return final_labels
 
 
-def cluster_users(vote_matrix_pca, n_clusters=None, method='agglomerative'):
+def cluster_users(vote_matrix_pca, n_clusters=None, method='agglomerative', random_state=42):
     """
     Cluster users based on PCA-reduced vote matrix
 
@@ -611,7 +738,7 @@ def cluster_users(vote_matrix_pca, n_clusters=None, method='agglomerative'):
                             metric='cosine'
                         )
                     else:
-                        clusterer = KMeans(n_clusters=k, random_state=42)
+                        clusterer = KMeans(n_clusters=k, random_state=random_state)
                     labels = clusterer.fit_predict(vote_matrix_pca)
                     score = silhouette_score(vote_matrix_pca, labels, metric='cosine')
                 except (OSError, ImportError) as e:
@@ -644,7 +771,7 @@ def cluster_users(vote_matrix_pca, n_clusters=None, method='agglomerative'):
                     metric='cosine'
                 )
             else:
-                clusterer = KMeans(n_clusters=n_clusters, random_state=42)
+                clusterer = KMeans(n_clusters=n_clusters, random_state=random_state)
             labels = clusterer.fit_predict(vote_matrix_pca)
             silhouette = silhouette_score(vote_matrix_pca, labels, metric='cosine')
         except (OSError, ImportError) as e:
@@ -877,6 +1004,167 @@ def identify_representative_statements(vote_matrix, user_labels, top_n=5):
     return representatives
 
 
+def _statement_id_set(statement_records):
+    return {int(item['statement_id']) for item in statement_records}
+
+
+def _jaccard_similarity(a, b):
+    if not a and not b:
+        return 1.0
+    union = a | b
+    if not union:
+        return 1.0
+    return len(a & b) / len(union)
+
+
+def _adjusted_rand_index(labels_a, labels_b):
+    """
+    Adjusted Rand Index (ARI) implemented with numpy only.
+    """
+    a = np.asarray(labels_a)
+    b = np.asarray(labels_b)
+    if a.shape[0] != b.shape[0]:
+        return 0.0
+    n = int(a.shape[0])
+    if n < 2:
+        return 1.0
+
+    _, inv_a = np.unique(a, return_inverse=True)
+    _, inv_b = np.unique(b, return_inverse=True)
+    n_a = int(inv_a.max()) + 1
+    n_b = int(inv_b.max()) + 1
+    contingency = np.zeros((n_a, n_b), dtype=np.int64)
+    for idx in range(n):
+        contingency[inv_a[idx], inv_b[idx]] += 1
+
+    def comb2(x):
+        x = np.asarray(x, dtype=np.float64)
+        return x * (x - 1.0) / 2.0
+
+    sum_nij = float(comb2(contingency).sum())
+    sum_ai = float(comb2(contingency.sum(axis=1)).sum())
+    sum_bj = float(comb2(contingency.sum(axis=0)).sum())
+    total_pairs = float(comb2(np.array([n]))[0])
+    if total_pairs <= 0:
+        return 1.0
+
+    expected = (sum_ai * sum_bj) / total_pairs
+    max_index = 0.5 * (sum_ai + sum_bj)
+    denom = max_index - expected
+    if denom == 0:
+        return 1.0
+    return float((sum_nij - expected) / denom)
+
+
+def _build_analysis_payload(user_ids, statement_ids, vote_matrix_filled, vote_matrix_real, method='agglomerative', random_state=42):
+    """
+    Shared analysis pipeline used by full-matrix and oversize modes.
+    """
+    if vote_matrix_filled is None or len(user_ids) == 0:
+        return None, None, None, None
+
+    vote_matrix_pca, pca = perform_pca(vote_matrix_filled)
+    vote_matrix_pca_scaled = apply_sparsity_scaling(vote_matrix_pca, vote_matrix_real)
+    user_labels, silhouette = cluster_users(vote_matrix_pca_scaled, method=method, random_state=random_state)
+
+    cluster_assignments = {
+        user_id: int(label)
+        for user_id, label in zip(user_ids, user_labels)
+    }
+    pca_coordinates = {
+        user_id: (float(coords[0]), float(coords[1]))
+        for user_id, coords in zip(user_ids, vote_matrix_pca_scaled)
+    }
+
+    consensus_stmts = identify_consensus_statements(vote_matrix_real, user_labels)
+    bridge_stmts = identify_bridge_statements(vote_matrix_real, user_labels)
+    divisive_stmts = identify_divisive_statements(vote_matrix_real, user_labels)
+    representative_stmts = identify_representative_statements(vote_matrix_real, user_labels)
+
+    results = {
+        'cluster_assignments': cluster_assignments,
+        'pca_coordinates': pca_coordinates,
+        'consensus_statements': consensus_stmts,
+        'bridge_statements': bridge_stmts,
+        'divisive_statements': divisive_stmts,
+        'representative_statements': representative_stmts,
+        'metadata': {
+            'num_clusters': int(len(np.unique(user_labels))),
+            'silhouette_score': float(silhouette),
+            'method': method,
+            'participants_count': len(user_ids),
+            'statements_count': len(statement_ids),
+            'analyzed_at': utcnow_naive().isoformat(),
+            'explained_variance': pca.explained_variance_ratio_.tolist(),
+        },
+    }
+    return results, vote_matrix_pca_scaled, pca, user_labels
+
+
+def _compute_oversize_stability_metrics(
+    vote_matrix_filled,
+    vote_matrix_real,
+    baseline_labels,
+    baseline_consensus,
+    baseline_bridge,
+    baseline_divisive,
+    method,
+    base_seed,
+    run_count,
+):
+    """
+    Compute cluster and statement stability across repeated seeded runs.
+    """
+    runs = max(1, int(run_count))
+    if runs <= 1:
+        return {'stability_runs': 1}
+
+    baseline_consensus_set = _statement_id_set(baseline_consensus)
+    baseline_bridge_set = _statement_id_set(baseline_bridge)
+    baseline_divisive_set = _statement_id_set(baseline_divisive)
+
+    ari_scores = []
+    consensus_jaccards = []
+    bridge_jaccards = []
+    divisive_jaccards = []
+
+    fixed_k = int(len(np.unique(baseline_labels)))
+    for run_idx in range(1, runs):
+        seed = int(base_seed + run_idx)
+        vote_matrix_pca, _ = perform_pca(vote_matrix_filled)
+        vote_matrix_pca_scaled = apply_sparsity_scaling(vote_matrix_pca, vote_matrix_real)
+        labels, _ = cluster_users(
+            vote_matrix_pca_scaled,
+            n_clusters=fixed_k,
+            method=method,
+            random_state=seed,
+        )
+        ari_scores.append(_adjusted_rand_index(baseline_labels, labels))
+
+        run_consensus = _statement_id_set(identify_consensus_statements(vote_matrix_real, labels))
+        run_bridge = _statement_id_set(identify_bridge_statements(vote_matrix_real, labels))
+        run_divisive = _statement_id_set(identify_divisive_statements(vote_matrix_real, labels))
+        consensus_jaccards.append(_jaccard_similarity(baseline_consensus_set, run_consensus))
+        bridge_jaccards.append(_jaccard_similarity(baseline_bridge_set, run_bridge))
+        divisive_jaccards.append(_jaccard_similarity(baseline_divisive_set, run_divisive))
+
+    return {
+        'stability_runs': int(runs),
+        'stability_mean_ari': float(np.mean(ari_scores)) if ari_scores else 1.0,
+        'stability_min_ari': float(np.min(ari_scores)) if ari_scores else 1.0,
+        'stability_max_ari': float(np.max(ari_scores)) if ari_scores else 1.0,
+        'stability_consensus_jaccard_mean': (
+            float(np.mean(consensus_jaccards)) if consensus_jaccards else 1.0
+        ),
+        'stability_bridge_jaccard_mean': (
+            float(np.mean(bridge_jaccards)) if bridge_jaccards else 1.0
+        ),
+        'stability_divisive_jaccard_mean': (
+            float(np.mean(divisive_jaccards)) if divisive_jaccards else 1.0
+        ),
+    }
+
+
 def run_consensus_analysis(discussion_id, db, method='agglomerative'):
     """
     Main function to run complete consensus analysis on a discussion
@@ -902,68 +1190,30 @@ def run_consensus_analysis(discussion_id, db, method='agglomerative'):
         )
         return build_oversize_consensus_results(discussion_id, db, plan)
     
-    # Build vote matrices (filled for PCA, real for consensus metrics)
     vote_matrix_filled, vote_matrix_real, user_ids, statement_ids = build_vote_matrix(discussion_id, db)
-
-    if vote_matrix_filled is None or len(user_ids) == 0:
+    results, _, _, user_labels = _build_analysis_payload(
+        user_ids=user_ids,
+        statement_ids=statement_ids,
+        vote_matrix_filled=vote_matrix_filled,
+        vote_matrix_real=vote_matrix_real,
+        method=method,
+        random_state=42,
+    )
+    if results is None:
         return None
-
-    # Perform PCA on filled matrix (imputed values help PCA see patterns)
-    vote_matrix_pca, pca = perform_pca(vote_matrix_filled)
-
-    # Apply sparsity-aware scaling (pol.is innovation)
-    # This prevents sparse voters from bunching at center, enabling 4-5+ clusters
-    vote_matrix_pca_scaled = apply_sparsity_scaling(vote_matrix_pca, vote_matrix_real)
-
-    # Cluster users based on scaled PCA coordinates
-    user_labels, silhouette = cluster_users(vote_matrix_pca_scaled, method=method)
-
-    # Create user-cluster mapping
-    # user_ids are strings like "u_42" (authenticated) or "a_abc123" (anonymous)
-    cluster_assignments = {
-        user_id: int(label)
-        for user_id, label in zip(user_ids, user_labels)
-    }
-
-    # Create PCA coordinates mapping (using scaled coordinates for visualization)
-    pca_coordinates = {
-        user_id: (float(coords[0]), float(coords[1]))
-        for user_id, coords in zip(user_ids, vote_matrix_pca_scaled)
-    }
-
-    # Identify special statements using REAL votes only (not imputed)
-    # This ensures consensus metrics only count actual participant votes
-    consensus_stmts = identify_consensus_statements(vote_matrix_real, user_labels)
-    bridge_stmts = identify_bridge_statements(vote_matrix_real, user_labels)
-    divisive_stmts = identify_divisive_statements(vote_matrix_real, user_labels)
-
-    # Identify representative statements for each opinion group
-    # This helps users understand "what does each group believe?"
-    representative_stmts = identify_representative_statements(vote_matrix_real, user_labels)
-
-    # Compile results
-    results = {
-        'cluster_assignments': cluster_assignments,
-        'pca_coordinates': pca_coordinates,
-        'consensus_statements': consensus_stmts,
-        'bridge_statements': bridge_stmts,
-        'divisive_statements': divisive_stmts,
-        'representative_statements': representative_stmts,
-        'metadata': {
-            'num_clusters': int(len(np.unique(user_labels))),
-            'silhouette_score': float(silhouette),
-            'method': method,
-            'participants_count': len(user_ids),
-            'statements_count': len(statement_ids),
-            'analyzed_at': utcnow_naive().isoformat(),
-            'explained_variance': pca.explained_variance_ratio_.tolist()
-        }
-    }
     
     logger.info(f"Consensus analysis complete for discussion {discussion_id}")
     logger.info(f"  - {len(user_ids)} users in {len(np.unique(user_labels))} clusters")
-    logger.info(f"  - {len(consensus_stmts)} consensus, {len(bridge_stmts)} bridge, {len(divisive_stmts)} divisive")
-    logger.info(f"  - {sum(len(v) for v in representative_stmts.values())} representative statements identified")
+    logger.info(
+        "  - %s consensus, %s bridge, %s divisive",
+        len(results['consensus_statements']),
+        len(results['bridge_statements']),
+        len(results['divisive_statements']),
+    )
+    logger.info(
+        "  - %s representative statements identified",
+        sum(len(v) for v in results['representative_statements'].values()),
+    )
 
     return results
 
