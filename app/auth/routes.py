@@ -301,6 +301,14 @@ def register():
 @auth_bp.route('/login', methods=['GET', 'POST'])
 @limiter.limit("10/minute")
 def login():
+    # Guard: if a concurrent/duplicate POST arrives after the first already
+    # logged the user in, skip re-processing to prevent duplicate flash messages.
+    if current_user.is_authenticated:
+        profile = current_user.individual_profile or current_user.company_profile
+        if not profile:
+            return redirect(url_for('profiles.select_profile_type'))
+        return redirect(url_for('auth.dashboard'))
+
     if request.method == 'POST':
         email = request.form.get('email')
         password = request.form.get('password')
