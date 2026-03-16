@@ -4156,7 +4156,7 @@ class Briefing(db.Model):
     # Relationships
     template = db.relationship('BriefTemplate', backref='briefings')
     sources = db.relationship('BriefingSource', backref='briefing', cascade='all, delete-orphan')
-    runs = db.relationship('BriefRun', backref='briefing', lazy='dynamic', order_by='BriefRun.scheduled_at.desc()')
+    runs = db.relationship('BriefRun', backref='briefing', lazy='dynamic', order_by='BriefRun.scheduled_at.desc()', passive_deletes=True)
     recipients = db.relationship('BriefRecipient', backref='briefing', lazy='dynamic', cascade='all, delete-orphan')
     sending_domain = db.relationship('SendingDomain', backref='briefings')
 
@@ -4262,7 +4262,7 @@ class BriefRun(db.Model):
     # Relationships
     items = db.relationship('BriefRunItem', backref='run', cascade='all, delete-orphan', order_by='BriefRunItem.position')
     approved_by = db.relationship('User', backref='approved_brief_runs', foreign_keys=[approved_by_user_id])
-    edits = db.relationship('BriefEdit', backref='brief_run', lazy='dynamic', order_by='BriefEdit.created_at.desc()')
+    edits = db.relationship('BriefEdit', backref='brief_run', lazy='dynamic', order_by='BriefEdit.created_at.desc()', passive_deletes=True)
     opens = db.relationship('BriefEmailOpen', backref='brief_run', cascade='all, delete-orphan')
 
     def to_dict(self):
