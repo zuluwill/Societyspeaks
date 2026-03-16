@@ -1555,24 +1555,82 @@ Guidelines:
                     seen_market_ids.add(market.id)
                     logger.info(f"Market Pulse: matched market '{market.question[:50]}' to topic '{topic.title[:40]}'")
 
-            # Strategy 2: Fall back to trending markets (high volume, recent movement)
+            # Strategy 2: Fall back to finance/economics markets (keyword-filtered)
             if len(signals) < max_markets:
-                trending_markets = PolymarketMarket.query.filter(
-                    PolymarketMarket.is_active == True,
-                    PolymarketMarket.volume_24h >= 5000,  # Meaningful volume
-                    PolymarketMarket.id.notin_(seen_market_ids) if seen_market_ids else True
-                ).order_by(
-                    PolymarketMarket.volume_24h.desc()
-                ).limit(max_markets - len(signals)).all()
+                import math
+                import re
+                from app.lib.time import utcnow_naive
 
-                for market in trending_markets:
-                    # Only include markets with interesting movement
-                    if market.change_24h and abs(market.change_24h) >= 0.02:  # 2%+ movement
-                        signal = market.to_signal_dict()
-                        signal['matched_topic'] = None  # Not matched to a specific topic
-                        signals.append(signal)
-                        seen_market_ids.add(market.id)
-                        logger.info(f"Market Pulse (trending): '{market.question[:50]}' (vol=${market.volume_24h:,.0f})")
+                FINANCE_KEYWORDS = [
+                    'interest rate', 'federal reserve', 'fed ', 'inflation', 'gdp',
+                    'recession', 'unemployment', 'stock market', 's&p', 'nasdaq', 'dow ',
+                    'bond', 'yield', 'treasury', 'dollar', 'currency', 'exchange rate',
+                    'crude oil', 'oil price', 'gold price', 'commodity',
+                    'bitcoin', 'ethereum', 'crypto', 'btc', 'eth ',
+                    'tariff', 'trade war', 'trade deal', 'sanctions',
+                    'earnings', 'ipo', 'merger', 'acquisition', 'bankruptcy',
+                    'central bank', 'ecb', 'boe', 'boj', 'imf', 'world bank',
+                    'monetary policy', 'fiscal', 'deficit', 'debt ceiling',
+                    'jobs report', 'payroll', 'cpi', 'ppi', 'pce',
+                    'rate cut', 'rate hike', 'quantitative',
+                    'market cap', 'ipo', 'valuation', 'hedge fund',
+                ]
+
+                SPORTS_EXCLUDE_KEYWORDS = [
+                    'nfl', 'nba', 'mlb', 'nhl', 'mls', 'ufc', 'wwe', 'fifa',
+                    'premier league', 'champions league', 'la liga', 'bundesliga',
+                    'serie a', 'ligue 1', 'eredivisie', 'championship',
+                    'super bowl', 'world series', 'stanley cup', 'nba finals',
+                    'win on 20', 'win the match', 'win on march', 'win on april',
+                    'win on january', 'win on february', 'win on may',
+                    'score in', 'score at', 'mvp', 'draft pick',
+                    'oscar', 'grammy', 'emmy', 'golden globe',
+                    'bachelor', 'reality tv', 'american idol',
+                ]
+
+                finance_pattern = re.compile(
+                    '|'.join(re.escape(kw) for kw in FINANCE_KEYWORDS),
+                    re.IGNORECASE
+                )
+                sports_exclude_pattern = re.compile(
+                    '|'.join(re.escape(kw) for kw in SPORTS_EXCLUDE_KEYWORDS),
+                    re.IGNORECASE
+                )
+
+                now = utcnow_naive()
+                candidate_markets = PolymarketMarket.query.filter(
+                    PolymarketMarket.is_active == True,
+                    PolymarketMarket.volume_24h >= 5000,
+                    PolymarketMarket.probability.isnot(None),
+                    (PolymarketMarket.end_date > now) | PolymarketMarket.end_date.is_(None),
+                    PolymarketMarket.id.notin_(seen_market_ids) if seen_market_ids else True
+                ).order_by(PolymarketMarket.volume_24h.desc()).limit(500).all()
+
+                scored = []
+                for market in candidate_markets:
+                    question_text = (market.question or '') + ' ' + (market.description or '')[:200]
+
+                    if sports_exclude_pattern.search(question_text):
+                        continue
+                    if not finance_pattern.search(question_text):
+                        continue
+                    if market.change_24h is None or abs(market.change_24h) < 0.005:
+                        continue
+
+                    volume_score = math.log(max(market.volume_24h or 1, 1))
+                    trader_score = math.log(max(market.trader_count or 1, 1))
+                    movement_score = abs(market.change_24h)
+                    composite = (movement_score * 0.4) + (volume_score * 0.3) + (trader_score * 0.3)
+                    scored.append((composite, market))
+
+                scored.sort(key=lambda x: x[0], reverse=True)
+
+                for _, market in scored[:max_markets - len(signals)]:
+                    signal = market.to_signal_dict()
+                    signal['matched_topic'] = None
+                    signals.append(signal)
+                    seen_market_ids.add(market.id)
+                    logger.info(f"Market Pulse (finance): '{market.question[:50]}' (vol=${market.volume_24h:,.0f})")
 
             if not signals:
                 logger.info("No market signals found for Market Pulse section")

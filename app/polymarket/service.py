@@ -329,6 +329,19 @@ class PolymarketService:
         ).update({'is_active': False}, synchronize_session=False)
         stats['deactivated'] = deactivated
 
+        # Also deactivate markets whose end_date has passed — these are resolved
+        # markets that the API may still return but are no longer actionable.
+        # Using a grace period of 1 hour to avoid deactivating markets mid-resolution.
+        expired_cutoff = utcnow_naive() - timedelta(hours=1)
+        expired_deactivated = PolymarketMarket.query.filter(
+            PolymarketMarket.is_active == True,
+            PolymarketMarket.end_date.isnot(None),
+            PolymarketMarket.end_date < expired_cutoff
+        ).update({'is_active': False}, synchronize_session=False)
+        if expired_deactivated:
+            logger.info(f"Deactivated {expired_deactivated} markets with expired end_date")
+        stats['deactivated'] += expired_deactivated
+
         db.session.commit()
 
         # Generate embeddings for new high-quality markets (in batches)
