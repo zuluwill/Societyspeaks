@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "admin/profiles/_shared.html" import render_profile_pagination %}
 
 {% block content %}
 <div class="min-h-screen bg-gray-100">
@@ -18,37 +19,43 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <!-- Search and Filters -->
             <div class="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6 mb-6">
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <form method="GET" action="{{ url_for('admin.list_profiles') }}" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                     <div>
                         <label for="search" class="block text-sm font-medium text-gray-700">Search</label>
-                        <input type="text" name="search" id="search" 
+                        <input type="text" name="q" id="search" value="{{ search_query or '' }}"
                                class="mt-1 block w-full shadow-sm sm:text-sm rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500">
                     </div>
                     <div>
                         <label for="profile-type" class="block text-sm font-medium text-gray-700">Profile Type</label>
-                        <select id="profile-type" name="profile-type" 
+                        <select id="profile-type" name="profile_type" 
                                 class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
                             <option value="">All Types</option>
-                            <option value="individual">Individual</option>
-                            <option value="company">Company</option>
+                            <option value="individual" {% if profile_filter == 'individual' %}selected{% endif %}>Individual</option>
+                            <option value="company" {% if profile_filter == 'company' %}selected{% endif %}>Company</option>
                         </select>
                     </div>
                     <div>
                         <label for="sort" class="block text-sm font-medium text-gray-700">Sort By</label>
                         <select id="sort" name="sort" 
                                 class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                            <option value="newest">Newest First</option>
-                            <option value="oldest">Oldest First</option>
-                            <option value="name">Name</option>
+                            <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                            <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                            <option value="name" {% if sort_by == 'name' %}selected{% endif %}>Name</option>
                         </select>
                     </div>
                     <div class="flex items-end">
-                        <button type="button" 
+                        <button type="submit"
                                 class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Apply Filters
                         </button>
+                        {% if search_query or profile_filter or sort_by != 'newest' %}
+                        <a href="{{ url_for('admin.list_profiles') }}"
+                           class="ml-2 bg-white text-gray-700 px-4 py-2 rounded-md text-sm font-medium border border-gray-300 hover:bg-gray-50">
+                            Clear
+                        </a>
+                        {% endif %}
                     </div>
-                </div>
+                </form>
             </div>
 
             <!-- Profile Lists -->
@@ -97,25 +104,15 @@
                         {% endfor %}
                     </ul>
                     
-                    {% if individual_profiles.pages > 1 %}
-                    <nav class="flex justify-center py-4">
-                        <ul class="flex space-x-2">
-                            {% if individual_profiles.has_prev %}
-                            <li><a href="?page={{ individual_profiles.prev_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Previous</a></li>
-                            {% endif %}
-                            {% for page_num in individual_profiles.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                                {% if page_num %}
-                                    <li><a href="?page={{ page_num }}" class="px-3 py-2 border rounded-md {% if page_num == individual_profiles.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
-                                {% else %}
-                                    <li class="px-3 py-2">...</li>
-                                {% endif %}
-                            {% endfor %}
-                            {% if individual_profiles.has_next %}
-                            <li><a href="?page={{ individual_profiles.next_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Next</a></li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                    {% endif %}
+                    {{ render_profile_pagination(
+                        individual_profiles,
+                        'individual',
+                        search_query,
+                        sort_by,
+                        individual_page or 1,
+                        company_page or 1,
+                        profile_filter
+                    ) }}
                 </div>
 
                 <!-- Company Profiles -->
@@ -164,51 +161,19 @@
                         {% endfor %}
                     </ul>
                     
-                    {% if company_profiles.pages > 1 %}
-                    <nav class="flex justify-center py-4">
-                        <ul class="flex space-x-2">
-                            {% if company_profiles.has_prev %}
-                            <li><a href="?page={{ company_profiles.prev_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Previous</a></li>
-                            {% endif %}
-                            {% for page_num in company_profiles.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
-                                {% if page_num %}
-                                    <li><a href="?page={{ page_num }}" class="px-3 py-2 border rounded-md {% if page_num == company_profiles.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}">{{ page_num }}</a></li>
-                                {% else %}
-                                    <li class="px-3 py-2">...</li>
-                                {% endif %}
-                            {% endfor %}
-                            {% if company_profiles.has_next %}
-                            <li><a href="?page={{ company_profiles.next_num }}" class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50">Next</a></li>
-                            {% endif %}
-                        </ul>
-                    </nav>
-                    {% endif %}
+                    {{ render_profile_pagination(
+                        company_profiles,
+                        'company',
+                        search_query,
+                        sort_by,
+                        individual_page or 1,
+                        company_page or 1,
+                        profile_filter
+                    ) }}
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- JavaScript for Search and Filters -->
-<script nonce="{{ csp_nonce() }}">
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('search');
-    const profileTypeSelect = document.getElementById('profile-type');
-    const sortSelect = document.getElementById('sort');
-
-    function applyFilters() {
-        const searchTerm = searchInput.value.toLowerCase();
-        const profileType = profileTypeSelect.value;
-        const sortBy = sortSelect.value;
-
-        // Add your filter logic here
-        // You might want to make an AJAX call to the server
-        // or filter the existing DOM elements
-    }
-
-    searchInput.addEventListener('input', applyFilters);
-    profileTypeSelect.addEventListener('change', applyFilters);
-    sortSelect.addEventListener('change', applyFilters);
-});
-</script>
 {% endblock %}

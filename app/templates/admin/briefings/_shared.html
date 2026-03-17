@@ -1,0 +1,21 @@
+{% macro render_prev_next_pagination(pagination, prev_url, next_url) %}
+{% if pagination.pages > 1 %}
+<div class="px-6 py-4 border-t border-gray-200">
+    <nav class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="text-sm text-gray-500">
+            Showing {{ ((pagination.page - 1) * pagination.per_page) + 1 }}–{{ [pagination.page * pagination.per_page, pagination.total] | min }} of {{ pagination.total }}
+        </div>
+        <div class="flex flex-wrap gap-2">
+            {% if pagination.has_prev %}
+            <a href="{{ prev_url }}"
+               class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">Previous</a>
+            {% endif %}
+            {% if pagination.has_next %}
+            <a href="{{ next_url }}"
+               class="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50">Next</a>
+            {% endif %}
+        </div>
+    </nav>
+</div>
+{% endif %}
+{% endmacro %}

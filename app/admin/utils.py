@@ -1,5 +1,14 @@
 # app/admin/utils.py
 from werkzeug.utils import secure_filename
+
+
+def escape_like(value):
+    """Escape SQL LIKE/ILIKE wildcard characters in user-provided search text.
+
+    Use alongside SQLAlchemy's ilike(..., escape='\\\\') so the database treats
+    backslash as the escape character, matching the patterns produced here.
+    """
+    return (value or '').replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
 import uuid
 import os
 from flask import current_app

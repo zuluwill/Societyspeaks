@@ -83,20 +83,32 @@
     {% endif %}
 
     <div class="bg-white rounded-xl shadow-sm">
-        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <div class="px-6 py-4 border-b border-gray-200 flex flex-col gap-3 lg:flex-row lg:justify-between lg:items-center">
+            <form method="GET" action="{{ url_for('admin.list_daily_subscribers') }}" class="flex flex-wrap items-center gap-2">
+                <input type="hidden" name="status" value="{{ status_filter or '' }}">
+                <input type="hidden" name="frequency" value="{{ frequency_filter or '' }}">
+                <input type="text" name="q" value="{{ search_query or '' }}"
+                       placeholder="Search by email or username"
+                       class="w-full sm:w-72 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+                <button type="submit" class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Search</button>
+                {% if search_query %}
+                <a href="{{ url_for('admin.list_daily_subscribers', status=status_filter or '', frequency=frequency_filter or '') }}"
+                   class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50">Clear</a>
+                {% endif %}
+            </form>
             <div class="flex items-center gap-4 flex-wrap">
                 <h3 class="text-lg font-semibold text-gray-900">Subscribers</h3>
                 <!-- Status Filter -->
                 <div class="flex items-center gap-2">
-                    <a href="{{ url_for('admin.list_daily_subscribers', frequency=frequency_filter) }}"
+                    <a href="{{ url_for('admin.list_daily_subscribers', frequency=frequency_filter, q=search_query or '') }}"
                        class="px-3 py-1 text-xs font-medium rounded-lg {% if not status_filter %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         All ({{ total_count }})
                     </a>
-                    <a href="{{ url_for('admin.list_daily_subscribers', status='active', frequency=frequency_filter) }}"
+                    <a href="{{ url_for('admin.list_daily_subscribers', status='active', frequency=frequency_filter, q=search_query or '') }}"
                        class="px-3 py-1 text-xs font-medium rounded-lg {% if status_filter == 'active' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         Active ({{ status_counts.active }})
                     </a>
-                    <a href="{{ url_for('admin.list_daily_subscribers', status='unsubscribed', frequency=frequency_filter) }}"
+                    <a href="{{ url_for('admin.list_daily_subscribers', status='unsubscribed', frequency=frequency_filter, q=search_query or '') }}"
                        class="px-3 py-1 text-xs font-medium rounded-lg {% if status_filter == 'unsubscribed' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         Unsubscribed ({{ status_counts.unsubscribed }})
                     </a>
@@ -104,19 +116,19 @@
                 {% if status_filter != 'unsubscribed' %}
                 <!-- Frequency Filter (only shown for active/all views) -->
                 <div class="flex items-center gap-2 border-l border-gray-200 pl-4">
-                    <a href="{{ url_for('admin.list_daily_subscribers', status=status_filter) }}"
+                    <a href="{{ url_for('admin.list_daily_subscribers', status=status_filter, q=search_query or '') }}"
                        class="px-3 py-1 text-xs font-medium rounded-lg {% if not frequency_filter %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         All Frequencies
                     </a>
-                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='daily', status=status_filter) }}"
+                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='daily', status=status_filter, q=search_query or '') }}"
                        class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'daily' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         Daily ({{ frequency_counts.daily }})
                     </a>
-                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='weekly', status=status_filter) }}"
+                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='weekly', status=status_filter, q=search_query or '') }}"
                        class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'weekly' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         Weekly ({{ frequency_counts.weekly }})
                     </a>
-                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='monthly', status=status_filter) }}"
+                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='monthly', status=status_filter, q=search_query or '') }}"
                        class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'monthly' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         Monthly ({{ frequency_counts.monthly }})
                     </a>
@@ -307,14 +319,14 @@
             </p>
             <nav class="flex items-center gap-1">
                 {% if pagination.has_prev %}
-                <a href="{{ url_for('admin.list_daily_subscribers', page=pagination.prev_num, status=status_filter, frequency=frequency_filter) }}"
+                <a href="{{ url_for('admin.list_daily_subscribers', page=pagination.prev_num, status=status_filter, frequency=frequency_filter, q=search_query or '') }}"
                    class="px-3 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
                     &larr; Prev
                 </a>
                 {% endif %}
                 {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
                     {% if p %}
-                    <a href="{{ url_for('admin.list_daily_subscribers', page=p, status=status_filter, frequency=frequency_filter) }}"
+                    <a href="{{ url_for('admin.list_daily_subscribers', page=p, status=status_filter, frequency=frequency_filter, q=search_query or '') }}"
                        class="px-3 py-1.5 text-sm font-medium rounded-lg {% if p == pagination.page %}bg-blue-600 text-white{% else %}text-gray-600 bg-white border border-gray-300 hover:bg-gray-50{% endif %}">
                         {{ p }}
                     </a>
@@ -323,7 +335,7 @@
                     {% endif %}
                 {% endfor %}
                 {% if pagination.has_next %}
-                <a href="{{ url_for('admin.list_daily_subscribers', page=pagination.next_num, status=status_filter, frequency=frequency_filter) }}"
+                <a href="{{ url_for('admin.list_daily_subscribers', page=pagination.next_num, status=status_filter, frequency=frequency_filter, q=search_query or '') }}"
                    class="px-3 py-1.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
                     Next &rarr;
                 </a>

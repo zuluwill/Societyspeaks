@@ -87,6 +87,15 @@ def dashboard():
         brief_type='weekly'
     ).order_by(DailyBrief.date.desc()).first()
 
+    # Trials expiring within 7 days
+    expiring_soon = DailyBriefSubscriber.query.filter(
+        DailyBriefSubscriber.tier == 'trial',
+        DailyBriefSubscriber.status == 'active',
+        DailyBriefSubscriber.trial_ends_at.isnot(None),
+        DailyBriefSubscriber.trial_ends_at > utcnow_naive(),
+        DailyBriefSubscriber.trial_ends_at <= utcnow_naive() + timedelta(days=7)
+    ).order_by(DailyBriefSubscriber.trial_ends_at.asc()).all()
+
     return render_template(
         'admin/brief_dashboard.html',
         today_brief=today_brief,
@@ -98,7 +107,8 @@ def dashboard():
         paid_subscribers=paid_subscribers,
         daily_subscribers=daily_subscribers,
         weekly_subscribers=weekly_subscribers,
-        latest_weekly=latest_weekly
+        latest_weekly=latest_weekly,
+        expiring_soon=expiring_soon
     )
 
 

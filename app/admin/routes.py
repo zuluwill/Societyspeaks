@@ -14,13 +14,14 @@ from app.storage_utils import upload_to_object_storage
 from app.admin import admin_bp
 from app.decorators import admin_required
 from app.admin.audit import write_admin_audit_event
+from app.admin.utils import escape_like as _escape_like
 
 # Import Polymarket admin routes
 try:
     from app.admin import polymarket_routes
 except ImportError:
     pass  # Polymarket routes are optional
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, aliased
 from sqlalchemy.exc import IntegrityError
 import time
 import os
@@ -47,6 +48,7 @@ def _log_admin_audit_event(action, target_type=None, target_id=None, metadata=No
         request_ip=_admin_request_ip(),
         metadata=metadata or {},
     )
+
 
 
 # Admin dashboard
@@ -165,21 +167,74 @@ def launch_room_health():
 @login_required
 @admin_required
 def list_profiles():
-    page = max(1, request.args.get('page', 1, type=int))
+    # Support independent pagination for the two profile lists.
+    # Keep `page` as backward-compatible fallback.
+    legacy_page = max(1, request.args.get('page', 1, type=int))
+    individual_page = max(1, request.args.get('individual_page', legacy_page, type=int))
+    company_page = max(1, request.args.get('company_page', legacy_page, type=int))
     per_page = 20
-    
-    individual_profiles = IndividualProfile.query.options(
+    search_query = request.args.get('q', '').strip()[:255]
+    sort_by = request.args.get('sort', 'newest').strip().lower()
+    profile_filter = request.args.get('profile_type', '').strip().lower()
+
+    individual_query = IndividualProfile.query.options(
         db.joinedload(IndividualProfile.user)
-    ).order_by(IndividualProfile.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
-    
-    company_profiles = CompanyProfile.query.options(
+    ).outerjoin(User, IndividualProfile.user_id == User.id)
+
+    company_query = CompanyProfile.query.options(
         db.joinedload(CompanyProfile.user)
-    ).order_by(CompanyProfile.id.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    ).outerjoin(User, CompanyProfile.user_id == User.id)
+
+    if search_query:
+        search_term = f"%{_escape_like(search_query)}%"
+        individual_query = individual_query.filter(
+            db.or_(
+                IndividualProfile.full_name.ilike(search_term, escape='\\'),
+                User.username.ilike(search_term, escape='\\'),
+                User.email.ilike(search_term, escape='\\'),
+                IndividualProfile.city.ilike(search_term, escape='\\'),
+                IndividualProfile.country.ilike(search_term, escape='\\'),
+            )
+        )
+        company_query = company_query.filter(
+            db.or_(
+                CompanyProfile.company_name.ilike(search_term, escape='\\'),
+                User.username.ilike(search_term, escape='\\'),
+                User.email.ilike(search_term, escape='\\'),
+                CompanyProfile.city.ilike(search_term, escape='\\'),
+                CompanyProfile.country.ilike(search_term, escape='\\'),
+            )
+        )
+
+    if sort_by == 'oldest':
+        individual_order = IndividualProfile.id.asc()
+        company_order = CompanyProfile.id.asc()
+    elif sort_by == 'name':
+        individual_order = IndividualProfile.full_name.asc()
+        company_order = CompanyProfile.company_name.asc()
+    else:
+        individual_order = IndividualProfile.id.desc()
+        company_order = CompanyProfile.id.desc()
+
+    if profile_filter == 'individual':
+        company_profiles = company_query.filter(CompanyProfile.id == -1).paginate(page=1, per_page=per_page, error_out=False)
+        individual_profiles = individual_query.order_by(individual_order).paginate(page=individual_page, per_page=per_page, error_out=False)
+    elif profile_filter == 'company':
+        individual_profiles = individual_query.filter(IndividualProfile.id == -1).paginate(page=1, per_page=per_page, error_out=False)
+        company_profiles = company_query.order_by(company_order).paginate(page=company_page, per_page=per_page, error_out=False)
+    else:
+        individual_profiles = individual_query.order_by(individual_order).paginate(page=individual_page, per_page=per_page, error_out=False)
+        company_profiles = company_query.order_by(company_order).paginate(page=company_page, per_page=per_page, error_out=False)
     
     return render_template(
         'admin/profiles/list.html',
         individual_profiles=individual_profiles,
-        company_profiles=company_profiles
+        company_profiles=company_profiles,
+        search_query=search_query,
+        sort_by=sort_by,
+        profile_filter=profile_filter,
+        individual_page=individual_page,
+        company_page=company_page,
     )
 
 
@@ -706,6 +761,7 @@ def list_discussions():
     page = max(1, request.args.get('page', 1, type=int))
     per_page = 20
     status_filter = request.args.get('status', '').strip().lower()
+    search_query = request.args.get('q', '').strip()[:255]
     
     query = Discussion.query.options(
         db.joinedload(Discussion.creator)
@@ -714,9 +770,19 @@ def list_discussions():
         query = query.filter(Discussion.is_closed.is_(True))
     elif status_filter == 'open':
         query = query.filter(Discussion.is_closed.is_(False))
+
+    if search_query:
+        search_term = f"%{_escape_like(search_query)}%"
+        query = query.filter(Discussion.title.ilike(search_term, escape='\\'))
+
     discussions = query.order_by(Discussion.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
     
-    return render_template('admin/discussions/list.html', discussions=discussions, status_filter=status_filter)
+    return render_template(
+        'admin/discussions/list.html',
+        discussions=discussions,
+        status_filter=status_filter,
+        search_query=search_query,
+    )
 
 
 @admin_bp.route('/partners')
@@ -1234,15 +1300,24 @@ def log_admin_access():
 def list_daily_questions():
     from sqlalchemy import func
     from app.daily.analytics import DailyQuestionAnalytics
+    from sqlalchemy import cast, String
     
     page = max(1, request.args.get('page', 1, type=int))
     per_page = 20
     analytics_days = DailyQuestionAnalytics.normalize_days(request.args.get('days', 30, type=int))
+    search_query = request.args.get('q', '').strip()[:255]
     
     # Get paginated questions
-    questions = DailyQuestion.query.order_by(
-        DailyQuestion.question_date.desc()
-    ).paginate(page=page, per_page=per_page, error_out=False)
+    question_query = DailyQuestion.query
+    if search_query:
+        search_term = f"%{_escape_like(search_query)}%"
+        question_query = question_query.filter(
+            db.or_(
+                DailyQuestion.question_text.ilike(search_term, escape='\\'),
+                cast(DailyQuestion.question_number, String).ilike(search_term, escape='\\'),
+            )
+        )
+    questions = question_query.order_by(DailyQuestion.question_date.desc()).paginate(page=page, per_page=per_page, error_out=False)
     
     # Batch fetch response counts for all questions on this page (prevents N+1)
     question_ids = [q.id for q in questions.items]
@@ -1277,7 +1352,8 @@ def list_daily_questions():
         upcoming=upcoming,
         today=today,
         analytics=analytics,
-        analytics_days=analytics_days
+        analytics_days=analytics_days,
+        search_query=search_query,
     )
 
 
@@ -1487,12 +1563,13 @@ def list_daily_subscribers():
     """View all daily question subscribers"""
     frequency_filter = request.args.get('frequency', '').lower()
     status_filter = request.args.get('status', '').lower()
+    search_query = request.args.get('q', '').strip()[:255]
     page = max(1, request.args.get('page', 1, type=int))
     per_page = 50
 
     query = DailyQuestionSubscriber.query.options(
         joinedload(DailyQuestionSubscriber.user)
-    )
+    ).outerjoin(User, DailyQuestionSubscriber.user_id == User.id)
 
     if frequency_filter in ['daily', 'weekly', 'monthly']:
         query = query.filter_by(email_frequency=frequency_filter)
@@ -1501,6 +1578,15 @@ def list_daily_subscribers():
         query = query.filter(DailyQuestionSubscriber.is_active == True)
     elif status_filter == 'unsubscribed':
         query = query.filter(DailyQuestionSubscriber.is_active == False)
+
+    if search_query:
+        search_term = f"%{_escape_like(search_query)}%"
+        query = query.filter(
+            db.or_(
+                DailyQuestionSubscriber.email.ilike(search_term, escape='\\'),
+                User.username.ilike(search_term, escape='\\'),
+            )
+        )
 
     # Unsubscribed sorted most-recent-first (nulls last for rows missing the date);
     # active/all sorted newest subscriber first.
@@ -1513,28 +1599,30 @@ def list_daily_subscribers():
     subscribers = pagination.items
 
     # Available users for the bulk-add dropdown — only needed on page 1.
-    exclude_patterns = ['test', 'bot', 'fake', 'demo', 'example']
+    # Filter test/bot/demo-style accounts at SQL layer to avoid over-fetching.
+    exclude_patterns = ['%test%', '%bot%', '%fake%', '%demo%', '%example%']
     if page == 1:
         subscribed_user_subq = (
             db.session.query(DailyQuestionSubscriber.user_id)
             .filter(DailyQuestionSubscriber.user_id.isnot(None))
             .subquery()
         )
-        available_users = [
-            u for u in (
-                User.query
-                .filter(
-                    User.email.isnot(None),
-                    ~User.id.in_(subscribed_user_subq),
-                )
-                .order_by(User.username)
-                .all()
+        available_users = (
+            User.query
+            .filter(
+                User.email.isnot(None),
+                ~User.id.in_(subscribed_user_subq),
+                *[
+                    ~db.or_(
+                        User.email.ilike(pattern),
+                        User.username.ilike(pattern),
+                    )
+                    for pattern in exclude_patterns
+                ],
             )
-            if not any(
-                p in (u.email or '').lower() or p in (u.username or '').lower()
-                for p in exclude_patterns
-            )
-        ]
+            .order_by(User.username)
+            .all()
+        )
     else:
         available_users = []
 
@@ -1560,6 +1648,7 @@ def list_daily_subscribers():
         frequency_counts=frequency_counts,
         status_filter=status_filter,
         status_counts=status_counts,
+        search_query=search_query,
     )
 
 
@@ -1843,13 +1932,15 @@ def list_statement_flags():
     per_page = 20
     status_filter = request.args.get('status', 'pending')
     reason_filter = request.args.get('reason', None)
+    search_query = request.args.get('q', '').strip()[:255]
+    flagger = aliased(User)
 
     # Build query
     query = StatementFlag.query.options(
         joinedload(StatementFlag.statement),
         joinedload(StatementFlag.flagger),
         joinedload(StatementFlag.reviewer)
-    )
+    ).join(Statement, StatementFlag.statement_id == Statement.id).outerjoin(flagger, StatementFlag.flagged_by_user_id == flagger.id)
 
     # Apply filters
     if status_filter and status_filter != 'all':
@@ -1857,6 +1948,16 @@ def list_statement_flags():
 
     if reason_filter and reason_filter != 'all':
         query = query.filter(StatementFlag.flag_reason == reason_filter)
+
+    if search_query:
+        search_term = f"%{_escape_like(search_query)}%"
+        query = query.filter(
+            db.or_(
+                Statement.content.ilike(search_term, escape='\\'),
+                flagger.username.ilike(search_term, escape='\\'),
+                StatementFlag.flag_reason.ilike(search_term, escape='\\'),
+            )
+        )
 
     # Order by newest first
     query = query.order_by(StatementFlag.created_at.desc())
@@ -1874,6 +1975,7 @@ def list_statement_flags():
         flags=flags,
         status_filter=status_filter,
         reason_filter=reason_filter,
+        search_query=search_query,
         pending_count=pending_count,
         reviewed_count=reviewed_count,
         dismissed_count=dismissed_count
@@ -1992,13 +2094,17 @@ def list_response_flags():
     per_page = 20
     status_filter = request.args.get('status', 'pending')
     reason_filter = request.args.get('reason', None)
+    search_query = request.args.get('q', '').strip()[:255]
+    flagged_by_user = aliased(User)
 
     # Build query
     query = DailyQuestionResponseFlag.query.options(
         joinedload(DailyQuestionResponseFlag.response).joinedload(DailyQuestionResponse.daily_question),
         joinedload(DailyQuestionResponseFlag.flagged_by),
         joinedload(DailyQuestionResponseFlag.reviewed_by)
-    )
+    ).join(DailyQuestionResponse, DailyQuestionResponseFlag.response_id == DailyQuestionResponse.id)\
+     .join(DailyQuestion, DailyQuestionResponse.daily_question_id == DailyQuestion.id)\
+     .outerjoin(flagged_by_user, DailyQuestionResponseFlag.flagged_by_user_id == flagged_by_user.id)
 
     # Apply filters
     if status_filter and status_filter != 'all':
@@ -2006,6 +2112,17 @@ def list_response_flags():
 
     if reason_filter and reason_filter != 'all':
         query = query.filter(DailyQuestionResponseFlag.reason == reason_filter)
+
+    if search_query:
+        search_term = f"%{_escape_like(search_query)}%"
+        query = query.filter(
+            db.or_(
+                DailyQuestion.question_text.ilike(search_term, escape='\\'),
+                DailyQuestionResponse.response_text.ilike(search_term, escape='\\'),
+                DailyQuestionResponseFlag.reason.ilike(search_term, escape='\\'),
+                flagged_by_user.username.ilike(search_term, escape='\\'),
+            )
+        )
 
     # Order by newest first
     query = query.order_by(DailyQuestionResponseFlag.created_at.desc())
@@ -2024,6 +2141,7 @@ def list_response_flags():
         flags=flags,
         status_filter=status_filter,
         reason_filter=reason_filter,
+        search_query=search_query,
         pending_count=pending_count,
         reviewed_valid_count=reviewed_valid_count,
         reviewed_invalid_count=reviewed_invalid_count,

@@ -4712,10 +4712,11 @@ class Subscription(db.Model):
 
     @property
     def days_remaining(self):
-        """Days remaining in current period"""
-        if not self.current_period_end:
+        """Days remaining in trial or current billing period."""
+        end_date = self.trial_end if self.status == 'trialing' and self.trial_end else self.current_period_end
+        if not end_date:
             return None
-        delta = self.current_period_end - utcnow_naive()
+        delta = end_date - utcnow_naive()
         return max(0, delta.days)
 
     def can_use_feature(self, feature):

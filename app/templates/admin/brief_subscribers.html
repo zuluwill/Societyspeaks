@@ -232,6 +232,9 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timezone</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Briefs</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Sent</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Opens</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clicks</th>
                         {% if status_filter == 'unsubscribed' %}
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unsubscribed</th>
                         {% endif %}
@@ -282,6 +285,31 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ subscriber.total_briefs_received or 0 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% if subscriber.last_sent_at %}
+                            <span title="{{ subscriber.last_sent_at.strftime('%Y-%m-%d %H:%M UTC') }}">
+                                {{ subscriber.last_sent_at.strftime('%b %d') }}
+                            </span>
+                            {% else %}
+                            <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% set opens = subscriber.total_opens or 0 %}
+                            {% set briefs = subscriber.total_briefs_received or 0 %}
+                            <span class="{% if opens > 0 %}text-green-700 font-medium{% else %}text-gray-400{% endif %}">
+                                {{ opens }}
+                            </span>
+                            {% if briefs > 0 and opens > 0 %}
+                            <span class="text-xs text-gray-400 ml-1">({{ ((opens / briefs) * 100) | round | int }}%)</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% set clicks = subscriber.total_clicks or 0 %}
+                            <span class="{% if clicks > 0 %}text-blue-700 font-medium{% else %}text-gray-400{% endif %}">
+                                {{ clicks }}
+                            </span>
                         </td>
                         {% if status_filter == 'unsubscribed' %}
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

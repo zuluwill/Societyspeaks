@@ -126,6 +126,40 @@
             </div>
         </div>
 
+        {% if expiring_soon %}
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-8">
+            <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                </svg>
+                <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-semibold text-amber-800">{{ expiring_soon|length }} trial{{ 's' if expiring_soon|length != 1 else '' }} expiring within 7 days</h3>
+                    <div class="mt-2 flex flex-wrap gap-2">
+                        {% for sub in expiring_soon %}
+                        <a href="{{ url_for('brief_admin.subscribers', q=sub.email, status='active', tier='trial') }}"
+                           class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white border border-amber-300 rounded-full text-xs text-amber-900 hover:bg-amber-100 transition">
+                            <span class="truncate max-w-[180px]">{{ sub.email }}</span>
+                            <span class="text-amber-500 font-medium whitespace-nowrap">
+                                {% if sub.trial_days_remaining == 0 %}
+                                    today
+                                {% elif sub.trial_days_remaining == 1 %}
+                                    1 day
+                                {% else %}
+                                    {{ sub.trial_days_remaining }}d
+                                {% endif %}
+                            </span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                <a href="{{ url_for('brief_admin.subscribers', status='active', tier='trial') }}"
+                   class="flex-shrink-0 text-xs text-amber-700 hover:text-amber-900 font-medium whitespace-nowrap">
+                    View all trials →
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div class="bg-white rounded-xl shadow-md overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200">

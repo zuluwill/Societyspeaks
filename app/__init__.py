@@ -616,6 +616,10 @@ def create_app():
     app.register_blueprint(brief_admin_bp)
     app.logger.debug("Daily brief admin blueprint registered")
 
+    from app.admin.briefings import briefings_admin_bp
+    app.register_blueprint(briefings_admin_bp)
+    app.logger.debug("Paid briefings admin blueprint registered")
+
     # Register news transparency blueprint
     from app.news import news_bp
     app.register_blueprint(news_bp)

@@ -1,0 +1,71 @@
+{% macro render_profile_pagination(pagination, profile_type, search_query, sort_by, individual_page, company_page, profile_filter='') %}
+{#
+  profile_type   — which list this macro paginates ('individual' or 'company')
+  profile_filter — the currently active type filter from the URL (may be '', 'individual', or 'company')
+                   This must be preserved unchanged in all pagination links so we don't
+                   silently activate a filter when the user is just advancing a page.
+#}
+{% if pagination.pages > 1 %}
+<nav class="flex justify-center py-4">
+    <ul class="flex space-x-2">
+        {% if pagination.has_prev %}
+        <li>
+            <a
+                href="{{ url_for(
+                    'admin.list_profiles',
+                    q=search_query or '',
+                    profile_type=profile_filter or '',
+                    sort=sort_by or 'newest',
+                    individual_page=pagination.prev_num if profile_type == 'individual' else individual_page,
+                    company_page=pagination.prev_num if profile_type == 'company' else company_page
+                ) }}"
+                class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50"
+            >
+                Previous
+            </a>
+        </li>
+        {% endif %}
+
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+            <li>
+                <a
+                    href="{{ url_for(
+                        'admin.list_profiles',
+                        q=search_query or '',
+                        profile_type=profile_filter or '',
+                        sort=sort_by or 'newest',
+                        individual_page=page_num if profile_type == 'individual' else individual_page,
+                        company_page=page_num if profile_type == 'company' else company_page
+                    ) }}"
+                    class="px-3 py-2 border rounded-md {% if page_num == pagination.page %}bg-blue-600 text-white{% else %}bg-white hover:bg-gray-50{% endif %}"
+                >
+                    {{ page_num }}
+                </a>
+            </li>
+            {% else %}
+            <li class="px-3 py-2">...</li>
+            {% endif %}
+        {% endfor %}
+
+        {% if pagination.has_next %}
+        <li>
+            <a
+                href="{{ url_for(
+                    'admin.list_profiles',
+                    q=search_query or '',
+                    profile_type=profile_filter or '',
+                    sort=sort_by or 'newest',
+                    individual_page=pagination.next_num if profile_type == 'individual' else individual_page,
+                    company_page=pagination.next_num if profile_type == 'company' else company_page
+                ) }}"
+                class="px-3 py-2 bg-white border rounded-md hover:bg-gray-50"
+            >
+                Next
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endmacro %}
