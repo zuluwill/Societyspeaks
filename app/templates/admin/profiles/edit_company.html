@@ -1,8 +1,9 @@
 {# templates/admin/profiles/edit_company.html #}
-{% extends "profiles/create_company_profile.html" %}
+{% extends "admin/_admin_base.html" %}
+{% from "profiles/_form_helpers.html" import render_field_with_errors, render_image_upload %}
 {% from "admin/profiles/_profile_form.html" import render_user_assignment_form, render_user_assignment_script %}
 
-{% block content %}
+{% block admin_content %}
 <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -11,14 +12,11 @@
                 <p class="mt-1 text-sm text-gray-500">Update profile information and user assignment.</p>
             </div>
 
-            {% block pre_form %}
-                {{ render_user_assignment_form(user_form) }}
-            {% endblock %}
+            {{ render_user_assignment_form(user_form) }}
 
             <form method="POST" enctype="multipart/form-data" class="p-8" id="companyProfileForm">
                 {{ form.csrf_token }}
 
-                {% block form_messages %}
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}
                         {% for category, message in messages %}
@@ -28,14 +26,28 @@
                         {% endfor %}
                     {% endif %}
                 {% endwith %}
-                {% endblock %}
 
-                {% block form_content %}
-                <!-- Existing company profile form fields from parent template -->
-                {{ super() }}
-                {% endblock %}
+                {{ render_image_upload(form.banner_image, 'banner-preview', 'Choose Banner Image') }}
+                {{ render_image_upload(form.logo, 'logo-preview', 'Choose Company Logo') }}
 
-                {% block form_actions %}
+                {{ render_field_with_errors(form.company_name, input_class="text-lg") }}
+                {{ render_field_with_errors(form.description, input_class="resize-none h-32") }}
+                {{ render_field_with_errors(form.city) }}
+                {{ render_field_with_errors(form.country) }}
+                {{ render_field_with_errors(form.email) }}
+                {{ render_field_with_errors(form.website) }}
+
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Social Media</h3>
+                    <div class="space-y-4">
+                        {{ render_field_with_errors(form.linkedin_url) }}
+                        {{ render_field_with_errors(form.twitter_url) }}
+                        {{ render_field_with_errors(form.facebook_url) }}
+                        {{ render_field_with_errors(form.instagram_url) }}
+                        {{ render_field_with_errors(form.tiktok_url) }}
+                    </div>
+                </div>
+
                 <div class="flex justify-end space-x-4">
                     <a href="{{ url_for('admin.list_profiles') }}" 
                        class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -46,14 +58,21 @@
                         Save Changes
                     </button>
                 </div>
-                {% endblock %}
             </form>
         </div>
     </div>
 </div>
 
-{% block form_scripts %}
-    {{ super() }}
-    {{ render_user_assignment_script() }}
-{% endblock %}
+<script src="{{ url_for('static', filename='js/image-upload.js') }}"></script>
+<script nonce="{{ csp_nonce() }}">
+document.getElementById('companyProfileForm').addEventListener('submit', function(e) {
+    const companyName = document.querySelector('input[name="company_name"]');
+    if (!companyName.value.trim()) {
+        e.preventDefault();
+        alert('Please enter your company name');
+    }
+});
+</script>
+
+{{ render_user_assignment_script() }}
 {% endblock %}

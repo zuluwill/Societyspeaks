@@ -1,12 +1,73 @@
 {# templates/admin/profiles/admin_individual_profile.html #}
-{% extends "profiles/create_individual_profile.html" %}
+{% extends "admin/_admin_base.html" %}
+{% from "profiles/_form_helpers.html" import render_field_with_errors, render_image_upload %}
 {% from "admin/profiles/_profile_form.html" import render_user_assignment_form, render_user_assignment_script %}
 
-{% block pre_form %}
-    {{ render_user_assignment_form(user_form) }}
-{% endblock %}
+{% block admin_content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+                <h1 class="text-2xl font-bold text-gray-900">Create Individual Profile</h1>
+                <p class="mt-1 text-sm text-gray-500">Add a new individual profile and assign it to a user.</p>
+            </div>
 
-{% block form_scripts %}
-    {{ super() }}
+            {{ render_user_assignment_form(user_form) }}
+
+            <form method="POST" enctype="multipart/form-data" class="p-8" id="profileForm">
+                {{ form.csrf_token }}
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="mb-6 p-4 rounded-md {% if category == 'error' %}bg-red-50 text-red-700{% else %}bg-green-50 text-green-700{% endif %}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {{ render_image_upload(form.banner_image, 'banner-preview', 'Choose Banner Image') }}
+                {{ render_image_upload(form.profile_image, 'profile-preview', 'Choose Profile Picture') }}
+
+                {{ render_field_with_errors(form.full_name) }}
+                {{ render_field_with_errors(form.bio, input_class="resize-none h-32") }}
+                {{ render_field_with_errors(form.city) }}
+                {{ render_field_with_errors(form.country) }}
+                {{ render_field_with_errors(form.email) }}
+                {{ render_field_with_errors(form.website) }}
+
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Social Links</h3>
+                    <div class="space-y-4">
+                        {{ render_field_with_errors(form.linkedin_url) }}
+                        {{ render_field_with_errors(form.twitter_url) }}
+                        {{ render_field_with_errors(form.facebook_url) }}
+                        {{ render_field_with_errors(form.instagram_url) }}
+                        {{ render_field_with_errors(form.tiktok_url) }}
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Create Profile
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/image-upload.js') }}"></script>
+<script nonce="{{ csp_nonce() }}">
+document.getElementById('profileForm').addEventListener('submit', function(e) {
+    const fullName = document.querySelector('input[name="full_name"]');
+    if (!fullName.value.trim()) {
+        e.preventDefault();
+        alert('Please enter your full name');
+    }
+});
+</script>
+
     {{ render_user_assignment_script() }}
 {% endblock %}
