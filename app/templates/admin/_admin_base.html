@@ -11,7 +11,7 @@
                         <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Admin Dashboard</h2>
                     </div>
                     <!-- Desktop Navigation -->
-                    <div class="hidden lg:ml-6 lg:flex lg:space-x-6">
+                    <div class="hidden lg:ml-4 lg:flex lg:space-x-4 overflow-x-auto">
                         <a href="{{ url_for('admin.dashboard') }}"
                            class="{% if request.endpoint == 'admin.dashboard' %}border-blue-500 text-gray-900{% else %}border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Dashboard
