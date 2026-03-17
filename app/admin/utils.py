@@ -1,7 +1,6 @@
 # app/admin/utils.py
 import uuid
 import os
-import io
 
 from flask import current_app
 from werkzeug.utils import secure_filename

@@ -34,9 +34,9 @@
             <p class="text-sm text-gray-500">Active</p>
             <p class="text-2xl font-bold text-green-600">{{ stats.active }}</p>
         </a>
-        <a href="{{ url_for('briefings_admin.subscriptions', status='past_due') }}"
-           class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition block {% if status_filter in ('past_due', 'unpaid') %}ring-2 ring-amber-400{% endif %}"
-           title="Includes past_due and unpaid — use the Status filter to see each separately">
+        <a href="{{ url_for('briefings_admin.subscriptions', status='at_risk') }}"
+           class="bg-white rounded-lg shadow-sm p-4 hover:shadow-md transition block {% if status_filter in ('at_risk', 'past_due', 'unpaid') %}ring-2 ring-amber-400{% endif %}"
+           title="Includes past_due and unpaid subscriptions">
             <p class="text-sm text-gray-500">At Risk</p>
             <p class="text-2xl font-bold text-amber-600">{{ stats.at_risk }}</p>
             <p class="text-xs text-gray-400 mt-0.5">past due + unpaid</p>

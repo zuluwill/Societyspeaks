@@ -55,7 +55,10 @@ def subscriptions():
         query = query.filter(User.email.ilike(f'%{_escape_like(search_query)}%', escape='\\'))
 
     if status_filter:
-        query = query.filter(Subscription.status == status_filter)
+        if status_filter == 'at_risk':
+            query = query.filter(Subscription.status.in_(('past_due', 'unpaid')))
+        else:
+            query = query.filter(Subscription.status == status_filter)
 
     if plan_filter:
         query = query.filter(PricingPlan.code == plan_filter)
