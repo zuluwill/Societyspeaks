@@ -1487,6 +1487,8 @@ def list_daily_subscribers():
     """View all daily question subscribers"""
     frequency_filter = request.args.get('frequency', '').lower()
     status_filter = request.args.get('status', '').lower()
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
 
     query = DailyQuestionSubscriber.query.options(
         joinedload(DailyQuestionSubscriber.user)
@@ -1507,26 +1509,30 @@ def list_daily_subscribers():
     else:
         query = query.order_by(DailyQuestionSubscriber.created_at.desc())
 
-    subscribers = query.all()
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    subscribers = pagination.items
 
-    # Build exclusion set from ALL subscribers (not just the filtered view) so
-    # active subscribers don't appear as available when viewing the unsubscribed tab.
-    all_subscribed_user_ids = {
-        r[0] for r in DailyQuestionSubscriber.query
-        .with_entities(DailyQuestionSubscriber.user_id)
+    # Subquery — let the DB do the exclusion work rather than materialising IDs in Python.
+    subscribed_user_subq = (
+        db.session.query(DailyQuestionSubscriber.user_id)
         .filter(DailyQuestionSubscriber.user_id.isnot(None))
-        .all()
-    }
-    available_users = User.query.filter(
-        User.email.isnot(None),
-        ~User.id.in_(all_subscribed_user_ids) if all_subscribed_user_ids else True
-    ).order_by(User.username).all()
-
+        .subquery()
+    )
     exclude_patterns = ['test', 'bot', 'fake', 'demo', 'example']
     available_users = [
-        u for u in available_users
-        if not any(p in (u.email or '').lower() or p in (u.username or '').lower()
-                   for p in exclude_patterns)
+        u for u in (
+            User.query
+            .filter(
+                User.email.isnot(None),
+                ~User.id.in_(subscribed_user_subq),
+            )
+            .order_by(User.username)
+            .all()
+        )
+        if not any(
+            p in (u.email or '').lower() or p in (u.username or '').lower()
+            for p in exclude_patterns
+        )
     ]
 
     status_counts = {
@@ -1543,6 +1549,7 @@ def list_daily_subscribers():
     return render_template(
         'admin/daily/subscribers.html',
         subscribers=subscribers,
+        pagination=pagination,
         available_users=available_users,
         active_count=status_counts['active'],
         total_count=status_counts['active'] + status_counts['unsubscribed'],
