@@ -14,6 +14,7 @@ The sectioned mode is the new default, invoked by generate_daily_brief().
 import os
 import logging
 import json
+import math
 from datetime import datetime, date, timedelta
 from typing import List, Dict, Optional, Tuple, Any
 from app.lib.time import utcnow_naive
@@ -101,6 +102,18 @@ class BriefGenerator:
         elif self.provider == 'anthropic':
             import anthropic
             self._anthropic_client = anthropic.Anthropic(api_key=self.api_key)
+
+    @staticmethod
+    def _market_activity_score(market: Any, min_change: float = 0.005) -> Optional[float]:
+        """Composite score used to rank high-signal prediction markets."""
+        change = market.change_24h
+        if change is None or abs(change) < min_change:
+            return None
+
+        volume_score = math.log(max(market.volume_24h or 1, 1))
+        trader_score = math.log(max(market.trader_count or 1, 1))
+        movement_score = abs(change)
+        return (movement_score * 0.4) + (volume_score * 0.3) + (trader_score * 0.3)
 
     def generate_brief(
         self,
@@ -1557,9 +1570,7 @@ Guidelines:
 
             # Strategy 2: Fall back to finance/economics markets (keyword-filtered)
             if len(signals) < max_markets:
-                import math
                 import re
-                from app.lib.time import utcnow_naive
 
                 FINANCE_KEYWORDS = [
                     'interest rate', 'federal reserve', 'fed ', 'inflation', 'gdp',
@@ -1604,7 +1615,7 @@ Guidelines:
                     PolymarketMarket.probability.isnot(None),
                     (PolymarketMarket.end_date > now) | PolymarketMarket.end_date.is_(None),
                     PolymarketMarket.id.notin_(seen_market_ids) if seen_market_ids else True
-                ).order_by(PolymarketMarket.volume_24h.desc()).limit(500).all()
+                ).order_by(PolymarketMarket.volume_24h.desc()).limit(1500).all()
 
                 scored = []
                 for market in candidate_markets:
@@ -1614,13 +1625,9 @@ Guidelines:
                         continue
                     if not finance_pattern.search(question_text):
                         continue
-                    if market.change_24h is None or abs(market.change_24h) < 0.005:
+                    composite = self._market_activity_score(market)
+                    if composite is None:
                         continue
-
-                    volume_score = math.log(max(market.volume_24h or 1, 1))
-                    trader_score = math.log(max(market.trader_count or 1, 1))
-                    movement_score = abs(market.change_24h)
-                    composite = (movement_score * 0.4) + (volume_score * 0.3) + (trader_score * 0.3)
                     scored.append((composite, market))
 
                 scored.sort(key=lambda x: x[0], reverse=True)
@@ -1658,7 +1665,6 @@ Guidelines:
         Ranking uses a composite score:
             abs(change_24h) * 0.4 + log(volume_24h) * 0.3 + log(trader_count) * 0.3
         """
-        import math
         import re
 
         if seen_market_ids is None:
@@ -1702,10 +1708,12 @@ Guidelines:
                 re.IGNORECASE
             )
 
+            now = utcnow_naive()
             high_volume = PolymarketMarket.query.filter(
                 PolymarketMarket.is_active == True,
                 PolymarketMarket.volume_24h >= 5000,
                 PolymarketMarket.probability.isnot(None),
+                (PolymarketMarket.end_date > now) | PolymarketMarket.end_date.is_(None),
             ).order_by(PolymarketMarket.volume_24h.desc()).limit(500).all()
 
             scored_markets = []
@@ -1719,15 +1727,10 @@ Guidelines:
                 if exclude_pattern.search(question_text):
                     continue
 
-                change = market.change_24h
-                if change is None or abs(change) < 0.005:
+                composite = self._market_activity_score(market)
+                if composite is None:
                     continue
 
-                volume_score = math.log(max(market.volume_24h or 1, 1))
-                trader_score = math.log(max(market.trader_count or 1, 1))
-                movement_score = abs(change)
-
-                composite = (movement_score * 0.4) + (volume_score * 0.3) + (trader_score * 0.3)
                 scored_markets.append((composite, market))
 
             scored_markets.sort(key=lambda x: x[0], reverse=True)
