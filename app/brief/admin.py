@@ -515,7 +515,7 @@ def subscribers():
         query = query.filter(DailyBriefSubscriber.tier == tier_filter)
 
     if status_filter == 'unsubscribed':
-        order_col = DailyBriefSubscriber.unsubscribed_at.desc()
+        order_col = DailyBriefSubscriber.unsubscribed_at.desc().nullslast()
     else:
         order_col = DailyBriefSubscriber.created_at.desc()
 
@@ -528,10 +528,6 @@ def subscribers():
     subscribers = pagination.items
 
     # Calculate stats (always unfiltered for the overview cards)
-    paid_count = DailyBriefSubscriber.query.filter(
-        DailyBriefSubscriber.tier.in_(['individual', 'team']),
-        DailyBriefSubscriber.status == 'active'
-    ).count()
     stats = {
         'total': DailyBriefSubscriber.query.count(),
         'active': DailyBriefSubscriber.query.filter_by(status='active').count(),
@@ -539,9 +535,9 @@ def subscribers():
         'free': DailyBriefSubscriber.query.filter_by(tier='free', status='active').count(),
         'individual': DailyBriefSubscriber.query.filter_by(tier='individual', status='active').count(),
         'team': DailyBriefSubscriber.query.filter_by(tier='team', status='active').count(),
-        'paid': paid_count,
         'unsubscribed': DailyBriefSubscriber.query.filter_by(status='unsubscribed').count()
     }
+    stats['paid'] = stats['individual'] + stats['team']
 
     return render_template(
         'admin/brief_subscribers.html',

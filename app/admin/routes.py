@@ -1500,18 +1500,26 @@ def list_daily_subscribers():
     elif status_filter == 'unsubscribed':
         query = query.filter(DailyQuestionSubscriber.is_active == False)
 
-    # Unsubscribed sorted most-recent-first; active sorted newest subscriber first
+    # Unsubscribed sorted most-recent-first (nulls last for rows missing the date);
+    # active/all sorted newest subscriber first.
     if status_filter == 'unsubscribed':
-        query = query.order_by(DailyQuestionSubscriber.unsubscribed_at.desc())
+        query = query.order_by(DailyQuestionSubscriber.unsubscribed_at.desc().nullslast())
     else:
         query = query.order_by(DailyQuestionSubscriber.created_at.desc())
 
     subscribers = query.all()
 
-    subscribed_user_ids = {s.user_id for s in subscribers if s.user_id}
+    # Build exclusion set from ALL subscribers (not just the filtered view) so
+    # active subscribers don't appear as available when viewing the unsubscribed tab.
+    all_subscribed_user_ids = {
+        r[0] for r in DailyQuestionSubscriber.query
+        .with_entities(DailyQuestionSubscriber.user_id)
+        .filter(DailyQuestionSubscriber.user_id.isnot(None))
+        .all()
+    }
     available_users = User.query.filter(
         User.email.isnot(None),
-        ~User.id.in_(subscribed_user_ids) if subscribed_user_ids else True
+        ~User.id.in_(all_subscribed_user_ids) if all_subscribed_user_ids else True
     ).order_by(User.username).all()
 
     exclude_patterns = ['test', 'bot', 'fake', 'demo', 'example']
