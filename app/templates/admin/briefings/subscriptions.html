@@ -95,6 +95,7 @@
                         <option value="">All Statuses</option>
                         <option value="trialing" {% if status_filter == 'trialing' %}selected{% endif %}>Trialing</option>
                         <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active</option>
+                        <option value="at_risk" {% if status_filter == 'at_risk' %}selected{% endif %}>At Risk (past due + unpaid)</option>
                         <option value="past_due" {% if status_filter == 'past_due' %}selected{% endif %}>Past Due</option>
                         <option value="unpaid" {% if status_filter == 'unpaid' %}selected{% endif %}>Unpaid</option>
                         <option value="canceled" {% if status_filter == 'canceled' %}selected{% endif %}>Canceled</option>
