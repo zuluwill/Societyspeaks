@@ -472,7 +472,7 @@ def remove_item(item_id):
 @admin_required
 def subscribers():
     """View subscriber list with search, status, and cadence filters."""
-    page = request.args.get('page', 1, type=int)
+    page = max(1, request.args.get('page', 1, type=int))
     per_page = 50
 
     # Search and filter params (follows same pattern as admin.list_users)

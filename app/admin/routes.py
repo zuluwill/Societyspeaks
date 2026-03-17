@@ -165,7 +165,7 @@ def launch_room_health():
 @login_required
 @admin_required
 def list_profiles():
-    page = request.args.get('page', 1, type=int)
+    page = max(1, request.args.get('page', 1, type=int))
     per_page = 20
     
     individual_profiles = IndividualProfile.query.options(
@@ -703,7 +703,7 @@ def toggle_discussion_closed(discussion_id):
 @login_required
 @admin_required
 def list_discussions():
-    page = request.args.get('page', 1, type=int)
+    page = max(1, request.args.get('page', 1, type=int))
     per_page = 20
     status_filter = request.args.get('status', '').strip().lower()
     
@@ -954,7 +954,7 @@ def partner_metrics_csv():
 @login_required
 @admin_required
 def list_users():
-    page = request.args.get('page', 1, type=int)
+    page = max(1, request.args.get('page', 1, type=int))
     per_page = 20
     search_query = request.args.get('q', '').strip()
     profile_filter = request.args.get('profile_type', '')
@@ -1235,7 +1235,7 @@ def list_daily_questions():
     from sqlalchemy import func
     from app.daily.analytics import DailyQuestionAnalytics
     
-    page = request.args.get('page', 1, type=int)
+    page = max(1, request.args.get('page', 1, type=int))
     per_page = 20
     analytics_days = DailyQuestionAnalytics.normalize_days(request.args.get('days', 30, type=int))
     
@@ -1839,7 +1839,7 @@ def list_statement_flags():
     """View all statement flags for admin review"""
     from sqlalchemy import func
 
-    page = request.args.get('page', 1, type=int)
+    page = max(1, request.args.get('page', 1, type=int))
     per_page = 20
     status_filter = request.args.get('status', 'pending')
     reason_filter = request.args.get('reason', None)
@@ -1988,7 +1988,7 @@ def list_response_flags():
     """View all daily question response flags for admin review"""
     from sqlalchemy import func
 
-    page = request.args.get('page', 1, type=int)
+    page = max(1, request.args.get('page', 1, type=int))
     per_page = 20
     status_filter = request.args.get('status', 'pending')
     reason_filter = request.args.get('reason', None)
