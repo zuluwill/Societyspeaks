@@ -360,6 +360,21 @@
         }
       }
     </script>
+    <!-- Source logo image error handler: must be in head so it fires before images load -->
+    <script nonce="{{ csp_nonce() }}">
+    (function() {
+      document.addEventListener('error', function(e) {
+        if (e.target && e.target.classList && e.target.classList.contains('source-logo-img')) {
+          e.target.style.display = 'none';
+          var fallback = e.target.nextElementSibling;
+          if (fallback && fallback.classList.contains('source-logo-fallback')) {
+            fallback.classList.remove('hidden');
+            fallback.style.display = 'flex';
+          }
+        }
+      }, true);
+    })();
+    </script>
   </head>
   <body class="h-full flex flex-col">
     <!-- Google Tag Manager (noscript) -->
