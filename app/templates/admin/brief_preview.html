@@ -1,9 +1,8 @@
-{% extends "layout.html" %}
+{% extends "admin/_admin_base.html" %}
 
 {% block title %}Preview Brief - {{ brief.date }} - Society Speaks{% endblock %}
 
-{% block content %}
-<div class="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+{% block admin_content %}
     <div class="max-w-4xl mx-auto">
         <div class="flex items-center justify-between mb-6">
             <div>
@@ -237,5 +236,4 @@
             </form>
         </div>
     </div>
-</div>
 {% endblock %}

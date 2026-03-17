@@ -1,9 +1,8 @@
-{% extends "layout.html" %}
+{% extends "admin/_admin_base.html" %}
 
 {% block title %}Edit Brief Item - Society Speaks{% endblock %}
 
-{% block content %}
-<div class="min-h-screen bg-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+{% block admin_content %}
     <div class="max-w-2xl mx-auto">
         <div class="mb-6">
             <a href="{{ url_for('brief_admin.preview', date_str=item.brief.date.strftime('%Y-%m-%d')) }}" 
@@ -50,5 +49,4 @@
             </form>
         </div>
     </div>
-</div>
 {% endblock %}

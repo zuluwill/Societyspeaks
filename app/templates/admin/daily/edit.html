@@ -1,8 +1,8 @@
-{% extends "layout.html" %}
+{% extends "admin/_admin_base.html" %}
 
 {% block title %}Edit Daily Question #{{ question.question_number }} - Admin{% endblock %}
 
-{% block content %}
+{% block admin_content %}
 <div class="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
     <div class="mb-8">
         <a href="{{ url_for('admin.list_daily_questions') }}" class="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4">
