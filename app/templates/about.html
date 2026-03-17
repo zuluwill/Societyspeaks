@@ -61,7 +61,7 @@
                 <p class="text-gray-700 mb-8">
                     Society Speaks does not just show what people think. It produces three distinct types of insight:
                 </p>
-                
+
                 <div class="grid gap-6 md:grid-cols-3">
                     <div class="bg-white rounded-lg border border-gray-200 p-6">
                         <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
@@ -72,7 +72,7 @@
                         <h3 class="font-semibold text-gray-900 mb-2">Consensus Statements</h3>
                         <p class="text-gray-600 text-sm">Ideas with broad agreement across participants, showing where society already aligns.</p>
                     </div>
-                    
+
                     <div class="bg-white rounded-lg border border-gray-200 p-6">
                         <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
                             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,7 +82,7 @@
                         <h3 class="font-semibold text-gray-900 mb-2">Bridge Statements</h3>
                         <p class="text-gray-600 text-sm">Ideas that resonate across different opinion clusters, even when people disagree elsewhere. These are the most actionable insights for progress.</p>
                     </div>
-                    
+
                     <div class="bg-white rounded-lg border border-gray-200 p-6">
                         <div class="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mb-4">
                             <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,10 +93,95 @@
                         <p class="text-gray-600 text-sm">Genuine fault lines where opinions are split. Surfacing these honestly shows where deeper work is needed.</p>
                     </div>
                 </div>
-                
+
                 <p class="text-gray-700 mt-8">
                     Together, these outputs create a far more accurate picture of public opinion than binary polls or adversarial debate.
                 </p>
+            </section>
+
+            <section class="mb-16 lg:mb-20">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">What We Offer</h2>
+                <p class="text-gray-700 mb-8">Society Speaks serves four distinct audiences through four distinct products.</p>
+
+                <div class="grid gap-6 sm:grid-cols-2">
+                    <div class="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
+                        <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Public Deliberation</h3>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            <span class="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">Citizens</span>
+                            <span class="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">General public</span>
+                            <span class="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">Researchers</span>
+                        </div>
+                        <p class="text-gray-600 text-sm flex-1 mb-4">Join daily questions and ongoing discussions on the issues that matter. Vote on statements, share your reasoning, and discover where society agrees, bridges, and genuinely divides — but only after you have thought for yourself.</p>
+                        <a href="{{ url_for('daily.today') }}" class="text-sm font-medium text-blue-600 hover:text-blue-800 inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                            Join today's discussion
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </a>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
+                        <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Deliberation Programmes</h3>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            <span class="text-xs font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">Government</span>
+                            <span class="text-xs font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">NGOs</span>
+                            <span class="text-xs font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">Civic organisations</span>
+                            <span class="text-xs font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full">Universities</span>
+                        </div>
+                        <p class="text-gray-600 text-sm flex-1 mb-4">Run structured deliberation campaigns at any scale — from community consultations to national programmes. Group multiple discussions under a single initiative, manage stewards, track participation, and export analysis-ready data.</p>
+                        <a href="{{ url_for('help.programmes') }}" class="text-sm font-medium text-blue-600 hover:text-blue-800 inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                            Learn about Programmes
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </a>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
+                        <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Intelligence Briefings</h3>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            <span class="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">Policy teams</span>
+                            <span class="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">Think tanks</span>
+                            <span class="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">Newsrooms</span>
+                            <span class="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">Organisations</span>
+                        </div>
+                        <p class="text-gray-600 text-sm flex-1 mb-4">AI-curated briefings drawn from your chosen sources, delivered on your schedule. Stay on top of the issues that matter to your team — daily or weekly, with full editorial control and Slack integration.</p>
+                        <a href="{{ url_for('briefing.landing') }}" class="text-sm font-medium text-blue-600 hover:text-blue-800 inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                            Explore Briefings
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </a>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-gray-200 p-6 flex flex-col">
+                        <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Publisher Embeds</h3>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            <span class="text-xs font-medium bg-green-50 text-green-700 px-2 py-0.5 rounded-full">News publishers</span>
+                            <span class="text-xs font-medium bg-green-50 text-green-700 px-2 py-0.5 rounded-full">Digital media</span>
+                            <span class="text-xs font-medium bg-green-50 text-green-700 px-2 py-0.5 rounded-full">Independent journalists</span>
+                        </div>
+                        <p class="text-gray-600 text-sm flex-1 mb-4">Embed structured discussions directly into your articles via a simple snippet or API. Give your readers a voice beyond the comment section and gain genuine, structured insight from your audience — article by article.</p>
+                        <a href="{{ url_for('partner.hub') }}" class="text-sm font-medium text-blue-600 hover:text-blue-800 inline-flex items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                            For publishers
+                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </a>
+                    </div>
+                </div>
             </section>
 
             <section class="mb-16 lg:mb-20 bg-gray-100 rounded-xl p-8 lg:p-10">
@@ -206,37 +291,40 @@
         </div>
     </div>
 
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-12">
-        <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg shadow-lg p-8 lg:p-10">
-            <h3 class="text-2xl font-semibold mb-6 text-gray-900">Open Source & Community Driven</h3>
-            <div class="flex flex-col md:flex-row gap-8">
-                <div class="flex-1">
-                    <p class="text-gray-700 mb-4">
-                        Society Speaks is proudly open source and community driven. We believe in transparency and collaboration, which is why our entire codebase is available on GitHub for anyone to explore, contribute to, or learn from.
-                    </p>
-                    <p class="text-gray-700">
-                        Your sponsorship helps keep Society Speaks free, independent, and continuously improving. Every contribution supports our infrastructure costs and enables us to develop new features that empower meaningful public discourse.
-                    </p>
-                    <div class="mt-4">
-                        <a href="https://github.com/zuluwill/Societyspeaks" 
-                           class="inline-flex items-center text-blue-600 hover:text-blue-800">
-                            <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                                <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
-                            </svg>
-                            View on GitHub
-                        </a>
-                    </div>
-                </div>
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <div class="grid gap-6 md:grid-cols-2">
+            <div class="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+                <h3 class="text-xl font-semibold text-gray-900 mb-4">Built in the Open</h3>
+                <p class="text-gray-600 mb-4">
+                    Society Speaks is proudly open source. Our entire codebase is available on GitHub for anyone to explore, audit, or contribute to.
+                </p>
+                <p class="text-gray-600 mb-6">
+                    Transparency is not a feature — it is how we earn trust as civic infrastructure.
+                </p>
+                <a href="https://github.com/zuluwill/Societyspeaks"
+                   target="_blank" rel="noopener noreferrer"
+                   aria-label="View Society Speaks source code on GitHub (opens in new tab)"
+                   class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 rounded-lg px-4 py-2 hover:bg-gray-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">
+                    <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/>
+                    </svg>
+                    View on GitHub
+                </a>
             </div>
-        </div>
 
-        <div class="mt-12 flex justify-center">
-            <iframe src="https://github.com/sponsors/zuluwill/card" 
-                    title="Sponsor zuluwill" 
-                    height="225" 
-                    width="600" 
-                    style="border: 0; max-width: 100%;">
-            </iframe>
+            <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 sm:p-8 text-white">
+                <h3 class="text-xl font-semibold mb-4">Support the Mission</h3>
+                <p class="text-blue-100 mb-4">
+                    Society Speaks runs without advertising and without selling your data. It is funded by people who believe in what it does.
+                </p>
+                <p class="text-blue-100 mb-6">
+                    Your donation — however small — keeps it independent, ad-free, and continuously improving.
+                </p>
+                <a href="{{ url_for('main.donate') }}"
+                   class="inline-block bg-white text-blue-700 font-semibold py-2.5 px-5 rounded-lg hover:bg-blue-50 transition text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-700">
+                    Make a donation
+                </a>
+            </div>
         </div>
     </div>
 
@@ -245,11 +333,11 @@
             <h3 class="text-2xl font-bold text-white mb-4">Ready to Make Your Voice Heard?</h3>
             <p class="text-white text-lg mb-6">Start with today's question or explore ongoing discussions.</p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="{{ url_for('daily.today') }}" 
+                <a href="{{ url_for('daily.today') }}"
                    class="inline-block bg-white text-blue-600 font-semibold py-3 px-6 rounded-lg shadow hover:bg-gray-100 transition">
                     Today's Question
                 </a>
-                <a href="{{ url_for('discussions.news_feed') }}" 
+                <a href="{{ url_for('discussions.news_feed') }}"
                    class="inline-block bg-blue-500 text-white font-semibold py-3 px-6 rounded-lg shadow hover:bg-blue-400 transition border border-blue-400">
                     Explore Discussions
                 </a>
