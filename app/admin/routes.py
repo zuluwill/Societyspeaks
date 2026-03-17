@@ -1487,7 +1487,7 @@ def list_daily_subscribers():
     """View all daily question subscribers"""
     frequency_filter = request.args.get('frequency', '').lower()
     status_filter = request.args.get('status', '').lower()
-    page = request.args.get('page', 1, type=int)
+    page = max(1, request.args.get('page', 1, type=int))
     per_page = 50
 
     query = DailyQuestionSubscriber.query.options(
@@ -1512,28 +1512,31 @@ def list_daily_subscribers():
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     subscribers = pagination.items
 
-    # Subquery — let the DB do the exclusion work rather than materialising IDs in Python.
-    subscribed_user_subq = (
-        db.session.query(DailyQuestionSubscriber.user_id)
-        .filter(DailyQuestionSubscriber.user_id.isnot(None))
-        .subquery()
-    )
+    # Available users for the bulk-add dropdown — only needed on page 1.
     exclude_patterns = ['test', 'bot', 'fake', 'demo', 'example']
-    available_users = [
-        u for u in (
-            User.query
-            .filter(
-                User.email.isnot(None),
-                ~User.id.in_(subscribed_user_subq),
+    if page == 1:
+        subscribed_user_subq = (
+            db.session.query(DailyQuestionSubscriber.user_id)
+            .filter(DailyQuestionSubscriber.user_id.isnot(None))
+            .subquery()
+        )
+        available_users = [
+            u for u in (
+                User.query
+                .filter(
+                    User.email.isnot(None),
+                    ~User.id.in_(subscribed_user_subq),
+                )
+                .order_by(User.username)
+                .all()
             )
-            .order_by(User.username)
-            .all()
-        )
-        if not any(
-            p in (u.email or '').lower() or p in (u.username or '').lower()
-            for p in exclude_patterns
-        )
-    ]
+            if not any(
+                p in (u.email or '').lower() or p in (u.username or '').lower()
+                for p in exclude_patterns
+            )
+        ]
+    else:
+        available_users = []
 
     status_counts = {
         'active': DailyQuestionSubscriber.query.filter_by(is_active=True).count(),
