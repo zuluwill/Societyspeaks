@@ -84,27 +84,44 @@
 
     <div class="bg-white rounded-xl shadow-sm">
         <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <h3 class="text-lg font-semibold text-gray-900">All Subscribers</h3>
-                <!-- Frequency Filter -->
+            <div class="flex items-center gap-4 flex-wrap">
+                <h3 class="text-lg font-semibold text-gray-900">Subscribers</h3>
+                <!-- Status Filter -->
                 <div class="flex items-center gap-2">
-                    <a href="{{ url_for('admin.list_daily_subscribers') }}" 
-                       class="px-3 py-1 text-xs font-medium rounded-lg {% if not frequency_filter %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
-                        All
+                    <a href="{{ url_for('admin.list_daily_subscribers', frequency=frequency_filter) }}"
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if not status_filter %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        All ({{ total_count }})
                     </a>
-                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='daily') }}" 
+                    <a href="{{ url_for('admin.list_daily_subscribers', status='active', frequency=frequency_filter) }}"
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if status_filter == 'active' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Active ({{ status_counts.active }})
+                    </a>
+                    <a href="{{ url_for('admin.list_daily_subscribers', status='unsubscribed', frequency=frequency_filter) }}"
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if status_filter == 'unsubscribed' %}bg-red-100 text-red-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        Unsubscribed ({{ status_counts.unsubscribed }})
+                    </a>
+                </div>
+                {% if status_filter != 'unsubscribed' %}
+                <!-- Frequency Filter (only shown for active/all views) -->
+                <div class="flex items-center gap-2 border-l border-gray-200 pl-4">
+                    <a href="{{ url_for('admin.list_daily_subscribers', status=status_filter) }}"
+                       class="px-3 py-1 text-xs font-medium rounded-lg {% if not frequency_filter %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
+                        All Frequencies
+                    </a>
+                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='daily', status=status_filter) }}"
                        class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'daily' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         Daily ({{ frequency_counts.daily }})
                     </a>
-                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='weekly') }}" 
+                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='weekly', status=status_filter) }}"
                        class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'weekly' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         Weekly ({{ frequency_counts.weekly }})
                     </a>
-                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='monthly') }}" 
+                    <a href="{{ url_for('admin.list_daily_subscribers', frequency='monthly', status=status_filter) }}"
                        class="px-3 py-1 text-xs font-medium rounded-lg {% if frequency_filter == 'monthly' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
                         Monthly ({{ frequency_counts.monthly }})
                     </a>
                 </div>
+                {% endif %}
             </div>
             {% if available_users %}
             <form action="{{ url_for('admin.bulk_subscribe_users') }}" method="POST" class="inline"
@@ -131,9 +148,15 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
+                        {% if status_filter != 'unsubscribed' %}
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Streak</th>
+                        {% endif %}
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscribed</th>
+                        {% if status_filter == 'unsubscribed' %}
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unsubscribed</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                        {% endif %}
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
@@ -187,6 +210,7 @@
                             <span class="text-xs text-gray-500 ml-1">{{ sub.get_send_day_name() }} {{ sub.preferred_send_hour }}:00</span>
                             {% endif %}
                         </td>
+                        {% if status_filter != 'unsubscribed' %}
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% if sub.is_active %}
                             <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">Active</span>
@@ -200,9 +224,26 @@
                             <span class="text-xs text-gray-500">(best: {{ sub.longest_streak }})</span>
                             {% endif %}
                         </td>
+                        {% endif %}
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {{ sub.created_at.strftime('%b %d, %Y') }}
                         </td>
+                        {% if status_filter == 'unsubscribed' %}
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% if sub.unsubscribed_at %}
+                            {{ sub.unsubscribed_at.strftime('%b %d, %Y') }}
+                            {% else %}
+                            <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {% if sub.unsubscribe_reason %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 text-gray-700 text-xs">{{ sub.unsubscribe_reason | replace('_', ' ') | title }}</span>
+                            {% else %}
+                            <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        {% endif %}
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
                             <div class="flex items-center space-x-2">
                                 <form action="{{ url_for('admin.toggle_subscriber', subscriber_id=sub.id) }}" method="POST" class="inline">

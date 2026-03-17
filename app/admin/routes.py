@@ -1485,49 +1485,63 @@ def view_daily_question(question_id):
 @admin_required
 def list_daily_subscribers():
     """View all daily question subscribers"""
-    # Get frequency filter from query params
     frequency_filter = request.args.get('frequency', '').lower()
-    
+    status_filter = request.args.get('status', '').lower()
+
     query = DailyQuestionSubscriber.query.options(
         joinedload(DailyQuestionSubscriber.user)
     )
-    
-    # Apply frequency filter if provided
+
     if frequency_filter in ['daily', 'weekly', 'monthly']:
         query = query.filter_by(email_frequency=frequency_filter)
-    
-    subscribers = query.order_by(
-        DailyQuestionSubscriber.created_at.desc()
-    ).all()
-    
+
+    if status_filter == 'active':
+        query = query.filter(DailyQuestionSubscriber.is_active == True)
+    elif status_filter == 'unsubscribed':
+        query = query.filter(DailyQuestionSubscriber.is_active == False)
+
+    # Unsubscribed sorted most-recent-first; active sorted newest subscriber first
+    if status_filter == 'unsubscribed':
+        query = query.order_by(DailyQuestionSubscriber.unsubscribed_at.desc())
+    else:
+        query = query.order_by(DailyQuestionSubscriber.created_at.desc())
+
+    subscribers = query.all()
+
     subscribed_user_ids = {s.user_id for s in subscribers if s.user_id}
     available_users = User.query.filter(
         User.email.isnot(None),
         ~User.id.in_(subscribed_user_ids) if subscribed_user_ids else True
     ).order_by(User.username).all()
-    
+
     exclude_patterns = ['test', 'bot', 'fake', 'demo', 'example']
     available_users = [
-        u for u in available_users 
-        if not any(p in (u.email or '').lower() or p in (u.username or '').lower() 
+        u for u in available_users
+        if not any(p in (u.email or '').lower() or p in (u.username or '').lower()
                    for p in exclude_patterns)
     ]
-    
-    # Count by frequency
-    frequency_counts = {
-        'daily': sum(1 for s in DailyQuestionSubscriber.query.filter_by(email_frequency='daily', is_active=True).all()),
-        'weekly': sum(1 for s in DailyQuestionSubscriber.query.filter_by(email_frequency='weekly', is_active=True).all()),
-        'monthly': sum(1 for s in DailyQuestionSubscriber.query.filter_by(email_frequency='monthly', is_active=True).all()),
+
+    status_counts = {
+        'active': DailyQuestionSubscriber.query.filter_by(is_active=True).count(),
+        'unsubscribed': DailyQuestionSubscriber.query.filter_by(is_active=False).count(),
     }
-    
+
+    frequency_counts = {
+        'daily': DailyQuestionSubscriber.query.filter_by(email_frequency='daily', is_active=True).count(),
+        'weekly': DailyQuestionSubscriber.query.filter_by(email_frequency='weekly', is_active=True).count(),
+        'monthly': DailyQuestionSubscriber.query.filter_by(email_frequency='monthly', is_active=True).count(),
+    }
+
     return render_template(
         'admin/daily/subscribers.html',
         subscribers=subscribers,
         available_users=available_users,
-        active_count=sum(1 for s in subscribers if s.is_active),
-        total_count=len(subscribers),
+        active_count=status_counts['active'],
+        total_count=status_counts['active'] + status_counts['unsubscribed'],
         frequency_filter=frequency_filter,
-        frequency_counts=frequency_counts
+        frequency_counts=frequency_counts,
+        status_filter=status_filter,
+        status_counts=status_counts,
     )
 
 

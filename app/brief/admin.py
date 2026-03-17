@@ -508,13 +508,18 @@ def subscribers():
     elif cadence_filter == 'weekly':
         query = query.filter(DailyBriefSubscriber.cadence == 'weekly')
 
-    # Filter by tier
-    if tier_filter:
+    # Filter by tier ('paid' is a convenience alias for individual + team)
+    if tier_filter == 'paid':
+        query = query.filter(DailyBriefSubscriber.tier.in_(['individual', 'team']))
+    elif tier_filter:
         query = query.filter(DailyBriefSubscriber.tier == tier_filter)
 
-    pagination = query.order_by(
-        DailyBriefSubscriber.created_at.desc()
-    ).paginate(
+    if status_filter == 'unsubscribed':
+        order_col = DailyBriefSubscriber.unsubscribed_at.desc()
+    else:
+        order_col = DailyBriefSubscriber.created_at.desc()
+
+    pagination = query.order_by(order_col).paginate(
         page=page,
         per_page=per_page,
         error_out=False
@@ -523,6 +528,10 @@ def subscribers():
     subscribers = pagination.items
 
     # Calculate stats (always unfiltered for the overview cards)
+    paid_count = DailyBriefSubscriber.query.filter(
+        DailyBriefSubscriber.tier.in_(['individual', 'team']),
+        DailyBriefSubscriber.status == 'active'
+    ).count()
     stats = {
         'total': DailyBriefSubscriber.query.count(),
         'active': DailyBriefSubscriber.query.filter_by(status='active').count(),
@@ -530,6 +539,7 @@ def subscribers():
         'free': DailyBriefSubscriber.query.filter_by(tier='free', status='active').count(),
         'individual': DailyBriefSubscriber.query.filter_by(tier='individual', status='active').count(),
         'team': DailyBriefSubscriber.query.filter_by(tier='team', status='active').count(),
+        'paid': paid_count,
         'unsubscribed': DailyBriefSubscriber.query.filter_by(status='unsubscribed').count()
     }
 
