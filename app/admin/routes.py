@@ -50,7 +50,6 @@ def _log_admin_audit_event(action, target_type=None, target_id=None, metadata=No
     )
 
 
-
 # Admin dashboard
 @admin_bp.route('/dashboard')
 @login_required

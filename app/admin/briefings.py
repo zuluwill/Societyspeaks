@@ -20,6 +20,24 @@ from app.models import (
 briefings_admin_bp = Blueprint('briefings_admin', __name__, url_prefix='/admin/briefings')
 
 
+def _subscription_query():
+    """Base query for Subscription rows with plan, user, and org eagerly loaded.
+
+    Centralises the join/options pattern so every view in this module stays DRY.
+    """
+    return (
+        db.session.query(Subscription)
+        .join(PricingPlan, Subscription.plan_id == PricingPlan.id)
+        .outerjoin(User, Subscription.user_id == User.id)
+        .outerjoin(CompanyProfile, Subscription.org_id == CompanyProfile.id)
+        .options(
+            contains_eager(Subscription.plan),
+            contains_eager(Subscription.user),
+            contains_eager(Subscription.org),
+        )
+    )
+
+
 @briefings_admin_bp.route('/')
 @admin_required
 def subscriptions():
@@ -31,18 +49,7 @@ def subscriptions():
     status_filter = request.args.get('status', '')
     plan_filter = request.args.get('plan', '')
 
-    # Base query: always join plan (required) and outer-join user (org subscriptions have no user)
-    query = (
-        db.session.query(Subscription)
-        .join(PricingPlan, Subscription.plan_id == PricingPlan.id)
-        .outerjoin(User, Subscription.user_id == User.id)
-        .outerjoin(CompanyProfile, Subscription.org_id == CompanyProfile.id)
-        .options(
-            contains_eager(Subscription.plan),
-            contains_eager(Subscription.user),
-            contains_eager(Subscription.org),
-        )
-    )
+    query = _subscription_query()
 
     if search_query:
         query = query.filter(User.email.ilike(f'%{_escape_like(search_query)}%', escape='\\'))
@@ -74,15 +81,7 @@ def subscriptions():
     # Trials expiring within 7 days — surface as an alert
     now = utcnow_naive()
     expiring_soon = (
-        db.session.query(Subscription)
-        .join(PricingPlan, Subscription.plan_id == PricingPlan.id)
-        .outerjoin(User, Subscription.user_id == User.id)
-        .outerjoin(CompanyProfile, Subscription.org_id == CompanyProfile.id)
-        .options(
-            contains_eager(Subscription.plan),
-            contains_eager(Subscription.user),
-            contains_eager(Subscription.org),
-        )
+        _subscription_query()
         .filter(
             Subscription.status == 'trialing',
             Subscription.trial_end.isnot(None),

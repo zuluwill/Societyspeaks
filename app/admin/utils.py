@@ -1,4 +1,9 @@
 # app/admin/utils.py
+import uuid
+import os
+import io
+
+from flask import current_app
 from werkzeug.utils import secure_filename
 
 
@@ -9,10 +14,7 @@ def escape_like(value):
     backslash as the escape character, matching the patterns produced here.
     """
     return (value or '').replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
-import uuid
-import os
-from flask import current_app
-import io
+
 
 _storage_client = None
 
