@@ -31,44 +31,49 @@
       discussion.creator_id %} {% set is_unlocked = is_creator or
       (user_vote_count|default(0) >= participation_threshold|default(5)) %}
       <a
+        id="consensus-analysis-link"
         href="{{ url_for('consensus.view_results', discussion_id=discussion.id) }}"
         class="{% if is_unlocked %}bg-green-600 hover:bg-green-700{% else %}bg-gray-500 hover:bg-gray-600{% endif %} text-white px-6 py-3 rounded-lg font-semibold flex items-center justify-center whitespace-nowrap"
+        data-threshold="{{ participation_threshold|default(5) }}"
+        data-vote-count="{{ user_vote_count|default(0) }}"
         {% if not is_unlocked %}title="Vote on {{ participation_threshold|default(5) - user_vote_count|default(0) }} more statements to unlock"{% endif %}
       >
-        {% if is_unlocked %}
-        <svg
-          class="w-5 h-5 mr-2 flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          ></path>
-        </svg>
-        Consensus Analysis
-        {% else %}
-        <svg
-          class="w-5 h-5 mr-2 flex-shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-          ></path>
-        </svg>
-        Analysis
-        <span class="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-xs font-medium"
-          >{{ user_vote_count|default(0) }}/{{ participation_threshold|default(5) }}</span
-        >
-        {% endif %}
+        <span id="consensus-analysis-unlocked" class="flex items-center {% if not is_unlocked %}hidden{% endif %}">
+          <svg
+            class="w-5 h-5 mr-2 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            ></path>
+          </svg>
+          Consensus Analysis
+        </span>
+        <span id="consensus-analysis-locked" class="flex items-center {% if is_unlocked %}hidden{% endif %}">
+          <svg
+            class="w-5 h-5 mr-2 flex-shrink-0"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+            ></path>
+          </svg>
+          Analysis
+          <span
+            id="analysis-vote-progress"
+            class="ml-2 bg-white/20 px-2 py-0.5 rounded-full text-xs font-medium"
+          >{{ user_vote_count|default(0) }}/{{ participation_threshold|default(5) }}</span>
+        </span>
       </a>
     </div>
 
@@ -187,9 +192,13 @@
       statements|sum(attribute='vote_count_agree') +
       statements|sum(attribute='vote_count_disagree') +
       statements|sum(attribute='vote_count_unsure')
-    ) %} {% set total_statements = statement_metrics.statement_count|default(statements|length) %} {% set participant_count = discussion.participant_count|default(0) %} {% if total_votes < min_total_votes or participant_count < min_participants %}
+  ) %} {% set total_statements = statement_metrics.statement_count|default(statements|length) %} {% set participant_count = discussion_participant_count|default(discussion.participant_count)|default(0) %} {% if total_votes < min_total_votes or participant_count < min_participants %}
   <div
+    id="consensus-progress-card"
     class="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200"
+    data-min-participants="{{ min_participants }}"
+    data-min-total-votes="{{ min_total_votes }}"
+    data-recommended-statements="{{ recommended_statements }}"
   >
     <div class="flex items-center justify-between mb-2">
       <span class="text-sm font-semibold text-gray-700"
@@ -202,7 +211,7 @@
       <div>
         <div class="flex justify-between text-xs text-gray-600 mb-1">
           <span>Participants</span>
-          <span>{{ participant_count }}/{{ min_participants }}</span>
+          <span id="consensus-participants-count">{{ participant_count }}/{{ min_participants }}</span>
         </div>
         <div
           style="
@@ -213,6 +222,7 @@
           "
         >
           <div
+            id="consensus-participants-bar"
             style="background: linear-gradient(to right, #60a5fa, #2563eb); height: 100%; width: {{ [((participant_count) / min_participants * 100), 100]|min }}%; transition: width 0.3s;"
           ></div>
         </div>
@@ -240,7 +250,7 @@
       <div>
         <div class="flex justify-between text-xs text-gray-600 mb-1">
           <span>Total Votes</span>
-          <span>{{ total_votes }}/{{ min_total_votes }}</span>
+          <span id="consensus-total-votes-count">{{ total_votes }}/{{ min_total_votes }}</span>
         </div>
         <div
           style="
@@ -251,6 +261,7 @@
           "
         >
           <div
+            id="consensus-total-votes-bar"
             style="background: linear-gradient(to right, #60a5fa, #2563eb); height: 100%; width: {{ [(total_votes / min_total_votes * 100), 100]|min }}%; transition: width 0.3s;"
           ></div>
         </div>
@@ -561,6 +572,80 @@
       }
   };
 
+  function updateConsensusUiFromServer(data) {
+      if (!data || typeof data !== 'object') return;
+
+      const analysisLink = document.getElementById('consensus-analysis-link');
+      if (analysisLink) {
+          const threshold = Number(data.participation_threshold ?? analysisLink.dataset.threshold ?? {{ participation_threshold|default(5) }});
+          const voteCount = Number(data.user_vote_count ?? analysisLink.dataset.voteCount ?? 0);
+          const isUnlocked = Boolean(data.is_consensus_unlocked) || voteCount >= threshold;
+
+          analysisLink.dataset.voteCount = String(voteCount);
+          analysisLink.dataset.threshold = String(threshold);
+
+          const lockedEl = document.getElementById('consensus-analysis-locked');
+          const unlockedEl = document.getElementById('consensus-analysis-unlocked');
+          const badgeEl = document.getElementById('analysis-vote-progress');
+
+          if (badgeEl) {
+              badgeEl.textContent = `${voteCount}/${threshold}`;
+          }
+
+          if (isUnlocked) {
+              analysisLink.classList.remove('bg-gray-500', 'hover:bg-gray-600');
+              analysisLink.classList.add('bg-green-600', 'hover:bg-green-700');
+              analysisLink.removeAttribute('title');
+              if (lockedEl) lockedEl.classList.add('hidden');
+              if (unlockedEl) unlockedEl.classList.remove('hidden');
+          } else {
+              analysisLink.classList.remove('bg-green-600', 'hover:bg-green-700');
+              analysisLink.classList.add('bg-gray-500', 'hover:bg-gray-600');
+              const votesNeeded = Math.max(0, threshold - voteCount);
+              analysisLink.setAttribute('title', `Vote on ${votesNeeded} more statements to unlock`);
+              if (unlockedEl) unlockedEl.classList.add('hidden');
+              if (lockedEl) lockedEl.classList.remove('hidden');
+          }
+      }
+
+      const progress = data.consensus_progress;
+      if (!progress || typeof progress !== 'object') return;
+
+      const participantsCountEl = document.getElementById('consensus-participants-count');
+      const participantsBarEl = document.getElementById('consensus-participants-bar');
+      const totalVotesCountEl = document.getElementById('consensus-total-votes-count');
+      const totalVotesBarEl = document.getElementById('consensus-total-votes-bar');
+      const progressCardEl = document.getElementById('consensus-progress-card');
+
+      const minParticipants = Number(progress.min_participants || 0);
+      const participantCount = Number(progress.participant_count || 0);
+      if (participantsCountEl && minParticipants > 0) {
+          participantsCountEl.textContent = `${participantCount}/${minParticipants}`;
+      }
+      if (participantsBarEl && minParticipants > 0) {
+          const pct = Math.min((participantCount / minParticipants) * 100, 100);
+          participantsBarEl.style.width = `${pct}%`;
+      }
+
+      const minTotalVotes = Number(progress.min_total_votes || 0);
+      const totalVotes = Number(progress.total_votes || 0);
+      if (totalVotesCountEl && minTotalVotes > 0) {
+          totalVotesCountEl.textContent = `${totalVotes}/${minTotalVotes}`;
+      }
+      if (totalVotesBarEl && minTotalVotes > 0) {
+          const pct = Math.min((totalVotes / minTotalVotes) * 100, 100);
+          totalVotesBarEl.style.width = `${pct}%`;
+      }
+
+      if (progressCardEl) {
+          const isReady = (
+              (minParticipants <= 0 || participantCount >= minParticipants) &&
+              (minTotalVotes <= 0 || totalVotes >= minTotalVotes)
+          );
+          progressCardEl.classList.toggle('hidden', isReady);
+      }
+  }
+
   async function voteOnStatement(statementId, voteValue, confidence = 3) {
       const statementDiv = document.querySelector(`[data-statement-id="${statementId}"]`);
       const buttons = statementDiv.querySelectorAll('.vote-btn');
@@ -662,6 +747,7 @@
           if (data.success) {
               // Reconcile with authoritative server counts (usually matches optimistic values)
               applyServerCounts(data);
+              updateConsensusUiFromServer(data);
 
               // Pulse animation to confirm
               clickedButton.style.transform = 'scale(1.05)';

@@ -140,6 +140,77 @@ def get_user_vote_count(discussion_id):
         return 0, 'anonymous'
 
 
+def build_consensus_ui_state(discussion, precomputed_metrics=None, participant_count=None):
+    """
+    Build a single, consistent consensus progress payload for UI consumers.
+
+    Returns:
+        dict with:
+          - user_vote_count
+          - participation_threshold
+          - is_consensus_unlocked
+          - consensus_progress
+    """
+    from sqlalchemy import func
+    from app.api.utils import get_discussion_participant_count
+
+    thresholds = consensus_thresholds_dict()
+    user_vote_count, _ = get_user_vote_count(discussion.id)
+    participation_threshold = PARTICIPATION_THRESHOLD
+    is_creator = current_user.is_authenticated and current_user.id == discussion.creator_id
+
+    # Compute visibility filter once, only when at least one query path will run.
+    if precomputed_metrics is None or participant_count is None:
+        can_view_unapproved = current_user.is_authenticated and (
+            current_user.id == discussion.creator_id or getattr(current_user, 'is_admin', False)
+        )
+        min_mod_status = None if can_view_unapproved else 0
+    else:
+        min_mod_status = None  # both args pre-supplied; no queries will run
+
+    if precomputed_metrics is not None:
+        total_votes = int(precomputed_metrics.get('total_votes') or 0)
+        statement_count = int(precomputed_metrics.get('statement_count') or 0)
+    else:
+        statement_scope = Statement.query.filter(
+            Statement.discussion_id == discussion.id,
+            Statement.is_deleted.is_(False)
+        )
+        if min_mod_status is not None:
+            statement_scope = statement_scope.filter(Statement.mod_status >= min_mod_status)
+
+        total_votes = statement_scope.with_entities(
+            func.coalesce(func.sum(Statement.vote_count_agree), 0) +
+            func.coalesce(func.sum(Statement.vote_count_disagree), 0) +
+            func.coalesce(func.sum(Statement.vote_count_unsure), 0)
+        ).scalar() or 0
+
+        statement_count = statement_scope.with_entities(
+            func.count(Statement.id)
+        ).scalar() or 0
+
+    if participant_count is None:
+        participant_count = get_discussion_participant_count(
+            discussion,
+            include_deleted_statement_votes=False,
+            min_mod_status=min_mod_status,
+        )
+
+    return {
+        'user_vote_count': int(user_vote_count or 0),
+        'participation_threshold': int(participation_threshold),
+        'is_consensus_unlocked': bool(is_creator or user_vote_count >= participation_threshold),
+        'consensus_progress': {
+            'participant_count': int(participant_count or 0),
+            'min_participants': int(thresholds.get('min_participants', 7)),
+            'total_votes': int(total_votes or 0),
+            'min_total_votes': int(thresholds.get('min_total_votes', 20)),
+            'statement_count': int(statement_count or 0),
+            'recommended_statements': int(thresholds.get('recommended_statements', 7)),
+        }
+    }
+
+
 @consensus_bp.route('/discussions/<int:discussion_id>/consensus/analyze', methods=['POST'])
 @login_required
 @limiter.limit("3 per hour")

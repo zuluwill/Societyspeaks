@@ -182,7 +182,11 @@ def get_partner_allowed_origins(env: Optional[str] = None):
     return list(allowed)
 
 
-def get_discussion_participant_count(discussion):
+def get_discussion_participant_count(
+    discussion,
+    include_deleted_statement_votes=True,
+    min_mod_status=None,
+):
     """
     Get the number of unique participants in a discussion.
 
@@ -190,30 +194,52 @@ def get_discussion_participant_count(discussion):
 
     Args:
         discussion: Discussion model instance
+        include_deleted_statement_votes: If False, ignore votes attached to
+            deleted statements.
+        min_mod_status: Optional minimum statement moderation status to include
+            (e.g., 0 to include only visible/approved statements).
 
     Returns:
         int: Number of unique participants
     """
     from sqlalchemy import func, distinct
     from app import db
-    from app.models import StatementVote
+    from app.models import StatementVote, Statement
 
     # Count authenticated users
-    user_count = db.session.query(
+    user_query = db.session.query(
         func.count(distinct(StatementVote.user_id))
     ).filter(
         StatementVote.discussion_id == discussion.id,
         StatementVote.user_id.isnot(None)
-    ).scalar() or 0
+    )
+    if not include_deleted_statement_votes or min_mod_status is not None:
+        user_query = user_query.join(
+            Statement, StatementVote.statement_id == Statement.id
+        )
+        if not include_deleted_statement_votes:
+            user_query = user_query.filter(Statement.is_deleted.is_(False))
+        if min_mod_status is not None:
+            user_query = user_query.filter(Statement.mod_status >= min_mod_status)
+    user_count = user_query.scalar() or 0
 
     # Count anonymous participants by fingerprint
-    anon_count = db.session.query(
+    anon_query = db.session.query(
         func.count(distinct(StatementVote.session_fingerprint))
     ).filter(
         StatementVote.discussion_id == discussion.id,
         StatementVote.user_id.is_(None),
         StatementVote.session_fingerprint.isnot(None)
-    ).scalar() or 0
+    )
+    if not include_deleted_statement_votes or min_mod_status is not None:
+        anon_query = anon_query.join(
+            Statement, StatementVote.statement_id == Statement.id
+        )
+        if not include_deleted_statement_votes:
+            anon_query = anon_query.filter(Statement.is_deleted.is_(False))
+        if min_mod_status is not None:
+            anon_query = anon_query.filter(Statement.mod_status >= min_mod_status)
+    anon_count = anon_query.scalar() or 0
 
     return user_count + anon_count
 

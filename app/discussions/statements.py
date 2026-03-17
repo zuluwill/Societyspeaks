@@ -972,17 +972,35 @@ def vote_statement(statement_id):
         actor_key = f"user:{user_id}" if user_id else f"anon:{(session_fingerprint or '')[:16]}"
         request_hash = _vote_request_hash(vote_value, confidence, partner_ref, cohort_slug)
         idempotency_cache_key = f"vote-idempotency:{statement_id}:{actor_key}:{idempotency_key}"
+        prior = None
         try:
             prior = cache.get(idempotency_cache_key)
-            if prior:
-                if prior.get('request_hash') != request_hash:
-                    return jsonify({
-                        'error': 'idempotency_key_reused',
-                        'message': 'This Idempotency-Key was already used with a different payload.'
-                    }), 409
-                return jsonify(prior.get('response', {})), int(prior.get('status_code', 200))
         except Exception:
-            pass
+            prior = None
+
+        if prior:
+            if prior.get('request_hash') != request_hash:
+                return jsonify({
+                    'error': 'idempotency_key_reused',
+                    'message': 'This Idempotency-Key was already used with a different payload.'
+                }), 409
+            response_payload = dict(prior.get('response', {}) or {})
+            # Refresh volatile consensus progress fields so duplicate requests
+            # do not serve stale unlock/progress state.
+            if response_payload.get('success'):
+                try:
+                    from app.discussions.consensus import build_consensus_ui_state
+                    ui_state = build_consensus_ui_state(discussion)
+                    response_payload.update({
+                        'user_vote_count': ui_state['user_vote_count'],
+                        'participation_threshold': ui_state['participation_threshold'],
+                        'is_consensus_unlocked': ui_state['is_consensus_unlocked'],
+                        'consensus_progress': ui_state['consensus_progress'],
+                    })
+                except Exception:
+                    # Keep idempotency guarantees even if best-effort UI refresh fails.
+                    pass
+            return jsonify(response_payload), int(prior.get('status_code', 200))
 
     try:
         _persist_vote_with_upsert(
@@ -1110,6 +1128,11 @@ def vote_statement(statement_id):
         flash('Vote recorded.', 'success')
         return redirect(url_for('statements.view_statement', statement_id=statement_id))
 
+    # Include fresh consensus-gate metrics so the voting UI can update
+    # unlock/progress state without requiring a page refresh.
+    from app.discussions.consensus import build_consensus_ui_state
+    consensus_ui_state = build_consensus_ui_state(discussion)
+
     response_payload = {
         'success': True,
         'vote': vote_value,
@@ -1118,7 +1141,11 @@ def vote_statement(statement_id):
         'vote_count_unsure': statement.vote_count_unsure,
         'total_votes': statement.total_votes,
         'agreement_rate': statement.agreement_rate,
-        'controversy_score': statement.controversy_score
+        'controversy_score': statement.controversy_score,
+        'user_vote_count': consensus_ui_state['user_vote_count'],
+        'participation_threshold': consensus_ui_state['participation_threshold'],
+        'is_consensus_unlocked': consensus_ui_state['is_consensus_unlocked'],
+        'consensus_progress': consensus_ui_state['consensus_progress'],
     }
 
     if idempotency_cache_key and request_hash:

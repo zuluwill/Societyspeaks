@@ -7,8 +7,8 @@ from app.storage_utils import get_recent_activity
 from app.middleware import track_discussion_view 
 from app.email_utils import create_discussion_notification
 from app.webhook_security import webhook_required, webhook_with_timestamp
-from app.discussions.consensus import get_user_vote_count, PARTICIPATION_THRESHOLD
-from app.api.utils import is_partner_origin_allowed, get_partner_allowed_origins
+from app.discussions.consensus import build_consensus_ui_state, PARTICIPATION_THRESHOLD
+from app.api.utils import is_partner_origin_allowed, get_partner_allowed_origins, get_discussion_participant_count
 from app.trending.conversion_tracking import track_social_click
 from app.lib.time import utcnow_naive
 from app.programmes.permissions import can_add_discussion_to_programme
@@ -789,9 +789,36 @@ def view_discussion(discussion_id, slug):
         query = apply_statement_sort(query, sort, discussion_id, db.session)
         statements_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         statements = statements_pagination.items
-    
-    # Get user's vote count for participation gate display
-    user_vote_count, _ = get_user_vote_count(discussion_id)
+
+        can_view_unapproved = current_user.is_authenticated and (
+            current_user.id == discussion.creator_id or getattr(current_user, 'is_admin', False)
+        )
+        discussion_participant_count = get_discussion_participant_count(
+            discussion,
+            include_deleted_statement_votes=False,
+            min_mod_status=None if can_view_unapproved else 0,
+        )
+        consensus_ui_state = build_consensus_ui_state(
+            discussion,
+            precomputed_metrics=statement_metrics,
+            participant_count=discussion_participant_count,
+        )
+    else:
+        _thresholds = consensus_thresholds_dict()
+        consensus_ui_state = {
+            'user_vote_count': 0,
+            'participation_threshold': int(PARTICIPATION_THRESHOLD),
+            'is_consensus_unlocked': False,
+            'consensus_progress': {
+                'participant_count': int(discussion.participant_count or 0),
+                'min_participants': int(_thresholds.get('min_participants', 7)),
+                'total_votes': 0,
+                'min_total_votes': int(_thresholds.get('min_total_votes', 20)),
+                'statement_count': 0,
+                'recommended_statements': int(_thresholds.get('recommended_statements', 7)),
+            },
+        }
+        discussion_participant_count = consensus_ui_state['consensus_progress']['participant_count']
 
     # Build per-statement vote map for optimistic UI seeding (authenticated only)
     user_votes_map = _build_user_votes_map([s.id for s in statements])
@@ -813,9 +840,10 @@ def view_discussion(discussion_id, slug):
                          statement_metrics=statement_metrics,
                          sort=sort,
                          form=form,
-                         user_vote_count=user_vote_count,
+                         user_vote_count=consensus_ui_state['user_vote_count'],
                          user_votes_map=user_votes_map,
-                         participation_threshold=PARTICIPATION_THRESHOLD,
+                         discussion_participant_count=discussion_participant_count,
+                         participation_threshold=consensus_ui_state['participation_threshold'],
                          consensus_thresholds=consensus_thresholds_dict(),
                          safe_information_html=safe_information_html,
                          safe_information_links=safe_info_links,
