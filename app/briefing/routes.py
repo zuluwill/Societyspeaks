@@ -740,6 +740,16 @@ def use_template(template_id):
             db.session.add(briefing)
             db.session.flush()  # Get briefing.id for source linking
 
+            # Auto-add the creating user as a recipient
+            auto_recipient = BriefRecipient(
+                briefing_id=briefing.id,
+                email=current_user.email,
+                name=current_user.full_name or current_user.username,
+                status='active'
+            )
+            auto_recipient.generate_magic_token()
+            db.session.add(auto_recipient)
+
             # Auto-populate sources from template using utility function
             sources_added, sources_failed, _ = populate_briefing_sources_from_template(
                 briefing, template.default_sources, current_user
@@ -967,6 +977,16 @@ def create_briefing():
 
             db.session.add(briefing)
             db.session.flush()  # Get briefing.id
+
+            # Auto-add the creating user as a recipient
+            auto_recipient = BriefRecipient(
+                briefing_id=briefing.id,
+                email=current_user.email,
+                name=current_user.full_name or current_user.username,
+                status='active'
+            )
+            auto_recipient.generate_magic_token()
+            db.session.add(auto_recipient)
             
             # Auto-populate sources from template if selected
             sources_added = 0
