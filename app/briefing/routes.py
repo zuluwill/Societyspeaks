@@ -285,6 +285,29 @@ def can_access_source(user, source):
     return False
 
 
+def add_auto_recipient_for_user(briefing, user):
+    """
+    Add the creator as an active recipient for a briefing.
+
+    Uses username as the persisted recipient name because `User.username` is the
+    canonical required identity field in the current schema.
+    """
+    email = getattr(user, 'email', None)
+    username = getattr(user, 'username', None)
+    if not email or not username:
+        raise ValueError("Cannot add auto recipient without user email and username")
+
+    auto_recipient = BriefRecipient(
+        briefing_id=briefing.id,
+        email=email,
+        name=username,
+        status='active'
+    )
+    auto_recipient.generate_magic_token()
+    db.session.add(auto_recipient)
+    return auto_recipient
+
+
 def populate_briefing_sources_from_template(briefing, default_sources, user):
     """
     Populate a briefing with sources from a template's default_sources list.
@@ -741,14 +764,7 @@ def use_template(template_id):
             db.session.flush()  # Get briefing.id for source linking
 
             # Auto-add the creating user as a recipient
-            auto_recipient = BriefRecipient(
-                briefing_id=briefing.id,
-                email=current_user.email,
-                name=current_user.username,
-                status='active'
-            )
-            auto_recipient.generate_magic_token()
-            db.session.add(auto_recipient)
+            add_auto_recipient_for_user(briefing, current_user)
 
             # Auto-populate sources from template using utility function
             sources_added, sources_failed, _ = populate_briefing_sources_from_template(
@@ -979,14 +995,7 @@ def create_briefing():
             db.session.flush()  # Get briefing.id
 
             # Auto-add the creating user as a recipient
-            auto_recipient = BriefRecipient(
-                briefing_id=briefing.id,
-                email=current_user.email,
-                name=current_user.username,
-                status='active'
-            )
-            auto_recipient.generate_magic_token()
-            db.session.add(auto_recipient)
+            add_auto_recipient_for_user(briefing, current_user)
             
             # Auto-populate sources from template if selected
             sources_added = 0
