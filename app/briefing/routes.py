@@ -744,7 +744,7 @@ def use_template(template_id):
             auto_recipient = BriefRecipient(
                 briefing_id=briefing.id,
                 email=current_user.email,
-                name=current_user.full_name or current_user.username,
+                name=current_user.username,
                 status='active'
             )
             auto_recipient.generate_magic_token()
@@ -982,7 +982,7 @@ def create_briefing():
             auto_recipient = BriefRecipient(
                 briefing_id=briefing.id,
                 email=current_user.email,
-                name=current_user.full_name or current_user.username,
+                name=current_user.username,
                 status='active'
             )
             auto_recipient.generate_magic_token()
