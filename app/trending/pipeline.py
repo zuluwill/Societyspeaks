@@ -375,7 +375,7 @@ def _backfill_single_article(
     
     article_embedding = np.array(article.title_embedding)
     
-    BACKFILL_THRESHOLD = 0.75
+    BACKFILL_THRESHOLD = 0.65
     best_match = None
     best_similarity = 0.0
     

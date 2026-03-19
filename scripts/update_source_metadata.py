@@ -375,6 +375,12 @@ SOURCE_METADATA = {
         'logo_url': 'https://logo.clearbit.com/newyorker.com',
         'description': 'American magazine featuring journalism, commentary, criticism, essays, fiction, and cartoons.'
     },
+    'The Observer': {
+        'source_category': 'newspaper',
+        'website_url': 'https://www.observer.co.uk/',
+        'logo_url': 'https://icon.horse/icon/observer.co.uk',
+        'description': 'British Sunday newspaper with liberal editorial perspective, published by Tortoise Media since 2024. The world\'s oldest Sunday newspaper.'
+    },
     'The News Agents': {
         'source_category': 'podcast',
         'website_url': 'https://www.globalplayer.com/podcasts/42KuWz/',
