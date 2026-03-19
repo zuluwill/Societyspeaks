@@ -152,11 +152,35 @@ SOURCE_METADATA = {
         'logo_url': 'https://logo.clearbit.com/foreignpolicy.com',
         'description': 'Global magazine of news and ideas covering foreign affairs, politics, economics, and culture.'
     },
+    'Anne Applebaum': {
+        'source_category': 'newsletter',
+        'website_url': 'https://anneapplebaum.substack.com/',
+        'logo_url': 'https://icon.horse/icon/anneapplebaum.substack.com',
+        'description': 'Pulitzer Prize-winning journalist and historian writing on democracy, authoritarianism, and foreign policy.'
+    },
+    'Chartbook': {
+        'source_category': 'newsletter',
+        'website_url': 'https://adamtooze.substack.com/',
+        'logo_url': 'https://icon.horse/icon/adamtooze.substack.com',
+        'description': 'Adam Tooze\'s newsletter on global political economy, financial history, and contemporary crises.'
+    },
+    'Francis Fukuyama': {
+        'source_category': 'newsletter',
+        'website_url': 'https://francisfukuyama.substack.com/',
+        'logo_url': 'https://icon.horse/icon/francisfukuyama.substack.com',
+        'description': 'Political scientist and author writing on liberalism, democracy, and international order.'
+    },
     'Freddie deBoer': {
         'source_category': 'newsletter',
         'website_url': 'https://freddiedeboer.substack.com/',
-        'logo_url': 'https://substackcdn.com/image/fetch/w_256,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2F7d24e5c4-2e36-4a36-8e4e-c28bfa7a7bd6_1280x1280.png',
+        'logo_url': 'https://icon.horse/icon/freddiedeboer.substack.com',
         'description': 'Writing on education, mental health, politics, and culture from a socialist perspective.'
+    },
+    'Jonathan Rauch': {
+        'source_category': 'newsletter',
+        'website_url': 'https://jrauch.substack.com/',
+        'logo_url': 'https://icon.horse/icon/jrauch.substack.com',
+        'description': 'Author and journalist writing on liberal democracy, free speech, and political culture.'
     },
     'Huberman Lab': {
         'source_category': 'podcast',
@@ -236,8 +260,26 @@ SOURCE_METADATA = {
     'Noahpinion': {
         'source_category': 'newsletter',
         'website_url': 'https://www.noahpinion.blog/',
-        'logo_url': 'https://substackcdn.com/image/fetch/w_256,c_limit,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fbucketeer-e05bbc84-baa3-437e-9518-adb32be77984.s3.amazonaws.com%2Fpublic%2Fimages%2F2cb92c64-89f6-4ed3-8f62-4b0d54bc2ee1_256x256.png',
+        'logo_url': 'https://icon.horse/icon/noahpinion.blog',
         'description': 'Economics and policy analysis from Bloomberg Opinion columnist Noah Smith.'
+    },
+    'Tortoise Media': {
+        'source_category': 'newspaper',
+        'website_url': 'https://www.tortoisemedia.com/',
+        'logo_url': 'https://icon.horse/icon/tortoisemedia.com',
+        'description': 'British slow news outlet focused on in-depth journalism and deliberate analysis of complex stories.'
+    },
+    'Yascha Mounk': {
+        'source_category': 'newsletter',
+        'website_url': 'https://yaschamounk.substack.com/',
+        'logo_url': 'https://icon.horse/icon/yaschamounk.substack.com',
+        'description': 'Political scientist writing on liberal democracy, populism, and political philosophy.'
+    },
+    'Zeynep Tufekci': {
+        'source_category': 'newsletter',
+        'website_url': 'https://zeynep.substack.com/',
+        'logo_url': 'https://icon.horse/icon/zeynep.substack.com',
+        'description': 'Sociologist and writer on technology, society, and politics. Contributes to The Atlantic and The New York Times.'
     },
     'Politico EU': {
         'source_category': 'newspaper',
