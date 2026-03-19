@@ -254,6 +254,8 @@ def can_access_briefing(user, briefing):
     Returns:
         bool: True if user can access, False otherwise
     """
+    if getattr(user, 'is_admin', False):
+        return True
     if briefing.owner_type == 'user':
         return briefing.owner_id == user.id
     elif briefing.owner_type == 'org':
@@ -274,6 +276,8 @@ def can_access_source(user, source):
     Returns:
         bool: True if user can access, False otherwise
     """
+    if getattr(user, 'is_admin', False):
+        return True
     if source.owner_type == 'system':
         return True  # System sources are accessible to all
     elif source.owner_type == 'user':
