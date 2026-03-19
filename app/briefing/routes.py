@@ -1720,17 +1720,10 @@ def add_source_to_briefing(briefing_id):
                 flash('Source not found', 'error')
                 return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         
-        # Check ownership (system sources are accessible to all)
-        if source.owner_type == 'system':
-            pass  # System sources are accessible to all
-        elif source.owner_type == 'user' and source.owner_id != current_user.id:
+        # Check ownership (delegates to can_access_source which grants admin bypass)
+        if not can_access_source(current_user, source):
             flash('You do not have access to this source', 'error')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
-        elif source.owner_type == 'org':
-            user_org = get_user_organization(current_user)
-            if not user_org or source.owner_id != user_org.id:
-                flash('You do not have access to this source', 'error')
-                return redirect(url_for('briefing.detail', briefing_id=briefing_id))
         
         # Check if source is ready (not extracting or failed)
         if source.status == 'extracting':
