@@ -46,6 +46,7 @@ def _job_error_listener(event):
             logger.error(f"Job {event.job_id} raised an exception: {event.exception}", 
                         exc_info=event.traceback)
 scheduler = None
+_app = None  # Flask app reference stored by init_scheduler for use by start_scheduler helpers
 _shutdown_registered = False
 _shutting_down = False
 _ops_alert_lock = threading.Lock()
@@ -229,8 +230,9 @@ def init_scheduler(app):
     """
     Initialize the APScheduler with Flask app context
     """
-    global scheduler
-    
+    global scheduler, _app
+    _app = app
+
     if scheduler is not None:
         logger.warning("Scheduler already initialized")
         return scheduler
@@ -3190,6 +3192,65 @@ def init_scheduler(app):
     return scheduler
 
 
+def _run_startup_brief_recovery(app):
+    """
+    Run in a background thread shortly after scheduler startup to catch any
+    'ready' briefs that were not published by the 18:00 UTC cron job.
+
+    Root cause: APScheduler uses an in-memory job store.  When the scheduler
+    process restarts (every 30 min to prevent SIGBUS crashes), it loses track
+    of jobs that fired during the restart window.  If the restart coincides
+    with the 18:00 UTC auto_publish_brief cron job, that brief stays in
+    'ready' status and the 18:15 UTC catch-up job (auto_publish_brief_catchup)
+    is the only thing that publishes it — generating a RECOVERY ops alert.
+
+    This startup check runs 30 seconds after scheduler init and silently
+    publishes any stale 'ready' briefs if it's past 18:00 UTC, eliminating
+    the restart-window race condition without changing the catch-up job.
+    """
+    import threading
+    import time as _time
+
+    def _do_recovery():
+        _time.sleep(30)
+        try:
+            with app.app_context():
+                from app import db
+                from app.models import DailyBrief
+                from datetime import date
+
+                now = utcnow_naive()
+                if now.hour < 18:
+                    return
+
+                ready_briefs = DailyBrief.query.filter_by(
+                    date=date.today(),
+                    status='ready'
+                ).all()
+
+                if not ready_briefs:
+                    return
+
+                for brief in ready_briefs:
+                    brief.status = 'published'
+                    brief.published_at = now
+                    logger.info(
+                        f"Startup recovery: published {brief.brief_type} brief '{brief.title}' "
+                        f"that was still in 'ready' status after scheduler restart"
+                    )
+
+                db.session.commit()
+                logger.info(
+                    f"Startup recovery: auto-published {len(ready_briefs)} brief(s) missed "
+                    f"during scheduler restart near the 18:00 UTC publish window"
+                )
+        except Exception as e:
+            logger.error(f"Startup brief recovery failed: {e}", exc_info=True)
+
+    t = threading.Thread(target=_do_recovery, daemon=True, name="startup-brief-recovery")
+    t.start()
+
+
 def start_scheduler():
     """
     Start the scheduler
@@ -3215,6 +3276,12 @@ def start_scheduler():
         scheduler.add_listener(_on_job_done, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR | EVENT_JOB_MISSED)
         scheduler.start()
         logger.info("Scheduler started with shutdown handlers and running-job trackers")
+        # Run startup recovery in a background thread so it doesn't block scheduler start.
+        # This catches any 'ready' briefs that were missed if the scheduler restarted
+        # near the 18:00 UTC auto-publish window (APScheduler uses in-memory job store,
+        # so missed cron jobs are not recovered across process restarts).
+        if _app is not None:
+            _run_startup_brief_recovery(_app)
     else:
         logger.warning("Scheduler already running")
 

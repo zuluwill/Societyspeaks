@@ -10,9 +10,11 @@ Replaces Loops.so integration with a single, simpler provider.
 """
 
 import os
+import re
 import time
 import logging
 from datetime import datetime
+from email.utils import parseaddr
 from app.lib.time import utcnow_naive
 from typing import List, Dict, Optional, Any, Tuple
 from flask import render_template, current_app, url_for
@@ -20,6 +22,28 @@ import requests
 from app.email_utils import RateLimiter  # single definition, shared across all email clients
 
 logger = logging.getLogger(__name__)
+
+
+def _extract_clean_email(raw: Optional[str]) -> Optional[str]:
+    """
+    Extract and validate a plain email address from a raw value.
+
+    Handles:
+    - Bare addresses: user@example.com
+    - Display-name format: Name <user@example.com>
+    - Angle-bracket-only: <user@example.com>  (stored incorrectly in some DBs)
+
+    Returns the normalised address string, or None if the value is empty or
+    does not contain a recognisable email address.
+    """
+    if not raw or not isinstance(raw, str):
+        return None
+    _, addr = parseaddr(raw.strip())
+    if not addr:
+        addr = raw.strip()
+    if not re.match(r'^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$', addr):
+        return None
+    return addr
 
 
 def _email_sending_allowed_for_environment() -> bool:
@@ -224,6 +248,22 @@ class ResendEmailClient:
             self.last_message_id = None
             return True
 
+        # Validate and normalise the 'to' addresses before sending.
+        # Resend rejects bare angle-bracket addresses like <user@domain.com> with
+        # a 422 validation_error; catching them here prevents avoidable API round-trips.
+        raw_to = email_data.get('to') or []
+        cleaned_to = []
+        for raw_addr in raw_to:
+            clean = _extract_clean_email(raw_addr)
+            if clean is None:
+                logger.error(
+                    f"Skipping email send — invalid 'to' address: {repr(raw_addr)}"
+                )
+                self.last_message_id = None
+                return False
+            cleaned_to.append(clean)
+        email_data = {**email_data, 'to': cleaned_to}
+
         if use_rate_limit:
             self.rate_limiter.acquire()
 
@@ -256,20 +296,41 @@ class ResendEmailClient:
             results['sent'] = len(emails)
             return results
 
-        if len(emails) > self.BATCH_SIZE:
-            raise ValueError(f"Batch size {len(emails)} exceeds maximum {self.BATCH_SIZE}")
+        # Validate and normalise each payload's 'to' field before sending.
+        valid_emails = []
+        for payload in emails:
+            raw_to = payload.get('to') or []
+            cleaned_to = []
+            all_valid = True
+            for raw_addr in raw_to:
+                clean = _extract_clean_email(raw_addr)
+                if clean is None:
+                    logger.error(f"Batch: dropping email with invalid 'to' address: {repr(raw_addr)}")
+                    results['failed'] += 1
+                    results['errors'].append(f"Invalid address: {repr(raw_addr)}")
+                    all_valid = False
+                    break
+                cleaned_to.append(clean)
+            if all_valid:
+                valid_emails.append({**payload, 'to': cleaned_to})
+
+        if not valid_emails:
+            return results
+
+        if len(valid_emails) > self.BATCH_SIZE:
+            raise ValueError(f"Batch size {len(valid_emails)} exceeds maximum {self.BATCH_SIZE}")
 
         success, sent_count, errors = resend_batch_with_retry(
             self.api_key,
-            emails,
+            valid_emails,
             max_retries=self.MAX_RETRIES,
             retry_delay=self.RETRY_DELAY,
         )
         if success:
             results['sent'] = sent_count
         else:
-            results['failed'] = len(emails)
-            results['errors'] = errors
+            results['failed'] += len(valid_emails)
+            results['errors'].extend(errors)
         return results
 
     # =========================================================================

@@ -276,10 +276,14 @@ class ResendClient:
                     f"Subscriber {subscriber.id} has invalid email address: {repr(subscriber.email)} — skipping send"
                 )
                 return False
-            # Strip whitespace and validate format to catch addresses that pass the
-            # '@' check but are rejected by Resend (spaces, newlines, angle brackets, etc.)
-            cleaned_email = subscriber.email.strip()
-            if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', cleaned_email):
+            # Use parseaddr to handle emails stored as "Name <email>" and extract
+            # just the address part. This also catches bare angle-bracket addresses
+            # like <user@domain.com> which pass a naive regex but are rejected by Resend.
+            _, cleaned_email = parseaddr(subscriber.email.strip())
+            if not cleaned_email:
+                # parseaddr returned empty string — fall back to stripped value for error logging
+                cleaned_email = subscriber.email.strip()
+            if not re.match(r'^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$', cleaned_email):
                 logger.error(
                     f"Subscriber {subscriber.id} email fails format validation: {repr(subscriber.email)} — skipping send"
                 )
@@ -683,8 +687,11 @@ class BriefEmailScheduler:
                     db.session.rollback()
                     continue
 
-                email_str = str(current_subscriber.email or '').strip()
-                if not email_str or '@' not in email_str or not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email_str):
+                raw_email = str(current_subscriber.email or '').strip()
+                _, email_str = parseaddr(raw_email)
+                if not email_str:
+                    email_str = raw_email
+                if not email_str or '@' not in email_str or not re.match(r'^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$', email_str):
                     results['failed'] += 1
                     results['errors'].append(
                         f"Subscriber {current_subscriber.id} has invalid email: {repr(current_subscriber.email)}"
