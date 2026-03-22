@@ -911,13 +911,26 @@ def init_scheduler(app):
                     logger.info("No daily question to send - none published for today")
                     return
                 
-                # Filter to only daily frequency subscribers
+                # Filter to only daily frequency subscribers who have NOT already received
+                # an email today (UTC).  This prevents double-sends on scheduler restart:
+                # the job has misfire_grace_time=3600, so if the scheduler restarts
+                # within an hour of 7:30 UTC the job fires again.  The DB-level check
+                # (last_email_sent date) is the idempotency guard.
+                from datetime import date as _date
+                from sqlalchemy import or_
+                today_utc = _date.today()
+                today_utc_start = datetime(today_utc.year, today_utc.month, today_utc.day)
                 daily_subscribers = DailyQuestionSubscriber.query.filter_by(
                     is_active=True,
                     email_frequency='daily'
+                ).filter(
+                    or_(
+                        DailyQuestionSubscriber.last_email_sent.is_(None),
+                        DailyQuestionSubscriber.last_email_sent < today_utc_start
+                    )
                 ).all()
                 
-                logger.info(f"Found {len(daily_subscribers)} daily frequency subscribers")
+                logger.info(f"Found {len(daily_subscribers)} daily frequency subscribers (not yet sent today)")
                 
                 if not daily_subscribers:
                     logger.info("No daily frequency subscribers to send to")
@@ -2490,7 +2503,10 @@ def init_scheduler(app):
                 
                 no_recipient_cleared = db.session.execute(
                     db.text("""
-                        UPDATE brief_run SET status = 'sent', sent_at = :now
+                        UPDATE brief_run
+                        SET status = 'failed',
+                            sent_at = :now,
+                            failure_reason = 'No active recipients configured'
                         WHERE status = 'approved' AND sent_at IS NULL
                         AND scheduled_at <= :now
                         AND briefing_id NOT IN (
@@ -2500,7 +2516,14 @@ def init_scheduler(app):
                     {'now': now}
                 )
                 if no_recipient_cleared.rowcount > 0:
-                    logger.info(f"Cleared {no_recipient_cleared.rowcount} runs for briefings with no active recipients")
+                    alert_msg = (
+                        f"ALERT: {no_recipient_cleared.rowcount} paid briefing run(s) failed because "
+                        f"the briefing has no active recipients configured. "
+                        f"Affected users may need to add recipients — check the brief_run table "
+                        f"for failure_reason='No active recipients configured'."
+                    )
+                    logger.warning(alert_msg)
+                    _send_ops_alert(alert_msg)
                 
                 db.session.commit()
             except Exception as e:
