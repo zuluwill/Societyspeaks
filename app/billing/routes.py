@@ -828,17 +828,71 @@ def pending_checkout():
     if not billing_interval:
         flash('Invalid billing interval selected.', 'error')
         return redirect(url_for('briefing.landing'))
-    
+
+    target_plan = PricingPlan.query.filter_by(code=plan_code).first()
+    if not target_plan:
+        flash('Invalid plan selected.', 'error')
+        return redirect(url_for('briefing.landing'))
+
+    existing_sub = get_active_subscription(current_user)
+    manual_sub_to_supersede = None
+
+    if existing_sub:
+        if existing_sub.stripe_subscription_id is None:
+            # Manual/admin-granted subscription — mark to supersede only after checkout is created
+            current_app.logger.info(
+                f"User {current_user.id} upgrading from manual subscription (plan: {existing_sub.plan.name}) "
+                f"to Stripe subscription (plan: {target_plan.name})"
+            )
+            manual_sub_to_supersede = existing_sub
+            flash(
+                f'Your free {existing_sub.plan.name} access will be replaced once you complete payment.',
+                'info'
+            )
+        else:
+            # Active Stripe subscription already exists
+            is_upgrading_to_org = target_plan.is_organisation and not existing_sub.plan.is_organisation
+            if is_upgrading_to_org:
+                try:
+                    s = get_stripe()
+                    _stripe_call(
+                        s.Subscription.modify,
+                        existing_sub.stripe_subscription_id,
+                        cancel_at_period_end=True
+                    )
+                    existing_sub.cancel_at_period_end = True
+                    db.session.commit()
+                    current_app.logger.info(
+                        f"Marked subscription {existing_sub.id} for cancellation due to org plan upgrade"
+                    )
+                except stripe.error.StripeError as e:
+                    current_app.logger.error(f"Failed to cancel existing subscription for upgrade: {e}")
+                    flash('Unable to process upgrade. Please contact support.', 'error')
+                    return redirect(url_for('briefing.list_briefings'))
+            else:
+                # Same tier or downgrade — send to customer portal
+                flash('You already have an active subscription. Use "Manage Billing" to change your plan.', 'info')
+                return redirect(url_for('billing.customer_portal'))
+
     try:
         checkout_session = create_checkout_session(
             user=current_user,
             plan_code=plan_code,
             billing_interval=billing_interval
         )
+
+        if manual_sub_to_supersede:
+            manual_sub_to_supersede.status = 'superseded'
+            manual_sub_to_supersede.canceled_at = db.func.now()
+            db.session.commit()
+            current_app.logger.info(
+                f"Manual subscription {manual_sub_to_supersede.id} marked superseded after checkout session created"
+            )
+
         if not checkout_session.url:
             flash('Payment session error. Please try again.', 'error')
             return redirect(url_for('briefing.landing'))
-        target_plan = PricingPlan.query.filter_by(code=plan_code).first()
+
         _track_posthog('checkout_started', current_user.id, {
             'plan_code': plan_code,
             'billing_interval': billing_interval,
