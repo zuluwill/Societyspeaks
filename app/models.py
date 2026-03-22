@@ -4262,6 +4262,7 @@ class BriefRun(db.Model):
     # Send claim tracking (for preventing duplicate sends)
     claimed_at = db.Column(db.DateTime, nullable=True)  # When a process claimed this for sending
     send_attempts = db.Column(db.Integer, default=0)  # Number of send attempts
+    failure_reason = db.Column(db.String(500), nullable=True)  # Why the run failed (e.g. no recipients)
 
     # Analytics tracking
     emails_sent = db.Column(db.Integer, default=0)  # Count of emails sent
