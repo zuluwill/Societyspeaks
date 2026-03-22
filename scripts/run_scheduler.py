@@ -148,4 +148,42 @@ try:
 except Exception as exc:
     logger.warning("APScheduler shutdown warning (non-fatal): %s", exc)
 
+# Release the Redis scheduler lock before exiting so the replacement process
+# can acquire it immediately rather than waiting up to TTL=120 s for it to
+# expire naturally.
+#
+# Normally the lock is managed and renewed by the heartbeat thread inside
+# _run_scheduler_cycle() (app/__init__.py).  sys.exit() kills all daemon
+# threads instantly, so their finally blocks never run.  Without this
+# explicit release the next process sees the lock still held (e.g.
+# "Scheduler lock held by pid=NNN, ttl=78s, retrying (1/8)...") and waits
+# up to 120 s before it can acquire it — adding unnecessary dead time.
+#
+# The Lua CAS script ensures we only delete the key if we still own it
+# (another process cannot accidentally release a lock it doesn't hold).
+_SCHEDULER_LOCK_KEY = 'scheduler_lock'
+try:
+    _redis_url = os.environ.get('REDIS_URL', '')
+    if _redis_url:
+        import redis as _redis_lib
+        _rc = _redis_lib.from_url(_redis_url, socket_timeout=3, socket_connect_timeout=3)
+        _release_script = """
+if redis.call('get', KEYS[1]) == ARGV[1] then
+    return redis.call('del', KEYS[1])
+else
+    return 0
+end
+"""
+        _owned_by = str(os.getpid())
+        _result = _rc.eval(_release_script, 1, _SCHEDULER_LOCK_KEY, _owned_by)
+        if _result:
+            logger.info("Scheduler Redis lock released (pid=%s)", _owned_by)
+        else:
+            logger.info(
+                "Scheduler Redis lock not held by this process (pid=%s) — nothing to release",
+                _owned_by,
+            )
+except Exception as _lock_err:
+    logger.warning("Could not release Redis lock before exit (non-fatal): %s", _lock_err)
+
 sys.exit(0)
