@@ -1579,6 +1579,30 @@ def init_scheduler(app):
             except Exception as e:
                 logger.error(f"Pre-brief Polymarket matching failed: {e}", exc_info=True)
 
+    @scheduler.scheduled_job('cron', hour=16, minute=0, id='pre_brief_publish', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    def pre_brief_publish_job():
+        """
+        Publish topics across all categories at 4:00pm UTC, one hour before the
+        daily brief generates.
+
+        The 6:30am auto-publish job only publishes 3 topics (for social scheduling).
+        This job publishes up to 15, prioritising category diversity so every
+        major section (Politics, Economy, Geopolitics, Healthcare, Technology,
+        Society, Environment, Culture, Education, Business) has at least one
+        published topic available when the brief selector runs at 5pm.
+
+        Social posts are NOT scheduled here — this is purely for brief coverage.
+        """
+        with app.app_context():
+            from app.trending.pipeline import auto_publish_daily
+
+            logger.info("Pre-brief publish: ensuring all categories have published topics")
+            try:
+                published = auto_publish_daily(max_topics=15, schedule_bluesky=False, schedule_x=False)
+                logger.info(f"Pre-brief publish: {published} additional topics published")
+            except Exception as e:
+                logger.error(f"Pre-brief publish failed: {e}", exc_info=True)
+
     @scheduler.scheduled_job('cron', hour=17, minute=0, id='generate_daily_brief', max_instances=1, coalesce=True, misfire_grace_time=21600)
     def generate_daily_brief_job():
         """
