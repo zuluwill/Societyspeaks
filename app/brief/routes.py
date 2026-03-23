@@ -794,8 +794,8 @@ def serve_audio(filename):
     import re
     expected_pattern = r'^brief(_run)?_\d+_item_\d+_\d{8}_\d{6}_[a-f0-9]{8}\.(wav|mp3)$'
     if not re.match(expected_pattern, filename):
-        logger.warning(f"Suspicious filename pattern: {filename}")
-        # Still allow it for backward compatibility, but log for monitoring
+        logger.warning(f"Suspicious filename pattern rejected: {filename}")
+        return jsonify({'error': 'Audio not found'}), 404
     
     try:
         audio_data = audio_storage.get(filename)

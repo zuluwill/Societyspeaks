@@ -3640,11 +3640,21 @@ class DailyQuestionSubscriber(db.Model):
         return self.last_weekly_email_sent > week_ago
     
     def has_received_monthly_digest_this_month(self):
-        """Check if monthly digest was already sent this month (within last 25 days)"""
-        if not self.last_weekly_email_sent:  # Reuse same field for monthly tracking
+        """Check if monthly digest was already sent this calendar month.
+
+        Uses the calendar month (year + month) rather than a rolling 25-day window
+        so that subscribers who recently received a *weekly* digest (because they just
+        switched from weekly to monthly) are not blocked from their first monthly
+        digest.  The rolling-days approach caused a 0–25 day dead-zone after a
+        frequency change.
+        """
+        if not self.last_weekly_email_sent:
             return False
-        month_ago = utcnow_naive() - timedelta(days=25)
-        return self.last_weekly_email_sent > month_ago
+        now = utcnow_naive()
+        return (
+            self.last_weekly_email_sent.year == now.year
+            and self.last_weekly_email_sent.month == now.month
+        )
     
     def should_receive_monthly_digest_now(self, utc_now=None):
         """
@@ -4252,6 +4262,7 @@ class BriefRun(db.Model):
     # Send claim tracking (for preventing duplicate sends)
     claimed_at = db.Column(db.DateTime, nullable=True)  # When a process claimed this for sending
     send_attempts = db.Column(db.Integer, default=0)  # Number of send attempts
+    failure_reason = db.Column(db.String(500), nullable=True)  # Why the run failed (e.g. no recipients)
 
     # Analytics tracking
     emails_sent = db.Column(db.Integer, default=0)  # Count of emails sent

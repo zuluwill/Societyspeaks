@@ -18,17 +18,14 @@ from flask import render_template, current_app
 from app.models import DailyBrief, DailyBriefSubscriber, BriefItem, db
 from app.brief.sections import SECTIONS, TOPIC_DISPLAY_LABELS, TOPIC_DISPLAY_COLORS
 from app.email_utils import RateLimiter
-from app.resend_client import resend_post_with_retry
+from app.resend_client import (
+    resend_post_with_retry,
+    _email_sending_allowed_for_environment,
+    _extract_clean_email,
+)
 from app.storage_utils import get_base_url
 
 logger = logging.getLogger(__name__)
-
-
-def _daily_brief_email_allowed() -> bool:
-    """Allow sending only in deployed production unless explicitly overridden."""
-    if os.environ.get('ALLOW_EMAIL_IN_NON_PROD') == '1':
-        return True
-    return os.environ.get('REPLIT_DEPLOYMENT') == '1'
 
 
 _SYSTEM_FONT = (
@@ -137,7 +134,7 @@ class ResendClient:
 
     def __init__(self):
         self._disabled = False
-        if not _daily_brief_email_allowed():
+        if not _email_sending_allowed_for_environment():
             logger.warning(
                 "Daily brief outbound email disabled outside deployed production. "
                 "Set ALLOW_EMAIL_IN_NON_PROD=1 only for intentional testing."
@@ -270,18 +267,13 @@ class ResendClient:
             bool: True if sent successfully
         """
         try:
-            # Validate email address before any API call
-            if not subscriber.email or not isinstance(subscriber.email, str) or '@' not in subscriber.email:
+            # Validate and normalise the stored address (handles "Name <addr>",
+            # bare "<addr>", and other malformed variants) via the single shared
+            # helper in resend_client.
+            cleaned_email = _extract_clean_email(subscriber.email)
+            if not cleaned_email:
                 logger.error(
-                    f"Subscriber {subscriber.id} has invalid email address: {repr(subscriber.email)} — skipping send"
-                )
-                return False
-            # Strip whitespace and validate format to catch addresses that pass the
-            # '@' check but are rejected by Resend (spaces, newlines, angle brackets, etc.)
-            cleaned_email = subscriber.email.strip()
-            if not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', cleaned_email):
-                logger.error(
-                    f"Subscriber {subscriber.id} email fails format validation: {repr(subscriber.email)} — skipping send"
+                    f"Subscriber {subscriber.id} has invalid email: {repr(subscriber.email)} — skipping send"
                 )
                 return False
 
@@ -683,8 +675,8 @@ class BriefEmailScheduler:
                     db.session.rollback()
                     continue
 
-                email_str = str(current_subscriber.email or '').strip()
-                if not email_str or '@' not in email_str or not re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email_str):
+                email_str = _extract_clean_email(str(current_subscriber.email or ''))
+                if not email_str:
                     results['failed'] += 1
                     results['errors'].append(
                         f"Subscriber {current_subscriber.id} has invalid email: {repr(current_subscriber.email)}"

@@ -158,6 +158,12 @@ def register():
         session['pending_checkout_plan'] = checkout_plan
         session['pending_checkout_interval'] = checkout_interval
 
+    # If a logged-in user clicks "Start free trial", skip registration and go straight to Stripe
+    if current_user.is_authenticated and checkout_plan:
+        return redirect(url_for('billing.pending_checkout',
+                                plan=checkout_plan,
+                                interval=checkout_interval))
+
     # Get invitation context from session (set by /invite/<token> route)
     pending_invitation_email = session.get('pending_invitation_email')
     pending_invitation_org = session.get('pending_invitation_org')

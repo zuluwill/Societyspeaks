@@ -46,6 +46,7 @@ def _job_error_listener(event):
             logger.error(f"Job {event.job_id} raised an exception: {event.exception}", 
                         exc_info=event.traceback)
 scheduler = None
+_app = None  # Flask app reference stored by init_scheduler for use by start_scheduler helpers
 _shutdown_registered = False
 _shutting_down = False
 _ops_alert_lock = threading.Lock()
@@ -229,8 +230,9 @@ def init_scheduler(app):
     """
     Initialize the APScheduler with Flask app context
     """
-    global scheduler
-    
+    global scheduler, _app
+    _app = app
+
     if scheduler is not None:
         logger.warning("Scheduler already initialized")
         return scheduler
@@ -625,6 +627,38 @@ def init_scheduler(app):
             logger.info(f"Partner billing reconciliation complete (updated={updated})")
     
     
+    @scheduler.scheduled_job('cron', minute='0', id='pending_topic_catchup', max_instances=1, coalesce=True, misfire_grace_time=1800)
+    def pending_topic_catchup_job():
+        """
+        Drain the pending → pending_review backlog every hour.
+
+        process_held_topics() processes topics whose hold_until has expired
+        but defaults to a small batch. This job runs every hour with a large
+        batch (200) to clear any historical backlog without overloading the
+        LLM API in a single burst.
+
+        Safe to run alongside the main pipeline — process_held_topics is
+        idempotent (it filters by status='pending' and hold_until <= now).
+        """
+        with app.app_context():
+            from app.trending.pipeline import process_held_topics
+            from app.models import TrendingTopic
+
+            pending_count = TrendingTopic.query.filter(
+                TrendingTopic.status == 'pending',
+                TrendingTopic.hold_until <= utcnow_naive()
+            ).count()
+
+            if pending_count == 0:
+                return
+
+            logger.info(f"Pending topic catch-up: {pending_count} expired topics to process")
+            try:
+                processed = process_held_topics(batch_size=200)
+                logger.info(f"Pending topic catch-up: processed {processed} topics ({pending_count - processed} remaining)")
+            except Exception as e:
+                logger.error(f"Pending topic catch-up failed: {e}", exc_info=True)
+
     @scheduler.scheduled_job('cron', hour='7,12,18,22', id='trending_topics_pipeline', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def run_trending_topics_pipeline():
         """
@@ -909,13 +943,26 @@ def init_scheduler(app):
                     logger.info("No daily question to send - none published for today")
                     return
                 
-                # Filter to only daily frequency subscribers
+                # Filter to only daily frequency subscribers who have NOT already received
+                # an email today (UTC).  This prevents double-sends on scheduler restart:
+                # the job has misfire_grace_time=3600, so if the scheduler restarts
+                # within an hour of 7:30 UTC the job fires again.  The DB-level check
+                # (last_email_sent date) is the idempotency guard.
+                from datetime import date as _date
+                from sqlalchemy import or_
+                today_utc = _date.today()
+                today_utc_start = datetime(today_utc.year, today_utc.month, today_utc.day)
                 daily_subscribers = DailyQuestionSubscriber.query.filter_by(
                     is_active=True,
                     email_frequency='daily'
+                ).filter(
+                    or_(
+                        DailyQuestionSubscriber.last_email_sent.is_(None),
+                        DailyQuestionSubscriber.last_email_sent < today_utc_start
+                    )
                 ).all()
                 
-                logger.info(f"Found {len(daily_subscribers)} daily frequency subscribers")
+                logger.info(f"Found {len(daily_subscribers)} daily frequency subscribers (not yet sent today)")
                 
                 if not daily_subscribers:
                     logger.info("No daily frequency subscribers to send to")
@@ -1563,6 +1610,30 @@ def init_scheduler(app):
                 logger.info(f"Pre-brief matching complete: {stats}")
             except Exception as e:
                 logger.error(f"Pre-brief Polymarket matching failed: {e}", exc_info=True)
+
+    @scheduler.scheduled_job('cron', hour=16, minute=0, id='pre_brief_publish', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    def pre_brief_publish_job():
+        """
+        Publish topics across all categories at 4:00pm UTC, one hour before the
+        daily brief generates.
+
+        The 6:30am auto-publish job only publishes 3 topics (for social scheduling).
+        This job publishes up to 15, prioritising category diversity so every
+        major section (Politics, Economy, Geopolitics, Healthcare, Technology,
+        Society, Environment, Culture, Education, Business) has at least one
+        published topic available when the brief selector runs at 5pm.
+
+        Social posts are NOT scheduled here — this is purely for brief coverage.
+        """
+        with app.app_context():
+            from app.trending.pipeline import auto_publish_daily
+
+            logger.info("Pre-brief publish: ensuring all categories have published topics")
+            try:
+                published = auto_publish_daily(max_topics=15, schedule_bluesky=False, schedule_x=False)
+                logger.info(f"Pre-brief publish: {published} additional topics published")
+            except Exception as e:
+                logger.error(f"Pre-brief publish failed: {e}", exc_info=True)
 
     @scheduler.scheduled_job('cron', hour=17, minute=0, id='generate_daily_brief', max_instances=1, coalesce=True, misfire_grace_time=21600)
     def generate_daily_brief_job():
@@ -2488,7 +2559,10 @@ def init_scheduler(app):
                 
                 no_recipient_cleared = db.session.execute(
                     db.text("""
-                        UPDATE brief_run SET status = 'sent', sent_at = :now
+                        UPDATE brief_run
+                        SET status = 'failed',
+                            sent_at = :now,
+                            failure_reason = 'No active recipients configured'
                         WHERE status = 'approved' AND sent_at IS NULL
                         AND scheduled_at <= :now
                         AND briefing_id NOT IN (
@@ -2498,7 +2572,14 @@ def init_scheduler(app):
                     {'now': now}
                 )
                 if no_recipient_cleared.rowcount > 0:
-                    logger.info(f"Cleared {no_recipient_cleared.rowcount} runs for briefings with no active recipients")
+                    alert_msg = (
+                        f"ALERT: {no_recipient_cleared.rowcount} paid briefing run(s) failed because "
+                        f"the briefing has no active recipients configured. "
+                        f"Affected users may need to add recipients — check the brief_run table "
+                        f"for failure_reason='No active recipients configured'."
+                    )
+                    logger.warning(alert_msg)
+                    _send_ops_alert(alert_msg)
                 
                 db.session.commit()
             except Exception as e:
@@ -3190,6 +3271,65 @@ def init_scheduler(app):
     return scheduler
 
 
+def _run_startup_brief_recovery(app):
+    """
+    Run in a background thread shortly after scheduler startup to catch any
+    'ready' briefs that were not published by the 18:00 UTC cron job.
+
+    Root cause: APScheduler uses an in-memory job store.  When the scheduler
+    process restarts (every 30 min to prevent SIGBUS crashes), it loses track
+    of jobs that fired during the restart window.  If the restart coincides
+    with the 18:00 UTC auto_publish_brief cron job, that brief stays in
+    'ready' status and the 18:15 UTC catch-up job (auto_publish_brief_catchup)
+    is the only thing that publishes it — generating a RECOVERY ops alert.
+
+    This startup check runs 30 seconds after scheduler init and silently
+    publishes any stale 'ready' briefs if it's past 18:00 UTC, eliminating
+    the restart-window race condition without changing the catch-up job.
+    """
+    import threading
+    import time as _time
+
+    def _do_recovery():
+        _time.sleep(30)
+        try:
+            with app.app_context():
+                from app import db
+                from app.models import DailyBrief
+                from datetime import date
+
+                now = utcnow_naive()
+                if now.hour < 18:
+                    return
+
+                ready_briefs = DailyBrief.query.filter_by(
+                    date=date.today(),
+                    status='ready'
+                ).all()
+
+                if not ready_briefs:
+                    return
+
+                for brief in ready_briefs:
+                    brief.status = 'published'
+                    brief.published_at = now
+                    logger.info(
+                        f"Startup recovery: published {brief.brief_type} brief '{brief.title}' "
+                        f"that was still in 'ready' status after scheduler restart"
+                    )
+
+                db.session.commit()
+                logger.info(
+                    f"Startup recovery: auto-published {len(ready_briefs)} brief(s) missed "
+                    f"during scheduler restart near the 18:00 UTC publish window"
+                )
+        except Exception as e:
+            logger.error(f"Startup brief recovery failed: {e}", exc_info=True)
+
+    t = threading.Thread(target=_do_recovery, daemon=True, name="startup-brief-recovery")
+    t.start()
+
+
 def start_scheduler():
     """
     Start the scheduler
@@ -3215,6 +3355,12 @@ def start_scheduler():
         scheduler.add_listener(_on_job_done, EVENT_JOB_EXECUTED | EVENT_JOB_ERROR | EVENT_JOB_MISSED)
         scheduler.start()
         logger.info("Scheduler started with shutdown handlers and running-job trackers")
+        # Run startup recovery in a background thread so it doesn't block scheduler start.
+        # This catches any 'ready' briefs that were missed if the scheduler restarted
+        # near the 18:00 UTC auto-publish window (APScheduler uses in-memory job store,
+        # so missed cron jobs are not recovered across process restarts).
+        if _app is not None:
+            _run_startup_brief_recovery(_app)
     else:
         logger.warning("Scheduler already running")
 

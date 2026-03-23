@@ -146,8 +146,8 @@ def donate_success():
 
 def _is_scanner_or_bogus_asset_path(filename: str) -> bool:
     """
-    Return True if the path looks like a vulnerability scanner (e.g. .php probes), not a real asset.
-    Avoids blocking legitimate filenames that contain 'php' (e.g. php-tutorial.pdf).
+    Return True if the path looks like a vulnerability scanner (e.g. .php probes, .env probes),
+    not a real asset. Avoids blocking legitimate filenames that contain 'php' (e.g. php-tutorial.pdf).
     """
     lower = filename.lower()
     # Block path segments ending in .php (e.g. m.php, c99.php), not names that merely contain 'php'
@@ -156,6 +156,13 @@ def _is_scanner_or_bogus_asset_path(filename: str) -> bool:
     if any(x in lower for x in ('/filemanager/', '/server/php/', '/c99.php', '/fk2e3')):
         return True
     if filename.endswith('/') or '//' in filename:
+        return True
+    # Block attempts to probe for sensitive config/env files
+    basename = os.path.basename(lower)
+    if basename in ('.env', '.env.local', '.env.production', '.env.example', '.htaccess',
+                    'web.config', 'wp-config.php', 'config.php'):
+        return True
+    if basename.startswith('.env.'):
         return True
     return False
 
@@ -174,6 +181,10 @@ def _serve_object_storage_asset(filename):
     try:
         file_data = asset_client.download_as_bytes(storage_path)
     except Exception as error:
+        error_msg = str(error)
+        if 'not found' in error_msg.lower() or 'does not exist' in error_msg.lower():
+            current_app.logger.warning(f"Asset not found in storage: {storage_path}")
+            abort(404)
         current_app.logger.error(f"Error fetching asset {storage_path}: {error}")
         return Response("Service unavailable", status=503)
 

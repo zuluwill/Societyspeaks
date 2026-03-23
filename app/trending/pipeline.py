@@ -123,14 +123,18 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     return len(articles), topics_created, ready_count
 
 
-def process_held_topics(batch_size: int = 10) -> int:
+def process_held_topics(batch_size: int = 50) -> int:
     """
     Process topics that have completed their hold window.
     Score them and move to pending_review.
     Processes in batches with error handling per topic.
+
+    Default batch_size raised from 10 to 50 so routine runs clear the queue
+    faster than new topics arrive. Use a larger batch (e.g. 200) when running
+    a catch-up pass against a historical backlog.
     """
     now = utcnow_naive()
-    
+
     held_topics = TrendingTopic.query.filter(
         TrendingTopic.status == 'pending',
         TrendingTopic.hold_until <= now
@@ -193,85 +197,119 @@ def auto_publish_daily(max_topics: int = 15, schedule_bluesky: bool = True, sche
     """
     Auto-publish up to max_topics diverse topics daily.
     Selects topics from trusted sources with civic relevance.
-    Ensures diversity by checking title similarity AND political leaning balance.
-    Enforces once-per-day limit by checking already-published today.
-    
+
+    Uses a two-pass strategy to guarantee category diversity:
+      Pass 1 — Category guarantee: pick the best (highest civic score) topic
+               from each target category, so every major subject area gets
+               at least one published topic per day.
+      Pass 2 — Score fill: fill remaining slots with the best remaining
+               topics regardless of category.
+
+    Both passes enforce political leaning balance and title-similarity
+    deduplication.
+
     Args:
         max_topics: Maximum topics to publish
-        schedule_bluesky: If True, schedule Bluesky posts for staggered times throughout the day
-                         (2pm, 4pm, 6pm, 8pm, 10pm UTC = 9am, 11am, 1pm, 3pm, 5pm EST)
-        schedule_x: If True, schedule X posts for staggered times throughout the day
+        schedule_bluesky: If True, schedule Bluesky posts for staggered times
+        schedule_x: If True, schedule X posts for staggered times
     """
     from app.models import User
     from app.trending.publisher import publish_topic
-    from collections import Counter
-    
+    from collections import Counter, defaultdict
+
+    # Categories we want guaranteed daily coverage for, in priority order.
+    PRIORITY_CATEGORIES = [
+        'Politics', 'Economy', 'Geopolitics', 'Healthcare',
+        'Technology', 'Society', 'Environment', 'Culture',
+        'Education', 'Business', 'Infrastructure',
+    ]
+
     today_start = utcnow_naive().replace(hour=0, minute=0, second=0, microsecond=0)
     already_published_today = TrendingTopic.query.filter(
         TrendingTopic.status == 'published',
         TrendingTopic.published_at >= today_start
     ).count()
-    
+
     if already_published_today >= max_topics:
         logger.info(f"Already published {already_published_today} topics today, skipping auto-publish")
         return 0
-    
+
     remaining_slots = max_topics - already_published_today
-    
-    topics = TrendingTopic.query.filter_by(status='pending_review').order_by(
+
+    # Fetch all pending_review candidates, best score first.
+    all_candidates = TrendingTopic.query.filter_by(status='pending_review').order_by(
         TrendingTopic.civic_score.desc().nullslast(),
         TrendingTopic.created_at.desc()
     ).all()
-    
+
     admin = User.query.filter_by(is_admin=True).first()
     if not admin:
         logger.error("No admin user found for auto-publish")
         return 0
-    
+
+    # Pre-filter to auto-publishable only, then group by category.
+    eligible = [t for t in all_candidates if t.should_auto_publish]
+    by_category = defaultdict(list)
+    for t in eligible:
+        by_category[t.primary_topic or 'Unknown'].append(t)
+
+    # Build an ordered list: first one-best-per-category (Pass 1),
+    # then the remaining eligible topics in score order (Pass 2).
+    ordered = []
+    used_ids = set()
+
+    for category in PRIORITY_CATEGORIES:
+        for t in by_category.get(category, []):
+            if t.id not in used_ids:
+                ordered.append(t)
+                used_ids.add(t.id)
+                break  # One guaranteed slot per category
+
+    for t in eligible:
+        if t.id not in used_ids:
+            ordered.append(t)
+            used_ids.add(t.id)
+
+    # Now publish from the ordered list, applying deduplication and balance checks.
     published = 0
     published_keywords = set()
     published_leanings = Counter()
     skipped_similar = 0
-    skipped_criteria = 0
     skipped_balance = 0
-    
-    for topic in topics:
+
+    for topic in ordered:
         if published >= remaining_slots:
             break
-            
-        if not topic.should_auto_publish:
-            skipped_criteria += 1
-            continue
-        
+
         title_words = set(topic.title.lower().split())
         title_words -= {'the', 'a', 'an', 'is', 'are', 'was', 'were', 'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by'}
-        
+
         if published_keywords and len(title_words & published_keywords) >= 3:
             logger.info(f"Skipping topic {topic.id} - too similar to already published: {topic.title[:40]}...")
             skipped_similar += 1
             continue
-        
+
         topic_leaning = _get_topic_political_leaning(topic)
-        
+
         left_count = published_leanings.get('left', 0) + published_leanings.get('centre-left', 0)
         right_count = published_leanings.get('right', 0) + published_leanings.get('centre-right', 0)
-        
+
         if topic_leaning in ('left', 'centre-left'):
             new_left = left_count + 1
-            if new_left > right_count + 1:
+            if new_left > right_count + 2:
                 logger.info(f"Skipping topic {topic.id} - would create political imbalance ({new_left}:{right_count} L:R): {topic.title[:40]}...")
                 skipped_balance += 1
                 continue
         elif topic_leaning in ('right', 'centre-right'):
             new_right = right_count + 1
-            if new_right > left_count + 1:
+            if new_right > left_count + 2:
                 logger.info(f"Skipping topic {topic.id} - would create political imbalance ({left_count}:{new_right} L:R): {topic.title[:40]}...")
                 skipped_balance += 1
                 continue
-        
+
         try:
             publish_topic(
-                topic, 
+                topic,
                 admin,
                 schedule_bluesky=schedule_bluesky,
                 schedule_x=schedule_x,
@@ -281,13 +319,13 @@ def auto_publish_daily(max_topics: int = 15, schedule_bluesky: bool = True, sche
             published += 1
             published_keywords.update(title_words)
             published_leanings[topic_leaning] += 1
-            logger.info(f"Auto-published topic {topic.id} ({topic_leaning}): {topic.title[:50]}...")
+            logger.info(f"Auto-published topic {topic.id} [{topic.primary_topic}] ({topic_leaning}): {topic.title[:50]}...")
         except Exception as e:
             logger.error(f"Failed to auto-publish topic {topic.id}: {e}")
             db.session.rollback()
             continue
-    
-    logger.info(f"Auto-publish summary: {published} published, {skipped_similar} similar, {skipped_criteria} criteria, {skipped_balance} balance")
+
+    logger.info(f"Auto-publish summary: {published} published, {skipped_similar} similar skipped, {skipped_balance} balance skipped")
     logger.info(f"Political balance: {dict(published_leanings)}")
     return published
 
@@ -375,7 +413,7 @@ def _backfill_single_article(
     
     article_embedding = np.array(article.title_embedding)
     
-    BACKFILL_THRESHOLD = 0.75
+    BACKFILL_THRESHOLD = 0.65
     best_match = None
     best_similarity = 0.0
     

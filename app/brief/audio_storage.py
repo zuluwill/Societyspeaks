@@ -238,7 +238,11 @@ class AudioStorage:
             return self._replit_client.download_as_bytes(key)
 
         except Exception as e:
-            logger.error(f"Replit Object Storage get failed: {e}")
+            error_msg = str(e)
+            if 'not found' in error_msg.lower() or 'does not exist' in error_msg.lower():
+                logger.warning(f"Replit Object Storage get: object not found for key audio/{filename}")
+            else:
+                logger.error(f"Replit Object Storage get failed: {e}")
             return None
 
     def _delete_replit(self, filename: str) -> bool:
