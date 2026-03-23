@@ -482,6 +482,25 @@ class TopicSelector:
                 result[section_key] = [(t, DEPTH_STANDARD) for t in section_topics]
                 used_topic_ids.update(t.id for t in section_topics)
 
+        # Phase 2b: Ensure every core section has at least one item.
+        # If a section came up empty (no matching category topics found), fall back
+        # to the best available unused topic regardless of category, so we never
+        # publish a brief with a completely blank core section.
+        for section_key in themed_sections:
+            if section_key not in result or not result[section_key]:
+                fallback = self._fallback_topic_for_section(scored, used_topic_ids, section_key)
+                if fallback:
+                    result[section_key] = [(fallback, DEPTH_STANDARD)]
+                    used_topic_ids.add(fallback.id)
+                    logger.info(
+                        f"Section '{section_key}' was empty — filled with best available "
+                        f"topic '{fallback.title[:50]}...' (category: {fallback.primary_topic})"
+                    )
+                else:
+                    logger.warning(
+                        f"Section '{section_key}' remains empty — no unused candidates left"
+                    )
+
         # Phase 3: Fill global roundup (geographic gap-fill)
         all_selected_topics = []
         for section_items in result.values():
@@ -580,6 +599,32 @@ class TopicSelector:
             logger.debug(f"Section '{section_key}': selected '{topic.title[:40]}...' (score={score:.2f})")
 
         return selected
+
+    def _fallback_topic_for_section(
+        self,
+        scored_topics: List[Tuple[TrendingTopic, float]],
+        exclude_ids: set,
+        section_key: str
+    ) -> Optional[TrendingTopic]:
+        """
+        Find the best available unused topic to fill an empty core section.
+
+        Used when no topics with a matching category were found for a section.
+        Picks the highest-scoring unused topic that hasn't already been assigned
+        to any section, regardless of its primary_topic category.
+
+        Args:
+            scored_topics: All scored candidates (sorted by score desc)
+            exclude_ids: Topic IDs already used in other sections
+            section_key: The section we're trying to fill (for logging only)
+
+        Returns:
+            Best available TrendingTopic, or None if all candidates are exhausted
+        """
+        for topic, score in scored_topics:
+            if topic.id not in exclude_ids:
+                return topic
+        return None
 
     def _select_global_roundup(
         self,
