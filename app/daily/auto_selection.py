@@ -47,17 +47,44 @@ WEIGHT_CLARITY = 0.20      # Statement clarity (shorter = better)
 WEIGHT_CONTROVERSY = 0.15  # Potential for divided opinions (engagement driver)
 WEIGHT_HISTORICAL = 0.15   # Learn from past performance
 
+# Categories that are always eligible for the daily question.
+# The daily question is about humanity's big civic/political/economic/social
+# questions — not entertainment, celebrity, or pure lifestyle.
+DAILY_QUESTION_CATEGORIES = {
+    'Politics',
+    'Geopolitics',
+    'Economy',
+    'Society',
+    'Healthcare',
+    'Environment',
+    'Education',
+    'Technology',
+    'Infrastructure',
+    'Business',
+    # Culture is included but requires a higher civic threshold (see MIN_CIVIC_SCORE_FOR_CULTURE).
+    # A Culture question must have clear civic relevance — e.g. "Should governments
+    # fund public broadcasting?" — not "What is your favourite film?"
+    'Culture',
+}
+
+# Culture discussions need a stronger civic signal before they qualify.
+# This filters out lifestyle/entertainment Culture topics while keeping
+# genuinely civic cultural debates.
+MIN_CIVIC_SCORE_FOR_CULTURE = 0.6
+
 # Priority topics - these get boosted for daily questions (major news/civic topics)
 PRIORITY_TOPICS = {
-    'Politics': 1.4,      # Major boost - core civic engagement
-    'Geopolitics': 1.4,   # Major boost - world events
-    'Economy': 1.3,       # Strong boost - affects everyone
-    'Society': 1.2,       # Moderate boost - social issues
-    'Technology': 1.1,    # Slight boost - tech policy matters
-    'Healthcare': 1.0,    # Neutral
-    'Business': 1.0,      # Neutral
-    'Culture': 0.8,       # Lower priority - entertainment focused
-    'Sport': 0.7,         # Lower priority
+    'Politics': 1.4,       # Major boost - core civic engagement
+    'Geopolitics': 1.4,    # Major boost - world events
+    'Economy': 1.3,        # Strong boost - affects everyone
+    'Society': 1.2,        # Moderate boost - social issues
+    'Healthcare': 1.1,     # Important - public health policy
+    'Environment': 1.1,    # Important - climate/sustainability policy
+    'Education': 1.1,      # Important - affects everyone long-term
+    'Technology': 1.1,     # Slight boost - tech policy matters
+    'Infrastructure': 1.0, # Neutral
+    'Business': 1.0,       # Neutral
+    'Culture': 0.8,        # Lower priority - must pass higher civic threshold
 }
 
 def _trim_text(text, max_length):
@@ -413,39 +440,72 @@ def is_duplicate_date_error(error):
 
 
 def get_eligible_discussions(days_to_avoid=AVOID_REPEAT_DAYS):
-    """Get discussions that haven't been used recently"""
+    """Get civic discussions that haven't been used recently.
+
+    Only returns discussions whose topic falls within DAILY_QUESTION_CATEGORIES.
+    Sport and any uncategorised/entertainment topics are excluded so the daily
+    question stays focused on civic, political, economic, and societal issues.
+    """
     cutoff = utcnow_naive() - timedelta(days=days_to_avoid)
-    
+
     recently_used_ids = db.session.query(DailyQuestionSelection.source_discussion_id).filter(
         DailyQuestionSelection.source_type == 'discussion',
         DailyQuestionSelection.selected_at >= cutoff,
         DailyQuestionSelection.source_discussion_id.isnot(None)
     ).scalar_subquery()
-    
+
+    allowed_categories = list(DAILY_QUESTION_CATEGORIES)
+
     discussions = Discussion.query.filter(
         Discussion.id.notin_(recently_used_ids),
-        Discussion.partner_env != 'test'
+        Discussion.partner_env != 'test',
+        Discussion.topic.in_(allowed_categories)
     ).order_by(Discussion.created_at.desc()).limit(50).all()
-    
+
     return discussions
 
 
 def get_eligible_trending_topics(days_to_avoid=AVOID_REPEAT_DAYS, min_civic_score=MIN_CIVIC_SCORE):
-    """Get published trending topics that haven't been used recently"""
+    """Get published trending topics that haven't been used recently.
+
+    Applies two-tier civic filtering:
+    - All allowed categories require civic_score >= min_civic_score (default 0.5).
+    - Culture topics additionally require civic_score >= MIN_CIVIC_SCORE_FOR_CULTURE (0.6)
+      so that lifestyle/entertainment Culture stories are excluded while genuinely civic
+      cultural debates (arts funding, media regulation, etc.) remain eligible.
+    - Topics not in DAILY_QUESTION_CATEGORIES are excluded entirely (e.g. Sport).
+    """
+    from sqlalchemy import and_, or_
+
     cutoff = utcnow_naive() - timedelta(days=days_to_avoid)
-    
+
     recently_used_ids = db.session.query(DailyQuestionSelection.source_trending_topic_id).filter(
         DailyQuestionSelection.source_type == 'trending',
         DailyQuestionSelection.selected_at >= cutoff,
         DailyQuestionSelection.source_trending_topic_id.isnot(None)
     ).scalar_subquery()
-    
+
+    non_culture_categories = [c for c in DAILY_QUESTION_CATEGORIES if c != 'Culture']
+
+    civic_category_filter = or_(
+        # All non-Culture civic categories: standard threshold
+        and_(
+            TrendingTopic.primary_topic.in_(non_culture_categories),
+            TrendingTopic.civic_score >= min_civic_score
+        ),
+        # Culture: higher threshold to ensure genuine civic angle
+        and_(
+            TrendingTopic.primary_topic == 'Culture',
+            TrendingTopic.civic_score >= MIN_CIVIC_SCORE_FOR_CULTURE
+        )
+    )
+
     topics = TrendingTopic.query.filter(
         TrendingTopic.status == 'published',
-        TrendingTopic.civic_score >= min_civic_score,
-        TrendingTopic.id.notin_(recently_used_ids)
+        TrendingTopic.id.notin_(recently_used_ids),
+        civic_category_filter
     ).order_by(TrendingTopic.civic_score.desc()).limit(30).all()
-    
+
     return topics
 
 
@@ -459,11 +519,14 @@ def get_eligible_statements(days_to_avoid=AVOID_REPEAT_DAYS):
         DailyQuestionSelection.source_statement_id.isnot(None)
     ).scalar_subquery()
     
+    allowed_categories = list(DAILY_QUESTION_CATEGORIES)
+
     statements = Statement.query.join(Discussion).filter(
         Statement.id.notin_(recently_used_ids),
-        Statement.is_seed == True
+        Statement.is_seed == True,
+        Discussion.topic.in_(allowed_categories)
     ).order_by(Statement.created_at.desc()).limit(50).all()
-    
+
     return statements
 
 
