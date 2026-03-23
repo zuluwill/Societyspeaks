@@ -193,6 +193,48 @@ def _get_topic_political_leaning(topic: TrendingTopic) -> str:
     return Counter(leanings).most_common(1)[0][0]
 
 
+def _build_ordered_candidates(eligible, priority_categories):
+    """
+    Apply the two-pass ordering strategy to a pre-filtered list of eligible topics.
+
+    Pass 1 — Category guarantee: take the single best-scored topic from each
+    priority category so that every subject area gets at least one slot.
+    Topics are assumed to arrive already sorted by score descending (callers
+    should query with ORDER BY civic_score DESC before filtering).
+
+    Pass 2 — Score fill: append all remaining eligible topics in their
+    original (score-descending) order.
+
+    Returns an ordered list with category-guaranteed topics first, then
+    score-ordered fill topics. No topic appears more than once.
+
+    This is a pure function with no side effects — it does not touch the
+    database or mutate the input list.
+    """
+    from collections import defaultdict
+
+    by_category = defaultdict(list)
+    for t in eligible:
+        by_category[t.primary_topic or 'Unknown'].append(t)
+
+    ordered = []
+    used_ids = set()
+
+    for category in priority_categories:
+        for t in by_category.get(category, []):
+            if t.id not in used_ids:
+                ordered.append(t)
+                used_ids.add(t.id)
+                break
+
+    for t in eligible:
+        if t.id not in used_ids:
+            ordered.append(t)
+            used_ids.add(t.id)
+
+    return ordered
+
+
 def auto_publish_daily(max_topics: int = 15, schedule_bluesky: bool = True, schedule_x: bool = True) -> int:
     """
     Auto-publish up to max_topics diverse topics daily.
@@ -247,28 +289,9 @@ def auto_publish_daily(max_topics: int = 15, schedule_bluesky: bool = True, sche
         logger.error("No admin user found for auto-publish")
         return 0
 
-    # Pre-filter to auto-publishable only, then group by category.
+    # Pre-filter to auto-publishable only, then order for diversity.
     eligible = [t for t in all_candidates if t.should_auto_publish]
-    by_category = defaultdict(list)
-    for t in eligible:
-        by_category[t.primary_topic or 'Unknown'].append(t)
-
-    # Build an ordered list: first one-best-per-category (Pass 1),
-    # then the remaining eligible topics in score order (Pass 2).
-    ordered = []
-    used_ids = set()
-
-    for category in PRIORITY_CATEGORIES:
-        for t in by_category.get(category, []):
-            if t.id not in used_ids:
-                ordered.append(t)
-                used_ids.add(t.id)
-                break  # One guaranteed slot per category
-
-    for t in eligible:
-        if t.id not in used_ids:
-            ordered.append(t)
-            used_ids.add(t.id)
+    ordered = _build_ordered_candidates(eligible, PRIORITY_CATEGORIES)
 
     # Now publish from the ordered list, applying deduplication and balance checks.
     published = 0
