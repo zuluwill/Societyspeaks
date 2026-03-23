@@ -627,6 +627,38 @@ def init_scheduler(app):
             logger.info(f"Partner billing reconciliation complete (updated={updated})")
     
     
+    @scheduler.scheduled_job('cron', minute='0', id='pending_topic_catchup', max_instances=1, coalesce=True, misfire_grace_time=1800)
+    def pending_topic_catchup_job():
+        """
+        Drain the pending → pending_review backlog every hour.
+
+        process_held_topics() processes topics whose hold_until has expired
+        but defaults to a small batch. This job runs every hour with a large
+        batch (200) to clear any historical backlog without overloading the
+        LLM API in a single burst.
+
+        Safe to run alongside the main pipeline — process_held_topics is
+        idempotent (it filters by status='pending' and hold_until <= now).
+        """
+        with app.app_context():
+            from app.trending.pipeline import process_held_topics
+            from app.models import TrendingTopic
+
+            pending_count = TrendingTopic.query.filter(
+                TrendingTopic.status == 'pending',
+                TrendingTopic.hold_until <= utcnow_naive()
+            ).count()
+
+            if pending_count == 0:
+                return
+
+            logger.info(f"Pending topic catch-up: {pending_count} expired topics to process")
+            try:
+                processed = process_held_topics(batch_size=200)
+                logger.info(f"Pending topic catch-up: processed {processed} topics ({pending_count - processed} remaining)")
+            except Exception as e:
+                logger.error(f"Pending topic catch-up failed: {e}", exc_info=True)
+
     @scheduler.scheduled_job('cron', hour='7,12,18,22', id='trending_topics_pipeline', max_instances=1, coalesce=True, misfire_grace_time=3600)
     def run_trending_topics_pipeline():
         """

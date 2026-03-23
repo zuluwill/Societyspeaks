@@ -123,14 +123,18 @@ def run_pipeline(hold_minutes: int = 60) -> Tuple[int, int, int]:
     return len(articles), topics_created, ready_count
 
 
-def process_held_topics(batch_size: int = 10) -> int:
+def process_held_topics(batch_size: int = 50) -> int:
     """
     Process topics that have completed their hold window.
     Score them and move to pending_review.
     Processes in batches with error handling per topic.
+
+    Default batch_size raised from 10 to 50 so routine runs clear the queue
+    faster than new topics arrive. Use a larger batch (e.g. 200) when running
+    a catch-up pass against a historical backlog.
     """
     now = utcnow_naive()
-    
+
     held_topics = TrendingTopic.query.filter(
         TrendingTopic.status == 'pending',
         TrendingTopic.hold_until <= now

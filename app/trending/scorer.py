@@ -559,11 +559,21 @@ Source articles:
 
 Rate on 0-1 scale and respond in JSON:
 {{
-    "civic_score": <0-1: how valuable is this for civic discussion? 1=very important public policy issue, 0=trivial/celebrity gossip>,
-    "quality_score": <0-1: how factual and substantive? 1=well-sourced news, 0=rumor/opinion>,
+    "civic_score": <0-1: how valuable is this for public understanding and civic life?
+        0.9-1.0 = major policy decision, election, war, economic crisis — affects millions directly
+        0.7-0.8 = significant legislation, court ruling, public health development, diplomatic event
+        0.5-0.6 = notable corporate/institutional news, cultural moment with social implications
+        0.3-0.4 = human interest, arts/culture story with broader cultural significance
+        0.0-0.2 = celebrity gossip, sport result with no wider significance, pure entertainment>,
+    "quality_score": <0-1: how factual and substantive? 1=well-sourced reported news, 0=rumor/unverified opinion>,
     "audience_score": <0-1: how appealing to our target audience? 1=perfect fit for intellectual podcast listeners, 0=tabloid/celebrity content>,
-    "risk_flag": <true/false: is this culture war bait, defamation risk, or likely to cause more division than insight?>,
-    "risk_reason": "<if risk_flag is true, explain briefly>",
+    "risk_flag": <true/false — only flag TRUE if the topic meets at least one of these specific criteria:
+        1. Clear defamation or legal liability risk (unverified accusations against named individuals)
+        2. Explicit hate speech, incitement, or content targeting protected groups
+        3. Purely manufactured outrage with no underlying news event (rage-bait with no factual hook)
+        Do NOT flag simply because a topic is politically contentious, divisive, or involves partisan figures.
+        Controversial political news is exactly what civic platforms exist to discuss. Flag=false for most political stories.>,
+    "risk_reason": "<if risk_flag is true, state which specific criterion above applies and why>",
     "primary_topic": "<one of: Healthcare, Environment, Education, Technology, Economy, Politics, Society, Infrastructure, Geopolitics, Business, Culture>",
     "canonical_tags": ["<tag1>", "<tag2>", "<tag3>"] (normalized lowercase topic identifiers for deduplication)
 }}
