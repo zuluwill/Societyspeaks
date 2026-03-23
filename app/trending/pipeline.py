@@ -15,6 +15,21 @@ from datetime import datetime, timedelta
 from app.lib.time import utcnow_naive
 from typing import List, Tuple
 
+# Pass 1 of auto_publish_daily: one best-scored topic per category (in this order), then score fill.
+AUTO_PUBLISH_PRIORITY_CATEGORIES: Tuple[str, ...] = (
+    'Politics',
+    'Economy',
+    'Geopolitics',
+    'Healthcare',
+    'Technology',
+    'Society',
+    'Environment',
+    'Culture',
+    'Education',
+    'Business',
+    'Infrastructure',
+)
+
 from app import db
 from app.models import NewsArticle, TrendingTopic, TrendingTopicArticle
 from app.trending.news_fetcher import NewsFetcher, seed_default_sources
@@ -210,6 +225,8 @@ def _build_ordered_candidates(eligible, priority_categories):
 
     This is a pure function with no side effects — it does not touch the
     database or mutate the input list.
+
+    ``priority_categories`` is typically ``AUTO_PUBLISH_PRIORITY_CATEGORIES``.
     """
     from collections import defaultdict
 
@@ -257,14 +274,7 @@ def auto_publish_daily(max_topics: int = 15, schedule_bluesky: bool = True, sche
     """
     from app.models import User
     from app.trending.publisher import publish_topic
-    from collections import Counter, defaultdict
-
-    # Categories we want guaranteed daily coverage for, in priority order.
-    PRIORITY_CATEGORIES = [
-        'Politics', 'Economy', 'Geopolitics', 'Healthcare',
-        'Technology', 'Society', 'Environment', 'Culture',
-        'Education', 'Business', 'Infrastructure',
-    ]
+    from collections import Counter
 
     today_start = utcnow_naive().replace(hour=0, minute=0, second=0, microsecond=0)
     already_published_today = TrendingTopic.query.filter(
@@ -291,7 +301,7 @@ def auto_publish_daily(max_topics: int = 15, schedule_bluesky: bool = True, sche
 
     # Pre-filter to auto-publishable only, then order for diversity.
     eligible = [t for t in all_candidates if t.should_auto_publish]
-    ordered = _build_ordered_candidates(eligible, PRIORITY_CATEGORIES)
+    ordered = _build_ordered_candidates(eligible, AUTO_PUBLISH_PRIORITY_CATEGORIES)
 
     # Now publish from the ordered list, applying deduplication and balance checks.
     published = 0

@@ -12,6 +12,8 @@ import pytest
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
 
+from app.trending.pipeline import AUTO_PUBLISH_PRIORITY_CATEGORIES, _build_ordered_candidates
+
 
 # ---------------------------------------------------------------------------
 # Helpers — lightweight stand-ins for TrendingTopic used in pure unit tests
@@ -30,13 +32,6 @@ def make_topic(id, primary_topic, civic_score=0.7, risk_flag=False, title="Topic
     )
 
 
-PRIORITY_CATEGORIES = [
-    'Politics', 'Economy', 'Geopolitics', 'Healthcare',
-    'Technology', 'Society', 'Environment', 'Culture',
-    'Education', 'Business', 'Infrastructure',
-]
-
-
 # ---------------------------------------------------------------------------
 # Tests for _build_ordered_candidates (pure function — no DB needed)
 # ---------------------------------------------------------------------------
@@ -45,8 +40,7 @@ class TestBuildOrderedCandidates:
     """Unit tests for the two-pass ordering helper."""
 
     def _call(self, eligible, categories=None):
-        from app.trending.pipeline import _build_ordered_candidates
-        return _build_ordered_candidates(eligible, categories or PRIORITY_CATEGORIES)
+        return _build_ordered_candidates(eligible, categories or AUTO_PUBLISH_PRIORITY_CATEGORIES)
 
     def test_empty_input_returns_empty(self):
         assert self._call([]) == []
@@ -74,8 +68,9 @@ class TestBuildOrderedCandidates:
         politics_first = next(i for i, c in enumerate(categories_seen) if c == 'Politics')
         economy_first  = next(i for i, c in enumerate(categories_seen) if c == 'Economy')
 
-        assert politics_first < len(PRIORITY_CATEGORIES), "Politics should appear in Pass 1 position"
-        assert economy_first  < len(PRIORITY_CATEGORIES), "Economy should appear in Pass 1 position"
+        n = len(AUTO_PUBLISH_PRIORITY_CATEGORIES)
+        assert politics_first < n, "Politics should appear in Pass 1 position"
+        assert economy_first < n, "Economy should appear in Pass 1 position"
 
     def test_pass1_picks_best_topic_per_category(self):
         """When topics arrive sorted score-descending, the first per category is the best."""
@@ -105,9 +100,9 @@ class TestBuildOrderedCandidates:
         assert pass2_topics[1].id == 4
 
     def test_unknown_category_appended_in_pass2(self):
-        """Topics whose primary_topic is not in PRIORITY_CATEGORIES go into Pass 2."""
+        """Topics whose primary_topic is not in AUTO_PUBLISH_PRIORITY_CATEGORIES go into Pass 2."""
         guaranteed = make_topic(1, 'Politics')
-        unknown    = make_topic(2, 'Sport')   # Not in PRIORITY_CATEGORIES
+        unknown    = make_topic(2, 'Sport')   # Not in auto-publish priority list
 
         result = self._call([guaranteed, unknown])
 
