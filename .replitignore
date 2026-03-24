@@ -1,9 +1,8 @@
-.pythonlibs/
 .cache/
-node_modules/
-.local/
 .git/
+.local/
 attached_assets/
+node_modules/
 __pycache__/
 *.py[cod]
 .pytest_cache/
