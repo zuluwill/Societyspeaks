@@ -19,6 +19,9 @@ with app.app_context():
 " 2>&1 || true
 SQLALCHEMY_MIGRATE=1 flask db upgrade
 
+echo "Installing Node.js dependencies..."
+npm install --silent
+
 echo "Building Tailwind CSS..."
 npx tailwindcss -i ./app/static/src/input.css -o ./app/static/css/output.css --minify
 
