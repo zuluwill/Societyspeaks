@@ -278,6 +278,14 @@
         api_host:
           '{{ config.get("POSTHOG_HOST", "https://eu.i.posthog.com") }}',
         person_profiles: "identified_only",
+        loaded: function(ph) {
+          {% if current_user.is_authenticated %}
+          ph.identify('{{ current_user.id }}', {
+            email: '{{ current_user.email | e }}',
+            username: '{{ current_user.username | e }}'
+          });
+          {% endif %}
+        },
         before_send: function (event) {
           if (event.event === "$exception") {
             var msg =

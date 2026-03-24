@@ -10,6 +10,7 @@ Events tracked:
 """
 
 import logging
+import uuid
 from typing import Optional, Dict
 from urllib.parse import urlparse, parse_qs
 
@@ -35,7 +36,7 @@ def track_social_conversion(
             return
 
         posthog.capture(
-            distinct_id=distinct_id or 'anonymous',
+            distinct_id=distinct_id or str(uuid.uuid4()),
             event=event_name,
             properties=properties
         )

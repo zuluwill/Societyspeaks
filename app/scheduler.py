@@ -1086,7 +1086,7 @@ def init_scheduler(app):
                                 import posthog
                                 if posthog and getattr(posthog, 'project_api_key', None):
                                     posthog.capture(
-                                        distinct_id=subscriber.email,
+                                        distinct_id=str(subscriber.user_id) if subscriber.user_id else subscriber.email,
                                         event='weekly_digest_sent',
                                         properties={
                                             'question_count': len(questions),
@@ -1180,7 +1180,7 @@ def init_scheduler(app):
                                 import posthog
                                 if posthog and getattr(posthog, 'project_api_key', None):
                                     posthog.capture(
-                                        distinct_id=subscriber.email,
+                                        distinct_id=str(subscriber.user_id) if subscriber.user_id else subscriber.email,
                                         event='monthly_digest_sent',
                                         properties={
                                             'question_count': len(questions),
