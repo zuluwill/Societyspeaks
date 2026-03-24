@@ -330,8 +330,9 @@ def login():
         login_user(user)
         
         # Track login with PostHog
-        _track_posthog('user_logged_in', user.id, {'email': user.email},
-                       identify_properties={'email': user.email, 'username': user.username})
+        _track_posthog('user_logged_in', user.id, {'email': user.email, 'method': 'password'},
+                       identify_properties={'email': user.email, 'username': user.username},
+                       flush=True)
         
         # Merge any anonymous votes from this session to the user's account
         fingerprint = session.get('statement_vote_fingerprint')

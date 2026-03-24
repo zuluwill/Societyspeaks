@@ -637,6 +637,14 @@ def magic_link(token):
                 if expired_sub.user:
                     from flask_login import login_user
                     login_user(expired_sub.user)
+                    try:
+                        import posthog as _ph
+                        if _ph and getattr(_ph, 'project_api_key', None):
+                            _ph.capture(distinct_id=str(expired_sub.user.id), event='user_logged_in',
+                                        properties={'method': 'magic_link', 'source': 'brief_subscription'})
+                            _ph.flush()
+                    except Exception:
+                        pass
                 flash(f'Welcome back! Signed in as {expired_sub.email}', 'success')
                 return redirect(url_for('brief.today'))
 
@@ -650,6 +658,14 @@ def magic_link(token):
     if subscriber.user:
         from flask_login import login_user
         login_user(subscriber.user)
+        try:
+            import posthog as _ph
+            if _ph and getattr(_ph, 'project_api_key', None):
+                _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
+                            properties={'method': 'magic_link', 'source': 'brief_subscription'})
+                _ph.flush()
+        except Exception:
+            pass
 
     flash(f'Welcome back! Signed in as {subscriber.email}', 'success')
     return redirect(url_for('brief.today'))

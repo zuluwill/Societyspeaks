@@ -1076,6 +1076,14 @@ def weekly_batch():
     # Log in if user has account
     if subscriber.user:
         login_user(subscriber.user)
+        try:
+            import posthog as _ph
+            if _ph and getattr(_ph, 'project_api_key', None):
+                _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
+                            properties={'method': 'magic_link', 'source': 'weekly_digest'})
+                _ph.flush()
+        except Exception:
+            pass
 
     # Get specific question IDs if provided (from email link)
     question_ids_param = request.args.get('questions')
@@ -1262,6 +1270,14 @@ def weekly_batch_vote():
     # Log in if user has account
     if subscriber.user:
         login_user(subscriber.user)
+        try:
+            import posthog as _ph
+            if _ph and getattr(_ph, 'project_api_key', None):
+                _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
+                            properties={'method': 'magic_link', 'source': 'daily_question_api'})
+                _ph.flush()
+        except Exception:
+            pass
 
     # Parse request (expects JSON from AJAX)
     if not request.is_json:
@@ -1411,6 +1427,14 @@ def magic_link(token):
     
     if subscriber.user:
         login_user(subscriber.user)
+        try:
+            import posthog as _ph
+            if _ph and getattr(_ph, 'project_api_key', None):
+                _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
+                            properties={'method': 'magic_link', 'source': 'daily_link'})
+                _ph.flush()
+        except Exception:
+            pass
     
     return redirect(url_for('daily.today'))
 
@@ -1455,6 +1479,14 @@ def one_click_vote(token, vote_choice):
     # Log in if user has account
     if subscriber.user:
         login_user(subscriber.user)
+        try:
+            import posthog as _ph
+            if _ph and getattr(_ph, 'project_api_key', None):
+                _ph.capture(distinct_id=str(subscriber.user.id), event='user_logged_in',
+                            properties={'method': 'magic_link', 'source': 'one_click_vote'})
+                _ph.flush()
+        except Exception:
+            pass
 
     # Get the specific question this email was about
     question = db.session.get(DailyQuestion,email_question_id)
