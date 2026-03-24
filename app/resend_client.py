@@ -918,13 +918,21 @@ class ResendEmailClient:
             if batch_emails:
                 batch_result = self._send_batch(batch_emails)
 
-                if batch_result['sent'] == 0 and batch_result['failed'] > 0:
-                    # Batch rejected entirely (e.g. 422 due to one bad address).
-                    # Fall back to individual sends so valid subscribers still receive
-                    # their email and the bad address is clearly identified.
+                batch_errors = batch_result.get('errors', [])
+                is_validation_failure = (
+                    batch_result['sent'] == 0
+                    and batch_result['failed'] > 0
+                    and any('422' in str(e) for e in batch_errors)
+                )
+
+                if is_validation_failure:
+                    # Batch rejected by Resend due to a bad address (422).
+                    # Resend doesn't say which one, so fall back to individual sends.
+                    # Any address that also fails individually is invalid — deactivate
+                    # it so it never blocks future batches again.
                     logger.warning(
-                        f"Batch send failed ({batch_result.get('errors', [])}); "
-                        f"falling back to {len(batch_emails)} individual sends."
+                        f"Batch rejected with 422 (bad address in batch of {len(batch_emails)}); "
+                        f"falling back to individual sends to identify the invalid address."
                     )
                     individual_sent = 0
                     individual_failed = 0
@@ -946,17 +954,24 @@ class ResendEmailClient:
                                 logger.warning(f"Failed to record analytics for {sub.email}: {analytics_error}")
                         else:
                             individual_failed += 1
-                            logger.error(
-                                f"Individual fallback failed for subscriber {sub.id} "
-                                f"<{sub.email}> — address may be invalid."
-                            )
+                            # Permanently deactivate — bad address that blocks everyone else.
+                            try:
+                                sub.is_active = False
+                                sub.unsubscribe_reason = 'invalid_email'
+                                sub.unsubscribed_at = utcnow_naive()
+                                logger.warning(
+                                    f"Deactivated subscriber {sub.id} <{sub.email}> — "
+                                    f"individual send failed after batch 422; address is invalid."
+                                )
+                            except Exception as deactivate_err:
+                                logger.error(f"Failed to deactivate subscriber {sub.id}: {deactivate_err}")
                     results['sent'] += individual_sent
                     results['failed'] += individual_failed
-                    results['errors'].extend(batch_result.get('errors', []))
+                    results['errors'].extend(batch_errors)
                 else:
                     results['sent'] += batch_result['sent']
                     results['failed'] += batch_result['failed']
-                    results['errors'].extend(batch_result.get('errors', []))
+                    results['errors'].extend(batch_errors)
 
                 # Update last_email_sent for successful batch sends
                 if batch_result['sent'] > 0:
