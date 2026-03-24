@@ -61,6 +61,9 @@ class User(UserMixin, db.Model):
     discussion_response_notifications = db.Column(db.Boolean, default=True)  # New responses
     weekly_digest_enabled = db.Column(db.Boolean, default=True)  # Weekly digest emails
 
+    # Login tracking
+    last_login_at = db.Column(db.DateTime, nullable=True)
+
     # Stripe billing
     stripe_customer_id = db.Column(db.String(255), nullable=True, unique=True)
 

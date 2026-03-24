@@ -328,7 +328,17 @@ def login():
 
         # Log the user in
         login_user(user)
-        
+
+        # Update last login timestamp and record event
+        try:
+            from app.lib.time import utcnow_naive
+            user.last_login_at = utcnow_naive()
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+        record_event('user_logged_in', user_id=user.id, event_metadata={'method': 'password'})
+
         # Track login with PostHog
         _track_posthog('user_logged_in', user.id, {'email': user.email, 'method': 'password'},
                        identify_properties={'email': user.email, 'username': user.username},

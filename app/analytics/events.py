@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 CANONICAL_EVENT_NAMES = {
     'account_created',
+    'user_logged_in',
     'discussion_viewed',
     'statement_voted',
     'response_created',
