@@ -16,6 +16,7 @@ from app.daily.utils import process_daily_question_subscription
 import hashlib
 import re
 import secrets
+import uuid
 
 DAILY_CLIENT_COOKIE_NAME = 'daily_client_id'
 DAILY_CLIENT_COOKIE_MAX_AGE = 365 * 24 * 60 * 60
@@ -62,7 +63,7 @@ def _track_context_engagement(question, response, source='web'):
         if not posthog or not getattr(posthog, 'project_api_key', None):
             return
 
-        distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint() or 'anonymous'
+        distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint() or str(uuid.uuid4())
         posthog.capture(
             distinct_id=distinct_id,
             event='daily_question_context_engaged',
@@ -1723,7 +1724,7 @@ def vote():
         try:
             import posthog
             if posthog and getattr(posthog, 'project_api_key', None):
-                distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint() or 'anonymous'
+                distinct_id = str(current_user.id) if current_user.is_authenticated else get_session_fingerprint() or str(uuid.uuid4())
                 posthog.capture(
                     distinct_id=distinct_id,
                     event='daily_question_participated',

@@ -796,6 +796,7 @@ def use_template(template_id):
                             'sources_added': sources_added,
                         }
                     )
+                    posthog.flush()
             except Exception as e:
                 logger.warning(f"PostHog tracking error: {e}")
 
@@ -1035,6 +1036,7 @@ def create_briefing():
                             'sources_added': sources_added,
                         }
                     )
+                    posthog.flush()
             except Exception as e:
                 logger.warning(f"PostHog tracking error: {e}")
 
