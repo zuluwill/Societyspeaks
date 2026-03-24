@@ -518,6 +518,24 @@ def handle_subscription_created(subscription_data):
             sync_subscription_with_org(stripe_sub, user)
             current_app.logger.info(f"Created subscription for user {user.id}")
             _reactivate_user_briefings(user.id)
+
+            stripe_status = subscription_data.get('status')
+            if stripe_status == 'trialing':
+                new_sub = Subscription.query.filter_by(
+                    stripe_subscription_id=subscription_data['id']
+                ).first()
+                trial_end_ts = subscription_data.get('trial_end')
+                trial_end_date = None
+                if trial_end_ts:
+                    from datetime import datetime as _dt
+                    trial_end_date = _dt.utcfromtimestamp(trial_end_ts).strftime('%Y-%m-%d')
+                _track_posthog('paid_briefing_trial_started', user.id, {
+                    'subscription_id': new_sub.id if new_sub else None,
+                    'plan_name': new_sub.plan.name if new_sub and new_sub.plan else None,
+                    'plan_code': new_sub.plan.code if new_sub and new_sub.plan else None,
+                    'billing_interval': new_sub.billing_interval if new_sub else None,
+                    'trial_end': trial_end_date,
+                })
         except ValueError as e:
             current_app.logger.error(f"Failed to create subscription for user {user.id}: {e}")
 
@@ -533,6 +551,7 @@ def handle_subscription_updated(subscription_data):
         prev_plan_name = sub.plan.name if sub.plan else None
         prev_plan_code = sub.plan.code if sub.plan else None
         prev_interval = sub.billing_interval
+        prev_status = sub.status
         user_id = sub.user_id
         try:
             sync_subscription_from_stripe(stripe_sub, user_id=sub.user_id, org_id=sub.org_id)
@@ -540,6 +559,16 @@ def handle_subscription_updated(subscription_data):
 
             new_plan_id = sub.plan_id
             new_interval = sub.billing_interval
+            new_status = sub.status
+
+            if prev_status == 'trialing' and new_status == 'active' and user_id:
+                _track_posthog('paid_briefing_trial_converted', user_id, {
+                    'subscription_id': sub.id,
+                    'plan_name': sub.plan.name if sub.plan else None,
+                    'plan_code': sub.plan.code if sub.plan else None,
+                    'billing_interval': sub.billing_interval,
+                })
+
             if (prev_plan_id != new_plan_id or prev_interval != new_interval) and user_id:
                 new_plan = db.session.get(PricingPlan, new_plan_id) if new_plan_id else None
                 _track_posthog('paid_briefing_subscription_changed', user_id, {
@@ -803,6 +832,20 @@ def handle_payment_failed(invoice_data):
             sub.status = 'past_due'
             db.session.commit()
             current_app.logger.info(f"Subscription {sub.id} marked past_due")
+
+            next_retry_ts = invoice_data.get('next_payment_attempt')
+            next_retry = None
+            if next_retry_ts:
+                from datetime import datetime as _dt
+                next_retry = _dt.utcfromtimestamp(next_retry_ts).strftime('%Y-%m-%d %H:%M UTC')
+            _track_posthog('paid_briefing_payment_failed', sub.user_id, {
+                'subscription_id': sub.id,
+                'plan_name': sub.plan.name if sub.plan else None,
+                'plan_code': sub.plan.code if sub.plan else None,
+                'billing_interval': sub.billing_interval,
+                'attempt_count': invoice_data.get('attempt_count'),
+                'next_retry': next_retry,
+            })
 
 
 def handle_trial_ending(subscription_data):
