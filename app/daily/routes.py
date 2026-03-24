@@ -1524,7 +1524,8 @@ def one_click_vote(token, vote_choice):
                              vote_label=VOTE_LABELS.get(VOTE_MAP.get(vote_choice), vote_choice.title()),
                              vote_emoji=VOTE_EMOJIS.get(vote_choice, ''),
                              token=token,
-                             source=source)
+                             source=source,
+                             source_articles=get_source_articles(question, limit=3))
     
     # POST request: Record the vote
     try:
