@@ -189,9 +189,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const charCount = document.getElementById('charCount');
     const form = document.getElementById('voteForm');
     const submitBtn = document.getElementById('submitVoteBtn');
-    const contextDetails = document.getElementById('preVoteContextDetails');
     const sourceLinks = document.querySelectorAll('.context-source-link');
-    const contextExpandedInput = document.getElementById('context_expanded');
     const sourceLinkClickCountInput = document.getElementById('source_link_click_count');
     let sourceLinkClicks = 0;
     let selectedVote = null;
@@ -219,14 +217,6 @@ document.addEventListener('DOMContentLoaded', function() {
             reasonTextarea.focus();
         });
     });
-
-    if (contextDetails && contextExpandedInput) {
-        contextDetails.addEventListener('toggle', function() {
-            if (contextDetails.open) {
-                contextExpandedInput.value = '1';
-            }
-        });
-    }
 
     if (sourceLinks.length && sourceLinkClickCountInput) {
         sourceLinks.forEach(link => {
