@@ -7,6 +7,7 @@ from datetime import datetime, date
 from slugify import slugify
 from app.seo import generate_sitemap
 from replit.object_storage import Client
+from replit.object_storage.errors import ObjectNotFoundError
 from sqlalchemy.orm import joinedload
 from app.lib.time import utcnow_naive
 import io
@@ -180,9 +181,12 @@ def _serve_object_storage_asset(filename):
 
     try:
         file_data = asset_client.download_as_bytes(storage_path)
+    except ObjectNotFoundError:
+        current_app.logger.warning(f"Asset not found in storage: {storage_path}")
+        abort(404)
     except Exception as error:
         error_msg = str(error)
-        if 'not found' in error_msg.lower() or 'does not exist' in error_msg.lower():
+        if 'not found' in error_msg.lower() or 'does not exist' in error_msg.lower() or 'could not be found' in error_msg.lower():
             current_app.logger.warning(f"Asset not found in storage: {storage_path}")
             abort(404)
         current_app.logger.error(f"Error fetching asset {storage_path}: {error}")

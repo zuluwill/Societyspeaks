@@ -123,15 +123,23 @@ def process_next_consensus_job():
     # Use SELECT FOR UPDATE SKIP LOCKED so concurrent workers never claim the
     # same job.  Falls back to plain SELECT on dialects that don't support it
     # (e.g. SQLite during tests).
-    bind = db.session.get_bind()
-    if bind.dialect.name == 'postgresql':
-        job = ConsensusJob.query.filter_by(
-            status=ConsensusJob.STATUS_QUEUED
-        ).order_by(ConsensusJob.queued_at.asc(), ConsensusJob.id.asc()).with_for_update(skip_locked=True).first()
-    else:
-        job = ConsensusJob.query.filter_by(
-            status=ConsensusJob.STATUS_QUEUED
-        ).order_by(ConsensusJob.queued_at.asc(), ConsensusJob.id.asc()).first()
+    try:
+        bind = db.session.get_bind()
+        if bind.dialect.name == 'postgresql':
+            job = ConsensusJob.query.filter_by(
+                status=ConsensusJob.STATUS_QUEUED
+            ).order_by(ConsensusJob.queued_at.asc(), ConsensusJob.id.asc()).with_for_update(skip_locked=True).first()
+        else:
+            job = ConsensusJob.query.filter_by(
+                status=ConsensusJob.STATUS_QUEUED
+            ).order_by(ConsensusJob.queued_at.asc(), ConsensusJob.id.asc()).first()
+    except Exception as db_err:
+        logger.warning(f"DB error claiming consensus job (stale connection?): {db_err} — rolling back and skipping")
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return False
 
     if not job:
         return False

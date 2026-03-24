@@ -917,12 +917,48 @@ class ResendEmailClient:
 
             if batch_emails:
                 batch_result = self._send_batch(batch_emails)
-                results['sent'] += batch_result['sent']
-                results['failed'] += batch_result['failed']
-                results['errors'].extend(batch_result.get('errors', []))
 
-                # Update last_email_sent for successful sends
-                # Note: With batch API, we assume all or none in the batch succeeded
+                if batch_result['sent'] == 0 and batch_result['failed'] > 0:
+                    # Batch rejected entirely (e.g. 422 due to one bad address).
+                    # Fall back to individual sends so valid subscribers still receive
+                    # their email and the bad address is clearly identified.
+                    logger.warning(
+                        f"Batch send failed ({batch_result.get('errors', [])}); "
+                        f"falling back to {len(batch_emails)} individual sends."
+                    )
+                    individual_sent = 0
+                    individual_failed = 0
+                    for sub, payload in zip(batch_subscribers, batch_emails):
+                        ok = self._send_with_retry(payload, use_rate_limit=True)
+                        if ok:
+                            individual_sent += 1
+                            sub.last_email_sent = utcnow_naive()
+                            try:
+                                from app.lib.email_analytics import EmailAnalytics
+                                EmailAnalytics.record_send(
+                                    email=sub.email,
+                                    category=EmailAnalytics.CATEGORY_DAILY_QUESTION,
+                                    subject=f"Daily Question #{question.question_number}: {question.topic_category or 'Civic'}",
+                                    question_subscriber_id=sub.id,
+                                    daily_question_id=question.id
+                                )
+                            except Exception as analytics_error:
+                                logger.warning(f"Failed to record analytics for {sub.email}: {analytics_error}")
+                        else:
+                            individual_failed += 1
+                            logger.error(
+                                f"Individual fallback failed for subscriber {sub.id} "
+                                f"<{sub.email}> — address may be invalid."
+                            )
+                    results['sent'] += individual_sent
+                    results['failed'] += individual_failed
+                    results['errors'].extend(batch_result.get('errors', []))
+                else:
+                    results['sent'] += batch_result['sent']
+                    results['failed'] += batch_result['failed']
+                    results['errors'].extend(batch_result.get('errors', []))
+
+                # Update last_email_sent for successful batch sends
                 if batch_result['sent'] > 0:
                     for subscriber in batch_subscribers:
                         subscriber.last_email_sent = utcnow_naive()

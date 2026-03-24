@@ -305,13 +305,20 @@ def score_articles_with_llm(articles: List[NewsArticle], batch_size: int = 25) -
     return articles
 
 
+def _sanitize_for_json(text: str) -> str:
+    """Strip control characters that make OpenAI reject the JSON request body."""
+    if not text:
+        return ""
+    return "".join(ch for ch in text if ch == "\n" or ch == "\t" or (ord(ch) >= 0x20 and ord(ch) != 0x7F))
+
+
 def _score_with_openai(articles: List[NewsArticle], api_key: str) -> List[NewsArticle]:
     """Score articles using OpenAI Structured Outputs for guaranteed JSON schema."""
     import openai
     
     client = openai.OpenAI(api_key=api_key)
     
-    headlines = [f"{i+1}. {a.title}" for i, a in enumerate(articles)]
+    headlines = [f"{i+1}. {_sanitize_for_json(a.title or '')}" for i, a in enumerate(articles)]
     
     prompt = f"""Rate each headline on these scales:
 
