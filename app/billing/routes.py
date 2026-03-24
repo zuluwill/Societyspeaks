@@ -529,9 +529,28 @@ def handle_subscription_updated(subscription_data):
 
     sub = Subscription.query.filter_by(stripe_subscription_id=subscription_data['id']).first()
     if sub:
+        prev_plan_id = sub.plan_id
+        prev_plan_name = sub.plan.name if sub.plan else None
+        prev_plan_code = sub.plan.code if sub.plan else None
+        prev_interval = sub.billing_interval
+        user_id = sub.user_id
         try:
             sync_subscription_from_stripe(stripe_sub, user_id=sub.user_id, org_id=sub.org_id)
             current_app.logger.info(f"Updated subscription {sub.id}")
+
+            new_plan_id = sub.plan_id
+            new_interval = sub.billing_interval
+            if (prev_plan_id != new_plan_id or prev_interval != new_interval) and user_id:
+                new_plan = db.session.get(PricingPlan, new_plan_id) if new_plan_id else None
+                _track_posthog('paid_briefing_subscription_changed', user_id, {
+                    'subscription_id': sub.id,
+                    'previous_plan': prev_plan_name,
+                    'new_plan': new_plan.name if new_plan else None,
+                    'previous_plan_code': prev_plan_code,
+                    'new_plan_code': new_plan.code if new_plan else None,
+                    'previous_interval': prev_interval,
+                    'new_interval': new_interval,
+                })
         except ValueError as e:
             current_app.logger.error(f"Failed to update subscription {sub.id}: {e}")
 
@@ -743,6 +762,12 @@ def handle_subscription_deleted(subscription_data):
         user_id = sub.user_id
         plan_name = sub.plan.name if sub.plan else None
         plan_code = sub.plan.code if sub.plan else None
+        billing_interval = sub.billing_interval
+        price_pence = None
+        if sub.plan:
+            price_pence = sub.plan.price_yearly if billing_interval == 'year' else sub.plan.price_monthly
+        from app.lib.time import utcnow_naive as _utcnow
+        days_active = (_utcnow() - sub.created_at).days if sub.created_at else None
         sub.status = 'canceled'
         sub.canceled_at = db.func.now()
         db.session.commit()
@@ -763,6 +788,9 @@ def handle_subscription_deleted(subscription_data):
             'subscription_id': sub.id,
             'plan_name': plan_name,
             'plan_code': plan_code,
+            'billing_interval': billing_interval,
+            'price_pence': price_pence,
+            'days_active': days_active,
         })
 
 

@@ -1277,6 +1277,9 @@ def edit(briefing_id):
             accent_color = request.form.get('accent_color', '#3B82F6').strip()
             header_text = request.form.get('header_text', '').strip() or None
             
+            # Capture cadence before update for change detection
+            old_cadence = briefing.cadence
+
             # Update briefing
             briefing.name = name
             briefing.description = description
@@ -1331,6 +1334,17 @@ def edit(briefing_id):
                             'cadence': briefing.cadence,
                         }
                     )
+                    if old_cadence != briefing.cadence:
+                        posthog.capture(
+                            distinct_id=str(current_user.id),
+                            event='daily_brief_cadence_changed',
+                            properties={
+                                'briefing_id': briefing.id,
+                                'previous_cadence': old_cadence,
+                                'new_cadence': briefing.cadence,
+                            }
+                        )
+                        posthog.flush()
             except Exception as e:
                 logger.warning(f"PostHog tracking error: {e}")
 
