@@ -591,6 +591,12 @@ class ResendEmailClient:
             streak_message = f"You've participated {subscriber.current_streak} days in a row!"
 
         why_this = question.why_this_question or "This question helps us understand how the public thinks about important issues."
+
+        try:
+            from app.daily.utils import get_source_articles_for_question
+            source_articles = get_source_articles_for_question(question, limit=3)
+        except Exception:
+            source_articles = []
         
         try:
             html = render_template(
@@ -607,7 +613,8 @@ class ResendEmailClient:
                 vote_agree_url=vote_urls['agree'],
                 vote_disagree_url=vote_urls['disagree'],
                 vote_unsure_url=vote_urls['unsure'],
-                base_url=self.base_url
+                base_url=self.base_url,
+                source_articles=source_articles
             )
         except Exception as e:
             logger.error(f"Template rendering failed for daily_question: {e}")
@@ -837,6 +844,12 @@ class ResendEmailClient:
             streak_message = f"You've participated {subscriber.current_streak} days in a row!"
 
         why_this = question.why_this_question or "This question helps us understand how the public thinks about important issues."
+
+        try:
+            from app.daily.utils import get_source_articles_for_question
+            source_articles = get_source_articles_for_question(question, limit=3)
+        except Exception:
+            source_articles = []
         
         html = render_template(
             'emails/daily_question.html',
@@ -852,7 +865,8 @@ class ResendEmailClient:
             vote_agree_url=vote_urls['agree'],
             vote_disagree_url=vote_urls['disagree'],
             vote_unsure_url=vote_urls['unsure'],
-            base_url=self.base_url
+            base_url=self.base_url,
+            source_articles=source_articles
         )
 
         return {

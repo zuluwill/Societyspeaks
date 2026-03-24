@@ -176,6 +176,36 @@
         </td>
     </tr>
     {% endif %}
+
+    {% if source_articles %}
+    <tr>
+        <td style="padding-bottom: 20px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                <tr>
+                    <td style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: #6b7280; text-transform: uppercase; padding-bottom: 10px;">
+                        Source{% if source_articles|length > 1 %}s{% endif %}
+                    </td>
+                </tr>
+                {% for article in source_articles %}
+                <tr>
+                    <td style="padding-bottom: 8px;">
+                        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border: 1px solid #e5e7eb; border-radius: 6px; background-color: #f9fafb;">
+                            <tr>
+                                <td style="padding: 10px 14px;">
+                                    <a href="{{ article.url }}" target="_blank" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; font-weight: 600; color: #1d4ed8; text-decoration: none; line-height: 1.4; display: block;">{{ article.title }}</a>
+                                    {% if article.source and article.source.name %}
+                                    <p style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 11px; color: #9ca3af; margin: 4px 0 0 0;">{{ article.source.name }}</p>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </td>
+    </tr>
+    {% endif %}
     
     <tr>
         <td style="border-top: 1px solid #e5e7eb; padding-top: 16px;">
