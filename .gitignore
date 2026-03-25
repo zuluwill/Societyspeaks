@@ -176,3 +176,6 @@ docs/
 
 # Replit deployment/config (stays local; Replit still uses it from filesystem)
 replit.md
+
+# Claude Code Security Review local run results (may contain findings)
+security-review-results/

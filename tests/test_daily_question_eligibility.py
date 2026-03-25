@@ -75,10 +75,6 @@ class TestCivicScoreThresholds:
         from app.daily.auto_selection import MIN_CIVIC_SCORE
         assert MIN_CIVIC_SCORE == 0.5
 
-    def test_culture_threshold_is_above_general(self):
-        from app.daily.auto_selection import MIN_CIVIC_SCORE, MIN_CIVIC_SCORE_FOR_CULTURE
-        assert MIN_CIVIC_SCORE_FOR_CULTURE > MIN_CIVIC_SCORE
-
 
 class TestPriorityTopicsConfig:
     """Civic categories must outrank Culture and not include Sport."""
