@@ -104,9 +104,9 @@ class Config:
     _connect_args = {
         'connect_timeout': 10,
         'keepalives': 1,
-        'keepalives_idle': 60,
+        'keepalives_idle': 30,   # was 60 — fire sooner so Neon drops are caught faster
         'keepalives_interval': 10,
-        'keepalives_count': 5,
+        'keepalives_count': 3,   # was 5 — fail faster on a dead link
     }
 
     SQLALCHEMY_ENGINE_OPTIONS = {

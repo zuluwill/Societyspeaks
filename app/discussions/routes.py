@@ -16,6 +16,7 @@ from app.programmes.permissions import can_view_programme
 from app.programmes.utils import render_safe_information_markdown, safe_information_links, validate_cohort_for_discussion
 from app.discussions.sorting import apply_statement_sort
 from app.discussions.thresholds import consensus_thresholds_dict
+from app.lib.db_utils import retry_on_db_disconnect
 from sqlalchemy.orm import joinedload, selectinload
 from sqlalchemy import func
 import json
@@ -722,6 +723,7 @@ def embed_discussion(discussion_id):
 
 @discussions_bp.route('/<int:discussion_id>/<slug>', methods=['GET'])
 @track_discussion_view
+@retry_on_db_disconnect()
 def view_discussion(discussion_id, slug):
     # Track social media clicks (conversion tracking)
     user_id = str(current_user.id) if current_user.is_authenticated else None
@@ -851,6 +853,7 @@ def view_discussion(discussion_id, slug):
 
 
 @discussions_bp.route('/api/discussions/<int:discussion_id>/statements', methods=['GET'])
+@retry_on_db_disconnect()
 def api_discussion_statements(discussion_id):
     discussion = db.session.get(Discussion, discussion_id)
     if not discussion or discussion.partner_env == 'test':
