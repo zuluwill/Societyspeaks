@@ -32,8 +32,26 @@ from app.billing.service import (
 )
 from sqlalchemy.orm import joinedload, selectinload
 import logging
+try:
+    import posthog
+except ImportError:
+    posthog = None
+from app.lib.posthog_utils import safe_posthog_capture
 
 logger = logging.getLogger(__name__)
+
+
+def _track_posthog(event, distinct_id, properties=None, flush=False):
+    """Fire a PostHog event silently — never raises."""
+    if not distinct_id:
+        return
+    safe_posthog_capture(
+        posthog_client=posthog,
+        distinct_id=str(distinct_id),
+        event=event,
+        properties=properties or {},
+        flush=flush,
+    )
 
 
 # =============================================================================
@@ -780,25 +798,15 @@ def use_template(template_id):
 
             db.session.commit()
 
-            try:
-                import posthog
-                if posthog and getattr(posthog, 'project_api_key', None):
-                    posthog.capture(
-                        distinct_id=str(current_user.id),
-                        event='briefing_created',
-                        properties={
-                            'briefing_id': briefing.id,
-                            'briefing_name': name,
-                            'owner_type': owner_type,
-                            'cadence': cadence,
-                            'from_template': True,
-                            'template_id': template_id,
-                            'sources_added': sources_added,
-                        }
-                    )
-                    posthog.flush()
-            except Exception as e:
-                logger.warning(f"PostHog tracking error: {e}")
+            _track_posthog('briefing_created', current_user.id, {
+                'briefing_id': briefing.id,
+                'briefing_name': name,
+                'owner_type': owner_type,
+                'cadence': cadence,
+                'from_template': True,
+                'template_id': template_id,
+                'sources_added': sources_added,
+            }, flush=True)
 
             # Show appropriate success message
             if sources_added > 0:
@@ -1020,25 +1028,15 @@ def create_briefing():
 
             db.session.commit()
 
-            try:
-                import posthog
-                if posthog and getattr(posthog, 'project_api_key', None):
-                    posthog.capture(
-                        distinct_id=str(current_user.id),
-                        event='briefing_created',
-                        properties={
-                            'briefing_id': briefing.id,
-                            'briefing_name': name,
-                            'owner_type': owner_type,
-                            'cadence': cadence,
-                            'from_template': bool(template_id),
-                            'template_id': template_id,
-                            'sources_added': sources_added,
-                        }
-                    )
-                    posthog.flush()
-            except Exception as e:
-                logger.warning(f"PostHog tracking error: {e}")
+            _track_posthog('briefing_created', current_user.id, {
+                'briefing_id': briefing.id,
+                'briefing_name': name,
+                'owner_type': owner_type,
+                'cadence': cadence,
+                'from_template': bool(template_id),
+                'template_id': template_id,
+                'sources_added': sources_added,
+            }, flush=True)
 
             if sources_added > 0:
                 msg = f'Briefing "{name}" created successfully with {sources_added} sources from template!'
@@ -1321,32 +1319,18 @@ def edit(briefing_id):
 
             db.session.commit()
 
-            try:
-                import posthog
-                if posthog and getattr(posthog, 'project_api_key', None):
-                    posthog.capture(
-                        distinct_id=str(current_user.id),
-                        event='briefing_edited',
-                        properties={
-                            'briefing_id': briefing.id,
-                            'briefing_name': briefing.name,
-                            'owner_type': briefing.owner_type,
-                            'cadence': briefing.cadence,
-                        }
-                    )
-                    if old_cadence != briefing.cadence:
-                        posthog.capture(
-                            distinct_id=str(current_user.id),
-                            event='daily_brief_cadence_changed',
-                            properties={
-                                'briefing_id': briefing.id,
-                                'previous_cadence': old_cadence,
-                                'new_cadence': briefing.cadence,
-                            }
-                        )
-                        posthog.flush()
-            except Exception as e:
-                logger.warning(f"PostHog tracking error: {e}")
+            _track_posthog('briefing_edited', current_user.id, {
+                'briefing_id': briefing.id,
+                'briefing_name': briefing.name,
+                'owner_type': briefing.owner_type,
+                'cadence': briefing.cadence,
+            })
+            if old_cadence != briefing.cadence:
+                _track_posthog('daily_brief_cadence_changed', current_user.id, {
+                    'briefing_id': briefing.id,
+                    'previous_cadence': old_cadence,
+                    'new_cadence': briefing.cadence,
+                }, flush=True)
 
             flash('Briefing updated successfully', 'success')
             return redirect(url_for('briefing.detail', briefing_id=briefing_id))
@@ -1938,21 +1922,12 @@ def manage_recipients(briefing_id):
                     recipient.generate_magic_token()
                     db.session.add(recipient)
                     db.session.commit()
-                    try:
-                        import posthog
-                        if posthog and getattr(posthog, 'project_api_key', None):
-                            posthog.capture(
-                                distinct_id=str(current_user.id),
-                                event='briefing_recipient_added',
-                                properties={
-                                    'briefing_id': briefing_id,
-                                    'briefing_name': briefing.name,
-                                    'recipient_count': 1,
-                                    'bulk': False,
-                                }
-                            )
-                    except Exception as e:
-                        logger.warning(f"PostHog tracking error: {e}")
+                    _track_posthog('briefing_recipient_added', current_user.id, {
+                        'briefing_id': briefing_id,
+                        'briefing_name': briefing.name,
+                        'recipient_count': 1,
+                        'bulk': False,
+                    })
                     flash(f'Recipient {email} added successfully', 'success')
 
             elif action == 'bulk_add':
@@ -2017,21 +1992,12 @@ def manage_recipients(briefing_id):
                 
                 db.session.commit()
                 if added > 0:
-                    try:
-                        import posthog
-                        if posthog and getattr(posthog, 'project_api_key', None):
-                            posthog.capture(
-                                distinct_id=str(current_user.id),
-                                event='briefing_recipient_added',
-                                properties={
-                                    'briefing_id': briefing_id,
-                                    'briefing_name': briefing.name,
-                                    'recipient_count': added,
-                                    'bulk': True,
-                                }
-                            )
-                    except Exception as e:
-                        logger.warning(f"PostHog tracking error: {e}")
+                    _track_posthog('briefing_recipient_added', current_user.id, {
+                        'briefing_id': briefing_id,
+                        'briefing_name': briefing.name,
+                        'recipient_count': added,
+                        'bulk': True,
+                    })
                 flash(f'Imported {added} recipients. {skipped} skipped (already exists or invalid).', 'success')
                 
             elif action == 'bulk_remove':
@@ -2120,22 +2086,11 @@ def unsubscribe(briefing_id, token):
         # Regenerate token to invalidate any other links (security)
         recipient.generate_magic_token(expires_hours=0)  # Immediately expired
         db.session.commit()
-        try:
-            import posthog
-            if posthog and getattr(posthog, 'project_api_key', None):
-                posthog.capture(
-                    distinct_id=recipient.email,
-                    event='briefing_recipient_unsubscribed',
-                    properties={
-                        'briefing_id': briefing_id,
-                        'briefing_name': briefing.name,
-                        'recipient_id': recipient.id,
-                    }
-                )
-                posthog.flush()  # Critical: ensure churn event is sent
-                logger.info(f"PostHog: briefing_recipient_unsubscribed for {recipient.email}")
-        except Exception as e:
-            logger.warning(f"PostHog tracking error: {e}")
+        _track_posthog('briefing_recipient_unsubscribed', recipient.email, {
+            'briefing_id': briefing_id,
+            'briefing_name': briefing.name,
+            'recipient_id': recipient.id,
+        }, flush=True)
         flash('You have been unsubscribed from this briefing', 'success')
 
     return render_template('briefing/unsubscribed.html', briefing=briefing, recipient=recipient)
@@ -2323,21 +2278,12 @@ def send_run(briefing_id, run_id):
     try:
         from app.briefing.email_client import send_brief_run_emails
         result = send_brief_run_emails(brief_run.id)
-        try:
-            import posthog
-            if posthog and getattr(posthog, 'project_api_key', None):
-                posthog.capture(
-                    distinct_id=str(current_user.id),
-                    event='brief_run_sent',
-                    properties={
-                        'briefing_id': briefing_id,
-                        'brief_run_id': brief_run.id,
-                        'recipients_sent': result.get('sent', 0),
-                        'recipients_failed': result.get('failed', 0),
-                    }
-                )
-        except Exception as e:
-            logger.warning(f"PostHog tracking error: {e}")
+        _track_posthog('brief_run_sent', current_user.id, {
+            'briefing_id': briefing_id,
+            'brief_run_id': brief_run.id,
+            'recipients_sent': result.get('sent', 0),
+            'recipients_failed': result.get('failed', 0),
+        })
         flash(f'Sent to {result["sent"]} recipients ({result["failed"]} failed)', 'success')
     except Exception as e:
         logger.error(f"Error sending BriefRun: {e}", exc_info=True)
@@ -3462,21 +3408,12 @@ def invite_member():
             )
         except Exception as e:
             logger.warning(f"Invitation email failed for {email}: {e}")
-        try:
-            import posthog
-            if posthog and getattr(posthog, 'project_api_key', None):
-                posthog.capture(
-                    distinct_id=str(current_user.id),
-                    event='organization_invite_sent',
-                    properties={
-                        'org_id': org.id,
-                        'org_name': org.company_name,
-                        'invitee_email': email,
-                        'role': role,
-                    }
-                )
-        except Exception as e:
-            logger.warning(f"PostHog tracking error: {e}")
+        _track_posthog('organization_invite_sent', current_user.id, {
+            'org_id': org.id,
+            'org_name': org.company_name,
+            'invitee_email': email,
+            'role': role,
+        })
         flash(f"Invitation sent to {email}.", "success")
     except ValueError as e:
         flash(str(e), "error")
