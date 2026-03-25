@@ -4447,6 +4447,7 @@ class BriefLinkClick(db.Model):
     brief_run_item_id = db.Column(db.Integer, db.ForeignKey('brief_run_item.id', ondelete='SET NULL'), nullable=True)
     recipient_email = db.Column(db.String(255), nullable=True)  # Hashed or anonymized
     target_url = db.Column(db.String(2000), nullable=False)
+    link_type = db.Column(db.String(50), nullable=True)  # 'article', 'view', 'internal'
     clicked_at = db.Column(db.DateTime, default=utcnow_naive)
     user_agent = db.Column(db.String(500), nullable=True)
 

@@ -16,6 +16,7 @@ from app import db
 from app.models import BriefRun, BriefRecipient, Briefing, SendingDomain, BriefEmailSend
 from app.resend_client import ResendEmailClient as BaseResendClient
 from app.storage_utils import get_base_url
+from app.briefing.link_tracker import wrap_links, recipient_hash as make_recipient_hash
 
 logger = logging.getLogger(__name__)
 
@@ -326,7 +327,16 @@ class BriefingEmailClient:
         except Exception as e:
             logger.warning(f"Could not render brief_run email template: {e}, using fallback")
             html = self._fallback_html(brief_run, briefing, recipient, content_html, unsubscribe_url)
-        
+
+        # Rewrite all eligible links through our own tracking endpoint.
+        # Unsubscribe links are excluded automatically by wrap_links.
+        try:
+            secret = current_app.config.get('SECRET_KEY', '')
+            r_hash = make_recipient_hash(brief_run.id, recipient.email or '')
+            html = wrap_links(html, base_url, brief_run.id, r_hash, secret)
+        except Exception as e:
+            logger.warning(f"Link wrapping failed for run {brief_run.id}, sending without tracking: {e}")
+
         return html
     
     def _fallback_html(

@@ -3211,19 +3211,26 @@ def track_open(run_id):
 @briefing_bp.route("/track/click/<int:run_id>")
 def track_click(run_id):
     """
-    Track link clicks and redirect to target URL.
-    Security: Only allows redirects to pre-registered URLs from the BriefRunItem.
+    Track link clicks and redirect to the target URL.
+
+    Security: each tracking URL carries an HMAC-SHA256 signature derived
+    from the app SECRET_KEY, the run_id, and the exact target URL.  The
+    signature is verified here before any redirect, preventing open-redirect
+    abuse without needing a hardcoded domain allow-list (which would block
+    internal links such as reader pages, discussion threads, etc.).
     """
     from urllib.parse import urlparse
-    
+    from app.briefing.link_tracker import verify_url as _verify_url
+
     target_url = request.args.get("url", "")
-    item_id = request.args.get("item", type=int)
-    recipient_hash = request.args.get("r", "")
-    
+    signature = request.args.get("sig", "")
+    r_hash = request.args.get("r", "")
+    link_type = request.args.get("t", "article")
+
     if not target_url:
         return redirect("/")
-    
-    # Security: Validate URL format (must be http/https)
+
+    # Basic URL format check
     try:
         parsed = urlparse(target_url)
         if parsed.scheme not in ('http', 'https'):
@@ -3232,72 +3239,34 @@ def track_click(run_id):
     except Exception:
         logger.warning(f"Malformed URL in click tracking: {target_url[:100]}")
         return redirect("/")
-    
+
+    # HMAC verification — reject any URL that wasn't signed by us at send time
+    secret = current_app.config.get('SECRET_KEY', '')
+    if not _verify_url(run_id, target_url, signature, secret):
+        logger.warning(f"Invalid click-tracking signature for run {run_id}: {target_url[:100]}")
+        return redirect("/")
+
+    # Record the click (best-effort — never block the redirect on DB errors)
     try:
-        brief_run = db.session.get(BriefRun,run_id)
-        if not brief_run:
-            # Unknown run - redirect safely to home
-            logger.warning(f"Click tracking for unknown brief_run {run_id}")
-            return redirect("/")
-        
-        # Security: Verify the URL is associated with this brief run
-        # Check if URL matches an ingested item's source URL
-        valid_url = False
-        
-        # Check if it's from one of the brief run's items
-        for item in brief_run.items:
-            if item.ingested_item:
-                if item.ingested_item.url and target_url.startswith(item.ingested_item.url[:50]):
-                    valid_url = True
-                    break
-        
-        # Also allow known safe domains (exact match or subdomain only)
-        safe_domains = {
-            'theguardian.com', 'nytimes.com', 'bbc.com', 'bbc.co.uk',
-            'reuters.com', 'apnews.com', 'washingtonpost.com',
-            'wsj.com', 'economist.com', 'ft.com', 'politico.com',
-            'theatlantic.com', 'npr.org', 'cnn.com', 'foxnews.com',
-            'nbcnews.com', 'abcnews.go.com', 'cbsnews.com',
-            'vox.com', 'slate.com', 'thedailywire.com', 'dailycaller.com'
-        }
-        parsed_domain = parsed.netloc.lower().replace('www.', '')
-        
-        # Exact match check (e.g., cnn.com == cnn.com)
-        if parsed_domain in safe_domains:
-            valid_url = True
-        else:
-            # Subdomain check (e.g., news.bbc.co.uk ends with .bbc.co.uk)
-            # Must have a dot before the domain to prevent suffix attacks
-            for safe_domain in safe_domains:
-                if parsed_domain.endswith('.' + safe_domain):
-                    valid_url = True
-                    break
-        
-        if not valid_url:
-            logger.warning(f"Rejected unverified redirect URL for run {run_id}: {target_url[:100]}")
-            # Still record the attempt but don't redirect
-            return redirect("/")
-        
-        # Record click
         click_record = BriefLinkClick(
             brief_run_id=run_id,
-            brief_run_item_id=item_id,
-            recipient_email=recipient_hash or None,
+            recipient_email=r_hash or None,
             target_url=target_url[:2000],
-            user_agent=request.headers.get("User-Agent", "")[:500]
+            link_type=link_type[:50] if link_type else None,
+            user_agent=request.headers.get("User-Agent", "")[:500],
         )
         db.session.add(click_record)
-        
-        # Update aggregate
-        brief_run.total_clicks = (brief_run.total_clicks or 0) + 1
-        
+
+        brief_run = db.session.get(BriefRun, run_id)
+        if brief_run:
+            brief_run.total_clicks = (brief_run.total_clicks or 0) + 1
+
         db.session.commit()
-        logger.debug(f"Tracked click for brief_run {run_id} -> {target_url[:50]}")
+        logger.debug(f"Tracked click for brief_run {run_id} -> {target_url[:60]}")
     except Exception as e:
-        logger.warning(f"Error tracking click for run {run_id}: {e}")
+        logger.warning(f"Error recording click for run {run_id}: {e}")
         db.session.rollback()
-    
-    # Redirect to validated target
+
     return redirect(target_url)
 
 
