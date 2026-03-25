@@ -10,40 +10,17 @@ Replaces Loops.so integration with a single, simpler provider.
 """
 
 import os
-import re
 import time
 import logging
 from datetime import datetime
-from email.utils import parseaddr
 from app.lib.time import utcnow_naive
 from typing import List, Dict, Optional, Any, Tuple
 from flask import render_template, current_app, url_for
 import requests
-from app.email_utils import RateLimiter  # single definition, shared across all email clients
+from app.email_utils import RateLimiter, extract_clean_email as _extract_clean_email  # shared utilities
 
 logger = logging.getLogger(__name__)
 
-
-def _extract_clean_email(raw: Optional[str]) -> Optional[str]:
-    """
-    Extract and validate a plain email address from a raw value.
-
-    Handles:
-    - Bare addresses: user@example.com
-    - Display-name format: Name <user@example.com>
-    - Angle-bracket-only: <user@example.com>  (stored incorrectly in some DBs)
-
-    Returns the normalised address string, or None if the value is empty or
-    does not contain a recognisable email address.
-    """
-    if not raw or not isinstance(raw, str):
-        return None
-    _, addr = parseaddr(raw.strip())
-    if not addr:
-        addr = raw.strip()
-    if not re.match(r'^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$', addr):
-        return None
-    return addr
 
 
 def _email_sending_allowed_for_environment() -> bool:
@@ -162,21 +139,51 @@ def resend_batch_with_retry(
     max_retries: int = 3,
     retry_delay: float = 2.0,
     timeout: int = 60,
-) -> Tuple[bool, int, List[str]]:
+) -> Tuple[bool, int, int, List[str]]:
     """
     POST a batch of emails to the Resend batch API with exponential-backoff retry.
 
     Returns:
-        (success, sent_count, errors)
+        (success, sent_count, failed_count, errors)
     """
     response, error = _resend_http_post(
         api_key, payloads, url, max_retries, retry_delay, timeout, log_prefix="Resend batch"
     )
     if response is None:
-        return False, 0, [error or "Unknown error"]
-    data = response.json()
-    sent = len(data['data']) if 'data' in data else len(payloads)
-    return True, sent, []
+        return False, 0, len(payloads or []), [error or "Unknown error"]
+
+    try:
+        data = response.json() or {}
+    except Exception as e:
+        return False, 0, len(payloads or []), [f"Invalid JSON response from Resend batch API: {e}"]
+
+    created = data.get("data") or []
+    raw_errors = data.get("errors") or []
+
+    sent_count = len(created)
+    failed_count = len(raw_errors)
+
+    # If Resend returns no structured errors, treat the call as fully successful.
+    # This matches strict validation mode (atomic success) responses.
+    errors: List[str] = []
+    for err in raw_errors:
+        if isinstance(err, dict):
+            idx = err.get("index")
+            msg = err.get("message") or err.get("error") or str(err)
+            if idx is not None:
+                errors.append(f"[{idx}] {msg}")
+            else:
+                errors.append(msg)
+        else:
+            errors.append(str(err))
+
+    # If we received neither data nor errors, fall back to optimistic "all sent"
+    # but preserve any top-level error fields if present.
+    if sent_count == 0 and failed_count == 0:
+        sent_count = len(payloads or [])
+
+    success = failed_count == 0
+    return success, sent_count, failed_count, errors
 
 
 class ResendEmailClient:
@@ -191,8 +198,6 @@ class ResendEmailClient:
     - Jinja2 template rendering
     """
 
-    API_URL = 'https://api.resend.com/emails'
-    BATCH_API_URL = 'https://api.resend.com/emails/batch'
     RATE_LIMIT = 14  # emails per second for single sends
     MAX_RETRIES = 3
     RETRY_DELAY = 2  # seconds
@@ -320,16 +325,15 @@ class ResendEmailClient:
         if len(valid_emails) > self.BATCH_SIZE:
             raise ValueError(f"Batch size {len(valid_emails)} exceeds maximum {self.BATCH_SIZE}")
 
-        success, sent_count, errors = resend_batch_with_retry(
+        success, sent_count, failed_count, errors = resend_batch_with_retry(
             self.api_key,
             valid_emails,
             max_retries=self.MAX_RETRIES,
             retry_delay=self.RETRY_DELAY,
         )
-        if success:
-            results['sent'] = sent_count
-        else:
-            results['failed'] += len(valid_emails)
+        results['sent'] += sent_count
+        if not success:
+            results['failed'] += failed_count or (len(valid_emails) - sent_count)
             results['errors'].extend(errors)
         return results
 

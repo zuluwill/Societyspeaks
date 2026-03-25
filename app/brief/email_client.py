@@ -17,11 +17,10 @@ from typing import List, Optional
 from flask import render_template, current_app
 from app.models import DailyBrief, DailyBriefSubscriber, BriefItem, db
 from app.brief.sections import SECTIONS, TOPIC_DISPLAY_LABELS, TOPIC_DISPLAY_COLORS
-from app.email_utils import RateLimiter
+from app.email_utils import RateLimiter, extract_clean_email
 from app.resend_client import (
     resend_post_with_retry,
     _email_sending_allowed_for_environment,
-    _extract_clean_email,
 )
 from app.storage_utils import get_base_url
 
@@ -268,9 +267,9 @@ class ResendClient:
         """
         try:
             # Validate and normalise the stored address (handles "Name <addr>",
-            # bare "<addr>", and other malformed variants) via the single shared
-            # helper in resend_client.
-            cleaned_email = _extract_clean_email(subscriber.email)
+            # bare "<addr>", and other malformed variants) via the shared
+            # helper in email_utils.
+            cleaned_email = extract_clean_email(subscriber.email)
             if not cleaned_email:
                 logger.error(
                     f"Subscriber {subscriber.id} has invalid email: {repr(subscriber.email)} — skipping send"
@@ -675,7 +674,7 @@ class BriefEmailScheduler:
                     db.session.rollback()
                     continue
 
-                email_str = _extract_clean_email(str(current_subscriber.email or ''))
+                email_str = extract_clean_email(str(current_subscriber.email or ''))
                 if not email_str:
                     results['failed'] += 1
                     results['errors'].append(

@@ -5,10 +5,35 @@ All actual email sending is done via Resend (see app/resend_client.py).
 
 Note: RateLimiter is kept here as it's used by app/brief/email_client.py
 """
+import re
 import time
 import threading
+from email.utils import parseaddr
+from typing import Optional
 from flask import current_app, url_for
 from app.models import IndividualProfile, CompanyProfile
+
+
+def extract_clean_email(raw: Optional[str]) -> Optional[str]:
+    """
+    Extract and validate a plain email address from a raw value.
+
+    Handles:
+    - Bare addresses: user@example.com
+    - Display-name format: Name <user@example.com>
+    - Angle-bracket-only: <user@example.com>  (stored incorrectly in some DBs)
+
+    Returns the normalised address string, or None if the value is empty or
+    does not contain a recognisable email address.
+    """
+    if not raw or not isinstance(raw, str):
+        return None
+    _, addr = parseaddr(raw.strip())
+    if not addr:
+        addr = raw.strip()
+    if not re.match(r'^[^@\s<>]+@[^@\s<>]+\.[^@\s<>]+$', addr):
+        return None
+    return addr
 
 
 class RateLimiter:

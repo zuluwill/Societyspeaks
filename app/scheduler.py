@@ -180,27 +180,25 @@ def _send_ops_alert(message: str) -> None:
     if to_email and resend_api_key:
         subject = f"[Society Speaks] CRITICAL Scheduler Alert ({utcnow_naive().strftime('%Y-%m-%d %H:%M UTC')})"
         try:
-            response = requests.post(
-                "https://api.resend.com/emails",
-                json={
+            from app.resend_client import resend_post_with_retry
+
+            success, _message_id = resend_post_with_retry(
+                resend_api_key,
+                {
                     "from": resend_from,
                     "to": [to_email],
                     "subject": subject,
                     "text": message,
                 },
-                headers={
-                    "Authorization": f"Bearer {resend_api_key}",
-                    "Content-Type": "application/json",
-                },
+                max_retries=3,
+                retry_delay=2.0,
                 timeout=10,
             )
-            if response.status_code == 200:
+            if success:
                 alert_sent = True
             else:
-                logger.warning(
-                    f"Failed to send scheduler alert email: {response.status_code} {response.text}"
-                )
-        except requests.RequestException as e:
+                logger.warning("Failed to send scheduler alert email via Resend (after retries)")
+        except Exception as e:
             logger.warning(f"Failed to send scheduler alert email: {e}")
 
     # Secondary channel: Slack webhook, if configured.

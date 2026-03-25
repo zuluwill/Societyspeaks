@@ -2,7 +2,10 @@ from flask import Flask, render_template, redirect, url_for, flash, request, abo
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager, current_user
-from flask_talisman import Talisman
+try:
+    from flask_talisman import Talisman
+except ImportError:  # Optional in dev/test environments
+    Talisman = None
 from flask_wtf.csrf import CSRFProtect
 from config import Config, config_dict
 from datetime import timedelta
@@ -65,7 +68,7 @@ limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["1000 per hour"]
 )
-talisman = Talisman()
+talisman = Talisman() if Talisman else None
 
 
 @lru_cache(maxsize=2)
@@ -333,13 +336,14 @@ def create_app():
     # Initialize Talisman with simplified CSP
     # Note: force_https=False because Replit's proxy handles HTTPS termination
     # The proxy receives HTTPS requests and forwards them as HTTP internally
-    talisman.init_app(
-        app,
-        force_https=False,  # Replit proxy handles HTTPS
-        session_cookie_secure=env == 'production',
-        content_security_policy=csp,
-        content_security_policy_nonce_in=['script-src']
-    )
+    if talisman:
+        talisman.init_app(
+            app,
+            force_https=False,  # Replit proxy handles HTTPS
+            session_cookie_secure=env == 'production',
+            content_security_policy=csp,
+            content_security_policy_nonce_in=['script-src']
+        )
 
     # Initialize extensions with better session handling
     try:

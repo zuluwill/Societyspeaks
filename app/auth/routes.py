@@ -11,8 +11,7 @@ from itsdangerous import URLSafeTimedSerializer
 from app.analytics.events import record_event
 # Email functions (migrated from Loops to Resend)
 from app.resend_client import send_password_reset_email, send_welcome_email, send_verification_email
-# Profile utilities (not email-related)
-from app.email_utils import get_missing_individual_profile_fields, get_missing_company_profile_fields
+from app.email_utils import extract_clean_email, get_missing_individual_profile_fields, get_missing_company_profile_fields
 # Billing service for invitation handling
 from app.billing.service import accept_invitation, get_active_subscription
 from app.brief.subscription import process_subscription as process_brief_subscription
@@ -22,6 +21,7 @@ try:
     import posthog
 except ImportError:
     posthog = None
+from app.lib.posthog_utils import safe_posthog_capture
 
 
 auth_bp = Blueprint('auth', __name__)
@@ -29,16 +29,16 @@ auth_bp = Blueprint('auth', __name__)
 
 def _track_posthog(event, user_id, properties=None, flush=False, identify_properties=None):
     """Fire a PostHog event silently — never raises."""
-    if not (posthog and getattr(posthog, 'project_api_key', None)):
+    if not user_id:
         return
-    try:
-        posthog.capture(distinct_id=str(user_id), event=event, properties=properties or {})
-        if identify_properties:
-            posthog.identify(distinct_id=str(user_id), properties=identify_properties)
-        if flush:
-            posthog.flush()
-    except Exception as e:
-        current_app.logger.warning(f"PostHog tracking error: {e}")
+    safe_posthog_capture(
+        posthog_client=posthog,
+        distinct_id=str(user_id),
+        event=event,
+        properties=properties or {},
+        flush=flush,
+        identify_properties=identify_properties,
+    )
 
 
 from app import limiter
@@ -176,26 +176,32 @@ def register():
         return num1, num2
 
     if request.method == 'POST':
-        username = request.form.get('username')
-        email = request.form.get('email')
-        password = request.form.get('password')
+        username = (request.form.get('username') or '').strip()
+        email_raw = (request.form.get('email') or '').strip()
+        password = request.form.get('password') or ''
         
-        # Get spam patterns from config
-        spam_patterns = current_app.config.get('SPAM_PATTERNS', [])
-        
-        # Check for spam in a case-insensitive way
-        input_text = f"{username.lower()} {email.lower()}"
-        if any(pattern in input_text for pattern in spam_patterns):
-            flash("Registration denied due to suspicious content", "error")
-            return redirect(url_for('auth.register'))
-
         # Validation checks
-        if not username or not email or not password:
+        if not username or not email_raw or not password:
             flash("All fields are required.", "error")
             return redirect(url_for('auth.register'))
 
         if len(password) < 8:
             flash("Password must be at least 8 characters.", "error")
+            return redirect(url_for('auth.register'))
+
+        clean_email = extract_clean_email(email_raw)
+        if clean_email is None:
+            flash("Please provide a valid email address.", "error")
+            return redirect(url_for('auth.register'))
+        email = clean_email.lower()
+
+        # Get spam patterns from config
+        spam_patterns = current_app.config.get('SPAM_PATTERNS', [])
+
+        # Check for spam in a case-insensitive way
+        input_text = f"{username.lower()} {email}"
+        if any(pattern in input_text for pattern in spam_patterns):
+            flash("Registration denied due to suspicious content", "error")
             return redirect(url_for('auth.register'))
 
         if User.query.filter_by(email=email).first():

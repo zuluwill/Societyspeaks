@@ -23,17 +23,20 @@ try:
     import posthog
 except ImportError:
     posthog = None
+from app.lib.posthog_utils import safe_posthog_capture
 
 
 def _track_posthog(event, user_id, properties=None):
     """Fire a PostHog billing event silently — always flushes, never raises."""
-    if not user_id or not (posthog and getattr(posthog, 'project_api_key', None)):
+    if not user_id:
         return
-    try:
-        posthog.capture(distinct_id=str(user_id), event=event, properties=properties or {})
-        posthog.flush()
-    except Exception as e:
-        current_app.logger.warning(f"PostHog tracking error: {e}")
+    safe_posthog_capture(
+        posthog_client=posthog,
+        distinct_id=str(user_id),
+        event=event,
+        properties=properties or {},
+        flush=True,
+    )
 
 
 def _normalize_billing_interval(raw_interval):
