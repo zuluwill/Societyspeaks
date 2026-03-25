@@ -281,7 +281,6 @@ class BriefingEmailClient:
         Returns:
             str: HTML email content
         """
-        import hashlib
         base_url = get_base_url()
         
         # Use approved content if available, otherwise draft
@@ -292,12 +291,6 @@ class BriefingEmailClient:
         view_url = f"{base_url}/briefings/{briefing.id}/runs/{brief_run.id}"
         reader_url = f"{base_url}/briefings/public/{briefing.id}/runs/{brief_run.id}/reader"
         unsubscribe_url = f"{base_url}/briefings/{briefing.id}/unsubscribe/{recipient.magic_token or ''}"
-        
-        # Build recipient hash for open tracking deduplication
-        recipient_hash = hashlib.sha256(
-            f"{brief_run.id}:{recipient.email}".encode()
-        ).hexdigest()[:16]
-        tracking_pixel_url = f"{base_url}/briefings/track/open/{brief_run.id}.gif?r={recipient_hash}"
         
         # Get company logo if org briefing
         company_logo_url = None
@@ -329,18 +322,10 @@ class BriefingEmailClient:
                 company_logo_url=company_logo_url,
                 items=items,
                 has_audio=has_audio,
-                tracking_pixel_url=tracking_pixel_url
             )
         except Exception as e:
             logger.warning(f"Could not render brief_run email template: {e}, using fallback")
             html = self._fallback_html(brief_run, briefing, recipient, content_html, unsubscribe_url)
-        
-        # Inject tracking pixel before </body> (works for both template and fallback HTML)
-        tracking_pixel = f'<img src="{tracking_pixel_url}" width="1" height="1" alt="" style="display:none;" />'
-        if '</body>' in html:
-            html = html.replace('</body>', f'{tracking_pixel}</body>', 1)
-        else:
-            html = html + tracking_pixel
         
         return html
     
