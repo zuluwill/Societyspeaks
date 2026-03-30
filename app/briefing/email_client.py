@@ -192,6 +192,7 @@ class BriefingEmailClient:
             # Send via base client (handles rate limiting internally)
             success = self.base_client._send_with_retry(email_data)
             resend_id = getattr(self.base_client, 'last_message_id', None)
+            send_error = getattr(self.base_client, 'last_send_error', None) or ''
             self._last_send_resend_id = resend_id
             
             if success:
@@ -209,13 +210,27 @@ class BriefingEmailClient:
                 except Exception as analytics_error:
                     logger.warning(f"Failed to record analytics for {recipient.email}: {analytics_error}")
             else:
-                try:
-                    recipient.magic_token = old_token
-                    recipient.magic_token_expires_at = old_expires
-                    db.session.commit()
-                except Exception:
-                    db.session.rollback()
-                    logger.warning(f"Could not restore old token for {recipient.email}")
+                # If Resend rejected with 422, the address is permanently invalid — suppress all future sends.
+                if '422' in send_error:
+                    try:
+                        recipient.status = 'unsubscribed'
+                        recipient.unsubscribed_at = utcnow_naive()
+                        db.session.commit()
+                        logger.warning(
+                            f"Marked recipient {recipient.id} <{recipient.email}> as unsubscribed "
+                            f"— Resend rejected with 422 (invalid address)."
+                        )
+                    except Exception as suppress_err:
+                        db.session.rollback()
+                        logger.error(f"Failed to suppress invalid recipient {recipient.id}: {suppress_err}")
+                else:
+                    try:
+                        recipient.magic_token = old_token
+                        recipient.magic_token_expires_at = old_expires
+                        db.session.commit()
+                    except Exception:
+                        db.session.rollback()
+                        logger.warning(f"Could not restore old token for {recipient.email}")
             
             return success
             

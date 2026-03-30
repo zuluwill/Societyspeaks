@@ -148,6 +148,7 @@ class ResendClient:
                 raise ValueError("RESEND_API_KEY environment variable not set")
 
         self.rate_limiter = RateLimiter(self.RATE_LIMIT)
+        self.last_send_error: Optional[str] = None
         # Get email address from env and format with name
         self._from_email_addr = os.environ.get('BRIEF_FROM_EMAIL', 'hello@brief.societyspeaks.io')
         # Handle case where env var might already include name (for backwards compat)
@@ -343,6 +344,21 @@ class ResendClient:
                     )
                 except Exception as analytics_error:
                     logger.warning(f"Failed to record analytics for {subscriber.email}: {analytics_error}")
+            else:
+                # If Resend rejected with 422 (invalid address), permanently suppress future sends.
+                send_error = self.last_send_error or ''
+                if '422' in send_error:
+                    try:
+                        subscriber.status = 'bounced'
+                        subscriber.unsubscribed_at = utcnow_naive()
+                        db.session.commit()
+                        logger.warning(
+                            f"Marked DailyBriefSubscriber {subscriber.id} <{subscriber.email}> as bounced "
+                            f"— Resend rejected with 422 (invalid address)."
+                        )
+                    except Exception as suppress_err:
+                        db.session.rollback()
+                        logger.error(f"Failed to suppress invalid subscriber {subscriber.id}: {suppress_err}")
 
             return success
 
@@ -363,14 +379,16 @@ class ResendClient:
         if self._disabled:
             recipient = (email_data.get('to') or ['unknown'])[0]
             logger.info(f"Daily brief email skipped (non-production guard): {recipient}")
+            self.last_send_error = None
             return True
 
-        success, _ = resend_post_with_retry(
+        success, result = resend_post_with_retry(
             self.api_key,
             email_data,
             max_retries=self.MAX_RETRIES,
             retry_delay=self.RETRY_DELAY,
         )
+        self.last_send_error = result if not success else None
         return success
 
     def _render_email(

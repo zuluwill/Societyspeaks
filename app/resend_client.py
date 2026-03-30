@@ -122,9 +122,9 @@ def resend_post_with_retry(
     Returns:
         (success, message_id)  — message_id is None on failure or if Resend omits it.
     """
-    response, _ = _resend_http_post(api_key, payload, url, max_retries, retry_delay, timeout)
+    response, err = _resend_http_post(api_key, payload, url, max_retries, retry_delay, timeout)
     if response is None:
-        return False, None
+        return False, err
     try:
         message_id = response.json().get('id')
     except Exception:
@@ -207,6 +207,7 @@ class ResendEmailClient:
         self.api_key = os.environ.get('RESEND_API_KEY')
         self._disabled = False
         self.last_message_id: Optional[str] = None
+        self.last_send_error: Optional[str] = None
         self._email_allowed = _email_sending_allowed_for_environment()
 
         if not self._email_allowed:
@@ -272,13 +273,18 @@ class ResendEmailClient:
         if use_rate_limit:
             self.rate_limiter.acquire()
 
-        success, message_id = resend_post_with_retry(
+        success, result = resend_post_with_retry(
             self.api_key,
             email_data,
             max_retries=self.MAX_RETRIES,
             retry_delay=self.RETRY_DELAY,
         )
-        self.last_message_id = message_id
+        if success:
+            self.last_message_id = result
+            self.last_send_error = None
+        else:
+            self.last_message_id = None
+            self.last_send_error = result
         return success
 
     def _send_batch(self, emails: List[Dict[str, Any]]) -> Dict[str, Any]:
