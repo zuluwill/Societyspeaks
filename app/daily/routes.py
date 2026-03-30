@@ -1886,6 +1886,60 @@ def report_response():
         return jsonify({'success': False, 'message': 'Failed to submit report'}), 500
 
 
+@daily_bp.route('/daily/track/click/<int:question_id>')
+def daily_track_click(question_id):
+    """
+    Track link clicks in daily question emails and redirect to the target URL.
+    Clicks are recorded in EmailEvent for analytics.
+    Security: HMAC-SHA256 signature is verified before any redirect.
+    """
+    from app.briefing.link_tracker import verify_url as _verify_url
+    from app.lib.email_analytics import EmailAnalytics
+
+    target_url = request.args.get('url', '')
+    signature = request.args.get('sig', '')
+    subscriber_id_str = request.args.get('r', '')
+
+    if not target_url:
+        return redirect('/')
+
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(target_url)
+        if parsed.scheme not in ('http', 'https'):
+            return redirect('/')
+    except Exception:
+        return redirect('/')
+
+    secret = current_app.config.get('SECRET_KEY', '')
+    if not _verify_url(question_id, target_url, signature, secret):
+        current_app.logger.warning(
+            f"Invalid click-tracking signature for question {question_id}: {target_url[:100]}"
+        )
+        return redirect('/')
+
+    try:
+        subscriber_id = int(subscriber_id_str)
+        subscriber = db.session.get(DailyQuestionSubscriber, subscriber_id)
+        if subscriber:
+            EmailAnalytics.record_click(
+                email=subscriber.email,
+                category=EmailAnalytics.CATEGORY_DAILY_QUESTION,
+                click_url=target_url[:500],
+                question_subscriber_id=subscriber.id,
+                daily_question_id=question_id,
+                user_agent=request.headers.get('User-Agent', '')[:500],
+                ip_address=request.remote_addr,
+            )
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.warning(
+            f"Error recording daily question click for question {question_id}: {e}"
+        )
+
+    return redirect(target_url)
+
+
 def get_subscriber_streak():
     """Get current subscriber's streak info if available"""
     subscriber_id = session.get('daily_subscriber_id')

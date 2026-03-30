@@ -1144,6 +1144,59 @@ def resend_webhook():
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 
+@brief_bp.route('/brief/track/click/<int:brief_id>')
+def brief_track_click(brief_id):
+    """
+    Track link clicks in old daily brief emails and redirect to the target URL.
+    Clicks are recorded in EmailEvent for the admin analytics dashboard.
+    Security: HMAC-SHA256 signature is verified before any redirect.
+    """
+    from app.briefing.link_tracker import verify_url as _verify_url
+    from app.lib.email_analytics import EmailAnalytics
+
+    target_url = request.args.get('url', '')
+    signature = request.args.get('sig', '')
+    subscriber_id_str = request.args.get('r', '')
+
+    if not target_url:
+        return redirect('/')
+
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(target_url)
+        if parsed.scheme not in ('http', 'https'):
+            return redirect('/')
+    except Exception:
+        return redirect('/')
+
+    secret = current_app.config.get('SECRET_KEY', '')
+    if not _verify_url(brief_id, target_url, signature, secret):
+        logger.warning(f"Invalid click-tracking signature for brief {brief_id}: {target_url[:100]}")
+        return redirect('/')
+
+    try:
+        subscriber_id = int(subscriber_id_str)
+        subscriber = DailyBriefSubscriber.query.get(subscriber_id)
+        if subscriber:
+            EmailAnalytics.record_click(
+                email=subscriber.email,
+                category=EmailAnalytics.CATEGORY_DAILY_BRIEF,
+                click_url=target_url[:500],
+                brief_subscriber_id=subscriber.id,
+                brief_id=brief_id,
+                user_agent=request.headers.get('User-Agent', '')[:500],
+                ip_address=request.remote_addr,
+            )
+            subscriber.total_clicks = (subscriber.total_clicks or 0) + 1
+            subscriber.last_clicked_at = utcnow_naive()
+            db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.warning(f"Error recording brief click for brief {brief_id}: {e}")
+
+    return redirect(target_url)
+
+
 @brief_bp.route('/brief/admin/analytics')
 @admin_required
 def admin_analytics():

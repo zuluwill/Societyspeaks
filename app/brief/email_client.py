@@ -22,6 +22,7 @@ from app.resend_client import (
     resend_post_with_retry,
     _email_sending_allowed_for_environment,
 )
+from app.briefing.link_tracker import wrap_links as _wrap_links, sign_url as _sign_url
 from app.storage_utils import get_base_url
 
 logger = logging.getLogger(__name__)
@@ -286,6 +287,17 @@ class ResendClient:
             unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
             sorted_items = self._get_sorted_brief_items(brief)
+
+            # Wrap links for click tracking (tracks clicks in EmailEvent)
+            secret = current_app.config.get('SECRET_KEY', '')
+            html_content = _wrap_links(
+                html=html_content,
+                base_url=base_url,
+                run_id=brief.id,
+                r_hash=str(subscriber.id),
+                secret=secret,
+                track_path='/brief/track/click',
+            )
 
             # Prepare email data with List-Unsubscribe headers for compliance
             email_data = {

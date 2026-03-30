@@ -18,6 +18,7 @@ from typing import List, Dict, Optional, Any, Tuple
 from flask import render_template, current_app, url_for
 import requests
 from app.email_utils import RateLimiter, extract_clean_email as _extract_clean_email  # shared utilities
+from app.briefing.link_tracker import wrap_links as _wrap_links
 
 logger = logging.getLogger(__name__)
 
@@ -630,6 +631,16 @@ class ResendEmailClient:
             logger.error(f"Template rendering failed for daily_question: {e}")
             return False
 
+        secret = current_app.config.get('SECRET_KEY', '')
+        html = _wrap_links(
+            html=html,
+            base_url=self.base_url,
+            run_id=question.id,
+            r_hash=str(subscriber.id),
+            secret=secret,
+            track_path='/daily/track/click',
+        )
+
         email_data = {
             'from': self.from_email_daily,
             'to': [subscriber.email],
@@ -711,6 +722,16 @@ class ResendEmailClient:
         except Exception as e:
             logger.error(f"Template rendering failed for weekly_questions_digest: {e}")
             return False
+
+        secret = current_app.config.get('SECRET_KEY', '')
+        html = _wrap_links(
+            html=html,
+            base_url=self.base_url,
+            run_id=questions[0].id,
+            r_hash=str(subscriber.id),
+            secret=secret,
+            track_path='/daily/track/click',
+        )
 
         # Build subject line
         first_question = questions[0].question_text[:50]
@@ -795,6 +816,16 @@ class ResendEmailClient:
         except Exception as e:
             logger.error(f"Template rendering failed for monthly_questions_digest: {e}")
             return False
+
+        secret = current_app.config.get('SECRET_KEY', '')
+        html = _wrap_links(
+            html=html,
+            base_url=self.base_url,
+            run_id=questions[0].id,
+            r_hash=str(subscriber.id),
+            secret=secret,
+            track_path='/daily/track/click',
+        )
 
         # Build subject line
         first_question = questions[0].question_text[:50]

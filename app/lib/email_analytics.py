@@ -94,6 +94,50 @@ class EmailAnalytics:
             return None
 
     @classmethod
+    def record_click(
+        cls,
+        email: str,
+        category: str,
+        click_url: str,
+        brief_subscriber_id: Optional[int] = None,
+        question_subscriber_id: Optional[int] = None,
+        brief_id: Optional[int] = None,
+        daily_question_id: Optional[int] = None,
+        user_agent: Optional[str] = None,
+        ip_address: Optional[str] = None,
+    ) -> Optional[EmailEvent]:
+        """
+        Record that a tracked link in an email was clicked.
+        Call this from click-tracking redirect endpoints.
+
+        Returns:
+            EmailEvent: The created event record, or None if failed
+        """
+        try:
+            event = EmailEvent.record_event(
+                recipient_email=email,
+                event_type=cls.EVENT_CLICKED,
+                email_category=category,
+                click_url=click_url,
+                brief_subscriber_id=brief_subscriber_id,
+                question_subscriber_id=question_subscriber_id,
+                brief_id=brief_id,
+                daily_question_id=daily_question_id,
+                user_agent=user_agent,
+                ip_address=ip_address,
+            )
+            if event is None:
+                logger.warning(f"EmailEvent.record_event returned None for click from {email}")
+                return None
+            db.session.commit()
+            logger.debug(f"Recorded click event for {email} ({category}) -> {click_url[:80]}")
+            return event
+        except Exception as e:
+            logger.error(f"Failed to record click event: {e}")
+            db.session.rollback()
+            return None
+
+    @classmethod
     def record_from_webhook(cls, payload: Dict[str, Any]) -> Optional[EmailEvent]:
         """
         Process a Resend webhook payload and record the event.

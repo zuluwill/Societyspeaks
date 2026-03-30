@@ -81,6 +81,7 @@ def make_tracked_url(
     recipient_hash: str,
     secret: str,
     link_type: str = 'article',
+    track_path: str = '/briefings/track/click',
 ) -> str:
     """Build a signed tracking redirect URL."""
     sig = sign_url(run_id, target_url, secret)
@@ -90,7 +91,7 @@ def make_tracked_url(
         'r': recipient_hash,
         't': link_type,
     })
-    return f"{base_url}/briefings/track/click/{run_id}?{params}"
+    return f"{base_url}{track_path}/{run_id}?{params}"
 
 
 def recipient_hash(run_id: int, email: str) -> str:
@@ -105,6 +106,7 @@ def wrap_links(
     run_id: int,
     r_hash: str,
     secret: str,
+    track_path: str = '/briefings/track/click',
 ) -> str:
     """
     Rewrite all eligible <a href="..."> links in *html* through the tracking
@@ -113,6 +115,10 @@ def wrap_links(
     Unsubscribe links, anchors, mailto:, and tel: are left untouched.
     HTML entities in href values (e.g. &amp;) are decoded before signing
     so the target URL is always valid when the user arrives.
+
+    track_path controls which server endpoint handles the redirect, e.g.
+    '/briefings/track/click' (default), '/brief/track/click', or
+    '/daily/track/click'.
     """
     def _replace(match: re.Match) -> str:
         prefix = match.group(1)
@@ -126,7 +132,7 @@ def wrap_links(
         target = unescape(raw_url)
 
         ltype = _link_type(target, base_url)
-        tracked = make_tracked_url(base_url, run_id, target, r_hash, secret, ltype)
+        tracked = make_tracked_url(base_url, run_id, target, r_hash, secret, ltype, track_path=track_path)
         return f'{prefix} href={quote}{tracked}{quote}{suffix}'
 
     return _RE_HREF.sub(_replace, html)
