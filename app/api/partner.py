@@ -7,9 +7,12 @@ All endpoints return JSON and use standardized error responses.
 import re
 import html
 import json
+import csv
+import io
 import hashlib
 import secrets
-from flask import Blueprint, request, jsonify, current_app
+from urllib.parse import urlparse
+from flask import Blueprint, request, jsonify, current_app, Response
 from app import db, limiter, cache
 from flask_login import current_user
 from sqlalchemy.exc import IntegrityError
@@ -18,7 +21,7 @@ from sqlalchemy.orm import contains_eager
 
 from app.models import (
     Discussion, NewsArticle, DiscussionSourceArticle, ConsensusAnalysis, Statement,
-    StatementFlag, StatementVote,
+    StatementFlag, StatementVote, PartnerUsageEvent, PartnerWebhookEndpoint, PartnerWebhookDelivery,
 )
 from app.discussions.statements import get_statement_vote_fingerprint
 from app.api.errors import api_error
@@ -30,6 +33,15 @@ from app.api.utils import (
 )
 from app.partner.keys import find_partner_api_key
 from app.lib.counter_utils import increment_counter
+from app.lib.time import utcnow_naive
+from app.partner.webhooks import emit_partner_event
+from app.partner.events import (
+    ALL_PARTNER_EVENTS,
+    EVENT_DISCUSSION_CREATED,
+    EVENT_DISCUSSION_UPDATED,
+    serialize_discussion_payload,
+)
+from app.partner.webhooks import generate_webhook_secret
 
 
 partner_bp = Blueprint('partner_api', __name__)
@@ -139,6 +151,8 @@ def lookup_by_article_url():
         'discussion_id': discussion.id,
         'slug': discussion.slug,
         'title': discussion.title,
+        'partner_article_url': discussion.partner_article_url,
+        'external_id': discussion.partner_external_id,
         'embed_url': urls['embed_url'],
         'consensus_url': urls['consensus_url'],
         'snapshot_url': urls['snapshot_url'],
@@ -439,6 +453,20 @@ _CREATE_MAX_ARTICLE_URL = 2048
 _CREATE_MAX_TITLE = 200  # matches Discussion.title column
 _CREATE_MAX_EXCERPT = 5000
 _CREATE_MAX_SOURCE_NAME = 200
+_CREATE_MAX_EXTERNAL_ID = 128
+
+
+def _partner_discussions_query(partner_slug, partner):
+    """Return a Discussion query scoped to the authenticated partner."""
+    q = Discussion.query
+    if partner:
+        return q.filter(
+            db.or_(
+                Discussion.partner_fk_id == partner.id,
+                Discussion.partner_id == partner.slug,
+            )
+        )
+    return q.filter(Discussion.partner_id == partner_slug)
 
 
 def _validate_seed_statements(stmts):
@@ -503,16 +531,7 @@ def list_partner_discussions():
     except (TypeError, ValueError):
         per_page = 30
 
-    q = Discussion.query
-    if partner:
-        q = q.filter(
-            db.or_(
-                Discussion.partner_fk_id == partner.id,
-                Discussion.partner_id == partner.slug,
-            )
-        )
-    else:
-        q = q.filter(Discussion.partner_id == partner_slug)
+    q = _partner_discussions_query(partner_slug, partner)
 
     if env_filter != 'all':
         q = q.filter(Discussion.partner_env == env_filter)
@@ -548,6 +567,7 @@ def list_partner_discussions():
             'slug': d.slug,
             'title': d.title,
             'partner_article_url': d.partner_article_url,
+            'external_id': d.partner_external_id,
             'env': d.partner_env,
             'is_closed': d.is_closed,
             'integrity_mode': d.integrity_mode,
@@ -569,6 +589,335 @@ def list_partner_discussions():
         'total': pagination.total,
         'pages': pagination.pages,
     })
+
+
+@partner_bp.route('/partner/discussions/by-external-id', methods=['GET'])
+@limiter.limit("120 per hour", key_func=_get_api_key_rate_limit_key)
+def lookup_partner_discussion_by_external_id():
+    """Look up a partner-owned discussion by external_id."""
+    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    if err:
+        return err
+
+    external_id = request.args.get('external_id')
+    if external_id is None:
+        return api_error('missing_external_id', 'The external_id parameter is required.', 400)
+    if not isinstance(external_id, str):
+        return api_error('invalid_external_id', 'The external_id must be a string.', 400)
+    external_id = external_id.strip()
+    if not external_id:
+        return api_error('invalid_external_id', 'The external_id must not be empty.', 400)
+    if len(external_id) > _CREATE_MAX_EXTERNAL_ID:
+        return api_error(
+            'invalid_external_id',
+            f'The external_id must be at most {_CREATE_MAX_EXTERNAL_ID} characters.',
+            400,
+        )
+
+    env_filter = (request.args.get('env') or key_env or 'all').lower()
+    if env_filter not in ('test', 'live', 'all'):
+        env_filter = key_env if key_env in ('test', 'live') else 'all'
+
+    q = _partner_discussions_query(partner_slug, partner).filter(
+        Discussion.partner_external_id == external_id
+    )
+    if env_filter != 'all':
+        q = q.filter(Discussion.partner_env == env_filter)
+
+    discussion = q.order_by(Discussion.created_at.desc()).first()
+    if not discussion:
+        return api_error('no_discussion', 'No discussion found for this external_id.', 404)
+
+    if discussion.partner_env == 'test' and key_env != 'test':
+        return api_error('forbidden', 'A valid test API key is required for this discussion.', 403)
+
+    urls = build_discussion_urls(discussion, include_ref=False)
+    if partner_slug:
+        record_partner_usage(partner_slug, key_env, 'lookup_external_id')
+
+    return jsonify({
+        'discussion_id': discussion.id,
+        'slug': discussion.slug,
+        'title': discussion.title,
+        'partner_article_url': discussion.partner_article_url,
+        'external_id': discussion.partner_external_id,
+        'embed_url': urls['embed_url'],
+        'consensus_url': urls['consensus_url'],
+        'snapshot_url': urls['snapshot_url'],
+        'source': 'partner',
+        'env': discussion.partner_env,
+    })
+
+
+@partner_bp.route('/partner/analytics/usage-export', methods=['GET'])
+@limiter.limit("60 per hour", key_func=_get_api_key_rate_limit_key)
+def partner_usage_export():
+    """Export partner usage events for BI/reporting (JSON or CSV)."""
+    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    if err:
+        return err
+
+    if not partner:
+        return api_error(
+            'partner_not_found',
+            'Usage export requires a portal-backed partner account.',
+            400
+        )
+
+    try:
+        days = int(request.args.get('days', 30))
+    except (TypeError, ValueError):
+        days = 30
+    days = min(365, max(1, days))
+
+    env_filter = (request.args.get('env') or 'all').lower()
+    if env_filter not in ('test', 'live', 'all'):
+        env_filter = 'all'
+
+    format_type = (request.args.get('format') or 'json').lower()
+    if format_type not in ('json', 'csv'):
+        return api_error('invalid_format', 'The format must be one of: json, csv.', 400)
+    try:
+        page = max(1, int(request.args.get('page', 1)))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        per_page = min(500, max(1, int(request.args.get('per_page', 100))))
+    except (TypeError, ValueError):
+        per_page = 100
+
+    from datetime import timedelta
+    since_ts = utcnow_naive() - timedelta(days=days)
+
+    q = PartnerUsageEvent.query.filter(
+        PartnerUsageEvent.partner_id == partner.id,
+        PartnerUsageEvent.created_at >= since_ts,
+    )
+    if env_filter != 'all':
+        q = q.filter(PartnerUsageEvent.env == env_filter)
+
+    pagination = q.order_by(
+        PartnerUsageEvent.created_at.asc(),
+        PartnerUsageEvent.id.asc(),
+    ).paginate(page=page, per_page=per_page, error_out=False)
+    rows = pagination.items
+    items = [{
+        'id': row.id,
+        'event_type': row.event_type,
+        'env': row.env,
+        'quantity': row.quantity,
+        'created_at': row.created_at.isoformat() if row.created_at else None,
+    } for row in rows]
+
+    if partner_slug:
+        record_partner_usage(partner_slug, key_env, 'usage_export')
+
+    if format_type == 'csv':
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['id', 'event_type', 'env', 'quantity', 'created_at'])
+        for item in items:
+            writer.writerow([
+                item['id'],
+                item['event_type'],
+                item['env'],
+                item['quantity'],
+                item['created_at'],
+            ])
+        return Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={
+                'Content-Disposition': f'attachment; filename=partner-usage-{partner.slug}-{days}d.csv'
+            }
+        )
+
+    return jsonify({
+        'partner': partner.slug,
+        'days': days,
+        'env': env_filter,
+        'count': len(items),
+        'page': pagination.page,
+        'per_page': pagination.per_page,
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'items': items,
+    })
+
+
+@partner_bp.route('/partner/webhooks', methods=['GET'])
+@limiter.limit("120 per hour", key_func=_get_api_key_rate_limit_key)
+def list_partner_webhooks():
+    err, _, _, partner, _ = _require_partner_api_auth()
+    if err:
+        return err
+    if not partner:
+        return api_error('partner_not_found', 'Webhook management requires a portal-backed partner account.', 400)
+
+    endpoints = PartnerWebhookEndpoint.query.filter_by(partner_id=partner.id).order_by(
+        PartnerWebhookEndpoint.created_at.desc()
+    ).all()
+    return jsonify({
+        'items': [{
+            'id': ep.id,
+            'url': ep.url,
+            'status': ep.status,
+            'event_types': ep.event_types or [],
+            'secret_last4': ep.secret_last4,
+            'last_delivery_at': ep.last_delivery_at.isoformat() if ep.last_delivery_at else None,
+            'last_error': ep.last_error,
+            'created_at': ep.created_at.isoformat() if ep.created_at else None,
+        } for ep in endpoints]
+    })
+
+
+@partner_bp.route('/partner/webhooks', methods=['POST'])
+@limiter.limit("30 per hour", key_func=_get_api_key_rate_limit_key)
+def create_partner_webhook():
+    err, _, _, partner, _ = _require_partner_api_auth()
+    if err:
+        return err
+    if not partner:
+        return api_error('partner_not_found', 'Webhook management requires a portal-backed partner account.', 400)
+
+    data = request.get_json() or {}
+    endpoint_url = (data.get('url') or '').strip()
+    parsed = urlparse(endpoint_url)
+    if not endpoint_url or parsed.scheme != 'https':
+        return api_error('invalid_url', 'Webhook url must be a valid HTTPS URL.', 400)
+    event_types = data.get('event_types') or []
+    if not isinstance(event_types, list) or not event_types:
+        return api_error('invalid_event_types', 'event_types must be a non-empty array.', 400)
+    event_types = [e for e in event_types if e in ALL_PARTNER_EVENTS]
+    if not event_types:
+        return api_error('invalid_event_types', 'No supported event_types provided.', 400)
+
+    try:
+        secret_plain, secret_enc, secret_last4 = generate_webhook_secret()
+    except Exception as exc:
+        current_app.logger.error("create_partner_webhook secret generation failed: %s", exc)
+        return api_error('secret_generation_failed', 'Could not generate webhook secret.', 500)
+
+    endpoint = PartnerWebhookEndpoint(
+        partner_id=partner.id,
+        url=endpoint_url[:1000],
+        status='active',
+        event_types=event_types,
+        encrypted_signing_secret=secret_enc,
+        secret_last4=secret_last4,
+    )
+    try:
+        db.session.add(endpoint)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error("create_partner_webhook failed: %s", exc)
+        return api_error('create_failed', 'Could not create webhook endpoint.', 500)
+
+    return jsonify({
+        'id': endpoint.id,
+        'url': endpoint.url,
+        'status': endpoint.status,
+        'event_types': endpoint.event_types,
+        'signing_secret': secret_plain,
+        'secret_last4': endpoint.secret_last4,
+    }), 201
+
+
+@partner_bp.route('/partner/webhooks/<int:endpoint_id>', methods=['PATCH'])
+@limiter.limit("60 per hour", key_func=_get_api_key_rate_limit_key)
+def patch_partner_webhook(endpoint_id):
+    err, _, _, partner, _ = _require_partner_api_auth()
+    if err:
+        return err
+    if not partner:
+        return api_error('partner_not_found', 'Webhook management requires a portal-backed partner account.', 400)
+
+    endpoint = PartnerWebhookEndpoint.query.filter_by(id=endpoint_id, partner_id=partner.id).first()
+    if not endpoint:
+        return api_error('webhook_not_found', 'Webhook endpoint was not found.', 404)
+
+    data = request.get_json() or {}
+    if 'status' in data:
+        status = (data.get('status') or '').strip().lower()
+        if status not in ('active', 'paused', 'disabled'):
+            return api_error('invalid_status', 'status must be active, paused, or disabled.', 400)
+        endpoint.status = status
+    if 'event_types' in data:
+        event_types = data.get('event_types')
+        if not isinstance(event_types, list) or not event_types:
+            return api_error('invalid_event_types', 'event_types must be a non-empty array.', 400)
+        event_types = [e for e in event_types if e in ALL_PARTNER_EVENTS]
+        if not event_types:
+            return api_error('invalid_event_types', 'No supported event_types provided.', 400)
+        endpoint.event_types = event_types
+
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error("patch_partner_webhook failed: %s", exc)
+        return api_error('update_failed', 'Could not update webhook endpoint.', 500)
+    return jsonify({
+        'id': endpoint.id,
+        'url': endpoint.url,
+        'status': endpoint.status,
+        'event_types': endpoint.event_types,
+        'secret_last4': endpoint.secret_last4,
+    })
+
+
+@partner_bp.route('/partner/webhooks/<int:endpoint_id>/rotate-secret', methods=['POST'])
+@limiter.limit("20 per hour", key_func=_get_api_key_rate_limit_key)
+def rotate_partner_webhook_secret(endpoint_id):
+    err, _, _, partner, _ = _require_partner_api_auth()
+    if err:
+        return err
+    if not partner:
+        return api_error('partner_not_found', 'Webhook management requires a portal-backed partner account.', 400)
+    endpoint = PartnerWebhookEndpoint.query.filter_by(id=endpoint_id, partner_id=partner.id).first()
+    if not endpoint:
+        return api_error('webhook_not_found', 'Webhook endpoint was not found.', 404)
+    try:
+        secret_plain, secret_enc, secret_last4 = generate_webhook_secret()
+    except Exception as exc:
+        current_app.logger.error("rotate_partner_webhook_secret generation failed: %s", exc)
+        return api_error('secret_generation_failed', 'Could not generate webhook secret.', 500)
+    endpoint.encrypted_signing_secret = secret_enc
+    endpoint.secret_last4 = secret_last4
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error("rotate_partner_webhook_secret save failed: %s", exc)
+        return api_error('update_failed', 'Could not rotate webhook secret.', 500)
+    return jsonify({
+        'id': endpoint.id,
+        'signing_secret': secret_plain,
+        'secret_last4': endpoint.secret_last4,
+    })
+
+
+@partner_bp.route('/partner/webhooks/<int:endpoint_id>', methods=['DELETE'])
+@limiter.limit("20 per hour", key_func=_get_api_key_rate_limit_key)
+def delete_partner_webhook(endpoint_id):
+    err, _, _, partner, _ = _require_partner_api_auth()
+    if err:
+        return err
+    if not partner:
+        return api_error('partner_not_found', 'Webhook management requires a portal-backed partner account.', 400)
+    endpoint = PartnerWebhookEndpoint.query.filter_by(id=endpoint_id, partner_id=partner.id).first()
+    if not endpoint:
+        return api_error('webhook_not_found', 'Webhook endpoint was not found.', 404)
+    try:
+        PartnerWebhookDelivery.query.filter_by(endpoint_id=endpoint.id).delete(synchronize_session=False)
+        db.session.delete(endpoint)
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        current_app.logger.error("delete_partner_webhook failed: %s", exc)
+        return api_error('delete_failed', 'Could not delete webhook endpoint.', 500)
+    return jsonify({'success': True})
 
 
 @partner_bp.route('/partner/discussions/<int:discussion_id>', methods=['PATCH'])
@@ -621,6 +970,15 @@ def patch_partner_discussion(discussion_id):
         db.session.rollback()
         current_app.logger.error(f"patch_partner_discussion: {e}")
         return api_error('update_failed', 'Could not update discussion.', 500)
+    try:
+        if partner:
+            emit_partner_event(
+                partner_id=partner.id,
+                event_type=EVENT_DISCUSSION_UPDATED,
+                data=serialize_discussion_payload(discussion),
+            )
+    except Exception:
+        current_app.logger.exception("Failed to emit discussion.updated webhook event")
 
     invalidate_partner_snapshot_cache(discussion_id)
 
@@ -632,6 +990,8 @@ def patch_partner_discussion(discussion_id):
         'discussion_id': discussion.id,
         'slug': discussion.slug,
         'title': discussion.title,
+        'partner_article_url': discussion.partner_article_url,
+        'external_id': discussion.partner_external_id,
         'is_closed': discussion.is_closed,
         'integrity_mode': discussion.integrity_mode,
         'embed_url': urls['embed_url'],
@@ -786,7 +1146,7 @@ def list_partner_discussion_flags(discussion_id):
 @limiter.limit("30 per hour", key_func=_get_api_key_rate_limit_key)
 def create_discussion():
     """
-    Create a new discussion for a partner article.
+    Create a new discussion for a partner article or partner external context.
 
     This endpoint allows partners to create discussions for articles
     that are not ingested via RSS. Requires API key authentication.
@@ -796,7 +1156,8 @@ def create_discussion():
         Content-Type: application/json
 
     Request Body:
-        article_url (required): The article URL (will be normalized)
+        article_url (optional): The article URL (will be normalized)
+        external_id (optional): Stable partner-defined identifier (required when article_url omitted)
         title (required): Discussion title
         excerpt (optional): Article excerpt for seed statement generation
         source_name (optional): Partner/source name for attribution
@@ -899,17 +1260,49 @@ def create_discussion():
 
     # Validate required fields
     article_url = data.get('article_url')
+    external_id = data.get('external_id')
     title = data.get('title')
 
-    if not article_url:
-        return api_error('missing_article_url', 'The article_url field is required.', 400)
-    if not isinstance(article_url, str):
-        return api_error('invalid_article_url', 'The article_url must be a string.', 400)
-    if len(article_url) > _CREATE_MAX_ARTICLE_URL:
+    normalized_url = None
+    if article_url is not None:
+        if not isinstance(article_url, str):
+            return api_error('invalid_article_url', 'The article_url must be a string.', 400)
+        if len(article_url) > _CREATE_MAX_ARTICLE_URL:
+            return api_error(
+                'invalid_article_url',
+                f'The article_url must be at most {_CREATE_MAX_ARTICLE_URL} characters.',
+                400,
+            )
+        article_url = article_url.strip()
+        if article_url:
+            normalized_url = normalize_url(article_url)
+            if not normalized_url:
+                return api_error(
+                    'invalid_url',
+                    'The provided article_url is not valid or could not be parsed.',
+                    400
+                )
+        else:
+            article_url = None
+
+    if external_id is not None:
+        if not isinstance(external_id, str):
+            return api_error('invalid_external_id', 'The external_id must be a string.', 400)
+        external_id = external_id.strip()
+        if not external_id:
+            external_id = None
+        elif len(external_id) > _CREATE_MAX_EXTERNAL_ID:
+            return api_error(
+                'invalid_external_id',
+                f'The external_id must be at most {_CREATE_MAX_EXTERNAL_ID} characters.',
+                400
+            )
+
+    if not normalized_url and not external_id:
         return api_error(
-            'invalid_article_url',
-            f'The article_url must be at most {_CREATE_MAX_ARTICLE_URL} characters.',
-            400,
+            'missing_identifier',
+            'Provide at least one identifier: article_url or external_id.',
+            400
         )
 
     if not title:
@@ -955,30 +1348,34 @@ def create_discussion():
             400
         )
 
-    # Normalize URL
-    normalized_url = normalize_url(article_url)
-    if not normalized_url:
-        return api_error(
-            'invalid_url',
-            'The provided article_url is not valid or could not be parsed.',
-            400
-        )
+    # Check if discussion already exists for this URL and/or external_id.
+    if normalized_url:
+        existing = Discussion.query.filter_by(
+            partner_article_url=normalized_url,
+            partner_id=partner_slug,
+            partner_env=key_env
+        ).first()
+        if existing:
+            return api_error(
+                'discussion_exists',
+                f'A discussion already exists for this URL (id: {existing.id}).',
+                409
+            )
 
-    # Check if discussion already exists for this URL
-    existing = Discussion.query.filter_by(
-        partner_article_url=normalized_url,
-        partner_id=partner_slug,
-        partner_env=key_env
-    ).first()
-    if existing:
-        return api_error(
-            'discussion_exists',
-            f'A discussion already exists for this URL (id: {existing.id}).',
-            409
-        )
+    if external_id:
+        existing = _partner_discussions_query(partner_slug, partner).filter_by(
+            partner_external_id=external_id,
+            partner_env=key_env,
+        ).first()
+        if existing:
+            return api_error(
+                'discussion_exists',
+                f'A discussion already exists for this external_id (id: {existing.id}).',
+                409
+            )
 
     # Also check NewsArticle path (normalized_url + raw url fallback)
-    if key_env == 'live':
+    if key_env == 'live' and normalized_url:
         article = NewsArticle.query.filter_by(normalized_url=normalized_url).first()
         if not article:
             article = NewsArticle.query.filter_by(url=article_url).first()
@@ -1041,6 +1438,7 @@ def create_discussion():
                 has_native_statements=True,
                 geographic_scope='global',
                 partner_article_url=normalized_url,
+                partner_external_id=external_id,
                 partner_id=partner_slug,
                 partner_fk_id=partner.id if partner else None,
                 partner_env=key_env,
@@ -1067,8 +1465,18 @@ def create_discussion():
             db.session.commit()
 
             current_app.logger.info(
-                f"Partner {partner_slug} created discussion {discussion.id} for {normalized_url}"
+                f"Partner {partner_slug} created discussion {discussion.id} "
+                f"for {normalized_url or external_id}"
             )
+            if partner:
+                try:
+                    emit_partner_event(
+                        partner_id=partner.id,
+                        event_type=EVENT_DISCUSSION_CREATED,
+                        data=serialize_discussion_payload(discussion),
+                    )
+                except Exception:
+                    current_app.logger.exception("Failed to emit discussion.created webhook event")
             break
 
         except IntegrityError as e:
@@ -1118,6 +1526,8 @@ def create_discussion():
         'discussion_id': discussion.id,
         'slug': discussion.slug,
         'title': discussion.title,
+        'partner_article_url': discussion.partner_article_url,
+        'external_id': discussion.partner_external_id,
         'embed_url': urls['embed_url'],
         'consensus_url': urls['consensus_url'],
         'snapshot_url': urls['snapshot_url'],

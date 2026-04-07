@@ -10,9 +10,11 @@ Covers:
 """
 
 import pytest
+import os
 from unittest.mock import patch, MagicMock
 from datetime import datetime
 from app.lib.time import utcnow_naive
+from cryptography.fernet import Fernet
 
 
 # ---------------------------------------------------------------------------
@@ -631,6 +633,122 @@ class TestCreateDiscussion:
         )
         assert resp.status_code == 401
         assert resp.get_json()['error'] == 'invalid_api_key'
+
+    def test_create_with_external_id_without_article_url_returns_201(self, client, db, partner):
+        key = _issue_partner_api_key(db, partner, env='live')
+        resp = client.post(
+            '/api/partner/discussions',
+            json={
+                'external_id': 'obs-cms-12345',
+                'title': 'Observer Live Blog Discussion',
+                'seed_statements': [{'content': 'This is a valid seed statement for live blog.', 'position': 'neutral'}],
+            },
+            headers={'X-API-Key': key}
+        )
+        assert resp.status_code == 201
+        data = resp.get_json()
+        assert data['external_id'] == 'obs-cms-12345'
+        assert data['partner_article_url'] is None
+
+    def test_duplicate_external_id_in_same_env_returns_409(self, client, db, partner):
+        key = _issue_partner_api_key(db, partner, env='live')
+        payload = {
+            'external_id': 'obs-cms-duplicate',
+            'title': 'Observer Duplicate External ID',
+            'seed_statements': [{'content': 'This is a valid seed statement for duplicate external id.', 'position': 'neutral'}],
+        }
+        first = client.post('/api/partner/discussions', json=payload, headers={'X-API-Key': key})
+        second = client.post('/api/partner/discussions', json=payload, headers={'X-API-Key': key})
+        assert first.status_code == 201
+        assert second.status_code == 409
+        assert second.get_json()['error'] == 'discussion_exists'
+
+
+class TestLookupByExternalId:
+    """Tests for GET /api/partner/discussions/by-external-id."""
+
+    def test_lookup_by_external_id_returns_200(self, client, db, partner):
+        key = _issue_partner_api_key(db, partner, env='live')
+        create = client.post(
+            '/api/partner/discussions',
+            json={
+                'external_id': 'obs-cms-lookup-1',
+                'title': 'Observer External Lookup',
+                'seed_statements': [{'content': 'This is a valid seed statement for external lookup.', 'position': 'neutral'}],
+            },
+            headers={'X-API-Key': key}
+        )
+        assert create.status_code == 201
+
+        lookup = client.get(
+            '/api/partner/discussions/by-external-id?external_id=obs-cms-lookup-1',
+            headers={'X-API-Key': key}
+        )
+        assert lookup.status_code == 200
+        data = lookup.get_json()
+        assert data['external_id'] == 'obs-cms-lookup-1'
+        assert data['discussion_id'] == create.get_json()['discussion_id']
+
+
+class TestPartnerUsageExport:
+    """Tests for GET /api/partner/analytics/usage-export."""
+
+    def test_usage_export_json_returns_events(self, client, db, partner):
+        from app.models import PartnerUsageEvent
+
+        key = _issue_partner_api_key(db, partner, env='live')
+        db.session.add(PartnerUsageEvent(partner_id=partner.id, env='live', event_type='create', quantity=1))
+        db.session.add(PartnerUsageEvent(partner_id=partner.id, env='live', event_type='lookup', quantity=2))
+        db.session.commit()
+
+        resp = client.get('/api/partner/analytics/usage-export?days=30', headers={'X-API-Key': key})
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['partner'] == partner.slug
+        assert data['count'] >= 2
+        assert any(item['event_type'] == 'create' for item in data['items'])
+
+    def test_usage_export_csv_returns_attachment(self, client, db, partner):
+        from app.models import PartnerUsageEvent
+
+        key = _issue_partner_api_key(db, partner, env='live')
+        db.session.add(PartnerUsageEvent(partner_id=partner.id, env='live', event_type='create', quantity=1))
+        db.session.commit()
+
+        resp = client.get(
+            '/api/partner/analytics/usage-export?days=30&format=csv',
+            headers={'X-API-Key': key}
+        )
+        assert resp.status_code == 200
+        assert 'text/csv' in (resp.headers.get('Content-Type') or '')
+        assert 'attachment; filename=' in (resp.headers.get('Content-Disposition') or '')
+        assert b'event_type' in resp.data
+
+
+class TestPartnerWebhookManagementApi:
+    """Tests for webhook management endpoints."""
+
+    def test_create_and_list_webhooks(self, client, db, partner):
+        key = _issue_partner_api_key(db, partner, env='live')
+        os.environ['ENCRYPTION_KEY'] = Fernet.generate_key().decode()
+        create = client.post(
+            '/api/partner/webhooks',
+            json={
+                'url': 'https://example.com/webhooks/societyspeaks',
+                'event_types': ['discussion.created', 'discussion.updated'],
+            },
+            headers={'X-API-Key': key},
+        )
+        assert create.status_code == 201
+        payload = create.get_json()
+        assert payload['id']
+        assert payload['signing_secret'].startswith('sswh_')
+
+        listed = client.get('/api/partner/webhooks', headers={'X-API-Key': key})
+        assert listed.status_code == 200
+        items = listed.get_json()['items']
+        assert len(items) >= 1
+        assert items[0]['url'].startswith('https://')
 
 
 # ---------------------------------------------------------------------------

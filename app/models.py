@@ -233,6 +233,49 @@ class PartnerApiKey(db.Model):
     last_used_at = db.Column(db.DateTime, nullable=True)
 
 
+class PartnerWebhookEndpoint(db.Model):
+    __table_args__ = (
+        db.Index('idx_partner_webhook_partner_status', 'partner_id', 'status'),
+        db.Index('idx_partner_webhook_event_types', 'event_types'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    partner_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=False)
+    url = db.Column(db.String(1000), nullable=False)
+    status = db.Column(db.String(20), default='active', nullable=False)  # active | paused | disabled
+    event_types = db.Column(db.JSON, nullable=False, default=list)
+    encrypted_signing_secret = db.Column(db.Text, nullable=False)
+    secret_last4 = db.Column(db.String(4), nullable=False)
+    last_delivery_at = db.Column(db.DateTime, nullable=True)
+    last_error = db.Column(db.String(500), nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
+
+
+class PartnerWebhookDelivery(db.Model):
+    __table_args__ = (
+        db.Index('idx_partner_webhook_delivery_status_next', 'status', 'next_attempt_at'),
+        db.Index('idx_partner_webhook_delivery_endpoint_created', 'endpoint_id', 'created_at'),
+        db.UniqueConstraint('endpoint_id', 'event_id', name='uq_partner_webhook_delivery_endpoint_event'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    endpoint_id = db.Column(db.Integer, db.ForeignKey('partner_webhook_endpoint.id', ondelete='CASCADE'), nullable=False)
+    partner_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=False)
+    event_id = db.Column(db.String(80), nullable=False)
+    event_type = db.Column(db.String(80), nullable=False)
+    payload_json = db.Column(db.JSON, nullable=False)
+    status = db.Column(db.String(20), default='pending', nullable=False)  # pending | retrying | delivered | failed
+    attempt_count = db.Column(db.Integer, default=0, nullable=False)
+    next_attempt_at = db.Column(db.DateTime, nullable=True)
+    last_http_status = db.Column(db.Integer, nullable=True)
+    last_response_body = db.Column(db.Text, nullable=True)
+    last_error = db.Column(db.String(500), nullable=True)
+    delivered_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
+
+
 class PartnerMember(db.Model):
     __table_args__ = (
         db.Index('ix_partner_member_partner_id', 'partner_id'),
@@ -252,6 +295,7 @@ class PartnerMember(db.Model):
     invited_at = db.Column(db.DateTime, nullable=True)
     accepted_at = db.Column(db.DateTime, nullable=True)
     last_login_at = db.Column(db.DateTime, nullable=True)
+    permissions_json = db.Column(db.JSON, nullable=False, default=dict)
     created_at = db.Column(db.DateTime, default=utcnow_naive)
     updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
@@ -771,6 +815,8 @@ class Discussion(db.Model):
         db.Index('idx_discussion_is_featured', 'is_featured'),
         db.Index('idx_discussion_topic', 'topic'),
         db.Index('idx_discussion_partner_article_url', 'partner_article_url'),
+        db.Index('idx_discussion_partner_external_id', 'partner_external_id'),
+        db.Index('uq_discussion_partner_env_external_id_slug', 'partner_env', 'partner_id', 'partner_external_id', unique=True),
         db.Index('idx_discussion_partner_id', 'partner_id'),
         db.Index('idx_discussion_partner_env_created', 'partner_env', 'created_at'),
         db.Index('idx_discussion_programme_id', 'programme_id'),
@@ -825,6 +871,7 @@ class Discussion(db.Model):
     # Partner embed integration (Phase 2)
     # For discussions created by partners whose content is not ingested via RSS
     partner_article_url = db.Column(db.String(1000), nullable=True)  # Normalized URL
+    partner_external_id = db.Column(db.String(128), nullable=True)  # Partner-defined stable ID for non-article discussions
     partner_id = db.Column(db.String(50), nullable=True)  # Partner slug (legacy identifier)
     partner_fk_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=True, index=True)
     partner_env = db.Column(db.String(10), default='live', nullable=False, index=True)  # test | live

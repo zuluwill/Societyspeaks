@@ -7,6 +7,8 @@ from app.profiles.forms import IndividualProfileForm, CompanyProfileForm
 from app.admin.forms import UserAssignmentForm, AdminProgrammeForm, AdminOrgMemberForm
 from datetime import date, datetime, timedelta
 from app.lib.time import utcnow_naive
+from app.partner.webhooks import emit_partner_event
+from app.partner.events import EVENT_KEY_REVOKED, serialize_key_payload
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
 from app.storage_utils import upload_to_object_storage
@@ -961,6 +963,14 @@ def admin_partner_revoke_key(partner_id, key_id):
             target_id=key.id,
             metadata={'partner_id': partner_id, 'env': key.env},
         )
+        try:
+            emit_partner_event(
+                partner_id=partner_id,
+                event_type=EVENT_KEY_REVOKED,
+                data=serialize_key_payload(key),
+            )
+        except Exception:
+            current_app.logger.exception('admin_partner_revoke_key webhook emit failed')
         flash('API key revoked.', 'success')
     except Exception:
         db.session.rollback()

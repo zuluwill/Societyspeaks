@@ -165,3 +165,34 @@ def test_owner_login_uses_partner_password_source(app, db):
     db.session.refresh(owner)
     db.session.refresh(partner)
     assert owner.password_hash == partner.password_hash
+
+
+def test_member_without_domain_permission_cannot_add_domain(app, db):
+    from app.models import PartnerMember
+
+    partner, owner = _create_partner_with_owner(db, email='owner5@example.com')
+    member = PartnerMember(
+        partner_id=partner.id,
+        email='member-nodomains@example.com',
+        full_name='No Domains Member',
+        role='member',
+        status='active',
+        permissions_json={'domains.manage': False},
+        accepted_at=utcnow_naive(),
+    )
+    member.set_password('MemberPass123!')
+    db.session.add(member)
+    db.session.commit()
+
+    client = app.test_client()
+    with client.session_transaction() as flask_session:
+        flask_session['partner_portal_id'] = partner.id
+        flask_session['partner_member_id'] = member.id
+
+    resp = client.post(
+        '/for-publishers/portal/domains/add',
+        data={'domain': 'example.com', 'env': 'test'},
+        follow_redirects=False,
+    )
+    assert resp.status_code == 302
+    assert '/for-publishers/portal/dashboard' in resp.location

@@ -33,12 +33,34 @@ from sqlalchemy import desc, func
 
 from app.models import (
     Partner, PartnerDomain, PartnerApiKey, PartnerUsageEvent, PartnerMember, generate_slug,
-    Discussion, Statement, StatementVote, ConsensusAnalysis,
+    Discussion, Statement, StatementVote, ConsensusAnalysis, PartnerWebhookEndpoint, PartnerWebhookDelivery,
 )
 from app.billing.service import create_partner_checkout_session, create_partner_portal_session, get_stripe
 from app.api.utils import invalidate_partner_snapshot_cache
 from app.admin.audit import write_admin_audit_event
 from app.lib.time import utcnow_naive
+from app.partner.permissions import (
+    member_can,
+    member_permissions,
+    ALL_PERMISSIONS,
+    PERM_KEYS_MANAGE,
+    PERM_DISCUSSIONS_MANAGE,
+    PERM_ANALYTICS_VIEW,
+    PERM_TEAM_MANAGE,
+    PERM_DOMAINS_MANAGE,
+    PERM_BILLING_MANAGE,
+    PERM_WEBHOOKS_MANAGE,
+)
+from app.partner.events import (
+    EVENT_DISCUSSION_UPDATED,
+    EVENT_KEY_REVOKED,
+    EVENT_DOMAIN_VERIFICATION_CHANGED,
+    ALL_PARTNER_EVENTS,
+    serialize_discussion_payload,
+    serialize_key_payload,
+    serialize_domain_payload,
+)
+from app.partner.webhooks import generate_webhook_secret, emit_partner_event, send_test_delivery
 
 
 @partner_bp.route('/')
@@ -196,13 +218,35 @@ def _current_partner_member(partner=None):
 
 
 def _member_can_manage_team(member):
-    """Owners and admins can manage team membership and API keys."""
-    return bool(member and member.role in ('owner', 'admin'))
+    return member_can(member, PERM_TEAM_MANAGE)
 
 
 def _member_can_manage_keys(member):
-    """Alias — key management requires the same roles as team management."""
-    return _member_can_manage_team(member)
+    return member_can(member, PERM_KEYS_MANAGE)
+
+
+def _member_can_manage_discussions(member):
+    return member_can(member, PERM_DISCUSSIONS_MANAGE)
+
+
+def _member_can_view_analytics(member):
+    return member_can(member, PERM_ANALYTICS_VIEW)
+
+
+def _member_can_manage_domains(member):
+    return member_can(member, PERM_DOMAINS_MANAGE)
+
+
+def _member_can_manage_billing(member):
+    return member_can(member, PERM_BILLING_MANAGE)
+
+
+def _member_can_manage_webhooks(member):
+    return member_can(member, PERM_WEBHOOKS_MANAGE)
+
+
+def _permissions_from_form():
+    return {key: bool(request.form.get(key)) for key in ALL_PERMISSIONS}
 
 
 def _portal_discussion_belongs_clause(partner):
@@ -722,6 +766,7 @@ def portal_dashboard():
     current_member = _current_partner_member(partner)
     domains, keys, has_verified_test_domain, has_test_key, has_live_key = _build_partner_portal_context(partner)
     new_key = session.pop('partner_new_key', None)
+    new_webhook_secret = session.pop('partner_new_webhook_secret', None)
     dns_checks = session.get('partner_dns_checks', {})
 
     since = utcnow_naive() - timedelta(days=30)
@@ -737,6 +782,8 @@ def portal_dashboard():
     last_health_check = session.get('partner_last_health_check')
     last_health_result = session.get('partner_last_health_result')
     team_members = PartnerMember.query.filter_by(partner_id=partner.id).order_by(PartnerMember.created_at.asc()).all()
+    for m in team_members:
+        m.effective_permissions = member_permissions(m)
 
     daily_since = utcnow_naive() - timedelta(days=13)
     daily_rows = PartnerUsageEvent.query.filter(
@@ -755,6 +802,9 @@ def portal_dashboard():
         usage_daily.append({'label': day.strftime('%b %d'), 'count': count})
     usage_max = max([d['count'] for d in usage_daily] or [0])
     partner_quota = _partner_discussion_quota(partner)
+    webhooks = PartnerWebhookEndpoint.query.filter_by(partner_id=partner.id).order_by(PartnerWebhookEndpoint.created_at.desc()).all()
+    recent_deliveries = PartnerWebhookDelivery.query.filter_by(partner_id=partner.id).order_by(PartnerWebhookDelivery.created_at.desc()).limit(20).all()
+    current_perms = member_permissions(current_member)
     return render_template(
         'partner/portal/dashboard.html',
         partner=partner,
@@ -762,6 +812,7 @@ def portal_dashboard():
         domains=domains,
         keys=keys,
         new_key=new_key,
+        new_webhook_secret=new_webhook_secret,
         has_verified_test_domain=has_verified_test_domain,
         has_test_key=has_test_key,
         has_live_key=has_live_key,
@@ -769,7 +820,16 @@ def portal_dashboard():
         current_member=current_member,
         can_manage_team=_member_can_manage_team(current_member),
         can_manage_keys=_member_can_manage_keys(current_member),
+        can_manage_discussions=_member_can_manage_discussions(current_member),
+        can_view_analytics=_member_can_view_analytics(current_member),
+        can_manage_domains=_member_can_manage_domains(current_member),
+        can_manage_billing=_member_can_manage_billing(current_member),
+        can_manage_webhooks=_member_can_manage_webhooks(current_member),
+        current_member_permissions=current_perms,
         team_members=team_members,
+        webhooks=webhooks,
+        recent_webhook_deliveries=recent_deliveries,
+        all_webhook_events=sorted(ALL_PARTNER_EVENTS),
         partner_health=partner_health,
         last_health_check=last_health_check,
         last_health_result=last_health_result,
@@ -820,7 +880,7 @@ def portal_discussions():
         vote_counts = {int(r[0]): int(r[1]) for r in rows}
 
     base = _get_base_url()
-    can_edit = _member_can_manage_team(_current_partner_member(partner)) and not _is_admin_preview(partner)
+    can_edit = _member_can_manage_discussions(_current_partner_member(partner)) and not _is_admin_preview(partner)
 
     # Batch-fetch key info for audit column — scoped to this partner in SQL (defence in depth)
     key_ids = [d.created_by_key_id for d in discussions if d.created_by_key_id]
@@ -862,8 +922,8 @@ def portal_discussions():
 def portal_toggle_discussion_closed(discussion_id):
     """Allow admin/owner to open or close a discussion from the portal."""
     partner = _current_partner()
-    if not _member_can_manage_team(_current_partner_member(partner)):
-        flash('Only owners and admins can open or close discussions.', 'warning')
+    if not _member_can_manage_discussions(_current_partner_member(partner)):
+        flash('You do not have permission to open or close discussions.', 'warning')
         return redirect(url_for('partner.portal_discussions'))
 
     if _is_admin_preview(partner):
@@ -880,6 +940,14 @@ def portal_toggle_discussion_closed(discussion_id):
         db.session.commit()
         invalidate_partner_snapshot_cache(discussion_id)
         action = 'closed' if discussion.is_closed else 'reopened'
+        try:
+            emit_partner_event(
+                partner_id=partner.id,
+                event_type=EVENT_DISCUSSION_UPDATED,
+                data=serialize_discussion_payload(discussion),
+            )
+        except Exception:
+            current_app.logger.exception("Failed to emit discussion.updated from portal toggle")
         flash(f'Discussion #{discussion_id} {action}.', 'success')
     except Exception:
         db.session.rollback()
@@ -933,7 +1001,7 @@ def portal_discussion_detail(discussion_id):
             }
 
     base = _get_base_url()
-    can_edit = _member_can_manage_team(_current_partner_member(partner)) and not _is_admin_preview(partner)
+    can_edit = _member_can_manage_discussions(_current_partner_member(partner)) and not _is_admin_preview(partner)
 
     return render_template(
         'partner/portal/discussion_detail.html',
@@ -1025,6 +1093,9 @@ def portal_usage_csv():
     from io import StringIO
 
     partner = _current_partner()
+    if not _member_can_view_analytics(_current_partner_member(partner)):
+        flash('You do not have permission to export analytics.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
     since = utcnow_naive() - timedelta(days=90)
     rows = PartnerUsageEvent.query.filter(
         PartnerUsageEvent.partner_id == partner.id,
@@ -1241,6 +1312,8 @@ def portal_update_member_role(member_id):
         return redirect(url_for('partner.portal_dashboard'))
 
     member.role = role
+    # Reset explicit overrides when role changes; role defaults become source of truth.
+    member.permissions_json = {}
     try:
         db.session.commit()
     except Exception:
@@ -1252,11 +1325,43 @@ def portal_update_member_role(member_id):
     return redirect(url_for('partner.portal_dashboard'))
 
 
+@partner_bp.route('/portal/team/<int:member_id>/permissions', methods=['POST'])
+@partner_login_required
+def portal_update_member_permissions(member_id):
+    partner = _current_partner()
+    current_member = _current_partner_member(partner)
+    if not _member_can_manage_team(current_member):
+        flash('Only members with team permissions can update member permissions.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    member = PartnerMember.query.filter_by(id=member_id, partner_id=partner.id).first_or_404()
+    if member.role == 'owner':
+        flash('Owner permissions cannot be changed.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+    if current_member and current_member.id == member.id and not request.form.get(PERM_TEAM_MANAGE):
+        flash('You cannot remove your own team-management permission.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    member.permissions_json = _permissions_from_form()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to update member permissions")
+        flash('Could not update member permissions.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+    flash('Member permissions updated.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
+
+
 @partner_bp.route('/portal/domains/add', methods=['POST'])
 @limiter.limit("10 per minute")
 @partner_login_required
 def portal_add_domain():
     partner = _current_partner()
+    if not _member_can_manage_domains(_current_partner_member(partner)):
+        flash('You do not have permission to manage domains.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
     domain = _normalize_domain(request.form.get('domain', ''))
     env = _validate_env(request.form.get('env', 'test'))
     if not domain:
@@ -1300,6 +1405,9 @@ def portal_add_domain():
 @partner_login_required
 def portal_toggle_domain(domain_id):
     partner = _current_partner()
+    if not _member_can_manage_domains(_current_partner_member(partner)):
+        flash('You do not have permission to manage domains.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
     domain = PartnerDomain.query.filter_by(id=domain_id, partner_id=partner.id).first_or_404()
     domain.is_active = not bool(domain.is_active)
     if not domain.is_active:
@@ -1316,6 +1424,14 @@ def portal_toggle_domain(domain_id):
         flash('Domain activated. Re-verify DNS TXT before embed requests are allowed.', 'success')
     else:
         flash('Domain deactivated.', 'success')
+    try:
+        emit_partner_event(
+            partner_id=partner.id,
+            event_type=EVENT_DOMAIN_VERIFICATION_CHANGED,
+            data=serialize_domain_payload(domain),
+        )
+    except Exception:
+        current_app.logger.exception("Failed to emit domain.verification_changed on toggle")
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1323,7 +1439,12 @@ def portal_toggle_domain(domain_id):
 @partner_login_required
 def portal_remove_domain(domain_id):
     partner = _current_partner()
+    if not _member_can_manage_domains(_current_partner_member(partner)):
+        flash('You do not have permission to manage domains.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
     domain = PartnerDomain.query.filter_by(id=domain_id, partner_id=partner.id).first_or_404()
+    payload = serialize_domain_payload(domain)
+    payload['deleted'] = True
     try:
         db.session.delete(domain)
         db.session.commit()
@@ -1332,6 +1453,14 @@ def portal_remove_domain(domain_id):
         current_app.logger.exception("Failed to remove partner domain")
         flash('Could not remove domain.', 'danger')
         return redirect(url_for('partner.portal_dashboard'))
+    try:
+        emit_partner_event(
+            partner_id=partner.id,
+            event_type=EVENT_DOMAIN_VERIFICATION_CHANGED,
+            data=payload,
+        )
+    except Exception:
+        current_app.logger.exception("Failed to emit domain.verification_changed on delete")
     flash('Domain removed.', 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
@@ -1340,6 +1469,9 @@ def portal_remove_domain(domain_id):
 @partner_login_required
 def portal_verify_domain(domain_id):
     partner = _current_partner()
+    if not _member_can_manage_domains(_current_partner_member(partner)):
+        flash('You do not have permission to manage domains.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
     domain = PartnerDomain.query.filter_by(id=domain_id, partner_id=partner.id).first_or_404()
     if not domain.is_active:
         flash('Activate this domain before verifying.', 'warning')
@@ -1391,6 +1523,173 @@ def portal_verify_domain(domain_id):
             flash('Verification failed. DNS lookup error; check your DNS provider and try again.', 'danger')
         else:
             flash('Verification failed. TXT record not found yet. Check the expected value and try again.', 'danger')
+
+    # Domain verification state can drive downstream allowlists.
+    try:
+        emit_partner_event(
+            partner_id=partner.id,
+            event_type=EVENT_DOMAIN_VERIFICATION_CHANGED,
+            data=serialize_domain_payload(domain),
+        )
+    except Exception:
+        current_app.logger.exception("Failed to emit domain.verification_changed webhook event")
+    return redirect(url_for('partner.portal_dashboard'))
+
+
+@partner_bp.route('/portal/webhooks/create', methods=['POST'])
+@partner_login_required
+def portal_create_webhook():
+    partner = _current_partner()
+    if not _member_can_manage_webhooks(_current_partner_member(partner)):
+        flash('You do not have permission to manage webhooks.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    endpoint_url = (request.form.get('url') or '').strip()
+    parsed = urlparse(endpoint_url)
+    if not endpoint_url or parsed.scheme not in ('https',):
+        flash('Webhook URL must be a valid HTTPS URL.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    event_types = [e for e in request.form.getlist('event_types') if e in ALL_PARTNER_EVENTS]
+    if not event_types:
+        flash('Select at least one webhook event type.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    try:
+        plain_secret, encrypted_secret, secret_last4 = generate_webhook_secret()
+    except Exception as exc:
+        current_app.logger.exception("Failed to generate webhook secret")
+        flash(f'Could not create webhook secret ({exc}). Check ENCRYPTION_KEY.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    endpoint = PartnerWebhookEndpoint(
+        partner_id=partner.id,
+        url=endpoint_url[:1000],
+        status='active',
+        event_types=event_types,
+        encrypted_signing_secret=encrypted_secret,
+        secret_last4=secret_last4,
+    )
+    try:
+        db.session.add(endpoint)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to create partner webhook endpoint")
+        flash('Could not create webhook endpoint.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    session['partner_new_webhook_secret'] = plain_secret
+    flash('Webhook endpoint created. Copy the signing secret now; it will not be shown again.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
+
+
+@partner_bp.route('/portal/webhooks/<int:endpoint_id>/update', methods=['POST'])
+@partner_login_required
+def portal_update_webhook(endpoint_id):
+    partner = _current_partner()
+    if not _member_can_manage_webhooks(_current_partner_member(partner)):
+        flash('You do not have permission to manage webhooks.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    endpoint = PartnerWebhookEndpoint.query.filter_by(id=endpoint_id, partner_id=partner.id).first_or_404()
+    status = (request.form.get('status') or 'active').strip().lower()
+    if status not in ('active', 'paused', 'disabled'):
+        status = endpoint.status
+    event_types = [e for e in request.form.getlist('event_types') if e in ALL_PARTNER_EVENTS]
+    if not event_types:
+        flash('Select at least one webhook event type.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    endpoint.status = status
+    endpoint.event_types = event_types
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to update webhook endpoint")
+        flash('Could not update webhook endpoint.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+    flash('Webhook endpoint updated.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
+
+
+@partner_bp.route('/portal/webhooks/<int:endpoint_id>/rotate-secret', methods=['POST'])
+@partner_login_required
+def portal_rotate_webhook_secret(endpoint_id):
+    partner = _current_partner()
+    if not _member_can_manage_webhooks(_current_partner_member(partner)):
+        flash('You do not have permission to manage webhooks.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    endpoint = PartnerWebhookEndpoint.query.filter_by(id=endpoint_id, partner_id=partner.id).first_or_404()
+    try:
+        plain_secret, encrypted_secret, secret_last4 = generate_webhook_secret()
+    except Exception as exc:
+        current_app.logger.exception("Failed to rotate webhook secret")
+        flash(f'Could not rotate webhook secret ({exc}). Check ENCRYPTION_KEY.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    endpoint.encrypted_signing_secret = encrypted_secret
+    endpoint.secret_last4 = secret_last4
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to save rotated webhook secret")
+        flash('Could not rotate webhook secret.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    session['partner_new_webhook_secret'] = plain_secret
+    flash('Webhook secret rotated. Copy the new secret now.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
+
+
+@partner_bp.route('/portal/webhooks/<int:endpoint_id>/delete', methods=['POST'])
+@partner_login_required
+def portal_delete_webhook(endpoint_id):
+    partner = _current_partner()
+    if not _member_can_manage_webhooks(_current_partner_member(partner)):
+        flash('You do not have permission to manage webhooks.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    endpoint = PartnerWebhookEndpoint.query.filter_by(id=endpoint_id, partner_id=partner.id).first_or_404()
+    try:
+        PartnerWebhookDelivery.query.filter_by(endpoint_id=endpoint.id).delete(synchronize_session=False)
+        db.session.delete(endpoint)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to delete webhook endpoint")
+        flash('Could not delete webhook endpoint.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+    flash('Webhook endpoint deleted.', 'success')
+    return redirect(url_for('partner.portal_dashboard'))
+
+
+@partner_bp.route('/portal/webhooks/<int:endpoint_id>/send-test', methods=['POST'])
+@partner_login_required
+def portal_send_test_webhook(endpoint_id):
+    partner = _current_partner()
+    if not _member_can_manage_webhooks(_current_partner_member(partner)):
+        flash('You do not have permission to manage webhooks.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    endpoint = PartnerWebhookEndpoint.query.filter_by(id=endpoint_id, partner_id=partner.id).first_or_404()
+    if endpoint.status != 'active':
+        flash('Webhook endpoint must be active to send test events.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
+
+    try:
+        delivery = send_test_delivery(endpoint)
+    except Exception:
+        current_app.logger.exception("Failed to send test webhook")
+        flash('Could not send test webhook.', 'danger')
+        return redirect(url_for('partner.portal_dashboard'))
+    if delivery.status == 'delivered':
+        flash('Test webhook delivered successfully.', 'success')
+    else:
+        flash('Test webhook queued — delivery pending. Check your receiver logs shortly.', 'info')
     return redirect(url_for('partner.portal_dashboard'))
 
 
@@ -1444,6 +1743,14 @@ def portal_revoke_key(key_id):
         current_app.logger.exception("Failed to revoke API key")
         flash('An error occurred. Please try again.', 'danger')
         return redirect(url_for('partner.portal_dashboard'))
+    try:
+        emit_partner_event(
+            partner_id=partner.id,
+            event_type=EVENT_KEY_REVOKED,
+            data=serialize_key_payload(key),
+        )
+    except Exception:
+        current_app.logger.exception("Failed to emit key.revoked webhook event")
     flash('API key revoked.', 'success')
     return redirect(url_for('partner.portal_dashboard'))
 
@@ -1475,6 +1782,14 @@ def portal_rotate_key(key_id):
         current_app.logger.exception("Failed to rotate API key")
         flash('An error occurred rotating the key. Please try again.', 'danger')
         return redirect(url_for('partner.portal_dashboard'))
+    try:
+        emit_partner_event(
+            partner_id=partner.id,
+            event_type=EVENT_KEY_REVOKED,
+            data=serialize_key_payload(key),
+        )
+    except Exception:
+        current_app.logger.exception("Failed to emit key.revoked for rotated key")
 
     session['partner_new_key'] = full_key
     flash('API key rotated. Copy the new key now; it will not be shown again.', 'success')
@@ -1485,6 +1800,9 @@ def portal_rotate_key(key_id):
 @partner_login_required
 def portal_start_billing():
     partner = _current_partner()
+    if not _member_can_manage_billing(_current_partner_member(partner)):
+        flash('You do not have permission to manage billing.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
     if partner.billing_status == 'active':
         flash('You already have an active subscription. Use Manage Billing to change plans.', 'info')
         return redirect(url_for('partner.portal_dashboard'))
@@ -1505,6 +1823,9 @@ def portal_start_billing():
 @partner_login_required
 def portal_billing_portal():
     partner = _current_partner()
+    if not _member_can_manage_billing(_current_partner_member(partner)):
+        flash('You do not have permission to manage billing.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
     try:
         portal_session = create_partner_portal_session(partner)
         return redirect(portal_session.url, code=303)

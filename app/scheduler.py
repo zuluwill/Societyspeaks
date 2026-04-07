@@ -377,6 +377,19 @@ def init_scheduler(app):
                 logger.info("Processed one programme export job from queue")
 
 
+    @scheduler.scheduled_job('interval', minutes=1, id='process_partner_webhook_queue', max_instances=1, coalesce=True)
+    def process_partner_webhook_queue():
+        """Process queued partner webhook deliveries with retry backoff."""
+        with app.app_context():
+            try:
+                from app.partner.webhooks import process_pending_webhook_deliveries
+                processed = process_pending_webhook_deliveries(limit=100)
+                if processed:
+                    logger.info("Processed %s partner webhook deliveries", processed)
+            except Exception:
+                logger.exception("Unexpected error in process_partner_webhook_queue")
+
+
     @scheduler.scheduled_job('interval', minutes=5, id='mark_stale_programme_export_jobs', max_instances=1, coalesce=True)
     def mark_stale_programme_export_jobs_job():
         """Mark timed-out running programme export jobs as stale."""

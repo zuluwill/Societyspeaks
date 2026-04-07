@@ -282,12 +282,16 @@ paths:
             schema:
               type: object
               required:
-                - article_url
                 - title
               properties:
                 article_url:
                   type: string
                   format: uri
+                  description: Optional canonical article URL. Provide this, external_id, or both.
+                external_id:
+                  type: string
+                  maxLength: 128
+                  description: Optional stable partner-defined ID for non-article or internal CMS discussions.
                 title:
                   type: string
                   maxLength: 200
@@ -325,6 +329,12 @@ paths:
                     type: string
                   title:
                     type: string
+                  partner_article_url:
+                    type: string
+                    nullable: true
+                  external_id:
+                    type: string
+                    nullable: true
                   embed_url:
                     type: string
                   consensus_url:
@@ -340,7 +350,7 @@ paths:
                   statement_count:
                     type: integer
         '400':
-          description: Invalid request or missing excerpt/seed_statements
+          description: Invalid request, missing identifier (article_url|external_id), or missing excerpt/seed_statements
         '401':
           description: Missing or invalid API key
         '402':
@@ -391,6 +401,205 @@ paths:
           description: Missing or invalid API key
         '403':
           description: Browser Origin not allowed, partner inactive, or partner API disabled
+
+  /api/partner/discussions/by-external-id:
+    get:
+      summary: Find partner discussion by external ID
+      description: |
+        Returns a partner-owned discussion by exact `external_id`.
+        Requires portal-issued `X-API-Key`; server-to-server only (no browser `Origin`).
+      operationId: getPartnerDiscussionByExternalId
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: query
+          name: external_id
+          required: true
+          schema:
+            type: string
+            maxLength: 128
+        - in: query
+          name: env
+          schema:
+            type: string
+            enum: [test, live, all]
+          description: Optional env filter; defaults to key env.
+      responses:
+        '200':
+          description: Discussion found
+        '400':
+          description: Missing or invalid external_id
+        '401':
+          description: Missing or invalid API key
+        '403':
+          description: Browser Origin not allowed, partner inactive, API disabled, or wrong env key
+        '404':
+          description: No discussion found for this external_id
+
+  /api/partner/analytics/usage-export:
+    get:
+      summary: Export partner usage events
+      description: |
+        Export raw partner API usage events for reporting.
+        Requires portal-issued `X-API-Key`; server-to-server only.
+      operationId: exportPartnerUsage
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: query
+          name: days
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 365
+            default: 30
+          description: Export window in days
+        - in: query
+          name: env
+          schema:
+            type: string
+            enum: [test, live, all]
+            default: all
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [json, csv]
+            default: json
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+      responses:
+        '200':
+          description: Usage export (JSON payload or CSV attachment)
+        '400':
+          description: Invalid format or non-portal partner key
+        '401':
+          description: Missing or invalid API key
+
+  /api/partner/webhooks:
+    get:
+      summary: List partner webhook endpoints
+      description: |
+        Returns webhook endpoints configured for this partner account.
+        Requires portal-issued `X-API-Key`; server-to-server only.
+      operationId: listPartnerWebhooks
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Webhook endpoint list
+        '400':
+          description: Non-portal partner key
+        '401':
+          description: Missing or invalid API key
+    post:
+      summary: Create partner webhook endpoint
+      description: |
+        Creates a webhook endpoint and returns a signing secret once.
+        Requires portal-issued `X-API-Key`; server-to-server only.
+      operationId: createPartnerWebhook
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, event_types]
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: HTTPS webhook receiver URL
+                event_types:
+                  type: array
+                  items:
+                    type: string
+                    enum: [discussion.created, discussion.updated, consensus.updated, key.revoked, domain.verification_changed]
+      responses:
+        '201':
+          description: Endpoint created (includes signing_secret once)
+        '400':
+          description: Validation error
+        '401':
+          description: Missing or invalid API key
+
+  /api/partner/webhooks/{endpoint_id}:
+    patch:
+      summary: Update webhook endpoint
+      operationId: patchPartnerWebhook
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: endpoint_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [active, paused, disabled]
+                event_types:
+                  type: array
+                  items:
+                    type: string
+                    enum: [discussion.created, discussion.updated, consensus.updated, key.revoked, domain.verification_changed]
+      responses:
+        '200':
+          description: Endpoint updated
+        '404':
+          description: Endpoint not found
+    delete:
+      summary: Delete webhook endpoint
+      operationId: deletePartnerWebhook
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: endpoint_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Endpoint deleted
+        '404':
+          description: Endpoint not found
+
+  /api/partner/webhooks/{endpoint_id}/rotate-secret:
+    post:
+      summary: Rotate webhook signing secret
+      operationId: rotatePartnerWebhookSecret
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: endpoint_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Secret rotated (includes signing_secret once)
+        '404':
+          description: Endpoint not found
 
   /api/partner/discussions/{discussion_id}:
     patch:

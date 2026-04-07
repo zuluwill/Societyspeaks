@@ -23,6 +23,13 @@
       <p class="text-xs text-emerald-800 mt-2">Copy and store this key now. For security, it will not be shown again.</p>
     </div>
     {% endif %}
+    {% if new_webhook_secret %}
+    <div class="rounded-xl border border-violet-200 bg-violet-50 p-5 mb-6">
+      <p class="font-semibold text-violet-900 mb-2">Your new webhook signing secret (shown once)</p>
+      <div class="bg-white border border-violet-200 rounded-lg p-3 font-mono text-sm break-all">{{ new_webhook_secret }}</div>
+      <p class="text-xs text-violet-800 mt-2">Store this secret securely in your webhook receiver. It will not be shown again.</p>
+    </div>
+    {% endif %}
     {% if is_admin_preview %}
     <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div class="text-sm text-blue-900 font-medium">Admin preview mode (read-only): you are viewing this portal as the partner owner.</div>
@@ -125,7 +132,7 @@
         </p>
         {% endif %}
         <div class="flex flex-wrap gap-2">
-          {% if partner.billing_status != 'active' %}
+          {% if partner.billing_status != 'active' and can_manage_billing %}
           <div class="w-full mb-2">
             <p class="text-xs text-gray-500 mb-2">Choose a plan to go live:</p>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -149,10 +156,13 @@
             <p class="text-xs text-gray-400 mt-2">Need more? <a href="mailto:info@societyspeaks.io" class="text-blue-600 hover:underline">Contact us</a> for Enterprise.</p>
           </div>
           {% endif %}
-          {% if partner.stripe_customer_id %}
+          {% if partner.stripe_customer_id and can_manage_billing %}
           <a href="{{ url_for('partner.portal_billing_portal') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
             Manage billing
           </a>
+          {% endif %}
+          {% if not can_manage_billing %}
+          <p class="text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">Billing actions are restricted for your account role.</p>
           {% endif %}
         </div>
       </div>
@@ -240,7 +250,9 @@
       <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-xl font-semibold text-gray-900">Usage (last 30 days)</h2>
+          {% if can_view_analytics %}
           <a href="{{ url_for('partner.portal_usage_csv') }}" class="text-xs font-semibold text-blue-600 hover:underline">Download CSV</a>
+          {% endif %}
         </div>
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm text-gray-700 mb-5">
           <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">Creates</div><div class="text-lg font-semibold">{{ usage.get('create', 0) }}</div></div>
@@ -259,12 +271,16 @@
       <div id="domains-panel" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Domains</h2>
         <p class="text-sm text-gray-600 mb-3">Add your staging and production hostnames exactly (for example, <code>www.example.com</code>). Embeds load only on verified active domains.</p>
+        {% if can_manage_domains %}
         <form method="POST" action="{{ url_for('partner.portal_add_domain') }}" class="grid gap-3 sm:grid-cols-3 mb-4">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input name="domain" type="text" placeholder="example.com" class="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm">
           <select name="env" class="rounded-lg border border-gray-300 px-3 py-2 text-sm"><option value="test">Test</option><option value="live">Live</option></select>
           <button type="submit" class="sm:col-span-3 inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Add domain</button>
         </form>
+        {% else %}
+        <p class="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">Domain management is restricted for your account role.</p>
+        {% endif %}
         <div class="space-y-3">
           {% for domain in domains %}
           <div class="rounded-lg border border-gray-100 bg-gray-50 p-3">
@@ -278,11 +294,13 @@
               </span>
             </div>
             <div class="flex flex-wrap items-center gap-3 mt-2">
-              {% if domain.is_active and not domain.is_verified() %}
+              {% if domain.is_active and not domain.is_verified() and can_manage_domains %}
               <form method="POST" action="{{ url_for('partner.portal_verify_domain', domain_id=domain.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs font-semibold text-blue-600 hover:underline">Verify</button></form>
               {% endif %}
+              {% if can_manage_domains %}
               <form method="POST" action="{{ url_for('partner.portal_toggle_domain', domain_id=domain.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs font-semibold {{ 'text-amber-700' if domain.is_active else 'text-emerald-700' }} hover:underline">{{ 'Turn off' if domain.is_active else 'Turn on' }}</button></form>
               <form method="POST" action="{{ url_for('partner.portal_remove_domain', domain_id=domain.id) }}" data-confirm="Remove this domain?"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs font-semibold text-red-600 hover:underline">Remove</button></form>
+              {% endif %}
             </div>
             {% if domain.is_active and not domain.is_verified() %}
             <div class="text-xs text-gray-600 mt-2">
@@ -331,6 +349,64 @@
 
     <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-8">
       <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">Webhook callbacks</h2>
+        <span class="text-xs text-gray-500">Signed with HMAC-SHA256</span>
+      </div>
+      <p class="text-sm text-gray-600 mb-3">Receive lifecycle events without polling. Use HTTPS and verify the signature and event ID for idempotency.</p>
+      {% if can_manage_webhooks %}
+      <form method="POST" action="{{ url_for('partner.portal_create_webhook') }}" class="grid gap-3 mb-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input name="url" type="url" required placeholder="https://observer.example.com/webhooks/societyspeaks" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+        <div class="grid gap-2 sm:grid-cols-2">
+          {% for ev in all_webhook_events %}
+          <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" name="event_types" value="{{ ev }}" checked>
+            <span>{{ ev }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <button type="submit" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Add webhook endpoint</button>
+      </form>
+      {% else %}
+      <p class="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">Webhook management is restricted for your account role.</p>
+      {% endif %}
+
+      <div class="space-y-3">
+        {% for wh in webhooks %}
+        <div class="rounded-lg border border-gray-100 bg-gray-50 p-3">
+          <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <div class="text-sm font-semibold text-gray-900 break-all">{{ wh.url }}</div>
+              <div class="text-xs text-gray-500">Status: {{ wh.status|upper }} · Secret: ••••{{ wh.secret_last4 }}</div>
+              <div class="text-xs text-gray-500 mt-1">Events: {{ (wh.event_types or []) | join(', ') }}</div>
+            </div>
+            {% if can_manage_webhooks %}
+            <div class="flex flex-wrap items-center gap-3">
+              <form method="POST" action="{{ url_for('partner.portal_send_test_webhook', endpoint_id=wh.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-blue-600 hover:underline">Send test</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_rotate_webhook_secret', endpoint_id=wh.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-amber-700 hover:underline">Rotate secret</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_delete_webhook', endpoint_id=wh.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-red-600 hover:underline">Delete</button></form>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <p class="text-sm text-gray-500">No webhook endpoints configured.</p>
+        {% endfor %}
+      </div>
+      {% if recent_webhook_deliveries %}
+      <p class="text-xs text-gray-500 mt-4">Recent deliveries:</p>
+      <div class="mt-2 space-y-2">
+        {% for d in recent_webhook_deliveries[:8] %}
+        <div class="text-xs text-gray-600 bg-gray-50 border border-gray-100 rounded px-2 py-1">
+          {{ d.event_type }} · {{ d.status }} · attempts {{ d.attempt_count }}{% if d.last_http_status %} · HTTP {{ d.last_http_status }}{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+
+    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-8">
+      <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-semibold text-gray-900">Team access</h2>
         {% if current_member %}
         <span class="text-xs text-gray-500">Signed in as {{ current_member.email }} ({{ current_member.role|title }})</span>
@@ -354,6 +430,25 @@
             <form method="POST" action="{{ url_for('partner.portal_update_member_role', member_id=member.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><select name="role" class="auto-submit-select rounded border border-gray-300 px-2 py-1 text-xs"><option value="member" {{ 'selected' if member.role == 'member' else '' }}>Member</option><option value="admin" {{ 'selected' if member.role == 'admin' else '' }}>Admin</option></select></form>
             <form method="POST" action="{{ url_for('partner.portal_update_member_status', member_id=member.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="action" value="{{ 'disable' if member.status == 'active' else 'enable' }}"><button class="text-xs font-semibold {{ 'text-amber-700' if member.status == 'active' else 'text-emerald-700' }} hover:underline">{{ 'Disable' if member.status == 'active' else 'Enable' }}</button></form>
           </div>
+          <form method="POST" action="{{ url_for('partner.portal_update_member_permissions', member_id=member.id) }}" class="grid gap-1 text-xs text-gray-600 sm:grid-cols-3 mt-2">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% set p = member.effective_permissions or {} %}
+            {% for perm, label in [
+              ('keys.manage', 'Keys'),
+              ('discussions.manage', 'Discussions'),
+              ('analytics.view', 'Analytics'),
+              ('team.manage', 'Team'),
+              ('domains.manage', 'Domains'),
+              ('billing.manage', 'Billing'),
+              ('webhooks.manage', 'Webhooks')
+            ] %}
+            <label class="inline-flex items-center gap-2">
+              <input type="checkbox" name="{{ perm }}" value="1" {% if p.get(perm) %}checked{% endif %}>
+              <span>{{ label }}</span>
+            </label>
+            {% endfor %}
+            <button class="sm:col-span-3 inline-flex items-center rounded-md bg-white px-2 py-1 text-xs font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 w-fit">Save permissions</button>
+          </form>
           {% endif %}
         </div>
         {% else %}

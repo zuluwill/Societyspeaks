@@ -46,6 +46,9 @@
             {% endif %}
           </div>
           <h1 class="text-2xl font-bold text-gray-900 leading-snug">{{ discussion.title }}</h1>
+          {% if discussion.partner_external_id %}
+            <p class="text-xs text-gray-500 mt-1">External ID: <span class="font-mono">{{ discussion.partner_external_id }}</span></p>
+          {% endif %}
           {% if discussion.partner_article_url %}
             <a href="{{ discussion.partner_article_url }}" target="_blank" rel="noopener"
                class="text-sm text-blue-600 hover:underline break-all">{{ discussion.partner_article_url }}</a>

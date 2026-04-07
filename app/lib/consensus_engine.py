@@ -1234,7 +1234,7 @@ def save_consensus_analysis(discussion_id, results, db):
     """
     Save consensus analysis results to database
     """
-    from app.models import ConsensusAnalysis
+    from app.models import ConsensusAnalysis, Discussion
     
     analysis = ConsensusAnalysis(
         discussion_id=discussion_id,
@@ -1253,6 +1253,19 @@ def save_consensus_analysis(discussion_id, results, db):
         invalidate_partner_snapshot_cache(discussion_id)
     except Exception:
         pass
+
+    try:
+        discussion = db.session.get(Discussion, discussion_id)
+        if discussion and discussion.partner_fk_id:
+            from app.partner.webhooks import emit_partner_event
+            from app.partner.events import EVENT_CONSENSUS_UPDATED, serialize_consensus_payload
+            emit_partner_event(
+                partner_id=discussion.partner_fk_id,
+                event_type=EVENT_CONSENSUS_UPDATED,
+                data=serialize_consensus_payload(discussion, analysis),
+            )
+    except Exception:
+        logger.exception("Failed to emit consensus.updated webhook event for discussion %s", discussion_id)
     
     logger.info(f"Saved consensus analysis for discussion {discussion_id}")
     return analysis

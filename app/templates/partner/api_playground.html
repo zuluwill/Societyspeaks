@@ -21,6 +21,12 @@
             Write/management endpoints are server-to-server only.
             Get test keys in the <a href="{{ url_for('partner.portal_signup') }}" class="text-blue-600 hover:underline">Partner Portal</a>.
           </p>
+          <p class="text-sm text-gray-600">
+            Browser-safe in this playground: <code>GET /api/discussions/by-article-url</code>, <code>GET /api/discussions/{id}/snapshot</code>, and <code>GET /api/oembed</code>.
+            Use backend tools (curl/Postman/server code) for authenticated endpoints such as
+            <code>/api/partner/discussions</code>, <code>/api/partner/discussions/by-external-id</code>,
+            <code>/api/partner/analytics/usage-export</code>, and <code>/api/partner/webhooks</code>.
+          </p>
           <div class="flex flex-wrap gap-3">
             <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
               Read API Docs
@@ -36,7 +42,7 @@
             <ol class="mt-3 space-y-2 text-sm text-gray-700">
               <li>Choose an endpoint on the left.</li>
               <li>Click <strong>Try it out</strong> and set parameters.</li>
-              <li>Use this page for lookup/snapshot/oEmbed. Test POST/PATCH partner endpoints from your backend tools (curl/Postman).</li>
+              <li>Use this page for lookup/snapshot/oEmbed only. Test authenticated partner endpoints from backend tools (curl/Postman).</li>
             </ol>
           </div>
         </div>
