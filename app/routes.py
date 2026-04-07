@@ -6,8 +6,13 @@ from app import db, limiter
 from datetime import datetime, date
 from slugify import slugify
 from app.seo import generate_sitemap
-from replit.object_storage import Client
-from replit.object_storage.errors import ObjectNotFoundError
+try:
+    from replit.object_storage import Client
+    from replit.object_storage.errors import ObjectNotFoundError
+except (ImportError, ModuleNotFoundError, AttributeError):
+    Client = None
+    class ObjectNotFoundError(Exception):
+        pass
 from sqlalchemy.orm import joinedload
 from app.lib.time import utcnow_naive
 import io
@@ -15,7 +20,7 @@ import mimetypes
 import os
 
 main_bp = Blueprint('main', __name__)
-asset_client = Client()
+asset_client = Client() if Client is not None else None
 
 def init_routes(app):
     app.register_blueprint(main_bp)

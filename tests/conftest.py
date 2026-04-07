@@ -20,6 +20,7 @@ os.environ.setdefault('DATABASE_URL', 'sqlite:///:memory:')
 _replit_mock = MagicMock()
 sys.modules.setdefault('replit', _replit_mock)
 sys.modules.setdefault('replit.object_storage', _replit_mock)
+sys.modules.setdefault('replit.object_storage.errors', _replit_mock)
 
 
 # SQLite compatibility for tests that use in-memory DB:
@@ -48,10 +49,16 @@ def app():
     os.environ['FLASK_ENV'] = 'development'
 
     try:
-        from app import create_app
+        from app import create_app, cache
         app = create_app()
         app.config['TESTING'] = True
         app.config['WTF_CSRF_ENABLED'] = False
+        # Flask-Caching's SimpleCache is a module-level singleton whose internal
+        # storage is NOT reset when init_app() is called with a new app instance.
+        # Explicitly clear it so cached snapshots/lookups from a prior test do not
+        # bleed into the next one.
+        with app.app_context():
+            cache.clear()
     finally:
         # Always restore Config and environment, even if create_app() raises
         Config.SQLALCHEMY_DATABASE_URI = _orig_uri

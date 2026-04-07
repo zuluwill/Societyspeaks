@@ -495,7 +495,7 @@ class TestCreateDiscussion:
         )
         assert resp.status_code == 401
 
-    def test_missing_body_returns_400(self, client, app):
+    def test_missing_body_returns_400(self, client, app, partner):
         # Use a legacy config key for simplicity
         app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
@@ -506,7 +506,7 @@ class TestCreateDiscussion:
         )
         assert resp.status_code == 400
 
-    def test_missing_article_url_returns_400(self, client, app):
+    def test_missing_article_url_returns_400(self, client, app, partner):
         app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         resp = client.post(
@@ -516,7 +516,7 @@ class TestCreateDiscussion:
         )
         assert resp.status_code == 400
 
-    def test_missing_title_returns_400(self, client, app):
+    def test_missing_title_returns_400(self, client, app, partner):
         app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         resp = client.post(
@@ -526,7 +526,7 @@ class TestCreateDiscussion:
         )
         assert resp.status_code == 400
 
-    def test_missing_content_returns_400(self, client, app):
+    def test_missing_content_returns_400(self, client, app, partner):
         """Must provide either excerpt or seed_statements."""
         app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
@@ -542,7 +542,7 @@ class TestCreateDiscussion:
         data = resp.get_json()
         assert data['error'] == 'missing_content'
 
-    def test_same_title_different_urls_generate_unique_slugs(self, client, app):
+    def test_same_title_different_urls_generate_unique_slugs(self, client, app, partner):
         """Same title across different URLs should not fail on slug collisions."""
         app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
@@ -569,7 +569,7 @@ class TestCreateDiscussion:
         assert first_data['discussion_id'] != second_data['discussion_id']
         assert first_data['slug'] != second_data['slug']
 
-    def test_idempotency_key_retry_returns_same_discussion(self, client, app):
+    def test_idempotency_key_retry_returns_same_discussion(self, client, app, partner):
         app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         payload = {
@@ -589,7 +589,7 @@ class TestCreateDiscussion:
         second_data = second.get_json()
         assert first_data['discussion_id'] == second_data['discussion_id']
 
-    def test_idempotency_key_reuse_with_different_payload_returns_409(self, client, app):
+    def test_idempotency_key_reuse_with_different_payload_returns_409(self, client, app, partner):
         app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         headers = {'X-API-Key': 'test-key', 'Idempotency-Key': 'idem-456'}
