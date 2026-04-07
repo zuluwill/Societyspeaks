@@ -10,7 +10,10 @@
         <h1 class="text-3xl font-bold text-gray-900">Partner Portal</h1>
         <p class="text-gray-600">Welcome, {{ partner.name }}.</p>
       </div>
-      <a href="{{ url_for('partner.portal_logout') }}" class="text-sm text-gray-600 hover:text-gray-900">Sign out</a>
+      <div class="flex flex-wrap items-center gap-3">
+        <a href="{{ url_for('partner.portal_discussions') }}" class="text-sm font-semibold text-blue-600 hover:underline">Discussions</a>
+        <a href="{{ url_for('partner.portal_logout') }}" class="text-sm text-gray-600 hover:text-gray-900">Sign out</a>
+      </div>
     </div>
 
     {% if new_key %}
@@ -45,7 +48,7 @@
           </li>
           <li>
             2) Run API calls from your backend
-            {% if partner_health.counts.create > 0 or partner_health.counts.lookup > 0 %}
+            {% if partner_health.counts.create > 0 or partner_health.counts.lookup > 0 or partner_health.counts.management > 0 %}
               <span class="ml-2 text-emerald-600 font-semibold">Ready</span>
             {% else %}
               <span class="ml-2 text-gray-400">Pending</span>
@@ -86,13 +89,21 @@
           </span>
           <span class="text-sm text-gray-500">&middot; Billing: <strong>{{ partner.billing_status|default('inactive') }}</strong></span>
         </div>
-        <p class="text-xs text-gray-500 mb-3">
+        <p class="text-xs text-gray-500 mb-2">
           {% if partner.stripe_customer_id %}
             Stripe customer linked. Use "Manage billing" for invoices and payment methods.
           {% else %}
             No Stripe customer yet. Start a plan checkout to unlock billing controls.
           {% endif %}
         </p>
+        {% if partner_quota %}
+        <p class="text-xs text-gray-700 mb-3 rounded-lg bg-gray-50 border border-gray-100 px-2 py-2">
+          <strong>Discussion quota:</strong>
+          Live this month: {{ partner_quota.live_used_month }}
+          {% if partner_quota.live_limit is not none %} / {{ partner_quota.live_limit }}{% else %} (no cap){% endif %}
+          · Test (lifetime): {{ partner_quota.test_used_lifetime }}
+        </p>
+        {% endif %}
         <div class="flex flex-wrap gap-2">
           {% if partner.billing_status != 'active' %}
           <div class="w-full mb-2">
@@ -199,10 +210,15 @@
           <h2 class="text-xl font-semibold text-gray-900">Usage (last 30 days)</h2>
           <a href="{{ url_for('partner.portal_usage_csv') }}" class="text-xs font-semibold text-blue-600 hover:underline">Download CSV</a>
         </div>
-        <div class="grid gap-3 sm:grid-cols-3 text-sm text-gray-700">
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 text-sm text-gray-700 mb-5">
           <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">Creates</div><div class="text-lg font-semibold">{{ usage.get('create', 0) }}</div></div>
           <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">Lookups</div><div class="text-lg font-semibold">{{ usage.get('lookup', 0) }}</div></div>
           <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">Snapshots</div><div class="text-lg font-semibold">{{ usage.get('snapshot', 0) }}</div></div>
+          <div class="rounded-lg bg-gray-50 p-3"><div class="text-xs text-gray-500">Management API</div><div class="text-lg font-semibold">{{ partner_health.counts.management }}</div><div class="text-xs text-gray-400 mt-1">List, patch, statements, flags</div></div>
+        </div>
+        <div>
+          <p class="text-xs text-gray-500 mb-2">Daily API calls — last 14 days</p>
+          <canvas id="usageDailyChart" height="80"></canvas>
         </div>
       </div>
     </div>
@@ -249,17 +265,21 @@
 
       <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">API keys</h2>
+        {% if can_manage_keys %}
         <div class="flex flex-wrap gap-2 mb-4">
           <form method="POST" action="{{ url_for('partner.portal_create_key') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="env" value="test"><button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">New test key</button></form>
           {% if partner.billing_status == 'active' %}
           <form method="POST" action="{{ url_for('partner.portal_create_key') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="env" value="live"><button class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">New live key</button></form>
           {% endif %}
         </div>
+        {% else %}
+        <p class="text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 mb-4">Key management is restricted to owners and admins.</p>
+        {% endif %}
         <div class="space-y-3">
           {% for key in keys %}
           <div class="rounded-lg border border-gray-100 bg-gray-50 p-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <div><div class="font-mono text-sm text-gray-900 break-all">{{ key.key_prefix }}••••{{ key.key_last4 }}</div><div class="text-xs text-gray-500">{{ key.env|upper }} · {{ key.status|upper }}</div></div>
-            {% if key.status == 'active' %}
+            {% if key.status == 'active' and can_manage_keys %}
             <div class="flex items-center gap-3">
               <form method="POST" action="{{ url_for('partner.portal_rotate_key', key_id=key.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-blue-600 hover:underline">Rotate</button></form>
               <form method="POST" action="{{ url_for('partner.portal_revoke_key', key_id=key.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-red-600 hover:underline">Revoke</button></form>
@@ -307,4 +327,43 @@
     </div>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var labels = {{ usage_daily | map(attribute='label') | list | tojson }};
+  var counts = {{ usage_daily | map(attribute='count') | list | tojson }};
+  var ctx = document.getElementById('usageDailyChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: counts,
+        backgroundColor: 'rgba(59, 130, 246, 0.6)',
+        borderColor: 'rgba(59, 130, 246, 1)',
+        borderWidth: 1,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: function(items) { return items[0].label; },
+            label: function(item) { return item.raw + ' API call' + (item.raw !== 1 ? 's' : ''); }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { beginAtZero: true, ticks: { precision: 0, font: { size: 10 } } }
+      }
+    }
+  });
+}());
+</script>
 {% endblock %}

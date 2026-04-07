@@ -36,7 +36,7 @@ Schema:
 }
 
 Revision ID: h2i3j4k5l6m7
-Revises: g1h2i3j4k5l6
+Revises: 2a3b4c5d6e7f
 Create Date: 2026-01-11
 
 """
@@ -47,7 +47,7 @@ from sqlalchemy import inspect
 
 # revision identifiers, used by Alembic.
 revision = 'h2i3j4k5l6m7'
-down_revision = 'g1h2i3j4k5l6'
+down_revision = '2a3b4c5d6e7f'
 branch_labels = None
 depends_on = None
 

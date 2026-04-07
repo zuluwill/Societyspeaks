@@ -29,10 +29,14 @@ from app.lib.auth_utils import (
     PARTNER_SIGNUP_RATE_LIMIT,
     PARTNER_LOGIN_RATE_LIMIT,
 )
+from sqlalchemy import desc, func
+
 from app.models import (
-    Partner, PartnerDomain, PartnerApiKey, PartnerUsageEvent, PartnerMember, generate_slug
+    Partner, PartnerDomain, PartnerApiKey, PartnerUsageEvent, PartnerMember, generate_slug,
+    Discussion, Statement, StatementVote, ConsensusAnalysis,
 )
 from app.billing.service import create_partner_checkout_session, create_partner_portal_session, get_stripe
+from app.api.utils import invalidate_partner_snapshot_cache
 from app.admin.audit import write_admin_audit_event
 from app.lib.time import utcnow_naive
 
@@ -192,7 +196,21 @@ def _current_partner_member(partner=None):
 
 
 def _member_can_manage_team(member):
+    """Owners and admins can manage team membership and API keys."""
     return bool(member and member.role in ('owner', 'admin'))
+
+
+def _member_can_manage_keys(member):
+    """Alias — key management requires the same roles as team management."""
+    return _member_can_manage_team(member)
+
+
+def _portal_discussion_belongs_clause(partner):
+    """SQL filter for discussions owned by this partner (FK or legacy slug)."""
+    return db.or_(
+        Discussion.partner_fk_id == partner.id,
+        Discussion.partner_id == partner.slug,
+    )
 
 
 def _has_valid_admin_preview(partner):
@@ -243,6 +261,15 @@ def _compute_partner_health(partner, keys, domains, usage):
     create_count = int(usage.get('create', 0))
     lookup_count = int(usage.get('lookup', 0))
     snapshot_count = int(usage.get('snapshot', 0))
+    management_count = sum(
+        int(usage.get(et, 0) or 0)
+        for et in (
+            'list_discussions',
+            'list_flags',
+            'patch_discussion',
+            'add_statements',
+        )
+    )
 
     checks = [
         {
@@ -260,8 +287,9 @@ def _compute_partner_health(partner, keys, domains, usage):
         {
             'id': 'api_activity',
             'label': 'API activity detected',
-            'ok': (create_count + lookup_count) > 0,
-            'hint': 'Run one lookup or create call from your backend.'
+            # Snapshots omitted: read-only embed traffic, not editorial/backend integration.
+            'ok': (create_count + lookup_count + management_count) > 0,
+            'hint': 'Run one lookup, create, or management API call from your backend.'
         },
         {
             'id': 'billing',
@@ -277,7 +305,34 @@ def _compute_partner_health(partner, keys, domains, usage):
             'create': create_count,
             'lookup': lookup_count,
             'snapshot': snapshot_count,
+            'management': management_count,
         }
+    }
+
+
+def _partner_discussion_quota(partner):
+    """Live discussions this calendar month vs tier cap; test lifetime count."""
+    from datetime import datetime, timezone
+
+    tier_limits = current_app.config.get('PARTNER_TIER_LIMITS', {})
+    tier = getattr(partner, 'tier', 'free') or 'free'
+    limit = tier_limits.get(tier, 25)
+    month_start = datetime.now(timezone.utc).replace(
+        tzinfo=None, day=1, hour=0, minute=0, second=0, microsecond=0
+    )
+    live_used = Discussion.query.filter(
+        Discussion.partner_fk_id == partner.id,
+        Discussion.partner_env == 'live',
+        Discussion.created_at >= month_start,
+    ).count()
+    test_used = Discussion.query.filter_by(
+        partner_fk_id=partner.id, partner_env='test'
+    ).count()
+    return {
+        'tier': tier,
+        'live_limit': limit,
+        'live_used_month': live_used,
+        'test_used_lifetime': test_used,
     }
 
 
@@ -550,9 +605,13 @@ def portal_login():
             flash('This account has been deactivated. Please contact support.', 'danger')
             return render_template('partner/portal/login.html')
 
-        # Successful login - clear failure tracking
-        session.pop(lockout_key, None)
-        session.pop(f'{lockout_key}:until', None)
+        # Capture redirect target before clearing the session.
+        next_url = request.form.get('next') or request.args.get('next')
+
+        # Regenerate session to prevent session-fixation attacks.
+        # Clear all pre-login state (lockout counters, DNS check cache, etc.)
+        # before writing the authenticated partner/member IDs.
+        session.clear()
 
         owner_member = _get_or_create_owner_member(partner)
         if member and member.partner_id == partner.id and member.status == 'active':
@@ -560,12 +619,15 @@ def portal_login():
         else:
             active_member = owner_member
         active_member.last_login_at = utcnow_naive()
-        db.session.commit()
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('portal_login: failed to update last_login_at')
 
         session['partner_portal_id'] = partner.id
         session['partner_member_id'] = active_member.id
         flash('Welcome back.', 'success')
-        next_url = request.form.get('next') or request.args.get('next')
         return redirect(_safe_portal_next_url(next_url))
 
     return render_template('partner/portal/login.html', next_url=request.args.get('next'))
@@ -656,8 +718,6 @@ def portal_logout():
 @partner_bp.route('/portal/dashboard')
 @partner_login_required
 def portal_dashboard():
-    from sqlalchemy import func
-
     partner = _current_partner()
     current_member = _current_partner_member(partner)
     domains, keys, has_verified_test_domain, has_test_key, has_live_key = _build_partner_portal_context(partner)
@@ -694,9 +754,11 @@ def portal_dashboard():
         count = daily_map.get(day.isoformat(), 0)
         usage_daily.append({'label': day.strftime('%b %d'), 'count': count})
     usage_max = max([d['count'] for d in usage_daily] or [0])
+    partner_quota = _partner_discussion_quota(partner)
     return render_template(
         'partner/portal/dashboard.html',
         partner=partner,
+        partner_quota=partner_quota,
         domains=domains,
         keys=keys,
         new_key=new_key,
@@ -706,6 +768,7 @@ def portal_dashboard():
         is_admin_preview=_is_admin_preview(partner),
         current_member=current_member,
         can_manage_team=_member_can_manage_team(current_member),
+        can_manage_keys=_member_can_manage_keys(current_member),
         team_members=team_members,
         partner_health=partner_health,
         last_health_check=last_health_check,
@@ -715,6 +778,175 @@ def portal_dashboard():
         usage_max=usage_max,
         dns_checks=dns_checks,
         base_url=_get_base_url()
+    )
+
+
+@partner_bp.route('/portal/discussions')
+@partner_login_required
+def portal_discussions():
+    partner = _current_partner()
+
+    env_filter = (request.args.get('env') or 'all').lower()
+    if env_filter not in ('test', 'live', 'all'):
+        env_filter = 'all'
+    status_filter = (request.args.get('status') or 'all').lower()
+    if status_filter not in ('open', 'closed', 'all'):
+        status_filter = 'all'
+    try:
+        page = max(1, int(request.args.get('page', 1)))
+    except (TypeError, ValueError):
+        page = 1
+
+    q = Discussion.query.filter(_portal_discussion_belongs_clause(partner))
+    if env_filter != 'all':
+        q = q.filter(Discussion.partner_env == env_filter)
+    if status_filter == 'open':
+        q = q.filter(Discussion.is_closed == False)  # noqa: E712
+    elif status_filter == 'closed':
+        q = q.filter(Discussion.is_closed == True)  # noqa: E712
+
+    pagination = q.order_by(Discussion.created_at.desc()).paginate(page=page, per_page=25, error_out=False)
+    discussions = pagination.items
+
+    d_ids = [d.id for d in discussions]
+    vote_counts = {}
+    if d_ids:
+        rows = (
+            db.session.query(StatementVote.discussion_id, func.count(StatementVote.id))
+            .filter(StatementVote.discussion_id.in_(d_ids))
+            .group_by(StatementVote.discussion_id)
+            .all()
+        )
+        vote_counts = {int(r[0]): int(r[1]) for r in rows}
+
+    base = _get_base_url()
+    can_edit = _member_can_manage_team(_current_partner_member(partner)) and not _is_admin_preview(partner)
+
+    # Batch-fetch key info for audit column — scoped to this partner in SQL (defence in depth)
+    key_ids = [d.created_by_key_id for d in discussions if d.created_by_key_id]
+    key_map = {}
+    if key_ids:
+        keys = PartnerApiKey.query.filter(
+            PartnerApiKey.id.in_(key_ids),
+            PartnerApiKey.partner_id == partner.id,
+        ).all()
+        key_map = {k.id: k for k in keys}
+
+    rows_out = []
+    for d in discussions:
+        key_rec = key_map.get(d.created_by_key_id) if d.created_by_key_id else None
+        rows_out.append({
+            'discussion': d,
+            'vote_count': vote_counts.get(d.id, 0),
+            'embed_url': f"{base}/discussions/{d.id}/embed?ref={partner.slug}",
+            'consensus_url': f"{base}/discussions/{d.id}/{d.slug}/consensus?ref={partner.slug}",
+            'key_label': f"••••{key_rec.key_last4}" if key_rec else None,
+        })
+
+    return render_template(
+        'partner/portal/discussions.html',
+        partner=partner,
+        rows=rows_out,
+        pagination=pagination,
+        env_filter=env_filter,
+        status_filter=status_filter,
+        partner_quota=_partner_discussion_quota(partner),
+        base_url=base,
+        can_edit=can_edit,
+        is_admin_preview=_is_admin_preview(partner),
+    )
+
+
+@partner_bp.route('/portal/discussions/<int:discussion_id>/toggle-closed', methods=['POST'])
+@partner_login_required
+def portal_toggle_discussion_closed(discussion_id):
+    """Allow admin/owner to open or close a discussion from the portal."""
+    partner = _current_partner()
+    if not _member_can_manage_team(_current_partner_member(partner)):
+        flash('Only owners and admins can open or close discussions.', 'warning')
+        return redirect(url_for('partner.portal_discussions'))
+
+    if _is_admin_preview(partner):
+        flash('Admin preview is read-only.', 'warning')
+        return redirect(url_for('partner.portal_discussions'))
+
+    discussion = Discussion.query.filter(
+        Discussion.id == discussion_id,
+        _portal_discussion_belongs_clause(partner),
+    ).first_or_404()
+
+    discussion.is_closed = not discussion.is_closed
+    try:
+        db.session.commit()
+        invalidate_partner_snapshot_cache(discussion_id)
+        action = 'closed' if discussion.is_closed else 'reopened'
+        flash(f'Discussion #{discussion_id} {action}.', 'success')
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to toggle discussion closed state")
+        flash('An error occurred. Please try again.', 'danger')
+
+    return redirect(url_for('partner.portal_discussions',
+                            env=request.args.get('env', 'all'),
+                            status=request.args.get('status', 'all'),
+                            page=request.args.get('page', 1)))
+
+
+@partner_bp.route('/portal/discussions/<int:discussion_id>')
+@partner_login_required
+def portal_discussion_detail(discussion_id):
+    """Per-discussion analytics: statement vote breakdown, consensus status, audit info."""
+    partner = _current_partner()
+    discussion = Discussion.query.filter(
+        Discussion.id == discussion_id,
+        _portal_discussion_belongs_clause(partner),
+    ).first_or_404()
+
+    vote_total = (
+        Statement.vote_count_agree
+        + Statement.vote_count_disagree
+        + Statement.vote_count_unsure
+    )
+    statements = (
+        Statement.query
+        .filter_by(discussion_id=discussion_id, is_deleted=False)
+        .filter(Statement.mod_status >= 0)
+        .order_by(desc(vote_total), Statement.id)
+        .all()
+    )
+
+    total_votes = sum(s.total_votes for s in statements)
+
+    latest_consensus = ConsensusAnalysis.query.filter_by(
+        discussion_id=discussion_id
+    ).order_by(ConsensusAnalysis.created_at.desc()).first()
+
+    key_info = None
+    if discussion.created_by_key_id:
+        key_record = db.session.get(PartnerApiKey, discussion.created_by_key_id)
+        if key_record and key_record.partner_id == partner.id:
+            key_info = {
+                'prefix': key_record.key_prefix or '',
+                'last4': key_record.key_last4 or '',
+                'env': key_record.env,
+                'status': key_record.status,
+            }
+
+    base = _get_base_url()
+    can_edit = _member_can_manage_team(_current_partner_member(partner)) and not _is_admin_preview(partner)
+
+    return render_template(
+        'partner/portal/discussion_detail.html',
+        partner=partner,
+        discussion=discussion,
+        statements=statements,
+        total_votes=total_votes,
+        latest_consensus=latest_consensus,
+        key_info=key_info,
+        embed_url=f"{base}/discussions/{discussion.id}/embed?ref={partner.slug}",
+        consensus_url=f"{base}/discussions/{discussion.id}/{discussion.slug}/consensus?ref={partner.slug}",
+        can_edit=can_edit,
+        is_admin_preview=_is_admin_preview(partner),
     )
 
 
@@ -766,7 +998,6 @@ def portal_health_check():
     partner = _current_partner()
     domains, keys, _, _, _ = _build_partner_portal_context(partner)
 
-    from sqlalchemy import func
     since = utcnow_naive() - timedelta(days=30)
     usage_rows = PartnerUsageEvent.query.filter(
         PartnerUsageEvent.partner_id == partner.id,
@@ -788,7 +1019,6 @@ def portal_health_check():
 @limiter.limit("10 per minute")
 @partner_login_required
 def portal_usage_csv():
-    from sqlalchemy import func
     import csv
     from io import StringIO
 
@@ -1147,8 +1377,13 @@ def portal_verify_domain(domain_id):
 
     if verified:
         domain.verified_at = utcnow_naive()
-        db.session.commit()
-        flash('Domain verified successfully.', 'success')
+        try:
+            db.session.commit()
+            flash('Domain verified successfully.', 'success')
+        except Exception:
+            db.session.rollback()
+            current_app.logger.exception('portal_verify_domain: failed to save verified_at')
+            flash('Domain check passed but could not be saved. Please try again.', 'danger')
     else:
         if details.get('error'):
             flash('Verification failed. DNS lookup error; check your DNS provider and try again.', 'danger')
@@ -1161,6 +1396,9 @@ def portal_verify_domain(domain_id):
 @partner_login_required
 def portal_create_key():
     partner = _current_partner()
+    if not _member_can_manage_keys(_current_partner_member(partner)):
+        flash('Only owners and admins can create API keys.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
     env = _validate_env(request.form.get('env', 'test'))
 
     if env == 'live' and partner.billing_status != 'active':
@@ -1192,6 +1430,9 @@ def portal_create_key():
 @partner_login_required
 def portal_revoke_key(key_id):
     partner = _current_partner()
+    if not _member_can_manage_keys(_current_partner_member(partner)):
+        flash('Only owners and admins can revoke API keys.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
     key = PartnerApiKey.query.filter_by(id=key_id, partner_id=partner.id).first_or_404()
     key.status = 'revoked'
     try:
@@ -1209,6 +1450,9 @@ def portal_revoke_key(key_id):
 @partner_login_required
 def portal_rotate_key(key_id):
     partner = _current_partner()
+    if not _member_can_manage_keys(_current_partner_member(partner)):
+        flash('Only owners and admins can rotate API keys.', 'warning')
+        return redirect(url_for('partner.portal_dashboard'))
     key = PartnerApiKey.query.filter_by(id=key_id, partner_id=partner.id).first_or_404()
     if key.status != 'active':
         flash('Only active keys can be rotated.', 'warning')

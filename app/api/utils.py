@@ -31,6 +31,30 @@ def sanitize_partner_ref(value: Optional[str]) -> Optional[str]:
     return cleaned or None
 
 
+def partner_ref_is_disabled(ref: Optional[str]) -> bool:
+    """
+    True if embed/API should treat this partner ref as disabled.
+
+    Combines DISABLED_PARTNER_REFS (env) with Partner.embed_disabled (database).
+    """
+    ref_norm = sanitize_partner_ref(ref)
+    if not ref_norm:
+        return False
+    disabled = current_app.config.get('DISABLED_PARTNER_REFS') or []
+    if not isinstance(disabled, list):
+        disabled = []
+    if ref_norm in disabled:
+        return True
+    try:
+        from app.models import Partner
+        row = Partner.query.filter_by(slug=ref_norm).first()
+        if row and getattr(row, 'embed_disabled', False):
+            return True
+    except Exception:
+        logger.debug('partner embed_disabled lookup failed', exc_info=True)
+    return False
+
+
 def get_rate_limit_key():
     """
     Generate rate limit key using IP and partner ref.
@@ -317,9 +341,11 @@ def track_partner_event(event_name: str, properties: Optional[dict] = None):
         logger.warning(f"PostHog tracking error for {event_name}: {e}")
 
 
-def record_partner_usage(partner_id: str, env: str, event_type: str, quantity: int = 1):
+def record_partner_usage(partner_slug: str, env: str, event_type: str, quantity: int = 1):
     """
     Record partner usage events for internal reporting.
+
+    partner_slug: the Partner.slug string (not the numeric Partner.id).
 
     Uses after_this_request to commit usage events after the main response
     is sent, avoiding mid-request commits that could interfere with the
@@ -330,7 +356,7 @@ def record_partner_usage(partner_id: str, env: str, event_type: str, quantity: i
         from app.models import Partner, PartnerUsageEvent
         from app import db
 
-        partner = Partner.query.filter_by(slug=partner_id).first()
+        partner = Partner.query.filter_by(slug=partner_slug).first()
         if not partner:
             return
 

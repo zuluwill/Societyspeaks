@@ -23,25 +23,79 @@
     <h2 class="text-xl font-semibold mb-4">Organizations</h2>
     <div class="space-y-3">
       {% for partner in partners %}
-      <div class="border rounded-lg p-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-center">
-        <div class="min-w-0">
-          <div class="font-semibold text-gray-900">{{ partner.name }}</div>
-          <div class="text-sm text-gray-600 break-all">{{ partner.contact_email }} · {{ partner.slug }}</div>
+      <div class="border rounded-lg p-4 space-y-3">
+        <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+          <div class="min-w-0">
+            <div class="font-semibold text-gray-900">{{ partner.name }}</div>
+            <div class="text-sm text-gray-600 break-all">{{ partner.contact_email }} · {{ partner.slug }}</div>
+            {% if partner.embed_disabled %}
+            <div class="mt-1 text-xs font-semibold text-red-700">Embed/API disabled (DB kill switch)</div>
+            {% endif %}
+          </div>
+          <form method="POST" action="{{ url_for('admin.preview_partner_portal', partner_id=partner.id) }}" class="justify-self-start lg:justify-self-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-xs font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+              View portal as partner (read-only)
+            </button>
+          </form>
         </div>
-        <div class="text-sm text-gray-600 break-words">
-          Billing: <strong>{{ partner.billing_status }}</strong>
-          <span class="mx-1">·</span>
-          Tier: <strong>{{ partner.tier }}</strong>
-          <span class="mx-1">·</span>
-          Team: <strong>{{ member_counts.get(partner.id, 0) }}</strong>
-          <span class="mx-1">·</span>
-          Creates: <strong>{{ usage_by_partner.get(partner.id, {}).get('create', 0) }}</strong>
+        <div class="text-sm text-gray-600 flex flex-wrap gap-x-3 gap-y-1">
+          <span>Billing: <strong>{{ partner.billing_status }}</strong></span>
+          <span>Tier: <strong>{{ partner.tier }}</strong></span>
+          <span>Team: <strong>{{ member_counts.get(partner.id, 0) }}</strong></span>
+          <span>Creates: <strong>{{ usage_by_partner.get(partner.id, {}).get('create', 0) }}</strong></span>
+          {% if partner.stripe_customer_id %}
+          <span class="font-mono text-xs text-gray-400">{{ partner.stripe_customer_id }}</span>
+          {% endif %}
+          {% if partner.stripe_subscription_id %}
+          <span class="font-mono text-xs text-gray-400">{{ partner.stripe_subscription_id }}</span>
+          {% endif %}
         </div>
-        <form method="POST" action="{{ url_for('admin.preview_partner_portal', partner_id=partner.id) }}" class="justify-self-start lg:justify-self-end">
+        <form method="POST" action="{{ url_for('admin.admin_partner_update', partner_id=partner.id) }}" class="grid gap-2 sm:grid-cols-2 lg:grid-cols-6 items-end text-xs">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-xs font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-            View portal as partner (read-only)
-          </button>
+          <div>
+            <label class="block text-gray-500 mb-1">Tier</label>
+            <select name="tier" class="w-full rounded border border-gray-300 px-2 py-1">
+              {% for t in ['free','starter','professional','enterprise'] %}
+              <option value="{{ t }}" {{ 'selected' if partner.tier == t else '' }}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-500 mb-1">Status</label>
+            <select name="status" class="w-full rounded border border-gray-300 px-2 py-1">
+              {% for s in ['pending','active','suspended'] %}
+              <option value="{{ s }}" {{ 'selected' if partner.status == s else '' }}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label class="block text-gray-500 mb-1">Billing</label>
+            <select name="billing_status" class="w-full rounded border border-gray-300 px-2 py-1">
+              {% for b in ['inactive','active'] %}
+              <option value="{{ b }}" {{ 'selected' if partner.billing_status == b else '' }}>{{ b }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="checkbox" name="embed_disabled" value="1" id="emb-{{ partner.id }}" class="rounded border-gray-300" {{ 'checked' if partner.embed_disabled else '' }}>
+            <label for="emb-{{ partner.id }}" class="text-gray-700">Disable embed/API</label>
+          </div>
+          <div>
+            <label class="block text-gray-500 mb-1">Stripe customer ID</label>
+            <input type="text" name="stripe_customer_id" value="{{ partner.stripe_customer_id or '' }}"
+              placeholder="cus_…"
+              class="w-full rounded border border-gray-300 px-2 py-1 font-mono text-xs placeholder-gray-300">
+          </div>
+          <div>
+            <label class="block text-gray-500 mb-1">Stripe subscription ID</label>
+            <input type="text" name="stripe_subscription_id" value="{{ partner.stripe_subscription_id or '' }}"
+              placeholder="sub_…"
+              class="w-full rounded border border-gray-300 px-2 py-1 font-mono text-xs placeholder-gray-300">
+          </div>
+          <div class="sm:col-span-2 lg:col-span-2 flex items-end">
+            <button type="submit" class="inline-flex rounded-md bg-gray-900 px-3 py-2 text-xs font-semibold text-white hover:bg-gray-800">Save partner</button>
+          </div>
         </form>
       </div>
       {% else %}
@@ -68,9 +122,17 @@
       <h2 class="text-xl font-semibold mb-4">API Keys</h2>
       <div class="space-y-2 max-h-96 overflow-y-auto pr-1">
         {% for key in keys %}
-        <div class="border rounded-lg p-3">
-          <div class="font-mono text-sm text-gray-900">{{ key.key_prefix }}••••{{ key.key_last4 }}</div>
-          <div class="text-sm text-gray-600">{{ key.env|upper }} · {{ key.status|upper }}</div>
+        <div class="border rounded-lg p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <div class="font-mono text-sm text-gray-900">{{ key.key_prefix }}••••{{ key.key_last4 }}</div>
+            <div class="text-sm text-gray-600">Partner #{{ key.partner_id }} · {{ key.env|upper }} · {{ key.status|upper }}</div>
+          </div>
+          {% if key.status == 'active' %}
+          <form method="POST" action="{{ url_for('admin.admin_partner_revoke_key', partner_id=key.partner_id, key_id=key.id) }}" onsubmit="return confirm('Revoke this API key?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="text-xs font-semibold text-red-600 hover:underline">Revoke</button>
+          </form>
+          {% endif %}
         </div>
         {% else %}
         <p class="text-sm text-gray-500">No keys yet.</p>

@@ -10,21 +10,23 @@ import json
 import hashlib
 import secrets
 from flask import Blueprint, request, jsonify, current_app
-from app import db, limiter, cache, csrf
+from app import db, limiter, cache
 from flask_login import current_user
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
+from sqlalchemy.orm import contains_eager
 
 from app.models import (
     Discussion, NewsArticle, DiscussionSourceArticle, ConsensusAnalysis, Statement,
-    StatementFlag,
+    StatementFlag, StatementVote,
 )
 from app.discussions.statements import get_statement_vote_fingerprint
 from app.api.errors import api_error
 from app.api.utils import (
     get_rate_limit_key, get_partner_ref, build_discussion_urls, append_ref_param,
     get_discussion_participant_count, get_discussion_statement_count,
-    sanitize_partner_ref, track_partner_event, record_partner_usage,
-    is_partner_origin_allowed
+    sanitize_partner_ref, partner_ref_is_disabled, track_partner_event, record_partner_usage,
+    is_partner_origin_allowed, invalidate_partner_snapshot_cache,
 )
 from app.partner.keys import find_partner_api_key
 from app.lib.counter_utils import increment_counter
@@ -56,20 +58,22 @@ def lookup_by_article_url():
     # Check if this partner ref is disabled (kill switch)
     ref = request.args.get('ref', '')
     ref_normalized = sanitize_partner_ref(ref)
-    disabled_refs = current_app.config.get('DISABLED_PARTNER_REFS') or []
-    if not isinstance(disabled_refs, list):
-        disabled_refs = []
-    if ref_normalized and ref_normalized in disabled_refs:
+    if ref_normalized and partner_ref_is_disabled(ref_normalized):
         return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
 
     # Optional API key context (test/live)
     api_key = request.headers.get('X-API-Key')
     if api_key:
-        is_valid, partner_id, key_env, partner = _validate_api_key()
+        is_valid, partner_slug, key_env, partner, _ = _validate_api_key()
         if not is_valid:
             return api_error('invalid_api_key', 'Invalid X-API-Key.', 401)
+        # Apply account-level kill switches even on read endpoints.
+        if partner and partner.status != 'active':
+            return api_error('partner_inactive', 'Partner account is not active.', 403)
+        if partner and partner.embed_disabled:
+            return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
     else:
-        partner_id = None
+        partner_slug = None
         key_env = 'live'
 
     # Get and validate URL parameter
@@ -83,7 +87,7 @@ def lookup_by_article_url():
         return api_error('invalid_url', 'The provided URL is not valid or could not be parsed.', 400)
 
     # Try cache first
-    cache_key = f"lookup:{key_env}:{partner_id or 'public'}:{normalized}"
+    cache_key = f"lookup:{key_env}:{partner_slug or 'public'}:{normalized}"
     cached = cache.get(cache_key)
     if cached:
         response_data = cached
@@ -97,10 +101,10 @@ def lookup_by_article_url():
     discussion = None
     source = 'rss'
 
-    if key_env == 'test' and partner_id:
+    if key_env == 'test' and partner_slug:
         discussion = Discussion.query.filter_by(
             partner_article_url=normalized,
-            partner_id=partner_id,
+            partner_id=partner_slug,
             partner_env='test'
         ).first()
         source = 'partner'
@@ -117,8 +121,8 @@ def lookup_by_article_url():
         # Phase 2: Check partner_article_url for live partner discussions
         if not discussion and hasattr(Discussion, 'partner_article_url'):
             query = Discussion.query.filter_by(partner_article_url=normalized, partner_env='live')
-            if partner_id:
-                query = query.filter_by(partner_id=partner_id)
+            if partner_slug:
+                query = query.filter_by(partner_id=partner_slug)
             discussion = query.first()
             if discussion:
                 source = 'partner'
@@ -158,8 +162,8 @@ def lookup_by_article_url():
         'source': source,
         'cache_hit': False
     })
-    if partner_id:
-        record_partner_usage(partner_id, key_env, 'lookup')
+    if partner_slug:
+        record_partner_usage(partner_slug, key_env, 'lookup')
 
     return jsonify(response_data)
 
@@ -189,10 +193,7 @@ def get_snapshot(discussion_id):
     # Check if this partner ref is disabled (kill switch)
     ref = request.args.get('ref', '')
     ref_normalized = sanitize_partner_ref(ref)
-    disabled_refs = current_app.config.get('DISABLED_PARTNER_REFS') or []
-    if not isinstance(disabled_refs, list):
-        disabled_refs = []
-    if ref_normalized and ref_normalized in disabled_refs:
+    if ref_normalized and partner_ref_is_disabled(ref_normalized):
         return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
 
     # Try cache first
@@ -233,11 +234,26 @@ def get_snapshot(discussion_id):
     if not discussion:
         return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
 
-    # Restrict test discussions to valid test keys for the owning partner
+    # Auth: test discussions always require the owning partner's test key.
+    # Live discussions are public without a key; if X-API-Key is sent (analytics / tooling),
+    # apply the same partner.status / embed_disabled gates as lookup.
+    api_key = request.headers.get('X-API-Key')
     if discussion.partner_env == 'test':
-        is_valid, partner_id, key_env, _partner = _validate_api_key()
-        if not is_valid or key_env != 'test' or partner_id != discussion.partner_id:
+        is_valid, partner_slug, key_env, partner, _ = _validate_api_key()
+        if not is_valid or key_env != 'test' or partner_slug != discussion.partner_id:
             return api_error('forbidden', 'A valid test API key is required for this discussion.', 403)
+        if partner and partner.status != 'active':
+            return api_error('partner_inactive', 'Partner account is not active.', 403)
+        if partner and partner.embed_disabled:
+            return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
+    elif api_key:
+        is_valid, partner_slug, key_env, partner, _ = _validate_api_key()
+        if not is_valid:
+            return api_error('invalid_api_key', 'Invalid X-API-Key.', 401)
+        if partner and partner.status != 'active':
+            return api_error('partner_inactive', 'Partner account is not active.', 403)
+        if partner and partner.embed_disabled:
+            return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
 
     # Get counts
     participant_count = get_discussion_participant_count(discussion)
@@ -310,22 +326,24 @@ def _validate_api_key():
     Validate partner API key from request header.
 
     Returns:
-        tuple: (is_valid, partner_id, env, partner)
+        tuple: (is_valid, partner_slug, env, partner, key_record)
+        partner_slug is Partner.slug (string), not a numeric id.
+        key_record is the PartnerApiKey row for DB-backed keys; None for legacy CONFIG keys.
     """
     api_key = request.headers.get('X-API-Key')
     if not api_key:
-        return False, None, None, None
+        return False, None, None, None, None
 
     record, partner, env = find_partner_api_key(api_key)
     if record and partner:
-        return True, partner.slug, env, partner
+        return True, partner.slug, env, partner, record
 
     # Legacy config keys (default to live)
     api_keys = current_app.config.get('PARTNER_API_KEYS', {})
     if api_key in api_keys:
-        return True, api_keys[api_key], 'live', None
+        return True, api_keys[api_key], 'live', None, None
 
-    return False, None, None, None
+    return False, None, None, None, None
 
 
 def _normalize_idempotency_key(raw_key):
@@ -337,13 +355,411 @@ def _normalize_idempotency_key(raw_key):
     return cleaned[:128]
 
 
-def _idempotency_cache_key(partner_id, key_env, idempotency_key):
-    return f"idempotency:create:{key_env}:{partner_id}:{idempotency_key}"
+def _idempotency_cache_key(partner_slug, key_env, idempotency_key):
+    return f"idempotency:create:{key_env}:{partner_slug}:{idempotency_key}"
 
 
 def _request_payload_hash(data):
     payload = json.dumps(data, sort_keys=True, separators=(',', ':'))
     return hashlib.sha256(payload.encode('utf-8')).hexdigest()
+
+
+def _partner_api_browser_forbidden():
+    """Block browser calls that could leak X-API-Key (same rule as create)."""
+    if request.headers.get('Origin'):
+        return api_error(
+            'browser_not_allowed',
+            'Partner API write/read endpoints must be called server-to-server (no browser Origin header).',
+            403
+        )
+    return None
+
+
+def _discussion_owned_by_partner(discussion, partner_slug, partner):
+    if not discussion or not partner_slug:
+        return False
+    if partner and getattr(discussion, 'partner_fk_id', None) and partner.id == discussion.partner_fk_id:
+        return True
+    if discussion.partner_id and discussion.partner_id == partner_slug:
+        return True
+    return False
+
+
+def _require_partner_api_auth():
+    """
+    Single auth gate for all partner management API routes.
+
+    Checks (in order): browser origin block, API key validity, account active status,
+    and the DB-level embed_disabled kill switch.
+
+    Returns (error_response, partner_slug, key_env, partner, key_record).
+    error_response is non-None when auth fails; callers should do:
+        err, partner_slug, key_env, partner, key_record = _require_partner_api_auth()
+        if err: return err
+    """
+    err = _partner_api_browser_forbidden()
+    if err:
+        return err, None, None, None, None
+
+    is_valid, partner_slug, key_env, partner, key_record = _validate_api_key()
+    if not is_valid:
+        return api_error('invalid_api_key', 'A valid X-API-Key header is required.', 401), None, None, None, None
+    if partner and partner.status != 'active':
+        return api_error('partner_inactive', 'Partner account is not active.', 403), None, None, None, None
+    if partner and partner.embed_disabled:
+        return api_error('partner_disabled', 'API access has been revoked for this partner.', 403), None, None, None, None
+    return None, partner_slug, key_env, partner, key_record
+
+
+_VALID_SEED_POSITIONS = frozenset(['pro', 'con', 'neutral'])
+_MAX_SEED_STATEMENTS_PER_REQUEST = 50
+
+# Input size limits for create_discussion — applied before any DB write or LLM call.
+_CREATE_MAX_ARTICLE_URL = 2048
+_CREATE_MAX_TITLE = 200  # matches Discussion.title column
+_CREATE_MAX_EXCERPT = 5000
+_CREATE_MAX_SOURCE_NAME = 200
+
+
+def _validate_seed_statements(stmts):
+    """
+    Validate and normalise a seed_statements list from a partner API request.
+
+    Enforces: max batch size, content length 10–500 chars, position enum.
+    Returns (error_response_or_None, validated_list).
+    """
+    if len(stmts) > _MAX_SEED_STATEMENTS_PER_REQUEST:
+        return api_error(
+            'too_many_statements',
+            f'At most {_MAX_SEED_STATEMENTS_PER_REQUEST} statements may be submitted per request.',
+            400
+        ), []
+    to_add = []
+    for i, stmt in enumerate(stmts):
+        if not isinstance(stmt, dict) or 'content' not in stmt:
+            return api_error('invalid_statement', f'Statement at index {i} must have a content field.', 400), []
+        content = (stmt.get('content') or '').strip()
+        if len(content) < 10:
+            return api_error('invalid_statement', f'Statement at index {i} must be at least 10 characters.', 400), []
+        if len(content) > 500:
+            return api_error('invalid_statement', f'Statement at index {i} must be at most 500 characters.', 400), []
+        position = (stmt.get('position') or 'neutral').lower()
+        if position not in _VALID_SEED_POSITIONS:
+            position = 'neutral'
+        to_add.append({'content': content[:500], 'position': position})
+    return None, to_add
+
+
+@partner_bp.route('/partner/discussions', methods=['GET'])
+@limiter.limit("120 per hour", key_func=_get_api_key_rate_limit_key)
+def list_partner_discussions():
+    """
+    List discussions created by this partner (partner_fk_id or legacy partner_id slug).
+
+    When the API key is a legacy CONFIG-only mapping (no Partner row), we only match
+    Discussion.partner_id == slug. Discussions with only partner_fk_id require a real Partner account.
+
+    Billing policy: listing existing discussions is intentionally allowed even when
+    billing_status is inactive — partners can still audit/manage their content after
+    a billing lapse. Only new discussion creation (POST /partner/discussions) requires
+    active billing.
+
+    Query: env=test|live|all (default all), page (default 1), per_page (default 30, max 100)
+    """
+    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    if err:
+        return err
+
+    env_filter = (request.args.get('env') or 'all').lower()
+    if env_filter not in ('test', 'live', 'all'):
+        env_filter = 'all'
+
+    try:
+        page = max(1, int(request.args.get('page', 1)))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        per_page = min(100, max(1, int(request.args.get('per_page', 30))))
+    except (TypeError, ValueError):
+        per_page = 30
+
+    q = Discussion.query
+    if partner:
+        q = q.filter(
+            db.or_(
+                Discussion.partner_fk_id == partner.id,
+                Discussion.partner_id == partner.slug,
+            )
+        )
+    else:
+        q = q.filter(Discussion.partner_id == partner_slug)
+
+    if env_filter != 'all':
+        q = q.filter(Discussion.partner_env == env_filter)
+
+    pagination = q.order_by(Discussion.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
+    page_ids = [d.id for d in pagination.items]
+
+    # Batch vote totals — 1 query for the whole page instead of 1 per discussion
+    vote_totals = {}
+    if page_ids:
+        rows = db.session.query(
+            StatementVote.discussion_id,
+            func.count(StatementVote.id),
+        ).filter(
+            StatementVote.discussion_id.in_(page_ids)
+        ).group_by(StatementVote.discussion_id).all()
+        vote_totals = {disc_id: count for disc_id, count in rows}
+
+    # Batch consensus presence — 1 query for the whole page
+    has_consensus = set()
+    if page_ids:
+        consensus_rows = db.session.query(ConsensusAnalysis.discussion_id).filter(
+            ConsensusAnalysis.discussion_id.in_(page_ids)
+        ).distinct().all()
+        has_consensus = {row[0] for row in consensus_rows}
+
+    items = []
+    for d in pagination.items:
+        urls = build_discussion_urls(d, include_ref=False)
+        items.append({
+            'discussion_id': d.id,
+            'slug': d.slug,
+            'title': d.title,
+            'partner_article_url': d.partner_article_url,
+            'env': d.partner_env,
+            'is_closed': d.is_closed,
+            'integrity_mode': d.integrity_mode,
+            'created_at': d.created_at.isoformat() if d.created_at else None,
+            'vote_count': int(vote_totals.get(d.id, 0)),
+            'has_consensus_analysis': d.id in has_consensus,
+            'embed_url': urls['embed_url'],
+            'consensus_url': urls['consensus_url'],
+            'snapshot_url': urls['snapshot_url'],
+        })
+
+    if partner_slug:
+        record_partner_usage(partner_slug, key_env, 'list_discussions')
+
+    return jsonify({
+        'items': items,
+        'page': pagination.page,
+        'per_page': pagination.per_page,
+        'total': pagination.total,
+        'pages': pagination.pages,
+    })
+
+
+@partner_bp.route('/partner/discussions/<int:discussion_id>', methods=['PATCH'])
+@limiter.limit("60 per hour", key_func=_get_api_key_rate_limit_key)
+def patch_partner_discussion(discussion_id):
+    """Update partner-owned discussion (is_closed, integrity_mode).
+
+    Billing policy: managing existing discussions is intentionally allowed even when
+    billing_status is inactive — partners can still close/reopen discussions after a
+    billing lapse. Only new discussion creation requires active billing.
+    """
+    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    if err:
+        return err
+
+    discussion = db.session.get(Discussion, discussion_id)
+    if not discussion:
+        return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
+
+    if not _discussion_owned_by_partner(discussion, partner_slug, partner):
+        return api_error('forbidden', 'This discussion does not belong to your partner account.', 403)
+
+    if discussion.partner_env == 'test' and (not partner or key_env != 'test'):
+        return api_error('forbidden', 'A valid test API key is required for this discussion.', 403)
+
+    data = request.get_json()
+    if not data or not isinstance(data, dict):
+        return api_error('invalid_request', 'Request body must be a JSON object.', 400)
+
+    changed = False
+    if 'is_closed' in data:
+        val = data['is_closed']
+        if not isinstance(val, bool):
+            return api_error('invalid_request', '"is_closed" must be a JSON boolean (true or false).', 400)
+        discussion.is_closed = val
+        changed = True
+    if 'integrity_mode' in data:
+        val = data['integrity_mode']
+        if not isinstance(val, bool):
+            return api_error('invalid_request', '"integrity_mode" must be a JSON boolean (true or false).', 400)
+        discussion.integrity_mode = val
+        changed = True
+
+    if not changed:
+        return api_error('invalid_request', 'No supported fields to update (is_closed, integrity_mode).', 400)
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"patch_partner_discussion: {e}")
+        return api_error('update_failed', 'Could not update discussion.', 500)
+
+    invalidate_partner_snapshot_cache(discussion_id)
+
+    if partner_slug:
+        record_partner_usage(partner_slug, key_env, 'patch_discussion')
+
+    urls = build_discussion_urls(discussion, include_ref=False)
+    return jsonify({
+        'discussion_id': discussion.id,
+        'slug': discussion.slug,
+        'title': discussion.title,
+        'is_closed': discussion.is_closed,
+        'integrity_mode': discussion.integrity_mode,
+        'embed_url': urls['embed_url'],
+        'consensus_url': urls['consensus_url'],
+        'snapshot_url': urls['snapshot_url'],
+        'env': discussion.partner_env,
+    })
+
+
+@partner_bp.route('/partner/discussions/<int:discussion_id>/statements', methods=['POST'])
+@limiter.limit("60 per hour", key_func=_get_api_key_rate_limit_key)
+def add_partner_discussion_statements(discussion_id):
+    """Append seed statements to an existing partner discussion.
+
+    Billing policy: appending statements to an existing discussion is intentionally
+    allowed even when billing_status is inactive — partners can seed content they
+    already own. Only new discussion creation requires active billing.
+    """
+    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    if err:
+        return err
+
+    discussion = db.session.get(Discussion, discussion_id)
+    if not discussion or not discussion.has_native_statements:
+        return api_error('discussion_not_found', 'Discussion not found or not a native statement discussion.', 404)
+
+    if not _discussion_owned_by_partner(discussion, partner_slug, partner):
+        return api_error('forbidden', 'This discussion does not belong to your partner account.', 403)
+
+    if discussion.partner_env == 'test' and (not partner or key_env != 'test'):
+        return api_error('forbidden', 'A valid test API key is required for this discussion.', 403)
+
+    data = request.get_json()
+    if not data or not isinstance(data, dict):
+        return api_error('invalid_request', 'Request body must be a JSON object.', 400)
+
+    seed_statements = data.get('seed_statements')
+    if not seed_statements or not isinstance(seed_statements, list):
+        return api_error('invalid_request', 'seed_statements array is required.', 400)
+
+    err, to_add = _validate_seed_statements(seed_statements)
+    if err:
+        return err
+
+    max_st = current_app.config.get('MAX_STATEMENTS_PER_DISCUSSION', 5000)
+    current_count = Statement.query.filter_by(discussion_id=discussion_id, is_deleted=False).count()
+    if current_count >= max_st:
+        return api_error('limit_reached', 'This discussion has reached the maximum number of statements.', 429)
+
+    remaining = max_st - current_count
+    if len(to_add) > remaining:
+        return api_error(
+            'too_many_statements',
+            f'Can add at most {remaining} more statements (discussion limit {max_st}).',
+            400
+        )
+
+    try:
+        for stmt_data in to_add:
+            db.session.add(Statement(
+                discussion_id=discussion_id,
+                content=stmt_data['content'],
+                statement_type='claim',
+                is_seed=True,
+                mod_status=1,
+                source='partner_provided',
+                seed_stance=stmt_data.get('position'),
+            ))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"add_partner_discussion_statements: {e}")
+        return api_error('creation_failed', 'Failed to add statements.', 500)
+
+    invalidate_partner_snapshot_cache(discussion_id)
+
+    if partner_slug:
+        record_partner_usage(partner_slug, key_env, 'add_statements')
+
+    return jsonify({
+        'discussion_id': discussion_id,
+        'added': len(to_add),
+        'statement_count': Statement.query.filter_by(discussion_id=discussion_id, is_deleted=False).count(),
+    }), 201
+
+
+@partner_bp.route('/partner/discussions/<int:discussion_id>/flags', methods=['GET'])
+@limiter.limit("120 per hour", key_func=_get_api_key_rate_limit_key)
+def list_partner_discussion_flags(discussion_id):
+    """List moderation flags for statements in this discussion (partner inbox)."""
+    err, partner_slug, key_env, partner, _ = _require_partner_api_auth()
+    if err:
+        return err
+
+    discussion = db.session.get(Discussion, discussion_id)
+    if not discussion:
+        return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
+
+    if not _discussion_owned_by_partner(discussion, partner_slug, partner):
+        return api_error('forbidden', 'This discussion does not belong to your partner account.', 403)
+
+    status_filter = (request.args.get('status') or 'pending').lower()
+    if status_filter not in ('pending', 'reviewed', 'dismissed', 'all'):
+        status_filter = 'pending'
+
+    try:
+        page = max(1, int(request.args.get('page', 1)))
+    except (TypeError, ValueError):
+        page = 1
+    try:
+        per_page = min(100, max(1, int(request.args.get('per_page', 30))))
+    except (TypeError, ValueError):
+        per_page = 30
+
+    q = (
+        StatementFlag.query.join(Statement, StatementFlag.statement_id == Statement.id)
+        .filter(Statement.discussion_id == discussion_id)
+        .options(contains_eager(StatementFlag.statement))
+    )
+    if status_filter != 'all':
+        q = q.filter(StatementFlag.status == status_filter)
+
+    pagination = q.order_by(StatementFlag.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
+    out = []
+    for fl in pagination.items:
+        st = fl.statement
+        out.append({
+            'flag_id': fl.id,
+            'statement_id': fl.statement_id,
+            'statement_excerpt': (st.content[:120] + '…') if st and len(st.content) > 120 else (st.content if st else ''),
+            'flag_reason': fl.flag_reason,
+            'status': fl.status,
+            'created_at': fl.created_at.isoformat() if fl.created_at else None,
+            'additional_context': fl.additional_context,
+        })
+
+    if partner_slug:
+        record_partner_usage(partner_slug, key_env, 'list_flags')
+
+    return jsonify({
+        'discussion_id': discussion_id,
+        'items': out,
+        'page': pagination.page,
+        'per_page': pagination.per_page,
+        'total': pagination.total,
+        'pages': pagination.pages,
+    })
 
 
 @partner_bp.route('/partner/discussions', methods=['POST'])
@@ -389,36 +805,17 @@ def create_discussion():
     from app.trending.constants import get_unique_slug
     from app.models import generate_slug
 
-    # Enforce server-to-server usage for API key protected writes.
-    # Browser requests with Origin should not send secret API keys.
-    request_origin = request.headers.get('Origin')
-    if request_origin:
-        return api_error(
-            'browser_not_allowed',
-            'Create Discussion must be called server-to-server (no browser Origin header).',
-            403
-        )
+    err, partner_slug, key_env, partner, key_record = _require_partner_api_auth()
+    if err:
+        return err
 
-    # Validate API key
-    is_valid, partner_id, key_env, partner = _validate_api_key()
-    if not is_valid:
-        return api_error(
-            'invalid_api_key',
-            'A valid X-API-Key header is required.',
-            401
-        )
+    created_by_key_id = key_record.id if key_record else None
 
     if key_env == 'live' and partner and partner.billing_status != 'active':
         return api_error(
             'billing_inactive',
             'Live API access requires an active subscription.',
             402
-        )
-    if partner and partner.status != 'active':
-        return api_error(
-            'partner_inactive',
-            'Partner account is not active.',
-            403
         )
 
     # Enforce discussion creation limits per tier
@@ -469,7 +866,7 @@ def create_discussion():
     request_hash = _request_payload_hash(data)
     idempotency_cache_key = None
     if idempotency_key:
-        idempotency_cache_key = _idempotency_cache_key(partner_id, key_env, idempotency_key)
+        idempotency_cache_key = _idempotency_cache_key(partner_slug, key_env, idempotency_key)
         prior = cache.get(idempotency_cache_key)
         if prior:
             if prior.get('request_hash') != request_hash:
@@ -486,9 +883,25 @@ def create_discussion():
 
     if not article_url:
         return api_error('missing_article_url', 'The article_url field is required.', 400)
+    if not isinstance(article_url, str):
+        return api_error('invalid_article_url', 'The article_url must be a string.', 400)
+    if len(article_url) > _CREATE_MAX_ARTICLE_URL:
+        return api_error(
+            'invalid_article_url',
+            f'The article_url must be at most {_CREATE_MAX_ARTICLE_URL} characters.',
+            400,
+        )
 
     if not title:
         return api_error('missing_title', 'The title field is required.', 400)
+    if not isinstance(title, str):
+        return api_error('invalid_title', 'The title must be a string.', 400)
+    if len(title) > _CREATE_MAX_TITLE:
+        return api_error(
+            'invalid_title',
+            f'The title must be at most {_CREATE_MAX_TITLE} characters.',
+            400,
+        )
 
     # Validate: need either excerpt or seed_statements
     excerpt = data.get('excerpt')
@@ -499,6 +912,26 @@ def create_discussion():
         return api_error(
             'missing_content',
             'Either excerpt or seed_statements must be provided.',
+            400
+        )
+
+    # Enforce length caps on inputs passed to the AI generator.
+    # Without these, an oversized payload would still hit the LLM even though the
+    # final DB write is capped — wasting tokens and risking cost/DoS.
+    if excerpt and not isinstance(excerpt, str):
+        return api_error('invalid_excerpt', 'The excerpt must be a string.', 400)
+    if excerpt and len(excerpt) > _CREATE_MAX_EXCERPT:
+        return api_error(
+            'invalid_excerpt',
+            f'The excerpt must be at most {_CREATE_MAX_EXCERPT} characters.',
+            400
+        )
+    if source_name and not isinstance(source_name, str):
+        return api_error('invalid_source_name', 'The source_name must be a string.', 400)
+    if source_name and len(source_name) > _CREATE_MAX_SOURCE_NAME:
+        return api_error(
+            'invalid_source_name',
+            f'The source_name must be at most {_CREATE_MAX_SOURCE_NAME} characters.',
             400
         )
 
@@ -514,7 +947,7 @@ def create_discussion():
     # Check if discussion already exists for this URL
     existing = Discussion.query.filter_by(
         partner_article_url=normalized_url,
-        partner_id=partner_id,
+        partner_id=partner_slug,
         partner_env=key_env
     ).first()
     if existing:
@@ -541,29 +974,9 @@ def create_discussion():
     # Generate seed statements if not provided
     statements_to_create = []
     if seed_statements:
-        # Validate provided statements
-        valid_positions = ['pro', 'con', 'neutral']
-        for i, stmt in enumerate(seed_statements):
-            if not isinstance(stmt, dict) or 'content' not in stmt:
-                return api_error(
-                    'invalid_statement',
-                    f'Statement at index {i} must have a content field.',
-                    400
-                )
-            content = stmt.get('content', '').strip()
-            if not content or len(content) < 10:
-                return api_error(
-                    'invalid_statement',
-                    f'Statement at index {i} content must be at least 10 characters.',
-                    400
-                )
-            position = stmt.get('position', 'neutral').lower()
-            if position not in valid_positions:
-                position = 'neutral'
-            statements_to_create.append({
-                'content': content[:500],  # Max 500 chars
-                'position': position
-            })
+        err, statements_to_create = _validate_seed_statements(seed_statements)
+        if err:
+            return err
     else:
         # Generate from excerpt using AI
         try:
@@ -574,7 +987,7 @@ def create_discussion():
                 count=5
             )
         except Exception as e:
-            current_app.logger.error(f"Seed generation failed for partner {partner_id}: {e}")
+            current_app.logger.error(f"Seed generation failed for partner {partner_slug}: {e}")
             return api_error(
                 'generation_failed',
                 'Failed to generate seed statements. Please try again or provide seed_statements.',
@@ -602,15 +1015,16 @@ def create_discussion():
             unique_slug = get_unique_slug(Discussion, slug_seed)
 
             discussion = Discussion(
-                title=title[:200],  # Max 200 chars per model
+                title=title[:_CREATE_MAX_TITLE],
                 description=excerpt[:500] if excerpt else None,
                 slug=unique_slug,
                 has_native_statements=True,
                 geographic_scope='global',
                 partner_article_url=normalized_url,
-                partner_id=partner_id,
+                partner_id=partner_slug,
                 partner_fk_id=partner.id if partner else None,
-                partner_env=key_env
+                partner_env=key_env,
+                created_by_key_id=created_by_key_id,
             )
             db.session.add(discussion)
             db.session.flush()  # Get the discussion ID
@@ -626,13 +1040,14 @@ def create_discussion():
                     is_seed=True,
                     mod_status=1,  # Seed statements are pre-approved
                     source=statement_source,
+                    seed_stance=stmt_data.get('position'),
                 )
                 db.session.add(statement)
 
             db.session.commit()
 
             current_app.logger.info(
-                f"Partner {partner_id} created discussion {discussion.id} for {normalized_url}"
+                f"Partner {partner_slug} created discussion {discussion.id} for {normalized_url}"
             )
             break
 
@@ -643,7 +1058,7 @@ def create_discussion():
             if not is_slug_collision:
                 current_app.logger.error(
                     "Failed to create partner discussion due to non-slug integrity error for partner %s: %s",
-                    partner_id,
+                    partner_slug,
                     e,
                 )
                 return api_error(
@@ -654,7 +1069,7 @@ def create_discussion():
             if attempt == max_slug_retries - 1:
                 current_app.logger.error(
                     "Failed to create partner discussion after slug retries for partner %s: %s",
-                    partner_id,
+                    partner_slug,
                     e,
                 )
                 return api_error(
@@ -694,11 +1109,11 @@ def create_discussion():
     # Track create API event
     track_partner_event('partner_api_create', {
         'discussion_id': discussion.id,
-        'partner_id': partner_id,
+        'partner_id': partner_slug,
         'statement_count': len(statements_to_create),
         'used_ai_generation': not bool(seed_statements)
     })
-    record_partner_usage(partner_id, key_env, 'create')
+    record_partner_usage(partner_slug, key_env, 'create')
 
     if idempotency_cache_key:
         cache.set(
@@ -828,7 +1243,6 @@ def oembed():
 
 
 @partner_bp.route('/embed/flag', methods=['POST'])
-@csrf.exempt
 @limiter.limit("10 per minute", key_func=get_rate_limit_key)
 def flag_statement_from_embed():
     """
@@ -870,10 +1284,7 @@ def flag_statement_from_embed():
 
     # Reject flags from disabled partner refs (kill switch)
     ref_str = sanitize_partner_ref(partner_ref)
-    disabled_refs = current_app.config.get('DISABLED_PARTNER_REFS') or []
-    if not isinstance(disabled_refs, list):
-        disabled_refs = []
-    if ref_str and ref_str in disabled_refs:
+    if ref_str and partner_ref_is_disabled(ref_str):
         return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
 
     if not statement_id:

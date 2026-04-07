@@ -15,6 +15,9 @@ from app.billing.service import (
     get_stripe,
     resolve_plan_from_stripe_subscription,
     _stripe_call,
+    _get_stripe_field,
+    _get_stripe_metadata,
+    sync_partner_subscription_state,
 )
 from app.models import User, PricingPlan, Subscription, Partner
 from app import db, csrf, limiter
@@ -457,7 +460,13 @@ def webhook():
         elif event_type == 'checkout.session.completed':
             current_app.logger.info(f"Checkout session completed: {data.get('id')}")
             metadata = _get_stripe_metadata(data)
-            if metadata.get('purpose') == 'partner_subscription' or metadata.get('partner_id'):
+            # Route to partner handler if purpose is explicit, or if partner_id is present
+            # (legacy sessions created before the purpose field was introduced).
+            is_partner_checkout = (
+                metadata.get('purpose') == 'partner_subscription'
+                or (metadata.get('partner_id') and not metadata.get('purpose'))
+            )
+            if is_partner_checkout:
                 _handle_partner_checkout_completed(data)
             elif metadata.get('purpose') == 'donation':
                 _handle_donation_checkout_completed(data)
@@ -594,60 +603,17 @@ def _is_partner_subscription(subscription_data):
         metadata = {}
     if metadata.get('purpose') == 'partner_subscription':
         return True
-    if metadata.get('partner_id'):
+    # Legacy fallback: sessions created before the purpose field was added.
+    # Only fire when purpose is absent to avoid misrouting future checkout types
+    # that happen to carry partner_id for other reasons.
+    if metadata.get('partner_id') and not metadata.get('purpose'):
         return True
     return False
 
 
-def _get_stripe_field(obj, key, default=None):
-    if isinstance(obj, dict):
-        return obj.get(key, default)
-    return getattr(obj, key, default)
-
-
-def _get_stripe_metadata(obj):
-    if isinstance(obj, dict):
-        metadata = obj.get('metadata', {})
-    else:
-        metadata = getattr(obj, 'metadata', {}) or {}
-    return metadata if isinstance(metadata, dict) else {}
-
-
 def _sync_partner_subscription_state(partner, stripe_sub, metadata_fallback=None):
-    metadata = _get_stripe_metadata(stripe_sub)
-    if metadata_fallback:
-        merged_metadata = dict(metadata_fallback)
-        merged_metadata.update(metadata)
-        metadata = merged_metadata
-
-    customer_id = _get_stripe_field(stripe_sub, 'customer')
-    if not partner.stripe_customer_id and customer_id:
-        partner.stripe_customer_id = customer_id
-
-    status = _get_stripe_field(stripe_sub, 'status', '')
-    sub_id = _get_stripe_field(stripe_sub, 'id')
-    terminal_statuses = ('canceled', 'unpaid', 'incomplete_expired')
-
-    if status in terminal_statuses:
-        # Subscription is no longer billable; clear stale Stripe sub linkage.
-        partner.stripe_subscription_id = None
-    else:
-        partner.stripe_subscription_id = sub_id
-
-    active_statuses = ('active', 'trialing', 'past_due')
-    partner.billing_status = 'active' if status in active_statuses else 'inactive'
-
-    if status == 'past_due':
-        current_app.logger.warning(f"Partner {partner.slug} subscription is past_due — grace period active")
-
-    tier_from_meta = metadata.get('partner_tier')
-    if tier_from_meta in ('starter', 'professional', 'enterprise'):
-        partner.tier = tier_from_meta
-    elif partner.billing_status == 'active' and partner.tier == 'free':
-        partner.tier = 'starter'
-
-    if status in terminal_statuses:
-        partner.tier = 'free'
+    """Thin wrapper; real logic lives in billing.service.sync_partner_subscription_state."""
+    sync_partner_subscription_state(partner, stripe_sub, metadata_fallback=metadata_fallback)
 
 
 def _find_partner_for_checkout_session(checkout_data):
@@ -656,7 +622,7 @@ def _find_partner_for_checkout_session(checkout_data):
     partner_id = metadata.get('partner_id')
     if partner_id:
         try:
-            partner = db.session.get(Partner,int(partner_id))
+            partner = db.session.get(Partner, int(partner_id))
         except (ValueError, TypeError):
             current_app.logger.warning(f"Non-numeric partner_id in checkout metadata: {partner_id}")
 
@@ -723,7 +689,7 @@ def _handle_partner_subscription(subscription_data):
     partner = None
     if partner_id:
         try:
-            partner = db.session.get(Partner,int(partner_id))
+            partner = db.session.get(Partner, int(partner_id))
         except (ValueError, TypeError):
             current_app.logger.warning(f"Non-numeric partner_id in subscription metadata: {partner_id}")
     if not partner:

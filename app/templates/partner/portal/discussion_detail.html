@@ -1,0 +1,182 @@
+{% extends "layout.html" %}
+
+{% block title %}Discussion #{{ discussion.id }} — Partner Portal{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen">
+  <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+
+    {# Breadcrumb #}
+    <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+      <a href="{{ url_for('partner.portal_dashboard') }}" class="hover:text-blue-600">Dashboard</a>
+      <span>/</span>
+      <a href="{{ url_for('partner.portal_discussions') }}" class="hover:text-blue-600">Discussions</a>
+      <span>/</span>
+      <span class="text-gray-800 font-medium">#{{ discussion.id }}</span>
+    </nav>
+
+    {# Flash messages #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="mb-4 rounded-lg px-4 py-3 text-sm
+          {% if category == 'success' %}bg-green-50 text-green-800 border border-green-200
+          {% elif category == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200
+          {% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    {# Header card #}
+    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mb-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium
+              {% if discussion.partner_env == 'live' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-700{% endif %}">
+              {{ discussion.partner_env }}
+            </span>
+            {% if discussion.is_closed %}
+              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-amber-100 text-amber-800">Closed</span>
+            {% else %}
+              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-800">Open</span>
+            {% endif %}
+            {% if discussion.integrity_mode %}
+              <span class="inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium bg-blue-100 text-blue-800">Integrity mode</span>
+            {% endif %}
+          </div>
+          <h1 class="text-2xl font-bold text-gray-900 leading-snug">{{ discussion.title }}</h1>
+          {% if discussion.partner_article_url %}
+            <a href="{{ discussion.partner_article_url }}" target="_blank" rel="noopener"
+               class="text-sm text-blue-600 hover:underline break-all">{{ discussion.partner_article_url }}</a>
+          {% endif %}
+        </div>
+        <div class="flex flex-wrap gap-2 shrink-0">
+          <a href="{{ embed_url }}" target="_blank" rel="noopener"
+            class="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+            View embed ↗
+          </a>
+          <a href="{{ consensus_url }}" target="_blank" rel="noopener"
+            class="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
+            Consensus ↗
+          </a>
+          {% if can_edit %}
+          <form method="post"
+            action="{{ url_for('partner.portal_toggle_discussion_closed', discussion_id=discussion.id) }}"
+            onsubmit="return confirm('{% if discussion.is_closed %}Reopen{% else %}Close{% endif %} this discussion?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit"
+              class="rounded-md px-3 py-2 text-sm font-semibold shadow-sm ring-1 ring-inset
+                {% if discussion.is_closed %}bg-white text-emerald-700 ring-emerald-300 hover:bg-emerald-50
+                {% else %}bg-white text-amber-700 ring-amber-300 hover:bg-amber-50{% endif %}">
+              {% if discussion.is_closed %}Reopen{% else %}Close{% endif %}
+            </button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+
+      {# Meta row #}
+      <dl class="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 sm:grid-cols-4 text-sm">
+        <div>
+          <dt class="text-xs text-gray-500">Created</dt>
+          <dd class="font-medium text-gray-800">{{ discussion.created_at.strftime('%d %b %Y') if discussion.created_at else '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-gray-500">Total votes</dt>
+          <dd class="font-medium text-gray-800 tabular-nums">{{ total_votes }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-gray-500">Statements</dt>
+          <dd class="font-medium text-gray-800 tabular-nums">{{ statements | length }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs text-gray-500">Created via key</dt>
+          <dd class="font-medium text-gray-800 font-mono text-xs">
+            {% if key_info %}
+              {{ key_info.prefix }}••••{{ key_info.last4 }}
+              <span class="font-sans text-gray-400">({{ key_info.env }}{% if key_info.status != 'active' %}, {{ key_info.status }}{% endif %})</span>
+            {% else %}
+              <span class="text-gray-400">Legacy / unknown</span>
+            {% endif %}
+          </dd>
+        </div>
+      </dl>
+    </div>
+
+    {# Consensus status #}
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm mb-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-2">Consensus analysis</h2>
+      {% if latest_consensus %}
+        <p class="text-sm text-gray-700">
+          Last analysis: <strong>{{ latest_consensus.created_at.strftime('%d %b %Y %H:%M UTC') if latest_consensus.created_at else '—' }}</strong>
+          &middot;
+          <a href="{{ consensus_url }}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">View full consensus ↗</a>
+        </p>
+      {% else %}
+        <p class="text-sm text-gray-500">No consensus analysis yet — analysis runs automatically after enough votes are cast.</p>
+      {% endif %}
+    </div>
+
+    {# Statement breakdown #}
+    <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-900">Statement analytics</h2>
+        <span class="text-sm text-gray-500">{{ statements | length }} statement{{ 's' if statements | length != 1 }} · {{ total_votes }} total vote{{ 's' if total_votes != 1 }}</span>
+      </div>
+
+      {% if statements %}
+      <div class="divide-y divide-gray-100">
+        {% for s in statements %}
+        {% set tv = s.total_votes %}
+        {% set agree_pct = ((s.vote_count_agree / tv * 100) | round(0) | int) if tv > 0 else 0 %}
+        {% set disagree_pct = ((s.vote_count_disagree / tv * 100) | round(0) | int) if tv > 0 else 0 %}
+        {% set unsure_pct = ((s.vote_count_unsure / tv * 100) | round(0) | int) if tv > 0 else 0 %}
+        <div class="px-6 py-4">
+          <div class="flex items-start gap-3 mb-2">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm text-gray-900 leading-snug">{{ s.content }}</p>
+              <div class="flex flex-wrap gap-2 mt-1">
+                {% if s.is_seed %}
+                  <span class="text-xs text-gray-400">seed</span>
+                {% endif %}
+                {% if s.seed_stance %}
+                  <span class="text-xs px-1.5 py-0.5 rounded
+                    {% if s.seed_stance == 'pro' %}bg-emerald-100 text-emerald-700
+                    {% elif s.seed_stance == 'con' %}bg-red-100 text-red-700
+                    {% else %}bg-gray-100 text-gray-600{% endif %}">
+                    {{ s.seed_stance }}
+                  </span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="shrink-0 text-right text-xs tabular-nums text-gray-500 leading-relaxed">
+              <div class="font-semibold text-gray-800 text-sm">{{ tv }} vote{{ 's' if tv != 1 }}</div>
+              <div class="text-emerald-700">✓ {{ agree_pct }}%</div>
+              <div class="text-red-700">✗ {{ disagree_pct }}%</div>
+              <div class="text-gray-400">~ {{ unsure_pct }}%</div>
+            </div>
+          </div>
+          {# Vote bar #}
+          {% if tv > 0 %}
+          <div class="flex h-2 w-full rounded-full overflow-hidden gap-px">
+            {% if agree_pct > 0 %}<div class="bg-emerald-500 rounded-l" style="width:{{ agree_pct }}%"></div>{% endif %}
+            {% if disagree_pct > 0 %}<div class="bg-red-400" style="width:{{ disagree_pct }}%"></div>{% endif %}
+            {% if unsure_pct > 0 %}<div class="bg-gray-200 rounded-r" style="width:{{ unsure_pct }}%"></div>{% endif %}
+          </div>
+          {% else %}
+          <div class="h-2 w-full rounded-full bg-gray-100"></div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="px-6 py-8 text-center text-gray-500 text-sm">
+        No statements yet. Add seeds via <code class="bg-gray-100 px-1 rounded">POST /api/partner/discussions/{{ discussion.id }}/statements</code>.
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

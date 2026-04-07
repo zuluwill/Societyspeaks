@@ -440,6 +440,68 @@ def create_partner_portal_session(partner, return_url=None):
     return session
 
 
+def _get_stripe_field(obj, key, default=None):
+    """Read a field from either a Stripe API object or a webhook dict."""
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
+def _get_stripe_metadata(obj):
+    """Return the metadata dict from a Stripe object or webhook dict."""
+    if isinstance(obj, dict):
+        metadata = obj.get('metadata', {})
+    else:
+        metadata = getattr(obj, 'metadata', {}) or {}
+    return metadata if isinstance(metadata, dict) else {}
+
+
+def sync_partner_subscription_state(partner, stripe_sub, metadata_fallback=None):
+    """Apply a Stripe subscription's state to a Partner model instance.
+
+    Handles:
+    - customer_id back-fill
+    - terminal vs active billing status
+    - tier from subscription metadata
+    - clearing the subscription_id on terminal states
+
+    Does NOT commit; callers are responsible for db.session.commit().
+    """
+    metadata = _get_stripe_metadata(stripe_sub)
+    if metadata_fallback:
+        merged = dict(metadata_fallback)
+        merged.update(metadata)
+        metadata = merged
+
+    customer_id = _get_stripe_field(stripe_sub, 'customer')
+    if not partner.stripe_customer_id and customer_id:
+        partner.stripe_customer_id = customer_id
+
+    status = _get_stripe_field(stripe_sub, 'status', '')
+    sub_id = _get_stripe_field(stripe_sub, 'id')
+    terminal_statuses = ('canceled', 'unpaid', 'incomplete_expired')
+    active_statuses = ('active', 'trialing', 'past_due')
+
+    if status in terminal_statuses:
+        partner.stripe_subscription_id = None
+        partner.billing_status = 'inactive'
+        partner.tier = 'free'
+    else:
+        partner.stripe_subscription_id = sub_id
+        partner.billing_status = 'active' if status in active_statuses else 'inactive'
+
+        if status == 'past_due':
+            current_app.logger.warning(
+                f"Partner {partner.slug} subscription is past_due — grace period active"
+            )
+
+        tier_from_meta = metadata.get('partner_tier')
+        if tier_from_meta in ('starter', 'professional', 'enterprise'):
+            partner.tier = tier_from_meta
+        elif partner.billing_status == 'active' and partner.tier == 'free':
+            partner.tier = 'starter'
+
+
 def reconcile_partner_subscriptions():
     """
     Reconcile partner billing status with Stripe.
@@ -451,43 +513,31 @@ def reconcile_partner_subscriptions():
     if not s:
         return 0
 
-    updated = 0
+    partners_updated = 0
     partners = Partner.query.filter(Partner.stripe_subscription_id.isnot(None)).all()
     for partner in partners:
         try:
             subscription = _stripe_call(s.Subscription.retrieve, partner.stripe_subscription_id)
         except Exception as e:
-            logger.warning(f"Partner reconciliation: failed to retrieve subscription {partner.stripe_subscription_id} for {partner.slug}: {e}")
+            logger.warning(
+                f"Partner reconciliation: failed to retrieve subscription "
+                f"{partner.stripe_subscription_id} for {partner.slug}: {e}"
+            )
             continue
-        status = subscription.get('status') if isinstance(subscription, dict) else getattr(subscription, 'status', '')
-        # past_due = grace period, keep active; only revoke on terminal states
-        active_statuses = ('active', 'trialing', 'past_due')
-        new_status = 'active' if status in active_statuses else 'inactive'
-        if partner.billing_status != new_status:
-            logger.info(f"Partner reconciliation: {partner.slug} billing status {partner.billing_status} -> {new_status}")
-            partner.billing_status = new_status
-            updated += 1
 
-        # Sync tier from subscription metadata
-        metadata = subscription.get('metadata', {}) if isinstance(subscription, dict) else (subscription.metadata or {})
-        tier_from_meta = metadata.get('partner_tier')
-        if tier_from_meta in ('starter', 'professional', 'enterprise') and partner.tier != tier_from_meta:
-            logger.info(f"Partner reconciliation: {partner.slug} tier {partner.tier} -> {tier_from_meta}")
-            partner.tier = tier_from_meta
-            updated += 1
+        prev = (partner.billing_status, partner.tier, partner.stripe_subscription_id)
+        sync_partner_subscription_state(partner, subscription)
+        if (partner.billing_status, partner.tier, partner.stripe_subscription_id) != prev:
+            logger.info(
+                f"Partner reconciliation: {partner.slug} "
+                f"billing={prev[0]}->{partner.billing_status} "
+                f"tier={prev[1]}->{partner.tier}"
+            )
+            partners_updated += 1
 
-        # Revert to free on terminal states
-        if status in ('canceled', 'unpaid', 'incomplete_expired') and partner.tier != 'free':
-            logger.info(f"Partner reconciliation: {partner.slug} subscription {status}, reverting tier to free")
-            partner.tier = 'free'
-            updated += 1
-        if status in ('canceled', 'unpaid', 'incomplete_expired') and partner.stripe_subscription_id is not None:
-            logger.info(f"Partner reconciliation: clearing terminal subscription id for {partner.slug}")
-            partner.stripe_subscription_id = None
-            updated += 1
-    if updated:
+    if partners_updated:
         db.session.commit()
-    return updated
+    return partners_updated
 
 
 def sync_subscription_from_stripe(stripe_subscription, user_id=None, org_id=None):

@@ -885,6 +885,90 @@ def preview_partner_portal(partner_id):
     return redirect(url_for('partner.portal_dashboard'))
 
 
+@admin_bp.route('/partners/<int:partner_id>/update', methods=['POST'])
+@login_required
+@admin_required
+def admin_partner_update(partner_id):
+    partner = Partner.query.get_or_404(partner_id)
+    tier = (request.form.get('tier') or '').strip()
+    if tier in ('free', 'starter', 'professional', 'enterprise'):
+        partner.tier = tier
+    elif tier:
+        flash(f"Tier '{tier}' is not recognised; tier was not updated.", 'warning')
+    status = (request.form.get('status') or '').strip()
+    if status in ('active', 'pending', 'suspended'):
+        partner.status = status
+    elif status:
+        flash(f"Status '{status}' is not recognised; status was not updated.", 'warning')
+    partner.embed_disabled = request.form.get('embed_disabled') == '1'
+    billing = (request.form.get('billing_status') or '').strip()
+    if billing in ('inactive', 'active'):
+        partner.billing_status = billing
+    elif billing:
+        flash(f"Billing status '{billing}' is not recognised; billing status was not updated.", 'warning')
+    # Allow admin to link/unlink Stripe IDs for enterprise manual billing.
+    # Accept blank (clears the field) or a value with the expected Stripe prefix.
+    stripe_customer_id = (request.form.get('stripe_customer_id') or '').strip() or None
+    if stripe_customer_id is None or stripe_customer_id.startswith('cus_'):
+        partner.stripe_customer_id = stripe_customer_id
+    elif stripe_customer_id:
+        flash(
+            'Stripe customer ID was not updated: use blank to clear, or an ID starting with cus_.',
+            'warning',
+        )
+    stripe_subscription_id = (request.form.get('stripe_subscription_id') or '').strip() or None
+    if stripe_subscription_id is None or stripe_subscription_id.startswith('sub_'):
+        partner.stripe_subscription_id = stripe_subscription_id
+    elif stripe_subscription_id:
+        flash(
+            'Stripe subscription ID was not updated: use blank to clear, or an ID starting with sub_.',
+            'warning',
+        )
+    try:
+        db.session.commit()
+        _log_admin_audit_event(
+            'partner_admin_update',
+            target_type='partner',
+            target_id=partner.id,
+            metadata={
+                'tier': partner.tier,
+                'status': partner.status,
+                'billing_status': partner.billing_status,
+                'embed_disabled': partner.embed_disabled,
+                'stripe_customer_id': partner.stripe_customer_id,
+                'stripe_subscription_id': partner.stripe_subscription_id,
+            },
+        )
+        flash('Partner updated.', 'success')
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('admin_partner_update failed')
+        flash('Could not update partner.', 'error')
+    return redirect(url_for('admin.list_partners'))
+
+
+@admin_bp.route('/partners/<int:partner_id>/keys/<int:key_id>/revoke', methods=['POST'])
+@login_required
+@admin_required
+def admin_partner_revoke_key(partner_id, key_id):
+    key = PartnerApiKey.query.filter_by(id=key_id, partner_id=partner_id).first_or_404()
+    key.status = 'revoked'
+    try:
+        db.session.commit()
+        _log_admin_audit_event(
+            'partner_key_revoked',
+            target_type='partner_api_key',
+            target_id=key.id,
+            metadata={'partner_id': partner_id, 'env': key.env},
+        )
+        flash('API key revoked.', 'success')
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('admin_partner_revoke_key failed')
+        flash('Could not revoke key.', 'error')
+    return redirect(url_for('admin.list_partners'))
+
+
 @admin_bp.route('/partners/preview/stop', methods=['POST'])
 @login_required
 @admin_required

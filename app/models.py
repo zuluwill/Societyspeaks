@@ -161,6 +161,8 @@ class Partner(db.Model):
     stripe_subscription_id = db.Column(db.String(255), nullable=True)
     billing_status = db.Column(db.String(30), default='inactive', nullable=False)
     tier = db.Column(db.String(30), default='free', nullable=False)  # free | starter | professional | enterprise
+    # When True, embed + public partner ref behave as DISABLED_PARTNER_REFS (ops kill switch without redeploy)
+    embed_disabled = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=utcnow_naive)
     updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
 
@@ -826,6 +828,10 @@ class Discussion(db.Model):
     partner_id = db.Column(db.String(50), nullable=True)  # Partner slug (legacy identifier)
     partner_fk_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=True, index=True)
     partner_env = db.Column(db.String(10), default='live', nullable=False, index=True)  # test | live
+    # Audit: which API key (by DB id) was used to create this discussion.
+    # Nullable for RSS-ingested and legacy rows. Allows "who created this?" lookups without
+    # exposing the raw key — join to PartnerApiKey for key_prefix / key_last4.
+    created_by_key_id = db.Column(db.Integer, db.ForeignKey('partner_api_key.id'), nullable=True)
 
     # Integrity controls (§8)
     # Enable stricter rate limits and monitoring for high-profile or sensitive discussions
@@ -1104,6 +1110,9 @@ class Statement(db.Model):
     # Values: 'ai_generated', 'partner_provided', 'user_submitted'
     source = db.Column(db.String(20), nullable=True)
 
+    # Partner API seed_statements[].position: pro | con | neutral (nullable for non-seeds / legacy)
+    seed_stance = db.Column(db.String(20), nullable=True)
+
     created_at = db.Column(db.DateTime, default=utcnow_naive)
     updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive)
     
@@ -1161,6 +1170,7 @@ class Statement(db.Model):
             'controversy_score': self.controversy_score,
             'is_seed': self.is_seed,
             'source': self.source,  # ai_generated, partner_provided, user_submitted
+            'seed_stance': self.seed_stance,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
