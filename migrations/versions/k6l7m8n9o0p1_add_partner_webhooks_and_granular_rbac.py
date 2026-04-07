@@ -43,12 +43,8 @@ def upgrade():
         ['partner_id', 'status'],
         unique=False,
     )
-    op.create_index(
-        'idx_partner_webhook_event_types',
-        'partner_webhook_endpoint',
-        ['event_types'],
-        unique=False,
-    )
+    # Note: JSON columns cannot be indexed with btree (PostgreSQL default).
+    # Webhook event_type filtering is done in application code; no index needed.
 
     op.create_table(
         'partner_webhook_delivery',
@@ -120,7 +116,6 @@ def downgrade():
     op.drop_index('idx_partner_webhook_delivery_status_next', table_name='partner_webhook_delivery')
     op.drop_table('partner_webhook_delivery')
 
-    op.drop_index('idx_partner_webhook_event_types', table_name='partner_webhook_endpoint')
     op.drop_index('idx_partner_webhook_partner_status', table_name='partner_webhook_endpoint')
     op.drop_table('partner_webhook_endpoint')
 
