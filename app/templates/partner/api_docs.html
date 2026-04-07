@@ -66,8 +66,8 @@
         <h3 class="font-semibold text-blue-900 mb-2">Testing the API</h3>
         <ul class="text-blue-800 text-sm space-y-1">
           <li><strong>Partner Portal:</strong> <a href="{{ url_for('partner.portal_signup') }}" class="underline font-medium">Create a portal</a> to get your test API key and DNS verification token.</li>
-          <li><strong>Interactive playground:</strong> <a href="{{ url_for('partner.api_playground') }}" class="underline font-medium">Open API Playground</a> to try lookup, snapshot, and oEmbed from your browser (Swagger UI). Requests run against this site.</li>
-          <li><strong>Create Discussion</strong> requires an API key; add it in the playground using the Authorize button (X-API-Key).</li>
+          <li><strong>Interactive playground:</strong> <a href="{{ url_for('partner.api_playground') }}" class="underline font-medium">Open API Playground</a> to try browser-safe endpoints (lookup, snapshot, oEmbed) from Swagger UI.</li>
+          <li><strong>Write endpoints</strong> (<code>POST/PATCH /api/partner/...</code>) are server-to-server only and should be tested from your backend or curl/Postman, not from browser Swagger.</li>
           <li><strong>From the command line:</strong> use the <code class="bg-blue-100 px-1 rounded">curl</code> examples in each section below, replacing the base URL and parameters as needed.</li>
         </ul>
       </div>
@@ -136,11 +136,10 @@
         <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
           <p class="text-sm font-semibold text-amber-900 mb-1">Server-to-server only for write operations</p>
           <p class="text-sm text-amber-800">
-            The <code>X-API-Key</code> header is intentionally excluded from browser CORS preflight.
-            <strong>Create Discussion</strong> must be called from your server, not from client-side JavaScript
+            <strong>Create Discussion</strong> and partner management routes must be called from your server, not from client-side JavaScript
             (requests with an <code>Origin</code> header are rejected with <code>403</code>).
             Read-only endpoints (Lookup, Snapshot, oEmbed) work from browsers without an API key.
-            If you need authenticated lookups from the browser, proxy through your own backend.
+            For authenticated requests from a web app, proxy through your backend so API keys stay secret.
           </p>
         </div>
       </div>

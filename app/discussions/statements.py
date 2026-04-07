@@ -938,20 +938,16 @@ def vote_statement(statement_id):
         if request.form.get('cohort'):
             cohort_slug = request.form.get('cohort').strip() or None
 
-    # Reject votes from disabled partner refs (kill switch)
-    ref_str = (partner_ref if isinstance(partner_ref, str) else str(partner_ref or '')).strip().lower()
-    disabled_refs = current_app.config.get('DISABLED_PARTNER_REFS') or []
-    if not isinstance(disabled_refs, list):
-        disabled_refs = []
-    if ref_str and ref_str in disabled_refs:
+    # Reject votes from disabled partner refs (kill switch: env + Partner.embed_disabled)
+    from app.api.utils import sanitize_partner_ref, partner_ref_is_disabled
+    partner_ref = sanitize_partner_ref(
+        partner_ref if isinstance(partner_ref, str) else str(partner_ref or '')
+    )
+    if partner_ref and partner_ref_is_disabled(partner_ref):
         if is_form_post:
             flash('Voting from this partner is currently unavailable.', 'error')
             return redirect(url_for('statements.view_statement', statement_id=statement_id))
         return jsonify({'error': 'Embed and API access has been revoked for this partner.'}), 403
-
-    # Sanitize partner_ref (shared rule: see app.api.utils.sanitize_partner_ref)
-    from app.api.utils import sanitize_partner_ref
-    partner_ref = sanitize_partner_ref(partner_ref)
 
     if vote_value not in [-1, 0, 1]:
         if is_form_post:

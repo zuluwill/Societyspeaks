@@ -24,6 +24,25 @@
     </div>
     {% endif %}
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="mb-4 rounded-lg px-4 py-3 text-sm
+          {% if category == 'success' %}bg-green-50 text-green-800 border border-green-200
+          {% elif category == 'warning' %}bg-amber-50 text-amber-800 border border-amber-200
+          {% else %}bg-red-50 text-red-800 border border-red-200{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 mb-6">
+      <p class="text-sm font-semibold text-amber-900 mb-1">Important setup note</p>
+      <p class="text-sm text-amber-800">
+        Write endpoints (<code>POST/PATCH /api/partner/...</code>) must be called from your backend only.
+        Browser requests with an <code>Origin</code> header are rejected.
+      </p>
+    </div>
+
     <div class="grid gap-6 lg:grid-cols-3 mb-8">
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <h3 class="text-lg font-semibold text-gray-900 mb-2">Status</h3>
@@ -38,6 +57,17 @@
             {% if has_live_key %}<span class="ml-2 text-emerald-600 font-semibold">Active</span>{% else %}<span class="ml-2 text-gray-400">Pending</span>{% endif %}
           </li>
         </ol>
+        <p class="text-xs text-gray-500 mt-3">
+          {% if not has_verified_test_domain %}
+            Next action: verify a test domain.
+          {% elif not has_test_key %}
+            Next action: create a test API key.
+          {% elif not has_live_key %}
+            Next action: complete test integration, then activate live keys.
+          {% else %}
+            Setup complete: keep production domains verified and monitor usage from the dashboard.
+          {% endif %}
+        </p>
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
         <h3 class="text-lg font-semibold text-gray-900 mb-2">Docs</h3>
@@ -103,6 +133,11 @@
       <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 class="text-xl font-semibold text-gray-900 mb-2">Step 2: Create a test API key</h2>
         <p class="text-sm text-gray-600 mb-4">Use test keys on staging before going live.</p>
+        {% if not can_manage_keys %}
+        <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-4">
+          Only owners and admins can create, rotate, or revoke API keys.
+        </p>
+        {% endif %}
         <div class="flex flex-wrap gap-2 mb-4">
           <form method="POST" action="{{ url_for('partner.portal_create_key') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -127,13 +162,14 @@
           <p class="text-sm text-gray-500">No API keys yet.</p>
           {% endfor %}
         </div>
+        <p class="text-xs text-gray-500 mt-3">For security, full keys are only shown once when created.</p>
       </div>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2 mt-6">
       <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm min-w-0">
         <h2 class="text-xl font-semibold text-gray-900 mb-2">Step 3: Create or lookup a discussion</h2>
-        <p class="text-sm text-gray-600 mb-4">Store the discussion ID in your CMS for consistent embeds. Run create calls from your backend only.</p>
+        <p class="text-sm text-gray-600 mb-4">Store the discussion ID in your CMS for consistent embeds. Use an <code>Idempotency-Key</code> on create to safely retry failed requests.</p>
         <div class="code-block relative group">
           <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">curl "{{ base_url }}/api/discussions/by-article-url?url=https://example.com/article" \
@@ -183,7 +219,7 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
       </div>
       <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 class="text-xl font-semibold text-gray-900 mb-2">Step 4: Embed on your page</h2>
-        <p class="text-sm text-gray-600 mb-4">Use the returned <code>embed_url</code> or build the iframe below.</p>
+        <p class="text-sm text-gray-600 mb-4">Use the returned <code>embed_url</code> from lookup/create. This ensures you use the correct discussion and environment.</p>
         <div class="code-block relative group">
           <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
           <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">&lt;iframe src="{{ base_url }}/discussions/{id}/embed" width="100%" height="600" frameborder="0" loading="lazy"&gt;&lt;/iframe&gt;</pre>
@@ -196,7 +232,7 @@ curl -X POST "{{ base_url }}/api/partner/discussions" \
 
     <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-6">
       <h2 class="text-xl font-semibold text-gray-900 mb-2">Step 5: Go live</h2>
-      <p class="text-sm text-gray-600 mb-4">Choose a plan to create live keys and verify production domains.</p>
+      <p class="text-sm text-gray-600 mb-4">Choose a plan to create live keys, then verify production domains before launching embeds publicly.</p>
       {% if partner.billing_status != 'active' %}
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
         <form method="POST" action="{{ url_for('partner.portal_start_billing') }}">

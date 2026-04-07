@@ -29,6 +29,7 @@ class Config:
 
     # Optional: comma-separated list of partner refs that are disabled (embed and API return 403/unavailable)
     # Example: DISABLED_PARTNER_REFS=bad-actor,revoked-partner
+    # Also: Partner.embed_disabled (DB) per slug — no redeploy required; see Admin → Partners.
     _disabled_refs = os.getenv('DISABLED_PARTNER_REFS', '')
     DISABLED_PARTNER_REFS = [r.strip().lower() for r in _disabled_refs.split(',') if r.strip()]
 
@@ -36,14 +37,15 @@ class Config:
     _demo_id = os.getenv('DEMO_DISCUSSION_ID', '').strip()
     DEMO_DISCUSSION_ID = int(_demo_id) if _demo_id.isdigit() else None
 
-    # Partner API keys for Create Discussion (you issue these; partners do not use their own keys)
-    # JSON object: {"secret_key_1": "partner_id_1", "secret_key_2": "partner_id_2"}
-    # Only holders of these keys can call POST /api/partner/discussions (rate limited 30/hour per key)
+    # Legacy config-key fallback for partner API auth (JSON object: {"key": "partner-slug"}).
+    # Best practice is DB-backed portal-issued keys; this fallback is disabled by default.
+    # Enable only during migration windows, then remove legacy keys.
     _partner_keys_str = os.getenv('PARTNER_API_KEYS', '{}')
     try:
         PARTNER_API_KEYS = json.loads(_partner_keys_str) if isinstance(_partner_keys_str, str) else _partner_keys_str
     except (ValueError, TypeError):
         PARTNER_API_KEYS = {}
+    ALLOW_LEGACY_PARTNER_API_KEYS = os.getenv('ALLOW_LEGACY_PARTNER_API_KEYS', 'false').lower() == 'true'
 
     # Secret for hashing partner API keys (defaults to SECRET_KEY if not set)
     # WARNING: If SECRET_KEY rotates, all partner API keys become invalid unless PARTNER_KEY_SECRET is set separately

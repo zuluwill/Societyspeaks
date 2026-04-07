@@ -196,7 +196,33 @@ def get_snapshot(discussion_id):
     if ref_normalized and partner_ref_is_disabled(ref_normalized):
         return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
 
-    # Try cache first
+    # Load discussion first so test-env auth is enforced before any cache return.
+    discussion = db.session.get(Discussion, discussion_id)
+    if not discussion:
+        return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
+
+    # Auth: test discussions always require the owning partner's test key.
+    # Live discussions are public without a key; if X-API-Key is sent (analytics / tooling),
+    # apply the same partner.status / embed_disabled gates as lookup.
+    api_key = request.headers.get('X-API-Key')
+    if discussion.partner_env == 'test':
+        is_valid, partner_slug, key_env, partner, _ = _validate_api_key()
+        if not is_valid or key_env != 'test' or partner_slug != discussion.partner_id:
+            return api_error('forbidden', 'A valid test API key is required for this discussion.', 403)
+        if partner and partner.status != 'active':
+            return api_error('partner_inactive', 'Partner account is not active.', 403)
+        if partner and partner.embed_disabled:
+            return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
+    elif api_key:
+        is_valid, partner_slug, key_env, partner, _ = _validate_api_key()
+        if not is_valid:
+            return api_error('invalid_api_key', 'Invalid X-API-Key.', 401)
+        if partner and partner.status != 'active':
+            return api_error('partner_inactive', 'Partner account is not active.', 403)
+        if partner and partner.embed_disabled:
+            return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
+
+    # Try cache after auth checks.
     cache_key = f"snapshot:{discussion_id}"
     version_key = f"snapshot:version:{discussion_id}"
     try:
@@ -228,32 +254,6 @@ def get_snapshot(discussion_id):
 
         increment_counter("cache_metrics:snapshot:stale_read", ttl_seconds=24 * 3600, fallback_cache=cache)
     increment_counter("cache_metrics:snapshot:miss", ttl_seconds=24 * 3600, fallback_cache=cache)
-
-    # Load discussion
-    discussion = db.session.get(Discussion, discussion_id)
-    if not discussion:
-        return api_error('discussion_not_found', 'The requested discussion does not exist.', 404)
-
-    # Auth: test discussions always require the owning partner's test key.
-    # Live discussions are public without a key; if X-API-Key is sent (analytics / tooling),
-    # apply the same partner.status / embed_disabled gates as lookup.
-    api_key = request.headers.get('X-API-Key')
-    if discussion.partner_env == 'test':
-        is_valid, partner_slug, key_env, partner, _ = _validate_api_key()
-        if not is_valid or key_env != 'test' or partner_slug != discussion.partner_id:
-            return api_error('forbidden', 'A valid test API key is required for this discussion.', 403)
-        if partner and partner.status != 'active':
-            return api_error('partner_inactive', 'Partner account is not active.', 403)
-        if partner and partner.embed_disabled:
-            return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
-    elif api_key:
-        is_valid, partner_slug, key_env, partner, _ = _validate_api_key()
-        if not is_valid:
-            return api_error('invalid_api_key', 'Invalid X-API-Key.', 401)
-        if partner and partner.status != 'active':
-            return api_error('partner_inactive', 'Partner account is not active.', 403)
-        if partner and partner.embed_disabled:
-            return api_error('partner_disabled', 'Embed and API access has been revoked for this partner.', 403)
 
     # Get counts
     participant_count = get_discussion_participant_count(discussion)
@@ -338,10 +338,30 @@ def _validate_api_key():
     if record and partner:
         return True, partner.slug, env, partner, record
 
-    # Legacy config keys (default to live)
+    # Optional legacy config-key fallback (migration aid only).
+    # Best practice is DB-backed portal keys for kill switches, billing enforcement,
+    # and key-level attribution.
+    allow_legacy = bool(current_app.config.get('ALLOW_LEGACY_PARTNER_API_KEYS', False))
+    if not allow_legacy:
+        return False, None, None, None, None
+
+    from app.models import Partner
     api_keys = current_app.config.get('PARTNER_API_KEYS', {})
-    if api_key in api_keys:
-        return True, api_keys[api_key], 'live', None, None
+    partner_slug = api_keys.get(api_key)
+    if partner_slug:
+        partner = Partner.query.filter_by(slug=partner_slug).first()
+        if not partner:
+            current_app.logger.error(
+                "Legacy PARTNER_API_KEYS mapping rejected: partner slug '%s' has no Partner row",
+                partner_slug,
+            )
+            return False, None, None, None, None
+        current_app.logger.warning(
+            "Legacy PARTNER_API_KEYS auth accepted for partner '%s'. "
+            "Migrate to portal-issued DB keys.",
+            partner_slug,
+        )
+        return True, partner_slug, 'live', partner, None
 
     return False, None, None, None, None
 

@@ -92,6 +92,24 @@ def statement(db, discussion):
     return s
 
 
+def _issue_partner_api_key(db, partner, env='live'):
+    """Create and persist a DB-backed partner API key, returning the plaintext key."""
+    from app.models import PartnerApiKey
+    from app.partner.keys import generate_partner_api_key
+
+    full_key, key_hash, last4 = generate_partner_api_key(env)
+    db.session.add(PartnerApiKey(
+        partner_id=partner.id,
+        key_prefix=full_key[:16],
+        key_hash=key_hash,
+        key_last4=last4,
+        env=env,
+        status='active',
+    ))
+    db.session.commit()
+    return full_key
+
+
 # ---------------------------------------------------------------------------
 # Partner Ref Sanitization
 # ---------------------------------------------------------------------------
@@ -239,6 +257,55 @@ class TestGetSnapshot:
         app.config['DISABLED_PARTNER_REFS'] = ['banned-ref']
         resp = client.get(f'/api/discussions/{discussion.id}/snapshot?ref=banned-ref')
         assert resp.status_code == 403
+
+    def test_test_snapshot_requires_key_even_if_payload_cached(self, client, app, db, partner):
+        """Regression: cache hits must never bypass test-key auth."""
+        from app import cache
+        from app.models import Discussion
+
+        d = Discussion(
+            title='Private test discussion',
+            slug='private-test-discussion',
+            has_native_statements=True,
+            geographic_scope='global',
+            partner_env='test',
+            partner_id=partner.slug,
+            partner_fk_id=partner.id,
+        )
+        db.session.add(d)
+        db.session.commit()
+
+        cache.set(f"snapshot:{d.id}", {
+            'discussion_id': d.id,
+            'discussion_title': d.title,
+            'participant_count': 0,
+            'statement_count': 0,
+            'has_analysis': False,
+            'consensus_url': f"https://example.com/discussions/{d.id}/x/consensus",
+            'env': 'test',
+            '_snapshot_version': 0,
+        }, timeout=600)
+        cache.set(f"snapshot:version:{d.id}", 0, timeout=600)
+
+        unauth = client.get(f'/api/discussions/{d.id}/snapshot')
+        assert unauth.status_code == 403
+        assert unauth.get_json()['error'] == 'forbidden'
+
+        live_key = _issue_partner_api_key(db, partner, env='live')
+        wrong_env = client.get(
+            f'/api/discussions/{d.id}/snapshot',
+            headers={'X-API-Key': live_key}
+        )
+        assert wrong_env.status_code == 403
+        assert wrong_env.get_json()['error'] == 'forbidden'
+
+        test_key = _issue_partner_api_key(db, partner, env='test')
+        ok = client.get(
+            f'/api/discussions/{d.id}/snapshot',
+            headers={'X-API-Key': test_key}
+        )
+        assert ok.status_code == 200
+        assert ok.get_json()['discussion_id'] == d.id
 
 
 # ---------------------------------------------------------------------------
@@ -401,6 +468,7 @@ class TestCreateDiscussion:
         assert resp.status_code == 401
 
     def test_browser_origin_rejected_for_create(self, client, app):
+        app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         resp = client.post(
             '/api/partner/discussions',
@@ -429,6 +497,7 @@ class TestCreateDiscussion:
 
     def test_missing_body_returns_400(self, client, app):
         # Use a legacy config key for simplicity
+        app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         resp = client.post(
             '/api/partner/discussions',
@@ -438,6 +507,7 @@ class TestCreateDiscussion:
         assert resp.status_code == 400
 
     def test_missing_article_url_returns_400(self, client, app):
+        app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         resp = client.post(
             '/api/partner/discussions',
@@ -447,6 +517,7 @@ class TestCreateDiscussion:
         assert resp.status_code == 400
 
     def test_missing_title_returns_400(self, client, app):
+        app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         resp = client.post(
             '/api/partner/discussions',
@@ -457,6 +528,7 @@ class TestCreateDiscussion:
 
     def test_missing_content_returns_400(self, client, app):
         """Must provide either excerpt or seed_statements."""
+        app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         resp = client.post(
             '/api/partner/discussions',
@@ -472,6 +544,7 @@ class TestCreateDiscussion:
 
     def test_same_title_different_urls_generate_unique_slugs(self, client, app):
         """Same title across different URLs should not fail on slug collisions."""
+        app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         headers = {'X-API-Key': 'test-key'}
 
@@ -497,6 +570,7 @@ class TestCreateDiscussion:
         assert first_data['slug'] != second_data['slug']
 
     def test_idempotency_key_retry_returns_same_discussion(self, client, app):
+        app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         payload = {
             'article_url': 'https://example.com/idempotent-article',
@@ -516,6 +590,7 @@ class TestCreateDiscussion:
         assert first_data['discussion_id'] == second_data['discussion_id']
 
     def test_idempotency_key_reuse_with_different_payload_returns_409(self, client, app):
+        app.config['ALLOW_LEGACY_PARTNER_API_KEYS'] = True
         app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
         headers = {'X-API-Key': 'test-key', 'Idempotency-Key': 'idem-456'}
 
@@ -541,6 +616,21 @@ class TestCreateDiscussion:
         assert first.status_code == 201
         assert second.status_code == 409
         assert second.get_json()['error'] == 'idempotency_key_reused'
+
+    def test_legacy_config_key_rejected_by_default(self, client, app):
+        app.config.pop('ALLOW_LEGACY_PARTNER_API_KEYS', None)
+        app.config['PARTNER_API_KEYS'] = {'test-key': 'test-publisher'}
+        resp = client.post(
+            '/api/partner/discussions',
+            json={
+                'article_url': 'https://example.com/article',
+                'title': 'Test Discussion',
+                'seed_statements': [{'content': 'This is a valid seed statement.', 'position': 'neutral'}],
+            },
+            headers={'X-API-Key': 'test-key'}
+        )
+        assert resp.status_code == 401
+        assert resp.get_json()['error'] == 'invalid_api_key'
 
 
 # ---------------------------------------------------------------------------

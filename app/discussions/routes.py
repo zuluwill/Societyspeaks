@@ -574,12 +574,9 @@ def embed_discussion(discussion_id):
 
     # Get partner ref and check if this ref is disabled (kill switch)
     ref = request.args.get('ref', '')
-    from app.api.utils import sanitize_partner_ref, append_ref_param
+    from app.api.utils import sanitize_partner_ref, append_ref_param, partner_ref_is_disabled
     ref_normalized = sanitize_partner_ref(ref)
-    disabled_refs = current_app.config.get('DISABLED_PARTNER_REFS') or []
-    if not isinstance(disabled_refs, list):
-        disabled_refs = []
-    if ref_normalized and ref_normalized in disabled_refs:
+    if ref_normalized and partner_ref_is_disabled(ref_normalized):
         base_url = current_app.config.get('BASE_URL', 'https://societyspeaks.io')
         return render_template(
             'discussions/embed_unavailable.html',

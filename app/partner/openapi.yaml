@@ -4,6 +4,8 @@ info:
   description: |
     Integrate Society Speaks on your site. Look up discussions by article URL,
     get participation snapshots, and embed the voting widget.
+    API keys are issued in the Partner Portal and sent as `X-API-Key`.
+    Write/management endpoints are server-to-server only (browser `Origin` requests are rejected).
     All endpoints return JSON. See the [Partner Hub](.) for full documentation.
   version: 1.0.0
   contact:
@@ -37,7 +39,7 @@ paths:
         - name: X-API-Key
           in: header
           required: false
-          description: Partner test/live API key (required for test environment access)
+          description: Portal-issued partner test/live API key (required for test environment access)
           schema:
             type: string
       responses:
@@ -103,7 +105,7 @@ paths:
         - name: X-API-Key
           in: header
           required: false
-          description: Partner test/live API key (required for test environment access)
+          description: Portal-issued partner test/live API key (required for test environment access)
           schema:
             type: string
       responses:
@@ -265,7 +267,11 @@ paths:
   /api/partner/discussions:
     post:
       summary: Create discussion (authenticated)
-      description: Create a discussion for an article not ingested via RSS. Requires X-API-Key header.
+      description: |
+        Create a discussion for an article not ingested via RSS.
+        Requires a portal-issued `X-API-Key` and must be called server-to-server
+        (requests with browser `Origin` are rejected).
+        For each seed statement, optional `position` (pro|con|neutral) is stored as `Statement.seed_stance`.
       operationId: createDiscussion
       security:
         - ApiKeyAuth: []
@@ -287,16 +293,21 @@ paths:
                   maxLength: 200
                 excerpt:
                   type: string
+                  maxLength: 5000
                 source_name:
                   type: string
+                  maxLength: 200
                 seed_statements:
                   type: array
+                  maxItems: 50
                   items:
                     type: object
                     required: [content]
                     properties:
                       content:
                         type: string
+                        minLength: 10
+                        maxLength: 500
                       position:
                         type: string
                         enum: [pro, con, neutral]
@@ -335,7 +346,7 @@ paths:
         '402':
           description: Live API requires active subscription
         '403':
-          description: Partner inactive or browser request not allowed (use server-to-server)
+          description: Partner inactive, embed/API disabled, or browser request not allowed (use server-to-server)
         '409':
           description: Discussion already exists for this URL
         '429':
@@ -347,10 +358,154 @@ paths:
                 type: integer
                 example: 60
 
+    get:
+      summary: List partner discussions
+      description: |
+        Returns discussions owned by this partner.
+        Requires portal-issued `X-API-Key`; server-to-server only (no browser `Origin`).
+        Supports pagination and env filter.
+      operationId: listPartnerDiscussions
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: query
+          name: env
+          schema:
+            type: string
+            enum: [test, live, all]
+          description: Filter by environment (default all)
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Paginated list of discussions with embed/consensus URLs and vote counts
+        '401':
+          description: Missing or invalid API key
+        '403':
+          description: Browser Origin not allowed, partner inactive, or partner API disabled
+
+  /api/partner/discussions/{discussion_id}:
+    patch:
+      summary: Update discussion (close, integrity mode)
+      description: |
+        Requires portal-issued `X-API-Key`. Server-to-server only.
+        Toggle is_closed and/or integrity_mode.
+      operationId: patchPartnerDiscussion
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: discussion_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_closed:
+                  type: boolean
+                integrity_mode:
+                  type: boolean
+      responses:
+        '200':
+          description: Updated discussion metadata
+        '403':
+          description: Not owned by this partner or wrong env key
+        '404':
+          description: Discussion not found
+
+  /api/partner/discussions/{discussion_id}/statements:
+    post:
+      summary: Add seed statements
+      description: |
+        Requires portal-issued `X-API-Key`. Server-to-server only.
+        Append moderator-approved seed statements after creation.
+        Each item's `position` (pro | con | neutral) is persisted on the statement as `seed_stance`.
+      operationId: addPartnerDiscussionStatements
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: discussion_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - seed_statements
+              properties:
+                seed_statements:
+                  type: array
+                  items:
+                    type: object
+                    required: [content]
+                    properties:
+                      content:
+                        type: string
+                      position:
+                        type: string
+                        enum: [pro, con, neutral]
+      responses:
+        '201':
+          description: Statements added
+        '429':
+          description: Discussion statement cap reached
+
+  /api/partner/discussions/{discussion_id}/flags:
+    get:
+      summary: List statement flags (moderation inbox)
+      description: |
+        Requires portal-issued `X-API-Key`. Server-to-server only.
+        Pending and reviewed flags for statements in this discussion.
+      operationId: listPartnerDiscussionFlags
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - in: path
+          name: discussion_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [pending, reviewed, dismissed, all]
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Paginated flag list
+
 components:
   securitySchemes:
     ApiKeyAuth:
       type: apiKey
       in: header
       name: X-API-Key
-      description: Partner API key (required for Create Discussion)
+      description: Portal-issued partner API key (required for authenticated partner endpoints)

@@ -60,6 +60,10 @@
       </div>
     </form>
 
+    <div class="rounded-lg border border-gray-200 bg-white px-4 py-3 mb-4 text-xs text-gray-600">
+      <strong>Tip:</strong> Use <em>View</em> for per-statement analytics, <em>Close</em> to pause new participation, and <em>Created via key</em> to audit which API key created each discussion.
+    </div>
+
     {# Table #}
     <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
@@ -113,7 +117,7 @@
                 </div>
               </td>
               <td class="px-4 py-3 font-mono text-xs text-gray-500 whitespace-nowrap">
-                {{ row.key_label or '—' }}
+                {{ row.key_label or 'legacy/unknown' }}
               </td>
               <td class="px-4 py-3 max-w-xs truncate text-gray-600" title="{{ d.partner_article_url or '' }}">
                 {{ d.partner_article_url or '—' }}
