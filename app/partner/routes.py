@@ -13,7 +13,7 @@ import os
 import re
 import secrets
 from functools import wraps
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from urllib.parse import urlparse
 from sqlalchemy.exc import IntegrityError
 from flask import render_template, request, current_app, send_from_directory, redirect, url_for, flash, session, Response
@@ -361,8 +361,6 @@ def _compute_partner_health(partner, keys, domains, usage):
 
 def _partner_discussion_quota(partner):
     """Live discussions this calendar month vs tier cap; test lifetime count."""
-    from datetime import datetime, timezone
-
     tier_limits = current_app.config.get('PARTNER_TIER_LIMITS', {})
     tier = getattr(partner, 'tier', 'free') or 'free'
     limit = tier_limits.get(tier, 25)
@@ -391,7 +389,6 @@ def _check_partner_quota_for_env(partner, env):
     Returns None if within quota, or a human-readable error string if capped.
     Mirrors _partner_discussion_quota and the API enforcement — uses UTC month start.
     """
-    from datetime import timezone
     tier_limits = current_app.config.get('PARTNER_TIER_LIMITS', {})
     partner_tier = getattr(partner, 'tier', 'free') or 'free'
     tier_limit = tier_limits.get(partner_tier, 25)
