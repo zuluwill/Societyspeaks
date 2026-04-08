@@ -380,6 +380,36 @@ def _partner_discussion_quota(partner):
     }
 
 
+def _check_partner_quota_for_env(partner, env):
+    """
+    Check whether the partner has capacity to create another discussion.
+    Returns None if within quota, or a human-readable error string if capped.
+    """
+    tier_limits = current_app.config.get('PARTNER_TIER_LIMITS', {})
+    partner_tier = getattr(partner, 'tier', 'free') or 'free'
+    tier_limit = tier_limits.get(partner_tier, 25)
+
+    if tier_limit is None:
+        return None  # Enterprise — no cap
+
+    if env == 'test':
+        count = Discussion.query.filter_by(partner_fk_id=partner.id, partner_env='test').count()
+    else:
+        month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        count = Discussion.query.filter(
+            Discussion.partner_fk_id == partner.id,
+            Discussion.partner_env == 'live',
+            Discussion.created_at >= month_start,
+        ).count()
+
+    if count >= tier_limit:
+        return (
+            f'Discussion quota reached for your {partner_tier.title()} plan '
+            f'({count}/{tier_limit}). Upgrade to create more.'
+        )
+    return None
+
+
 def _build_partner_portal_context(partner):
     domains = partner.domains.order_by(PartnerDomain.created_at.desc()).all()
     keys = partner.api_keys.order_by(PartnerApiKey.created_at.desc()).all()
@@ -916,6 +946,7 @@ def portal_discussions():
         can_edit=can_edit,
         can_create=_member_can_manage_discussions(_current_partner_member(partner)) and not _is_admin_preview(partner),
         is_admin_preview=_is_admin_preview(partner),
+        discussion_topics=Discussion.TOPICS,
         portal_page='discussions',
     )
 
@@ -939,6 +970,8 @@ def portal_create_discussion():
     article_url = (request.form.get('article_url') or '').strip()
     external_id = (request.form.get('external_id') or '').strip()
     excerpt = (request.form.get('excerpt') or '').strip()
+    description = (request.form.get('description') or '').strip()
+    topic = (request.form.get('topic') or '').strip()
     env = (request.form.get('env') or 'test').strip()
 
     if env not in ('test', 'live'):
@@ -960,24 +993,14 @@ def portal_create_discussion():
         flash('An active subscription is required to create live discussions.', 'error')
         return redirect(url_for('partner.portal_discussions'))
 
-    # Quota check
-    tier_limits = current_app.config.get('PARTNER_TIER_LIMITS', {})
-    partner_tier = getattr(partner, 'tier', 'free') or 'free'
-    tier_limit = tier_limits.get(partner_tier, 25)
+    if topic and topic not in Discussion.TOPICS:
+        topic = ''
 
-    if tier_limit is not None:
-        if env == 'test':
-            env_count = Discussion.query.filter_by(partner_fk_id=partner.id, partner_env='test').count()
-        else:
-            month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            env_count = Discussion.query.filter(
-                Discussion.partner_fk_id == partner.id,
-                Discussion.partner_env == 'live',
-                Discussion.created_at >= month_start,
-            ).count()
-        if env_count >= tier_limit:
-            flash(f'Discussion quota reached for your {partner_tier.title()} plan. Upgrade to create more.', 'error')
-            return redirect(url_for('partner.portal_discussions'))
+    # Quota check (DRY — shared with API)
+    quota_err = _check_partner_quota_for_env(partner, env)
+    if quota_err:
+        flash(quota_err, 'error')
+        return redirect(url_for('partner.portal_discussions'))
 
     # Normalise article URL
     normalized_url = None
@@ -1024,8 +1047,9 @@ def portal_create_discussion():
 
     discussion = Discussion(
         title=title,
-        description=excerpt[:500] if excerpt else None,
+        description=(description[:1000] if description else (excerpt[:500] if excerpt else None)),
         slug=unique_slug,
+        topic=topic or None,
         has_native_statements=True,
         geographic_scope='global',
         partner_id=partner.slug,
@@ -1168,6 +1192,74 @@ def portal_discussion_detail(discussion_id):
         is_admin_preview=_is_admin_preview(partner),
         portal_page='detail',
     )
+
+
+@partner_bp.route('/portal/discussions/<int:discussion_id>/statements/new', methods=['POST'])
+@partner_login_required
+def portal_add_statement(discussion_id):
+    """Add a seed statement to a discussion directly from the portal UI."""
+    partner = _current_partner()
+
+    if not _member_can_manage_discussions(_current_partner_member(partner)):
+        flash('You do not have permission to add statements.', 'error')
+        return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+
+    if _is_admin_preview(partner):
+        flash('Admin preview mode: write actions are disabled.', 'warning')
+        return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+
+    discussion = Discussion.query.filter(
+        Discussion.id == discussion_id,
+        _portal_discussion_belongs_clause(partner),
+    ).first_or_404()
+
+    if discussion.is_closed:
+        flash('This discussion is closed. Reopen it before adding statements.', 'warning')
+        return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+
+    content = (request.form.get('content') or '').strip()
+    stance = (request.form.get('stance') or '').strip()
+
+    if not content:
+        flash('Statement content is required.', 'error')
+        return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+    if len(content) < 10:
+        flash('Statement must be at least 10 characters.', 'error')
+        return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+    if len(content) > 500:
+        flash('Statement must be 500 characters or fewer.', 'error')
+        return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+    if stance and stance not in ('pro', 'con', 'neutral'):
+        stance = ''
+
+    existing = Statement.query.filter_by(
+        discussion_id=discussion_id, content=content, is_deleted=False
+    ).first()
+    if existing:
+        flash('An identical statement already exists in this discussion.', 'warning')
+        return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+
+    stmt = Statement(
+        discussion_id=discussion_id,
+        content=content,
+        seed_stance=stance or None,
+        statement_type='claim',
+        is_seed=True,
+        mod_status=1,
+    )
+    db.session.add(stmt)
+    if not discussion.has_native_statements:
+        discussion.has_native_statements = True
+
+    try:
+        db.session.commit()
+        flash('Statement added.', 'success')
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to add statement from portal")
+        flash('Failed to add statement — please try again.', 'error')
+
+    return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
 
 
 @partner_bp.route('/portal/getting-started')

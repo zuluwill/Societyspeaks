@@ -175,10 +175,76 @@
       </div>
       {% else %}
       <div class="px-6 py-8 text-center text-gray-500 text-sm">
-        No statements yet. Add seeds via <code class="bg-gray-100 px-1 rounded">POST /api/partner/discussions/{{ discussion.id }}/statements</code>.
+        {% if can_edit and not discussion.is_closed %}
+          No statements yet — add the first one below.
+        {% else %}
+          No statements yet.
+        {% endif %}
       </div>
       {% endif %}
     </div>
+
+    {# Add statement form #}
+    {% if can_edit %}
+    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm mt-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-1">Add a statement</h2>
+      {% if discussion.is_closed %}
+      <p class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+        This discussion is closed. Reopen it to add new statements.
+      </p>
+      {% else %}
+      <p class="text-sm text-gray-500 mb-4">
+        Statements are immediately visible to readers as they vote. Keep them concise (10–500 characters), specific, and debatable.
+        These behave exactly like the seed statements regular users see — they are pre-approved and framed with a stance.
+      </p>
+      <form method="POST" action="{{ url_for('partner.portal_add_statement', discussion_id=discussion.id) }}" class="grid gap-4">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Statement <span class="text-red-500">*</span>
+            <span class="font-normal text-gray-400 ml-1">(10–500 characters)</span>
+          </label>
+          <textarea name="content" rows="3" maxlength="500" required
+                    placeholder="e.g. Stricter emissions targets would cost more jobs than they create."
+                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                    id="statement-content-input"></textarea>
+          <p class="text-xs text-gray-400 mt-1" id="statement-char-count">0 / 500</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Stance <span class="text-gray-400 font-normal">(optional — helps frame the statement for readers)</span></label>
+          <div class="flex flex-wrap gap-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="stance" value="pro" class="accent-emerald-600">
+              <span class="text-sm text-emerald-700 font-medium">Pro</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="stance" value="con" class="accent-red-600">
+              <span class="text-sm text-red-700 font-medium">Con</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="radio" name="stance" value="neutral" class="accent-gray-500">
+              <span class="text-sm text-gray-600 font-medium">Neutral</span>
+            </label>
+          </div>
+        </div>
+        <div>
+          <button type="submit"
+                  class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
+            Add statement
+          </button>
+        </div>
+      </form>
+      <script>
+        (function(){
+          var ta = document.getElementById('statement-content-input');
+          var ctr = document.getElementById('statement-char-count');
+          if (!ta || !ctr) return;
+          ta.addEventListener('input', function(){ ctr.textContent = ta.value.length + ' / 500'; });
+        })();
+      </script>
+      {% endif %}
+    </div>
+    {% endif %}
 
   </div>
 </div>
