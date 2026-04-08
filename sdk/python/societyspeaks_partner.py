@@ -5,13 +5,15 @@ Intended as a reference wrapper for partners integrating from backend services.
 
 from __future__ import annotations
 
+import hashlib
+import hmac as _hmac
 import time
 import uuid
 from typing import Any, Dict, List, Optional
 
 import requests
 
-SDK_VERSION = "0.2.0"
+SDK_VERSION = "0.3.0"
 
 
 class PartnerApiError(Exception):
@@ -33,6 +35,55 @@ class SocietyspeaksPartnerClient:
     @property
     def sdk_version(self) -> str:
         return SDK_VERSION
+
+    @staticmethod
+    def verify_webhook_signature(
+        raw_body: bytes,
+        signature_header: str,
+        timestamp_header: str,
+        secret: str,
+        tolerance_seconds: int = 300,
+    ) -> bool:
+        """Verify an incoming webhook request signature.
+
+        Always call this before processing any webhook payload.
+
+        Args:
+            raw_body: The raw request body **bytes** — read before parsing JSON.
+            signature_header: Value of the ``X-SocietySpeaks-Signature`` header.
+            timestamp_header: Value of the ``X-SocietySpeaks-Timestamp`` header.
+            secret: The signing secret issued when the webhook endpoint was created.
+            tolerance_seconds: Reject requests older than this many seconds to prevent
+                replay attacks. Defaults to 300 (5 minutes).
+
+        Raises:
+            ValueError: If the timestamp is missing, malformed, or outside tolerance.
+
+        Returns:
+            ``True`` if the signature is valid, ``False`` otherwise.
+        """
+        try:
+            ts = int(timestamp_header)
+        except (TypeError, ValueError):
+            raise ValueError("Invalid or missing X-SocietySpeaks-Timestamp header.")
+
+        age = abs(int(time.time()) - ts)
+        if age > tolerance_seconds:
+            raise ValueError(
+                f"Webhook timestamp is {age}s old (tolerance: {tolerance_seconds}s). "
+                "Possible replay attack — reject this request."
+            )
+
+        if isinstance(raw_body, str):
+            raw_body = raw_body.encode("utf-8")
+
+        signed_payload = f"{ts}.".encode() + raw_body
+        expected = "sha256=" + _hmac.new(
+            secret.encode("utf-8"),
+            signed_payload,
+            hashlib.sha256,
+        ).hexdigest()
+        return _hmac.compare_digest(expected, signature_header)
 
     @staticmethod
     def _retry_after_seconds(response: requests.Response) -> Optional[int]:

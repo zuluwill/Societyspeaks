@@ -149,6 +149,13 @@
             For authenticated requests from a web app, proxy through your backend so API keys stay secret.
           </p>
         </div>
+        <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p class="text-sm font-semibold text-blue-900 mb-1">HTTPS required</p>
+          <p class="text-sm text-blue-800">
+            All API requests must be made over HTTPS. Plain HTTP connections are rejected. Never log your API key
+            or include it in URLs — always send it in the <code>X-API-Key</code> header.
+          </p>
+        </div>
       </div>
     </section>
 
@@ -156,7 +163,7 @@
     <section id="client-libraries">
       <div class="flex items-start justify-between mb-1 gap-4">
         <h2 class="text-xl font-bold text-gray-900">Client Libraries</h2>
-        <span class="shrink-0 text-xs font-mono bg-gray-100 text-gray-500 rounded px-2 py-1 mt-0.5">v0.2.0</span>
+        <span class="shrink-0 text-xs font-mono bg-gray-100 text-gray-500 rounded px-2 py-1 mt-0.5">v0.3.0</span>
       </div>
       <p class="text-gray-600 mb-6">
         Drop-in helper clients for Python and Node.js. Each is a <strong>single self-contained file</strong> — no build step,
@@ -852,6 +859,7 @@ const embedUrl = data.embed_url;</pre>
                 <pre class="bg-gray-900 text-green-400 p-3 text-sm whitespace-pre-wrap break-words ss-panel" data-lang="curl">curl -X POST "{{ base_url }}/api/partner/discussions" \
   -H "X-API-Key: your_api_key" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: idem_$(openssl rand -hex 16)" \
   -d '{
     "article_url": "https://example.com/article/urban-cars",
     "title": "Should cities ban cars from downtown areas?",
@@ -964,14 +972,166 @@ const { discussion_id, embed_url } = data;</pre>
     <section id="webhooks-api">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Webhook callbacks (Authenticated)</h2>
       <p class="text-gray-600 mb-4">Configure signed lifecycle callbacks to avoid polling. Use server-to-server calls with a portal-issued key.</p>
-      <div class="bg-white border border-gray-200 rounded-lg p-4 space-y-2 text-sm">
+      <div class="bg-white border border-gray-200 rounded-lg p-4 space-y-2 text-sm mb-4">
         <p><code class="text-purple-700">GET /api/partner/webhooks</code> - list webhook endpoints</p>
         <p><code class="text-purple-700">POST /api/partner/webhooks</code> - create endpoint and receive signing secret once</p>
         <p><code class="text-purple-700">PATCH /api/partner/webhooks/{endpoint_id}</code> - pause/resume and update event subscriptions</p>
         <p><code class="text-purple-700">POST /api/partner/webhooks/{endpoint_id}/rotate-secret</code> - rotate signing secret</p>
         <p><code class="text-purple-700">DELETE /api/partner/webhooks/{endpoint_id}</code> - delete endpoint</p>
       </div>
-      <p class="text-xs text-gray-500 mt-2">Webhook request headers include <code>X-SocietySpeaks-Event</code>, <code>X-SocietySpeaks-Event-Id</code>, <code>X-SocietySpeaks-Timestamp</code>, and <code>X-SocietySpeaks-Signature</code> (<code>sha256=...</code> over <code>{timestamp}.{raw_body}</code>).</p>
+
+      <!-- Webhook request headers -->
+      <h3 class="font-semibold text-gray-900 mb-2">Request headers</h3>
+      <p class="text-sm text-gray-600 mb-3">Every webhook delivery includes these headers:</p>
+      <div class="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-6">
+        <table class="w-full text-sm min-w-[500px] border border-gray-200 rounded-lg">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="py-2 px-3 text-left font-semibold text-gray-900 border-b">Header</th>
+              <th class="py-2 px-3 text-left font-semibold text-gray-900 border-b">Description</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Event</td><td class="py-2 px-3 text-gray-600">Event type, e.g. <code>discussion.created</code></td></tr>
+            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Event-Id</td><td class="py-2 px-3 text-gray-600">Unique event UUID — use for deduplication</td></tr>
+            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Timestamp</td><td class="py-2 px-3 text-gray-600">Unix seconds (UTC) when the event was sent</td></tr>
+            <tr><td class="py-2 px-3 font-mono text-purple-700">X-SocietySpeaks-Signature</td><td class="py-2 px-3 text-gray-600">HMAC-SHA256 signature — <strong>always verify this</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Signature verification warning -->
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+        <p class="text-sm font-semibold text-red-900 mb-1">Always verify webhook signatures</p>
+        <p class="text-sm text-red-800">
+          Without verification, any party that knows your endpoint URL can send forged events.
+          Read the raw body <em>before</em> parsing JSON, then verify the HMAC-SHA256 signature using your signing secret.
+          Reject requests with timestamps older than 5 minutes to prevent replay attacks.
+        </p>
+      </div>
+
+      <!-- Signature format -->
+      <h3 class="font-semibold text-gray-900 mb-2">Signature format</h3>
+      <p class="text-sm text-gray-600 mb-4">
+        The signed payload is <code class="bg-gray-100 px-1 rounded">{timestamp}.{raw_body}</code>
+        (Unix seconds, a literal dot, then the raw UTF-8 request body). The
+        <code>X-SocietySpeaks-Signature</code> header is <code>sha256=&lt;hex_digest&gt;</code>.
+      </p>
+
+      <!-- Verification code examples -->
+      <h3 class="font-semibold text-gray-900 mb-2">Verification example</h3>
+      <div class="code-block relative group mb-6">
+        <button class="copy-btn absolute top-10 right-2 z-10 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+        <div class="rounded-lg border border-gray-700 overflow-hidden ss-code-tabs">
+          <div class="flex bg-gray-800 border-b border-gray-700 text-xs" role="tablist">
+            <button role="tab" aria-selected="true" data-lang="python" class="ss-tab px-3 py-2 font-medium transition-colors text-white bg-gray-900">Python</button>
+            <button role="tab" aria-selected="false" data-lang="node" class="ss-tab px-3 py-2 font-medium transition-colors text-gray-400 hover:text-gray-200">Node.js</button>
+          </div>
+          <pre class="bg-gray-900 text-green-400 p-4 text-sm whitespace-pre-wrap break-words ss-panel" data-lang="python"># Flask example — adapt raw-body reading to your framework
+from flask import Flask, request, abort
+from societyspeaks_partner import SocietyspeaksPartnerClient
+import os
+
+app = Flask(__name__)
+WEBHOOK_SECRET = os.environ["SS_WEBHOOK_SECRET"]  # store in env, never hardcode
+
+@app.route("/webhooks/societyspeaks", methods=["POST"])
+def handle_webhook():
+    raw_body = request.get_data()  # read raw bytes BEFORE any JSON parsing
+
+    try:
+        valid = SocietyspeaksPartnerClient.verify_webhook_signature(
+            raw_body=raw_body,
+            signature_header=request.headers.get("X-SocietySpeaks-Signature", ""),
+            timestamp_header=request.headers.get("X-SocietySpeaks-Timestamp", ""),
+            secret=WEBHOOK_SECRET,
+            tolerance_seconds=300,  # reject events older than 5 minutes
+        )
+    except ValueError as exc:
+        # Timestamp missing, malformed, or outside the tolerance window
+        abort(400, str(exc))
+
+    if not valid:
+        abort(401, "Invalid webhook signature.")
+
+    event      = request.get_json()
+    event_type = request.headers.get("X-SocietySpeaks-Event")
+    event_id   = request.headers.get("X-SocietySpeaks-Event-Id")
+
+    # Deduplicate using event_id (store processed IDs in your DB or cache)
+    if already_processed(event_id):
+        return "", 200
+
+    if event_type == "discussion.created":
+        handle_discussion_created(event["data"])
+
+    return "", 200</pre>
+          <pre class="bg-gray-900 text-green-400 p-4 text-sm whitespace-pre-wrap break-words ss-panel" data-lang="node" hidden>// Express example — adapt raw-body reading to your framework
+const express = require("express");
+const { SocietyspeaksPartnerClient } = require("./societyspeaks_partner");
+
+const app = express();
+const WEBHOOK_SECRET = process.env.SS_WEBHOOK_SECRET; // store in env, never hardcode
+
+// Use express.raw() so the body stays as a Buffer before any parsing
+app.post(
+  "/webhooks/societyspeaks",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    const rawBody = req.body; // Buffer — do NOT call JSON.parse before verifying
+
+    let valid;
+    try {
+      valid = SocietyspeaksPartnerClient.verifyWebhookSignature(
+        rawBody,
+        req.headers["x-societyspeaks-signature"] ?? "",
+        req.headers["x-societyspeaks-timestamp"] ?? "",
+        WEBHOOK_SECRET,
+        300, // reject events older than 5 minutes
+      );
+    } catch (err) {
+      // Timestamp missing, malformed, or outside the tolerance window
+      return res.status(400).send(err.message);
+    }
+
+    if (!valid) return res.status(401).send("Invalid webhook signature.");
+
+    const event     = JSON.parse(rawBody);
+    const eventType = req.headers["x-societyspeaks-event"];
+    const eventId   = req.headers["x-societyspeaks-event-id"];
+
+    // Deduplicate using eventId (store processed IDs in your DB or cache)
+    if (alreadyProcessed(eventId)) return res.sendStatus(200);
+
+    if (eventType === "discussion.created") {
+      handleDiscussionCreated(event.data);
+    }
+
+    res.sendStatus(200);
+  }
+);</pre>
+        </div>
+      </div>
+
+      <!-- Manual verification steps -->
+      <h3 class="font-semibold text-gray-900 mb-2">Manual verification (without the SDK)</h3>
+      <p class="text-sm text-gray-600 mb-3">If you are not using our SDK, follow these steps exactly:</p>
+      <ol class="text-sm text-gray-700 space-y-2 list-decimal list-inside mb-4">
+        <li>Read the raw request body as bytes — before any JSON parsing.</li>
+        <li>Parse <code>X-SocietySpeaks-Timestamp</code> as an integer. If it is absent or more than 300 seconds in the past, reject with HTTP 400.</li>
+        <li>Build the signed payload: <code>{timestamp}</code> + <code>.</code> + raw body bytes.</li>
+        <li>Compute <code>HMAC-SHA256(key=signing_secret, msg=signed_payload)</code> and hex-encode it.</li>
+        <li>Prepend <code>sha256=</code> to form the expected signature string.</li>
+        <li>Compare with <code>X-SocietySpeaks-Signature</code> using a <strong>constant-time</strong> comparison — <code>hmac.compare_digest</code> in Python, <code>crypto.timingSafeEqual</code> in Node. A plain string equality check leaks timing information.</li>
+      </ol>
+
+      <!-- Secret management -->
+      <h3 class="font-semibold text-gray-900 mb-2">Secret management</h3>
+      <p class="text-sm text-gray-600">
+        The signing secret is returned once when you create an endpoint — store it securely in an environment variable or secrets manager, never in source code.
+        It is never shown again in the portal. Use <code>POST /api/partner/webhooks/{endpoint_id}/rotate-secret</code>
+        to issue a new secret; briefly accept both the old and new signatures during the rollover period before decommissioning the old one.
+      </p>
     </section>
 
     <!-- Analytics Export API -->

@@ -3,8 +3,8 @@
  * Backend/server usage only (never expose API keys in browser code).
  */
 
-const { randomUUID } = require("crypto");
-const SDK_VERSION = "0.2.0";
+const { createHmac, randomUUID, timingSafeEqual } = require("crypto");
+const SDK_VERSION = "0.3.0";
 
 class PartnerApiError extends Error {
   constructor(statusCode, error, message, retryAfter = null) {
@@ -26,6 +26,48 @@ class SocietyspeaksPartnerClient {
 
   get sdkVersion() {
     return SDK_VERSION;
+  }
+
+  /**
+   * Verify an incoming webhook request signature.
+   *
+   * Always call this before processing any webhook payload.
+   *
+   * @param {Buffer|string} rawBody - The raw request body. Read before parsing JSON.
+   * @param {string} signatureHeader - Value of the X-SocietySpeaks-Signature header.
+   * @param {string} timestampHeader - Value of the X-SocietySpeaks-Timestamp header.
+   * @param {string} secret - The signing secret issued when the endpoint was created.
+   * @param {number} [toleranceSeconds=300] - Reject requests older than this to prevent replay attacks.
+   * @returns {boolean} true if the signature is valid, false otherwise.
+   * @throws {Error} If the timestamp is missing, malformed, or outside tolerance.
+   */
+  static verifyWebhookSignature(
+    rawBody,
+    signatureHeader,
+    timestampHeader,
+    secret,
+    toleranceSeconds = 300
+  ) {
+    const ts = parseInt(timestampHeader, 10);
+    if (!Number.isFinite(ts)) {
+      throw new Error("Invalid or missing X-SocietySpeaks-Timestamp header.");
+    }
+    const age = Math.abs(Math.floor(Date.now() / 1000) - ts);
+    if (age > toleranceSeconds) {
+      throw new Error(
+        `Webhook timestamp is ${age}s old (tolerance: ${toleranceSeconds}s). ` +
+        "Possible replay attack — reject this request."
+      );
+    }
+
+    const body = typeof rawBody === "string" ? Buffer.from(rawBody, "utf8") : rawBody;
+    const signedPayload = Buffer.concat([Buffer.from(`${ts}.`, "utf8"), body]);
+    const expected = "sha256=" + createHmac("sha256", secret).update(signedPayload).digest("hex");
+
+    const expectedBuf = Buffer.from(expected, "utf8");
+    const receivedBuf = Buffer.from(signatureHeader, "utf8");
+    if (expectedBuf.length !== receivedBuf.length) return false;
+    return timingSafeEqual(expectedBuf, receivedBuf);
   }
 
   async _request(method, path, { body, params, headers } = {}) {

@@ -124,6 +124,7 @@ def api_docs():
 
 
 @partner_bp.route('/sdk/python')
+@limiter.limit("30 per minute")
 def sdk_python():
     """Download the Python SDK helper file."""
     sdk_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'sdk', 'python'))
@@ -137,6 +138,7 @@ def sdk_python():
 
 
 @partner_bp.route('/sdk/node')
+@limiter.limit("30 per minute")
 def sdk_node():
     """Download the Node.js SDK helper file."""
     sdk_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'sdk', 'node'))
