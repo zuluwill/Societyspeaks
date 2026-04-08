@@ -85,6 +85,7 @@
       <div class="sticky top-6 space-y-1 text-sm">
         <p class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-3">On this page</p>
         <a href="#auth" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Authentication</a>
+        <a href="#client-libraries" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Client Libraries</a>
         <a href="#base-url" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Base URL</a>
         <a href="#workflows" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Common Workflows</a>
         <a href="#lookup" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Lookup by Article URL</a>
@@ -104,6 +105,7 @@
     <div class="lg:hidden mb-6 -mx-4 px-4 overflow-x-auto" style="-ms-overflow-style:none;scrollbar-width:none">
       <div class="flex gap-2 text-xs whitespace-nowrap pb-2">
         <a href="#auth" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Auth</a>
+        <a href="#client-libraries" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Client Libraries</a>
         <a href="#base-url" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Base URL</a>
         <a href="#workflows" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Workflows</a>
         <a href="#lookup" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Lookup</a>
@@ -149,6 +151,162 @@
         </div>
       </div>
     </section>
+
+    <!-- Client Libraries -->
+    <section id="client-libraries">
+      <div class="flex items-start justify-between mb-1 gap-4">
+        <h2 class="text-xl font-bold text-gray-900">Client Libraries</h2>
+        <span class="shrink-0 text-xs font-mono bg-gray-100 text-gray-500 rounded px-2 py-1 mt-0.5">v0.2.0</span>
+      </div>
+      <p class="text-gray-600 mb-6">
+        Drop-in helper clients for Python and Node.js. Each is a <strong>single self-contained file</strong> — no build step,
+        no transitive dependencies beyond <code class="bg-gray-100 px-1 rounded text-gray-800">requests</code> (Python only).
+        Server-side use only — never expose your API key in browser code.
+      </p>
+
+      <!-- Language selector -->
+      <div class="flex gap-1 bg-gray-100 rounded-lg p-1 w-fit mb-8">
+        <button class="sdk-lang-tab rounded-md px-4 py-1.5 text-sm font-medium transition-colors" data-sdklang="python">Python</button>
+        <button class="sdk-lang-tab rounded-md px-4 py-1.5 text-sm font-medium transition-colors" data-sdklang="node">Node.js</button>
+      </div>
+
+      <!-- Python panel -->
+      <div class="sdk-lang-panel" data-sdklang="python">
+        <div class="mb-8">
+          <h3 class="font-semibold text-gray-900 mb-2">1. Add to your project</h3>
+          <p class="text-gray-600 text-sm mb-3">Download the file and place it alongside your application code.</p>
+          <a href="{{ url_for('partner.sdk_python') }}" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors mb-4">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            Download societyspeaks_partner.py
+          </a>
+          <div class="code-block relative group">
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto"># Place societyspeaks_partner.py anywhere in your project, then:
+from societyspeaks_partner import SocietyspeaksPartnerClient, PartnerApiError</pre>
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <h3 class="font-semibold text-gray-900 mb-2">2. Install the one dependency</h3>
+          <div class="code-block relative group">
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">pip install requests</pre>
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <h3 class="font-semibold text-gray-900 mb-2">3. Initialise &amp; make your first call</h3>
+          <div class="code-block relative group">
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">from societyspeaks_partner import SocietyspeaksPartnerClient, PartnerApiError
+
+client = SocietyspeaksPartnerClient(
+    base_url="{{ base_url }}",
+    api_key="sspk_live_your_key_here",  # never expose in browser code
+)
+
+try:
+    # Look up an existing discussion by article URL
+    result = client.lookup_by_article_url("https://yoursite.com/article")
+    print(result["embed_url"])
+except PartnerApiError as e:
+    if e.status_code == 404:
+        # Discussion doesn't exist yet — create one
+        discussion = client.create_discussion(
+            title="Should cities ban single-use plastics?",
+            article_url="https://yoursite.com/article",
+            excerpt="A new UN report finds that single-use plastic bans...",
+            embed_statement_submissions_enabled=False,
+        )
+        print(discussion["embed_url"])
+    else:
+        raise</pre>
+          </div>
+        </div>
+
+        <details class="group">
+          <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-500 mb-3">
+            <span class="group-open:hidden">▶ View full source</span>
+            <span class="hidden group-open:inline">▼ Hide source</span>
+            <span class="text-xs font-mono text-gray-400 font-normal">societyspeaks_partner.py</span>
+          </summary>
+          <div class="code-block relative group mt-3">
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto max-h-[32rem]">{{ python_sdk_source | e }}</pre>
+          </div>
+        </details>
+      </div>
+
+      <!-- Node.js panel -->
+      <div class="sdk-lang-panel hidden" data-sdklang="node">
+        <div class="mb-8">
+          <h3 class="font-semibold text-gray-900 mb-2">1. Add to your project</h3>
+          <p class="text-gray-600 text-sm mb-3">Download the file and place it alongside your application code.</p>
+          <a href="{{ url_for('partner.sdk_node') }}" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors mb-4">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            Download societyspeaks_partner.js
+          </a>
+          <div class="code-block relative group">
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">// Place societyspeaks_partner.js anywhere in your project, then:
+const { SocietyspeaksPartnerClient, PartnerApiError } = require('./societyspeaks_partner');</pre>
+          </div>
+        </div>
+
+        <div class="mb-8">
+          <h3 class="font-semibold text-gray-900 mb-2">2. No dependencies required</h3>
+          <p class="text-gray-600 text-sm">
+            Uses Node's built-in <code class="bg-gray-100 px-1 rounded text-gray-800">fetch</code> (Node 18+) and
+            <code class="bg-gray-100 px-1 rounded text-gray-800">crypto</code>. No <code class="bg-gray-100 px-1 rounded text-gray-800">npm install</code> needed.
+          </p>
+        </div>
+
+        <div class="mb-8">
+          <h3 class="font-semibold text-gray-900 mb-2">3. Initialise &amp; make your first call</h3>
+          <div class="code-block relative group">
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto">const { SocietyspeaksPartnerClient, PartnerApiError } = require('./societyspeaks_partner');
+
+const client = new SocietyspeaksPartnerClient({
+  baseUrl: '{{ base_url }}',
+  apiKey: 'sspk_live_your_key_here',  // never expose in browser code
+});
+
+try {
+  // Look up an existing discussion by article URL
+  const result = await client.lookupByArticleUrl('https://yoursite.com/article');
+  console.log(result.embed_url);
+} catch (e) {
+  if (e instanceof PartnerApiError && e.statusCode === 404) {
+    // Discussion doesn't exist yet — create one
+    const discussion = await client.createDiscussion({
+      title: 'Should cities ban single-use plastics?',
+      articleUrl: 'https://yoursite.com/article',
+      excerpt: 'A new UN report finds that single-use plastic bans...',
+      embedStatementSubmissionsEnabled: false,
+    });
+    console.log(discussion.embed_url);
+  } else {
+    throw e;
+  }
+}</pre>
+          </div>
+        </div>
+
+        <details class="group">
+          <summary class="cursor-pointer select-none inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-500 mb-3">
+            <span class="group-open:hidden">▶ View full source</span>
+            <span class="hidden group-open:inline">▼ Hide source</span>
+            <span class="text-xs font-mono text-gray-400 font-normal">societyspeaks_partner.js</span>
+          </summary>
+          <div class="code-block relative group mt-3">
+            <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+            <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-sm overflow-x-auto max-h-[32rem]">{{ node_sdk_source | e }}</pre>
+          </div>
+        </details>
+      </div>
+    </section>
+
     <!-- Base URL -->
     <section id="base-url">
       <h2 class="text-xl font-bold text-gray-900 mb-4">Base URL</h2>
@@ -959,6 +1117,35 @@ const { discussion_id, embed_url } = data;</pre>
             activateTab(c, currentLang);
           });
         });
+      });
+    });
+  })();
+
+  // SDK language tab switching (Python / Node.js)
+  (function() {
+    var SDK_KEY = 'ss_sdk_lang';
+    var sdkLang = localStorage.getItem(SDK_KEY) || 'python';
+
+    function activateSdkLang(lang) {
+      document.querySelectorAll('.sdk-lang-tab').forEach(function(btn) {
+        var active = btn.dataset.sdklang === lang;
+        btn.classList.toggle('bg-white', active);
+        btn.classList.toggle('text-gray-900', active);
+        btn.classList.toggle('shadow-sm', active);
+        btn.classList.toggle('text-gray-500', !active);
+      });
+      document.querySelectorAll('.sdk-lang-panel').forEach(function(panel) {
+        panel.classList.toggle('hidden', panel.dataset.sdklang !== lang);
+      });
+    }
+
+    activateSdkLang(sdkLang);
+
+    document.querySelectorAll('.sdk-lang-tab').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        sdkLang = btn.dataset.sdklang;
+        localStorage.setItem(SDK_KEY, sdkLang);
+        activateSdkLang(sdkLang);
       });
     });
   })();

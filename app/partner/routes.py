@@ -102,8 +102,51 @@ def api_docs():
     API documentation page.
 
     Documents the lookup API, snapshot API, and embed URL parameters.
+    Passes SDK source inline so the docs page always reflects the current SDK.
     """
-    return render_template('partner/api_docs.html', base_url=_get_base_url())
+    sdk_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'sdk'))
+    try:
+        with open(os.path.join(sdk_root, 'python', 'societyspeaks_partner.py'), 'r') as f:
+            python_sdk_source = f.read()
+    except OSError:
+        python_sdk_source = ''
+    try:
+        with open(os.path.join(sdk_root, 'node', 'index.js'), 'r') as f:
+            node_sdk_source = f.read()
+    except OSError:
+        node_sdk_source = ''
+    return render_template(
+        'partner/api_docs.html',
+        base_url=_get_base_url(),
+        python_sdk_source=python_sdk_source,
+        node_sdk_source=node_sdk_source,
+    )
+
+
+@partner_bp.route('/sdk/python')
+def sdk_python():
+    """Download the Python SDK helper file."""
+    sdk_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'sdk', 'python'))
+    return send_from_directory(
+        sdk_dir,
+        'societyspeaks_partner.py',
+        as_attachment=True,
+        download_name='societyspeaks_partner.py',
+        mimetype='text/x-python',
+    )
+
+
+@partner_bp.route('/sdk/node')
+def sdk_node():
+    """Download the Node.js SDK helper file."""
+    sdk_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'sdk', 'node'))
+    return send_from_directory(
+        sdk_dir,
+        'index.js',
+        as_attachment=True,
+        download_name='societyspeaks_partner.js',
+        mimetype='application/javascript',
+    )
 
 
 @partner_bp.route('/rules')
