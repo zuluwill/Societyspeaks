@@ -1,3 +1,7 @@
+import hashlib
+import hmac
+import time
+
 import pytest
 
 from sdk.python.societyspeaks_partner import PartnerApiError, SocietyspeaksPartnerClient
@@ -71,3 +75,56 @@ def test_partner_api_error_includes_retry_after(monkeypatch):
     with pytest.raises(PartnerApiError) as err:
         client.list_discussions()
     assert err.value.retry_after == 60
+
+
+def test_verify_webhook_signature_valid(monkeypatch):
+    fixed_now = 1_700_000_000
+    monkeypatch.setattr("sdk.python.societyspeaks_partner.time.time", lambda: fixed_now)
+
+    body = b'{"id":"evt_123","type":"discussion.updated"}'
+    ts = str(fixed_now)
+    secret = "sswh_test_secret"
+    payload = f"{ts}.".encode() + body
+    sig = "sha256=" + hmac.new(secret.encode("utf-8"), payload, hashlib.sha256).hexdigest()
+
+    assert SocietyspeaksPartnerClient.verify_webhook_signature(
+        raw_body=body,
+        signature_header=sig,
+        timestamp_header=ts,
+        secret=secret,
+    )
+
+
+def test_verify_webhook_signature_invalid_signature(monkeypatch):
+    fixed_now = 1_700_000_000
+    monkeypatch.setattr("sdk.python.societyspeaks_partner.time.time", lambda: fixed_now)
+    assert SocietyspeaksPartnerClient.verify_webhook_signature(
+        raw_body=b"{}",
+        signature_header="sha256=deadbeef",
+        timestamp_header=str(fixed_now),
+        secret="sswh_test_secret",
+    ) is False
+
+
+def test_verify_webhook_signature_rejects_stale_timestamp(monkeypatch):
+    fixed_now = 1_700_000_000
+    monkeypatch.setattr("sdk.python.societyspeaks_partner.time.time", lambda: fixed_now)
+    stale_ts = str(fixed_now - 301)
+    with pytest.raises(ValueError):
+        SocietyspeaksPartnerClient.verify_webhook_signature(
+            raw_body=b"{}",
+            signature_header="sha256=deadbeef",
+            timestamp_header=stale_ts,
+            secret="sswh_test_secret",
+            tolerance_seconds=300,
+        )
+
+
+def test_verify_webhook_signature_rejects_malformed_timestamp():
+    with pytest.raises(ValueError):
+        SocietyspeaksPartnerClient.verify_webhook_signature(
+            raw_body=b"{}",
+            signature_header="sha256=deadbeef",
+            timestamp_header="not-a-timestamp",
+            secret="sswh_test_secret",
+        )

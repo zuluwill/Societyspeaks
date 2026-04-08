@@ -1,5 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const { createHmac } = require("crypto");
 const { SocietyspeaksPartnerClient, PartnerApiError, SDK_VERSION } = require("./index.js");
 
 test("createDiscussion sends embed submission flag and idempotency key", async () => {
@@ -71,4 +72,83 @@ test("exports sdk version", () => {
     apiKey: "sspk_live_test",
   });
   assert.equal(client.sdkVersion, SDK_VERSION);
+});
+
+test("verifyWebhookSignature returns true for valid signature", () => {
+  const nowSec = 1_700_000_000;
+  const originalNow = Date.now;
+  Date.now = () => nowSec * 1000;
+  try {
+    const body = Buffer.from('{"id":"evt_123","type":"discussion.updated"}', "utf8");
+    const ts = String(nowSec);
+    const secret = "sswh_test_secret";
+    const payload = Buffer.concat([Buffer.from(`${ts}.`, "utf8"), body]);
+    const signature =
+      "sha256=" + createHmac("sha256", secret).update(payload).digest("hex");
+
+    assert.equal(
+      SocietyspeaksPartnerClient.verifyWebhookSignature(
+        body,
+        signature,
+        ts,
+        secret
+      ),
+      true
+    );
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
+test("verifyWebhookSignature returns false for invalid signature", () => {
+  const nowSec = 1_700_000_000;
+  const originalNow = Date.now;
+  Date.now = () => nowSec * 1000;
+  try {
+    assert.equal(
+      SocietyspeaksPartnerClient.verifyWebhookSignature(
+        Buffer.from("{}", "utf8"),
+        "sha256=deadbeef",
+        String(nowSec),
+        "sswh_test_secret"
+      ),
+      false
+    );
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
+test("verifyWebhookSignature rejects stale timestamp", () => {
+  const nowSec = 1_700_000_000;
+  const originalNow = Date.now;
+  Date.now = () => nowSec * 1000;
+  try {
+    assert.throws(
+      () =>
+        SocietyspeaksPartnerClient.verifyWebhookSignature(
+          Buffer.from("{}", "utf8"),
+          "sha256=deadbeef",
+          String(nowSec - 301),
+          "sswh_test_secret",
+          300
+        ),
+      /replay attack/i
+    );
+  } finally {
+    Date.now = originalNow;
+  }
+});
+
+test("verifyWebhookSignature rejects malformed timestamp", () => {
+  assert.throws(
+    () =>
+      SocietyspeaksPartnerClient.verifyWebhookSignature(
+        Buffer.from("{}", "utf8"),
+        "sha256=deadbeef",
+        "not-a-ts",
+        "sswh_test_secret"
+      ),
+    /invalid or missing/i
+  );
 });

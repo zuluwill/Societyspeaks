@@ -152,8 +152,8 @@
         <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p class="text-sm font-semibold text-blue-900 mb-1">HTTPS required</p>
           <p class="text-sm text-blue-800">
-            All API requests must be made over HTTPS. Plain HTTP connections are rejected. Never log your API key
-            or include it in URLs — always send it in the <code>X-API-Key</code> header.
+            All API requests must be made over HTTPS and enforced at your edge/proxy layer in production.
+            Never log your API key or include it in URLs — always send it in the <code>X-API-Key</code> header.
           </p>
         </div>
       </div>
