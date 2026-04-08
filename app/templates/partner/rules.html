@@ -59,7 +59,7 @@
     </div>
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <h3 class="text-lg font-semibold text-gray-900 mb-2">For product teams</h3>
-      <p class="text-sm text-gray-600">Stable embed rules and strict boundaries for UI customization.</p>
+      <p class="text-sm text-gray-600">Stable embed rules, clear API boundaries, and predictable portal controls for teams.</p>
     </div>
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <h3 class="text-lg font-semibold text-gray-900 mb-2">For editorial leaders</h3>
@@ -124,6 +124,24 @@
           </svg>
           <span><strong>Reference</strong> Society Speaks results in editorial content (e.g., "Society Speaks polling shows...")</span>
         </li>
+        <li class="flex items-start">
+          <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+          </svg>
+          <span><strong>Create discussions with either <code>article_url</code> or <code>external_id</code></strong> for article and non-article newsroom workflows</span>
+        </li>
+        <li class="flex items-start">
+          <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+          </svg>
+          <span><strong>Configure webhook callbacks and analytics export</strong> for operational sync and reporting</span>
+        </li>
+        <li class="flex items-start">
+          <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+          </svg>
+          <span><strong>Manage statements and teammate permissions</strong> from the Partner Portal (owner/admin controls)</span>
+        </li>
       </ul>
     </section>
 
@@ -178,10 +196,16 @@
       </ul>
     </section>
 
-    <!-- Vote-only scope -->
+    <!-- Embed submission scope -->
     <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg mb-8">
       <p class="text-amber-900 text-sm m-0">
-        <strong>Embed is vote-only.</strong> Readers can vote on statements and report; they cannot submit new statements from the embed. User-generated statements (if any) happen on the full Society Speaks site only. This is an invariant for the current program.
+        <strong>Embed submissions are partner-controlled.</strong> By default, embeds are vote/report only. Owners and admins can enable inline reader statement submissions per discussion in the Partner Portal.
+      </p>
+    </div>
+
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg mb-8">
+      <p class="text-blue-900 text-sm m-0">
+        <strong>Write operations are server-side only.</strong> Create/update partner endpoints must be called from your backend (not browser JavaScript) using a portal-issued API key.
       </p>
     </div>
 

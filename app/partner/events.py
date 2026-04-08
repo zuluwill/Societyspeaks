@@ -28,6 +28,7 @@ def serialize_discussion_payload(discussion):
         'partner_env': discussion.partner_env,
         'partner_article_url': discussion.partner_article_url,
         'external_id': discussion.partner_external_id,
+        'embed_statement_submissions_enabled': bool(getattr(discussion, 'embed_statement_submissions_enabled', False)),
         'is_closed': bool(discussion.is_closed),
         'integrity_mode': bool(discussion.integrity_mode),
         'urls': urls,

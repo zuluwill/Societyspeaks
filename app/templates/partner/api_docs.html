@@ -70,6 +70,9 @@
           <li><strong>Write endpoints</strong> (<code>POST/PATCH /api/partner/...</code>) are server-to-server only and should be tested from your backend or curl/Postman, not from browser Swagger.</li>
           <li><strong>From the command line:</strong> use the <code class="bg-blue-100 px-1 rounded">curl</code> examples in each section below, replacing the base URL and parameters as needed.</li>
         </ul>
+        <p class="text-xs text-blue-800 mt-2">
+          Newsroom workflow quick map: <code>external_id</code> for CMS mapping, webhook callbacks for system sync, and Partner Portal roles for access control.
+        </p>
       </div>
     </header>
   </div>
@@ -91,6 +94,7 @@
         <a href="#postmessage" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">PostMessage Events</a>
         <a href="#oembed" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">oEmbed Provider</a>
         <a href="#create-discussion" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Create Discussion</a>
+        <a href="#update-discussion" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Update Discussion</a>
         <a href="#cost-protection" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Cost &amp; Abuse Protection</a>
         <a href="#rate-limits" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Rate Limits</a>
         <a href="#error-format" class="docs-nav-link block rounded-md px-3 py-2 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors">Error Format</a>
@@ -109,6 +113,7 @@
         <a href="#postmessage" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">PostMessage</a>
         <a href="#oembed" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">oEmbed</a>
         <a href="#create-discussion" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Create</a>
+        <a href="#update-discussion" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Update</a>
         <a href="#cost-protection" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Cost Protection</a>
         <a href="#rate-limits" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Rate Limits</a>
         <a href="#error-format" class="rounded-full bg-gray-100 px-4 py-2 text-gray-700 hover:bg-gray-200 active:bg-gray-300 transition-colors">Errors</a>
@@ -660,14 +665,20 @@ const embedUrl = data.embed_url;</pre>
                 <td class="py-2 text-gray-500">conditional</td>
                 <td class="py-2 text-gray-600">Array of {content, position} statements</td>
               </tr>
-              <tr>
+              <tr class="border-b">
                 <td class="py-2 font-mono text-purple-600">source_name</td>
                 <td class="py-2 text-gray-500">optional</td>
                 <td class="py-2 text-gray-600">Your publication name for attribution</td>
               </tr>
+              <tr>
+                <td class="py-2 font-mono text-purple-600">embed_statement_submissions_enabled</td>
+                <td class="py-2 text-gray-500">optional</td>
+                <td class="py-2 text-gray-600">Allow inline reader submissions in embed for this discussion (default false)</td>
+              </tr>
             </table>
             </div>
             <p class="text-xs text-gray-500 mt-2">Notes: Provide at least one identifier (<code>article_url</code> or <code>external_id</code>) and either <code>excerpt</code> or <code>seed_statements</code>.</p>
+            <p class="text-xs text-gray-500 mt-1">Recommendation: keep <code>embed_statement_submissions_enabled</code> as <code>false</code> for most article pages, and enable it only for discussions where your team wants inline statement intake from the embed.</p>
           </div>
 
           <div>
@@ -736,6 +747,7 @@ const { discussion_id, embed_url } = data;</pre>
   "title": "Should cities ban cars from downtown areas?",
   "partner_article_url": "https://example.com/article/urban-cars",
   "external_id": "observer-cms-12345",
+  "embed_statement_submissions_enabled": false,
   "embed_url": "{{ base_url }}/discussions/456/embed",
   "consensus_url": "{{ base_url }}/discussions/456/.../consensus",
   "snapshot_url": "{{ base_url }}/api/discussions/456/snapshot",
@@ -765,6 +777,29 @@ const { discussion_id, embed_url } = data;</pre>
           </div>
         </div>
       </div>
+    </section>
+
+    <!-- Update Discussion API -->
+    <section id="update-discussion">
+      <h2 class="text-xl font-bold text-gray-900 mb-4">Update discussion policy (Authenticated)</h2>
+      <p class="text-gray-600 mb-3">
+        Use this to close/reopen discussions, toggle integrity mode, and control inline embed submissions.
+      </p>
+      <div class="code-block relative group">
+        <button class="copy-btn absolute top-2 right-2 rounded bg-gray-700 px-2 py-1 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+        <pre class="bg-gray-900 text-green-400 p-4 rounded-lg text-xs whitespace-pre-wrap break-words">curl -X PATCH "{{ base_url }}/api/partner/discussions/456" \
+  -H "X-API-Key: your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "is_closed": false,
+    "integrity_mode": true,
+    "embed_statement_submissions_enabled": true
+  }'</pre>
+      </div>
+      <p class="text-xs text-gray-500 mt-2">
+        Recommended default for most article pages: <code>"embed_statement_submissions_enabled": false</code>.
+        Enable <code>true</code> for selected high-engagement discussions (for example, live blogs or campaign hubs).
+      </p>
     </section>
 
     <!-- Webhooks API -->

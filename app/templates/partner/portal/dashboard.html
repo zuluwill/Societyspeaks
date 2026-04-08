@@ -422,15 +422,7 @@
           <form method="POST" action="{{ url_for('partner.portal_update_member_permissions', member_id=member.id) }}" class="grid gap-1 text-xs text-gray-600 sm:grid-cols-3 mt-2">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             {% set p = member.effective_permissions or {} %}
-            {% for perm, label in [
-              ('keys.manage', 'Keys'),
-              ('discussions.manage', 'Discussions'),
-              ('analytics.view', 'Analytics'),
-              ('team.manage', 'Team'),
-              ('domains.manage', 'Domains'),
-              ('billing.manage', 'Billing'),
-              ('webhooks.manage', 'Webhooks')
-            ] %}
+            {% for perm, label in permission_options %}
             <label class="inline-flex items-center gap-2">
               <input type="checkbox" name="{{ perm }}" value="1" {% if p.get(perm) %}checked{% endif %}>
               <span>{{ label }}</span>

@@ -650,6 +650,37 @@ class TestCreateDiscussion:
         assert data['external_id'] == 'obs-cms-12345'
         assert data['partner_article_url'] is None
 
+    def test_create_supports_embed_statement_submissions_policy(self, client, db, partner):
+        key = _issue_partner_api_key(db, partner, env='live')
+        resp = client.post(
+            '/api/partner/discussions',
+            json={
+                'external_id': 'obs-cms-inline-allowed',
+                'title': 'Observer Inline Submissions',
+                'embed_statement_submissions_enabled': True,
+                'seed_statements': [{'content': 'This is a valid seed statement for embed submissions.', 'position': 'neutral'}],
+            },
+            headers={'X-API-Key': key}
+        )
+        assert resp.status_code == 201
+        data = resp.get_json()
+        assert data['embed_statement_submissions_enabled'] is True
+
+    def test_create_rejects_non_boolean_embed_statement_submissions_policy(self, client, db, partner):
+        key = _issue_partner_api_key(db, partner, env='live')
+        resp = client.post(
+            '/api/partner/discussions',
+            json={
+                'external_id': 'obs-cms-inline-invalid',
+                'title': 'Observer Inline Invalid',
+                'embed_statement_submissions_enabled': 'yes',
+                'seed_statements': [{'content': 'This is a valid seed statement for policy type checks.', 'position': 'neutral'}],
+            },
+            headers={'X-API-Key': key}
+        )
+        assert resp.status_code == 400
+        assert resp.get_json()['error'] == 'invalid_request'
+
     def test_duplicate_external_id_in_same_env_returns_409(self, client, db, partner):
         key = _issue_partner_api_key(db, partner, env='live')
         payload = {
@@ -688,6 +719,48 @@ class TestLookupByExternalId:
         data = lookup.get_json()
         assert data['external_id'] == 'obs-cms-lookup-1'
         assert data['discussion_id'] == create.get_json()['discussion_id']
+
+
+class TestEmbedStatementSubmissionPolicy:
+    """Tests for inline statement submissions from embed."""
+
+    def test_embed_submission_blocked_when_discussion_policy_disabled(self, client, db, discussion):
+        discussion.embed_statement_submissions_enabled = False
+        db.session.commit()
+
+        resp = client.post(
+            f'/api/embed/discussions/{discussion.id}/statements',
+            json={
+                'content': 'This statement should be rejected by embed policy.',
+                'embed_fingerprint': 'test-fp-embed-policy',
+            },
+            headers={'X-Embed-Request': 'true'}
+        )
+        assert resp.status_code == 403
+        assert resp.get_json()['error'] == 'embed_statement_submissions_disabled'
+
+    def test_embed_submission_creates_statement_when_policy_enabled(self, client, db, discussion):
+        from app.models import Statement
+
+        discussion.embed_statement_submissions_enabled = True
+        db.session.commit()
+
+        resp = client.post(
+            f'/api/embed/discussions/{discussion.id}/statements',
+            json={
+                'content': 'This is a valid inline statement from embed.',
+                'embed_fingerprint': 'test-fp-embed-policy-enabled',
+            },
+            headers={'X-Embed-Request': 'true'}
+        )
+        assert resp.status_code == 201
+        body = resp.get_json()
+        assert body['success'] is True
+
+        created = db.session.get(Statement, body['statement_id'])
+        assert created is not None
+        assert created.discussion_id == discussion.id
+        assert created.source == 'user_submitted'
 
 
 class TestPartnerUsageExport:

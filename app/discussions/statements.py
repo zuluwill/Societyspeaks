@@ -273,6 +273,11 @@ def get_user_identifier():
         }
 
 
+def embed_statement_submissions_allowed(discussion):
+    """Whether reader statement submissions are allowed directly from embed."""
+    return bool(getattr(discussion, 'embed_statement_submissions_enabled', False))
+
+
 def check_statement_rate_limit(identifier):
     """
     Check if user has exceeded statement rate limit.
@@ -498,6 +503,132 @@ def create_statement(discussion_id):
     return render_template('discussions/create_statement.html', 
                          form=form, 
                          discussion=discussion)
+
+
+@statements_bp.route('/api/embed/discussions/<int:discussion_id>/statements', methods=['POST'])
+@csrf.exempt
+@limiter.limit("20 per hour", key_func=get_remote_address)
+def create_statement_from_embed(discussion_id):
+    """Create a reader-submitted statement from embed when the discussion policy allows it."""
+    is_embed_request = request.headers.get('X-Embed-Request', '').lower() in ('1', 'true', 'yes')
+    if not is_embed_request:
+        return jsonify({'success': False, 'error': 'embed_request_required'}), 400
+
+    discussion = Discussion.query.get_or_404(discussion_id)
+    _enforce_programme_visibility_for_discussion(discussion)
+
+    if not discussion.has_native_statements:
+        return jsonify({'success': False, 'error': 'native_statements_disabled'}), 400
+    if discussion.is_closed:
+        return jsonify({'success': False, 'error': 'discussion_closed'}), 403
+    if not embed_statement_submissions_allowed(discussion):
+        return jsonify({'success': False, 'error': 'embed_statement_submissions_disabled'}), 403
+
+    if discussion.partner_fk_id or discussion.partner_id:
+        from app.api.utils import is_partner_origin_allowed
+        origin = request.headers.get('Origin')
+        if origin and not is_partner_origin_allowed(origin, env=discussion.partner_env):
+            return jsonify({'success': False, 'error': 'origin_not_allowed'}), 403
+
+    partner_ref = extract_partner_ref_from_request()
+    from app.api.utils import partner_ref_is_disabled
+    if partner_ref and partner_ref_is_disabled(partner_ref):
+        return jsonify({'success': False, 'error': 'partner_disabled'}), 403
+
+    payload = request.get_json(silent=True) if request.is_json else request.form
+    content = ((payload or {}).get('content') or '').strip()
+    statement_type = ((payload or {}).get('statement_type') or 'claim').strip().lower()
+    if statement_type not in ('claim', 'question'):
+        statement_type = 'claim'
+
+    if len(content) < 10:
+        return jsonify({
+            'success': False,
+            'error': 'invalid_content',
+            'message': 'Statement must be at least 10 characters.',
+        }), 400
+    if len(content) > 500:
+        return jsonify({
+            'success': False,
+            'error': 'invalid_content',
+            'message': 'Statement must be 500 characters or fewer.',
+        }), 400
+
+    # Identifier mirrors vote handling so anonymous embeds remain deduplicated/rate-limited.
+    if current_user.is_authenticated:
+        identifier = {'user_id': current_user.id, 'session_fingerprint': None}
+    else:
+        embed_fingerprint = extract_embed_fingerprint_from_request() or get_statement_vote_fingerprint()
+        identifier = {'user_id': None, 'session_fingerprint': embed_fingerprint}
+
+    allowed, _, rate_message = check_statement_rate_limit(identifier)
+    if not allowed:
+        return jsonify({
+            'success': False,
+            'error': 'rate_limited',
+            'message': rate_message or 'Rate limit exceeded.',
+        }), 429
+
+    max_statements = current_app.config.get('MAX_STATEMENTS_PER_DISCUSSION', 5000)
+    current_statement_count = Statement.query.filter_by(
+        discussion_id=discussion_id,
+        is_deleted=False
+    ).count()
+    if current_statement_count >= max_statements:
+        return jsonify({
+            'success': False,
+            'error': 'statement_limit_reached',
+            'message': 'This discussion has reached its statement limit.',
+        }), 429
+
+    existing = Statement.query.filter_by(
+        discussion_id=discussion_id,
+        content=content,
+        is_deleted=False
+    ).first()
+    if existing:
+        return jsonify({
+            'success': False,
+            'error': 'duplicate_statement',
+            'statement_id': existing.id,
+            'message': 'This statement already exists in the discussion.',
+        }), 409
+
+    statement = Statement(
+        discussion_id=discussion_id,
+        user_id=identifier['user_id'],
+        session_fingerprint=identifier['session_fingerprint'],
+        content=content,
+        statement_type=statement_type,
+        source='user_submitted'
+    )
+    db.session.add(statement)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': 'duplicate_statement',
+            'message': 'This statement already exists in the discussion.',
+        }), 409
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("create_statement_from_embed failed")
+        return jsonify({
+            'success': False,
+            'error': 'statement_create_failed',
+            'message': 'Could not submit statement at this time.',
+        }), 500
+
+    from app.api.utils import invalidate_partner_snapshot_cache
+    invalidate_partner_snapshot_cache(discussion_id)
+
+    return jsonify({
+        'success': True,
+        'statement_id': statement.id,
+        'message': 'Statement submitted.',
+    }), 201
 
 
 def get_or_create_statement_client_id():

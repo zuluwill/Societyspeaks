@@ -121,6 +121,61 @@
       <p class="text-xs text-gray-500 mt-2">Closing a discussion pauses new votes and submissions, but historical analytics remain available.</p>
     </div>
 
+    {% if can_edit %}
+    <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm mb-6">
+      <h2 class="text-lg font-semibold text-gray-900 mb-2">Embed submission policy</h2>
+      <p class="text-sm text-gray-600 mb-3">
+        Control whether readers can submit new statements directly from the embed on your site.
+      </p>
+      <form method="POST" action="{{ url_for('partner.portal_set_embed_statement_submissions', discussion_id=discussion.id) }}" class="grid gap-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-xs text-gray-500">Quick presets:</span>
+          <button type="button" data-embed-preset="recommended" class="rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-50">Recommended (vote/report only)</button>
+          <button type="button" data-embed-preset="high-engagement" class="rounded-md border border-blue-300 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-100">High-engagement (allow inline submit)</button>
+        </div>
+        <label class="inline-flex items-start gap-3 text-sm text-gray-700">
+          <input
+            type="checkbox"
+            name="embed_statement_submissions_enabled"
+            value="1"
+            class="mt-0.5 accent-blue-600"
+            {% if discussion.embed_statement_submissions_enabled %}checked{% endif %}
+            {% if discussion.is_closed %}disabled{% endif %}
+          >
+          <span>
+            Allow inline statement submissions in embed
+            <span class="block text-xs text-gray-500">Default recommendation: keep off for most article pages. Turn on for high-engagement workflows (live blogs, campaign hubs) when moderation coverage is in place.</span>
+            <span class="block text-xs text-gray-500">When enabled, readers can propose statements from the embed (same 10-500 character rules and anti-abuse limits).</span>
+          </span>
+        </label>
+        {% if discussion.is_closed %}
+        <p class="text-xs text-amber-700">This discussion is closed. Reopen it before changing embed submission behavior.</p>
+        {% else %}
+        <div>
+          <button type="submit" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+            Save embed policy
+          </button>
+        </div>
+        {% endif %}
+      </form>
+      <script>
+        (function () {
+          var form = document.querySelector('form[action*="embed-submissions"]');
+          if (!form) return;
+          var checkbox = form.querySelector('input[name="embed_statement_submissions_enabled"]');
+          if (!checkbox || checkbox.disabled) return;
+          form.querySelectorAll('[data-embed-preset]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+              checkbox.checked = (btn.getAttribute('data-embed-preset') === 'high-engagement');
+              checkbox.focus();
+            });
+          });
+        })();
+      </script>
+    </div>
+    {% endif %}
+
     {# Statement breakdown #}
     <div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">

@@ -378,6 +378,77 @@
       text-decoration: underline;
     }
 
+    .embed-submit {
+      margin-top: 16px;
+      border: 1px solid var(--embed-border);
+      border-radius: 8px;
+      padding: 12px;
+      background: var(--embed-surface-hover);
+    }
+
+    .embed-submit__title {
+      margin: 0 0 6px 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .embed-submit__hint {
+      margin: 0 0 10px 0;
+      font-size: 0.75rem;
+      color: var(--embed-text-light);
+    }
+
+    .embed-submit__textarea {
+      width: 100%;
+      min-height: 86px;
+      border: 1px solid var(--embed-border);
+      border-radius: 6px;
+      padding: 10px;
+      font: inherit;
+      color: var(--embed-text);
+      background: var(--embed-bg);
+      resize: vertical;
+    }
+
+    .embed-submit__textarea:focus-visible {
+      outline: 2px solid var(--embed-primary);
+      outline-offset: 1px;
+    }
+
+    .embed-submit__controls {
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .embed-submit__meta {
+      font-size: 0.75rem;
+      color: var(--embed-text-light);
+    }
+
+    .embed-submit__btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 6px;
+      background: var(--embed-primary);
+      color: #fff;
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .embed-submit__btn:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
     /* Offline banner */
     .offline-banner {
       display: none;
@@ -774,6 +845,34 @@
     </nav>
     {% endif %}
 
+    {% if discussion.embed_statement_submissions_enabled %}
+    <section class="embed-submit" aria-labelledby="embedSubmitTitle">
+      <h2 id="embedSubmitTitle" class="embed-submit__title">Suggest a statement</h2>
+      <p class="embed-submit__hint">
+        Your statement should be concise and debatable (10-500 characters).
+      </p>
+      <form id="embedStatementForm">
+        <label for="embedStatementInput" class="sr-only">Statement</label>
+        <textarea
+          id="embedStatementInput"
+          name="content"
+          maxlength="500"
+          minlength="10"
+          required
+          class="embed-submit__textarea"
+          placeholder="e.g. Expanding low-emission zones is worth short-term disruption for long-term health."
+          {% if is_closed %}disabled{% endif %}
+        ></textarea>
+        <div class="embed-submit__controls">
+          <span id="embedStatementMeta" class="embed-submit__meta">0 / 500</span>
+          <button id="embedStatementSubmitBtn" type="submit" class="embed-submit__btn" {% if is_closed %}disabled{% endif %}>
+            Submit statement
+          </button>
+        </div>
+      </form>
+    </section>
+    {% endif %}
+
     <!-- Footer with CTA -->
     <footer class="embed-footer">
       <a href="{{ consensus_url }}" class="embed-cta" target="_blank" rel="noopener" id="consensusLink">
@@ -830,7 +929,8 @@
       partnerRef: '{{ ref|e }}',
       consensusUrl: '{{ consensus_url }}',
       voteGateThreshold: 5,
-      isClosed: {{ 'true' if is_closed else 'false' }}
+      isClosed: {{ 'true' if is_closed else 'false' }},
+      embedStatementSubmissionsEnabled: {{ 'true' if discussion.embed_statement_submissions_enabled else 'false' }}
     };
 
     // Storage key for this discussion's votes
@@ -1369,6 +1469,71 @@
       });
     }
 
+    async function submitEmbedStatement(e) {
+      e.preventDefault();
+      if (config.isClosed || !config.embedStatementSubmissionsEnabled) return;
+
+      const textarea = document.getElementById('embedStatementInput');
+      const submitBtn = document.getElementById('embedStatementSubmitBtn');
+      if (!textarea || !submitBtn) return;
+
+      const content = textarea.value.trim();
+      if (content.length < 10) {
+        showToast('Statement must be at least 10 characters.', 'warning');
+        return;
+      }
+      if (content.length > 500) {
+        showToast('Statement must be 500 characters or fewer.', 'warning');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      const originalLabel = submitBtn.textContent;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        const response = await fetch(`/api/embed/discussions/${config.discussionId}/statements`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': config.csrfToken,
+            'X-Embed-Request': 'true'
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            content,
+            statement_type: 'claim',
+            ref: config.partnerRef,
+            embed_fingerprint: embedParticipantId
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (response.status === 429) {
+            showToast(data.message || "You're posting too quickly. Please wait a bit.", 'warning');
+            return;
+          }
+          if (data.error === 'duplicate_statement') {
+            showToast('That statement is already in this discussion.', 'info');
+            return;
+          }
+          showToast(data.message || 'Could not submit statement right now.', 'error');
+          return;
+        }
+
+        textarea.value = '';
+        const meta = document.getElementById('embedStatementMeta');
+        if (meta) meta.textContent = '0 / 500';
+        showToast('Statement submitted. It will appear in the discussion shortly.', 'success');
+      } catch (error) {
+        showToast('Network error while submitting statement.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalLabel;
+      }
+    }
+
     // ===========================================
     // Initialization
     // ===========================================
@@ -1395,8 +1560,19 @@
       // Flag modal event listeners
       const flagForm = document.getElementById('flagForm');
       const flagSubmitBtn = document.getElementById('flagSubmitBtn');
+      const embedStatementForm = document.getElementById('embedStatementForm');
+      const embedStatementInput = document.getElementById('embedStatementInput');
+      const embedStatementMeta = document.getElementById('embedStatementMeta');
 
       flagForm.addEventListener('submit', submitFlag);
+      if (embedStatementForm) {
+        embedStatementForm.addEventListener('submit', submitEmbedStatement);
+      }
+      if (embedStatementInput && embedStatementMeta) {
+        embedStatementInput.addEventListener('input', () => {
+          embedStatementMeta.textContent = `${embedStatementInput.value.length} / 500`;
+        });
+      }
 
       // Enable submit button when reason selected
       flagForm.querySelectorAll('input[name="flag_reason"]').forEach(input => {

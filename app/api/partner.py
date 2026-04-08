@@ -146,19 +146,7 @@ def lookup_by_article_url():
     # If we need soft-delete in future, add is_deleted column to Discussion model
 
     # Build response
-    urls = build_discussion_urls(discussion, include_ref=False)
-    response_data = {
-        'discussion_id': discussion.id,
-        'slug': discussion.slug,
-        'title': discussion.title,
-        'partner_article_url': discussion.partner_article_url,
-        'external_id': discussion.partner_external_id,
-        'embed_url': urls['embed_url'],
-        'consensus_url': urls['consensus_url'],
-        'snapshot_url': urls['snapshot_url'],
-        'source': source,
-        'env': discussion.partner_env
-    }
+    response_data = _serialize_partner_discussion_response(discussion, source=source)
 
     # Cache base response (without ref) for 5 minutes
     cache.set(cache_key, response_data, timeout=300)
@@ -469,6 +457,38 @@ def _partner_discussions_query(partner_slug, partner):
     return q.filter(Discussion.partner_id == partner_slug)
 
 
+def _serialize_partner_discussion_response(
+    discussion,
+    *,
+    source='partner',
+    statement_count=None,
+    vote_count=None,
+    has_consensus_analysis=None,
+):
+    """Canonical discussion response payload used across partner endpoints."""
+    urls = build_discussion_urls(discussion, include_ref=False)
+    payload = {
+        'discussion_id': discussion.id,
+        'slug': discussion.slug,
+        'title': discussion.title,
+        'partner_article_url': discussion.partner_article_url,
+        'external_id': discussion.partner_external_id,
+        'embed_statement_submissions_enabled': bool(getattr(discussion, 'embed_statement_submissions_enabled', False)),
+        'embed_url': urls['embed_url'],
+        'consensus_url': urls['consensus_url'],
+        'snapshot_url': urls['snapshot_url'],
+        'source': source,
+        'env': discussion.partner_env,
+    }
+    if statement_count is not None:
+        payload['statement_count'] = int(statement_count)
+    if vote_count is not None:
+        payload['vote_count'] = int(vote_count)
+    if has_consensus_analysis is not None:
+        payload['has_consensus_analysis'] = bool(has_consensus_analysis)
+    return payload
+
+
 def _validate_seed_statements(stmts):
     """
     Validate and normalise a seed_statements list from a partner API request.
@@ -561,23 +581,17 @@ def list_partner_discussions():
 
     items = []
     for d in pagination.items:
-        urls = build_discussion_urls(d, include_ref=False)
-        items.append({
-            'discussion_id': d.id,
-            'slug': d.slug,
-            'title': d.title,
-            'partner_article_url': d.partner_article_url,
-            'external_id': d.partner_external_id,
-            'env': d.partner_env,
+        item = _serialize_partner_discussion_response(
+            d,
+            vote_count=vote_totals.get(d.id, 0),
+            has_consensus_analysis=(d.id in has_consensus),
+        )
+        item.update({
             'is_closed': d.is_closed,
             'integrity_mode': d.integrity_mode,
             'created_at': d.created_at.isoformat() if d.created_at else None,
-            'vote_count': int(vote_totals.get(d.id, 0)),
-            'has_consensus_analysis': d.id in has_consensus,
-            'embed_url': urls['embed_url'],
-            'consensus_url': urls['consensus_url'],
-            'snapshot_url': urls['snapshot_url'],
         })
+        items.append(item)
 
     if partner_slug:
         record_partner_usage(partner_slug, key_env, 'list_discussions')
@@ -631,22 +645,10 @@ def lookup_partner_discussion_by_external_id():
     if discussion.partner_env == 'test' and key_env != 'test':
         return api_error('forbidden', 'A valid test API key is required for this discussion.', 403)
 
-    urls = build_discussion_urls(discussion, include_ref=False)
     if partner_slug:
         record_partner_usage(partner_slug, key_env, 'lookup_external_id')
 
-    return jsonify({
-        'discussion_id': discussion.id,
-        'slug': discussion.slug,
-        'title': discussion.title,
-        'partner_article_url': discussion.partner_article_url,
-        'external_id': discussion.partner_external_id,
-        'embed_url': urls['embed_url'],
-        'consensus_url': urls['consensus_url'],
-        'snapshot_url': urls['snapshot_url'],
-        'source': 'partner',
-        'env': discussion.partner_env,
-    })
+    return jsonify(_serialize_partner_discussion_response(discussion))
 
 
 @partner_bp.route('/partner/analytics/usage-export', methods=['GET'])
@@ -923,7 +925,7 @@ def delete_partner_webhook(endpoint_id):
 @partner_bp.route('/partner/discussions/<int:discussion_id>', methods=['PATCH'])
 @limiter.limit("60 per hour", key_func=_get_api_key_rate_limit_key)
 def patch_partner_discussion(discussion_id):
-    """Update partner-owned discussion (is_closed, integrity_mode).
+    """Update partner-owned discussion (is_closed, integrity_mode, embed_statement_submissions_enabled).
 
     Billing policy: managing existing discussions is intentionally allowed even when
     billing_status is inactive — partners can still close/reopen discussions after a
@@ -960,9 +962,23 @@ def patch_partner_discussion(discussion_id):
             return api_error('invalid_request', '"integrity_mode" must be a JSON boolean (true or false).', 400)
         discussion.integrity_mode = val
         changed = True
+    if 'embed_statement_submissions_enabled' in data:
+        val = data['embed_statement_submissions_enabled']
+        if not isinstance(val, bool):
+            return api_error(
+                'invalid_request',
+                '"embed_statement_submissions_enabled" must be a JSON boolean (true or false).',
+                400,
+            )
+        discussion.embed_statement_submissions_enabled = val
+        changed = True
 
     if not changed:
-        return api_error('invalid_request', 'No supported fields to update (is_closed, integrity_mode).', 400)
+        return api_error(
+            'invalid_request',
+            'No supported fields to update (is_closed, integrity_mode, embed_statement_submissions_enabled).',
+            400,
+        )
 
     try:
         db.session.commit()
@@ -985,20 +1001,12 @@ def patch_partner_discussion(discussion_id):
     if partner_slug:
         record_partner_usage(partner_slug, key_env, 'patch_discussion')
 
-    urls = build_discussion_urls(discussion, include_ref=False)
-    return jsonify({
-        'discussion_id': discussion.id,
-        'slug': discussion.slug,
-        'title': discussion.title,
-        'partner_article_url': discussion.partner_article_url,
-        'external_id': discussion.partner_external_id,
+    payload = _serialize_partner_discussion_response(discussion)
+    payload.update({
         'is_closed': discussion.is_closed,
         'integrity_mode': discussion.integrity_mode,
-        'embed_url': urls['embed_url'],
-        'consensus_url': urls['consensus_url'],
-        'snapshot_url': urls['snapshot_url'],
-        'env': discussion.partner_env,
     })
+    return jsonify(payload)
 
 
 @partner_bp.route('/partner/discussions/<int:discussion_id>/statements', methods=['POST'])
@@ -1158,6 +1166,7 @@ def create_discussion():
     Request Body:
         article_url (optional): The article URL (will be normalized)
         external_id (optional): Stable partner-defined identifier (required when article_url omitted)
+        embed_statement_submissions_enabled (optional): Allow reader statement submissions directly in embed
         title (required): Discussion title
         excerpt (optional): Article excerpt for seed statement generation
         source_name (optional): Partner/source name for attribution
@@ -1261,7 +1270,15 @@ def create_discussion():
     # Validate required fields
     article_url = data.get('article_url')
     external_id = data.get('external_id')
+    embed_statement_submissions_enabled = data.get('embed_statement_submissions_enabled', False)
     title = data.get('title')
+
+    if not isinstance(embed_statement_submissions_enabled, bool):
+        return api_error(
+            'invalid_request',
+            '"embed_statement_submissions_enabled" must be a JSON boolean (true or false).',
+            400,
+        )
 
     normalized_url = None
     if article_url is not None:
@@ -1439,6 +1456,7 @@ def create_discussion():
                 geographic_scope='global',
                 partner_article_url=normalized_url,
                 partner_external_id=external_id,
+                embed_statement_submissions_enabled=embed_statement_submissions_enabled,
                 partner_id=partner_slug,
                 partner_fk_id=partner.id if partner else None,
                 partner_env=key_env,
@@ -1521,20 +1539,10 @@ def create_discussion():
             )
 
     # Build response (same shape as lookup)
-    urls = build_discussion_urls(discussion, include_ref=False)
-    response_data = {
-        'discussion_id': discussion.id,
-        'slug': discussion.slug,
-        'title': discussion.title,
-        'partner_article_url': discussion.partner_article_url,
-        'external_id': discussion.partner_external_id,
-        'embed_url': urls['embed_url'],
-        'consensus_url': urls['consensus_url'],
-        'snapshot_url': urls['snapshot_url'],
-        'source': 'partner',
-        'env': discussion.partner_env,
-        'statement_count': len(statements_to_create)
-    }
+    response_data = _serialize_partner_discussion_response(
+        discussion,
+        statement_count=len(statements_to_create),
+    )
 
     # Track create API event
     track_partner_event('partner_api_create', {

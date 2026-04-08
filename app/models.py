@@ -872,6 +872,9 @@ class Discussion(db.Model):
     # For discussions created by partners whose content is not ingested via RSS
     partner_article_url = db.Column(db.String(1000), nullable=True)  # Normalized URL
     partner_external_id = db.Column(db.String(128), nullable=True)  # Partner-defined stable ID for non-article discussions
+    # Partner-controlled embed behavior:
+    # False = vote/report only, True = allow reader statement submissions from embed.
+    embed_statement_submissions_enabled = db.Column(db.Boolean, nullable=False, default=False)
     partner_id = db.Column(db.String(50), nullable=True)  # Partner slug (legacy identifier)
     partner_fk_id = db.Column(db.Integer, db.ForeignKey('partner.id'), nullable=True, index=True)
     partner_env = db.Column(db.String(10), default='live', nullable=False, index=True)  # test | live

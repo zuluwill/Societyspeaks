@@ -20,6 +20,19 @@ ALL_PERMISSIONS = (
     PERM_WEBHOOKS_MANAGE,
 )
 
+PERMISSION_LABELS = {
+    PERM_KEYS_MANAGE: 'Keys',
+    PERM_DISCUSSIONS_MANAGE: 'Discussions',
+    PERM_ANALYTICS_VIEW: 'Analytics',
+    PERM_TEAM_MANAGE: 'Team',
+    PERM_DOMAINS_MANAGE: 'Domains',
+    PERM_BILLING_MANAGE: 'Billing',
+    PERM_WEBHOOKS_MANAGE: 'Webhooks',
+}
+
+# Ordered options for UI rendering.
+PERMISSION_OPTIONS = tuple((perm, PERMISSION_LABELS[perm]) for perm in ALL_PERMISSIONS)
+
 
 DEFAULT_ROLE_PERMISSIONS = {
     'owner': {

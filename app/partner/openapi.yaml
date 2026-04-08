@@ -292,6 +292,10 @@ paths:
                   type: string
                   maxLength: 128
                   description: Optional stable partner-defined ID for non-article or internal CMS discussions.
+                embed_statement_submissions_enabled:
+                  type: boolean
+                  default: false
+                  description: Optional. Allow readers to submit statements directly from embed for this discussion.
                 title:
                   type: string
                   maxLength: 200
@@ -335,6 +339,8 @@ paths:
                   external_id:
                     type: string
                     nullable: true
+                  embed_statement_submissions_enabled:
+                    type: boolean
                   embed_url:
                     type: string
                   consensus_url:
@@ -603,10 +609,10 @@ paths:
 
   /api/partner/discussions/{discussion_id}:
     patch:
-      summary: Update discussion (close, integrity mode)
+      summary: Update discussion (close, integrity mode, embed submissions)
       description: |
         Requires portal-issued `X-API-Key`. Server-to-server only.
-        Toggle is_closed and/or integrity_mode.
+        Toggle is_closed, integrity_mode, and/or embed_statement_submissions_enabled.
       operationId: patchPartnerDiscussion
       security:
         - ApiKeyAuth: []
@@ -626,6 +632,8 @@ paths:
                 is_closed:
                   type: boolean
                 integrity_mode:
+                  type: boolean
+                embed_statement_submissions_enabled:
                   type: boolean
       responses:
         '200':
