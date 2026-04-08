@@ -228,8 +228,8 @@
           </div>
         </div>
         <div>
-          <button type="submit"
-                  class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors">
+          <button type="submit" id="add-statement-btn"
+                  class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
             Add statement
           </button>
         </div>
@@ -238,8 +238,16 @@
         (function(){
           var ta = document.getElementById('statement-content-input');
           var ctr = document.getElementById('statement-char-count');
-          if (!ta || !ctr) return;
-          ta.addEventListener('input', function(){ ctr.textContent = ta.value.length + ' / 500'; });
+          var btn = document.getElementById('add-statement-btn');
+          if (ta && ctr) {
+            ta.addEventListener('input', function(){ ctr.textContent = ta.value.length + ' / 500'; });
+          }
+          if (btn) {
+            btn.closest('form').addEventListener('submit', function() {
+              btn.disabled = true;
+              btn.textContent = 'Adding…';
+            });
+          }
         })();
       </script>
       {% endif %}

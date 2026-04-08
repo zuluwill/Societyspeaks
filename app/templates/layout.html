@@ -1034,10 +1034,10 @@
     {% block flash_messages %}
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-2">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-2" aria-live="polite" aria-atomic="true">
       {% for category, message in messages %}
       {%- set _color = {'success': 'green', 'warning': 'yellow', 'error': 'red', 'danger': 'red', 'info': 'blue'}.get(category, 'gray') -%}
-      <div class="rounded-md bg-{{ _color }}-50 p-4">
+      <div class="rounded-md bg-{{ _color }}-50 p-4" role="alert">
         <p class="text-sm font-medium text-{{ _color }}-800">{{ message }}</p>
       </div>
       {% endfor %}
