@@ -1,7 +1,7 @@
 """Add partner_external_id to discussion for non-article partner flows
 
 Revision ID: j5k6l7m8n9o0
-Revises: 3f4e5d6c7b8a
+Revises: r1e2p3a4i5r6
 Create Date: 2026-04-07
 
 Adds a partner-defined stable identifier so partners can create/manage

@@ -35,18 +35,18 @@
         <div class="grid gap-4 sm:grid-cols-2">
           <div class="sm:col-span-2">
             <label class="block text-sm font-medium text-gray-700 mb-1">Discussion title <span class="text-red-500">*</span></label>
-            <input name="title" type="text" required maxlength="300" placeholder="e.g. Should the UK rejoin the EU single market?"
+            <input name="title" type="text" required maxlength="200" placeholder="e.g. Should the UK rejoin the EU single market?"
                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Article URL</label>
-            <input name="article_url" type="url" placeholder="https://observer.com/your-article"
+            <input name="article_url" type="url" maxlength="2048" placeholder="https://observer.com/your-article"
                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <p class="text-xs text-gray-400 mt-1">Used to link the discussion to a specific article.</p>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">External / CMS ID</label>
-            <input name="external_id" type="text" maxlength="255" placeholder="e.g. observer-cms-12345"
+            <input name="external_id" type="text" maxlength="128" placeholder="e.g. observer-cms-12345"
                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <p class="text-xs text-gray-400 mt-1">Your own stable reference. Useful when there is no article URL.</p>
           </div>
@@ -70,6 +70,15 @@
             <textarea name="excerpt" rows="3" maxlength="2000"
                       placeholder="Paste a short excerpt from the article to help generate balanced opening statements for readers…"
                       class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="inline-flex items-start gap-3 text-sm text-gray-700">
+              <input type="checkbox" name="embed_statement_submissions_enabled" value="1" class="mt-0.5 accent-blue-600">
+              <span>
+                Allow reader statement submissions directly in the embed
+                <span class="block text-xs text-gray-500">Off by default for moderation safety. You can change this per discussion later.</span>
+              </span>
+            </label>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Environment</label>
@@ -209,6 +218,9 @@
                     <span class="text-emerald-700 font-medium">Open</span>
                   {% endif %}
                   {% if d.integrity_mode %}<span class="text-xs text-gray-500">· Integrity</span>{% endif %}
+                  <span class="text-xs {{ 'text-blue-700' if d.embed_statement_submissions_enabled else 'text-gray-500' }}">
+                    · Embed submit {{ 'on' if d.embed_statement_submissions_enabled else 'off' }}
+                  </span>
                   {% if can_edit %}
                   <form method="post"
                     action="{{ url_for('partner.portal_toggle_discussion_closed', discussion_id=d.id, env=env_filter, status=status_filter, page=pagination.page) }}"

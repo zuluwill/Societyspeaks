@@ -43,6 +43,7 @@ from app.partner.permissions import (
     member_can,
     member_permissions,
     ALL_PERMISSIONS,
+    PERMISSION_OPTIONS,
     PERM_KEYS_MANAGE,
     PERM_DISCUSSIONS_MANAGE,
     PERM_ANALYTICS_VIEW,
@@ -249,6 +250,10 @@ def _permissions_from_form():
     return {key: bool(request.form.get(key)) for key in ALL_PERMISSIONS}
 
 
+def _form_bool(field_name):
+    return (request.form.get(field_name) or '').strip().lower() in ('1', 'true', 'on', 'yes')
+
+
 def _portal_discussion_belongs_clause(partner):
     """SQL filter for discussions owned by this partner (FK or legacy slug)."""
     return db.or_(
@@ -384,7 +389,9 @@ def _check_partner_quota_for_env(partner, env):
     """
     Check whether the partner has capacity to create another discussion.
     Returns None if within quota, or a human-readable error string if capped.
+    Mirrors _partner_discussion_quota and the API enforcement — uses UTC month start.
     """
+    from datetime import timezone
     tier_limits = current_app.config.get('PARTNER_TIER_LIMITS', {})
     partner_tier = getattr(partner, 'tier', 'free') or 'free'
     tier_limit = tier_limits.get(partner_tier, 25)
@@ -395,7 +402,9 @@ def _check_partner_quota_for_env(partner, env):
     if env == 'test':
         count = Discussion.query.filter_by(partner_fk_id=partner.id, partner_env='test').count()
     else:
-        month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_start = datetime.now(timezone.utc).replace(
+            tzinfo=None, day=1, hour=0, minute=0, second=0, microsecond=0
+        )
         count = Discussion.query.filter(
             Discussion.partner_fk_id == partner.id,
             Discussion.partner_env == 'live',
@@ -856,6 +865,7 @@ def portal_dashboard():
         can_manage_billing=_member_can_manage_billing(current_member),
         can_manage_webhooks=_member_can_manage_webhooks(current_member),
         current_member_permissions=current_perms,
+        permission_options=PERMISSION_OPTIONS,
         team_members=team_members,
         webhooks=webhooks,
         recent_webhook_deliveries=recent_deliveries,
@@ -973,6 +983,7 @@ def portal_create_discussion():
     description = (request.form.get('description') or '').strip()
     topic = (request.form.get('topic') or '').strip()
     env = (request.form.get('env') or 'test').strip()
+    embed_submissions_enabled = _form_bool('embed_statement_submissions_enabled')
 
     if env not in ('test', 'live'):
         env = 'test'
@@ -981,8 +992,9 @@ def portal_create_discussion():
         flash('Title is required.', 'error')
         return redirect(url_for('partner.portal_discussions'))
 
-    if len(title) > 300:
-        flash('Title must be 300 characters or fewer.', 'error')
+    max_title_len = (getattr(Discussion.__table__.c.title.type, 'length', None) or 200)
+    if len(title) > max_title_len:
+        flash(f'Title must be {max_title_len} characters or fewer.', 'error')
         return redirect(url_for('partner.portal_discussions'))
 
     if not article_url and not external_id:
@@ -1005,6 +1017,9 @@ def portal_create_discussion():
     # Normalise article URL
     normalized_url = None
     if article_url:
+        if len(article_url) > 2048:
+            flash('Article URL must be 2048 characters or fewer.', 'error')
+            return redirect(url_for('partner.portal_discussions'))
         try:
             from app.lib.url_normalizer import normalize_url
             normalized_url = normalize_url(article_url)
@@ -1023,8 +1038,11 @@ def portal_create_discussion():
 
     # External ID uniqueness
     if external_id:
-        if len(external_id) > 255:
-            flash('External ID must be 255 characters or fewer.', 'error')
+        max_external_id_len = (
+            getattr(Discussion.__table__.c.partner_external_id.type, 'length', None) or 128
+        )
+        if len(external_id) > max_external_id_len:
+            flash(f'External ID must be {max_external_id_len} characters or fewer.', 'error')
             return redirect(url_for('partner.portal_discussions'))
         existing = Discussion.query.filter_by(
             partner_external_id=external_id,
@@ -1057,6 +1075,7 @@ def portal_create_discussion():
         partner_env=env,
         partner_article_url=normalized_url,
         partner_external_id=external_id or None,
+        embed_statement_submissions_enabled=embed_submissions_enabled,
         created_by_key_id=best_key.id if best_key else None,
     )
     db.session.add(discussion)
@@ -1066,7 +1085,7 @@ def portal_create_discussion():
             from app.trending.seed_generator import generate_seed_statements_from_content
             seeds = generate_seed_statements_from_content(
                 title=title,
-                content=excerpt,
+                excerpt=excerpt[:5000],  # Mirror API _CREATE_MAX_EXCERPT cap
                 source_name=partner.name,
             )
             for s in seeds:
@@ -1076,10 +1095,13 @@ def portal_create_discussion():
                     statement_type='claim',
                     is_seed=True,
                     mod_status=1,
+                    source='ai_generated',
                 )
                 discussion.statements.append(stmt)
         except Exception:
-            pass  # Don't block creation if seed generation fails
+            current_app.logger.exception(
+                "Seed generation failed for portal discussion (partner=%s)", partner.slug
+            )
 
     try:
         db.session.commit()
@@ -1194,6 +1216,41 @@ def portal_discussion_detail(discussion_id):
     )
 
 
+@partner_bp.route('/portal/discussions/<int:discussion_id>/embed-submissions', methods=['POST'])
+@partner_login_required
+def portal_set_embed_statement_submissions(discussion_id):
+    """Enable/disable reader statement submissions directly from the embed."""
+    partner = _current_partner()
+    if not _member_can_manage_discussions(_current_partner_member(partner)):
+        flash('You do not have permission to change embed submission settings.', 'warning')
+        return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+
+    if _is_admin_preview(partner):
+        flash('Admin preview mode: write actions are disabled.', 'warning')
+        return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+
+    discussion = Discussion.query.filter(
+        Discussion.id == discussion_id,
+        _portal_discussion_belongs_clause(partner),
+    ).first_or_404()
+
+    if discussion.is_closed:
+        flash('Reopen the discussion before changing embed submission settings.', 'warning')
+        return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+
+    discussion.embed_statement_submissions_enabled = _form_bool('embed_statement_submissions_enabled')
+    try:
+        db.session.commit()
+        state = 'enabled' if discussion.embed_statement_submissions_enabled else 'disabled'
+        flash(f'Embed statement submissions {state}.', 'success')
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception("Failed to update embed submission policy")
+        flash('Could not update embed submission settings.', 'danger')
+
+    return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+
+
 @partner_bp.route('/portal/discussions/<int:discussion_id>/statements/new', methods=['POST'])
 @partner_login_required
 def portal_add_statement(discussion_id):
@@ -1232,6 +1289,12 @@ def portal_add_statement(discussion_id):
     if stance and stance not in ('pro', 'con', 'neutral'):
         stance = ''
 
+    max_st = current_app.config.get('MAX_STATEMENTS_PER_DISCUSSION', 5000)
+    current_count = Statement.query.filter_by(discussion_id=discussion_id, is_deleted=False).count()
+    if current_count >= max_st:
+        flash(f'This discussion has reached the maximum of {max_st} statements.', 'warning')
+        return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion_id))
+
     existing = Statement.query.filter_by(
         discussion_id=discussion_id, content=content, is_deleted=False
     ).first()
@@ -1246,6 +1309,7 @@ def portal_add_statement(discussion_id):
         statement_type='claim',
         is_seed=True,
         mod_status=1,
+        source='partner_provided',
     )
     db.session.add(stmt)
     if not discussion.has_native_statements:
@@ -1253,6 +1317,7 @@ def portal_add_statement(discussion_id):
 
     try:
         db.session.commit()
+        invalidate_partner_snapshot_cache(discussion_id)
         flash('Statement added.', 'success')
     except Exception:
         db.session.rollback()
