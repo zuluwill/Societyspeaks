@@ -3,16 +3,15 @@
 {% block title %}Discussion #{{ discussion.id }} — Partner Portal{% endblock %}
 
 {% block content %}
+{% include 'partner/portal/_portal_nav.html' %}
 <div class="bg-gray-50 min-h-screen">
-  <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
 
     {# Breadcrumb #}
     <nav class="flex items-center gap-2 text-sm text-gray-500 mb-6">
-      <a href="{{ url_for('partner.portal_dashboard') }}" class="hover:text-blue-600">Dashboard</a>
-      <span>/</span>
       <a href="{{ url_for('partner.portal_discussions') }}" class="hover:text-blue-600">Discussions</a>
       <span>/</span>
-      <span class="text-gray-800 font-medium">#{{ discussion.id }}</span>
+      <span class="text-gray-800 font-medium">{{ discussion.title|truncate(60) }}</span>
     </nav>
 
     {# Flash messages #}

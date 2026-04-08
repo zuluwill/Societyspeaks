@@ -837,7 +837,8 @@ def portal_dashboard():
         usage_daily=usage_daily,
         usage_max=usage_max,
         dns_checks=dns_checks,
-        base_url=_get_base_url()
+        base_url=_get_base_url(),
+        portal_page='dashboard',
     )
 
 
@@ -913,8 +914,158 @@ def portal_discussions():
         partner_quota=_partner_discussion_quota(partner),
         base_url=base,
         can_edit=can_edit,
+        can_create=_member_can_manage_discussions(_current_partner_member(partner)) and not _is_admin_preview(partner),
         is_admin_preview=_is_admin_preview(partner),
+        portal_page='discussions',
     )
+
+
+@partner_bp.route('/portal/discussions/new', methods=['POST'])
+@partner_login_required
+def portal_create_discussion():
+    """Create a discussion directly from the portal UI (no API key required)."""
+    partner = _current_partner()
+    member = _current_partner_member(partner)
+
+    if not _member_can_manage_discussions(member):
+        flash('You do not have permission to create discussions.', 'error')
+        return redirect(url_for('partner.portal_discussions'))
+
+    if _is_admin_preview(partner):
+        flash('Admin preview mode: create actions are disabled.', 'warning')
+        return redirect(url_for('partner.portal_discussions'))
+
+    title = (request.form.get('title') or '').strip()
+    article_url = (request.form.get('article_url') or '').strip()
+    external_id = (request.form.get('external_id') or '').strip()
+    excerpt = (request.form.get('excerpt') or '').strip()
+    env = (request.form.get('env') or 'test').strip()
+
+    if env not in ('test', 'live'):
+        env = 'test'
+
+    if not title:
+        flash('Title is required.', 'error')
+        return redirect(url_for('partner.portal_discussions'))
+
+    if len(title) > 300:
+        flash('Title must be 300 characters or fewer.', 'error')
+        return redirect(url_for('partner.portal_discussions'))
+
+    if not article_url and not external_id:
+        flash('Either an article URL or an external ID is required.', 'error')
+        return redirect(url_for('partner.portal_discussions'))
+
+    if env == 'live' and partner.billing_status != 'active':
+        flash('An active subscription is required to create live discussions.', 'error')
+        return redirect(url_for('partner.portal_discussions'))
+
+    # Quota check
+    tier_limits = current_app.config.get('PARTNER_TIER_LIMITS', {})
+    partner_tier = getattr(partner, 'tier', 'free') or 'free'
+    tier_limit = tier_limits.get(partner_tier, 25)
+
+    if tier_limit is not None:
+        if env == 'test':
+            env_count = Discussion.query.filter_by(partner_fk_id=partner.id, partner_env='test').count()
+        else:
+            month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+            env_count = Discussion.query.filter(
+                Discussion.partner_fk_id == partner.id,
+                Discussion.partner_env == 'live',
+                Discussion.created_at >= month_start,
+            ).count()
+        if env_count >= tier_limit:
+            flash(f'Discussion quota reached for your {partner_tier.title()} plan. Upgrade to create more.', 'error')
+            return redirect(url_for('partner.portal_discussions'))
+
+    # Normalise article URL
+    normalized_url = None
+    if article_url:
+        try:
+            from app.lib.url_normalizer import normalize_url
+            normalized_url = normalize_url(article_url)
+        except Exception:
+            flash('Invalid article URL — please check and try again.', 'error')
+            return redirect(url_for('partner.portal_discussions'))
+
+        existing = Discussion.query.filter_by(
+            partner_article_url=normalized_url,
+            partner_env=env,
+            partner_fk_id=partner.id,
+        ).first()
+        if existing:
+            flash(f'A discussion already exists for that article URL (ID {existing.id}).', 'warning')
+            return redirect(url_for('partner.portal_discussions'))
+
+    # External ID uniqueness
+    if external_id:
+        if len(external_id) > 255:
+            flash('External ID must be 255 characters or fewer.', 'error')
+            return redirect(url_for('partner.portal_discussions'))
+        existing = Discussion.query.filter_by(
+            partner_external_id=external_id,
+            partner_fk_id=partner.id,
+            partner_env=env,
+        ).first()
+        if existing:
+            flash(f'A discussion with that external ID already exists (ID {existing.id}).', 'warning')
+            return redirect(url_for('partner.portal_discussions'))
+
+    # Best active key for audit trail
+    best_key = PartnerApiKey.query.filter_by(
+        partner_id=partner.id, env=env, status='active'
+    ).order_by(PartnerApiKey.created_at.desc()).first()
+
+    # Generate slug (retry on collision)
+    from app.trending.constants import get_unique_slug
+    base_slug = generate_slug(title) or 'discussion'
+    unique_slug = get_unique_slug(Discussion, base_slug)
+
+    discussion = Discussion(
+        title=title,
+        description=excerpt[:500] if excerpt else None,
+        slug=unique_slug,
+        has_native_statements=True,
+        geographic_scope='global',
+        partner_id=partner.slug,
+        partner_fk_id=partner.id,
+        partner_env=env,
+        partner_article_url=normalized_url,
+        partner_external_id=external_id or None,
+        created_by_key_id=best_key.id if best_key else None,
+    )
+    db.session.add(discussion)
+
+    if excerpt:
+        try:
+            from app.trending.seed_generator import generate_seed_statements_from_content
+            seeds = generate_seed_statements_from_content(
+                title=title,
+                content=excerpt,
+                source_name=partner.name,
+            )
+            for s in seeds:
+                stmt = Statement(
+                    content=s.get('content', ''),
+                    seed_stance=s.get('position') or s.get('stance'),
+                    statement_type='claim',
+                    is_seed=True,
+                    mod_status=1,
+                )
+                discussion.statements.append(stmt)
+        except Exception:
+            pass  # Don't block creation if seed generation fails
+
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        flash('Could not create the discussion — a duplicate may already exist.', 'error')
+        return redirect(url_for('partner.portal_discussions'))
+
+    flash(f'Discussion "{title}" created successfully (ID {discussion.id}).', 'success')
+    return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion.id))
 
 
 @partner_bp.route('/portal/discussions/<int:discussion_id>/toggle-closed', methods=['POST'])
@@ -1015,6 +1166,7 @@ def portal_discussion_detail(discussion_id):
         consensus_url=f"{base}/discussions/{discussion.id}/{discussion.slug}/consensus?ref={partner.slug}",
         can_edit=can_edit,
         is_admin_preview=_is_admin_preview(partner),
+        portal_page='detail',
     )
 
 
@@ -1036,7 +1188,8 @@ def portal_getting_started():
         has_verified_test_domain=has_verified_test_domain,
         has_test_key=has_test_key,
         has_live_key=has_live_key,
-        base_url=_get_base_url()
+        base_url=_get_base_url(),
+        portal_page='setup',
     )
 
 
