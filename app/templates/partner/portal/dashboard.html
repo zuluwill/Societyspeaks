@@ -264,7 +264,7 @@
         <form method="POST" action="{{ url_for('partner.portal_add_domain') }}" class="grid gap-3 sm:grid-cols-3 mb-4">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input name="domain" type="text" placeholder="example.com" class="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm">
-          <select name="env" class="rounded-lg border border-gray-300 px-3 py-2 text-sm"><option value="test">Test</option><option value="live">Live</option></select>
+          <select name="env" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm"><option value="test">Test</option><option value="live">Live</option></select>
           <button type="submit" class="sm:col-span-3 inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Add domain</button>
         </form>
         {% else %}
@@ -406,7 +406,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input name="full_name" type="text" placeholder="Full name (optional)" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
         <input name="email" type="email" placeholder="teammate@example.com" class="rounded-lg border border-gray-300 px-3 py-2 text-sm" required>
-        <select name="role" class="rounded-lg border border-gray-300 px-3 py-2 text-sm"><option value="member">Member</option><option value="admin">Admin</option></select>
+        <select name="role" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm"><option value="member">Member</option><option value="admin">Admin</option></select>
         <button type="submit" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">Invite teammate</button>
       </form>
       {% endif %}

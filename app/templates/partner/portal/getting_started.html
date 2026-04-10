@@ -94,7 +94,7 @@
         <form method="POST" action="{{ url_for('partner.portal_add_domain') }}" class="grid gap-3 sm:grid-cols-3 mb-4">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input name="domain" type="text" placeholder="staging.example.com" class="sm:col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm">
-          <select name="env" class="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+          <select name="env" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm">
             <option value="test">Test</option>
             <option value="live">Live</option>
           </select>

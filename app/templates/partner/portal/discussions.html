@@ -58,7 +58,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Topic <span class="text-gray-400 font-normal">(optional)</span></label>
-            <select name="topic" class="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 w-full">
+            <select name="topic" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500 w-full">
               <option value="">— No topic —</option>
               {% for t in discussion_topics %}
               <option value="{{ t }}">{{ t }}</option>
@@ -82,7 +82,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Environment</label>
-            <select name="env" class="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500">
+            <select name="env" class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500">
               <option value="test">Test</option>
               {% if partner.billing_status == 'active' %}<option value="live">Live</option>{% endif %}
             </select>
@@ -159,7 +159,7 @@
       <div>
         <label class="block text-xs text-gray-500 mb-1">Environment</label>
         <select name="env" onchange="this.form.submit()"
-          class="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white">
+          class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white">
           <option value="all" {% if env_filter == 'all' %}selected{% endif %}>All envs</option>
           <option value="live" {% if env_filter == 'live' %}selected{% endif %}>Live</option>
           <option value="test" {% if env_filter == 'test' %}selected{% endif %}>Test</option>
@@ -168,7 +168,7 @@
       <div>
         <label class="block text-xs text-gray-500 mb-1">Status</label>
         <select name="status" onchange="this.form.submit()"
-          class="rounded-lg border border-gray-300 px-3 py-2 text-sm bg-white">
+          class="rounded-lg border border-gray-300 pl-3 pr-8 py-2 text-sm bg-white">
           <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All statuses</option>
           <option value="open" {% if status_filter == 'open' %}selected{% endif %}>Open</option>
           <option value="closed" {% if status_filter == 'closed' %}selected{% endif %}>Closed</option>
