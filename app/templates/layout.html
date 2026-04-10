@@ -738,6 +738,15 @@
                   role="menuitem"
                   >Settings</a
                 >
+                {% if session.get('partner_portal_id') %}
+                <div class="border-t border-gray-100 my-1"></div>
+                <a
+                  href="{{ url_for('partner.portal_dashboard') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >Partner Portal</a
+                >
+                {% endif %}
                 {% if current_user.is_admin %}
                 <a
                   href="{{ url_for('admin.dashboard') }}"
@@ -979,6 +988,13 @@
                   class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
                   >Settings</a
                 >
+                {% if session.get('partner_portal_id') %}
+                <a
+                  href="{{ url_for('partner.portal_dashboard') }}"
+                  class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                  >Partner Portal</a
+                >
+                {% endif %}
                 {% if current_user.is_admin %}
                 <a
                   href="{{ url_for('admin.dashboard') }}"
