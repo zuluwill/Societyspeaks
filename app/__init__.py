@@ -352,13 +352,17 @@ def create_app():
                 Config.SESSION_REDIS.ping()
                 app.config['SESSION_REDIS'] = Config.SESSION_REDIS
             except Exception as e:
-                app.logger.warning(f"Redis session ping failed ({type(e).__name__}): {e}, falling back to filesystem")
-                app.config['SESSION_TYPE'] = 'filesystem'
+                app.logger.warning(f"Redis session ping failed ({type(e).__name__}): {e}, falling back to cachelib filesystem sessions")
+                app.config['SESSION_TYPE'] = 'cachelib'
+                app.config['SESSION_REDIS'] = None
+                app.config['SESSION_CACHELIB'] = Config.SESSION_CACHELIB
         
         sess.init_app(app)
     except Exception as e:
         app.logger.error(f"Session initialization error: {e}")
-        app.config['SESSION_TYPE'] = 'filesystem'
+        app.config['SESSION_TYPE'] = 'cachelib'
+        app.config['SESSION_REDIS'] = None
+        app.config['SESSION_CACHELIB'] = Config.SESSION_CACHELIB
         sess.init_app(app)
 
     # Initialize cache — set config on app.config so flask-caching reads it reliably
@@ -471,6 +475,7 @@ def create_app():
                     app.logger.error("REDIS_URL environment variable is not set or empty.")
                     app.logger.error("Falling back to memory-based rate limiting - this is not recommended for production.")
                     # Don't raise an exception, but allow memory fallback with strong warning
+                    app.config['RATELIMIT_STORAGE_URI'] = 'memory://'
             
             # Test Redis connectivity in production if we have a URL
             if redis_url and not redis_url.startswith('memory://'):
@@ -485,6 +490,7 @@ def create_app():
                     app.logger.error(f"Redis connection failed in production: {redis_error}")
                     app.logger.error("Falling back to memory-based rate limiting - this is not ideal for production.")
                     app.config['RATELIMIT_STORAGE_URL'] = 'memory://'
+                    app.config['RATELIMIT_STORAGE_URI'] = 'memory://'
         
         # Development mode - allow memory fallback but warn
         elif redis_url and not redis_url.startswith('memory://'):
@@ -498,8 +504,10 @@ def create_app():
             except Exception as redis_error:
                 app.logger.warning(f"Redis connection failed in development: {redis_error}, using memory storage")
                 app.config['RATELIMIT_STORAGE_URL'] = 'memory://'
+                app.config['RATELIMIT_STORAGE_URI'] = 'memory://'
         else:
             app.logger.warning("Rate limiter using memory storage - development mode only")
+            app.config['RATELIMIT_STORAGE_URI'] = 'memory://'
         
         limiter.init_app(app)
         

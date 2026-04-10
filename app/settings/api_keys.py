@@ -100,7 +100,7 @@ def delete_api_key(key_id):
     """
     Delete an API key
     """
-    api_key = UserAPIKey.query.get_or_404(key_id)
+    api_key = db.get_or_404(UserAPIKey, key_id)
     
     # Check ownership
     if api_key.user_id != current_user.id:
@@ -121,7 +121,7 @@ def toggle_api_key(key_id):
     """
     Activate/deactivate an API key
     """
-    api_key = UserAPIKey.query.get_or_404(key_id)
+    api_key = db.get_or_404(UserAPIKey, key_id)
     
     # Check ownership
     if api_key.user_id != current_user.id:
@@ -143,7 +143,7 @@ def revalidate_api_key(key_id):
     """
     Re-validate an API key to check if it's still working
     """
-    api_key_record = UserAPIKey.query.get_or_404(key_id)
+    api_key_record = db.get_or_404(UserAPIKey, key_id)
     
     # Check ownership
     if api_key_record.user_id != current_user.id:

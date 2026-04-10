@@ -2,6 +2,7 @@ import redis
 from redis.backoff import ExponentialBackoff
 from redis.retry import Retry
 from redis.exceptions import ConnectionError, TimeoutError
+from cachelib.file import FileSystemCache
 from dotenv import load_dotenv
 from datetime import timedelta
 import json
@@ -9,6 +10,39 @@ import os
 import logging
 
 load_dotenv()
+
+
+def _env_int(name, default):
+    """Parse an integer env var safely, logging and falling back on bad input."""
+    raw = os.getenv(name)
+    if raw is None or str(raw).strip() == "":
+        return default
+    try:
+        return int(str(raw).strip())
+    except (TypeError, ValueError):
+        logging.warning("Invalid %s=%r; using default %s", name, raw, default)
+        return default
+
+
+def _env_optional_file_mode(name):
+    """Parse optional file mode from env, accepting octal-style values."""
+    raw = os.getenv(name)
+    if raw is None or str(raw).strip() == "":
+        return None
+    raw = str(raw).strip()
+    try:
+        return int(raw, 8) if raw.startswith("0") else int(raw)
+    except (TypeError, ValueError):
+        logging.warning("Invalid %s=%r; ignoring custom file mode", name, raw)
+        return None
+
+
+def _build_session_cache():
+    """Build the cachelib filesystem cache used for non-Redis session fallback."""
+    session_dir = os.path.abspath(os.getenv('SESSION_FILE_DIR', './flask_session'))
+    threshold = _env_int('SESSION_FILE_THRESHOLD', 500)
+    mode = _env_optional_file_mode('SESSION_FILE_MODE')
+    return FileSystemCache(cache_dir=session_dir, threshold=threshold, mode=mode)
 
 class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev')
@@ -144,7 +178,9 @@ class Config:
     # Use Redis for session management
     SESSION_TYPE = 'redis'
     SESSION_PERMANENT = True
-    SESSION_USE_SIGNER = True
+    # Server-side sessions do not need signed session IDs; the random SID length
+    # provides the relevant entropy and avoids deprecated Flask-Session config.
+    SESSION_ID_LENGTH = _env_int('SESSION_ID_LENGTH', 32)
     # 24 hours keeps users logged in across a normal day without forcing
     # frequent re-authentication; adjust upward for "remember me" style UX.
     PERMANENT_SESSION_LIFETIME = timedelta(hours=24)
@@ -152,8 +188,9 @@ class Config:
     SESSION_REDIS_RETRY_NUMBER = 3
     LOG_TO_STDOUT = os.getenv('LOG_TO_STDOUT', 'False').lower() == 'true'
 
-    # Filesystem fallback directory (used when Redis is unavailable in non-production)
-    SESSION_FILE_DIR = './flask_session'
+    # CacheLib-backed filesystem fallback used when Redis is unavailable in
+    # non-production. This replaces the deprecated SESSION_FILE_* settings.
+    SESSION_CACHELIB = _build_session_cache()
 
     _redis_url = os.getenv('REDIS_URL')
     _is_production = os.getenv('FLASK_ENV') == 'production'
@@ -216,6 +253,7 @@ class Config:
             logging.info("Redis connection established successfully")
             REDIS_URL = _redis_url
             RATELIMIT_STORAGE_URL = _redis_url
+            RATELIMIT_STORAGE_URI = RATELIMIT_STORAGE_URL
         except Exception as e:
             if _is_production:
                 # Re-raise: a production process must not silently degrade.
@@ -224,19 +262,21 @@ class Config:
                     "Resolve the Redis connectivity issue before deploying."
                 ) from e
             logging.warning(
-                f"Failed to connect to Redis ({e}), falling back to filesystem sessions. "
+                f"Failed to connect to Redis ({e}), falling back to cachelib filesystem sessions. "
                 "This is acceptable in development but must not happen in production."
             )
-            SESSION_TYPE = 'filesystem'
+            SESSION_TYPE = 'cachelib'
             SESSION_REDIS = None
             REDIS_URL = None
             RATELIMIT_STORAGE_URL = 'memory://'
+            RATELIMIT_STORAGE_URI = RATELIMIT_STORAGE_URL
     else:
-        logging.info("No REDIS_URL provided, using filesystem sessions (development mode)")
-        SESSION_TYPE = 'filesystem'
+        logging.info("No REDIS_URL provided, using cachelib filesystem sessions (development mode)")
+        SESSION_TYPE = 'cachelib'
         SESSION_REDIS = None
         REDIS_URL = None
         RATELIMIT_STORAGE_URL = 'memory://'
+        RATELIMIT_STORAGE_URI = RATELIMIT_STORAGE_URL
 
     # ===========================================================================
     # EMAIL CONFIGURATION

@@ -162,11 +162,15 @@ def view_topic(topic_id):
     from app.models import TrendingTopicArticle, NewsArticle
     from sqlalchemy.orm import joinedload
 
-    topic = TrendingTopic.query.options(
-        joinedload(TrendingTopic.articles)
-        .joinedload(TrendingTopicArticle.article)
-        .joinedload(NewsArticle.source)
-    ).get_or_404(topic_id)
+    topic = db.one_or_404(
+        db.select(TrendingTopic)
+        .options(
+            joinedload(TrendingTopic.articles)
+            .joinedload(TrendingTopicArticle.article)
+            .joinedload(NewsArticle.source)
+        )
+        .filter_by(id=topic_id)
+    )
 
     recent_discussions = Discussion.query.filter_by(
         has_native_statements=True
@@ -184,7 +188,7 @@ def view_topic(topic_id):
 @admin_required
 def publish(topic_id):
     """Publish a topic as a discussion."""
-    topic = TrendingTopic.query.get_or_404(topic_id)
+    topic = db.get_or_404(TrendingTopic, topic_id)
     
     if topic.status not in ['pending_review', 'approved']:
         flash("Topic cannot be published in current state", "error")
@@ -205,7 +209,7 @@ def publish(topic_id):
 @admin_required
 def edit_topic(topic_id):
     """Edit topic title and description."""
-    topic = TrendingTopic.query.get_or_404(topic_id)
+    topic = db.get_or_404(TrendingTopic, topic_id)
     
     topic.title = request.form.get('title', topic.title)
     topic.description = request.form.get('description', topic.description)
@@ -221,7 +225,7 @@ def edit_topic(topic_id):
 @admin_required
 def regenerate_seeds(topic_id):
     """Regenerate seed statements for a topic."""
-    topic = TrendingTopic.query.get_or_404(topic_id)
+    topic = db.get_or_404(TrendingTopic, topic_id)
     
     seeds = generate_seed_statements(topic, count=7)
     topic.seed_statements = seeds
@@ -236,7 +240,7 @@ def regenerate_seeds(topic_id):
 @admin_required
 def rescore_topic(topic_id):
     """Rescore a topic."""
-    topic = TrendingTopic.query.get_or_404(topic_id)
+    topic = db.get_or_404(TrendingTopic, topic_id)
     
     topic = score_topic(topic)
     db.session.commit()
@@ -250,14 +254,14 @@ def rescore_topic(topic_id):
 @admin_required
 def merge(topic_id):
     """Merge topic into an existing discussion."""
-    topic = TrendingTopic.query.get_or_404(topic_id)
+    topic = db.get_or_404(TrendingTopic, topic_id)
     
     discussion_id = request.form.get('discussion_id', type=int)
     if not discussion_id:
         flash("Please select a discussion to merge into", "error")
         return redirect(url_for('trending.view_topic', topic_id=topic_id))
     
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
     
     merge_topic_into_discussion(topic, discussion, current_user)
     
@@ -270,7 +274,7 @@ def merge(topic_id):
 @admin_required
 def discard(topic_id):
     """Discard a topic."""
-    topic = TrendingTopic.query.get_or_404(topic_id)
+    topic = db.get_or_404(TrendingTopic, topic_id)
     
     topic.status = 'discarded'
     topic.reviewed_by_id = current_user.id
@@ -288,7 +292,7 @@ def unpublish(topic_id):
     """Unpublish a topic - delete discussion and all related records, revert to pending_review."""
     from app.models import DiscussionSourceArticle, Statement, StatementVote
     
-    topic = TrendingTopic.query.get_or_404(topic_id)
+    topic = db.get_or_404(TrendingTopic, topic_id)
     
     if topic.status != 'published' or not topic.discussion_id:
         flash("Topic is not published", "error")
@@ -374,7 +378,7 @@ def add_source():
 @admin_required
 def toggle_source(source_id):
     """Toggle source active status."""
-    source = NewsSource.query.get_or_404(source_id)
+    source = db.get_or_404(NewsSource, source_id)
     source.is_active = not source.is_active
     db.session.commit()
     
@@ -388,7 +392,7 @@ def toggle_source(source_id):
 @admin_required
 def delete_source(source_id):
     """Delete a news source."""
-    source = NewsSource.query.get_or_404(source_id)
+    source = db.get_or_404(NewsSource, source_id)
     name = source.name
     
     db.session.delete(source)
@@ -411,7 +415,7 @@ def api_stats():
 @admin_required
 def share_to_bluesky(topic_id):
     """Manually share a published topic to Bluesky."""
-    topic = TrendingTopic.query.get_or_404(topic_id)
+    topic = db.get_or_404(TrendingTopic, topic_id)
     
     if not topic.created_discussion:
         flash("Topic must be published first", "error")
@@ -447,7 +451,7 @@ def share_to_bluesky(topic_id):
 @admin_required
 def get_x_share_url(topic_id):
     """Generate and redirect to X share URL."""
-    topic = TrendingTopic.query.get_or_404(topic_id)
+    topic = db.get_or_404(TrendingTopic, topic_id)
     
     if not topic.created_discussion:
         flash("Topic must be published first", "error")
@@ -507,7 +511,7 @@ def promote_article(article_id):
     from datetime import timedelta
     from app.models import TrendingTopicArticle
     
-    article = NewsArticle.query.get_or_404(article_id)
+    article = db.get_or_404(NewsArticle, article_id)
     
     try:
         title = generate_neutral_question([article])

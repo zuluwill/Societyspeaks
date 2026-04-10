@@ -219,7 +219,7 @@ def trigger_analysis(discussion_id):
     Trigger consensus analysis for a discussion
     Rate limited to prevent abuse (computationally expensive)
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
 
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         abort(403)
@@ -290,7 +290,7 @@ def view_results(discussion_id):
     - Discussion creators can always view (they need to manage the discussion)
     - Admins can always view
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
 
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         abort(403)
@@ -445,7 +445,7 @@ def get_cluster_data(discussion_id):
     API endpoint to get cluster data for visualization
     Returns JSON with user positions and cluster assignments
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
 
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         return jsonify({'error': 'forbidden'}), 403
@@ -478,7 +478,7 @@ def get_special_statements(discussion_id):
     """
     API endpoint to get consensus, bridge, and divisive statements
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
 
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         return jsonify({'error': 'forbidden'}), 403
@@ -510,7 +510,7 @@ def get_analysis_status(discussion_id):
     """
     API endpoint to check if analysis is ready or available
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
 
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         return jsonify({'error': 'forbidden'}), 403
@@ -575,7 +575,7 @@ def generate_report(discussion_id):
     Participation Gate: Same as view_results - users must vote on at least
     PARTICIPATION_THRESHOLD statements before viewing.
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
 
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         abort(403)
@@ -642,7 +642,7 @@ def export_analysis(discussion_id):
     Export consensus analysis data as JSON or CSV
     Useful for external analysis tools
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
 
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         return jsonify({'error': 'forbidden'}), 403
@@ -773,7 +773,7 @@ def generate_summary(discussion_id):
     """
     from app.lib.llm_utils import generate_discussion_summary
 
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
 
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         abort(403)
@@ -846,7 +846,7 @@ def get_summary_api(discussion_id):
     """
     API endpoint to get AI-generated summary
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         return jsonify({'error': 'forbidden'}), 403
 
@@ -879,7 +879,7 @@ def generate_cluster_labels_route(discussion_id):
     """
     from app.lib.llm_utils import generate_cluster_labels
 
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
 
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         abort(403)

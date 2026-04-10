@@ -341,7 +341,7 @@ def load_perspectives(topic_id):
         }), 401
 
     # Get topic and validate it's published
-    topic = TrendingTopic.query.get_or_404(topic_id)
+    topic = db.get_or_404(TrendingTopic, topic_id)
 
     if topic.status != 'published':
         return jsonify({

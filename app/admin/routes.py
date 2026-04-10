@@ -291,7 +291,7 @@ def create_individual_profile():
 @login_required
 @admin_required
 def edit_individual_profile(profile_id):
-    profile = IndividualProfile.query.get_or_404(profile_id)
+    profile = db.get_or_404(IndividualProfile, profile_id)
     form = IndividualProfileForm(obj=profile)
     form.submit.label.text = 'Save Changes'
     user_form = UserAssignmentForm(obj=profile.user)
@@ -375,7 +375,7 @@ def create_company_profile():
 @login_required
 @admin_required
 def edit_company_profile(profile_id):
-    profile = CompanyProfile.query.get_or_404(profile_id)
+    profile = db.get_or_404(CompanyProfile, profile_id)
     form = CompanyProfileForm(obj=profile)
     form.submit.label.text = 'Save Changes'
     user_form = UserAssignmentForm(obj=profile.user)
@@ -413,9 +413,9 @@ def edit_company_profile(profile_id):
 def delete_profile(profile_type, profile_id):
     try:
         if profile_type == 'individual':
-            profile = IndividualProfile.query.get_or_404(profile_id)
+            profile = db.get_or_404(IndividualProfile, profile_id)
         else:
-            profile = CompanyProfile.query.get_or_404(profile_id)
+            profile = db.get_or_404(CompanyProfile, profile_id)
 
         user = db.session.get(User,profile.user_id)
         if not user.company_profile and not user.individual_profile:
@@ -436,7 +436,7 @@ def delete_profile(profile_type, profile_id):
 @login_required
 @admin_required
 def manage_company_profile(profile_id):
-    profile = CompanyProfile.query.get_or_404(profile_id)
+    profile = db.get_or_404(CompanyProfile, profile_id)
     programme_form = AdminProgrammeForm(prefix='prog')
     member_form = AdminOrgMemberForm(prefix='mem')
     programmes = Programme.query.filter_by(company_profile_id=profile.id).order_by(Programme.created_at.desc()).all()
@@ -457,7 +457,7 @@ def manage_company_profile(profile_id):
 @login_required
 @admin_required
 def admin_create_programme(profile_id):
-    profile = CompanyProfile.query.get_or_404(profile_id)
+    profile = db.get_or_404(CompanyProfile, profile_id)
     form = AdminProgrammeForm(prefix='prog')
     if form.validate_on_submit():
         try:
@@ -495,7 +495,7 @@ def admin_create_programme(profile_id):
 @login_required
 @admin_required
 def admin_add_org_member(profile_id):
-    profile = CompanyProfile.query.get_or_404(profile_id)
+    profile = db.get_or_404(CompanyProfile, profile_id)
     form = AdminOrgMemberForm(prefix='mem')
     if form.validate_on_submit():
         try:
@@ -547,7 +547,7 @@ def admin_add_org_member(profile_id):
 @login_required
 @admin_required
 def admin_remove_org_member(profile_id, member_id):
-    profile = CompanyProfile.query.get_or_404(profile_id)
+    profile = db.get_or_404(CompanyProfile, profile_id)
     member = OrganizationMember.query.filter_by(id=member_id, org_id=profile_id).first_or_404()
     if member.user_id == profile.user_id:
         flash('Cannot remove the primary account (organisation owner).', 'error')
@@ -690,7 +690,7 @@ def delete_discussion(discussion_id):
         BriefItem, DailyQuestion, DailyQuestionSelection
     )
     
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
     discussion_title = discussion.title
     
     try:
@@ -747,7 +747,7 @@ def delete_discussion(discussion_id):
 @login_required
 @admin_required
 def toggle_discussion_closed(discussion_id):
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
     discussion.is_closed = not discussion.is_closed
     db.session.commit()
     status_label = 'closed' if discussion.is_closed else 'reopened'
@@ -829,7 +829,7 @@ def list_partners():
 @login_required
 @admin_required
 def preview_partner_portal(partner_id):
-    partner = Partner.query.get_or_404(partner_id)
+    partner = db.get_or_404(Partner, partner_id)
 
     owner_member = PartnerMember.query.filter_by(
         partner_id=partner.id,
@@ -891,7 +891,7 @@ def preview_partner_portal(partner_id):
 @login_required
 @admin_required
 def admin_partner_update(partner_id):
-    partner = Partner.query.get_or_404(partner_id)
+    partner = db.get_or_404(Partner, partner_id)
     tier = (request.form.get('tier') or '').strip()
     if tier in ('free', 'starter', 'professional', 'enterprise'):
         partner.tier = tier
@@ -1154,7 +1154,7 @@ def list_users():
 @login_required
 @admin_required
 def delete_user(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     if user == current_user:
         flash('You cannot delete your own account.', 'error')
         return redirect(url_for('admin.list_users'))
@@ -1181,7 +1181,7 @@ def delete_user(user_id):
 @admin_required
 def change_profile_type(user_id):
     """Change a user's profile type."""
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     new_profile_type = request.form.get('profile_type', '').strip() or None
     
     valid_types = ['individual', 'company', None]
@@ -1207,7 +1207,7 @@ def change_profile_type(user_id):
 @login_required
 @admin_required
 def toggle_admin(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     if user == current_user:
         flash('You cannot modify your own admin status.', 'error')
         return redirect(url_for('admin.list_users'))
@@ -1230,7 +1230,7 @@ def manage_user_subscription(user_id):
     Admin-only: Manually manage user subscriptions.
     Allows granting free access, changing plans, or revoking subscriptions.
     """
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     
     # Get all pricing plans
     plans = PricingPlan.query.order_by(PricingPlan.price_monthly).all()
@@ -1533,7 +1533,7 @@ def create_daily_question():
 @login_required
 @admin_required
 def edit_daily_question(question_id):
-    question = DailyQuestion.query.get_or_404(question_id)
+    question = db.get_or_404(DailyQuestion, question_id)
     
     if request.method == 'POST':
         try:
@@ -1566,7 +1566,7 @@ def edit_daily_question(question_id):
 @login_required
 @admin_required
 def publish_daily_question(question_id):
-    question = DailyQuestion.query.get_or_404(question_id)
+    question = db.get_or_404(DailyQuestion, question_id)
     
     try:
         question.status = 'published'
@@ -1585,7 +1585,7 @@ def publish_daily_question(question_id):
 @login_required
 @admin_required
 def archive_daily_question(question_id):
-    question = DailyQuestion.query.get_or_404(question_id)
+    question = db.get_or_404(DailyQuestion, question_id)
     
     try:
         question.status = 'archived'
@@ -1606,7 +1606,7 @@ def delete_daily_question(question_id):
     from app.models import DailyQuestionSelection
     from app.daily.auto_selection import auto_schedule_upcoming_questions
     
-    question = DailyQuestion.query.get_or_404(question_id)
+    question = db.get_or_404(DailyQuestion, question_id)
     question_date = question.question_date
     
     try:
@@ -1636,7 +1636,7 @@ def delete_daily_question(question_id):
 @login_required
 @admin_required
 def view_daily_question(question_id):
-    question = DailyQuestion.query.get_or_404(question_id)
+    question = db.get_or_404(DailyQuestion, question_id)
     responses = DailyQuestionResponse.query.filter_by(
         daily_question_id=question_id
     ).order_by(DailyQuestionResponse.created_at.desc()).limit(100).all()
@@ -1810,7 +1810,7 @@ def add_subscriber():
 @admin_required
 def toggle_subscriber(subscriber_id):
     """Toggle subscriber active status"""
-    subscriber = DailyQuestionSubscriber.query.get_or_404(subscriber_id)
+    subscriber = db.get_or_404(DailyQuestionSubscriber, subscriber_id)
     subscriber.is_active = not subscriber.is_active
     db.session.commit()
     
@@ -1824,7 +1824,7 @@ def toggle_subscriber(subscriber_id):
 @admin_required
 def update_subscriber_frequency(subscriber_id):
     """Update subscriber email frequency preference"""
-    subscriber = DailyQuestionSubscriber.query.get_or_404(subscriber_id)
+    subscriber = db.get_or_404(DailyQuestionSubscriber, subscriber_id)
     new_frequency = request.form.get('frequency', 'daily').lower()
     
     if new_frequency not in ['daily', 'weekly', 'monthly']:
@@ -1856,7 +1856,7 @@ def update_subscriber_frequency(subscriber_id):
 @admin_required
 def delete_subscriber(subscriber_id):
     """Delete a subscriber completely"""
-    subscriber = DailyQuestionSubscriber.query.get_or_404(subscriber_id)
+    subscriber = db.get_or_404(DailyQuestionSubscriber, subscriber_id)
     email = subscriber.email
     
     db.session.delete(subscriber)
@@ -1974,7 +1974,7 @@ def resend_daily_question(subscriber_id):
     """Resend today's daily question to a specific subscriber"""
     from app.resend_client import get_resend_client
     
-    subscriber = DailyQuestionSubscriber.query.get_or_404(subscriber_id)
+    subscriber = db.get_or_404(DailyQuestionSubscriber, subscriber_id)
     
     # Get today's published question
     question = DailyQuestion.get_today()
@@ -2080,7 +2080,7 @@ def list_statement_flags():
 @admin_required
 def review_statement_flag(flag_id):
     """Review a single statement flag"""
-    flag = StatementFlag.query.get_or_404(flag_id)
+    flag = db.get_or_404(StatementFlag, flag_id)
     action = request.form.get('action')  # 'approve', 'dismiss'
     review_notes = request.form.get('review_notes', '')
 
@@ -2247,7 +2247,7 @@ def list_response_flags():
 @admin_required
 def review_response_flag(flag_id):
     """Review a single response flag and take action"""
-    flag = DailyQuestionResponseFlag.query.get_or_404(flag_id)
+    flag = db.get_or_404(DailyQuestionResponseFlag, flag_id)
     action = request.form.get('action')  # 'valid', 'invalid', 'dismiss'
     review_notes = request.form.get('review_notes', '')
 
@@ -2527,7 +2527,7 @@ def source_claims():
 @admin_required
 def approve_source_claim(source_id):
     """Approve a source claim request."""
-    source = NewsSource.query.get_or_404(source_id)
+    source = db.get_or_404(NewsSource, source_id)
 
     if source.claim_status != 'pending':
         flash('This claim is not pending review.', 'error')
@@ -2571,7 +2571,7 @@ def approve_source_claim(source_id):
 @admin_required
 def reject_source_claim(source_id):
     """Reject a source claim request."""
-    source = NewsSource.query.get_or_404(source_id)
+    source = db.get_or_404(NewsSource, source_id)
 
     if source.claim_status != 'pending':
         flash('This claim is not pending review.', 'error')
@@ -2599,7 +2599,7 @@ def reject_source_claim(source_id):
 @admin_required
 def revoke_source_claim(source_id):
     """Revoke an approved source claim."""
-    source = NewsSource.query.get_or_404(source_id)
+    source = db.get_or_404(NewsSource, source_id)
 
     if source.claim_status != 'approved':
         flash('This source is not currently claimed.', 'error')

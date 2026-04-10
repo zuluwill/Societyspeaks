@@ -362,7 +362,7 @@ def check_statement_rate_limit(identifier):
 @limiter.limit("10 per minute")  # Removed @login_required to allow anonymous statements like pol.is
 def create_statement(discussion_id):
     """Create a new statement in a native discussion (authenticated or anonymous)"""
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
 
     if discussion.programme and not can_view_programme(discussion.programme, current_user):
         abort(403)
@@ -514,7 +514,7 @@ def create_statement_from_embed(discussion_id):
     if not is_embed_request:
         return jsonify({'success': False, 'error': 'embed_request_required'}), 400
 
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
     _enforce_programme_visibility_for_discussion(discussion)
 
     if not discussion.has_native_statements:
@@ -977,7 +977,7 @@ def vote_statement(statement_id):
             return redirect(url_for('statements.view_statement', statement_id=statement_id))
         return jsonify({'error': 'Automated requests not allowed'}), 403
 
-    statement = Statement.query.get_or_404(statement_id)
+    statement = db.get_or_404(Statement, statement_id)
     discussion = statement.discussion
     if discussion and discussion.is_closed:
         if is_form_post:
@@ -1292,7 +1292,7 @@ def vote_statement(statement_id):
 @with_db_retry()
 def view_statement(statement_id):
     """View a single statement with its responses and votes"""
-    statement = Statement.query.get_or_404(statement_id)
+    statement = db.get_or_404(Statement, statement_id)
     discussion = statement.discussion
     _enforce_programme_visibility_for_discussion(discussion)
     
@@ -1324,7 +1324,7 @@ def view_statement(statement_id):
 @login_required
 def edit_statement(statement_id):
     """Edit own statement (within 10 minute window)"""
-    statement = Statement.query.get_or_404(statement_id)
+    statement = db.get_or_404(Statement, statement_id)
     _enforce_programme_visibility_for_discussion(statement.discussion)
     
     # Check ownership
@@ -1357,7 +1357,7 @@ def edit_statement(statement_id):
 @login_required
 def delete_statement(statement_id):
     """Soft delete own statement"""
-    statement = Statement.query.get_or_404(statement_id)
+    statement = db.get_or_404(Statement, statement_id)
     _enforce_programme_visibility_for_discussion(statement.discussion)
     
     # Check ownership or admin
@@ -1381,7 +1381,7 @@ def delete_statement(statement_id):
 @limiter.limit("5 per minute")
 def flag_statement(statement_id):
     """Flag a statement for moderation"""
-    statement = Statement.query.get_or_404(statement_id)
+    statement = db.get_or_404(Statement, statement_id)
     _enforce_programme_visibility_for_discussion(statement.discussion)
 
     # Check if user already flagged this statement
@@ -1420,7 +1420,7 @@ def list_statements(discussion_id):
     List statements for a discussion with sorting options
     Progressive disclosure: prioritize statements with fewer votes
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
     _enforce_programme_visibility_for_discussion(discussion)
 
     if not discussion.has_native_statements:
@@ -1474,7 +1474,7 @@ def get_statement_votes(statement_id):
         pass
 
     _safe_cache_increment("cache_metrics:statement_votes:miss", timeout=24 * 3600)
-    statement = Statement.query.get_or_404(statement_id)
+    statement = db.get_or_404(Statement, statement_id)
     discussion = statement.discussion
     if discussion and discussion.programme and not can_view_programme(discussion.programme, current_user):
         return jsonify({'error': 'forbidden'}), 403
@@ -1511,7 +1511,7 @@ def quick_response(statement_id):
     Quick inline response from voting UI.
     Creates a brief response without full form validation.
     """
-    statement = Statement.query.get_or_404(statement_id)
+    statement = db.get_or_404(Statement, statement_id)
     discussion = statement.discussion
 
     # Defensive check for orphaned statement
@@ -1573,7 +1573,7 @@ def create_response(statement_id):
     Create a threaded response to a statement or another response
     Supports pro/con/neutral positioning
     """
-    statement = Statement.query.get_or_404(statement_id)
+    statement = db.get_or_404(Statement, statement_id)
 
     _enforce_programme_visibility_for_discussion(statement.discussion)
 
@@ -1621,7 +1621,7 @@ def create_response(statement_id):
 @statements_bp.route('/responses/<int:response_id>')
 def view_response(response_id):
     """View a specific response with its thread"""
-    response = Response.query.get_or_404(response_id)
+    response = db.get_or_404(Response, response_id)
     _enforce_programme_visibility_for_discussion(response.statement.discussion)
     
     if response.is_deleted:
@@ -1654,7 +1654,7 @@ def edit_response(response_id):
     Edit a response (within 10-minute window)
     Only the author can edit
     """
-    response = Response.query.get_or_404(response_id)
+    response = db.get_or_404(Response, response_id)
     _enforce_programme_visibility_for_discussion(response.statement.discussion)
     
     # Check ownership
@@ -1697,7 +1697,7 @@ def delete_response(response_id):
     Soft-delete a response
     Only the author or discussion owner can delete
     """
-    response = Response.query.get_or_404(response_id)
+    response = db.get_or_404(Response, response_id)
     discussion = response.statement.discussion
     _enforce_programme_visibility_for_discussion(discussion)
     
@@ -1723,7 +1723,7 @@ def list_responses(statement_id):
     """
     from sqlalchemy.orm import joinedload, selectinload
     
-    statement = Statement.query.get_or_404(statement_id)
+    statement = db.get_or_404(Statement, statement_id)
     _enforce_programme_visibility_for_discussion(statement.discussion)
     
     # Fetch ALL responses for this statement with eager loading of users
@@ -1785,7 +1785,7 @@ def get_response_children(response_id):
     from sqlalchemy.orm import joinedload
     from sqlalchemy import exists, and_
     
-    response = Response.query.get_or_404(response_id)
+    response = db.get_or_404(Response, response_id)
     _enforce_programme_visibility_for_discussion(response.statement.discussion)
     
     # Eager load user relationship to prevent N+1
@@ -1835,7 +1835,7 @@ def add_evidence(response_id):
     from app.models import Evidence
     import os
     
-    response = Response.query.get_or_404(response_id)
+    response = db.get_or_404(Response, response_id)
     _enforce_programme_visibility_for_discussion(response.statement.discussion)
     
     # Check if user can add evidence (response author or discussion owner)
@@ -1915,7 +1915,7 @@ def delete_evidence(evidence_id):
     """
     from app.models import Evidence
     
-    evidence = Evidence.query.get_or_404(evidence_id)
+    evidence = db.get_or_404(Evidence, evidence_id)
     response = evidence.response
     discussion = response.statement.discussion
     _enforce_programme_visibility_for_discussion(discussion)
@@ -1951,7 +1951,7 @@ def update_evidence_quality(evidence_id):
     """
     from app.models import Evidence
     
-    evidence = Evidence.query.get_or_404(evidence_id)
+    evidence = db.get_or_404(Evidence, evidence_id)
     discussion = evidence.response.statement.discussion
     _enforce_programme_visibility_for_discussion(discussion)
     
@@ -1981,7 +1981,7 @@ def download_evidence(evidence_id):
     from flask import send_file
     import io
     
-    evidence = Evidence.query.get_or_404(evidence_id)
+    evidence = db.get_or_404(Evidence, evidence_id)
     _enforce_programme_visibility_for_discussion(evidence.response.statement.discussion)
     
     if not evidence.storage_key:

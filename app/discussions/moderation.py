@@ -22,7 +22,7 @@ def moderation_queue(discussion_id):
     View moderation queue for a discussion
     Only accessible to discussion owner
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
     
     # Check if current user is the discussion owner
     if discussion.creator_id != current_user.id:
@@ -84,8 +84,8 @@ def review_flag(discussion_id, flag_id):
     """
     Review a flag and take action (approve or reject)
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
-    flag = StatementFlag.query.get_or_404(flag_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
+    flag = db.get_or_404(StatementFlag, flag_id)
     
     # Check permissions
     if discussion.creator_id != current_user.id:
@@ -143,7 +143,7 @@ def bulk_moderation_action(discussion_id):
     Take bulk action on multiple flags
     Useful for handling spam waves
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
     
     # Check permissions
     if discussion.creator_id != current_user.id:
@@ -206,7 +206,7 @@ def moderation_stats(discussion_id):
     """
     View detailed moderation statistics for a discussion
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
     
     # Check permissions
     if discussion.creator_id != current_user.id:
@@ -278,7 +278,7 @@ def moderation_summary_api(discussion_id):
     JSON API endpoint for moderation summary
     Used for dashboard widgets
     """
-    discussion = Discussion.query.get_or_404(discussion_id)
+    discussion = db.get_or_404(Discussion, discussion_id)
     
     # Check permissions
     if discussion.creator_id != current_user.id:

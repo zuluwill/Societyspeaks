@@ -775,7 +775,7 @@ def generate_brief_audio(brief_id):
     """
     Audio generation has been disabled (feature deprecated as not worthwhile).
     """
-    DailyBrief.query.get_or_404(brief_id)
+    db.get_or_404(DailyBrief, brief_id)
     return jsonify({
         'error': 'Audio generation is disabled',
         'code': 'AUDIO_DISABLED'
@@ -788,7 +788,7 @@ def get_audio_job_status(job_id):
     """Get status of audio generation job"""
     from app.models import AudioGenerationJob
 
-    job = AudioGenerationJob.query.get_or_404(job_id)
+    job = db.get_or_404(AudioGenerationJob, job_id)
     
     return jsonify(job.to_dict())
 
@@ -1176,7 +1176,7 @@ def brief_track_click(brief_id):
 
     try:
         subscriber_id = int(subscriber_id_str)
-        subscriber = DailyBriefSubscriber.query.get(subscriber_id)
+        subscriber = db.session.get(DailyBriefSubscriber, subscriber_id)
         if subscriber:
             EmailAnalytics.record_click(
                 email=subscriber.email,

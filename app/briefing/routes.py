@@ -228,7 +228,7 @@ def create_input_source_from_news_source(news_source_id, user):
     Returns:
         InputSource instance (existing or newly created)
     """
-    news_source = NewsSource.query.get_or_404(news_source_id)
+    news_source = db.get_or_404(NewsSource, news_source_id)
     
     # Check if InputSource already exists for this NewsSource
     existing = InputSource.query.filter_by(
@@ -441,7 +441,7 @@ def briefing_owner_required(f):
     """
     @wraps(f)
     def decorated_function(briefing_id, *args, **kwargs):
-        briefing = Briefing.query.get_or_404(briefing_id)
+        briefing = db.get_or_404(Briefing, briefing_id)
         if not can_access_briefing(current_user, briefing):
             flash('You do not have permission to access this briefing', 'error')
             return redirect(url_for('briefing.list_briefings'))
@@ -486,7 +486,7 @@ def source_owner_required(f):
     def decorated_function(*args, source_id=None, **kwargs):
         if source_id is None:
             source_id = kwargs.get('source_id') or request.view_args.get('source_id')
-        source = InputSource.query.get_or_404(source_id)
+        source = db.get_or_404(InputSource, source_id)
         if not can_access_source(current_user, source):
             flash('You do not have access to this source', 'error')
             return redirect(url_for('briefing.list_sources'))
@@ -656,7 +656,7 @@ def preview_template(template_id):
     Preview a template - show details, configurable options, and sample output.
     This route is public (no login required) so users can browse before signing up.
     """
-    template = BriefTemplate.query.get_or_404(template_id)
+    template = db.get_or_404(BriefTemplate, template_id)
     
     if not template.is_active:
         flash('This template is no longer available', 'error')
@@ -698,7 +698,7 @@ def use_template(template_id):
             flash(limit_error, 'info')
             return redirect(url_for('briefing.list_briefings'))
     
-    template = BriefTemplate.query.get_or_404(template_id)
+    template = db.get_or_404(BriefTemplate, template_id)
     
     if not template.is_active:
         flash('This template is no longer available', 'error')
@@ -1136,7 +1136,7 @@ def detail(briefing_id):
 @limiter.limit("10/minute")
 def edit(briefing_id):
     """Edit briefing configuration"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
 
     # Check permissions (DRY)
     is_allowed, redirect_response = check_briefing_permission(
@@ -1368,7 +1368,7 @@ def edit(briefing_id):
 @limiter.limit("5/minute")
 def delete(briefing_id):
     """Delete a briefing"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
 
     # Check permissions (DRY)
     is_allowed, redirect_response = check_briefing_permission(
@@ -1406,7 +1406,7 @@ def list_templates():
 @limiter.limit("60/minute")
 def api_detail(briefing_id):
     """API endpoint for briefing details (JSON)"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
 
     # Check permissions (DRY) - API endpoint returns JSON
     if not can_access_briefing(current_user, briefing):
@@ -1690,7 +1690,7 @@ def upload_source():
 @limiter.limit("10/minute")
 def add_source_to_briefing(briefing_id):
     """Add a source to a briefing"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
     
     # Check permissions (DRY)
     is_allowed, redirect_response = check_briefing_permission(
@@ -1778,7 +1778,7 @@ def add_source_to_briefing(briefing_id):
 @limiter.limit("10/minute")
 def remove_source_from_briefing(briefing_id, source_id):
     """Remove a source from a briefing"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
     
     # Check permissions (DRY)
     is_allowed, redirect_response = check_briefing_permission(
@@ -1813,7 +1813,7 @@ def remove_source_from_briefing(briefing_id, source_id):
 @limiter.limit("30/minute")
 def update_source_priority(briefing_id, source_id):
     """Update source priority for a briefing"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
     
     # Check permissions
     is_allowed, redirect_response = check_briefing_permission(
@@ -1855,7 +1855,7 @@ def update_source_priority(briefing_id, source_id):
 @limiter.limit("30/minute")
 def manage_recipients(briefing_id):
     """Manage recipients for a briefing"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
     
     # Check permissions (DRY)
     is_allowed, redirect_response = check_briefing_permission(
@@ -2067,7 +2067,7 @@ def unsubscribe(briefing_id, token):
     CAN-SPAM and GDPR require that unsubscribe links work indefinitely.
     Token expiry is tracked for audit purposes but not enforced here.
     """
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
 
     recipient = BriefRecipient.query.filter_by(
         briefing_id=briefing_id,
@@ -2129,7 +2129,7 @@ def generate_brief_run_audio(briefing_id, run_id):
 @limiter.limit("60/minute")
 def view_run(briefing_id, run_id):
     """View a BriefRun (approval workflow requires approval_workflow feature for editing/approving)"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
     brief_run = BriefRun.query.filter_by(
         id=run_id,
         briefing_id=briefing_id
@@ -2168,7 +2168,7 @@ def view_run(briefing_id, run_id):
 @limiter.limit("10/minute")
 def edit_run(briefing_id, run_id):
     """Edit/approve a BriefRun draft"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
     brief_run = BriefRun.query.filter_by(
         id=run_id,
         briefing_id=briefing_id
@@ -2248,7 +2248,7 @@ def edit_run(briefing_id, run_id):
 @limiter.limit("5/minute")
 def send_run(briefing_id, run_id):
     """Manually send an approved BriefRun"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
     brief_run = BriefRun.query.filter_by(
         id=run_id,
         briefing_id=briefing_id
@@ -2581,7 +2581,7 @@ def delete_domain(domain_id):
 @limiter.limit("30/minute")  # More restrictive for unauthenticated public endpoint
 def public_briefing(briefing_id):
     """View a public briefing's archive"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
 
     # Check if briefing is public
     if briefing.visibility != 'public':
@@ -2605,7 +2605,7 @@ def public_briefing(briefing_id):
 @limiter.limit("30/minute")  # More restrictive for unauthenticated public endpoint
 def public_brief_run(briefing_id, run_id):
     """View a specific public brief run"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
 
     # Check if briefing is public
     if briefing.visibility != 'public':
@@ -2640,7 +2640,7 @@ def public_brief_run_reader(briefing_id, run_id):
     - Text-to-speech tools
     - Accessibility
     """
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
 
     # Check if briefing is public
     if briefing.visibility != 'public':
@@ -2690,7 +2690,7 @@ def public_brief_run_reader(briefing_id, run_id):
 @limiter.limit("10/minute")
 def test_generate(briefing_id):
     """Queue a test brief generation job (async)"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
     
     # Check permissions (DRY)
     is_allowed, redirect_response = check_briefing_permission(
@@ -2825,7 +2825,7 @@ def generation_status(briefing_id, job_id):
 @login_required
 def generation_progress(briefing_id, job_id):
     """Show progress page for generation job (fallback for non-JS)"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
     
     # Check permissions
     is_allowed, redirect_response = check_briefing_permission(
@@ -2862,7 +2862,7 @@ def generation_progress(briefing_id, job_id):
 @limiter.limit("5/minute")
 def test_send(briefing_id):
     """Send test email to user's email"""
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
     
     # Check permissions (DRY)
     is_allowed, redirect_response = check_briefing_permission(
@@ -3224,7 +3224,7 @@ def analytics(briefing_id):
     View analytics dashboard for a briefing.
     Shows open rates, click rates, and trends over time.
     """
-    briefing = Briefing.query.get_or_404(briefing_id)
+    briefing = db.get_or_404(Briefing, briefing_id)
     
     # Check access
     if not can_access_briefing(current_user, briefing):

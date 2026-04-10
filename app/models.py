@@ -986,7 +986,7 @@ class Discussion(db.Model):
     @staticmethod
     def feature_discussion(discussion_id, feature=True):
         """Manually feature or unfeature a discussion"""
-        discussion = Discussion.query.get_or_404(discussion_id)
+        discussion = db.get_or_404(Discussion, discussion_id)
         discussion.is_featured = feature
         db.session.commit()
         return discussion

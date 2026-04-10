@@ -352,7 +352,7 @@ def emergency_generate_status():
 @admin_required
 def publish(brief_id):
     """Publish a draft brief"""
-    brief = DailyBrief.query.get_or_404(brief_id)
+    brief = db.get_or_404(DailyBrief, brief_id)
 
     if brief.status == 'published':
         flash('Brief is already published.', 'info')
@@ -376,7 +376,7 @@ def publish(brief_id):
 @admin_required
 def unpublish(brief_id):
     """Unpublish a brief"""
-    brief = DailyBrief.query.get_or_404(brief_id)
+    brief = db.get_or_404(DailyBrief, brief_id)
 
     brief.status = 'draft'
     brief.published_at = None
@@ -393,7 +393,7 @@ def unpublish(brief_id):
 @admin_required
 def skip(brief_id):
     """Skip a brief (mark as not sending)"""
-    brief = DailyBrief.query.get_or_404(brief_id)
+    brief = db.get_or_404(DailyBrief, brief_id)
     reason = request.form.get('reason', 'Admin decision')
 
     brief.status = 'skipped'
@@ -412,7 +412,7 @@ def skip(brief_id):
 @admin_required
 def edit_item(item_id):
     """Edit a brief item"""
-    item = BriefItem.query.get_or_404(item_id)
+    item = db.get_or_404(BriefItem, item_id)
 
     if request.method == 'POST':
         # Update fields
@@ -449,7 +449,7 @@ def edit_item(item_id):
 @admin_required
 def remove_item(item_id):
     """Remove item from brief"""
-    item = BriefItem.query.get_or_404(item_id)
+    item = db.get_or_404(BriefItem, item_id)
     brief = item.brief
 
     # Store position for reordering
@@ -572,7 +572,7 @@ def test_send():
         flash('Brief ID required.', 'error')
         return redirect(url_for('brief_admin.dashboard'))
 
-    brief = DailyBrief.query.get_or_404(brief_id)
+    brief = db.get_or_404(DailyBrief, brief_id)
 
     try:
         from app.brief.email_client import send_brief_to_subscriber
@@ -772,7 +772,7 @@ def toggle_subscriber(subscriber_id):
     """Toggle subscriber active/paused status"""
     from app.models import DailyBriefSubscriber
     
-    subscriber = DailyBriefSubscriber.query.get_or_404(subscriber_id)
+    subscriber = db.get_or_404(DailyBriefSubscriber, subscriber_id)
     
     if subscriber.status == 'active':
         subscriber.status = 'paused'
@@ -793,7 +793,7 @@ def delete_subscriber(subscriber_id):
     """Delete a subscriber"""
     from app.models import DailyBriefSubscriber
     
-    subscriber = DailyBriefSubscriber.query.get_or_404(subscriber_id)
+    subscriber = db.get_or_404(DailyBriefSubscriber, subscriber_id)
     email = subscriber.email
     
     db.session.delete(subscriber)
@@ -834,7 +834,7 @@ def resend_to_subscriber(subscriber_id):
     from app.models import DailyBriefSubscriber
     from app.brief.email_client import send_brief_to_subscriber
     
-    subscriber = DailyBriefSubscriber.query.get_or_404(subscriber_id)
+    subscriber = db.get_or_404(DailyBriefSubscriber, subscriber_id)
     
     # Get today's published brief
     today_brief = DailyBrief.query.filter_by(
@@ -865,7 +865,7 @@ def set_subscriber_tier(subscriber_id):
     """Change a subscriber's tier (admin only)"""
     from app.models import DailyBriefSubscriber
     
-    subscriber = DailyBriefSubscriber.query.get_or_404(subscriber_id)
+    subscriber = db.get_or_404(DailyBriefSubscriber, subscriber_id)
     new_tier = request.form.get('tier')
     
     valid_tiers = ['trial', 'free', 'individual', 'team']
@@ -899,7 +899,7 @@ def extend_subscriber_trial(subscriber_id):
     """Extend a subscriber's trial period"""
     from app.models import DailyBriefSubscriber
     
-    subscriber = DailyBriefSubscriber.query.get_or_404(subscriber_id)
+    subscriber = db.get_or_404(DailyBriefSubscriber, subscriber_id)
     additional_days = request.form.get('days', 14, type=int)
     
     if additional_days < 1 or additional_days > 365:
@@ -921,7 +921,7 @@ def set_subscriber_cadence(subscriber_id):
     """Update a subscriber's brief frequency (daily/weekly) and preferred weekly day"""
     from app.models import DailyBriefSubscriber
     
-    subscriber = DailyBriefSubscriber.query.get_or_404(subscriber_id)
+    subscriber = db.get_or_404(DailyBriefSubscriber, subscriber_id)
     new_cadence = request.form.get('cadence', 'daily')
     preferred_day = request.form.get('preferred_weekly_day', type=int)
     

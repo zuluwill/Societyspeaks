@@ -1314,7 +1314,7 @@ def track_discussion_activity(discussion_id):
     Can be called when there's new participant or response activity
     """
     try:
-        discussion = Discussion.query.get_or_404(discussion_id)
+        discussion = db.get_or_404(Discussion, discussion_id)
         
         # Get activity data from request
         activity_data = request.get_json()
@@ -1381,7 +1381,7 @@ def track_new_participant(discussion_id):
     Useful for integration testing or manual triggers
     """
     try:
-        discussion = Discussion.query.get_or_404(discussion_id)
+        discussion = db.get_or_404(Discussion, discussion_id)
         
         # Get participant data
         participant_data = request.get_json()
