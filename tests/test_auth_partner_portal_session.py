@@ -252,3 +252,55 @@ def test_partner_lockout_message_is_shown_when_main_login_triggers_lockout(app, 
     assert response is not None
     assert response.status_code == 200
     assert b"Too many failed attempts." in response.data
+
+
+def test_main_login_shows_deactivated_message_for_inactive_partner_member_without_lockout(app, db):
+    from app.lib.partner_portal_session import partner_login_lockout_key
+
+    partner, owner = _create_partner_with_owner(
+        db, email="inactive-partner-owner@example.com", slug="inactive-partner-owner"
+    )
+    partner.status = "inactive"
+    owner.status = "active"
+    db.session.commit()
+
+    client = app.test_client()
+    response = client.post(
+        "/auth/login",
+        data={"email": partner.contact_email, "password": "ValidPass123!"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"This account has been deactivated. Please contact support." in response.data
+    with client.session_transaction() as flask_session:
+        assert "partner_portal_id" not in flask_session
+        assert "partner_member_id" not in flask_session
+        assert partner_login_lockout_key(partner.contact_email) not in flask_session
+        assert f"{partner_login_lockout_key(partner.contact_email)}:until" not in flask_session
+
+
+def test_portal_login_shows_deactivated_message_for_inactive_partner_member_without_lockout(app, db):
+    from app.lib.partner_portal_session import partner_login_lockout_key
+
+    partner, owner = _create_partner_with_owner(
+        db, email="inactive-portal-owner@example.com", slug="inactive-portal-owner"
+    )
+    partner.status = "inactive"
+    owner.status = "active"
+    db.session.commit()
+
+    client = app.test_client()
+    response = client.post(
+        "/for-publishers/portal/login",
+        data={"email": partner.contact_email, "password": "ValidPass123!"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"This account has been deactivated. Please contact support." in response.data
+    with client.session_transaction() as flask_session:
+        assert "partner_portal_id" not in flask_session
+        assert "partner_member_id" not in flask_session
+        assert partner_login_lockout_key(partner.contact_email) not in flask_session
+        assert f"{partner_login_lockout_key(partner.contact_email)}:until" not in flask_session

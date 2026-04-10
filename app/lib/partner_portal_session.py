@@ -171,7 +171,10 @@ def authenticate_partner_credentials(email, password):
     active_member = None
 
     if member_record:
-        if member_record.status == "active" and partner and partner.status == "active":
+        # Authenticate active members even if the partner is deactivated so the
+        # caller can show the explicit deactivated-account message instead of
+        # misclassifying correct credentials as a failed login attempt.
+        if member_record.status == "active" and partner:
             # Owner credentials are sourced from Partner for backward compatibility.
             if (
                 member_record.role == "owner"
