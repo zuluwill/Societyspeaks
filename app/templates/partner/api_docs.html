@@ -5,11 +5,18 @@
 {% block meta_description %}API documentation for Society Speaks partner integration. Lookup discussions by article URL, show participation snapshots, and embed voting widgets with developer-friendly endpoints and clear governance for publishers.{% endblock %}
 
 {% block content %}
+{% if partner %}
+{% include 'partner/portal/_portal_nav.html' %}
+{% endif %}
 <div class="bg-gradient-to-b from-blue-50 to-white">
   <div class="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
     <header class="space-y-4">
       <nav class="text-sm text-gray-500">
+        {% if partner %}
+        <a href="{{ url_for('partner.portal_dashboard') }}" class="hover:text-blue-600">Partner Portal</a>
+        {% else %}
         <a href="{{ url_for('partner.hub') }}" class="hover:text-blue-600">For Publishers</a>
+        {% endif %}
         <span class="mx-2">/</span>
         <span class="text-gray-900">API Reference</span>
       </nav>
@@ -24,8 +31,8 @@
             <a href="{{ url_for('partner.api_playground') }}" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
               Open API Playground
             </a>
-            <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-              Partner Portal
+            <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.portal_signup') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+              {{ 'Back to dashboard' if partner else 'Partner Portal' }}
             </a>
             <a href="{{ url_for('partner.embed_generator') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
               Embed Generator
@@ -65,7 +72,7 @@
       <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
         <h3 class="font-semibold text-blue-900 mb-2">Testing the API</h3>
         <ul class="text-blue-800 text-sm space-y-1">
-          <li><strong>Partner Portal:</strong> <a href="{{ url_for('partner.portal_signup') }}" class="underline font-medium">Create a portal</a> to get your test API key and DNS verification token.</li>
+          <li><strong>Partner Portal:</strong> <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.portal_signup') }}" class="underline font-medium">{{ 'Open your dashboard' if partner else 'Create a portal' }}</a> to get your test API key and DNS verification token.</li>
           <li><strong>Interactive playground:</strong> <a href="{{ url_for('partner.api_playground') }}" class="underline font-medium">Open API Playground</a> to try browser-safe endpoints (lookup, snapshot, oEmbed) from Swagger UI.</li>
           <li><strong>Write endpoints</strong> (<code>POST/PATCH /api/partner/...</code>) are server-to-server only and should be tested from your backend or curl/Postman, not from browser Swagger.</li>
           <li><strong>From the command line:</strong> use the <code class="bg-blue-100 px-1 rounded">curl</code> examples in each section below, replacing the base URL and parameters as needed.</li>
@@ -1240,7 +1247,7 @@ app.post(
   <div class="mt-12 pt-8 border-t border-gray-200">
     <p class="text-gray-500 text-sm">
       Questions? <a href="mailto:info@societyspeaks.io" class="text-blue-600 hover:underline">Contact us</a>
-      or visit the <a href="{{ url_for('partner.hub') }}" class="text-blue-600 hover:underline">Partner Hub</a>.
+      or visit the <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.hub') }}" class="text-blue-600 hover:underline">{{ 'Partner Dashboard' if partner else 'Partner Hub' }}</a>.
     </p>
   </div>
 </div>

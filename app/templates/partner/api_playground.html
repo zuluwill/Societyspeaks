@@ -3,11 +3,18 @@
 {% block meta_description %}Try the Society Speaks Partner API from your browser. Interactive requests for lookup, snapshot, and oEmbed with clear steps for developers and publishers.{% endblock %}
 
 {% block content %}
+{% if partner %}
+{% include 'partner/portal/_portal_nav.html' %}
+{% endif %}
 <div class="bg-gradient-to-b from-blue-50 to-white">
   <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
     <header class="space-y-4">
       <nav class="text-sm text-gray-500">
+        {% if partner %}
+        <a href="{{ url_for('partner.portal_dashboard') }}" class="hover:text-blue-600">Partner Portal</a>
+        {% else %}
         <a href="{{ url_for('partner.hub') }}" class="hover:text-blue-600">For Publishers</a>
+        {% endif %}
         <span class="mx-2">/</span>
         <a href="{{ url_for('partner.api_docs') }}" class="hover:text-blue-600">API Reference</a>
         <span class="mx-2">/</span>
@@ -31,8 +38,8 @@
             <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
               Read API Docs
             </a>
-            <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-              Get API keys
+            <a href="{{ url_for('partner.portal_dashboard') if partner else url_for('partner.portal_signup') }}" class="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+              {{ 'Back to dashboard' if partner else 'Get API keys' }}
             </a>
           </div>
         </div>

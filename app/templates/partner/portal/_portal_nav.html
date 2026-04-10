@@ -1,5 +1,5 @@
-{# _portal_nav.html — shared sticky nav for all Partner Portal pages.
-   Expects: partner, portal_page ('dashboard'|'discussions'|'setup'|'detail'), is_admin_preview #}
+{# _portal_nav.html — shared sticky nav for portal and signed-in partner docs pages.
+   Expects: partner, portal_page ('dashboard'|'discussions'|'setup'|'detail'|'api_docs'), is_admin_preview #}
 <nav class="bg-white border-b border-gray-200 sticky top-0 z-30">
   <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-14 gap-4">
@@ -24,7 +24,8 @@
           Setup guide
         </a>
         <a href="{{ url_for('partner.api_docs') }}"
-           class="px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+           class="px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors
+                  {% if portal_page == 'api_docs' %}bg-blue-50 text-blue-700{% else %}text-gray-600 hover:text-gray-900 hover:bg-gray-100{% endif %}">
           API docs
         </a>
       </div>

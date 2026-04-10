@@ -127,6 +127,7 @@ def api_docs():
         base_url=_get_base_url(),
         python_sdk_source=python_sdk_source,
         node_sdk_source=node_sdk_source,
+        **_portal_nav_context('api_docs'),
     )
 
 
@@ -187,7 +188,10 @@ def api_playground():
     Partners can try lookup, snapshot, and oEmbed from the browser.
     Create Discussion requires an API key in the X-API-Key header.
     """
-    return render_template('partner/api_playground.html')
+    return render_template(
+        'partner/api_playground.html',
+        **_portal_nav_context('api_docs'),
+    )
 
 
 _DOMAIN_RE = re.compile(r'^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$')
@@ -508,6 +512,18 @@ def partner_login_required(f):
 def _get_base_url():
     """Return the configured base URL (DRY helper used by public + portal routes)."""
     return current_app.config.get('BASE_URL', 'https://societyspeaks.io')
+
+
+def _portal_nav_context(portal_page):
+    """Template context for showing the partner workspace nav on shared pages."""
+    partner = _current_partner()
+    if not partner:
+        return {}
+    return {
+        'partner': partner,
+        'portal_page': portal_page,
+        'is_admin_preview': _is_admin_preview(partner),
+    }
 
 
 def _validate_env(raw_env):
