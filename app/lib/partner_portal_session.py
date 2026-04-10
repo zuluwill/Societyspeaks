@@ -235,7 +235,8 @@ def attempt_partner_only_login(email, password):
         normalized_email, partner, active_member, valid_login = authenticate_partner_credentials(
             email, password
         )
-        if not partner or not valid_login or partner.status != "active":
+
+        if not partner or not valid_login:
             fail_count, remaining = record_partner_login_failure(normalized_email)
             if remaining > 0:
                 current_app.logger.warning(
@@ -244,6 +245,15 @@ def attempt_partner_only_login(email, password):
                     fail_count,
                 )
             return None
+
+        # Correct credentials but account deactivated — tell the user and do
+        # not record a failure (mirrors the dedicated portal login behaviour).
+        if partner.status != "active":
+            flash(
+                "This account has been deactivated. Please contact support.",
+                "error",
+            )
+            return redirect(url_for("auth.login"))
 
         finalize_partner_portal_login(partner, active_member)
 
