@@ -22,7 +22,7 @@ try:
 except ImportError:
     posthog = None
 from app.lib.posthog_utils import safe_posthog_capture
-from app.lib.partner_portal_session import sync_partner_portal_session_for_email
+from app.lib.partner_portal_session import sync_partner_portal_session_for_email, attempt_partner_only_login
 
 
 auth_bp = Blueprint('auth', __name__)
@@ -329,8 +329,18 @@ def login():
 
         user = User.query.filter_by(email=email).first()
 
-        # Check for invalid email or password
-        if not user or not check_password_hash(user.password, password):
+        # No User record - check whether this is a partner-only account so
+        # partners who never created a main-site account can still sign in here
+        # and land directly on their portal dashboard.
+        if not user:
+            partner_response = attempt_partner_only_login(email, password)
+            if partner_response:
+                return partner_response
+            flash("Invalid email or password.", "error")
+            return redirect(url_for('auth.login'))
+
+        # User record found - verify password
+        if not check_password_hash(user.password, password):
             flash("Invalid email or password.", "error")
             return redirect(url_for('auth.login'))
 
