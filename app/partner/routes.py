@@ -885,6 +885,28 @@ def portal_dashboard():
         usage_daily.append({'label': day.strftime('%b %d'), 'count': count})
     usage_max = max([d['count'] for d in usage_daily] or [0])
     partner_quota = _partner_discussion_quota(partner)
+
+    # Top discussions by total votes (engagement overview)
+    _vote_total = (
+        Statement.vote_count_agree
+        + Statement.vote_count_disagree
+        + Statement.vote_count_unsure
+    )
+    _top_rows = (
+        db.session.query(Discussion, func.sum(_vote_total).label('tv'))
+        .join(Statement, Statement.discussion_id == Discussion.id)
+        .filter(
+            _portal_discussion_belongs_clause(partner),
+            Statement.is_deleted == False,  # noqa: E712
+            Statement.mod_status >= 0,
+        )
+        .group_by(Discussion.id)
+        .order_by(desc('tv'))
+        .limit(5)
+        .all()
+    )
+    top_discussions = [{'discussion': r[0], 'votes': int(r[1] or 0)} for r in _top_rows]
+
     webhooks = PartnerWebhookEndpoint.query.filter_by(partner_id=partner.id).order_by(PartnerWebhookEndpoint.created_at.desc()).all()
     recent_deliveries = PartnerWebhookDelivery.query.filter_by(partner_id=partner.id).order_by(PartnerWebhookDelivery.created_at.desc()).limit(20).all()
     current_perms = member_permissions(current_member)
@@ -922,6 +944,7 @@ def portal_dashboard():
         usage_max=usage_max,
         dns_checks=dns_checks,
         base_url=_get_base_url(),
+        top_discussions=top_discussions,
         portal_page='dashboard',
     )
 

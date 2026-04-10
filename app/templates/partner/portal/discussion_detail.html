@@ -108,13 +108,34 @@
 
     {# Consensus status #}
     <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm mb-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-2">Consensus analysis</h2>
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="text-lg font-semibold text-gray-900">Consensus analysis</h2>
+        {% if latest_consensus %}
+        <a href="{{ consensus_url }}" target="_blank" rel="noopener"
+           class="text-xs font-semibold text-blue-600 hover:underline">View full consensus ↗</a>
+        {% endif %}
+      </div>
       {% if latest_consensus %}
-        <p class="text-sm text-gray-700">
-          Last analysis: <strong>{{ latest_consensus.created_at.strftime('%d %b %Y %H:%M UTC') if latest_consensus.created_at else '—' }}</strong>
-          &middot;
-          <a href="{{ consensus_url }}" target="_blank" rel="noopener" class="text-blue-600 hover:underline">View full consensus ↗</a>
-        </p>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-3">
+          <div class="rounded-lg bg-gray-50 p-3">
+            <div class="text-xs text-gray-500">Participants</div>
+            <div class="text-xl font-semibold text-gray-900 tabular-nums">{{ latest_consensus.participants_count or '—' }}</div>
+          </div>
+          <div class="rounded-lg bg-gray-50 p-3">
+            <div class="text-xs text-gray-500">Statements analysed</div>
+            <div class="text-xl font-semibold text-gray-900 tabular-nums">{{ latest_consensus.statements_count or '—' }}</div>
+          </div>
+          <div class="rounded-lg bg-gray-50 p-3">
+            <div class="text-xs text-gray-500">Opinion clusters</div>
+            <div class="text-xl font-semibold text-gray-900 tabular-nums">{{ latest_consensus.num_clusters or '—' }}</div>
+          </div>
+          <div class="rounded-lg bg-gray-50 p-3">
+            <div class="text-xs text-gray-500">Last run</div>
+            <div class="text-sm font-medium text-gray-900">{{ latest_consensus.created_at.strftime('%d %b %Y') if latest_consensus.created_at else '—' }}</div>
+            <div class="text-xs text-gray-400">{{ latest_consensus.created_at.strftime('%H:%M UTC') if latest_consensus.created_at else '' }}</div>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500">Opinion clusters show how readers divided on the topic — 1 cluster means broad agreement, multiple clusters indicate distinct viewpoints.</p>
       {% else %}
         <p class="text-sm text-gray-500">No consensus analysis yet — analysis runs automatically after enough votes are cast.</p>
       {% endif %}
@@ -195,7 +216,13 @@
             <div class="flex-1 min-w-0">
               <p class="text-sm text-gray-900 leading-snug">{{ s.content }}</p>
               <div class="flex flex-wrap gap-2 mt-1">
-                {% if s.is_seed %}
+                {% if s.source == 'user_submitted' %}
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-purple-50 text-purple-700">Reader submitted</span>
+                {% elif s.source == 'ai_generated' %}
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-blue-50 text-blue-600">AI generated</span>
+                {% elif s.source == 'partner_provided' %}
+                  <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">Partner added</span>
+                {% elif s.is_seed %}
                   <span class="text-xs text-gray-400">seed</span>
                 {% endif %}
                 {% if s.seed_stance %}
