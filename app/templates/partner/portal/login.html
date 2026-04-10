@@ -17,15 +17,15 @@
         {% endif %}
         <div class="grid gap-5">
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-            <input name="email" type="email" autocomplete="email" autofocus class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="you@example.com" value="{{ email_value or '' }}" required>
+            <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input id="loginEmail" name="email" type="email" autocomplete="email" autofocus class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="you@example.com" value="{{ email_value or '' }}" required>
           </div>
           <div>
             <div class="flex items-center justify-between mb-1">
-              <label class="block text-sm font-medium text-gray-700">Password</label>
+              <label for="loginPassword" class="block text-sm font-medium text-gray-700">Password</label>
               <a href="{{ url_for('partner.portal_forgot_password') }}" class="text-xs text-blue-600 hover:underline">Forgot password?</a>
             </div>
-            <input name="password" type="password" autocomplete="current-password" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
+            <input id="loginPassword" name="password" type="password" autocomplete="current-password" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" required>
           </div>
         </div>
 

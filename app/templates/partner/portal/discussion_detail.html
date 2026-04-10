@@ -65,7 +65,7 @@
           {% if can_edit %}
           <form method="post"
             action="{{ url_for('partner.portal_toggle_discussion_closed', discussion_id=discussion.id) }}"
-            onsubmit="return confirm('{% if discussion.is_closed %}Reopen{% else %}Close{% endif %} this discussion?')">
+            data-confirm="{% if discussion.is_closed %}Reopen{% else %}Close{% endif %} this discussion?">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit"
               class="rounded-md px-3 py-2 text-sm font-semibold shadow-sm ring-1 ring-inset
@@ -282,7 +282,7 @@
       <form method="POST" action="{{ url_for('partner.portal_add_statement', discussion_id=discussion.id) }}" class="grid gap-4">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">
+          <label for="statement-content-input" class="block text-sm font-medium text-gray-700 mb-1">
             Statement <span class="text-red-500">*</span>
             <span class="font-normal text-gray-400 ml-1">(10–500 characters)</span>
           </label>
