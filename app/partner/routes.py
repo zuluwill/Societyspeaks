@@ -1030,22 +1030,24 @@ def portal_create_discussion():
     if env not in ('test', 'live'):
         env = 'test'
 
+    _form_url = url_for('partner.portal_discussions') + '#new-discussion-form'
+
     if not title:
         flash('Title is required.', 'error')
-        return redirect(url_for('partner.portal_discussions'))
+        return redirect(_form_url)
 
     max_title_len = (getattr(Discussion.__table__.c.title.type, 'length', None) or 200)
     if len(title) > max_title_len:
         flash(f'Title must be {max_title_len} characters or fewer.', 'error')
-        return redirect(url_for('partner.portal_discussions'))
+        return redirect(_form_url)
 
     if not article_url and not external_id:
         flash('Either an article URL or an external ID is required.', 'error')
-        return redirect(url_for('partner.portal_discussions'))
+        return redirect(_form_url)
 
     if env == 'live' and partner.billing_status != 'active':
         flash('An active subscription is required to create live discussions.', 'error')
-        return redirect(url_for('partner.portal_discussions'))
+        return redirect(_form_url)
 
     if topic and topic not in Discussion.TOPICS:
         topic = ''
@@ -1054,20 +1056,20 @@ def portal_create_discussion():
     quota_err = _check_partner_quota_for_env(partner, env)
     if quota_err:
         flash(quota_err, 'error')
-        return redirect(url_for('partner.portal_discussions'))
+        return redirect(_form_url)
 
     # Normalise article URL
     normalized_url = None
     if article_url:
         if len(article_url) > 2048:
             flash('Article URL must be 2048 characters or fewer.', 'error')
-            return redirect(url_for('partner.portal_discussions'))
+            return redirect(_form_url)
         try:
             from app.lib.url_normalizer import normalize_url
             normalized_url = normalize_url(article_url)
         except Exception:
             flash('Invalid article URL — please check and try again.', 'error')
-            return redirect(url_for('partner.portal_discussions'))
+            return redirect(_form_url)
 
         existing = Discussion.query.filter_by(
             partner_article_url=normalized_url,
@@ -1076,7 +1078,7 @@ def portal_create_discussion():
         ).first()
         if existing:
             flash(f'A discussion already exists for that article URL (ID {existing.id}).', 'warning')
-            return redirect(url_for('partner.portal_discussions'))
+            return redirect(_form_url)
 
     # External ID uniqueness
     if external_id:
@@ -1085,7 +1087,7 @@ def portal_create_discussion():
         )
         if len(external_id) > max_external_id_len:
             flash(f'External ID must be {max_external_id_len} characters or fewer.', 'error')
-            return redirect(url_for('partner.portal_discussions'))
+            return redirect(_form_url)
         existing = Discussion.query.filter_by(
             partner_external_id=external_id,
             partner_fk_id=partner.id,
@@ -1093,7 +1095,7 @@ def portal_create_discussion():
         ).first()
         if existing:
             flash(f'A discussion with that external ID already exists (ID {existing.id}).', 'warning')
-            return redirect(url_for('partner.portal_discussions'))
+            return redirect(_form_url)
 
     # Best active key for audit trail
     best_key = PartnerApiKey.query.filter_by(
@@ -1150,7 +1152,7 @@ def portal_create_discussion():
     except IntegrityError:
         db.session.rollback()
         flash('Could not create the discussion — a duplicate may already exist.', 'error')
-        return redirect(url_for('partner.portal_discussions'))
+        return redirect(_form_url)
 
     flash(f'Discussion "{title}" created successfully (ID {discussion.id}).', 'success')
     return redirect(url_for('partner.portal_discussion_detail', discussion_id=discussion.id))
