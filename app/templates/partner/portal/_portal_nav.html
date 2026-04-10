@@ -23,6 +23,10 @@
                   {% if portal_page == 'setup' %}bg-blue-50 text-blue-700{% else %}text-gray-600 hover:text-gray-900 hover:bg-gray-100{% endif %}">
           Setup guide
         </a>
+        <a href="{{ url_for('partner.api_docs') }}"
+           class="px-3 py-1.5 rounded-md text-sm font-medium whitespace-nowrap transition-colors text-gray-600 hover:text-gray-900 hover:bg-gray-100">
+          API docs
+        </a>
       </div>
 
       <div class="flex items-center gap-3 shrink-0">

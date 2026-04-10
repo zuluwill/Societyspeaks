@@ -14,14 +14,20 @@
     {% if new_key %}
     <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-5 mb-6">
       <p class="font-semibold text-emerald-900 mb-2">Your new API key (shown once)</p>
-      <div class="bg-white border border-emerald-200 rounded-lg p-3 font-mono text-sm break-all">{{ new_key }}</div>
+      <div class="code-block relative group bg-white border border-emerald-200 rounded-lg p-3">
+        <button class="copy-btn absolute top-2 right-2 rounded bg-emerald-700 px-2 py-1 text-xs text-white opacity-100 hover:bg-emerald-600">Copy</button>
+        <pre class="font-mono text-sm break-all whitespace-pre-wrap pr-14">{{ new_key }}</pre>
+      </div>
       <p class="text-xs text-emerald-800 mt-2">Copy and store this key now. For security, it will not be shown again.</p>
     </div>
     {% endif %}
     {% if new_webhook_secret %}
     <div class="rounded-xl border border-violet-200 bg-violet-50 p-5 mb-6">
       <p class="font-semibold text-violet-900 mb-2">Your new webhook signing secret (shown once)</p>
-      <div class="bg-white border border-violet-200 rounded-lg p-3 font-mono text-sm break-all">{{ new_webhook_secret }}</div>
+      <div class="code-block relative group bg-white border border-violet-200 rounded-lg p-3">
+        <button class="copy-btn absolute top-2 right-2 rounded bg-violet-700 px-2 py-1 text-xs text-white opacity-100 hover:bg-violet-600">Copy</button>
+        <pre class="font-mono text-sm break-all whitespace-pre-wrap pr-14">{{ new_webhook_secret }}</pre>
+      </div>
       <p class="text-xs text-violet-800 mt-2">Store this secret securely in your webhook receiver. It will not be shown again.</p>
     </div>
     {% endif %}
@@ -189,7 +195,8 @@
     <div class="grid gap-6 lg:grid-cols-2 mb-8">
       <div id="quickstart-panel" class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Quickstart (test)</h2>
-        <p class="text-sm text-gray-600 mb-3">Lookup by URL, create if missing, then embed. Run these commands from your backend (not browser JavaScript).</p>
+        <p class="text-sm text-gray-600 mb-2">Lookup by URL, create if missing, then embed. Run these commands from your backend (not browser JavaScript).</p>
+        <p class="text-sm text-gray-600 mb-3">Prefer Python or Node.js? <a href="{{ url_for('partner.api_docs') }}#client-libraries" class="font-semibold text-blue-600 hover:underline">Download our SDKs →</a></p>
         {% set ns = namespace(api_key='sspk_test_...', is_real=false) %}
         {% if new_key and new_key.startswith('sspk_test_') %}
           {% set ns.api_key = new_key %}
@@ -292,10 +299,14 @@
               {% endif %}
             </div>
             {% if domain.is_active and not domain.is_verified() %}
-            <div class="text-xs text-gray-600 mt-2">
-              Add TXT record: <code class="bg-white px-1 rounded">societyspeaks-verify={{ domain.verification_token }}</code>
+            <div class="mt-2">
+              <p class="text-xs text-gray-600 mb-1">Add this TXT record to your DNS:</p>
+              <div class="code-block relative group">
+                <button class="copy-btn absolute top-1 right-1 rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+                <pre class="bg-white border border-gray-200 rounded px-2 py-1.5 text-xs font-mono text-gray-800 pr-16 whitespace-pre-wrap break-all">societyspeaks-verify={{ domain.verification_token }}</pre>
+              </div>
+              <p class="text-xs text-gray-500 mt-1">After updating DNS, click Verify. Changes can take a few minutes to propagate.</p>
             </div>
-            <div class="text-xs text-gray-500 mt-1">After updating DNS, click Verify. DNS changes can take a few minutes to propagate.</div>
             {% endif %}
           </div>
           {% else %}
@@ -323,8 +334,8 @@
             <div><div class="font-mono text-sm text-gray-900 break-all">{{ key.key_prefix }}••••{{ key.key_last4 }}</div><div class="text-xs text-gray-500">{{ key.env|upper }} · {{ key.status|upper }}</div></div>
             {% if key.status == 'active' and can_manage_keys %}
             <div class="flex items-center gap-3">
-              <form method="POST" action="{{ url_for('partner.portal_rotate_key', key_id=key.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-blue-600 hover:underline">Rotate</button></form>
-              <form method="POST" action="{{ url_for('partner.portal_revoke_key', key_id=key.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-red-600 hover:underline">Revoke</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_rotate_key', key_id=key.id) }}" data-confirm="Rotate this key? The current key will stop working immediately."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-blue-600 hover:underline">Rotate</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_revoke_key', key_id=key.id) }}" data-confirm="Revoke this key? It will stop working immediately and cannot be recovered."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-red-600 hover:underline">Revoke</button></form>
             </div>
             {% endif %}
           </div>
@@ -372,8 +383,8 @@
             {% if can_manage_webhooks %}
             <div class="flex flex-wrap items-center gap-3">
               <form method="POST" action="{{ url_for('partner.portal_send_test_webhook', endpoint_id=wh.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-blue-600 hover:underline">Send test</button></form>
-              <form method="POST" action="{{ url_for('partner.portal_rotate_webhook_secret', endpoint_id=wh.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-amber-700 hover:underline">Rotate secret</button></form>
-              <form method="POST" action="{{ url_for('partner.portal_delete_webhook', endpoint_id=wh.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-red-600 hover:underline">Delete</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_rotate_webhook_secret', endpoint_id=wh.id) }}" data-confirm="Rotate the signing secret for this endpoint? Update your receiver before rotating."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-amber-700 hover:underline">Rotate secret</button></form>
+              <form method="POST" action="{{ url_for('partner.portal_delete_webhook', endpoint_id=wh.id) }}" data-confirm="Delete this webhook endpoint? All deliveries will stop immediately."><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="text-xs text-red-600 hover:underline">Delete</button></form>
             </div>
             {% endif %}
           </div>

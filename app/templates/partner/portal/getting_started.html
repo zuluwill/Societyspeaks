@@ -121,8 +121,12 @@
               {% endif %}
             </div>
             {% if not domain.is_verified() %}
-            <div class="text-xs text-gray-600 mt-2">
-              Add TXT record: <code class="bg-white px-1 rounded">societyspeaks-verify={{ domain.verification_token }}</code>
+            <div class="mt-2">
+              <p class="text-xs text-gray-600 mb-1">Add this TXT record to your DNS:</p>
+              <div class="code-block relative group">
+                <button class="copy-btn absolute top-1 right-1 rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-600 hover:text-white">Copy</button>
+                <pre class="bg-white border border-gray-200 rounded px-2 py-1.5 text-xs font-mono text-gray-800 pr-16 whitespace-pre-wrap break-all">societyspeaks-verify={{ domain.verification_token }}</pre>
+              </div>
             </div>
             {% endif %}
           </div>
