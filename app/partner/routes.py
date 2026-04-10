@@ -61,6 +61,13 @@ from app.partner.events import (
     serialize_key_payload,
     serialize_domain_payload,
 )
+from app.lib.partner_portal_session import (
+    authenticate_partner_credentials,
+    finalize_partner_portal_login,
+    get_or_create_owner_member,
+    get_partner_login_lockout,
+    record_partner_login_failure,
+)
 from app.partner.webhooks import generate_webhook_secret, emit_partner_event, send_test_delivery
 
 
@@ -213,34 +220,6 @@ def _current_partner():
         _clear_partner_session()
         return None
     return partner
-
-
-def _get_or_create_owner_member(partner):
-    owner_member = PartnerMember.query.filter_by(
-        partner_id=partner.id,
-        email=partner.contact_email
-    ).first()
-    if owner_member:
-        if owner_member.role != 'owner':
-            owner_member.role = 'owner'
-        if owner_member.status != 'active':
-            owner_member.status = 'active'
-        if not owner_member.password_hash:
-            owner_member.password_hash = partner.password_hash
-        return owner_member
-
-    owner_member = PartnerMember(
-        partner_id=partner.id,
-        email=partner.contact_email,
-        full_name=partner.name,
-        password_hash=partner.password_hash,
-        role='owner',
-        status='active',
-        accepted_at=utcnow_naive(),
-    )
-    db.session.add(owner_member)
-    db.session.flush()
-    return owner_member
 
 
 def _current_partner_member(partner=None):
@@ -519,7 +498,7 @@ def partner_login_required(f):
                 flash('Your team access is no longer active. Please sign in again.', 'warning')
                 return redirect(url_for('partner.portal_login'))
         else:
-            owner_member = _get_or_create_owner_member(partner)
+            owner_member = get_or_create_owner_member(partner)
             db.session.commit()
             session['partner_member_id'] = owner_member.id
         return f(*args, **kwargs)
@@ -653,7 +632,7 @@ def portal_signup():
                 ))
 
             full_key = _create_api_key_for_partner(partner, 'test')
-            owner_member = _get_or_create_owner_member(partner)
+            owner_member = get_or_create_owner_member(partner)
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
@@ -681,47 +660,18 @@ def portal_login():
         email = normalize_email(request.form.get('email'))
         password = request.form.get('password', '')
 
-        member = PartnerMember.query.filter_by(email=email).first()
-        partner = member.partner if member else Partner.query.filter_by(contact_email=email).first()
+        remaining = get_partner_login_lockout(email)
+        if remaining > 0:
+            flash(f'Too many failed attempts. Please try again in {remaining} seconds.', 'danger')
+            return render_template('partner/portal/login.html', email_value=email)
 
-        # Temporary lockout after repeated failures (stored in session to keep it simple)
-        # Uses '_lockout_' prefix (not 'partner_') so _clear_partner_session() won't wipe it
-        lockout_key = f'_lockout_partner:{email}'
-        fail_count = session.get(lockout_key, 0)
-        lockout_until = session.get(f'{lockout_key}:until')
-
-        if lockout_until:
-            lockout_dt = datetime.fromisoformat(lockout_until)
-            if utcnow_naive() < lockout_dt:
-                remaining = int((lockout_dt - utcnow_naive()).total_seconds())
-                flash(f'Too many failed attempts. Please try again in {remaining} seconds.', 'danger')
-                return render_template('partner/portal/login.html', email_value=email)
-            else:
-                # Lockout expired, reset
-                session.pop(lockout_key, None)
-                session.pop(f'{lockout_key}:until', None)
-                fail_count = 0
-
-        valid_login = False
-        if member:
-            if member.status == 'active' and partner and partner.status == 'active':
-                # Owner credentials are sourced from Partner for backward compatibility.
-                if member.role == 'owner' or member.email == partner.contact_email:
-                    valid_login = partner.check_password(password)
-                    if valid_login and member.password_hash != partner.password_hash:
-                        member.password_hash = partner.password_hash
-                else:
-                    valid_login = member.check_password(password)
-        elif partner:
-            valid_login = partner.check_password(password)
+        _, partner, member, valid_login = authenticate_partner_credentials(
+            email, password
+        )
 
         if not partner or not valid_login:
-            fail_count += 1
-            session[lockout_key] = fail_count
-            if fail_count >= 5:
-                # Lock out for 5 minutes after 5 failures
-                lockout_dt = utcnow_naive() + timedelta(minutes=5)
-                session[f'{lockout_key}:until'] = lockout_dt.isoformat()
+            fail_count, remaining = record_partner_login_failure(email)
+            if remaining > 0:
                 current_app.logger.warning(f"Partner login lockout triggered for {email} after {fail_count} failures")
                 flash('Too many failed attempts. Please try again in 5 minutes.', 'danger')
             else:
@@ -734,26 +684,7 @@ def portal_login():
 
         # Capture redirect target before clearing the session.
         next_url = request.form.get('next') or request.args.get('next')
-
-        # Regenerate session to prevent session-fixation attacks.
-        # Clear all pre-login state (lockout counters, DNS check cache, etc.)
-        # before writing the authenticated partner/member IDs.
-        session.clear()
-
-        owner_member = _get_or_create_owner_member(partner)
-        if member and member.partner_id == partner.id and member.status == 'active':
-            active_member = member
-        else:
-            active_member = owner_member
-        active_member.last_login_at = utcnow_naive()
-        try:
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            current_app.logger.exception('portal_login: failed to update last_login_at')
-
-        session['partner_portal_id'] = partner.id
-        session['partner_member_id'] = active_member.id
+        finalize_partner_portal_login(partner, member)
         flash('Welcome back.', 'success')
         return redirect(_safe_portal_next_url(next_url))
 
@@ -802,7 +733,7 @@ def portal_reset_password(token):
 
         partner.set_password(password)
         try:
-            owner_member = _get_or_create_owner_member(partner)
+            owner_member = get_or_create_owner_member(partner)
             owner_member.set_password(password)
             owner_member.status = 'active'
             owner_member.accepted_at = owner_member.accepted_at or utcnow_naive()

@@ -12,6 +12,7 @@ from app.analytics.events import record_event
 # Email functions (migrated from Loops to Resend)
 from app.resend_client import send_password_reset_email, send_welcome_email, send_verification_email
 from app.email_utils import extract_clean_email, get_missing_individual_profile_fields, get_missing_company_profile_fields
+from app.lib.auth_utils import normalize_email
 # Billing service for invitation handling
 from app.billing.service import accept_invitation, get_active_subscription
 from app.brief.subscription import process_subscription as process_brief_subscription
@@ -22,7 +23,11 @@ try:
 except ImportError:
     posthog = None
 from app.lib.posthog_utils import safe_posthog_capture
-from app.lib.partner_portal_session import sync_partner_portal_session_for_email, attempt_partner_only_login
+from app.lib.partner_portal_session import (
+    sync_partner_portal_session_for_email,
+    attempt_partner_only_login,
+    get_partner_login_lockout,
+)
 
 
 auth_bp = Blueprint('auth', __name__)
@@ -324,10 +329,10 @@ def login():
         return redirect(url_for('auth.dashboard'))
 
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        email = normalize_email(request.form.get('email'))
+        password = request.form.get('password', '')
 
-        user = User.query.filter_by(email=email).first()
+        user = User.query.filter(func.lower(User.email) == email).first()
 
         # No User record - check whether this is a partner-only account so
         # partners who never created a main-site account can still sign in here
@@ -336,6 +341,13 @@ def login():
             partner_response = attempt_partner_only_login(email, password)
             if partner_response:
                 return partner_response
+            remaining = get_partner_login_lockout(email)
+            if remaining > 0:
+                flash(
+                    f"Too many failed attempts. Please try again in {remaining} seconds.",
+                    "error",
+                )
+                return redirect(url_for('auth.login'))
             flash("Invalid email or password.", "error")
             return redirect(url_for('auth.login'))
 
