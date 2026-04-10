@@ -387,11 +387,11 @@ def create_partner_checkout_session(partner, tier=None, success_url=None, cancel
         raise ValueError(f"Unsupported self-serve tier: {tier}")
 
     prices = current_app.config.get('PARTNER_STRIPE_PRICES') or {}
-    price_id = prices.get(tier)
+    price_id = (prices.get(tier) or '').strip() or None
 
     # Fallback to legacy single-price config
     if not price_id:
-        price_id = current_app.config.get('PARTNER_STRIPE_PRICE_ID')
+        price_id = (current_app.config.get('PARTNER_STRIPE_PRICE_ID') or '').strip() or None
     if not price_id:
         raise ValueError(f"No Stripe Price ID configured for tier '{tier}'")
 

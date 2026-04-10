@@ -57,10 +57,10 @@ class Config:
         )
 
     # Partner billing – per-tier Stripe Price IDs (GBP monthly recurring)
-    PARTNER_STRIPE_PRICE_ID = os.getenv('PARTNER_STRIPE_PRICE_ID')  # legacy fallback
+    PARTNER_STRIPE_PRICE_ID = (os.getenv('PARTNER_STRIPE_PRICE_ID') or '').strip() or None  # legacy fallback
     PARTNER_STRIPE_PRICES = {
-        'starter':      os.getenv('PARTNER_STRIPE_PRICE_STARTER'),       # £49/mo
-        'professional': os.getenv('PARTNER_STRIPE_PRICE_PROFESSIONAL'),  # £249/mo
+        'starter':      (os.getenv('PARTNER_STRIPE_PRICE_STARTER') or '').strip() or None,       # £49/mo
+        'professional': (os.getenv('PARTNER_STRIPE_PRICE_PROFESSIONAL') or '').strip() or None,  # £249/mo
         # Enterprise is "contact us" / manual invoicing — no self-serve checkout
     }
 
