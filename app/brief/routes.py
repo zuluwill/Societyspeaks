@@ -36,6 +36,7 @@ from app.brief.email_client import send_brief_to_subscriber, ResendClient
 from app.trending.conversion_tracking import track_social_click
 from app.decorators import admin_required
 from app.brief.subscription import process_subscription
+from app.lib.partner_portal_session import sync_partner_portal_session_for_email
 
 logger = logging.getLogger(__name__)
 
@@ -637,6 +638,7 @@ def magic_link(token):
                 if expired_sub.user:
                     from flask_login import login_user
                     login_user(expired_sub.user)
+                    sync_partner_portal_session_for_email(expired_sub.user.email)
                     try:
                         import posthog as _ph
                         if _ph and getattr(_ph, 'project_api_key', None):
@@ -658,6 +660,7 @@ def magic_link(token):
     if subscriber.user:
         from flask_login import login_user
         login_user(subscriber.user)
+        sync_partner_portal_session_for_email(subscriber.user.email)
         try:
             import posthog as _ph
             if _ph and getattr(_ph, 'project_api_key', None):

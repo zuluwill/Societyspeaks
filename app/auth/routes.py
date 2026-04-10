@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from werkzeug.security import generate_password_hash, check_password_hash
 from urllib.parse import urlparse
 from app import db, cache
-from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber, Partner, PartnerMember
+from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy import func
 from datetime import datetime, timedelta
@@ -22,6 +22,7 @@ try:
 except ImportError:
     posthog = None
 from app.lib.posthog_utils import safe_posthog_capture
+from app.lib.partner_portal_session import sync_partner_portal_session_for_email
 
 
 auth_bp = Blueprint('auth', __name__)
@@ -257,6 +258,7 @@ def register():
 
         # Auto-login the new user for frictionless checkout flow
         login_user(new_user)
+        sync_partner_portal_session_for_email(new_user.email)
 
         # Auto-link any pending steward invites sent to this email address
         from app.models import ProgrammeSteward
@@ -335,25 +337,9 @@ def login():
         # Log the user in
         login_user(user)
 
-        # Establish partner portal session if this user has a partner account,
-        # so they don't need to authenticate separately at /for-publishers/portal/login.
-        try:
-            member = PartnerMember.query.filter_by(
-                email=user.email, status='active'
-            ).first()
-            if member and member.partner and member.partner.status == 'active':
-                session['partner_portal_id'] = member.partner_id
-                session['partner_member_id'] = member.id
-            else:
-                partner = Partner.query.filter_by(
-                    contact_email=user.email, status='active'
-                ).first()
-                if partner:
-                    session['partner_portal_id'] = partner.id
-        except Exception as _partner_exc:
-            current_app.logger.warning(
-                "Could not establish partner session at login: %s", _partner_exc
-            )
+        # Keep partner portal session in sync with the authenticated user so a
+        # reused browser session cannot retain access from another account.
+        sync_partner_portal_session_for_email(user.email)
 
         # Update last login timestamp and record event
         try:
