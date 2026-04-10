@@ -594,19 +594,21 @@ def portal_signup():
         password = request.form.get('password', '')
         domain = _normalize_domain(request.form.get('domain', ''))
 
+        _signup_ctx = dict(name_value=name, email_value=email, domain_value=domain)
+
         if not name or not email or not password:
             flash('Name, email, and password are required.', 'danger')
-            return render_template('partner/portal/signup.html')
+            return render_template('partner/portal/signup.html', **_signup_ctx)
 
         email_ok, email_err = validate_email_format(email)
         if not email_ok:
             flash(email_err, 'danger')
-            return render_template('partner/portal/signup.html')
+            return render_template('partner/portal/signup.html', **_signup_ctx)
 
         is_valid, error_message = validate_password(password)
         if not is_valid:
             flash(error_message, 'danger')
-            return render_template('partner/portal/signup.html')
+            return render_template('partner/portal/signup.html', **_signup_ctx)
 
         if Partner.query.filter_by(contact_email=email).first():
             flash('An account with this email already exists. Please sign in.', 'warning')
@@ -626,7 +628,7 @@ def portal_signup():
             slug = f"{slug_base}-{counter}"
             if counter > 100:
                 flash('Could not generate a unique account identifier. Please try a different name.', 'danger')
-                return render_template('partner/portal/signup.html')
+                return render_template('partner/portal/signup.html', **_signup_ctx)
 
         try:
             partner = Partner(
@@ -661,7 +663,7 @@ def portal_signup():
             db.session.rollback()
             current_app.logger.exception("Failed to create partner account")
             flash('An error occurred creating your account. Please try again.', 'danger')
-            return render_template('partner/portal/signup.html')
+            return render_template('partner/portal/signup.html', **_signup_ctx)
 
         session['partner_portal_id'] = partner.id
         session['partner_member_id'] = owner_member.id
@@ -693,7 +695,7 @@ def portal_login():
             if utcnow_naive() < lockout_dt:
                 remaining = int((lockout_dt - utcnow_naive()).total_seconds())
                 flash(f'Too many failed attempts. Please try again in {remaining} seconds.', 'danger')
-                return render_template('partner/portal/login.html')
+                return render_template('partner/portal/login.html', email_value=email)
             else:
                 # Lockout expired, reset
                 session.pop(lockout_key, None)
@@ -724,11 +726,11 @@ def portal_login():
                 flash('Too many failed attempts. Please try again in 5 minutes.', 'danger')
             else:
                 flash('Invalid email or password.', 'danger')
-            return render_template('partner/portal/login.html')
+            return render_template('partner/portal/login.html', email_value=email)
 
         if partner.status != 'active':
             flash('This account has been deactivated. Please contact support.', 'danger')
-            return render_template('partner/portal/login.html')
+            return render_template('partner/portal/login.html', email_value=email)
 
         # Capture redirect target before clearing the session.
         next_url = request.form.get('next') or request.args.get('next')

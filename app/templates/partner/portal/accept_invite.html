@@ -19,12 +19,11 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Full name</label>
             <input name="full_name" type="text" value="{{ member.full_name or '' }}" class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm">
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input name="password" type="password" autocomplete="new-password" required class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm">
-          </div>
+          {% with pw_input_id='invitePassword' %}
+            {% include 'partner/components/_password_field.html' %}
+          {% endwith %}
         </div>
-        <button type="submit" class="w-full mt-6 inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+        <button type="submit" class="w-full mt-6 inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500" data-loading-text="Accepting…">
           Accept invite
         </button>
       </form>
