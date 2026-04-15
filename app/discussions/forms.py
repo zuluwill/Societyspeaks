@@ -284,6 +284,8 @@ class CreateDiscussionForm(FlaskForm):
             return False
 
         return True
+
+
 class EditDiscussionForm(FlaskForm):
     title = StringField('Discussion Title', validators=[
         DataRequired(),

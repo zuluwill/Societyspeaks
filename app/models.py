@@ -149,7 +149,7 @@ class User(UserMixin, db.Model):
         cache_key = f'_unread_notif_count_{self.id}'
         cached = getattr(g, cache_key, None)
         if cached is None:
-            cached = self.notifications.filter_by(is_read=False).count()
+            cached = Notification.unread_count_for_user(self.id)
             setattr(g, cache_key, cached)
         return cached
 
@@ -424,8 +424,8 @@ class DiscussionFollow(db.Model):
     )
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id', ondelete='CASCADE'), nullable=False)
     created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
 
 
