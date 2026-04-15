@@ -1,6 +1,6 @@
 from app import db, cache
 from app.lib.time import utcnow_naive
-from flask import current_app
+from flask import current_app, g
 from datetime import datetime, timedelta
 from slugify import slugify as python_slugify
 from flask_login import UserMixin
@@ -58,7 +58,8 @@ class User(UserMixin, db.Model):
     # Notification preferences
     email_notifications = db.Column(db.Boolean, default=True)  # Enable email notifications
     discussion_participant_notifications = db.Column(db.Boolean, default=True)  # New participants
-    discussion_response_notifications = db.Column(db.Boolean, default=True)  # New responses
+    discussion_response_notifications = db.Column(db.Boolean, default=True)  # Activity: statements, replies, votes
+    discussion_update_notifications = db.Column(db.Boolean, default=True)  # Organiser/steward "what happened next" updates
     weekly_digest_enabled = db.Column(db.Boolean, default=True)  # Weekly digest emails
 
     # Login tracking
@@ -73,6 +74,8 @@ class User(UserMixin, db.Model):
 
     discussions_created = db.relationship('Discussion', backref='creator', lazy='dynamic')
     notifications = db.relationship('Notification', backref='user', lazy='dynamic')
+    discussion_follows = db.relationship('DiscussionFollow', backref='user', lazy='dynamic', cascade='all, delete-orphan')
+    discussion_updates_authored = db.relationship('DiscussionUpdate', backref='author', lazy='dynamic', cascade='all, delete-orphan')
     programmes_created = db.relationship('Programme', backref='creator', lazy='select', foreign_keys='Programme.creator_id')
     programme_stewardships = db.relationship(
         'ProgrammeSteward',
@@ -140,6 +143,20 @@ class User(UserMixin, db.Model):
     def get_id(self):
         # Flask-Login needs this to identify users across sessions.
         return str(self.id)
+
+    @property
+    def unread_notification_count(self):
+        cache_key = f'_unread_notif_count_{self.id}'
+        cached = getattr(g, cache_key, None)
+        if cached is None:
+            cached = self.notifications.filter_by(is_read=False).count()
+            setattr(g, cache_key, cached)
+        return cached
+
+    def follows_discussion(self, discussion_id):
+        if not discussion_id:
+            return False
+        return self.discussion_follows.filter_by(discussion_id=discussion_id).first() is not None
 
 
 class Partner(db.Model):
@@ -363,8 +380,8 @@ class DiscussionView(db.Model):
 
 class Notification(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id', ondelete='CASCADE'), nullable=False)
     type = db.Column(db.String(50), nullable=False)  # 'new_participant', 'new_response', etc.
     title = db.Column(db.String(200), nullable=False)
     message = db.Column(db.Text, nullable=False)
@@ -379,6 +396,67 @@ class Notification(db.Model):
         """Mark notification as read"""
         self.is_read = True
         db.session.commit()
+
+    @classmethod
+    def unread_count_for_user(cls, user_id):
+        if not user_id:
+            return 0
+        return cls.query.filter_by(user_id=user_id, is_read=False).count()
+
+    @classmethod
+    def mark_all_as_read_for_user(cls, user_id):
+        if not user_id:
+            return 0
+        updated = cls.query.filter_by(user_id=user_id, is_read=False).update(
+            {'is_read': True},
+            synchronize_session=False,
+        )
+        db.session.commit()
+        return updated
+
+
+class DiscussionFollow(db.Model):
+    __tablename__ = 'discussion_follow'
+    __table_args__ = (
+        db.Index('idx_discussion_follow_user_created', 'user_id', 'created_at'),
+        db.Index('idx_discussion_follow_discussion_created', 'discussion_id', 'created_at'),
+        db.UniqueConstraint('user_id', 'discussion_id', name='uq_discussion_follow_user_discussion'),
+    )
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
+
+
+class DiscussionUpdate(db.Model):
+    __tablename__ = 'discussion_update'
+    __table_args__ = (
+        db.Index('idx_discussion_update_discussion_created', 'discussion_id', 'created_at'),
+        db.Index('idx_discussion_update_user_created', 'user_id', 'created_at'),
+    )
+
+    TYPE_UPDATE = 'update'
+    TYPE_OUTCOME = 'outcome'
+    TYPE_NEXT_STEP = 'next_step'
+    VALID_TYPES = {TYPE_UPDATE, TYPE_OUTCOME, TYPE_NEXT_STEP}
+
+    id = db.Column(db.Integer, primary_key=True)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussion.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    update_type = db.Column(db.String(20), nullable=False, default=TYPE_UPDATE)
+    title = db.Column(db.String(200), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    links = db.Column(db.JSON, nullable=False, default=list)
+    created_at = db.Column(db.DateTime, default=utcnow_naive, nullable=False)
+    updated_at = db.Column(db.DateTime, default=utcnow_naive, onupdate=utcnow_naive, nullable=False)
+
+    @validates('update_type')
+    def validate_update_type(self, key, value):
+        normalized = (value or self.TYPE_UPDATE).strip().lower()
+        if normalized not in self.VALID_TYPES:
+            raise ValueError("Invalid discussion update type")
+        return normalized
 
 
 class DiscussionParticipant(db.Model):
@@ -853,6 +931,8 @@ class Discussion(db.Model):
     information_body = db.Column(db.Text, nullable=True)
     information_links = db.Column(db.JSON, nullable=False, default=list)
     views = db.relationship('DiscussionView', backref='discussion', lazy='dynamic')
+    follows = db.relationship('DiscussionFollow', backref='discussion', lazy='dynamic', cascade='all, delete-orphan')
+    updates = db.relationship('DiscussionUpdate', backref='discussion', lazy='dynamic', cascade='all, delete-orphan')
 
     # Bluesky posting schedule (for staggered posts throughout the day)
     bluesky_scheduled_at = db.Column(db.DateTime, nullable=True)   # When to post to Bluesky

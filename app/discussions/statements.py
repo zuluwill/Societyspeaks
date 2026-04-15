@@ -11,6 +11,7 @@ from app.db_retry import with_db_retry
 from app.discussions.statement_forms import StatementForm, VoteForm, ResponseForm, FlagStatementForm
 from app.models import Discussion, Statement, StatementVote, Response, StatementFlag, DiscussionParticipant
 from app.email_utils import create_discussion_notification
+from app.discussions.follower_notifications import notify_discussion_followers
 from app.programmes.permissions import can_view_programme
 from app.programmes.utils import validate_cohort_for_discussion
 from app.discussions.sorting import apply_statement_sort
@@ -42,6 +43,26 @@ EMBED_FINGERPRINT_MAX_LENGTH = 128
 def _enforce_programme_visibility_for_discussion(discussion):
     if discussion and discussion.programme and not can_view_programme(discussion.programme, current_user):
         abort(403)
+
+
+def _notify_discussion_owner_about_response_activity(discussion, actor_user_id=None, response_count=None):
+    if not discussion or not discussion.creator_id:
+        return
+    if actor_user_id and discussion.creator_id == actor_user_id:
+        return
+    create_discussion_notification(
+        user_id=discussion.creator_id,
+        discussion_id=discussion.id,
+        notification_type='new_response',
+        additional_data={'response_count': response_count or 0},
+    )
+    notify_discussion_followers(
+        discussion,
+        'new_response',
+        actor_user_id=actor_user_id,
+        skip_discussion_creator=True,
+        cooldown_hours=4,
+    )
 
 
 def _apply_vote_counter_delta(statement_id, old_vote, new_vote):
@@ -472,6 +493,10 @@ def create_statement(discussion_id):
         db.session.commit()
         from app.api.utils import invalidate_partner_snapshot_cache
         invalidate_partner_snapshot_cache(discussion_id)
+        _notify_discussion_owner_about_response_activity(
+            discussion,
+            actor_user_id=identifier['user_id'],
+        )
         
         # Track statement creation with PostHog
         if posthog and getattr(posthog, 'project_api_key', None):
@@ -623,6 +648,10 @@ def create_statement_from_embed(discussion_id):
 
     from app.api.utils import invalidate_partner_snapshot_cache
     invalidate_partner_snapshot_cache(discussion_id)
+    _notify_discussion_owner_about_response_activity(
+        discussion,
+        actor_user_id=identifier['user_id'],
+    )
 
     return jsonify({
         'success': True,
@@ -1542,6 +1571,10 @@ def quick_response(statement_id):
             )
             db.session.add(response)
             db.session.commit()
+            response_count = Response.query.filter_by(
+                statement_id=statement.id,
+                is_deleted=False,
+            ).count()
             record_event(
                 'response_created',
                 user_id=current_user.id,
@@ -1550,6 +1583,11 @@ def quick_response(statement_id):
                 statement_id=statement.id,
                 country=statement.discussion.country if statement.discussion else None,
                 source='quick_response'
+            )
+            _notify_discussion_owner_about_response_activity(
+                discussion,
+                actor_user_id=current_user.id,
+                response_count=response_count,
             )
             flash("Your thought has been added!", "success")
         except Exception as e:
@@ -1595,6 +1633,10 @@ def create_response(statement_id):
             )
             db.session.add(response)
             db.session.commit()
+            response_count = Response.query.filter_by(
+                statement_id=statement.id,
+                is_deleted=False,
+            ).count()
             record_event(
                 'response_created',
                 user_id=current_user.id,
@@ -1603,6 +1645,11 @@ def create_response(statement_id):
                 statement_id=statement.id,
                 country=statement.discussion.country if statement.discussion else None,
                 source='response_form'
+            )
+            _notify_discussion_owner_about_response_activity(
+                statement.discussion,
+                actor_user_id=current_user.id,
+                response_count=response_count,
             )
             
             flash("Response posted successfully!", "success")

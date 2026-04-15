@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+{% from "components/discussion_card.html" import discussion_card %}
+{% block title %}Saved Discussions{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 px-4 sm:py-8 sm:px-6 lg:px-8">
+  <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
+    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+    <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="text-gray-900 font-medium">Saved Discussions</span>
+  </nav>
+
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Saved Discussions</h1>
+      <p class="text-sm text-gray-500 mt-0.5">
+        {% if q %}
+          {{ pagination.total }} result{{ 's' if pagination.total != 1 else '' }} for "<strong>{{ q }}</strong>"
+        {% else %}
+          {{ pagination.total }} saved discussion{{ 's' if pagination.total != 1 else '' }}
+        {% endif %}
+      </p>
+    </div>
+    <a href="{{ url_for('discussions.search_discussions') }}"
+       class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 shrink-0">
+      Browse discussions
+    </a>
+  </div>
+
+  <form method="GET" action="{{ url_for('auth.saved_discussions') }}" class="mb-6">
+    <div class="relative max-w-md">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 105 11a6 6 0 0012 0z"/>
+      </svg>
+      <input
+        type="search"
+        name="q"
+        value="{{ q }}"
+        placeholder="Search saved discussions..."
+        class="block w-full pl-9 pr-4 py-2.5 text-base border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+      >
+    </div>
+  </form>
+
+  {% if discussions %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      {% for discussion in discussions %}
+        {{ discussion_card(discussion, button_label='Open') }}
+      {% endfor %}
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-gray-100 pt-6">
+      <p class="text-sm text-gray-500">
+        Showing {{ (pagination.page - 1) * pagination.per_page + 1 }}–{{ [pagination.page * pagination.per_page, pagination.total] | min }} of {{ pagination.total }}
+      </p>
+      <nav class="flex items-center gap-1">
+        {% if pagination.has_prev %}
+          <a href="{{ url_for('auth.saved_discussions', page=pagination.prev_num, q=q) }}" class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">← Prev</a>
+        {% else %}
+          <span class="px-3 py-1.5 text-sm text-gray-300 border border-gray-200 rounded-md">← Prev</span>
+        {% endif %}
+        {% for p in pagination.iter_pages(left_edge=1, left_current=2, right_current=2, right_edge=1) %}
+          {% if p %}
+            {% if p == pagination.page %}
+              <span class="px-3 py-1.5 text-sm font-semibold bg-blue-600 text-white border border-blue-600 rounded-md">{{ p }}</span>
+            {% else %}
+              <a href="{{ url_for('auth.saved_discussions', page=p, q=q) }}" class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">{{ p }}</a>
+            {% endif %}
+          {% else %}
+            <span class="px-2 py-1.5 text-sm text-gray-400">…</span>
+          {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+          <a href="{{ url_for('auth.saved_discussions', page=pagination.next_num, q=q) }}" class="px-3 py-1.5 text-sm text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">Next →</a>
+        {% else %}
+          <span class="px-3 py-1.5 text-sm text-gray-300 border border-gray-200 rounded-md">Next →</span>
+        {% endif %}
+      </nav>
+    </div>
+    {% endif %}
+  {% else %}
+    <div class="text-center py-16 border-2 border-dashed border-gray-200 rounded-lg">
+      {% if q %}
+        <p class="text-sm font-medium text-gray-600 mb-1">No saved discussions match "{{ q }}"</p>
+        <a href="{{ url_for('auth.saved_discussions') }}" class="text-sm text-blue-600 hover:underline">Clear search</a>
+      {% else %}
+        <p class="text-sm font-medium text-gray-600 mb-1">No saved discussions yet</p>
+        <p class="text-xs text-gray-400 mb-4">Save a discussion from its page to build your watchlist.</p>
+        <a href="{{ url_for('discussions.search_discussions') }}" class="inline-block bg-blue-600 text-white px-5 py-2 rounded-md hover:bg-blue-700 text-sm font-medium">
+          Explore discussions
+        </a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

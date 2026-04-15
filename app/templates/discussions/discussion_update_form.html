@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto py-8 px-4">
+  <nav class="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
+    <a href="{{ url_for('auth.dashboard') }}" class="hover:text-gray-700">Dashboard</a>
+    <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" class="hover:text-gray-700 truncate max-w-xs">{{ discussion.title }}</a>
+    <svg class="w-4 h-4 shrink-0 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="text-gray-900 font-medium">{{ page_title }}</span>
+  </nav>
+
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <h1 class="text-2xl font-bold text-gray-900 mb-1">{{ page_title }}</h1>
+    <p class="text-sm text-gray-500 mb-6">Use updates to explain outcomes, progress, or what happens next.</p>
+
+    <form method="POST" class="space-y-6">
+      {{ form.csrf_token }}
+
+      <div>
+        {{ form.update_type.label(class="block text-sm font-medium text-gray-700") }}
+        {{ form.update_type(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500") }}
+        {% if form.update_type.errors %}{% for error in form.update_type.errors %}
+        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+        {% endfor %}{% endif %}
+      </div>
+
+      <div>
+        {{ form.title.label(class="block text-sm font-medium text-gray-700") }}
+        {{ form.title(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", placeholder="What changed?") }}
+        {% if form.title.errors %}{% for error in form.title.errors %}
+        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+        {% endfor %}{% endif %}
+      </div>
+
+      <div>
+        {{ form.body.label(class="block text-sm font-medium text-gray-700") }}
+        {{ form.body(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="8", placeholder="Summarise the outcome, decision, or next step using Markdown.") }}
+        <p class="mt-1 text-xs text-gray-500">Markdown is supported. Raw HTML is not allowed.</p>
+        {% if form.body.errors %}{% for error in form.body.errors %}
+        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+        {% endfor %}{% endif %}
+      </div>
+
+      <div>
+        {{ form.links.label(class="block text-sm font-medium text-gray-700") }}
+        {{ form.links(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500", rows="4", placeholder="Minutes|https://example.com/minutes") }}
+        <p class="mt-1 text-xs text-gray-500">One per line in format <code>Label|https://url</code>.</p>
+        {% if form.links.errors %}{% for error in form.links.errors %}
+        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+        {% endfor %}{% endif %}
+      </div>
+
+      <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-gray-200">
+        <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
+           class="px-4 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50">
+          Cancel
+        </a>
+        {{ form.submit(class="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700", value=submit_label) }}
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

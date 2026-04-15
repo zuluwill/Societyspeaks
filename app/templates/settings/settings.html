@@ -135,7 +135,7 @@
                             </div>
                         </label>
 
-                        {# Discussion response notifications #}
+                        {# Discussion activity (statements, replies, votes) #}
                         <label class="flex items-start cursor-pointer group">
                             <div class="relative flex items-center h-5">
                                 <input type="checkbox" 
@@ -144,8 +144,22 @@
                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
                             </div>
                             <div class="ml-3">
-                                <span class="text-sm font-medium text-gray-700">New responses</span>
-                                <p class="text-sm text-gray-500">Get notified when there's new activity in your discussions</p>
+                                <span class="text-sm font-medium text-gray-700">Discussion activity</span>
+                                <p class="text-sm text-gray-500">New statements, replies, and votes in discussions you host or follow</p>
+                            </div>
+                        </label>
+
+                        {# Organiser / steward outcome updates #}
+                        <label class="flex items-start cursor-pointer group">
+                            <div class="relative flex items-center h-5">
+                                <input type="checkbox" 
+                                       name="{{ notif_form.discussion_update_notifications.name }}"
+                                       {% if notif_form.discussion_update_notifications.data %}checked{% endif %}
+                                       class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                            </div>
+                            <div class="ml-3">
+                                <span class="text-sm font-medium text-gray-700">Discussion updates</span>
+                                <p class="text-sm text-gray-500">When an organiser posts a &quot;what happened next&quot; update to a discussion you follow</p>
                             </div>
                         </label>
 
@@ -273,6 +287,24 @@ document.getElementById('confirm-delete-btn')?.addEventListener('click', functio
         document.getElementById('delete-account-form').submit();
     }
 });
+
+(function () {
+    var master = document.getElementById('email_notifications');
+    if (!master) return;
+    var subPanel = master.closest('label').nextElementSibling;
+    if (!subPanel) return;
+
+    function applyState(enabled) {
+        subPanel.querySelectorAll('input[type="checkbox"]').forEach(function (cb) {
+            cb.disabled = !enabled;
+        });
+        subPanel.style.opacity = enabled ? '' : '0.4';
+        subPanel.style.pointerEvents = enabled ? '' : 'none';
+    }
+
+    applyState(master.checked);
+    master.addEventListener('change', function () { applyState(this.checked); });
+}());
 </script>
 
 {% endblock %}

@@ -71,6 +71,7 @@ def view_settings():
                 current_user.email_notifications = notif_form.email_notifications.data
                 current_user.discussion_participant_notifications = notif_form.discussion_participant_notifications.data
                 current_user.discussion_response_notifications = notif_form.discussion_response_notifications.data
+                current_user.discussion_update_notifications = notif_form.discussion_update_notifications.data
                 current_user.weekly_digest_enabled = notif_form.weekly_digest_enabled.data
                 db.session.commit()
                 flash('Notification preferences updated successfully.', 'success')
@@ -86,6 +87,7 @@ def view_settings():
         notif_form.email_notifications.data = current_user.email_notifications
         notif_form.discussion_participant_notifications.data = current_user.discussion_participant_notifications
         notif_form.discussion_response_notifications.data = current_user.discussion_response_notifications
+        notif_form.discussion_update_notifications.data = current_user.discussion_update_notifications
         notif_form.weekly_digest_enabled.data = current_user.weekly_digest_enabled
 
     active_subscription = get_active_subscription(current_user)

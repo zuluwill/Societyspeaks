@@ -1,8 +1,8 @@
-from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app
+from flask import abort, render_template, redirect, url_for, flash, request, Blueprint, jsonify, current_app, session
 from flask_login import login_required, current_user
 from app import db, limiter, talisman
-from app.discussions.forms import CreateDiscussionForm, EditDiscussionForm
-from app.models import Discussion, DiscussionParticipant, Programme, TrendingTopic, DiscussionSourceArticle, NewsArticle, NewsSource, Statement
+from app.discussions.forms import CreateDiscussionForm, EditDiscussionForm, DiscussionUpdateForm
+from app.models import Discussion, DiscussionFollow, DiscussionParticipant, DiscussionUpdate, Programme, TrendingTopic, DiscussionSourceArticle, NewsArticle, NewsSource, Statement
 from app.storage_utils import get_recent_activity
 from app.middleware import track_discussion_view 
 from app.email_utils import create_discussion_notification
@@ -12,13 +12,22 @@ from app.api.utils import is_partner_origin_allowed, get_partner_allowed_origins
 from app.trending.conversion_tracking import track_social_click
 from app.lib.time import utcnow_naive
 from app.programmes.permissions import can_add_discussion_to_programme
-from app.programmes.permissions import can_view_programme
-from app.programmes.utils import render_safe_information_markdown, safe_information_links, validate_cohort_for_discussion
+from app.programmes.permissions import can_steward_programme, can_view_programme
+from app.programmes.utils import (
+    parse_label_url_lines,
+    render_safe_markdown,
+    safe_information_links,
+    safe_label_url_links,
+    validate_cohort_for_discussion,
+)
 from app.discussions.sorting import apply_statement_sort
+from app.discussions.query_utils import apply_discussion_visibility
+from app.discussions.follower_notifications import notify_discussion_followers
 from app.discussions.thresholds import consensus_thresholds_dict
 from app.lib.db_utils import retry_on_db_disconnect
+from app.lib.url_utils import safe_next_url as _validate_next_url
 from sqlalchemy.orm import joinedload, selectinload
-from sqlalchemy import func
+from sqlalchemy import and_, func, or_
 import json
 import os
 import re
@@ -69,6 +78,32 @@ def _build_user_votes_map(statement_ids):
         SVModel.statement_id.in_(statement_ids)
     ).all()
     return {row.statement_id: row.vote for row in rows}
+
+
+def _apply_statement_text_search(query, search_term):
+    cleaned = (search_term or '').strip()
+    if not cleaned:
+        return query
+    return query.filter(Statement.content.ilike(f"%{cleaned}%"))
+
+
+def _parse_markdown_links(raw_text):
+    return safe_label_url_links(parse_label_url_lines(raw_text))
+
+
+def _can_manage_discussion_updates(discussion):
+    if not current_user.is_authenticated:
+        return False
+    if current_user.is_admin or discussion.creator_id == current_user.id:
+        return True
+    if discussion.programme:
+        return can_steward_programme(discussion.programme, current_user)
+    return False
+
+
+def _safe_next_url(fallback_endpoint, **fallback_values):
+    next_url = _validate_next_url(request.form.get('next') or request.args.get('next'))
+    return next_url or url_for(fallback_endpoint, **fallback_values)
 
 
 @discussions_bp.route('/news')
@@ -245,16 +280,7 @@ def create_discussion():
                 form.programme_phase.errors.append('Selected phase is not valid for this programme.')
                 return render_template('discussions/create_discussion.html', form=form, programme_meta=programme_meta)
 
-        information_links = []
-        raw_information_links = (form.information_links.data or '').strip()
-        if raw_information_links:
-            for line in raw_information_links.splitlines():
-                cleaned = line.strip()
-                if not cleaned or '|' not in cleaned:
-                    continue
-                label, url = cleaned.split('|', 1)
-                information_links.append({"label": label.strip(), "url": url.strip()})
-            information_links = safe_information_links(information_links)
+        information_links = _parse_markdown_links(form.information_links.data)
 
         # Create a new discussion
         discussion = Discussion(
@@ -458,16 +484,7 @@ def edit_discussion(discussion_id):
             )
 
     # Parse information_links from pipe-text → safe JSON list
-    raw_links = (form.information_links.data or '').strip()
-    information_links = []
-    if raw_links:
-        for line in raw_links.splitlines():
-            cleaned = line.strip()
-            if not cleaned or '|' not in cleaned:
-                continue
-            label, url = cleaned.split('|', 1)
-            information_links.append({"label": label.strip(), "url": url.strip()})
-        information_links = safe_information_links(information_links)
+    information_links = _parse_markdown_links(form.information_links.data)
 
     # Track old programme for cache invalidation
     old_programme_id = discussion.programme_id
@@ -750,6 +767,7 @@ def view_discussion(discussion_id, slug):
     sort = 'progressive'
     form = None
     statements_pagination = None
+    statement_search_term = request.args.get('q', '').strip()[:100]
     statement_metrics = {
         'statement_count': 0,
         'agree_votes': 0,
@@ -785,6 +803,7 @@ def view_discussion(discussion_id, slug):
             )
         
         # Apply sorting — all sort modes including 'controversial' handled in SQL.
+        query = _apply_statement_text_search(query, statement_search_term)
         query = apply_statement_sort(query, sort, discussion_id, db.session)
         statements_pagination = query.paginate(page=page, per_page=per_page, error_out=False)
         statements = statements_pagination.items
@@ -828,8 +847,27 @@ def view_discussion(discussion_id, slug):
     safe_information_html = None
     safe_info_links = []
     if discussion.information_title or discussion.information_body or discussion.information_links:
-        safe_information_html = render_safe_information_markdown(discussion.information_body)
+        safe_information_html = render_safe_markdown(discussion.information_body)
         safe_info_links = safe_information_links(discussion.information_links)
+
+    discussion_updates = DiscussionUpdate.query.options(
+        joinedload(DiscussionUpdate.author)
+    ).filter_by(
+        discussion_id=discussion.id
+    ).order_by(
+        DiscussionUpdate.created_at.desc(),
+        DiscussionUpdate.id.desc()
+    ).all()
+    discussion_updates_rendered = [
+        {
+            'record': update,
+            'body_html': render_safe_markdown(update.body),
+            'links': safe_label_url_links(update.links),
+        }
+        for update in discussion_updates
+    ]
+    is_following = current_user.is_authenticated and current_user.follows_discussion(discussion.id)
+    can_manage_updates = _can_manage_discussion_updates(discussion)
     
     # Render the page
     return render_template('discussions/view_discussion.html',
@@ -846,7 +884,236 @@ def view_discussion(discussion_id, slug):
                          consensus_thresholds=consensus_thresholds_dict(),
                          safe_information_html=safe_information_html,
                          safe_information_links=safe_info_links,
-                         cohort_slug=cohort_slug)
+                         cohort_slug=cohort_slug,
+                         can_manage_updates=can_manage_updates,
+                         discussion_updates=discussion_updates_rendered,
+                         is_following=is_following,
+                         statement_search_term=statement_search_term)
+
+
+@discussions_bp.route('/<int:discussion_id>/follow', methods=['POST'])
+@login_required
+def follow_discussion(discussion_id):
+    discussion = db.get_or_404(Discussion, discussion_id)
+    if discussion.partner_env == 'test':
+        abort(404)
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(404)
+
+    existing = DiscussionFollow.query.filter_by(
+        user_id=current_user.id,
+        discussion_id=discussion.id,
+    ).first()
+    if not existing:
+        db.session.add(DiscussionFollow(user_id=current_user.id, discussion_id=discussion.id))
+        db.session.commit()
+        flash('Discussion saved to your dashboard.', 'success')
+    else:
+        flash('This discussion is already saved.', 'info')
+
+    return redirect(_safe_next_url(
+        'discussions.view_discussion',
+        discussion_id=discussion.id,
+        slug=discussion.slug,
+    ))
+
+
+@discussions_bp.route('/<int:discussion_id>/follow/start', methods=['GET'])
+def start_follow_discussion(discussion_id):
+    discussion = db.get_or_404(Discussion, discussion_id)
+    if discussion.partner_env == 'test':
+        abort(404)
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(404)
+
+    if current_user.is_authenticated:
+        return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
+
+    next_url = _safe_next_url(
+        'discussions.view_discussion',
+        discussion_id=discussion.id,
+        slug=discussion.slug,
+    )
+    session['pending_follow_discussion_id'] = discussion.id
+    session['pending_post_auth_redirect'] = next_url
+    flash('Create an account or sign in to save this discussion and follow future updates.', 'info')
+    return redirect(url_for('auth.login', next=next_url))
+
+
+@discussions_bp.route('/<int:discussion_id>/unfollow', methods=['POST'])
+@login_required
+def unfollow_discussion(discussion_id):
+    discussion = db.get_or_404(Discussion, discussion_id)
+    if discussion.partner_env == 'test':
+        abort(404)
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(404)
+
+    existing = DiscussionFollow.query.filter_by(
+        user_id=current_user.id,
+        discussion_id=discussion.id,
+    ).first()
+    if existing:
+        db.session.delete(existing)
+        db.session.commit()
+        flash('Discussion removed from your saved list.', 'success')
+    else:
+        flash('This discussion was not in your saved list.', 'info')
+
+    return redirect(_safe_next_url(
+        'discussions.view_discussion',
+        discussion_id=discussion.id,
+        slug=discussion.slug,
+    ))
+
+
+@discussions_bp.route('/<int:discussion_id>/updates/create', methods=['GET', 'POST'])
+@login_required
+def create_discussion_update(discussion_id):
+    discussion = db.get_or_404(Discussion, discussion_id)
+    if discussion.partner_env == 'test':
+        abort(404)
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(404)
+    if not _can_manage_discussion_updates(discussion):
+        flash("You don't have permission to add updates to this discussion.", 'error')
+        return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
+
+    form = DiscussionUpdateForm()
+    if form.validate_on_submit():
+        update = DiscussionUpdate(
+            discussion_id=discussion.id,
+            user_id=current_user.id,
+            update_type=form.update_type.data,
+            title=form.title.data.strip(),
+            body=form.body.data.strip(),
+            links=_parse_markdown_links(form.links.data),
+        )
+        db.session.add(update)
+        db.session.commit()
+        notify_discussion_followers(
+            discussion,
+            'discussion_update',
+            actor_user_id=current_user.id,
+        )
+        flash('Discussion update published.', 'success')
+        return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
+
+    return render_template(
+        'discussions/discussion_update_form.html',
+        discussion=discussion,
+        form=form,
+        page_title='Add discussion update',
+        submit_label='Publish update',
+    )
+
+
+@discussions_bp.route('/<int:discussion_id>/updates/<int:update_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_discussion_update(discussion_id, update_id):
+    discussion = db.get_or_404(Discussion, discussion_id)
+    update = db.get_or_404(DiscussionUpdate, update_id)
+    if update.discussion_id != discussion.id:
+        abort(404)
+    if discussion.partner_env == 'test':
+        abort(404)
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(404)
+    if not _can_manage_discussion_updates(discussion):
+        flash("You don't have permission to edit updates for this discussion.", 'error')
+        return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
+
+    if request.method == 'GET':
+        form = DiscussionUpdateForm(obj=update)
+        form.links.data = '\n'.join(
+            f"{link.get('label', '')}|{link.get('url', '')}"
+            for link in (update.links or [])
+            if link.get('url')
+        )
+    else:
+        form = DiscussionUpdateForm()
+
+    if form.validate_on_submit():
+        update.update_type = form.update_type.data
+        update.title = form.title.data.strip()
+        update.body = form.body.data.strip()
+        update.links = _parse_markdown_links(form.links.data)
+        db.session.commit()
+        flash('Discussion update saved.', 'success')
+        return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
+
+    return render_template(
+        'discussions/discussion_update_form.html',
+        discussion=discussion,
+        form=form,
+        update=update,
+        page_title='Edit discussion update',
+        submit_label='Save update',
+    )
+
+
+@discussions_bp.route('/<int:discussion_id>/updates/<int:update_id>/delete', methods=['POST'])
+@login_required
+def delete_discussion_update(discussion_id, update_id):
+    discussion = db.get_or_404(Discussion, discussion_id)
+    update = db.get_or_404(DiscussionUpdate, update_id)
+    if update.discussion_id != discussion.id:
+        abort(404)
+    if discussion.partner_env == 'test':
+        abort(404)
+    if discussion.programme and not can_view_programme(discussion.programme, current_user):
+        abort(404)
+    if not _can_manage_discussion_updates(discussion):
+        flash("You don't have permission to delete updates for this discussion.", 'error')
+        return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
+
+    db.session.delete(update)
+    db.session.commit()
+    flash('Discussion update deleted.', 'success')
+    return redirect(url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug))
+
+
+@discussions_bp.route('/statements/search', methods=['GET'])
+def search_statements():
+    q = request.args.get('q', '').strip()[:100]
+    topic = request.args.get('topic', '').strip()
+    sort = request.args.get('sort', 'recent').strip()
+    page = max(1, request.args.get('page', 1, type=int))
+
+    query = Statement.query.options(
+        joinedload(Statement.user),
+        joinedload(Statement.discussion),
+    ).join(
+        Discussion,
+        Statement.discussion_id == Discussion.id,
+    ).filter(
+        Discussion.partner_env != 'test',
+        Discussion.has_native_statements.is_(True),
+        Statement.is_deleted.is_(False),
+        Statement.mod_status >= 0,
+    )
+    query = apply_discussion_visibility(query, current_user)
+
+    if q:
+        query = _apply_statement_text_search(query, q)
+    if topic:
+        query = query.filter(Discussion.topic == topic)
+
+    if sort not in {'recent', 'most_voted', 'best', 'controversial'}:
+        sort = 'recent'
+    query = apply_statement_sort(query, sort, 0, db.session)
+
+    pagination = query.paginate(page=page, per_page=20, error_out=False)
+
+    return render_template(
+        'discussions/search_statements.html',
+        pagination=pagination,
+        statements=pagination.items,
+        q=q,
+        sort=sort,
+        topic=topic,
+        topics=Discussion.TOPICS,
+    )
 
 
 @discussions_bp.route('/api/discussions/<int:discussion_id>/statements', methods=['GET'])
@@ -862,6 +1129,7 @@ def api_discussion_statements(discussion_id):
 
     page = max(1, request.args.get('page', 1, type=int))
     sort = request.args.get('sort', 'progressive')
+    search_term = request.args.get('q', '').strip()[:100]
     per_page = current_app.config.get('DISCUSSION_STATEMENTS_PER_PAGE', 20)
 
     cohort_slug = (request.args.get('cohort') or '').strip() or None
@@ -869,6 +1137,7 @@ def api_discussion_statements(discussion_id):
         cohort_slug = None
 
     _, query = _statement_queries_for_discussion(discussion)
+    query = _apply_statement_text_search(query, search_term)
     query = apply_statement_sort(query, sort, discussion.id, db.session)
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
     statement_user_votes_map = _build_user_votes_map([s.id for s in pagination.items])
@@ -959,6 +1228,8 @@ def fetch_discussions(search, country, city, topic, keywords, programme_id, page
         query = query.filter_by(city=city)
     if topic:
         query = query.filter_by(topic=topic)
+    if keywords:
+        query = query.filter(Discussion.keywords.ilike(f"%{keywords}%"))
     if programme_id:
         query = query.filter(Discussion.programme_id == programme_id)
 

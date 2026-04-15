@@ -2,9 +2,9 @@ from flask import Blueprint, render_template, redirect, url_for, request, flash,
 from werkzeug.security import generate_password_hash, check_password_hash
 from urllib.parse import urlparse
 from app import db, cache
-from app.models import User, Discussion, IndividualProfile, CompanyProfile, ProfileView, DiscussionView, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber
+from app.models import User, Discussion, DiscussionFollow, DiscussionParticipant, IndividualProfile, CompanyProfile, Notification, ProfileView, DiscussionView, Response, Statement, StatementVote, OrganizationMember, Programme, DailyBriefSubscriber, DailyQuestionSubscriber
 from flask_login import login_user, login_required, logout_user, current_user
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from datetime import datetime, timedelta
 from app.storage_utils import get_recent_activity
 from itsdangerous import URLSafeTimedSerializer
@@ -13,11 +13,14 @@ from app.analytics.events import record_event
 from app.resend_client import send_password_reset_email, send_welcome_email, send_verification_email
 from app.email_utils import extract_clean_email, get_missing_individual_profile_fields, get_missing_company_profile_fields
 from app.lib.auth_utils import normalize_email
+from app.lib.url_utils import safe_next_url
 # Billing service for invitation handling
 from app.billing.service import accept_invitation, get_active_subscription
 from app.brief.subscription import process_subscription as process_brief_subscription
 from app.daily.utils import process_daily_question_subscription
 from app.programmes.access import programme_access_labels, query_accessible_programmes, ranked_programme_access_subquery
+from app.programmes.permissions import can_view_programme
+from app.discussions.query_utils import apply_discussion_visibility
 try:
     import posthog
 except ImportError:
@@ -58,6 +61,200 @@ def _safe_referrer_or(fallback_endpoint):
         if parsed.scheme in ('http', 'https') and parsed.netloc == request.host:
             return referrer
     return url_for(fallback_endpoint)
+
+
+def _current_next_url():
+    return safe_next_url(request.form.get('next') or request.args.get('next'))
+
+
+def _set_pending_post_auth_redirect(next_url):
+    safe_next = safe_next_url(next_url)
+    if safe_next:
+        session['pending_post_auth_redirect'] = safe_next
+    else:
+        session.pop('pending_post_auth_redirect', None)
+    return safe_next
+
+
+def _peek_pending_post_auth_redirect():
+    return safe_next_url(session.get('pending_post_auth_redirect'))
+
+
+def _pop_pending_post_auth_redirect():
+    return safe_next_url(session.pop('pending_post_auth_redirect', None))
+
+
+def _consume_pending_discussion_follow(user):
+    discussion_id = session.pop('pending_follow_discussion_id', None)
+    if not discussion_id or not user or not getattr(user, 'id', None):
+        return None
+
+    discussion = Discussion.query.options(
+        db.joinedload(Discussion.programme)
+    ).filter_by(id=discussion_id).first()
+    if not discussion or discussion.partner_env == 'test':
+        return None
+    if discussion.programme and not can_view_programme(discussion.programme, user):
+        return None
+
+    existing_follow = DiscussionFollow.query.filter_by(
+        user_id=user.id,
+        discussion_id=discussion.id,
+    ).first()
+    if existing_follow:
+        return discussion
+
+    db.session.add(DiscussionFollow(user_id=user.id, discussion_id=discussion.id))
+    try:
+        db.session.commit()
+        flash('Discussion saved. We will keep it handy in your dashboard.', 'success')
+        return discussion
+    except Exception:
+        db.session.rollback()
+        current_app.logger.warning(
+            'Failed to save pending followed discussion %s for user %s',
+            discussion_id,
+            user.id,
+        )
+        return None
+
+
+def _query_saved_discussions(user):
+    query = Discussion.query.join(
+        DiscussionFollow,
+        DiscussionFollow.discussion_id == Discussion.id,
+    ).filter(
+        DiscussionFollow.user_id == user.id,
+        Discussion.partner_env != 'test',
+    )
+    query = apply_discussion_visibility(query, user)
+    return query
+
+
+def _recent_participating_discussions(user, limit=6):
+    activity_by_discussion = {}
+
+    def add_activity(discussion, timestamp, activity_key):
+        if not discussion or discussion.partner_env == 'test':
+            return
+        if discussion.programme and not can_view_programme(discussion.programme, user):
+            return
+        row = activity_by_discussion.setdefault(
+            discussion.id,
+            {
+                'discussion': discussion,
+                'last_activity': timestamp,
+                'activity_types': set(),
+            },
+        )
+        if timestamp and (row['last_activity'] is None or timestamp > row['last_activity']):
+            row['last_activity'] = timestamp
+        row['activity_types'].add(activity_key)
+
+    participant_rows = DiscussionParticipant.query.options(
+        db.joinedload(DiscussionParticipant.discussion).joinedload(Discussion.programme)
+    ).filter_by(
+        user_id=user.id,
+    ).order_by(
+        DiscussionParticipant.last_activity.desc(),
+        DiscussionParticipant.id.desc(),
+    ).limit(limit * 4).all()
+    for participant in participant_rows:
+        add_activity(
+            participant.discussion,
+            participant.last_activity or participant.joined_at,
+            'voted',
+        )
+
+    statement_rows = Statement.query.options(
+        db.joinedload(Statement.discussion).joinedload(Discussion.programme)
+    ).filter(
+        Statement.user_id == user.id,
+        Statement.is_deleted.is_(False),
+    ).order_by(
+        Statement.created_at.desc(),
+        Statement.id.desc(),
+    ).limit(limit * 4).all()
+    for statement in statement_rows:
+        add_activity(statement.discussion, statement.updated_at or statement.created_at, 'statement')
+
+    response_rows = Response.query.options(
+        db.joinedload(Response.statement).joinedload(Statement.discussion).joinedload(Discussion.programme)
+    ).filter(
+        Response.user_id == user.id,
+        Response.is_deleted.is_(False),
+    ).order_by(
+        Response.created_at.desc(),
+        Response.id.desc(),
+    ).limit(limit * 4).all()
+    for response in response_rows:
+        discussion = response.statement.discussion if response.statement else None
+        add_activity(discussion, response.updated_at or response.created_at, 'response')
+
+    rows = sorted(
+        activity_by_discussion.values(),
+        key=lambda row: row['last_activity'] or datetime.min,
+        reverse=True,
+    )
+    return rows[:limit]
+
+
+def _recent_user_contributions(user, limit=12):
+    entries = []
+
+    statement_rows = Statement.query.options(
+        db.joinedload(Statement.discussion)
+    ).filter(
+        Statement.user_id == user.id,
+        Statement.is_deleted.is_(False),
+    ).order_by(
+        Statement.created_at.desc(),
+        Statement.id.desc(),
+    ).limit(limit).all()
+    for statement in statement_rows:
+        discussion = statement.discussion
+        if not discussion or discussion.partner_env == 'test':
+            continue
+        if discussion.programme and not can_view_programme(discussion.programme, user):
+            continue
+        entries.append(
+            {
+                'kind': 'statement',
+                'created_at': statement.created_at,
+                'title': statement.content,
+                'discussion': discussion,
+                'url': url_for('statements.view_statement', statement_id=statement.id),
+            }
+        )
+
+    response_rows = Response.query.options(
+        db.joinedload(Response.statement).joinedload(Statement.discussion)
+    ).filter(
+        Response.user_id == user.id,
+        Response.is_deleted.is_(False),
+    ).order_by(
+        Response.created_at.desc(),
+        Response.id.desc(),
+    ).limit(limit).all()
+    for response in response_rows:
+        statement = response.statement
+        discussion = statement.discussion if statement else None
+        if not discussion or discussion.partner_env == 'test':
+            continue
+        if discussion.programme and not can_view_programme(discussion.programme, user):
+            continue
+        entries.append(
+            {
+                'kind': 'response',
+                'created_at': response.created_at,
+                'title': response.content,
+                'discussion': discussion,
+                'url': url_for('statements.view_response', response_id=response.id),
+            }
+        )
+
+    entries.sort(key=lambda row: row['created_at'] or datetime.min, reverse=True)
+    return entries[:limit]
 
 @auth_bp.route('/verify-email/<token>', methods=['GET'])
 @limiter.limit("20/minute")
@@ -155,6 +352,7 @@ def handle_invitation(token):
 @limiter.limit("5/hour")
 def register():
     import random
+    next_url = _current_next_url()
 
     # Capture checkout intent from query params (for briefing signups)
     checkout_plan = request.args.get('checkout_plan')
@@ -189,16 +387,16 @@ def register():
         # Validation checks
         if not username or not email_raw or not password:
             flash("All fields are required.", "error")
-            return redirect(url_for('auth.register'))
+            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         if len(password) < 8:
             flash("Password must be at least 8 characters.", "error")
-            return redirect(url_for('auth.register'))
+            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         clean_email = extract_clean_email(email_raw)
         if clean_email is None:
             flash("Please provide a valid email address.", "error")
-            return redirect(url_for('auth.register'))
+            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
         email = clean_email.lower()
 
         # Get spam patterns from config
@@ -208,11 +406,11 @@ def register():
         input_text = f"{username.lower()} {email}"
         if any(pattern in input_text for pattern in spam_patterns):
             flash("Registration denied due to suspicious content", "error")
-            return redirect(url_for('auth.register'))
+            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         if User.query.filter_by(email=email).first():
             flash("Email already registered. Please log in.", "error")
-            return redirect(url_for('auth.register'))
+            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         # Verify CAPTCHA (server-side session validation)
         verification = request.form.get('verification')
@@ -221,22 +419,22 @@ def register():
         # Check if session has expected value (prevents replay attacks)
         if expected is None:
             flash("Session expired. Please try again.", "error")
-            return redirect(url_for('auth.register'))
+            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         # Check if verification answer was provided
         if not verification:
             flash("Please answer the verification question.", "error")
-            return redirect(url_for('auth.register'))
+            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         try:
             verification_int = int(verification)
         except (ValueError, TypeError):
             flash("Incorrect verification answer. Please try again.", "error")
-            return redirect(url_for('auth.register'))
+            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         if verification_int != expected:
             flash("Incorrect verification answer. Please try again.", "error")
-            return redirect(url_for('auth.register'))
+            return redirect(url_for('auth.register', next=next_url) if next_url else url_for('auth.register'))
 
         # Hash the password and create the user
         hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
@@ -264,6 +462,8 @@ def register():
         # Auto-login the new user for frictionless checkout flow
         login_user(new_user)
         sync_partner_portal_session_for_email(new_user.email)
+        _set_pending_post_auth_redirect(next_url)
+        _consume_pending_discussion_follow(new_user)
 
         # Auto-link any pending steward invites sent to this email address
         from app.models import ProgrammeSteward
@@ -300,6 +500,9 @@ def register():
 
         # No pending checkout - normal registration flow
         flash("Welcome! We've sent a verification email. You can continue setting up your account.", "success")
+        pending_redirect = _peek_pending_post_auth_redirect()
+        if pending_redirect:
+            return redirect(url_for('profiles.select_profile_type', next=pending_redirect))
         return redirect(url_for('profiles.select_profile_type'))
 
     # GET request - generate fresh CAPTCHA
@@ -308,6 +511,7 @@ def register():
     return render_template('auth/register.html',
                          invitation_email=pending_invitation_email,
                          invitation_org=pending_invitation_org,
+                         next_url=next_url,
                          captcha_num1=captcha_num1,
                          captcha_num2=captcha_num2)
 
@@ -320,13 +524,17 @@ def register():
 @auth_bp.route('/login', methods=['GET', 'POST'])
 @limiter.limit("10/minute")
 def login():
+    next_url = _current_next_url()
     # Guard: if a concurrent/duplicate POST arrives after the first already
     # logged the user in, skip re-processing to prevent duplicate flash messages.
     if current_user.is_authenticated:
         profile = current_user.individual_profile or current_user.company_profile
         if not profile:
+            destination = next_url or _peek_pending_post_auth_redirect()
+            if destination:
+                return redirect(url_for('profiles.select_profile_type', next=destination))
             return redirect(url_for('profiles.select_profile_type'))
-        return redirect(url_for('auth.dashboard'))
+        return redirect(next_url or _peek_pending_post_auth_redirect() or url_for('auth.dashboard'))
 
     if request.method == 'POST':
         email = normalize_email(request.form.get('email'))
@@ -347,17 +555,19 @@ def login():
                     f"Too many failed attempts. Please try again in {remaining} seconds.",
                     "error",
                 )
-                return redirect(url_for('auth.login'))
+                return redirect(url_for('auth.login', next=next_url) if next_url else url_for('auth.login'))
             flash("Invalid email or password.", "error")
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('auth.login', next=next_url) if next_url else url_for('auth.login'))
 
         # User record found - verify password
         if not check_password_hash(user.password, password):
             flash("Invalid email or password.", "error")
-            return redirect(url_for('auth.login'))
+            return redirect(url_for('auth.login', next=next_url) if next_url else url_for('auth.login'))
 
         # Log the user in
         login_user(user)
+        _set_pending_post_auth_redirect(next_url)
+        _consume_pending_discussion_follow(user)
 
         # Keep partner portal session in sync with the authenticated user so a
         # reused browser session cannot retain access from another account.
@@ -417,6 +627,9 @@ def login():
 
         if not profile:
             # Redirect to profile setup if no profile exists
+            pending_redirect = _peek_pending_post_auth_redirect()
+            if pending_redirect:
+                return redirect(url_for('profiles.select_profile_type', next=pending_redirect))
             return redirect(url_for('profiles.select_profile_type'))
 
         # If the user has a profile, check for missing fields and send reminder if necessary
@@ -453,9 +666,9 @@ def login():
                     current_app.logger.error(f"Failed to send profile reminder: {e}")
 
         # Redirect to the dashboard if the user has a complete or partially complete profile
-        return redirect(url_for('auth.dashboard'))
+        return redirect(_pop_pending_post_auth_redirect() or url_for('auth.dashboard'))
 
-    return render_template('auth/login.html')
+    return render_template('auth/login.html', next_url=next_url)
 
 
 
@@ -513,6 +726,34 @@ def dashboard():
     dq_sub = DailyQuestionSubscriber.query.filter_by(email=current_user.email).first()
     active_subscription = get_active_subscription(current_user)
     has_briefings_plan = bool(active_subscription)
+    participating_discussions = _recent_participating_discussions(current_user, limit=6)
+    recent_contributions = _recent_user_contributions(current_user, limit=1)
+    saved_discussions = _query_saved_discussions(current_user).order_by(
+        DiscussionFollow.created_at.desc(),
+        Discussion.id.desc(),
+    ).limit(6).all()
+    recent_notifications = Notification.query.filter_by(user_id=current_user.id).order_by(
+        Notification.created_at.desc(),
+        Notification.id.desc(),
+    ).limit(5).all()
+    unread_notifications = Notification.unread_count_for_user(current_user.id)
+    continue_item = recent_contributions[0] if recent_contributions else None
+    continue_discussion = continue_item['discussion'] if continue_item else None
+    continue_url = continue_item['url'] if continue_item else None
+    continue_label = None
+    continue_summary = None
+    if continue_item:
+        continue_label = 'Continue your latest response' if continue_item['kind'] == 'response' else 'Continue your latest statement'
+        continue_summary = continue_item['title']
+    elif participating_discussions:
+        continue_discussion = participating_discussions[0]['discussion']
+        continue_url = url_for(
+            'discussions.view_discussion',
+            discussion_id=continue_discussion.id,
+            slug=continue_discussion.slug,
+        )
+        continue_label = 'Continue this discussion'
+        continue_summary = continue_discussion.description or None
 
     return render_template(
         'auth/dashboard.html',
@@ -527,6 +768,14 @@ def dashboard():
         dq_sub=dq_sub,
         has_briefings_plan=has_briefings_plan,
         active_subscription=active_subscription,
+        participating_discussions=participating_discussions,
+        recent_notifications=recent_notifications,
+        saved_discussions=saved_discussions,
+        unread_notifications=unread_notifications,
+        continue_discussion=continue_discussion,
+        continue_url=continue_url,
+        continue_label=continue_label,
+        continue_summary=continue_summary,
     )
 
 
@@ -613,6 +862,85 @@ def my_discussions():
         pagination=pagination,
         q=q,
     )
+
+
+@auth_bp.route('/dashboard/participation')
+@login_required
+def participation():
+    participating_discussions = _recent_participating_discussions(current_user, limit=24)
+    recent_contributions = _recent_user_contributions(current_user, limit=20)
+    return render_template(
+        'auth/participation.html',
+        participating_discussions=participating_discussions,
+        recent_contributions=recent_contributions,
+    )
+
+
+@auth_bp.route('/dashboard/saved')
+@login_required
+def saved_discussions():
+    page = max(request.args.get('page', 1, type=int), 1)
+    q = request.args.get('q', '').strip()[:100]
+
+    query = _query_saved_discussions(current_user)
+    if q:
+        query = query.filter(
+            or_(
+                Discussion.title.ilike(f'%{q}%'),
+                Discussion.description.ilike(f'%{q}%'),
+            )
+        )
+
+    pagination = query.order_by(
+        DiscussionFollow.created_at.desc(),
+        Discussion.id.desc(),
+    ).paginate(page=page, per_page=12, error_out=False)
+    return render_template(
+        'auth/saved_discussions.html',
+        discussions=pagination.items,
+        pagination=pagination,
+        q=q,
+    )
+
+
+@auth_bp.route('/dashboard/notifications')
+@login_required
+def notifications():
+    page = max(request.args.get('page', 1, type=int), 1)
+    pagination = Notification.query.filter_by(user_id=current_user.id).order_by(
+        Notification.created_at.desc(),
+        Notification.id.desc(),
+    ).paginate(page=page, per_page=20, error_out=False)
+    return render_template(
+        'auth/notifications.html',
+        notifications=pagination.items,
+        pagination=pagination,
+        unread_notifications=Notification.unread_count_for_user(current_user.id),
+    )
+
+
+@auth_bp.route('/dashboard/notifications/<int:notification_id>/read', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    notification = Notification.query.filter_by(
+        id=notification_id,
+        user_id=current_user.id,
+    ).first_or_404()
+    if not notification.is_read:
+        notification.is_read = True
+        db.session.commit()
+    return redirect(_safe_referrer_or('auth.notifications'))
+
+
+@auth_bp.route('/dashboard/notifications/read-all', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    updated = Notification.mark_all_as_read_for_user(current_user.id)
+    if updated:
+        flash('All notifications marked as read.', 'success')
+    else:
+        flash('You have no unread notifications.', 'info')
+    return redirect(_safe_referrer_or('auth.notifications'))
 
 
 @auth_bp.route('/logout')

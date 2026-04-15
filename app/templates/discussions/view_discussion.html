@@ -95,6 +95,35 @@
 
       <!-- Right side actions -->
       <div class="flex items-center gap-2">
+        {% if current_user.is_authenticated %}
+        <form method="POST" action="{{ url_for('discussions.unfollow_discussion', discussion_id=discussion.id) if is_following else url_for('discussions.follow_discussion', discussion_id=discussion.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+          <button
+            type="submit"
+            class="inline-flex items-center px-3 py-2 border rounded-md shadow-sm text-sm font-medium {% if is_following %}border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100{% else %}border-gray-300 text-gray-700 bg-white hover:bg-gray-50{% endif %}"
+          >
+            <svg class="w-4 h-4 mr-1.5" fill="{% if is_following %}currentColor{% else %}none{% endif %}" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+            {{ 'Saved' if is_following else 'Save Discussion' }}
+          </button>
+        </form>
+        {% else %}
+        <div class="flex flex-col items-end gap-1">
+          <a
+            href="{{ url_for('discussions.start_follow_discussion', discussion_id=discussion.id, next=request.full_path.rstrip('?')) }}"
+            class="inline-flex items-center px-3 py-2 border rounded-md shadow-sm text-sm font-medium border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+          >
+            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+            </svg>
+            Save Discussion
+          </a>
+          <p class="text-xs text-gray-500">Sign in to save this discussion and get updates.</p>
+        </div>
+        {% endif %}
+
         {% if current_user.is_authenticated and (discussion.creator_id == current_user.id or current_user.is_admin) %}
         <a href="{{ url_for('discussions.edit_discussion', discussion_id=discussion.id) }}"
            class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
@@ -523,6 +552,84 @@
 
   {% if discussion.information_title or discussion.information_body or discussion.information_links %}
   {% include 'discussions/_information_step.html' %}
+  {% endif %}
+
+  {% if discussion_updates %}
+  <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <div class="max-w-3xl mx-auto">
+      <div class="flex items-center justify-between gap-4 mb-5">
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900">What Happened Next</h2>
+          <p class="text-sm text-gray-500 mt-1">Organiser and steward updates, outcomes, and next steps.</p>
+        </div>
+        {% if can_manage_updates %}
+        <a href="{{ url_for('discussions.create_discussion_update', discussion_id=discussion.id) }}"
+           class="inline-flex items-center px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+          Add update
+        </a>
+        {% endif %}
+      </div>
+
+      <div class="space-y-4">
+        {% for item in discussion_updates %}
+        {% set update = item.record %}
+        <article class="rounded-lg border border-gray-200 p-5">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap mb-2">
+                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium
+                  {% if update.update_type == 'outcome' %}bg-green-100 text-green-800
+                  {% elif update.update_type == 'next_step' %}bg-amber-100 text-amber-800
+                  {% else %}bg-blue-100 text-blue-800{% endif %}">
+                  {{ update.update_type.replace('_', ' ')|title }}
+                </span>
+                <span class="text-xs text-gray-500">{{ update.created_at.strftime('%b %d, %Y') }}</span>
+                {% if update.author %}
+                <span class="text-xs text-gray-500">by {{ update.author.username }}</span>
+                {% endif %}
+              </div>
+              <h3 class="text-lg font-semibold text-gray-900">{{ update.title }}</h3>
+            </div>
+            {% if can_manage_updates %}
+            <div class="flex items-center gap-2">
+              <a href="{{ url_for('discussions.edit_discussion_update', discussion_id=discussion.id, update_id=update.id) }}"
+                 class="text-sm text-blue-600 hover:text-blue-700 hover:underline">Edit</a>
+              <form method="POST" action="{{ url_for('discussions.delete_discussion_update', discussion_id=discussion.id, update_id=update.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="text-sm text-red-600 hover:text-red-700 hover:underline" onclick="return confirm('Delete this update? This cannot be undone.')">Delete</button>
+              </form>
+            </div>
+            {% endif %}
+          </div>
+          <div class="prose max-w-none text-gray-700">{{ item.body_html|safe }}</div>
+          {% if item.links %}
+          <div class="mt-4 flex flex-col gap-2">
+            {% for link in item.links %}
+            <a href="{{ link.url }}" target="_blank" rel="noopener noreferrer"
+               class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline">
+              {{ link.label }}
+            </a>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% elif can_manage_updates %}
+  <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+    <div class="max-w-3xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h2 class="text-xl font-semibold text-gray-900">What Happened Next</h2>
+        <p class="text-sm text-gray-500 mt-1">Add the first update to capture outcomes, decisions, or next steps.</p>
+      </div>
+      <a href="{{ url_for('discussions.create_discussion_update', discussion_id=discussion.id) }}"
+         class="inline-flex items-center px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+        Add update
+      </a>
+    </div>
+  </div>
   {% endif %}
 
   <!-- Native vs Pol.is Discussion Rendering -->

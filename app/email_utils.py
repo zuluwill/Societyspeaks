@@ -125,6 +125,22 @@ def send_discussion_notification_email(user, discussion, notification_type, addi
     return resend_send_notification(user, discussion, notification_type, additional_data)
 
 
+def user_accepts_discussion_notification_email(user, notification_type: str) -> bool:
+    """Master email toggle plus per-type preferences (DRY gate for outbound mail)."""
+    if not user or not getattr(user, 'email_notifications', True):
+        return False
+    nt = (notification_type or '').strip().lower().replace('-', '_')
+    if nt == 'new_participant':
+        return bool(getattr(user, 'discussion_participant_notifications', True))
+    if nt == 'new_response':
+        return bool(getattr(user, 'discussion_response_notifications', True))
+    if nt == 'discussion_update':
+        return bool(getattr(user, 'discussion_update_notifications', True))
+    if nt == 'discussion_active':
+        return bool(getattr(user, 'discussion_response_notifications', True))
+    return False
+
+
 def create_discussion_notification(user_id, discussion_id, notification_type, additional_data=None):
     """Create a notification and optionally send email"""
     from app.models import Notification, User, Discussion
@@ -134,30 +150,39 @@ def create_discussion_notification(user_id, discussion_id, notification_type, ad
         if notification_type:
             notification_type = notification_type.strip().lower().replace('-', '_')
         
-        valid_types = {'new_participant', 'new_response', 'discussion_active'}
+        valid_types = {'new_participant', 'new_response', 'discussion_active', 'discussion_update'}
         if notification_type not in valid_types:
             current_app.logger.warning(f"Unknown notification type: {notification_type}")
             return None
-        
+
         user = db.session.get(User, user_id)
         discussion = db.session.get(Discussion, discussion_id)
-        
+
         if not user or not discussion:
             current_app.logger.warning(f"User {user_id} or discussion {discussion_id} not found")
             return None
-        
-        send_email_notification = (
-            user.email_notifications and
-            ((notification_type == 'new_participant' and user.discussion_participant_notifications) or
-             (notification_type == 'new_response' and user.discussion_response_notifications))
+
+        send_email_notification = user_accepts_discussion_notification_email(
+            user, notification_type
         )
-        
+
+        is_discussion_host = user.id == discussion.creator_id
+
         if notification_type == 'new_participant':
             title = f"New participant in '{discussion.title}'"
             message = f"Someone new has joined your discussion '{discussion.title}'"
         elif notification_type == 'new_response':
-            title = f"New response in '{discussion.title}'"
-            message = f"There's new activity in your discussion '{discussion.title}'"
+            if is_discussion_host:
+                title = f"New activity in '{discussion.title}'"
+                message = f"There's new activity in your discussion '{discussion.title}'"
+            else:
+                title = f"New activity in '{discussion.title}'"
+                message = (
+                    f"There's new activity in a discussion you're following: '{discussion.title}'"
+                )
+        elif notification_type == 'discussion_update':
+            title = f"Update posted to '{discussion.title}'"
+            message = f"A new update was posted to '{discussion.title}'"
         else:
             title = f"Activity in '{discussion.title}'"
             message = f"There's been activity in your discussion '{discussion.title}'"

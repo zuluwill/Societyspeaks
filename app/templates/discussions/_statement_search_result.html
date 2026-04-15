@@ -1,0 +1,62 @@
+<article class="bg-white rounded-lg shadow p-5">
+  <div class="mb-3 flex flex-wrap items-center gap-2 text-sm text-gray-500">
+    <a
+      href="{{ url_for('discussions.view_discussion', discussion_id=statement.discussion.id, slug=statement.discussion.slug) }}"
+      class="font-medium text-blue-600 hover:text-blue-700 hover:underline"
+    >
+      {{ statement.discussion.title }}
+    </a>
+    {% if statement.discussion.topic %}
+    <span>·</span>
+    <span>{{ statement.discussion.topic }}</span>
+    {% endif %}
+    <span>·</span>
+    <span>{{ statement.created_at.strftime('%b %d, %Y') }}</span>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 p-5">
+    <div class="flex items-start justify-between gap-4">
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-3">
+          <span class="bg-gray-100 px-2 py-1 rounded font-semibold">{{ statement.statement_type|upper }}</span>
+          <span>Posted by {% if statement.user %}{{ statement.user.username }}{% else %}<span class="text-gray-400">Anonymous</span>{% endif %}</span>
+        </div>
+        <p class="text-lg text-gray-900 leading-relaxed break-words">{{ statement.content }}</p>
+      </div>
+    </div>
+
+    <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div class="rounded-lg bg-blue-50 px-4 py-3 text-center">
+        <div class="text-lg font-semibold text-blue-700">{{ statement.vote_count_agree }}</div>
+        <div class="text-xs text-blue-700">Agree</div>
+      </div>
+      <div class="rounded-lg bg-red-50 px-4 py-3 text-center">
+        <div class="text-lg font-semibold text-red-700">{{ statement.vote_count_disagree }}</div>
+        <div class="text-xs text-red-700">Disagree</div>
+      </div>
+      <div class="rounded-lg bg-gray-100 px-4 py-3 text-center">
+        <div class="text-lg font-semibold text-gray-700">{{ statement.vote_count_unsure }}</div>
+        <div class="text-xs text-gray-600">Unsure</div>
+      </div>
+      <div class="rounded-lg bg-slate-100 px-4 py-3 text-center">
+        <div class="text-lg font-semibold text-slate-800">{{ statement.total_votes }}</div>
+        <div class="text-xs text-slate-600">Total votes</div>
+      </div>
+    </div>
+
+    <div class="mt-4 flex flex-col sm:flex-row gap-2">
+      <a
+        href="{{ url_for('statements.view_statement', statement_id=statement.id) }}"
+        class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700"
+      >
+        View statement
+      </a>
+      <a
+        href="{{ url_for('discussions.view_discussion', discussion_id=statement.discussion.id, slug=statement.discussion.slug) }}#statement-{{ statement.id }}"
+        class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+      >
+        Open in discussion
+      </a>
+    </div>
+  </div>
+</article>

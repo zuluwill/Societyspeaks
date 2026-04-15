@@ -9,6 +9,9 @@
 
             <form method="POST" enctype="multipart/form-data" class="p-8" id="companyProfileForm">
                 {{ form.csrf_token }}
+                {% if next_url %}
+                <input type="hidden" name="next" value="{{ next_url }}">
+                {% endif %}
 
                 {% block form_messages %}
                 {% with messages = get_flashed_messages(with_categories=true) %}

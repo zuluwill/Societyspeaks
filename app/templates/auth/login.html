@@ -18,8 +18,11 @@
     {% endif %}
     {% endwith %}
 
-    <form method="POST" action="{{ url_for('auth.login') }}" class="mt-6">
+    <form method="POST" action="{{ url_for('auth.login', next=next_url) if next_url else url_for('auth.login') }}" class="mt-6">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if next_url %}
+        <input type="hidden" name="next" value="{{ next_url }}">
+        {% endif %}
         <label class="block text-sm font-medium text-gray-700">Email</label>
         <input type="email" name="email" autocomplete="email" class="mt-1 p-2 w-full border rounded-lg focus:border-blue-500 focus:ring-blue-500" required>
 
@@ -45,6 +48,6 @@
       })();
     </script>
 
-    <p class="text-center mt-4 text-sm text-gray-600">Don't have an account? <a href="{{ url_for('auth.register') }}" class="text-blue-500 hover:underline">Register</a></p>
+    <p class="text-center mt-4 text-sm text-gray-600">Don't have an account? <a href="{{ url_for('auth.register', next=next_url) if next_url else url_for('auth.register') }}" class="text-blue-500 hover:underline">Register</a></p>
 </div>
 {% endblock %}

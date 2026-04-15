@@ -13,7 +13,8 @@ class ChangePasswordForm(FlaskForm):
 class NotificationPreferencesForm(FlaskForm):
     email_notifications = BooleanField('Enable email notifications')
     discussion_participant_notifications = BooleanField('New participants')
-    discussion_response_notifications = BooleanField('New responses')
+    discussion_response_notifications = BooleanField('Discussion activity')
+    discussion_update_notifications = BooleanField('Discussion updates')
     weekly_digest_enabled = BooleanField('Weekly digest')
     submit = SubmitField('Save Notification Preferences')
 

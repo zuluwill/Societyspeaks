@@ -16,6 +16,7 @@ import json
 import time
 import io
 from pathlib import Path
+from app.lib.url_utils import safe_next_url as _safe_next_url
 
 
 profiles_bp = Blueprint('profiles', __name__, template_folder='../templates/profiles')
@@ -25,6 +26,7 @@ client = Client()
 # Allowed file extensions for uploads
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif', 'webp'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
@@ -171,13 +173,17 @@ def get_static_asset(filename):
 @profiles_bp.route('/profile/select')
 @login_required
 def select_profile_type():
-    return render_template('profiles/select_profile_type.html')
+    return render_template(
+        'profiles/select_profile_type.html',
+        next_url=_safe_next_url(request.args.get('next')),
+    )
 
 
 @profiles_bp.route('/profile/individual/new', methods=['GET', 'POST'])
 @login_required
 def create_individual_profile():
     form = IndividualProfileForm()
+    next_url = _safe_next_url(request.form.get('next') or request.args.get('next'))
     if form.validate_on_submit():
         try:
             profile_image = None
@@ -238,21 +244,22 @@ def create_individual_profile():
                 current_app.logger.warning(f"PostHog tracking error: {e}")
 
             flash("Profile created! You're all set — start a discussion or create a programme from your dashboard.", "success")
-            return redirect(url_for('auth.dashboard'))
+            return redirect(next_url or url_for('auth.dashboard'))
 
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error creating profile: {str(e)}")
             flash("Error creating profile. Please try again.", "error")
-            return render_template('profiles/create_individual_profile.html', form=form)
+            return render_template('profiles/create_individual_profile.html', form=form, next_url=next_url)
 
-    return render_template('profiles/create_individual_profile.html', form=form)
+    return render_template('profiles/create_individual_profile.html', form=form, next_url=next_url)
 
 
 @profiles_bp.route('/profile/company/new', methods=['GET', 'POST'])
 @login_required
 def create_company_profile():
     form = CompanyProfileForm()
+    next_url = _safe_next_url(request.form.get('next') or request.args.get('next'))
     if form.validate_on_submit():
         try:
             logo = None
@@ -307,7 +314,7 @@ def create_company_profile():
                 current_app.logger.warning(f"PostHog tracking error: {e}")
 
             flash("Profile created! You're all set — start a discussion or create a programme from your dashboard.", "success")
-            return redirect(url_for('auth.dashboard'))
+            return redirect(next_url or url_for('auth.dashboard'))
 
         except Exception as e:
             db.session.rollback()
@@ -323,9 +330,9 @@ def create_company_profile():
                 except Exception:
                     pass
             flash("Error creating company profile. Please try again.", "error")
-            return render_template('profiles/create_company_profile.html', form=form)
+            return render_template('profiles/create_company_profile.html', form=form, next_url=next_url)
 
-    return render_template('profiles/create_company_profile.html', form=form)
+    return render_template('profiles/create_company_profile.html', form=form, next_url=next_url)
 
 
 

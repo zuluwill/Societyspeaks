@@ -56,7 +56,21 @@ def parse_cohorts_csv(raw_text):
     return rows
 
 
-def safe_information_links(raw_links):
+def parse_label_url_lines(raw_text):
+    if not raw_text:
+        return []
+
+    rows = []
+    for line in raw_text.splitlines():
+        cleaned = line.strip()
+        if not cleaned or "|" not in cleaned:
+            continue
+        label, url = cleaned.split("|", 1)
+        rows.append({"label": label.strip(), "url": url.strip()})
+    return rows
+
+
+def safe_label_url_links(raw_links):
     safe_links = []
     if not isinstance(raw_links, list):
         return safe_links
@@ -74,7 +88,7 @@ def safe_information_links(raw_links):
     return safe_links
 
 
-def render_safe_information_markdown(markdown_text):
+def render_safe_markdown(markdown_text):
     if not markdown_text:
         return ""
     if md is None or bleach is None:
@@ -88,6 +102,14 @@ def render_safe_information_markdown(markdown_text):
         protocols=ALLOWED_INFORMATION_PROTOCOLS,
         strip=True
     )
+
+
+def safe_information_links(raw_links):
+    return safe_label_url_links(raw_links)
+
+
+def render_safe_information_markdown(markdown_text):
+    return render_safe_markdown(markdown_text)
 
 
 def get_programme_cohort_slugs(programme):

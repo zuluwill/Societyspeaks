@@ -77,41 +77,79 @@
       </a>
     </div>
 
-    <!-- Sorting Options -->
-    <div class="flex items-center space-x-2 w-full sm:w-auto">
-      <label class="text-sm text-gray-600 font-medium whitespace-nowrap"
-        >Sort by:</label
-      >
-      <select
-        id="sortSelect"
-        class="flex-1 sm:flex-none border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
-        style="
-          background-image: url(&quot;data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e&quot;);
-          background-repeat: no-repeat;
-          background-position: right 0.75rem center;
-          background-size: 1.25rem 1.25rem;
-        "
-        data-base-url="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
-        data-cohort-slug="{{ cohort_slug or '' }}"
-      >
-        <option value="progressive" {% if sort == 'progressive' %}selected{% endif %}>
-          Progressive (Pol.is Style)
-        </option>
-        <option value="best" {% if sort == 'best' %}selected{% endif %}>
-          Best (Most Agreed)
-        </option>
-        <option value="controversial" {% if sort == 'controversial' %}selected{% endif %}>
-          Controversial
-        </option>
-        <option value="recent" {% if sort == 'recent' %}selected{% endif %}>
-          Recent
-        </option>
-        <option value="most_voted" {% if sort == 'most_voted' %}selected{% endif %}>
-          Most Voted
-        </option>
-      </select>
+    <div class="flex flex-col sm:flex-row w-full sm:w-auto gap-3 sm:items-center">
+      <form method="GET" action="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}" class="flex items-center gap-2 w-full sm:w-auto">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        {% if cohort_slug %}<input type="hidden" name="cohort" value="{{ cohort_slug }}">{% endif %}
+        <label for="statementSearch" class="sr-only">Search statements</label>
+        <input
+          id="statementSearch"
+          type="search"
+          name="q"
+          value="{{ statement_search_term }}"
+          placeholder="Search statements..."
+          class="w-full sm:w-64 border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+        <button type="submit" class="px-4 py-2.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          Search
+        </button>
+      </form>
+
+      <!-- Sorting Options -->
+      <div class="flex items-center space-x-2 w-full sm:w-auto">
+        <label class="text-sm text-gray-600 font-medium whitespace-nowrap"
+          >Sort by:</label
+        >
+        <select
+          id="sortSelect"
+          class="flex-1 sm:flex-none border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+          style="
+            background-image: url(&quot;data:image/svg+xml;charset=UTF-8,%3csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27currentColor%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3e%3cpolyline points=%276 9 12 15 18 9%27%3e%3c/polyline%3e%3c/svg%3e&quot;);
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.25rem 1.25rem;
+          "
+          data-base-url="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug) }}"
+          data-cohort-slug="{{ cohort_slug or '' }}"
+          data-search-term="{{ statement_search_term or '' }}"
+        >
+          <option value="progressive" {% if sort == 'progressive' %}selected{% endif %}>
+            Progressive (Pol.is Style)
+          </option>
+          <option value="best" {% if sort == 'best' %}selected{% endif %}>
+            Best (Most Agreed)
+          </option>
+          <option value="controversial" {% if sort == 'controversial' %}selected{% endif %}>
+            Controversial
+          </option>
+          <option value="recent" {% if sort == 'recent' %}selected{% endif %}>
+            Recent
+          </option>
+          <option value="most_voted" {% if sort == 'most_voted' %}selected{% endif %}>
+            Most Voted
+          </option>
+        </select>
+      </div>
     </div>
   </div>
+
+  {% if statement_search_term %}
+  <div class="mb-4 text-sm text-gray-500">
+    Showing {{ statements_pagination.total if statements_pagination else 0 }} matching statement{{ '' if (statements_pagination and statements_pagination.total == 1) else 's' }} for
+    <span class="font-medium text-gray-700">"{{ statement_search_term }}"</span>.
+    {% if cohort_slug %}
+    <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, sort=sort, cohort=cohort_slug) }}" class="text-blue-600 hover:text-blue-700 hover:underline">Clear search</a>
+    {% else %}
+    <a href="{{ url_for('discussions.view_discussion', discussion_id=discussion.id, slug=discussion.slug, sort=sort) }}" class="text-blue-600 hover:text-blue-700 hover:underline">Clear search</a>
+    {% endif %}
+    <span class="mx-1">·</span>
+    <a href="{{ url_for('discussions.search_statements', q=statement_search_term) }}" class="text-blue-600 hover:text-blue-700 hover:underline">Search all statements</a>
+  </div>
+  {% else %}
+  <div class="mb-4 text-sm text-gray-500">
+    Need to find a specific claim? <a href="{{ url_for('discussions.search_statements') }}" class="text-blue-600 hover:text-blue-700 hover:underline">Search all statements</a>.
+  </div>
+  {% endif %}
 
   {% if cohort_slug and discussion.programme and discussion.programme.cohorts %}
   {% set cohort_ns = namespace(label=cohort_slug) %}
@@ -363,6 +401,7 @@
     data-has-next="{{ 'true' if statements_pagination.has_next else 'false' }}"
     data-total-pages="{{ statements_pagination.pages }}"
     data-sort="{{ sort }}"
+    data-search="{{ statement_search_term or '' }}"
     data-cohort="{{ cohort_slug or '' }}">
     <div class="text-sm text-gray-500" id="lazyLoadStatus">
       Loaded {{ statements|length }} of {{ statements_pagination.total }} statements (page {{ statements_pagination.page }} of {{ statements_pagination.pages }})
@@ -511,8 +550,10 @@
       if (!controls) return null;
       const sort = controls.dataset.sort || 'progressive';
       const cohort = controls.dataset.cohort || '';
+      const search = controls.dataset.search || '';
       const params = new URLSearchParams({ sort, page: String(page) });
       if (cohort) params.set('cohort', cohort);
+      if (search) params.set('q', search);
       return `{{ url_for('discussions.api_discussion_statements', discussion_id=discussion.id) }}?${params.toString()}`;
   }
 
@@ -829,8 +870,10 @@
       sortSelect.addEventListener('change', function() {
           const baseUrl = this.getAttribute('data-base-url');
           const cohortSlug = this.getAttribute('data-cohort-slug');
+          const searchTerm = this.getAttribute('data-search-term');
           let url = baseUrl + '?sort=' + encodeURIComponent(this.value);
           if (cohortSlug) url += '&cohort=' + encodeURIComponent(cohortSlug);
+          if (searchTerm) url += '&q=' + encodeURIComponent(searchTerm);
           window.location.href = url;
       });
   }

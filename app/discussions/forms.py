@@ -334,3 +334,29 @@ class EditDiscussionForm(FlaskForm):
             return False
 
         return True
+
+
+class DiscussionUpdateForm(FlaskForm):
+    update_type = SelectField(
+        'Update Type',
+        choices=[
+            ('update', 'General update'),
+            ('outcome', 'Outcome'),
+            ('next_step', 'Next step'),
+        ],
+        validators=[DataRequired()],
+    )
+    title = StringField(
+        'Title',
+        validators=[DataRequired(), Length(min=5, max=200, message="Title must be between 5 and 200 characters")],
+    )
+    body = TextAreaField(
+        'Body',
+        validators=[DataRequired(), Length(min=20, max=10000, message="Body must be between 20 and 10000 characters")],
+        description='Markdown only. Raw HTML is not supported.',
+    )
+    links = TextAreaField(
+        'Related Links (one per line: Label|https://url)',
+        validators=[Optional(), Length(max=4000)],
+    )
+    submit = SubmitField('Save update')

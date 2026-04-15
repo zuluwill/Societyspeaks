@@ -1159,7 +1159,7 @@ def send_discussion_notification_email(user, discussion, notification_type: str,
     Args:
         user: User object to notify
         discussion: Discussion object
-        notification_type: 'new_participant', 'new_response', or 'discussion_active'
+        notification_type: 'new_participant', 'new_response', 'discussion_update', or 'discussion_active'
         additional_data: Optional additional template data
 
     Returns:
@@ -1172,15 +1172,26 @@ def send_discussion_notification_email(user, discussion, notification_type: str,
         base_url = client.base_url
         discussion_url = f"{base_url}/discussions/{discussion.id}/{discussion.slug}"
 
-        # Prepare notification-specific content
+        is_host = user.id == discussion.creator_id
+
+        # Prepare notification-specific content (align with in-app copy in email_utils)
         if notification_type == 'new_participant':
-            subject = f"New participant in your discussion"
+            subject = "New participant in your discussion"
             message = f"Someone new has joined your discussion '{discussion.title}'"
         elif notification_type == 'new_response':
-            subject = f"New response in your discussion"
-            message = f"There's new activity in your discussion '{discussion.title}'"
+            if is_host:
+                subject = "New activity in your discussion"
+                message = f"There's new activity in your discussion '{discussion.title}'"
+            else:
+                subject = "New activity in a discussion you follow"
+                message = (
+                    f"There's new activity in a discussion you're following: '{discussion.title}'"
+                )
+        elif notification_type == 'discussion_update':
+            subject = f"Update: {discussion.title}"
+            message = f"A new update was posted to '{discussion.title}'"
         else:
-            subject = f"Activity in your discussion"
+            subject = "Activity in your discussion"
             message = f"There's been activity in your discussion '{discussion.title}'"
 
         # Render using the standard base email template

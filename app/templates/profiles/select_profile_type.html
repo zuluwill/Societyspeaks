@@ -92,7 +92,7 @@
                     </ul>
 
                     <!-- CTA Button -->
-                    <a href="{{ url_for('profiles.create_individual_profile') }}" 
+                    <a href="{{ url_for('profiles.create_individual_profile', next=next_url) if next_url else url_for('profiles.create_individual_profile') }}" 
                        class="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-3 text-sm sm:text-base font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-colors duration-200">
                         Create Individual Profile
                     </a>
@@ -140,7 +140,7 @@
                     </ul>
 
                     <!-- CTA Button -->
-                    <a href="{{ url_for('profiles.create_company_profile') }}" 
+                    <a href="{{ url_for('profiles.create_company_profile', next=next_url) if next_url else url_for('profiles.create_company_profile') }}" 
                        class="inline-flex w-full items-center justify-center rounded-lg bg-green-600 px-4 py-3 text-sm sm:text-base font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 transition-colors duration-200">
                         Create Organisation Profile
                     </a>
