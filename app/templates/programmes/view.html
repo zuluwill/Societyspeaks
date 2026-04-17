@@ -36,7 +36,7 @@
          style="background-image: url('{{ url_for('profiles.get_image', filename=banner_img) }}'); background-size: cover; background-position: center;">
       <div class="absolute inset-0 bg-black bg-opacity-20"></div>
     {% else %}
-    <div class="relative h-36 sm:h-48 bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700">
+    <div class="relative h-36 sm:h-48 {% if journey_mode %}bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900{% else %}bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700{% endif %}">
       {# Subtle decorative circles #}
       <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div class="absolute -top-8 -right-8 w-48 h-48 rounded-full bg-white opacity-5"></div>
@@ -83,9 +83,26 @@
           <img src="{{ logo_src }}" alt="{{ programme.name }}" class="w-full h-full object-contain">
         </div>
         {% else %}
+        {% if journey_mode %}
+          {% set _hf = {
+            'United States': '🇺🇸', 'United Kingdom': '🇬🇧', 'Netherlands': '🇳🇱',
+            'Ireland': '🇮🇪', 'Germany': '🇩🇪', 'France': '🇫🇷', 'Canada': '🇨🇦',
+            'Singapore': '🇸🇬', 'Japan': '🇯🇵', 'China': '🇨🇳'
+          } %}
+          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-4 border-white shadow-md flex-shrink-0 bg-gradient-to-br from-indigo-600 to-blue-700 flex items-center justify-center">
+            {% if programme.country %}
+            <span class="text-3xl sm:text-4xl leading-none select-none" aria-hidden="true">{{ _hf.get(programme.country, '🌍') }}</span>
+            {% else %}
+            <svg class="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            {% endif %}
+          </div>
+        {% else %}
         <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-4 border-white shadow-md flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
           <span class="text-white text-2xl sm:text-3xl font-bold select-none">{{ programme.name[0] | upper }}</span>
         </div>
+        {% endif %}
         {% endif %}
       </div>
 
