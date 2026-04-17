@@ -1,0 +1,437 @@
+{% extends "layout.html" %}
+
+{% block title %}Frequently Asked Questions — Society Speaks{% endblock %}
+{% block meta_description %}Everything you need to know about Society Speaks — the Big Questions Journey, Daily Brief, Daily Question, Personal Briefs, how our machine learning works, privacy, and pricing.{% endblock %}
+{% block og_title %}Frequently Asked Questions — Society Speaks{% endblock %}
+{% block og_description %}How does Society Speaks work? What is a bridge idea? Is it free? Find answers to all your questions about our civic platform.{% endblock %}
+
+{% block extra_head %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "name": "Society Speaks — Frequently Asked Questions",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is Society Speaks?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Society Speaks is a civic technology platform that uses machine learning to turn public participation into structured insight. We group participants by how they vote — not by who they are — to surface consensus statements (broad agreement), bridge ideas (ideas that unite opposing groups), and genuine divisions worth addressing. It is open source, ad-free, and free to use." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Society Speaks free?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. All core features are free: discussions, the Big Questions Journey, the Daily Question, the Daily Brief, the News Transparency Dashboard, and voting. A paid Personal Briefs subscription (from £4.99/month) is available for those who want a custom daily digest from their own sources — and it funds the free civic platform." }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need an account to use Society Speaks?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. You can browse discussions, read the Daily Brief, and explore the News Transparency Dashboard without an account. You do need an account to vote on statements in discussions (so your progress is saved), create discussions or programmes, or subscribe to the Daily Question by email." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the Big Questions Journey?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The Big Questions Journey is a guided civic experience covering the issues that define our era. Each journey has 8 themes — climate and planet, AI and technology, economy and work, health and care, war, peace and security, democracy and institutions, society and cohesion, and education and future skills — each starting with at least 7 expert-curated policy statements. Participants vote on each statement and can add their own. After voting, you see where you stand compared to others and where society genuinely agrees, divides, and finds common ground. Country-specific editions are available for the UK, US, Germany, France, Netherlands, Ireland, Canada, Singapore, Japan, and China." }
+    },
+    {
+      "@type": "Question",
+      "name": "How many statements are in the Big Questions Journey?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Each edition starts with at least 56 seed statements — 7 per theme across 8 themes. Participants can also submit their own statements, so the total grows as the community contributes. Country editions reflect that country's specific policy context and current debates." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the Daily Question?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The Daily Question is one carefully chosen civic question published each day. You vote Agree, Disagree, or Unsure, optionally explain your reasoning, and then see how others responded. Over time, this creates a longitudinal record of how public opinion evolves on key issues. Questions are delivered by email — weekly by default — and you can change the frequency to daily or monthly in your preferences." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the Daily Brief?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The Daily Brief is a free, ad-free daily news digest covering 3–5 stories vetted for civic impact. It draws from 140+ sources across the political spectrum — left, centre, and right — and includes a political balance breakdown, 'Why This Matters' context for every story, and under-reported stories others miss. It is published daily and available by email." }
+    },
+    {
+      "@type": "Question",
+      "name": "How do you choose sources for the Daily Brief?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The Daily Brief draws from 140+ curated sources including news outlets, analysis publications, think tanks, and podcasts across the political spectrum. Sources are selected for journalistic quality and civic relevance. Political bias ratings are drawn from AllSides. You can explore all sources on the News Transparency Dashboard." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a discussion on Society Speaks?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A discussion is a structured deliberation space where participants vote Agree, Disagree, or Unsure on a set of statements about a topic. Anyone can create a discussion — community groups, researchers, journalists, organisations, or individuals. Discussions can be public, unlisted, or invite-only. After enough votes are collected, machine learning clusters participants and reveals consensus statements, bridge ideas, and divisive statements." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a Programme on Society Speaks?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A programme is a structured collection of related discussions, organised into themes and phases. Programmes are designed for organisations, researchers, governments, and media outlets running structured consultation or deliberation over time. They support multiple stewards, visibility controls (public, unlisted, invite-only, or private), and data export." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a consensus statement?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A consensus statement is one that receives broad agreement across all opinion clusters — including groups that disagree on other questions. Consensus statements show where society already aligns, even when people believe they are divided." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a bridge idea?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A bridge idea is a statement that resonates strongly across different opinion clusters — groups that otherwise disagree on most issues. Bridge ideas represent rare common ground and are often the most actionable insights for policy, journalism, or community dialogue." }
+    },
+    {
+      "@type": "Question",
+      "name": "How does the machine learning work?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Society Speaks uses dimensionality reduction (PCA) and agglomerative clustering to group participants by their voting patterns, not their demographics or stated identity. This reveals natural opinion clusters — groups of people who tend to vote similarly. Statements are then classified as consensus (agreement across all clusters), bridge (agreement across clusters that otherwise disagree), or divisive (strong disagreement between clusters). The methodology is inspired by Pol.is, developed by the Computational Democracy Project." }
+    },
+    {
+      "@type": "Question",
+      "name": "How many votes are needed before analysis runs?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The consensus analysis requires a minimum number of participants to produce statistically meaningful clusters. The exact threshold depends on the number of statements, but typically a discussion needs at least 7–15 participants who have voted on a meaningful proportion of statements before clustering can run reliably." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is voting anonymous?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Signed-in users have their votes linked to their account so they can track their own progress and history. Anonymous voting is available on some discussions via a session fingerprint that does not identify you personally. Society Speaks does not sell personal data and does not use advertising. The platform is open source." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I add my own statement to a discussion?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Participants can submit their own statements to any open discussion. Submitted statements go through a moderation queue before appearing to others. In the Big Questions Journey, community-submitted statements grow the pool beyond the initial seed statements." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a Personal Brief?",
+      "acceptedAnswer": { "@type": "Answer", "text": "A Personal Brief is a paid product that lets you create a custom daily digest from the sources you choose — RSS feeds, Substacks, PDFs, and more. AI synthesis combines coverage from multiple sources on your schedule. Personal Brief subscriptions fund the free civic platform. Plans start from £4.99/month with a 30-day free trial and no credit card required." }
+    },
+    {
+      "@type": "Question",
+      "name": "How is the Personal Brief different from the Daily Brief?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The Daily Brief is a free, editorially curated digest of 3–5 civic stories from Society Speaks' 140+ source library. A Personal Brief is a paid, fully customisable digest built from your own chosen sources, with AI synthesis and your own schedule. A Personal Brief subscription funds the free Daily Brief and other civic features." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can organisations use Society Speaks?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Society Speaks works with publishers, NGOs, governments, researchers, and media outlets globally. Organisations can embed discussions directly on their own websites via the Partner API, commission custom programmes for citizen consultation, and access structured data exports for analysis and reporting. Contact us via the For Organisations page." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the News Transparency Dashboard?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The News Transparency Dashboard is a free tool that shows today's news from 140+ sources organised by political leaning — left, centre, and right. It includes AI-generated sensationalism scores, coverage balance percentages, and links to source bias ratings from AllSides. No sign-up required." }
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white border-b border-gray-200">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div class="text-center">
+            <p class="text-xs font-semibold text-indigo-600 uppercase tracking-widest mb-3">Help & support</p>
+            <h1 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Frequently Asked Questions</h1>
+            <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
+                Everything you need to know about Society Speaks — how it works, what it costs, and how to get the most from it.
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="bg-gray-50 py-12 sm:py-16">
+    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+
+        {# ── Macro: renders one FAQ section ── #}
+        {%- macro faq_section(title, icon_path, questions) %}
+        <section class="mb-10" aria-labelledby="section-{{ title | lower | replace(' ', '-') | replace('&', '') | replace('  ', '-') }}">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-600">
+                    <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ icon_path }}"/>
+                    </svg>
+                </div>
+                <h2 id="section-{{ title | lower | replace(' ', '-') | replace('&', '') | replace('  ', '-') }}"
+                    class="text-xl font-bold text-gray-900">{{ title }}</h2>
+            </div>
+            <div class="space-y-3">
+                {% for q, a in questions %}
+                <details class="group bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <summary class="flex items-center justify-between gap-4 cursor-pointer px-6 py-4 text-gray-900 font-semibold text-sm sm:text-base select-none hover:bg-gray-50 transition-colors list-none [&::-webkit-details-marker]:hidden">
+                        {{ q }}
+                        <svg class="flex-shrink-0 w-5 h-5 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </summary>
+                    <div class="px-6 pb-5 pt-1 text-sm sm:text-base text-gray-600 leading-relaxed border-t border-gray-100">
+                        {{ a }}
+                    </div>
+                </details>
+                {% endfor %}
+            </div>
+        </section>
+        {%- endmacro %}
+
+        {{ faq_section(
+            "Getting Started",
+            "M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
+            [
+                (
+                    "What is Society Speaks?",
+                    "Society Speaks is a civic technology platform that uses machine learning to turn public participation into structured insight. We group participants by how they vote — not by who they are — to reveal where society genuinely agrees, where it divides, and which ideas bridge the gap. It is open source, ad-free, and free to use."
+                ),
+                (
+                    "Is Society Speaks free?",
+                    "Yes. All core features are free: the Big Questions Journey, Daily Question, Daily Brief, News Transparency Dashboard, discussions, and voting. A paid Personal Briefs subscription (from £4.99/month) is available for those who want a custom daily digest from their own sources — and it funds the free civic platform."
+                ),
+                (
+                    "Do I need an account?",
+                    "No. You can browse discussions, read the Daily Brief, and explore the News Transparency Dashboard without an account. You need an account to save your voting progress, create discussions or programmes, or subscribe to the Daily Question by email."
+                ),
+                (
+                    "Who is Society Speaks for?",
+                    "Society Speaks is for anyone who wants to understand public opinion more honestly — individuals curious about where they stand, community groups and NGOs running consultations, governments and policymakers seeking civic insight, publishers and media outlets wanting to embed structured discussion, and researchers studying public opinion."
+                ),
+                (
+                    "Is Society Speaks open source?",
+                    "Yes. The Society Speaks platform is open source. You can find the code on our GitHub repository. We believe civic infrastructure should be transparent and auditable."
+                )
+            ]
+        ) }}
+
+        {{ faq_section(
+            "The Big Questions Journey",
+            "M13 10V3L4 14h7v7l9-11h-7z",
+            [
+                (
+                    "What is the Big Questions Journey?",
+                    "The Big Questions Journey is a guided civic experience covering the issues that define our era. It has 8 themes — climate and planet, AI and technology, economy and work, health and care, war, peace and security, democracy and institutions, society and cohesion, and education and future skills. Each theme starts with expert-curated policy statements. After voting, you see where you stand compared to others globally."
+                ),
+                (
+                    "How many statements are there?",
+                    "Each edition starts with at least 56 seed statements — a minimum of 7 per theme across 8 themes. Participants can also submit their own statements to any theme, so the total grows as the community contributes. The number varies slightly between country editions."
+                ),
+                (
+                    "Are there editions for different countries?",
+                    "Yes. Country-specific editions are available for the United Kingdom, United States, Germany, France, Netherlands, Ireland, Canada, Singapore, Japan, and China. Each edition anchors the statements in that country's specific policy context, institutions, and current debates. A global edition is also available. The platform personalises your recommended edition based on your browser language or profile."
+                ),
+                (
+                    "Can I add my own statement to a Journey discussion?",
+                    "Yes. After voting on the existing statements in any theme, you can submit your own statement. Submitted statements are reviewed before appearing to other participants. This is how the pool of statements grows beyond the initial seed set."
+                ),
+                (
+                    "What happens after I complete the Journey?",
+                    "Once you have voted across a theme's statements, you unlock the recap for that theme — showing how your views compare to different opinion clusters, which statements reached consensus, and where genuine divisions lie. Complete all 8 themes to see your full picture."
+                ),
+                (
+                    "Can I save my progress and come back later?",
+                    "Yes, if you are signed in. Your votes are saved to your account so you can return and continue where you left off. Anonymous voting uses a session fingerprint — if you clear your browser data, your anonymous progress may be lost."
+                )
+            ]
+        ) }}
+
+        {{ faq_section(
+            "The Daily Question",
+            "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+            [
+                (
+                    "What is the Daily Question?",
+                    "The Daily Question is one carefully chosen civic question published each day. You vote Agree, Disagree, or Unsure, optionally explain your reasoning in a sentence or two, and then see how others responded. Over time, this builds a longitudinal record of how public opinion evolves."
+                ),
+                (
+                    "How often is a new question published?",
+                    "A new question is published every day. By default, the email digest delivers 5 questions per week. You can change your delivery frequency to daily or monthly in your email preferences."
+                ),
+                (
+                    "How do I get the Daily Question by email?",
+                    "Visit the Daily Question subscribe page and enter your email address. No account is required to subscribe by email. You can manage your preferences — including frequency, send day, and time — via a link in any email we send you."
+                ),
+                (
+                    "Can I change how often I get the email?",
+                    "Yes. You can choose weekly (default, 5 questions per digest), daily (one question per day), or monthly. You can also choose which day and time weekly digests arrive. Update your preferences via the link in any Daily Question email."
+                ),
+                (
+                    "How are Daily Questions chosen?",
+                    "Questions are chosen for civic relevance, timeliness, and their ability to surface genuine agreement or division. They are drawn from active discussions on the platform and from current news topics."
+                )
+            ]
+        ) }}
+
+        {{ faq_section(
+            "The Daily Brief",
+            "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z",
+            [
+                (
+                    "What is the Daily Brief?",
+                    "The Daily Brief is a free, ad-free daily news digest covering 3–5 stories vetted for civic impact. It draws from 140+ sources across the political spectrum and includes a left/centre/right breakdown for each story, 'Why This Matters' context, and under-reported stories others miss. No sign-up required to read."
+                ),
+                (
+                    "How do you choose which stories to cover?",
+                    "Stories are selected for civic relevance — how they affect democratic life, policy, or public understanding — rather than for virality or outrage potential. An AI scoring system filters for quality and civic impact. Our editorial team curates the final selection."
+                ),
+                (
+                    "What does the left/centre/right breakdown mean?",
+                    "For each story, we show how sources across the political spectrum are covering it — what left-leaning, centre, and right-leaning outlets emphasise, and where framing differs. Political bias ratings are sourced from AllSides. This lets you see the same story from multiple angles rather than a single editorial perspective."
+                ),
+                (
+                    "How many sources do you use?",
+                    "The Daily Brief draws from 140+ curated sources including news outlets, analysis publications, think tanks, and podcasts. You can explore all sources, organised by political leaning, on the News Transparency Dashboard."
+                ),
+                (
+                    "Is the Daily Brief available by email?",
+                    "Yes. Subscribe on the Daily Brief page. Email is optional — the Brief is always free to read on the website."
+                ),
+                (
+                    "What is the 'Under the Radar' section?",
+                    "Under the Radar highlights important stories that have not received mainstream coverage. These are stories our editors and AI scoring system identify as having high civic relevance but low media attention — the kind of stories that matter but rarely make headlines."
+                )
+            ]
+        ) }}
+
+        {{ faq_section(
+            "Discussions & Programmes",
+            "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
+            [
+                (
+                    "What is a discussion?",
+                    "A discussion is a structured deliberation space where participants vote on a set of statements about a specific topic. Anyone with an account can create one. Once enough people have voted, machine learning reveals consensus statements, bridge ideas, and genuine divisions."
+                ),
+                (
+                    "How do I create a discussion?",
+                    "Sign in, go to 'Start a Discussion', give it a title and description, add your seed statements (at least 3 to start), choose your visibility setting, and publish. You can invite others via link or leave it open for anyone to join."
+                ),
+                (
+                    "What are seed statements?",
+                    "Seed statements are the initial set of propositions participants vote on. They define the conversation space. Good seed statements are clear, singular in claim, and span a range of perspectives on the topic. Participants can also add their own statements once the discussion is running."
+                ),
+                (
+                    "What is a programme?",
+                    "A programme is a collection of related discussions organised into themes and phases. Programmes are designed for structured consultation over time — citizen assemblies, policy research, community engagement, or media-led deliberation. They support multiple stewards, progress tracking, and data export."
+                ),
+                (
+                    "What visibility options are available?",
+                    "Public: anyone can find and join. Unlisted: joinable via link only, not listed in search. Invite-only: participants must be approved or invited. Private: visible only to programme stewards."
+                ),
+                (
+                    "How many votes are needed before the analysis runs?",
+                    "The consensus analysis needs a minimum number of participants to produce statistically meaningful clusters — typically 7–15 participants who have voted on a meaningful proportion of statements. The exact threshold depends on the number of statements in the discussion."
+                )
+            ]
+        ) }}
+
+        {{ faq_section(
+            "How the Machine Learning Works",
+            "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
+            [
+                (
+                    "How does Society Speaks analyse votes?",
+                    "We use dimensionality reduction (Principal Component Analysis) and agglomerative clustering to group participants by their voting patterns — not their demographics, stated identity, or prior beliefs. This reveals natural opinion clusters: groups of people who tend to vote similarly across a discussion."
+                ),
+                (
+                    "What is a consensus statement?",
+                    "A consensus statement receives broad agreement across all opinion clusters — including groups that disagree on other questions. It shows where society already aligns, even when people believe they are divided."
+                ),
+                (
+                    "What is a bridge idea?",
+                    "A bridge idea resonates strongly across different opinion clusters that otherwise disagree. Bridge ideas represent rare common ground and are often the most actionable insights for policymakers, journalists, and community leaders."
+                ),
+                (
+                    "What is a divisive statement?",
+                    "A divisive statement produces a strong, clear split between opinion clusters. Divisive statements are not failures — they show where genuine democratic deliberation is needed, rather than simply counting votes."
+                ),
+                (
+                    "Is the methodology peer reviewed?",
+                    "The methodology is inspired by Pol.is, developed by the Computational Democracy Project, which has been used in government deliberations in Taiwan (vTaiwan), the EU, and elsewhere. Society Speaks builds on this foundation with its own native implementation. Our code is open source and auditable."
+                )
+            ]
+        ) }}
+
+        {{ faq_section(
+            "Personal Briefs (Premium)",
+            "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z",
+            [
+                (
+                    "What is a Personal Brief?",
+                    "A Personal Brief is a paid product that lets you create a custom daily digest from your own chosen sources — RSS feeds, Substacks, PDFs, newsletters, and more. AI synthesis combines coverage from multiple sources and delivers it on your schedule. It is distinct from the free Daily Brief, which is editorially curated by Society Speaks."
+                ),
+                (
+                    "How much does a Personal Brief cost?",
+                    "Plans start from £4.99/month for a Personal plan. Professional plans (£25/month) and Team plans (£300/month) are also available, with additional features including multiple briefings, review before sending, and team collaboration. All plans include a 30-day free trial and no credit card is required to start."
+                ),
+                (
+                    "How does my subscription help the platform?",
+                    "Personal Brief subscriptions directly fund the free civic features of Society Speaks — the Daily Brief, Daily Question, Big Questions Journey, discussions, and the News Transparency Dashboard. We are not ad-funded, so subscriber support is what keeps everything else free."
+                ),
+                (
+                    "What sources can I use in a Personal Brief?",
+                    "You can add any RSS feed, Substack, uploaded PDF, or web page. The AI synthesises content from all your chosen sources and delivers a coherent digest. Team plans also allow review and editing before the brief is sent."
+                ),
+                (
+                    "Can I cancel at any time?",
+                    "Yes. Cancel anytime from your account settings. There are no lock-in periods. If you cancel during a trial, you will not be charged."
+                )
+            ]
+        ) }}
+
+        {{ faq_section(
+            "For Organisations",
+            "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
+            [
+                (
+                    "Can organisations use Society Speaks?",
+                    "Yes. Society Speaks works with publishers, NGOs, governments, researchers, and media outlets globally. Organisations can embed discussions on their own websites via the Partner API, commission structured programmes for citizen consultation, and access data exports for analysis and reporting."
+                ),
+                (
+                    "What is the publisher embed?",
+                    "Publishers can embed live Society Speaks discussions directly on their articles and pages via a simple script tag. Readers vote on statements without leaving the publication, and the publisher gets structured public opinion data alongside their content. Visit the For Organisations page for details."
+                ),
+                (
+                    "Can I run a citizen consultation or deliberation programme?",
+                    "Yes. Programmes are designed precisely for structured, multi-stage deliberation. You can create themed discussions, invite participants, control visibility, appoint stewards, and export results. Contact us if you need help setting up a large-scale programme."
+                ),
+                (
+                    "What data can organisations access?",
+                    "Discussion creators and programme stewards can access vote distributions, participant counts, consensus analysis results, and CSV exports of anonymised voting data. Raw personal data is never shared."
+                )
+            ]
+        ) }}
+
+        {{ faq_section(
+            "Privacy & Data",
+            "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z",
+            [
+                (
+                    "Is my voting anonymous?",
+                    "Signed-in users have their votes linked to their account so they can track their own progress. Votes are not publicly attributed to individual users by name. Anonymous voting is available via a session fingerprint that does not personally identify you. The site does not use advertising or sell personal data."
+                ),
+                (
+                    "Do you use advertising?",
+                    "No. Society Speaks is not ad-funded. We do not show adverts, use retargeting, or sell your data to third parties. Revenue comes from Personal Brief subscriptions and organisation partnerships."
+                ),
+                (
+                    "Is the platform open source?",
+                    "Yes. The Society Speaks codebase is open source and available on GitHub. We believe civic infrastructure should be transparent and auditable by anyone."
+                ),
+                (
+                    "How do I delete my account?",
+                    "You can request account deletion from your account settings. This removes your personal data from our systems in accordance with GDPR and UK data protection law."
+                )
+            ]
+        ) }}
+
+        <!-- Still have questions -->
+        <div class="mt-12 rounded-2xl bg-indigo-50 border border-indigo-100 p-8 text-center">
+            <h2 class="text-xl font-bold text-gray-900 mb-2">Still have a question?</h2>
+            <p class="text-gray-600 mb-6">We are happy to help. Send us a message and we will get back to you.</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="mailto:info@societyspeaks.io?subject=Question%20about%20Society%20Speaks"
+                   class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    Email us
+                </a>
+                <a href="{{ url_for('help.help') }}"
+                   class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+                    Visit the Help Centre
+                    <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

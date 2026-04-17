@@ -352,6 +352,11 @@ def content_policy():
     return render_template('content-policy.html')
 
 
+@main_bp.route('/faq')
+def faq():
+    return render_template('faq.html')
+
+
 
 @main_bp.route('/sitemap.xml')
 def sitemap():

@@ -49,6 +49,8 @@
       title="Latest Discussions"
       href="/feed"
     />
+    <link rel="canonical" href="{{ request.base_url }}" />
+    {% block extra_head %}{% endblock %}
 
     <!-- Open Graph Meta Tags for Social Media Sharing -->
     <meta
@@ -436,7 +438,7 @@
               >Home</a
             >
 
-            <!-- Products Dropdown -->
+            <!-- Participate Dropdown -->
             <div class="relative" id="products-dropdown-container">
               <button
                 type="button"
@@ -445,7 +447,7 @@
                 aria-expanded="false"
                 aria-haspopup="true"
               >
-                Products
+                Participate
                 <svg
                   class="ml-1 h-4 w-4"
                   viewBox="0 0 20 20"
@@ -461,21 +463,25 @@
               </button>
               <div
                 id="products-dropdown-menu"
-                class="absolute left-0 z-50 mt-2 w-56 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+                class="absolute left-0 z-50 mt-2 w-64 origin-top-left rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
                 role="menu"
                 style="display: none"
               >
+                <a
+                  href="{{ url_for('programmes.view_programme', slug='humanity-big-questions') }}"
+                  class="flex items-center px-4 py-2.5 text-sm text-gray-800 hover:bg-indigo-50 font-medium"
+                  role="menuitem"
+                >
+                  <svg class="w-4 h-4 mr-2 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                  Big Questions Journey
+                  <span class="ml-auto text-xs text-indigo-500 font-semibold">Featured</span>
+                </a>
+                <div class="border-t border-gray-100 my-1"></div>
                 <div
-                  class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                  class="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider"
                 >
                   Free
                 </div>
-                <a
-                  href="{{ url_for('main.platform') }}"
-                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  role="menuitem"
-                  >Discussions &amp; Programmes</a
-                >
                 <a
                   href="{{ url_for('daily.today') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -489,14 +495,14 @@
                   >Daily Brief</a
                 >
                 <a
-                  href="{{ url_for('programmes.view_programme', slug='humanity-big-questions') }}"
+                  href="{{ url_for('main.platform') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
-                  >Big Questions Journey</a
+                  >Discussions &amp; Programmes</a
                 >
                 <div class="border-t border-gray-100 my-1"></div>
                 <div
-                  class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                  class="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider"
                 >
                   Premium
                 </div>
@@ -507,16 +513,10 @@
                 >
                   Personal Briefs
                   <span
-                    class="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800"
+                    class="ml-2 inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700"
                     >Pro</span
                   >
                 </a>
-                <div class="border-t border-gray-100 my-1"></div>
-                <div
-                  class="px-3 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                >
-                  Publishers
-                </div>
                 <a
                   href="{{ url_for('partner.hub') }}"
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -524,7 +524,7 @@
                 >
                   For Publishers
                   <span
-                    class="ml-2 inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800"
+                    class="ml-2 inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700"
                     >Pro</span
                   >
                 </a>
@@ -627,6 +627,12 @@
                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                   role="menuitem"
                   >Help</a
+                >
+                <a
+                  href="{{ url_for('main.faq') }}"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  role="menuitem"
+                  >FAQ</a
                 >
               </div>
             </div>
@@ -833,17 +839,19 @@
               >Home</a
             >
 
-            <!-- Products Section -->
+            <!-- Participate Section -->
             <div class="border-t border-blue-500/30 pt-2 mt-2">
               <span
                 class="block px-3 py-1 text-xs font-semibold text-blue-200 uppercase tracking-wider"
-                >Products</span
+                >Participate</span
               >
               <a
-                href="{{ url_for('main.platform') }}"
-                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
-                >Discussions &amp; Programmes</a
+                href="{{ url_for('programmes.view_programme', slug='humanity-big-questions') }}"
+                class="flex items-center rounded-md px-3 py-2 text-base font-semibold text-white hover:bg-blue-500"
               >
+                <svg class="w-4 h-4 mr-2 text-indigo-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                Big Questions Journey
+              </a>
               <a
                 href="{{ url_for('daily.today') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
@@ -855,9 +863,9 @@
                 >Daily Brief</a
               >
               <a
-                href="{{ url_for('programmes.view_programme', slug='humanity-big-questions') }}"
+                href="{{ url_for('main.platform') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
-                >Big Questions Journey</a
+                >Discussions &amp; Programmes</a
               >
               <a
                 href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
@@ -924,6 +932,11 @@
                 href="{{ url_for('help.help') }}"
                 class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
                 >Help</a
+              >
+              <a
+                href="{{ url_for('main.faq') }}"
+                class="block rounded-md px-3 py-2 text-base font-medium text-white hover:bg-blue-500"
+                >FAQ</a
               >
               <a
                 href="{{ url_for('main.donate') }}"
@@ -1176,9 +1189,16 @@
               </li>
               <li>
                 <a
+                  href="{{ url_for('main.faq') }}"
+                  class="text-gray-400 hover:text-white transition"
+                  >FAQ</a
+                >
+              </li>
+              <li>
+                <a
                   href="/help"
                   class="text-gray-400 hover:text-white transition"
-                  >Help</a
+                  >Help</
                 >
               </li>
               <li>
