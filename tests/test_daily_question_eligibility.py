@@ -441,3 +441,12 @@ class TestGetEligibleStatements:
         db.session.commit()
         results = get_eligible_statements()
         assert results == []
+
+
+class TestGuidedJourneyDailyBoost:
+    def test_get_guided_journey_priority_discussions_no_crash(self, app, db):
+        from app.daily.auto_selection import get_guided_journey_priority_discussions
+
+        with app.app_context():
+            out = get_guided_journey_priority_discussions()
+            assert isinstance(out, list)

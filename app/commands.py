@@ -670,3 +670,52 @@ def init_commands(app):
             click.echo(f"Error during backfill: {str(e)}", err=True)
             import traceback
             traceback.print_exc()
+
+    @app.cli.command('journey-theme-analytics')
+    @click.option('--limit', default=15, help='Max topics to list')
+    def journey_theme_analytics_cmd(limit):
+        """Print ranked Discussion.topic engagement for curriculum planning."""
+        from app.programmes.journey_analytics import compute_topic_rankings
+
+        rows = compute_topic_rankings(limit=limit)
+        if not rows:
+            click.echo("No topic data found (empty database or no votes yet).")
+            return
+        click.echo(
+            f"{'topic':<18} {'votes':>7} {'voters':>7} {'disc':>5} {'civic':>7} {'qual':>7} {'score':>9}"
+        )
+        click.echo("-" * 70)
+        for r in rows:
+            click.echo(
+                f"{r['topic'][:18]:<18} {r['vote_count']:>7} {r['distinct_voters']:>7} "
+                f"{r['discussion_count']:>5} {r['avg_trending_civic']:>7.2f} {r['avg_trending_quality']:>7.2f} {r['composite_score']:>9.1f}"
+            )
+
+    from app.programmes.journey_variants import VALID_VARIANTS as _GUIDED_JOURNEY_VARIANTS
+
+    _seed_journey_variant_choice = click.Choice(sorted(_GUIDED_JOURNEY_VARIANTS))
+
+    @app.cli.command('seed-guided-journey')
+    @click.option(
+        '--variant',
+        default='global',
+        type=_seed_journey_variant_choice,
+        help='Country variant to seed (default: global); keys defined in journey_variants.VARIANT_METADATA.',
+    )
+    @click.option('--all-variants', is_flag=True, default=False,
+                  help='Seed all country variants in one run')
+    @click.option('--creator-email', default=None, help='User to own programme and seed statements')
+    def seed_guided_journey_cmd(variant, all_variants, creator_email):
+        """Create or update guided flagship programmes (global + 10 country variants)."""
+        from app.programmes.journey_seed import seed_guided_journey_programme
+
+        targets = sorted(_GUIDED_JOURNEY_VARIANTS) if all_variants else [variant]
+        for v in targets:
+            try:
+                p = seed_guided_journey_programme(variant=v, creator_email=creator_email)
+                click.echo(f"✓ {v:6s}  {p.name}  (slug={p.slug}, id={p.id})")
+            except Exception as e:
+                db.session.rollback()
+                click.echo(f"✗ {v:6s}  Error: {e}", err=True)
+                import traceback
+                traceback.print_exc()

@@ -33,6 +33,13 @@ from app.programmes.utils import (
     parse_csv_list,
     validate_cohort_for_discussion,
 )
+from app.programmes.journey import (
+    build_journey_progress,
+    build_programme_recap_payload,
+    is_guided_journey_programme,
+    ordered_journey_discussions,
+    user_statement_votes_detail_batch,
+)
 
 
 programmes_bp = Blueprint('programmes', __name__, template_folder='../templates/programmes')
@@ -137,7 +144,7 @@ def _programme_nsp_dashboard_payload(programme):
 
     vote_rows = db.session.query(
         func.date(func.coalesce(StatementVote.updated_at, StatementVote.created_at)).label('event_date'),
-        StatementVote.vote_value,
+        StatementVote.vote,
         func.count(StatementVote.id).label('vote_count')
     ).join(
         Discussion, Discussion.id == StatementVote.discussion_id
@@ -145,7 +152,7 @@ def _programme_nsp_dashboard_payload(programme):
         Discussion.programme_id == programme.id
     ).group_by(
         func.date(func.coalesce(StatementVote.updated_at, StatementVote.created_at)),
-        StatementVote.vote_value
+        StatementVote.vote
     ).order_by(func.date(func.coalesce(StatementVote.updated_at, StatementVote.created_at)).asc()).all()
 
     trend_map = {}
@@ -153,9 +160,9 @@ def _programme_nsp_dashboard_payload(programme):
         day = row.event_date.isoformat()
         if day not in trend_map:
             trend_map[day] = {'agree': 0, 'disagree': 0, 'unsure': 0}
-        if row.vote_value == 1:
+        if row.vote == 1:
             trend_map[day]['agree'] += int(row.vote_count or 0)
-        elif row.vote_value == -1:
+        elif row.vote == -1:
             trend_map[day]['disagree'] += int(row.vote_count or 0)
         else:
             trend_map[day]['unsure'] += int(row.vote_count or 0)
@@ -366,6 +373,12 @@ def view_programme(slug):
     can_edit = can_edit_programme(programme, current_user)
     can_steward = can_steward_programme(programme, current_user)
     summary = get_programme_summary(programme.id)
+    journey_mode = is_guided_journey_programme(programme)
+    journey_progress = None
+    if journey_mode:
+        uid = current_user.id if current_user.is_authenticated else None
+        ordered = ordered_journey_discussions(programme)
+        journey_progress = build_journey_progress(programme, uid, discussions=ordered)
     return render_template(
         'programmes/view.html',
         programme=programme,
@@ -374,7 +387,47 @@ def view_programme(slug):
         selected_phase=phase,
         can_edit=can_edit,
         can_steward=can_steward,
-        summary=summary
+        summary=summary,
+        journey_mode=journey_mode,
+        journey_progress=journey_progress,
+    )
+
+
+@programmes_bp.route('/<slug>/recap')
+def programme_journey_recap(slug):
+    """
+    Programme-level recap for guided flagship journeys: per-theme participation,
+    aggregate vote mix, and optional signed-in vote detail (not a single cross-topic PCA).
+    """
+    programme = Programme.query.filter_by(slug=slug).first_or_404()
+    if not can_view_programme(programme, current_user):
+        visibility = getattr(programme, 'visibility', 'public')
+        if visibility == 'invite_only' and not current_user.is_authenticated:
+            flash('Please log in to access this programme.', 'info')
+            return redirect(url_for('auth.login'))
+        abort(404)
+    if not is_guided_journey_programme(programme):
+        flash('This recap view is only available for guided flagship programmes.', 'info')
+        return redirect(url_for('programmes.view_programme', slug=programme.slug))
+
+    uid = current_user.id if current_user.is_authenticated else None
+    ordered_discussions = ordered_journey_discussions(programme)
+    recap = build_programme_recap_payload(programme, uid, discussions=ordered_discussions)
+    personal_by_discussion = {}
+    if uid:
+        disc_ids = [d.id for d in ordered_discussions]
+        personal_by_discussion = user_statement_votes_detail_batch(uid, disc_ids)
+    recap_share_url = url_for(
+        'programmes.programme_journey_recap',
+        slug=programme.slug,
+        _external=True,
+    )
+    return render_template(
+        'programmes/journey_recap.html',
+        programme=programme,
+        recap=recap,
+        personal_by_discussion=personal_by_discussion,
+        recap_share_url=recap_share_url,
     )
 
 

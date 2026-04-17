@@ -71,6 +71,21 @@ class Config:
     _demo_id = os.getenv('DEMO_DISCUSSION_ID', '').strip()
     DEMO_DISCUSSION_ID = int(_demo_id) if _demo_id.isdigit() else None
 
+    # Guided "big questions" flagship programmes (progress UI, recap, daily-question boost).
+    # GUIDED_JOURNEY_PROGRAMME_SLUGS (comma-separated) overrides all per-country keys when set.
+    GUIDED_JOURNEY_PROGRAMME_SLUG    = (os.getenv('GUIDED_JOURNEY_PROGRAMME_SLUG')    or 'humanity-big-questions').strip().lower()
+    GUIDED_JOURNEY_PROGRAMME_SLUGS   = os.getenv('GUIDED_JOURNEY_PROGRAMME_SLUGS', '').strip()
+    GUIDED_JOURNEY_UK_PROGRAMME_SLUG = (os.getenv('GUIDED_JOURNEY_UK_PROGRAMME_SLUG') or 'humanity-big-questions-uk').strip().lower()
+    GUIDED_JOURNEY_US_PROGRAMME_SLUG = (os.getenv('GUIDED_JOURNEY_US_PROGRAMME_SLUG') or 'humanity-big-questions-us').strip().lower()
+    GUIDED_JOURNEY_NL_PROGRAMME_SLUG = (os.getenv('GUIDED_JOURNEY_NL_PROGRAMME_SLUG') or 'humanity-big-questions-nl').strip().lower()
+    GUIDED_JOURNEY_IE_PROGRAMME_SLUG = (os.getenv('GUIDED_JOURNEY_IE_PROGRAMME_SLUG') or 'humanity-big-questions-ie').strip().lower()
+    GUIDED_JOURNEY_DE_PROGRAMME_SLUG = (os.getenv('GUIDED_JOURNEY_DE_PROGRAMME_SLUG') or 'humanity-big-questions-de').strip().lower()
+    GUIDED_JOURNEY_FR_PROGRAMME_SLUG = (os.getenv('GUIDED_JOURNEY_FR_PROGRAMME_SLUG') or 'humanity-big-questions-fr').strip().lower()
+    GUIDED_JOURNEY_CA_PROGRAMME_SLUG = (os.getenv('GUIDED_JOURNEY_CA_PROGRAMME_SLUG') or 'humanity-big-questions-ca').strip().lower()
+    GUIDED_JOURNEY_SG_PROGRAMME_SLUG = (os.getenv('GUIDED_JOURNEY_SG_PROGRAMME_SLUG') or 'humanity-big-questions-sg').strip().lower()
+    GUIDED_JOURNEY_JP_PROGRAMME_SLUG = (os.getenv('GUIDED_JOURNEY_JP_PROGRAMME_SLUG') or 'humanity-big-questions-jp').strip().lower()
+    GUIDED_JOURNEY_CN_PROGRAMME_SLUG = (os.getenv('GUIDED_JOURNEY_CN_PROGRAMME_SLUG') or 'humanity-big-questions-cn').strip().lower()
+
     # Legacy config-key fallback for partner API auth (JSON object: {"key": "partner-slug"}).
     # Best practice is DB-backed portal-issued keys; this fallback is disabled by default.
     # Enable only during migration windows, then remove legacy keys.

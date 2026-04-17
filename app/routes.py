@@ -1,8 +1,13 @@
 import stripe
 from flask import Blueprint, render_template, request, jsonify, Response, current_app, url_for, abort, send_file, make_response, send_from_directory, redirect, flash
 from flask_login import login_required, current_user
-from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestion, DailyBrief
-from app import db, limiter
+from app.models import Discussion, IndividualProfile, CompanyProfile, DailyQuestion, DailyBrief, Programme
+from app.programmes.journey import (
+    guided_journey_slug_set,
+    infer_journey_country_from_accept_language,
+    journey_programme_country_lookup_key,
+)
+from app import cache, db, limiter
 from datetime import datetime, date
 from slugify import slugify
 from app.seo import generate_sitemap
@@ -82,6 +87,80 @@ def index():
     if daily_brief:
         brief_items = daily_brief.items.order_by(db.text('position')).limit(3).all()
 
+    journey_slugs = guided_journey_slug_set()
+    _jp_cache_key = "homepage_journey_programmes"
+    _slug_fp = ",".join(sorted(journey_slugs))
+    all_journey_programmes = None
+    try:
+        _cached = cache.get(_jp_cache_key)
+        if isinstance(_cached, tuple) and len(_cached) == 2:
+            _fp, _rows = _cached
+            if _fp == _slug_fp:
+                all_journey_programmes = _rows
+    except Exception:
+        pass
+    if all_journey_programmes is None:
+        all_journey_programmes = (
+            Programme.query.filter(
+                Programme.slug.in_(journey_slugs),
+                Programme.status == 'active',
+            ).order_by(Programme.name.asc()).all()
+            if journey_slugs else []
+        )
+        try:
+            cache.set(_jp_cache_key, (_slug_fp, all_journey_programmes), timeout=300)
+        except Exception:
+            pass
+
+    # Geo-prioritise: show the visitor's country journey first if we have one.
+    # We do not use IP geolocation (VPN-safe). Priority order:
+    # explicit ?journey= / ?edition= slug → profile country → Accept-Language → global fallback.
+    # Profile country is stored as ISO-style codes (e.g. UK, US) on IndividualProfile / CompanyProfile;
+    # Programme.country uses full names — journey_programme_country_lookup_key bridges the two.
+    _by_country = {(p.country or '').lower(): p for p in all_journey_programmes}
+    _global_journey = next((p for p in all_journey_programmes if not p.country), None)
+
+    guided_journey_programme = None
+    # journey_personalisation: 'chosen' | 'profile' | 'language' | 'fallback'
+    # Used in the template to set the right recommendation label.
+    journey_personalisation = "fallback"
+
+    # Explicit edition (bookmark / share / VPN or wrong browser language).
+    explicit_slug = (request.args.get("journey") or request.args.get("edition") or "").strip().lower()
+    if explicit_slug and explicit_slug in journey_slugs:
+        guided_journey_programme = next(
+            (p for p in all_journey_programmes if p.slug and p.slug.lower() == explicit_slug),
+            None,
+        )
+        if guided_journey_programme:
+            journey_personalisation = "chosen"
+
+    if current_user.is_authenticated and not guided_journey_programme:
+        profile_country = None
+        pt = getattr(current_user, "profile_type", None)
+        if pt == "company" and getattr(current_user, "company_profile", None):
+            profile_country = current_user.company_profile.country
+        elif getattr(current_user, "individual_profile", None):
+            profile_country = current_user.individual_profile.country
+        elif getattr(current_user, "company_profile", None):
+            profile_country = current_user.company_profile.country
+        country_key = journey_programme_country_lookup_key(profile_country)
+        if country_key:
+            guided_journey_programme = _by_country.get(country_key)
+            if guided_journey_programme:
+                journey_personalisation = "profile"
+
+    if not guided_journey_programme:
+        accept_lang = request.headers.get("Accept-Language", "")
+        inferred_key = infer_journey_country_from_accept_language(accept_lang)
+        if inferred_key:
+            guided_journey_programme = _by_country.get(inferred_key)
+            if guided_journey_programme:
+                journey_personalisation = "language"
+
+    if not guided_journey_programme:
+        guided_journey_programme = _global_journey or (all_journey_programmes[0] if all_journey_programmes else None)
+
     return render_template('index.html',
                          featured_discussions=featured_discussions,
                          discussions=discussions,
@@ -92,7 +171,10 @@ def index():
                          topic=topic,
                          daily_question=daily_question,
                          daily_brief=daily_brief,
-                         brief_items=brief_items)
+                         brief_items=brief_items,
+                         guided_journey_programme=guided_journey_programme,
+                         journey_personalisation=journey_personalisation,
+                         all_journey_programmes=all_journey_programmes)
 
 
 @main_bp.route('/about')

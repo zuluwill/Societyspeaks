@@ -26,6 +26,7 @@ from app.models import (
     DailyQuestion,
     DailyQuestionSelection,
     Discussion,
+    Programme,
     TrendingTopic,
     Statement,
     DailyQuestionResponse
@@ -465,6 +466,44 @@ def get_eligible_discussions(days_to_avoid=AVOID_REPEAT_DAYS):
     return discussions
 
 
+def get_guided_journey_priority_discussions(days_to_avoid=AVOID_REPEAT_DAYS):
+    """
+    Active flagship programme discussions, in curated theme order, eligible for daily question.
+
+    Returned first (deduped) in select_next_question_source so the daily question often
+    aligns with the guided journey without excluding the rest of the pool.
+    """
+    from app.programmes.journey import guided_journey_slug_set, ordered_journey_discussions
+
+    slugs = sorted(guided_journey_slug_set())
+    if not slugs:
+        return []
+
+    cutoff = utcnow_naive() - timedelta(days=days_to_avoid)
+    recent_rows = db.session.query(DailyQuestionSelection.source_discussion_id).filter(
+        DailyQuestionSelection.source_type == "discussion",
+        DailyQuestionSelection.selected_at >= cutoff,
+        DailyQuestionSelection.source_discussion_id.isnot(None),
+    ).all()
+    recent_ids = {row[0] for row in recent_rows if row[0] is not None}
+
+    allowed_categories = list(DAILY_QUESTION_CATEGORIES)
+    out = []
+    programmes = (
+        Programme.query.filter(Programme.slug.in_(slugs), Programme.status == "active").order_by(Programme.id.asc()).all()
+    )
+    for programme in programmes:
+        for discussion in ordered_journey_discussions(programme):
+            if discussion.id in recent_ids:
+                continue
+            if discussion.partner_env == "test":
+                continue
+            if discussion.topic not in allowed_categories:
+                continue
+            out.append(discussion)
+    return out
+
+
 def get_eligible_trending_topics(days_to_avoid=AVOID_REPEAT_DAYS, min_civic_score=MIN_CIVIC_SCORE):
     """Get published trending topics that haven't been used recently.
 
@@ -550,10 +589,19 @@ def select_next_question_source():
     not just discussion titles. Users need specific claims to agree/disagree with.
     """
     # Try discussions first - collect all eligible statements with scores
-    discussions = get_eligible_discussions()
+    guided_first = get_guided_journey_priority_discussions()
+    general = get_eligible_discussions()
+    seen_ids = set()
+    discussions = []
+    for d in guided_first + general:
+        if d.id in seen_ids:
+            continue
+        seen_ids.add(d.id)
+        discussions.append(d)
+
     all_discussion_statements = []
 
-    for discussion in discussions[:15]:  # Check more discussions
+    for discussion in discussions[:25]:  # Guided programmes expand the candidate pool slightly
         seed_statements = Statement.query.filter_by(
             discussion_id=discussion.id,
             is_seed=True

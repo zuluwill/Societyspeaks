@@ -47,22 +47,35 @@
                     </div>
 
                     <div class="flex flex-col space-y-3 sm:flex-row sm:flex-wrap sm:gap-3 sm:space-y-0">
-                        <a href="{{ url_for('daily.today') }}" 
-                           class="inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2">
+                        {% if guided_journey_programme %}
+                        <a href="{{ url_for('programmes.view_programme', slug=guided_journey_programme.slug) }}"
+                           class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2">
+                            <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                            {% if guided_journey_programme.country %}
+                            Big questions — {{ guided_journey_programme.country }}
+                            {% else %}
+                            Big questions journey
+                            {% endif %}
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('daily.today') }}"
+                           class="inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             Today's Question
                         </a>
                         <a href="{{ url_for('brief.today') }}" 
-                           class="inline-flex items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                           class="inline-flex items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2">
                             <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                             Read Daily Brief
                         </a>
                         <a href="{{ url_for('discussions.create_discussion') if current_user.is_authenticated else url_for('auth.register') }}"
-                           class="inline-flex items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+                           class="inline-flex items-center justify-center rounded-md bg-white px-5 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2">
                             <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
@@ -84,6 +97,127 @@
         </div>
     </div>
 </div>
+
+{% if all_journey_programmes %}
+{% set country_flags = {
+  'United States': '🇺🇸', 'United Kingdom': '🇬🇧', 'Netherlands': '🇳🇱',
+  'Ireland': '🇮🇪', 'Germany': '🇩🇪', 'France': '🇫🇷', 'Canada': '🇨🇦',
+  'Singapore': '🇸🇬', 'Japan': '🇯🇵', 'China': '🇨🇳'
+} %}
+<!-- Big Questions Journey Section -->
+<section class="bg-gradient-to-br from-indigo-900 via-indigo-800 to-blue-900 py-16 sm:py-20" aria-labelledby="journey-section-heading">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+
+    <!-- Section header -->
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-2 rounded-full bg-indigo-700/50 px-4 py-1.5 text-sm font-semibold text-indigo-200 mb-4">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        Guided civic journey
+      </div>
+      <h2 id="journey-section-heading" class="text-3xl sm:text-4xl font-bold text-white leading-tight">
+        What do you actually believe?
+      </h2>
+      <p class="mt-4 text-lg text-indigo-200 max-w-2xl mx-auto">
+        8 themes. 48 real policy statements. Vote on the issues that define our era — then see where humanity agrees, where it divides, and what might bridge the gap.{% if journey_personalisation != 'fallback' and guided_journey_programme and guided_journey_programme.country %} Questions anchored in <strong class="text-white">{{ guided_journey_programme.country }}</strong>.{% endif %}
+      </p>
+    </div>
+
+    <!-- Stats strip -->
+    <div class="grid grid-cols-3 gap-3 sm:gap-6 max-w-lg mx-auto mb-12">
+      <div class="bg-white/10 rounded-xl p-4 sm:p-5 text-center">
+        <div class="text-2xl sm:text-3xl font-bold text-white">8</div>
+        <div class="text-indigo-200 text-xs sm:text-sm mt-1">Big themes</div>
+      </div>
+      <div class="bg-white/10 rounded-xl p-4 sm:p-5 text-center">
+        <div class="text-2xl sm:text-3xl font-bold text-white">48</div>
+        <div class="text-indigo-200 text-xs sm:text-sm mt-1">Statements</div>
+      </div>
+      <div class="bg-white/10 rounded-xl p-4 sm:p-5 text-center">
+        <div class="text-2xl sm:text-3xl font-bold text-white">{{ all_journey_programmes | length }}</div>
+        <div class="text-indigo-200 text-xs sm:text-sm mt-1">Editions</div>
+      </div>
+    </div>
+
+    <!-- Featured (geo-personalised) journey CTA -->
+    {% if guided_journey_programme %}
+    <div class="flex justify-center mb-8">
+      <a href="{{ url_for('programmes.view_programme', slug=guided_journey_programme.slug) }}"
+         class="group inline-flex items-center gap-3 rounded-xl bg-white px-6 py-4 text-indigo-900 shadow-lg hover:bg-indigo-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-900">
+        <span class="text-2xl leading-none" aria-hidden="true">
+          {{ country_flags.get(guided_journey_programme.country, '🌍') if guided_journey_programme.country else '🌍' }}
+        </span>
+        <div class="text-left">
+          {# Label honesty: profile vs language vs explicit URL vs global fallback #}
+          {% if journey_personalisation == 'profile' %}
+          <div class="text-xs font-semibold text-indigo-400 uppercase tracking-wide">Recommended for you</div>
+          {% elif journey_personalisation == 'chosen' %}
+          <div class="text-xs font-semibold text-indigo-400 uppercase tracking-wide">Your pick</div>
+          {% elif journey_personalisation == 'language' and guided_journey_programme.country %}
+          <div class="text-xs font-semibold text-indigo-400 uppercase tracking-wide">Edition for {{ guided_journey_programme.country }}</div>
+          {% else %}
+          <div class="text-xs font-semibold text-indigo-400 uppercase tracking-wide">Global edition</div>
+          {% endif %}
+          <div class="text-base sm:text-lg font-bold leading-snug">
+            {{ guided_journey_programme.country or 'Global' }} — Start the journey
+          </div>
+        </div>
+        <svg class="w-5 h-5 text-indigo-400 group-hover:text-indigo-600 flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+    {% endif %}
+
+    {% if all_journey_programmes | length > 1 %}
+    <p class="text-center text-sm text-indigo-300 max-w-sm mx-auto mt-2 mb-1">
+      Not the right edition? Choose yours below.
+    </p>
+    {% endif %}
+
+    <!-- Country picker — native list semantics for screen readers -->
+    {% set other_journeys = all_journey_programmes | selectattr('id', '!=', guided_journey_programme.id if guided_journey_programme else -1) | list %}
+    {% if other_journeys %}
+    <div>
+      <p id="journey-country-picker-label" class="text-center text-xs font-semibold text-indigo-300 uppercase tracking-widest mb-4">
+        Or choose an edition
+      </p>
+      <nav aria-labelledby="journey-country-picker-label">
+        <ul class="flex flex-wrap justify-center gap-2 sm:gap-3 list-none p-0 m-0">
+          {% for jp in other_journeys %}
+          <li>
+            <a href="{{ url_for('programmes.view_programme', slug=jp.slug) }}"
+               class="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 sm:px-4 py-2 text-sm text-white hover:bg-white/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-indigo-900">
+              <span class="text-base leading-none" aria-hidden="true">{{ country_flags.get(jp.country, '🌍') if jp.country else '🌍' }}</span>
+              <span class="font-medium">{{ jp.country or 'Global' }}</span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+
+    <!-- Themes preview — decorative, no nav role needed -->
+    <ul class="mt-12 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-w-3xl mx-auto list-none p-0"
+        aria-label="Journey themes">
+      {% for theme_name, theme_icon in [
+        ('Climate & planet', '🌍'), ('AI & technology', '🤖'),
+        ('Economy & work', '💼'), ('Health & care', '🏥'),
+        ('War & security', '🕊'), ('Democracy', '🏛'),
+        ('Society', '🤝'), ('Education', '🎓')
+      ] %}
+      <li class="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2.5">
+        <span class="text-lg leading-none" aria-hidden="true">{{ theme_icon }}</span>
+        <span class="text-indigo-100 text-xs font-medium leading-snug">{{ theme_name }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+
+  </div>
+</section>
+{% endif %}
 
 <!-- Daily Question Highlight -->
 <div class="bg-white border-b">
