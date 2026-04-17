@@ -306,7 +306,7 @@ def build_journey_progress(
     is_journey_complete = total_themes > 0 and completed_themes == total_themes
 
     return {
-        "items": items,
+        "theme_items": items,
         "next_item": next_item,
         "completed_themes": completed_themes,
         "total_themes": total_themes,
