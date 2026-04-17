@@ -458,7 +458,7 @@ def programme_journey_recap(slug):
 def journey_reminder_subscribe(slug):
     """
     Save a journey reminder cadence preference for authenticated or anonymous users.
-    Accepts JSON: {cadence: 'weekly'|'weekend'|'commute', email: '...' (anon only)}
+    Accepts JSON: {cadence: 'weekly'|'weekend'|'twice_weekly', timezone: '...', preferred_hour: 0-23, preferred_minute: 0-59, email: '...' (anon only)}
     Returns JSON: {success: true} or {success: false, error: '...'}
     """
     programme = Programme.query.filter_by(slug=slug).first_or_404()
@@ -578,7 +578,7 @@ def journey_reminder_subscribe(slug):
         else:
             db.session.commit()
 
-        return jsonify({'success': True, 'cadence': cadence, 'preferred_hour': preferred_hour})
+        return jsonify({'success': True, 'cadence': cadence, 'preferred_hour': preferred_hour, 'preferred_minute': preferred_minute})
 
     except Exception:
         db.session.rollback()

@@ -1627,9 +1627,6 @@ class JourneyReminderSubscription(db.Model):
     VALID_CADENCES = (CADENCE_WEEKLY, CADENCE_WEEKEND, CADENCE_TWICE_WEEKLY, CADENCE_COMMUTE)
     MAX_REMINDERS = 8
 
-    # Preferred local hour for each time-of-day slot
-    TIME_SLOT_HOURS = {'morning': 8, 'lunchtime': 12, 'evening': 19}
-
     id = db.Column(db.Integer, primary_key=True)
     programme_id = db.Column(db.Integer, db.ForeignKey('programme.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=True)

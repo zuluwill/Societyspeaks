@@ -378,7 +378,7 @@
   {% set _jrs = journey_reminder_subscription %}
   {% set _cadence_label = {'weekly': 'Weekly', 'weekend': 'Weekend mornings', 'twice_weekly': 'Twice a week', 'commute': 'Twice a week'}[_jrs.cadence] if _jrs.cadence in ('weekly','weekend','twice_weekly','commute') else _jrs.cadence %}
   {% set _h = _jrs.preferred_hour %}
-  {% set _m = _jrs.preferred_minute if _jrs.preferred_minute is defined else 0 %}
+  {% set _m = _jrs.preferred_minute if _jrs.preferred_minute is not none else 0 %}
   {% set _h12 = (_h % 12) if (_h % 12) != 0 else 12 %}
   {% set _ampm = 'am' if _h < 12 else 'pm' %}
   {% set _m_str = ('0' ~ _m) if _m < 10 else (_m|string) %}
