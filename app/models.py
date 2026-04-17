@@ -1658,7 +1658,11 @@ class JourneyReminderSubscription(db.Model):
 
     @staticmethod
     def verify_resume_token(token):
-        """Return the subscription if the token is valid and unexpired, else None."""
+        """
+        Return the subscription if the token is valid, unexpired, and active.
+        Used for magic-link resumption — token freshness is enforced here
+        because old resume links should not silently re-authenticate.
+        """
         if not token:
             return None
         sub = JourneyReminderSubscription.query.filter_by(resume_token=token).first()
@@ -1669,6 +1673,18 @@ class JourneyReminderSubscription(db.Model):
         if sub.unsubscribed_at:
             return None
         return sub
+
+    @staticmethod
+    def find_by_unsubscribe_token(token):
+        """
+        Return the subscription matching this token regardless of expiry.
+        Used for email unsubscribe links — CAN-SPAM / GDPR require these to
+        work indefinitely, not just within the 72-hour resume window.
+        Returns None only if the token doesn't match any row.
+        """
+        if not token:
+            return None
+        return JourneyReminderSubscription.query.filter_by(resume_token=token).first()
 
     def set_next_send_at(self, from_dt=None):
         """

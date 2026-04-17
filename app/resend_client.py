@@ -1685,7 +1685,6 @@ def send_journey_reminder_email(
             is_anonymous=not subscription.user_id,
         )
 
-        settings_url = f"{_base}/settings"
         email_data = {
             'from': client.from_email,
             'to': [subscription.email],

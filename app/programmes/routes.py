@@ -394,6 +394,12 @@ def view_programme(slug):
             journey_reminder_subscription = JourneyReminderSubscription.query.filter_by(
                 programme_id=programme.id, user_id=uid
             ).first()
+        elif 'journey_resume_sub_id' in session:
+            # Anonymous user arrived via magic link — show their subscription status
+            sub_id = session.get('journey_resume_sub_id')
+            candidate = db.session.get(JourneyReminderSubscription, sub_id)
+            if candidate and candidate.programme_id == programme.id:
+                journey_reminder_subscription = candidate
     return render_template(
         'programmes/view.html',
         programme=programme,
@@ -577,7 +583,9 @@ def journey_reminder_unsubscribe(slug):
 
     sub = None
     if token:
-        sub = JourneyReminderSubscription.verify_resume_token(token)
+        # Use the no-expiry lookup — unsubscribe links must work indefinitely
+        # regardless of the 72-hour magic-link window (CAN-SPAM / GDPR compliance).
+        sub = JourneyReminderSubscription.find_by_unsubscribe_token(token)
     elif current_user.is_authenticated:
         sub = JourneyReminderSubscription.query.filter_by(
             programme_id=programme.id, user_id=current_user.id
@@ -586,6 +594,8 @@ def journey_reminder_unsubscribe(slug):
     if sub and sub.programme_id == programme.id:
         sub.unsubscribed_at = utcnow_naive()
         db.session.commit()
+        # Clear the session reference so anonymous users stop seeing the "set" pill
+        session.pop('journey_resume_sub_id', None)
         flash('You\'ve been unsubscribed from journey reminders.', 'success')
     else:
         flash('Could not find that subscription — it may have already been removed.', 'info')
