@@ -5,13 +5,19 @@ Each variant has GENUINELY DISTINCT statements reflecting that country's specifi
 institutions, debates, and political context. The global variant covers universal
 big questions; country variants anchor each theme in local reality.
 
-Variant keys and slugs: app/programmes/journey_variants.py (add env keys in config.py when adding variants).
+Academic standard: every statement is drawn from live, contested debates in
+peer-reviewed literature, major institutional reports (IPCC, IEA, ILO, OECD, WHO,
+UNHCR, etc.), and leading policy institutes. Statements are designed to be:
+  - Clearly normative and falsifiable
+  - Genuinely contested by informed, reasonable people
+  - Free of rhetorical second clauses or embedded conclusions
+  - Accessible to educated non-specialists
 
+Variant keys and slugs: app/programmes/journey_variants.py
 Run via:
   flask seed-guided-journey --all-variants
   flask seed-guided-journey --variant global
   flask seed-guided-journey --variant uk
-  # … see journey_variants.VALID_VARIANTS
 """
 from __future__ import annotations
 
@@ -45,34 +51,42 @@ def _curriculum_global() -> List[dict[str, Any]]:
             "theme": "Climate & planet",
             "topic": "Environment",
             "title": "Big questions: Climate, energy, and our shared environment",
-            "description": "How should humanity respond to environmental limits and climate risk?",
+            "description": "How should humanity respond to the climate crisis while managing energy security and fairness?",
             "information_title": "Before you vote",
-            "information_body": "These statements are about **collective choices** — policy, technology, and fairness — not personal guilt.",
-            "article_keywords": ["climate", "carbon", "energy", "COP"],
+            "information_body": (
+                "These statements concern **collective policy choices** — carbon pricing, climate finance, technology — "
+                "not personal habits. Key sources: IPCC Sixth Assessment Report (2021–2022), IEA Net Zero by 2050 (2021), "
+                "UNFCCC Loss and Damage Fund decisions."
+            ),
+            "article_keywords": ["IPCC report", "carbon pricing", "climate finance developing countries", "net zero policy", "clean energy transition"],
             "seeds": [
-                "Rich countries should pay significantly more toward global climate adaptation than poorer nations.",
-                "Nuclear power should be a major part of decarbonising electricity this decade.",
-                "Governments should ban new fossil-fuel car sales sooner, even if it raises short-term costs.",
-                "Carbon taxes are fairer than complex regulations for reducing emissions.",
-                "Protecting biodiversity is as urgent as cutting greenhouse gases.",
-                "Individual lifestyle change matters less than systemic policy change for the climate.",
+                "Developed countries have not met their $100 billion annual climate finance pledge and owe developing nations substantially more in adaptation and loss-and-damage funding.",
+                "Nuclear power must be retained and expanded in most countries as part of a credible path to electricity decarbonisation by 2050.",
+                "A carbon price set at or near the social cost of carbon is more economically efficient than sector-by-sector emission regulations.",
+                "Biodiversity loss is as serious a long-term threat to human welfare as climate change and warrants equivalent policy priority and funding.",
+                "Meeting 1.5°C temperature targets requires major demand-side changes in diet, aviation, and consumption — not only clean energy supply.",
+                "New licensing of fossil fuel extraction should end immediately in countries that have made legally binding net-zero commitments.",
             ],
         },
         {
             "theme": "AI & technology",
             "topic": "Technology",
             "title": "Big questions: Artificial intelligence, automation, and governance",
-            "description": "Who should control powerful AI systems, and what must be regulated?",
+            "description": "Who should control powerful AI systems, and what must be regulated to protect society?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **governance and trade-offs**: safety, innovation, jobs, and democratic oversight.",
-            "article_keywords": ["artificial intelligence", "AI regulation", "automation", "tech policy"],
+            "information_body": (
+                "Focus on **governance and trade-offs**: safety, innovation, jobs, and democratic oversight. "
+                "Key references: EU AI Act (2024), Bletchley AI Safety Declaration (2023), "
+                "Acemoglu 'The Simple Macroeconomics of AI' (2024), UN Advisory Body on AI (2024)."
+            ),
+            "article_keywords": ["AI regulation frontier safety", "AI liability law", "AI automation jobs displacement", "AI governance treaty", "data protection AI training"],
             "seeds": [
-                "Advanced AI systems should require a government licence before wide public deployment.",
-                "Open-source release of the largest AI models does more public good than harm.",
-                "Companies building frontier AI should be legally liable for serious harms their systems cause.",
-                "Automating jobs with AI is acceptable if redistribution and retraining are publicly funded.",
-                "Democratic governments should slow AI deployment if safety is uncertain, even if rivals do not.",
-                "Personal data should not be used to train general AI models without clear opt-in consent.",
+                "Frontier AI systems capable of causing large-scale harm should be required to pass independent safety evaluations before public deployment.",
+                "Open-source release of the most powerful AI model weights creates security risks that outweigh the benefits of public access.",
+                "AI developers should bear strict legal liability for foreseeable harms caused by their deployed systems, as manufacturers do for physical products.",
+                "AI-driven automation will displace significantly more jobs than it creates this decade, requiring fundamental redesign of social insurance systems.",
+                "Global AI safety governance requires a binding multilateral treaty process, not voluntary national commitments.",
+                "Training AI systems on personal data without explicit opt-in consent should be prohibited under data protection law.",
             ],
         },
         {
@@ -81,242 +95,298 @@ def _curriculum_global() -> List[dict[str, Any]]:
             "title": "Big questions: Prosperity, inequality, and the future of work",
             "description": "Taxation, markets, and who bears the costs of economic change.",
             "information_title": "Before you vote",
-            "information_body": "These questions concern **systems**, not any one person's spending habits.",
-            "article_keywords": ["economy", "inequality", "taxation", "workers rights"],
+            "information_body": (
+                "These questions concern **systemic design**, not individual spending. "
+                "Key sources: Piketty 'Capital in the 21st Century' (2013), Hsieh & Moretti 'Housing Constraints' (2019), "
+                "OECD 'In It Together' inequality reports, IMF Fiscal Monitor."
+            ),
+            "article_keywords": ["wealth tax policy", "universal basic income evidence", "housing zoning reform", "trade labour standards", "collective bargaining inequality"],
             "seeds": [
-                "Wealth taxes on the very rich are a fair way to fund public services.",
-                "A universal basic income is better than targeted benefits for reducing poverty.",
-                "Stronger unions improve outcomes for most workers, not only their members.",
-                "Free trade agreements should be rejected when they weaken labour or environmental standards.",
-                "Housing costs are mainly a supply problem that upzoning and planning reform can fix.",
-                "High inflation is a bigger long-term threat to society than high unemployment.",
+                "A direct annual tax on net wealth above a high threshold is necessary to address asset concentration that income taxation alone cannot reach.",
+                "A universal basic income set at the poverty line would reduce poverty more effectively than current means-tested benefit systems.",
+                "Restrictive zoning and planning regulations are the primary cause of housing unaffordability in most major cities.",
+                "International trade agreements must include binding, independently enforceable labour and environmental standards.",
+                "High collective bargaining coverage reduces wage inequality more effectively than minimum wage legislation alone.",
+                "Central banks should formally weight full employment as an equal mandate to price stability, not treat inflation control as the sole objective.",
             ],
         },
         {
             "theme": "Health & care",
             "topic": "Healthcare",
             "title": "Big questions: Health systems, prevention, and access",
-            "description": "How societies should fund and prioritise care.",
+            "description": "How societies should fund, organise, and prioritise healthcare.",
             "information_title": "Before you vote",
-            "information_body": "Vote on **public policy** angles — access, funding, prevention — not personal medical choices.",
-            "article_keywords": ["healthcare", "public health", "health system", "mental health"],
+            "information_body": (
+                "Vote on **public policy** — access, funding models, prevention — not personal medical choices. "
+                "Key sources: Commonwealth Fund International Health Comparisons, Lancet Commission on Universal Health Coverage (2023), "
+                "WHO Mental Health Action Plan 2013–2030, Stiglitz-Sen-Fitoussi Commission on GDP."
+            ),
+            "article_keywords": ["universal healthcare outcomes comparison", "drug patent compulsory licensing", "ultra-processed food regulation", "mental health funding gap", "pandemic preparedness fund"],
             "seeds": [
-                "Healthcare should be funded primarily through taxation rather than private insurance.",
-                "Governments should restrict junk-food advertising to reduce obesity.",
-                "Longer healthy life expectancy matters more as a policy goal than maximising GDP growth.",
-                "Medical innovation should be incentivised even if it temporarily raises drug prices.",
-                "Mental health services deserve equal funding to physical health services.",
-                "Pandemic preparedness should be funded continuously, not only after emergencies begin.",
+                "Universal healthcare funded through general taxation achieves better population health outcomes than insurance-based systems at comparable total cost.",
+                "Compulsory licensing of essential medicine patents is justified when patent protection prevents access in low- and middle-income countries.",
+                "The public health burden of ultra-processed food consumption is severe enough to justify mandatory advertising restrictions and reformulation requirements.",
+                "Mental health conditions receive a fraction of the clinical and research investment justified by their economic and social burden.",
+                "A permanent international pandemic preparedness fund financed by treaty obligation — not discretionary aid — is necessary after the failures of COVID response.",
+                "Governments should prioritise healthy life expectancy and wellbeing indicators over GDP growth as the primary measures of national progress.",
             ],
         },
         {
             "theme": "War, peace & security",
             "topic": "Geopolitics",
             "title": "Big questions: War, intervention, and international security",
-            "description": "When force is justified and how alliances should work.",
+            "description": "When force is justified, how alliances should work, and how to govern new security risks.",
             "information_title": "Before you vote",
-            "information_body": "These are **normative** questions about legitimacy and risk; reasonable people disagree sharply.",
-            "article_keywords": ["NATO", "Ukraine", "war", "defence spending", "security"],
+            "information_body": (
+                "These are **normative** questions about legitimacy and risk; reasonable people disagree sharply. "
+                "Key references: Waltz vs. Sagan nuclear debate, R2P doctrine (ICISS 2001), "
+                "SIPRI Military Expenditure Database, ICRC Autonomous Weapons positions."
+            ),
+            "article_keywords": ["nuclear deterrence policy", "humanitarian intervention R2P", "NATO defence spending 2 percent", "sanctions effectiveness authoritarian", "autonomous weapons ban treaty"],
             "seeds": [
-                "Military alliances like NATO reduce the overall risk of large-scale war.",
-                "Humanitarian military intervention can be justified even without UN Security Council approval.",
-                "Countries should spend more on defence given current geopolitical instability.",
-                "Economic sanctions are preferable to military force for changing authoritarian state behaviour.",
-                "Nuclear deterrence remains necessary for great-power peace in our lifetime.",
-                "Neutral countries should still supply defensive aid when democracies are invaded.",
+                "Nuclear deterrence remains the primary guarantor of great-power peace, making significant nuclear disarmament strategically premature in current conditions.",
+                "Humanitarian military intervention without UN Security Council authorisation is justified when genocide or mass atrocities are actively ongoing and the Council is deadlocked.",
+                "Liberal democracies should collectively increase defence spending given the demonstrated willingness of authoritarian states to use military force.",
+                "Multilateral economic sanctions are rarely sufficient on their own to change the strategic behaviour of authoritarian governments.",
+                "Climate change is a threat multiplier for armed conflict and insecurity and should be formally integrated into national security strategies.",
+                "Autonomous weapons systems that select and engage targets without meaningful human control should be banned by international treaty.",
             ],
         },
         {
             "theme": "Democracy & institutions",
             "topic": "Politics",
             "title": "Big questions: Democracy, rights, and political institutions",
-            "description": "Representation, limits on power, and civic trust.",
+            "description": "Representation, limits on power, electoral integrity, and civic trust.",
             "information_title": "Before you vote",
-            "information_body": "Interpret statements as **design choices** for institutions, not party loyalty.",
-            "article_keywords": ["democracy", "elections", "parliament", "rights", "institutions"],
+            "information_body": (
+                "Interpret statements as **institutional design choices**, not party loyalty. "
+                "Key sources: Lijphart 'Patterns of Democracy' (2012), Levitsky & Ziblatt 'How Democracies Die' (2018), "
+                "Electoral Integrity Project, Gilens & Page 'Testing Theories of American Politics' (2014)."
+            ),
+            "article_keywords": ["proportional representation evidence", "judicial independence democracy", "election misinformation platform liability", "term limits democratic backsliding", "compulsory voting turnout"],
             "seeds": [
-                "Proportional representation is fairer than first-past-the-post for national elections.",
-                "Strong judicial review is essential even when it slows majoritarian change.",
-                "Social media platforms should be legally required to curb viral election misinformation.",
-                "Term limits for heads of government strengthen democracy more than they weaken experience.",
-                "Compulsory voting improves democratic legitimacy.",
-                "Corporate lobbying should be much more tightly restricted than it is today.",
+                "Proportional representation produces more representative legislative bodies than first-past-the-post electoral systems.",
+                "Independent judicial review is essential for protecting minority rights even when it overrides the preferences of electoral majorities.",
+                "Social media platforms that algorithmically amplify demonstrably false election information should bear legal liability for resulting democratic harms.",
+                "Term limits for heads of government meaningfully reduce the risk of democratic backsliding and authoritarian consolidation.",
+                "Compulsory voting would substantially increase political equality by eliminating the systematic under-representation of lower-income and younger voters.",
+                "The scale of corporate and industry lobbying distorts democratic representation far beyond what ordinary citizens can counterbalance.",
             ],
         },
         {
             "theme": "Society & cohesion",
             "topic": "Society",
             "title": "Big questions: Migration, identity, and social trust",
-            "description": "Pluralism, borders, and what we owe each other.",
+            "description": "Pluralism, borders, and what we owe each other in diverse societies.",
             "information_title": "Before you vote",
-            "information_body": "Vote on **policy and ethics**; avoid interpreting statements as attacks on individuals.",
-            "article_keywords": ["migration", "immigration", "refugees", "social cohesion"],
+            "information_body": (
+                "Vote on **policy and ethics**; avoid interpreting statements as judgements on individuals. "
+                "Key sources: UNHCR Global Trends, Clemens 'Economics and Emigration' (2011), "
+                "Putnam 'E Pluribus Unum' (2007), Wilkinson & Pickett 'The Spirit Level' (2009)."
+            ),
+            "article_keywords": ["high-skilled migration economic evidence", "refugee convention legal obligations", "multiculturalism cohesion research", "hate speech law minority protection", "inequality social trust"],
             "seeds": [
-                "Economic migration should be easier than it is in most rich countries today.",
-                "Refugees fleeing war should be protected even when host communities face housing pressure.",
-                "Multiculturalism strengthens societies more than it fragments them.",
-                "National identity still matters for democratic solidarity in large diverse states.",
-                "Hate-speech laws should protect minorities even when they limit some political speech.",
-                "Reducing inequality does more for social cohesion than restricting immigration.",
+                "High-income countries should substantially expand legal migration pathways — the fiscal and economic evidence for doing so is strong.",
+                "States that signed the 1951 Refugee Convention have binding legal obligations to asylum seekers that domestic political pressure cannot override.",
+                "Cultural and ethnic diversity in high-immigration societies produces long-term economic benefits that justify active and well-resourced immigration policy.",
+                "Hate speech laws targeting incitement to violence are compatible with free expression and necessary to protect vulnerable communities.",
+                "Reducing income inequality through redistribution is more effective at building social trust and cohesion than restricting immigration.",
+                "Governments have a duty to actively enforce prohibitions on racial and ethnic discrimination in employment and housing, not merely legislate them.",
             ],
         },
         {
             "theme": "Education & future skills",
             "topic": "Education",
             "title": "Big questions: Education, skills, and opportunity",
-            "description": "What every generation should learn — and who pays.",
+            "description": "What every generation should learn, how education systems can reduce inequality, and who pays.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **access, curriculum, and funding models**.",
-            "article_keywords": ["education", "schools", "university tuition", "vocational training"],
+            "information_body": (
+                "Focus on **access, curriculum, and funding models**. "
+                "Key sources: OECD 'Education at a Glance', Chetty, Friedman & Rockoff 'Measuring the Impacts of Teachers' (2014), "
+                "Hoxby & Avery 'The Missing One-Offs' (2013), Hanushek & Woessmann on vocational education."
+            ),
+            "article_keywords": ["university tuition fees access inequality", "standardised testing learning outcomes", "vocational education funding parity", "digital literacy curriculum", "private schools inequality public subsidy"],
             "seeds": [
-                "Higher education tuition should be largely publicly funded through general taxation.",
-                "Standardised testing does more harm than good for student learning outcomes.",
-                "Vocational pathways deserve equal prestige to academic university routes.",
-                "National curricula should require climate literacy and digital skills for all students.",
-                "Private schools widen inequality and should be phased down, not expanded.",
-                "Teacher pay should rise significantly even if class sizes stay the same.",
+                "University tuition fees reduce access for students from lower-income households and should be replaced with public funding through progressive taxation.",
+                "High-stakes standardised testing narrows curricula and disadvantages students from lower-income backgrounds without improving average learning outcomes.",
+                "Vocational and technical education routes are systematically underfunded relative to academic routes in most high-income countries.",
+                "Digital and critical information literacy should be mandatory core curriculum requirements from primary school alongside reading and numeracy.",
+                "Private schools that select by academic ability or religious faith perpetuate socioeconomic advantage and should not receive public subsidy.",
+                "Teacher quality is the single most important within-school determinant of pupil outcomes, and teacher pay should reflect this.",
             ],
         },
     ]
 
 
 def _curriculum_uk() -> List[dict[str, Any]]:
-    """UK-specific big questions anchored in British institutions and current debates."""
+    """UK-specific big questions anchored in British institutions, evidence, and current debates."""
     return [
         {
             "theme": "Climate & planet",
             "topic": "Environment",
-            "title": "Big questions for the UK: Energy, net zero, and environmental policy",
-            "description": "Should Britain lead on climate action or prioritise energy security first?",
+            "title": "Big questions for the UK: Net zero, energy security, and environmental policy",
+            "description": "Can Britain decarbonise at the pace required by the Climate Change Act while managing energy costs and rural interests?",
             "information_title": "Before you vote",
-            "information_body": "These questions concern UK **policy choices** — North Sea licensing, heat pumps, planning — not individual habits.",
-            "article_keywords": ["North Sea oil", "net zero", "heat pump", "UK climate", "energy security"],
+            "information_body": (
+                "These questions concern **UK policy choices** — North Sea licensing, heat pumps, planning reform, and agricultural policy. "
+                "Key sources: Climate Change Committee Sixth Carbon Budget (2020), NESO Clean Power 2030 Action Plan, "
+                "UK North Sea Transition Deal, UK Net Zero Research Programme."
+            ),
+            "article_keywords": ["UK North Sea oil gas licence", "UK net zero Climate Change Act", "heat pump grant UK", "UK onshore wind planning", "UK Sixth Carbon Budget"],
             "seeds": [
-                "The UK should not issue new North Sea oil and gas licences given our net-zero 2050 commitment.",
-                "Heat pump grants should be large enough to make them the default choice for UK home heating.",
-                "Planning rules should be relaxed to fast-track onshore wind farms in England.",
-                "The UK's climate leadership is undermined when it expands Heathrow while cutting rail investment.",
-                "British farmers should be paid to restore peatlands even when it reduces agricultural output.",
-                "Net zero should not be delayed even if the transition raises household energy bills.",
+                "Issuing new North Sea oil and gas licences is incompatible with the UK's legally binding 2050 net-zero commitment under the Climate Change Act.",
+                "Heat pump grants should be increased substantially so that installation costs are no longer a barrier for median-income households.",
+                "Planning rules in England should be reformed to allow onshore wind development — currently one of the cheapest new electricity sources available.",
+                "The UK's Sixth Carbon Budget requires emissions reductions significantly faster than existing policy will deliver.",
+                "UK farmers should receive direct payments for peatland restoration and habitat recovery, even where this reduces agricultural output.",
+                "Britain's net-zero credibility is undermined by expanding Heathrow airport capacity while rail investment is delayed.",
             ],
         },
         {
             "theme": "AI & technology",
             "topic": "Technology",
-            "title": "Big questions for the UK: AI regulation, data, and digital governance",
-            "description": "Can Britain lead on responsible AI without stifling its tech sector?",
+            "title": "Big questions for the UK: AI safety, regulation, and digital governance",
+            "description": "Can Britain lead on responsible AI without sacrificing its economic ambitions in the sector?",
             "information_title": "Before you vote",
-            "information_body": "Consider the UK's **post-Brexit positioning** — autonomous regulator vs alignment with EU AI Act.",
-            "article_keywords": ["UK AI regulation", "ARIA", "ICO", "Online Safety Act", "tech regulation"],
+            "information_body": (
+                "Consider the UK's position as host of the AI Safety Summit and its **post-Brexit regulatory divergence** from the EU AI Act. "
+                "Key sources: UK AI Safety Institute (AISI) evaluations, Online Safety Act 2023, "
+                "ICO enforcement records, Centre for Long-Term Resilience AI reports."
+            ),
+            "article_keywords": ["UK AI Safety Institute", "UK AI regulation binding rules", "Online Safety Act 2023", "ICO GDPR enforcement UK", "UK data protection post-Brexit"],
             "seeds": [
-                "The UK should adopt binding AI safety rules aligned with the EU AI Act rather than a lighter-touch approach.",
-                "ARIA's public investment in frontier AI research is a good use of taxpayer money.",
-                "The Online Safety Act goes too far in restricting legal but harmful online content.",
-                "Requiring social media age verification is worth the privacy trade-offs.",
-                "UK data protection rules post-Brexit should remain as strong as the EU's GDPR.",
-                "The government should use public procurement to favour UK-built AI tools over US alternatives.",
+                "The UK should adopt binding AI safety rules rather than relying on voluntary codes and industry self-regulation.",
+                "The UK's light-touch post-Brexit approach to AI regulation risks enabling harms that the EU AI Act is designed to prevent.",
+                "The Online Safety Act's provisions on legal-but-harmful content set a problematic precedent for government oversight of online speech.",
+                "Requiring age verification for social media platforms is justified even if it creates privacy trade-offs.",
+                "UK data protection rules post-Brexit should remain fully equivalent to the EU's GDPR to protect UK-EU data flows.",
+                "Government use of automated decision-making that affects individuals' rights should require mandatory transparency and right of appeal.",
             ],
         },
         {
             "theme": "Economy & work",
             "topic": "Economy",
             "title": "Big questions for the UK: Growth, inequality, and the cost of living",
-            "description": "Stagnant wages, housing costs, and who should bear the burden of recovery.",
+            "description": "UK productivity stagnation, regional inequality, and the housing crisis.",
             "information_title": "Before you vote",
-            "information_body": "These are questions about **economic design choices**, not individual budgeting.",
-            "article_keywords": ["UK economy", "cost of living", "National Living Wage", "housing", "austerity"],
+            "information_body": (
+                "Focus on **structural economic questions** — the productivity puzzle, housing supply, and fiscal choices. "
+                "Key sources: Resolution Foundation, Institute for Fiscal Studies, LSE Centre for Economic Performance, "
+                "OBR Fiscal Risks and Sustainability report, ONS Regional Economic Activity data."
+            ),
+            "article_keywords": ["UK productivity gap OECD", "National Living Wage UK evidence", "UK housing crisis planning", "UK regional inequality levelling up", "UK public investment infrastructure"],
             "seeds": [
-                "Austerity since 2010 has done more long-term damage to the UK economy than it saved.",
-                "The National Living Wage should rise to £15 an hour within this parliament.",
-                "Cutting inheritance tax is a lower priority than fixing the NHS and schools.",
-                "The UK should rejoin the EU single market for goods to improve trade.",
-                "London's dominance of the UK economy is a structural problem that needs active redistribution.",
-                "Britain's housing crisis is primarily caused by the planning system, not land banking.",
+                "Public sector austerity from 2010 to 2019 caused lasting damage to UK public services and long-run economic capacity.",
+                "The National Living Wage should rise to £15 an hour within this parliament, in line with living cost evidence.",
+                "The UK's chronic underinvestment in infrastructure and R&D relative to OECD peers is a primary cause of its productivity gap.",
+                "London's dominance of the UK economy requires active regional industrial policy — market forces alone will not rebalance it.",
+                "The UK housing crisis requires both more permissive planning reform and a significant expansion of publicly funded housebuilding.",
+                "Inheritance tax reform should prioritise closing agricultural and business property relief loopholes before any reduction in the headline rate.",
             ],
         },
         {
             "theme": "Health & care",
             "topic": "Healthcare",
-            "title": "Big questions for the UK: Saving the NHS",
-            "description": "Waiting lists, funding models, and whether the NHS can survive without reform.",
+            "title": "Big questions for the UK: The NHS, social care, and public health",
+            "description": "Waiting lists, funding models, workforce retention, and whether the NHS can be restored to sustainability.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **NHS structure, funding, and access** — not personal health choices.",
-            "article_keywords": ["NHS", "waiting lists", "social care", "NHS reform", "GP"],
+            "information_body": (
+                "Focus on **NHS structure, funding, and access** — not personal health choices. "
+                "Key sources: NHS England waiting list data (7m+ in 2024), Health Foundation 'NHS at 75' report, "
+                "Nuffield Trust social care analyses, King's Fund workforce reports."
+            ),
+            "article_keywords": ["NHS waiting list funding 2024", "NHS social care elderly funding", "NHS workforce pay retention", "NHS privatisation independent sector", "UK obesity prevention policy"],
             "seeds": [
-                "The NHS should remain free at the point of use for everyone, funded by general taxation.",
-                "NHS waiting lists should be cleared by expanding use of private providers paid by the state.",
-                "Social care for the elderly should be fully funded by the state, not left to individuals.",
-                "NHS staff pay has fallen so far behind that a major pay rise is justified even if it requires tax rises.",
-                "GPs should offer same-day appointments as a right, funded by ending some elective hospital care.",
-                "Patients should be able to pay to top up NHS care without losing their NHS entitlement.",
+                "The NHS must remain free at the point of use for all, funded through general taxation — user charges would deter those who need care most.",
+                "NHS waiting lists, which exceeded seven million in 2024, cannot be cleared without a significant and sustained real-terms funding increase.",
+                "Social care for older and disabled people should be fully state-funded, ending the system under which individuals must deplete assets to pay for care.",
+                "NHS staff pay has declined significantly in real terms since 2010 and requires urgent restoration to recruit and retain the workforce needed.",
+                "Expanded use of independent sector providers, paid at NHS tariff rates, can meaningfully reduce waiting times without compromising NHS principles.",
+                "Prevention — addressing obesity, smoking, and alcohol consumption — would reduce future NHS demand more effectively than efficiency measures alone.",
             ],
         },
         {
             "theme": "War, peace & security",
             "topic": "Geopolitics",
-            "title": "Big questions for the UK: Defence, NATO, and Britain's place in the world",
-            "description": "Trident, Ukraine, and what post-Brexit Britain owes to international security.",
+            "title": "Big questions for the UK: Defence, NATO, and Britain's role in the world",
+            "description": "Trident, Ukraine, defence spending, and Britain's post-Brexit geopolitical position.",
             "information_title": "Before you vote",
-            "information_body": "These are normative questions about **force, alliances, and nuclear deterrence**.",
-            "article_keywords": ["Trident", "NATO UK", "Ukraine UK", "UK defence spending", "AUKUS"],
+            "information_body": (
+                "These are normative questions about **force, alliances, and Britain's international commitments**. "
+                "Key sources: IISS Military Balance, Budapest Memorandum (1994), "
+                "RUSI defence reviews, House of Commons Defence Committee reports."
+            ),
+            "article_keywords": ["UK Trident renewal cost", "UK NATO 2 percent defence spending", "UK Ukraine Budapest Memorandum", "AUKUS strategic assessment", "UK overseas development aid 0.7"],
             "seeds": [
-                "The UK should renew Trident even though the cost could fund years of NHS investment.",
-                "Britain should commit to spending 2.5% of GDP on defence as a floor, not a target.",
-                "The UK has a special obligation to support Ukraine given its role in the Budapest Memorandum.",
-                "AUKUS is a strategic mistake that alienates the EU and risks conflict with China.",
-                "UK foreign aid should be restored to 0.7% of GNI as a legal obligation.",
-                "Post-Brexit Britain punches below its weight diplomatically and needs to re-engage with Europe.",
+                "The UK should renew and maintain its Trident nuclear deterrent as a necessary contribution to NATO's nuclear posture.",
+                "Britain should commit to spending 2.5% of GDP on defence as a sustained floor, not merely an aspirational target.",
+                "The UK has a particular obligation to sustain military support for Ukraine given its role as a Budapest Memorandum signatory.",
+                "Post-Brexit Britain has diminished its diplomatic influence in Europe in ways that damage UK national security interests.",
+                "AUKUS strengthens UK strategic interests in the Indo-Pacific and represents a sound long-term security investment.",
+                "UK overseas development assistance should be restored to 0.7% of GNI as required by the International Development Act.",
             ],
         },
         {
             "theme": "Democracy & institutions",
             "topic": "Politics",
             "title": "Big questions for the UK: Parliament, voting, and constitutional reform",
-            "description": "Lords reform, electoral systems, and the erosion of democratic norms.",
+            "description": "Lords reform, electoral systems, judicial independence, and the erosion of democratic norms.",
             "information_title": "Before you vote",
-            "information_body": "These are **institutional design** questions — not about any party's current position.",
-            "article_keywords": ["House of Lords reform", "proportional representation UK", "Supreme Court", "UK constitution"],
+            "information_body": (
+                "These are **institutional design questions** — not about any party's current position. "
+                "Key sources: Electoral Reform Society, Constitution Unit UCL, "
+                "Supreme Court judgment in Miller (2019), Venice Commission assessments of UK constitutional changes."
+            ),
+            "article_keywords": ["UK proportional representation evidence", "House of Lords reform elected", "UK Supreme Court independence", "voter ID disenfranchisement UK", "UK political donations transparency"],
             "seeds": [
                 "First-past-the-post should be replaced with proportional representation for UK general elections.",
-                "The House of Lords should be replaced by an elected second chamber.",
-                "The Supreme Court's power to strike down government actions should be strengthened, not weakened.",
-                "Prime Ministers should be limited to two terms in office.",
-                "Voter ID requirements do more harm to legitimate voting than they prevent fraud.",
-                "Recall elections for MPs should be triggered by a public petition, not just a parliamentary vote.",
+                "The House of Lords should be replaced by an elected second chamber with a clear democratic mandate.",
+                "The Supreme Court's power to hold government actions unlawful under constitutional principles should be protected, not curtailed.",
+                "Voter ID requirements introduced in 2023 disenfranchise legitimately entitled voters more than they prevent fraud.",
+                "MP recall should be triggerable directly by constituents through a petition threshold, not only through a parliamentary committee.",
+                "Political donation transparency rules should be substantially tightened to limit the influence of large donors on government policy.",
             ],
         },
         {
             "theme": "Society & cohesion",
             "topic": "Society",
             "title": "Big questions for the UK: Immigration, identity, and community",
-            "description": "What the UK owes newcomers, and what it takes to build a cohesive society.",
+            "description": "What the UK owes newcomers, and what it takes to build and maintain a cohesive society.",
             "information_title": "Before you vote",
-            "information_body": "Vote on **policy design**, not individual people's choices or worth.",
-            "article_keywords": ["UK immigration", "asylum seekers UK", "Channel crossings", "integration UK"],
+            "information_body": (
+                "Vote on **policy design**, not on the character or worth of individuals. "
+                "Key sources: Migration Advisory Committee reports, UNHCR UK asylum statistics, "
+                "IPPR 'Legitimate Concerns' report, Home Office Migration Transparency Data."
+            ),
+            "article_keywords": ["UK net migration policy MAC", "UK asylum seeker right to work", "UK offshore processing Rwanda ruling", "UK integration policy evidence", "UK community cohesion investment"],
             "seeds": [
-                "The UK's target of reducing net migration to the tens of thousands is neither achievable nor desirable.",
-                "Asylum seekers should be allowed to work while their claims are assessed.",
-                "Offshore processing of asylum claims, as under the Rwanda scheme, is ethically unacceptable.",
-                "The UK's diversity is a strength that benefits everyone, not just recent arrivals.",
-                "Communities facing rapid demographic change should receive additional public investment.",
-                "British citizenship tests should assess civic values, not historical trivia.",
+                "Net migration targets expressed as absolute numbers are not a credible policy instrument and should be replaced with skills-based assessment frameworks.",
+                "Asylum seekers should have the right to work while their claims are assessed — the prohibition harms integration prospects and public finances.",
+                "Offshore processing of asylum claims is incompatible with the UK's obligations under the 1951 Refugee Convention and ECHR.",
+                "Britain's ethnic and cultural diversity is a long-term economic and social asset that requires sustained public investment in cohesion infrastructure.",
+                "Communities experiencing rapid demographic change require additional targeted public investment to maintain social infrastructure.",
+                "UK citizenship naturalisation requirements should prioritise civic knowledge and democratic values over historical trivia.",
             ],
         },
         {
             "theme": "Education & future skills",
             "topic": "Education",
             "title": "Big questions for the UK: Schools, universities, and preparing for work",
-            "description": "RAAC schools, tuition fees, and whether the system delivers for everyone.",
+            "description": "Tuition fees, grammar schools, apprenticeships, and whether the system delivers for everyone.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **access, funding models, and what we teach** — not individual school performance.",
-            "article_keywords": ["UK education", "university tuition fees", "apprenticeships UK", "OFSTED", "grammar schools"],
+            "information_body": (
+                "Focus on **access, funding models, and what is taught** — not individual school performance. "
+                "Key sources: Institute for Fiscal Studies HE funding analysis, Education Policy Institute, "
+                "Sutton Trust social mobility research, OFSTED framework reviews."
+            ),
+            "article_keywords": ["UK university tuition fees graduate debt", "grammar schools inequality evidence", "UK apprenticeships funding parity", "OFSTED inspection reform", "UK teacher pay graduate professions"],
             "seeds": [
-                "University tuition fees should be abolished and higher education funded by general taxation.",
-                "Grammar schools should be phased out because they entrench advantage rather than expand it.",
-                "Apprenticeships should be funded at the same per-student level as university places.",
-                "OFSTED inspection is too high-stakes and should be replaced with school improvement support.",
-                "Teachers are significantly underpaid relative to other graduate professions in the UK.",
-                "Religious schools that select pupils on faith grounds should not receive state funding.",
+                "University tuition fees should be substantially reduced and the graduate contribution system reformed to reduce the long-term debt burden.",
+                "Grammar schools should not be expanded — the evidence shows they increase inequality without improving overall educational attainment.",
+                "Apprenticeships should receive equivalent per-pupil public funding to university places to give them genuine parity of esteem.",
+                "OFSTED single-word judgements create counterproductive high-stakes inspection culture and should be replaced with school improvement support.",
+                "Teacher pay in the UK has fallen significantly behind comparable graduate professions and must be substantially increased.",
+                "State-funded schools that select pupils on religious grounds create social segregation and should transition to open admissions.",
             ],
         },
     ]
@@ -329,136 +399,170 @@ def _curriculum_us() -> List[dict[str, Any]]:
             "theme": "Climate & planet",
             "topic": "Environment",
             "title": "Big questions for the US: Climate policy, energy, and the American economy",
-            "description": "Can the US lead on climate while protecting jobs and energy independence?",
+            "description": "Can the US lead on climate while protecting jobs and energy security?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **federal policy choices** — the IRA, EPA authority, fossil fuels — not personal choices.",
-            "article_keywords": ["US climate policy", "Inflation Reduction Act", "EPA", "fracking", "fossil fuels USA"],
+            "information_body": (
+                "Focus on **federal policy choices** — the Inflation Reduction Act, EPA authority, and fossil fuel infrastructure. "
+                "Key sources: Rhodium Group US climate progress reports, Resources for the Future, "
+                "Brookings energy policy analysis, NOAA climate data."
+            ),
+            "article_keywords": ["Inflation Reduction Act clean energy", "EPA greenhouse gas authority", "US Paris Agreement climate", "US LNG export climate impact", "US agricultural emissions policy"],
             "seeds": [
-                "The Inflation Reduction Act's climate investments should be protected even if other spending is cut.",
-                "The EPA should have broad authority to regulate carbon emissions without additional Congressional action.",
-                "The US should rejoin and fully fund international climate agreements.",
-                "New federal permits for LNG export terminals should be blocked given the climate emergency.",
-                "Agricultural subsidies should shift toward regenerative farming and away from commodity monocultures.",
-                "States should not be allowed to block federal clean energy infrastructure on their territory.",
+                "The Inflation Reduction Act's clean energy investments should be protected — rolling them back would set US decarbonisation back by a decade.",
+                "The EPA's authority to regulate greenhouse gas emissions must be maintained against legislative attempts to restrict it.",
+                "The United States should meet its nationally determined contribution under the Paris Agreement and fund it fully.",
+                "New federal permits for LNG export terminals should be paused given their long-term lock-in of fossil fuel infrastructure.",
+                "Federal agricultural subsidies should be substantially reoriented toward low-emissions and regenerative farming practices.",
+                "States should not be permitted to block federally authorised clean energy infrastructure on their territory for political rather than technical reasons.",
             ],
         },
         {
             "theme": "AI & technology",
             "topic": "Technology",
             "title": "Big questions for the US: Big Tech, AI, and the digital economy",
-            "description": "Section 230, antitrust, and whether Washington can govern Silicon Valley.",
+            "description": "Section 230, antitrust, and whether Washington can effectively govern Silicon Valley.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **federal regulation and trade-offs** between innovation, safety, and democratic accountability.",
-            "article_keywords": ["Section 230", "Big Tech antitrust", "AI safety USA", "FTC tech", "social media regulation"],
+            "information_body": (
+                "Focus on **federal regulation and trade-offs** between innovation, safety, and democratic accountability. "
+                "Key sources: FTC antitrust enforcement actions, Senate AI Insight Forum reports, "
+                "Georgetown CSET AI policy analyses, AI Safety Institute (NIST) frameworks."
+            ),
+            "article_keywords": ["Section 230 reform social media", "Big Tech antitrust FTC", "federal AI safety agency", "AI worker displacement fund", "data sovereignty foreign access"],
             "seeds": [
-                "Section 230 liability protections for social media platforms should be significantly narrowed.",
-                "Breaking up Amazon, Google, or Meta would improve competition and benefit consumers.",
-                "The US needs a federal AI safety agency with power to halt dangerous deployments.",
-                "AI companies should be required to pay workers displaced by automation a transition fund.",
-                "Americans' data should not be sold to foreign governments or companies without consent.",
-                "The US should lead on setting global AI governance standards rather than defer to the EU.",
+                "Section 230 liability protection for social media platforms should be narrowed where platforms knowingly amplify demonstrably harmful content.",
+                "Antitrust enforcement against Amazon, Google, and Meta should be substantially strengthened — current market concentration harms competition.",
+                "A federal AI safety agency with power to evaluate and conditionally halt high-risk deployments should be established.",
+                "Workers displaced by AI automation should be supported by a publicly funded retraining and transition programme.",
+                "Americans' personal data should not be sold to or accessed by foreign governments without explicit consent or a court order.",
+                "The United States should lead in setting global AI governance standards rather than deferring to the EU or avoiding binding international frameworks.",
             ],
         },
         {
             "theme": "Economy & work",
             "topic": "Economy",
             "title": "Big questions for the US: The economy, taxes, and who gets ahead",
-            "description": "Minimum wage, student debt, and whether the American Dream still works.",
+            "description": "Minimum wage, student debt, the tax code, and whether the American Dream is accessible.",
             "information_title": "Before you vote",
-            "information_body": "These are **systemic policy questions** — not about individual hard work or personal responsibility.",
-            "article_keywords": ["federal minimum wage", "student debt forgiveness", "US inequality", "carried interest", "tax reform USA"],
+            "information_body": (
+                "These are **systemic policy questions** — not about individual hard work or personal responsibility. "
+                "Key sources: Congressional Budget Office, Economic Policy Institute, "
+                "Chetty et al. 'The Fading American Dream' (2017), Tax Policy Center, IZA labour research."
+            ),
+            "article_keywords": ["federal minimum wage $15 evidence", "student loan forgiveness Biden", "carried interest loophole", "US wealth tax Saez Zucman", "right-to-work laws union membership"],
             "seeds": [
-                "The federal minimum wage should be raised to $15 an hour and indexed to inflation.",
-                "Student loan debt should be broadly cancelled as a matter of economic and racial justice.",
-                "The carried interest loophole for hedge funds should be closed immediately.",
-                "The United States needs a wealth tax on fortunes above $50 million.",
-                "Right-to-work laws that weaken unions should be repealed at the federal level.",
-                "US trade deals should include enforceable labour and environmental standards for trading partners.",
+                "The federal minimum wage should be raised to $15 an hour and automatically indexed to inflation thereafter.",
+                "Federal student loan forgiveness should be expanded substantially, prioritising borrowers from programmes with poor labour market outcomes.",
+                "The carried interest tax preference for private equity and hedge fund managers should be eliminated.",
+                "A wealth tax on fortunes above $50 million would raise significant revenue without materially harming productive investment.",
+                "Right-to-work laws weaken collective bargaining and should be repealed at the federal level.",
+                "US trade agreements must include binding, independently enforceable labour and environmental standards.",
             ],
         },
         {
             "theme": "Health & care",
             "topic": "Healthcare",
             "title": "Big questions for the US: Healthcare, insurance, and who gets covered",
-            "description": "Medicare, the ACA, and why the US spends more and gets less than peers.",
+            "description": "Medicare, the ACA, drug pricing, and why the US spends more and gets less than peers.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **coverage, cost, and system design** — not individual health choices.",
-            "article_keywords": ["Medicare for All", "ACA Obamacare", "insulin prices USA", "US healthcare cost", "Medicaid"],
+            "information_body": (
+                "Focus on **coverage, cost, and system design** — not individual health choices. "
+                "Key sources: Commonwealth Fund US health system analyses, CBO healthcare scoring, "
+                "RAND Medicare for All study, Peterson-KFF Health System Tracker."
+            ),
+            "article_keywords": ["Medicare for All single payer study", "drug price negotiation Medicare", "Medicaid expansion states", "mental health parity enforcement", "employer health insurance mobility"],
             "seeds": [
-                "The US should move to a single-payer Medicare for All system to cover everyone.",
-                "Drug prices should be capped by the federal government as they are in most other rich countries.",
-                "Medicaid expansion should be mandatory for all states, not optional.",
-                "Mental health parity laws should be strictly enforced so insurers cannot deny mental health claims.",
-                "Employer-based health insurance ties workers to jobs in a way that harms economic mobility.",
-                "Reproductive healthcare, including abortion, should be covered by all federally funded health plans.",
+                "The United States should move toward a single-payer Medicare for All system — it is the only model that would achieve universal coverage efficiently.",
+                "The federal government should have comprehensive authority to negotiate drug prices directly with pharmaceutical companies.",
+                "Medicaid expansion should be mandatory for all states — the current opt-out system creates unjustifiable coverage gaps.",
+                "Mental health parity laws should be strictly enforced so that insurers cannot systematically limit mental health claims.",
+                "Employer-based health insurance reduces worker mobility and economic efficiency and should be replaced with portable coverage.",
+                "Reproductive healthcare services should be covered under all federally funded health insurance plans.",
             ],
         },
         {
             "theme": "War, peace & security",
             "topic": "Geopolitics",
-            "title": "Big questions for the US: Military, alliances, and America's global role",
-            "description": "NATO burden-sharing, Pentagon spending, and whether US power stabilises the world.",
+            "title": "Big questions for the US: Military power, alliances, and America's global role",
+            "description": "NATO burden-sharing, Pentagon spending, and whether US power stabilises or destabilises the world.",
             "information_title": "Before you vote",
-            "information_body": "These are questions about the **costs and legitimacy of American military power**.",
-            "article_keywords": ["NATO USA", "Pentagon budget", "Ukraine US aid", "US military spending", "isolationism"],
+            "information_body": (
+                "These are questions about the **costs, legitimacy, and effectiveness of American military power**. "
+                "Key sources: SIPRI US military expenditure data, Congressional Research Service, "
+                "CSIS strategic assessments, War Powers Resolution debate."
+            ),
+            "article_keywords": ["US NATO commitments burden sharing", "Ukraine US military aid", "Congress war powers authorisation", "Pentagon budget audit", "US arms sales human rights"],
             "seeds": [
-                "The US should reduce the Pentagon budget and reinvest in diplomacy and foreign aid.",
-                "America has a binding moral obligation to continue supporting Ukraine militarily.",
-                "NATO allies that do not meet the 2% GDP defence spending target should face reduced US commitments.",
-                "The US should maintain a significant military presence in Europe for the foreseeable future.",
-                "Congress should reassert its war powers and require authorisation for any new military action.",
-                "US arms sales to authoritarian governments undermine American values and should be restricted.",
+                "The United States should maintain its military commitments to NATO allies rather than conditioning them on burden-sharing targets.",
+                "Continued US military support for Ukraine is a strategic investment in deterring further Russian aggression in Europe.",
+                "Congress should pass legislation reasserting war powers so that no president can commit US forces to significant combat without authorisation.",
+                "The US defence budget should be subject to rigorous independent efficiency audit before further increases are approved.",
+                "US arms sales to governments that commit systematic human rights violations undermine American values and long-term security interests.",
+                "Sustained engagement with China through international institutions is more effective than economic and technological decoupling as a strategy for managing rivalry.",
             ],
         },
         {
             "theme": "Democracy & institutions",
             "topic": "Politics",
             "title": "Big questions for the US: Democracy, voting rights, and institutional reform",
-            "description": "The Electoral College, the filibuster, and whether US democracy needs reform.",
+            "description": "The Electoral College, the filibuster, the Supreme Court, and whether US democracy needs structural reform.",
             "information_title": "Before you vote",
-            "information_body": "Interpret these as **structural design questions** — not partisan claims.",
-            "article_keywords": ["Electoral College reform", "filibuster", "Supreme Court term limits", "gerrymandering", "voting rights USA"],
+            "information_body": (
+                "Interpret these as **structural design questions** — not partisan claims. "
+                "Key sources: Electoral Integrity Project, Brennan Center for Justice, "
+                "Levitsky & Ziblatt 'How Democracies Die' (2018), Citizens United v. FEC (2010), "
+                "Campaign Legal Center analyses."
+            ),
+            "article_keywords": ["Electoral College national popular vote", "Senate filibuster reform", "Supreme Court term limits justices", "gerrymandering independent redistricting", "Citizens United campaign finance"],
             "seeds": [
-                "The Electoral College should be replaced by a national popular vote for the presidency.",
-                "The Senate filibuster should be eliminated so majority rule can function in Congress.",
-                "Supreme Court justices should serve 18-year terms with staggered appointments.",
-                "Independent redistricting commissions should be required in every state to end gerrymandering.",
-                "Federal automatic voter registration should be the law to maximise participation.",
-                "The Citizens United decision should be overturned by constitutional amendment.",
+                "The Electoral College should be replaced by a national popular vote to ensure that every vote counts equally in presidential elections.",
+                "The Senate filibuster should be abolished or substantially reformed so that majority rule can function in ordinary legislation.",
+                "Supreme Court justices should serve staggered 18-year terms with regular and predictable appointments by each president.",
+                "Independent redistricting commissions should be required in every state to eliminate partisan gerrymandering.",
+                "Federal automatic voter registration should be introduced to maximise electoral participation without compromising integrity.",
+                "The Citizens United decision should be overturned — unlimited anonymous political spending distorts democratic representation.",
             ],
         },
         {
             "theme": "Society & cohesion",
             "topic": "Society",
             "title": "Big questions for the US: Immigration, identity, and the American promise",
-            "description": "Border policy, DACA, and what it means to be American today.",
+            "description": "Border policy, DACA, racial justice, and what it means to be American today.",
             "information_title": "Before you vote",
-            "information_body": "Vote on **policy design**, not the character or worth of individuals.",
-            "article_keywords": ["US immigration reform", "DACA", "border policy USA", "affirmative action", "gun control"],
+            "information_body": (
+                "Vote on **policy design**, not the character or worth of individuals. "
+                "Key sources: Migration Policy Institute, American Immigration Council, "
+                "SFFA v. Harvard & UNC Supreme Court ruling (2023), Everytown gun violence research, "
+                "National Academy of Sciences 'The Integration of Immigrants into American Society' (2015)."
+            ),
+            "article_keywords": ["DACA legal status path citizenship", "undocumented immigrants residency pathway", "SFFA race-conscious admissions ruling 2023", "universal background check gun violence", "US refugee admissions cap"],
             "seeds": [
-                "DACA recipients should be given a clear path to permanent legal status and citizenship.",
-                "Undocumented immigrants who have lived in the US for more than five years should have a pathway to residency.",
-                "Race-conscious college admissions policies can be justified as reparative tools for historical exclusion.",
-                "Federal universal background check legislation for all gun purchases should be passed.",
-                "The US should accept more refugees and asylum seekers — the current caps are too low.",
-                "Police reform, not defunding, is the right response to systemic racial disparities in law enforcement.",
+                "DACA recipients who have built their lives in the United States deserve a clear statutory path to permanent legal status and citizenship.",
+                "Undocumented immigrants who have resided in the United States for an extended period with no serious criminal record should be eligible for legal residency.",
+                "The Supreme Court's 2023 prohibition on race-conscious college admissions will increase, not decrease, racial inequality in higher education access.",
+                "Federal universal background check legislation for all gun purchases should be passed — the evidence that it reduces gun violence is strong.",
+                "The United States accepts far too few refugees relative to its capacity and international obligations.",
+                "Addressing racial disparities in policing requires structural reform — incremental measures have proved insufficient.",
             ],
         },
         {
             "theme": "Education & future skills",
             "topic": "Education",
             "title": "Big questions for the US: Schools, colleges, and the skills gap",
-            "description": "School choice, student debt, and whether American education serves everyone.",
+            "description": "School funding equity, student debt, vocational training, and what K-12 students should learn.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **access, funding equity, and what is taught** — not individual school or college performance.",
-            "article_keywords": ["school choice USA", "student debt USA", "teacher pay USA", "standardised tests USA"],
+            "information_body": (
+                "Focus on **access, funding equity, and curriculum** — not individual school performance. "
+                "Key sources: Education Trust school funding equity research, Chetty et al. on colleges and mobility, "
+                "National Center for Education Statistics, Fordham Institute on curriculum standards."
+            ),
+            "article_keywords": ["school funding property tax inequality", "school vouchers public education", "SAT ACT admissions income bias", "vocational trades funding college prep", "teacher pay national US districts"],
             "seeds": [
-                "Public school funding should not vary by local property tax revenues — it creates unjust inequality.",
-                "Voucher programmes for private schools divert needed funding from the public school system.",
-                "The SAT and ACT should be dropped from college admissions as they disadvantage lower-income students.",
-                "Trade and vocational programmes should be funded at the same level as college-prep curricula.",
-                "Teacher pay should be set nationally at a competitive professional rate, not left to local districts.",
-                "Critical race history should be taught in K-12 schools — understanding the past is not indoctrination.",
+                "Per-pupil school funding should not vary by local property tax revenue — this mechanism systematically disadvantages students from lower-income communities.",
+                "Public voucher programmes for private schools divert funding from the public school system and expand, rather than reduce, educational inequality.",
+                "Standardised college admissions tests systematically disadvantage students from lower-income backgrounds and should be substantially de-emphasised.",
+                "Vocational and trades programmes should be funded at the same per-student level as college-preparatory curricula.",
+                "Teacher pay should be set at a nationally competitive professional rate, not left to wide variation across local districts.",
+                "K-12 schools should teach comprehensive and accurate history of slavery and racial violence — this is a requirement of civic literacy.",
             ],
         },
     ]
@@ -470,18 +574,22 @@ def _curriculum_nl() -> List[dict[str, Any]]:
         {
             "theme": "Climate & planet",
             "topic": "Environment",
-            "title": "Grote vragen voor Nederland: Stikstof, energie en klimaat",
-            "description": "Hoe balanceert Nederland klimaatdoelen met de belangen van boeren en industrie?",
+            "title": "Big questions for the Netherlands: Nitrogen, energy, and the climate transition",
+            "description": "How does the Netherlands balance climate targets with the interests of agriculture, industry, and energy security?",
             "information_title": "Before you vote",
-            "information_body": "These questions concern **Dutch policy choices** — nitrogen rules, Groningen gas, and delta adaptation.",
-            "article_keywords": ["Netherlands nitrogen", "stikstof", "Groningen gas", "Dutch climate", "energy transition Netherlands"],
+            "information_body": (
+                "These questions concern **Dutch policy choices** — nitrogen rules, Groningen gas, and coastal adaptation. "
+                "Key sources: Raad van State nitrogen ruling (2019), KNMI climate scenarios, "
+                "PBL Netherlands Environmental Assessment Agency, CBS Statistics Netherlands energy data."
+            ),
+            "article_keywords": ["Netherlands nitrogen stikstof livestock", "Groningen gas earthquake seismic", "Dutch coal power phase-out", "Netherlands pension fund fossil fuel divestment", "Dutch nuclear energy expansion"],
             "seeds": [
-                "The Netherlands must cut livestock numbers significantly to meet nitrogen emission targets, even at cost to farmers.",
-                "Groningen gas extraction should have been phased out faster, regardless of energy supply concerns.",
-                "Dutch water management expertise gives the Netherlands a special obligation to fund global sea-level adaptation.",
-                "The Netherlands should close all coal power stations before 2030 even if electricity prices rise.",
-                "Dutch pension funds should be required to fully divest from fossil fuel companies.",
-                "Nuclear energy should be expanded in the Netherlands as part of the clean energy transition.",
+                "The Netherlands must reduce livestock numbers significantly to meet its legally binding nitrogen emission targets under the Council of State ruling.",
+                "Groningen gas extraction should have been phased out faster — the balance between energy supply and seismic safety was wrongly struck.",
+                "Dutch water management expertise gives the Netherlands a special obligation to fund global sea-level adaptation in vulnerable nations.",
+                "The Netherlands should close its remaining coal power stations before 2030 even if this temporarily raises electricity prices.",
+                "Dutch pension funds should be required to fully divest from fossil fuel companies in line with fiduciary duty to beneficiaries.",
+                "Nuclear energy should be part of the Netherlands' long-term electricity mix as part of the clean energy transition.",
             ],
         },
         {
@@ -490,117 +598,145 @@ def _curriculum_nl() -> List[dict[str, Any]]:
             "title": "Big questions for the Netherlands: ASML, AI governance, and digital sovereignty",
             "description": "Can the Netherlands shape global tech policy from its unique position as home to ASML?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Dutch tech policy**, ASML export controls, and EU digital regulation.",
-            "article_keywords": ["ASML export controls", "Netherlands AI", "Dutch tech sector", "EU digital sovereignty", "chip war"],
+            "information_body": (
+                "Focus on **Dutch tech policy**, ASML export controls, EU AI Act implementation, and the Dutch DPA. "
+                "Key sources: Dutch DPA (Autoriteit Persoonsgegevens) enforcement reports, "
+                "ASML annual reports, Rathenau Instituut digital society research, EU AI Act (2024)."
+            ),
+            "article_keywords": ["ASML export controls China chips", "EU AI Act Dutch business compliance", "Dutch DPA GDPR enforcement Big Tech", "Netherlands digital sovereignty cloud", "ASML deep tech innovation Netherlands"],
             "seeds": [
-                "The Dutch government was right to restrict ASML chip technology exports to China under US pressure.",
-                "The EU AI Act is good for Dutch businesses in the long run even if short-term compliance is costly.",
-                "The Netherlands should invest more in domestic AI research to reduce dependence on US and Chinese platforms.",
-                "Privacy regulators like the Dutch DPA should have larger budgets to enforce GDPR against Big Tech.",
-                "ASML's success shows the Netherlands should prioritise deep-tech industry over financial services.",
-                "Digital identity systems for citizens should use open-source software under public control.",
+                "The Dutch government was right to restrict ASML chip technology exports to China under US pressure, as the security risks outweigh the trade costs.",
+                "The EU AI Act will benefit Dutch businesses in the long run by creating legal clarity, even if short-term compliance costs are significant.",
+                "The Netherlands should invest more in domestic AI research capacity to reduce dependence on US and Chinese platforms.",
+                "The Dutch Data Protection Authority needs significantly larger enforcement budgets to hold Big Tech accountable under GDPR.",
+                "ASML's success demonstrates that the Netherlands should prioritise deep-tech industrial policy over further growth of financial services.",
+                "Citizens' digital identity systems should be built on open-source software under public control, not proprietary commercial platforms.",
             ],
         },
         {
             "theme": "Economy & work",
             "topic": "Economy",
-            "title": "Big questions for the Netherlands: Housing, flex work, and the Dutch economy",
-            "description": "The housing crisis, flex contracts, and whether Dutch prosperity is distributed fairly.",
+            "title": "Big questions for the Netherlands: Housing, flex work, and Dutch prosperity",
+            "description": "The housing crisis, flex contracts, pension reform, and whether Dutch prosperity is shared fairly.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **structural economic policy** — housing, flex work, pensions — not individual circumstances.",
-            "article_keywords": ["Netherlands housing crisis", "flex workers Netherlands", "Dutch pension reform", "woningmarkt"],
+            "information_body": (
+                "Focus on **structural economic policy** — housing, labour market reform, pensions, and tax. "
+                "Key sources: CPB Netherlands Bureau for Economic Policy Analysis, "
+                "CBS housing data, ABP pension fund reports, SER (Social and Economic Council) reports."
+            ),
+            "article_keywords": ["Netherlands housing crisis 100000 homes", "flex contract zero hours Netherlands reform", "Dutch pension system defined contribution", "Netherlands tax treaty multinationals", "hypotheekrenteaftrek mortgage interest deduction"],
             "seeds": [
-                "The Dutch government should intervene directly in the housing market by building at least 100,000 homes per year.",
-                "Zero-hours and flex contracts should be restricted so more workers get permanent employment.",
-                "The new Dutch pension system (moving to defined contribution) is fairer for younger workers.",
-                "The Netherlands benefits too much from its tax treaty network and should close loopholes used by multinationals.",
-                "The wage gap between permanent and temporary workers doing the same job should be illegal.",
-                "Dutch homeowners receive too many tax subsidies (hypotheekrenteaftrek) at the expense of renters.",
+                "The Dutch government should directly build or commission at least 100,000 homes per year to address the structural housing shortage.",
+                "Zero-hours and flex contracts should be substantially restricted so that more workers have access to permanent employment.",
+                "The transition to defined-contribution pensions (the new Dutch pension system) is fairer for younger workers than the previous system.",
+                "The Netherlands benefits disproportionately from its tax treaty network and should close loopholes exploited by multinationals.",
+                "The wage gap between permanent and temporary workers doing equivalent jobs should be prohibited by law.",
+                "Mortgage interest tax relief (hypotheekrenteaftrek) disproportionately benefits homeowners at the expense of renters and should be phased out.",
             ],
         },
         {
             "theme": "Health & care",
             "topic": "Healthcare",
-            "title": "Big questions for the Netherlands: Zorg, eigen risico, and public health",
-            "description": "Is the Dutch insurance-based healthcare system still working for everyone?",
+            "title": "Big questions for the Netherlands: Healthcare access, the eigen risico, and elderly care",
+            "description": "Is the Dutch insurance-based healthcare system still working equitably for everyone?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Dutch healthcare access, the eigen risico (deductible), and long-term care**.",
-            "article_keywords": ["Dutch healthcare", "eigen risico", "zorgverzekering", "elderly care Netherlands"],
+            "information_body": (
+                "Focus on **Dutch healthcare access, the eigen risico (deductible), and long-term care**. "
+                "Key sources: RIVM National Institute for Public Health, Zorginstituut Nederland, "
+                "SCP Netherlands Institute for Social Research on healthcare access, NZa healthcare authority data."
+            ),
+            "article_keywords": ["Dutch eigen risico healthcare deductible abolish", "Netherlands elderly care underfunding", "mental health waiting times Netherlands", "Dutch GP shortage rural areas", "Dutch preventive health sugar tax"],
             "seeds": [
-                "The eigen risico (compulsory health deductible) should be abolished because it stops people seeking care.",
-                "Elderly care in the Netherlands is chronically underfunded and needs a major increase in spending.",
-                "Mental health waiting times in the Netherlands are unacceptably long and need urgent investment.",
-                "The Dutch compulsory health insurance model is fairer than a fully public NHS-style system.",
-                "Preventive public health measures — like sugar taxes — are worth the infringement on personal choice.",
-                "GP shortages in rural areas of the Netherlands are a serious equity problem the government must address.",
+                "The eigen risico (compulsory health deductible) should be abolished because it deters people from seeking necessary care.",
+                "Elderly care in the Netherlands is chronically underfunded and requires a major sustained increase in public spending.",
+                "Mental health waiting times in the Netherlands are unacceptably long and require urgent structural investment.",
+                "The Dutch compulsory health insurance model achieves broader coverage than fully public systems in comparable countries.",
+                "Preventive public health measures — including taxes on tobacco and ultra-processed food — are justified even where they restrict individual choice.",
+                "GP shortages in rural areas of the Netherlands constitute a serious equity problem that requires targeted government intervention.",
             ],
         },
         {
             "theme": "War, peace & security",
             "topic": "Geopolitics",
             "title": "Big questions for the Netherlands: Defence, Ukraine, and Dutch foreign policy",
-            "description": "F-35s to Ukraine, NATO obligations, and MH17 — where should the Netherlands stand?",
+            "description": "F-16s to Ukraine, NATO obligations, MH17, and the Netherlands' role in European security.",
             "information_title": "Before you vote",
-            "information_body": "These are normative questions about **alliances, military support, and international justice**.",
-            "article_keywords": ["Netherlands Ukraine F-35", "Netherlands NATO", "MH17", "Dutch defence spending"],
+            "information_body": (
+                "These are normative questions about **alliances, military support, and international justice**. "
+                "Key sources: IISS on Dutch defence capabilities, Dutch Court of Appeal MH17 damages ruling (2022), "
+                "NATO burden-sharing assessments, AIV (Advisory Council on International Affairs) reports."
+            ),
+            "article_keywords": ["Netherlands F-16 Ukraine transfer", "Netherlands NATO 2 percent defence", "MH17 Russia verdict damages", "Dutch parliamentary defence oversight", "European defence force Netherlands"],
             "seeds": [
-                "The Netherlands was right to transfer F-16 fighter jets to Ukraine.",
-                "The Netherlands should reach NATO's 2% GDP defence spending target within this decade.",
-                "The MH17 verdict and damages claim against Russia should be pursued through all available international mechanisms.",
-                "Dutch special forces involvement in conflicts should require explicit parliamentary authorisation.",
-                "The Netherlands should push within the EU for a common European defence force to reduce reliance on the US.",
-                "Development aid should not be cut to fund higher defence spending.",
+                "The Netherlands was right to transfer F-16 fighter jets to Ukraine in support of its legal right to self-defence.",
+                "The Netherlands should reach NATO's 2% of GDP defence spending target within this decade.",
+                "The MH17 damages claim against Russia should be pursued through all available international legal mechanisms.",
+                "Dutch special forces involvement in armed conflicts should require explicit prior parliamentary authorisation.",
+                "The Netherlands should advocate within the EU for a common European defence capability to reduce structural dependence on the US.",
+                "Development aid should not be cut to fund higher defence spending — the two serve different strategic objectives.",
             ],
         },
         {
             "theme": "Democracy & institutions",
             "topic": "Politics",
-            "title": "Big questions for the Netherlands: Democracy, coalitions, and the rise of populism",
-            "description": "Long kabinetsformaties, PVV's rise, and what the Dutch political system needs.",
+            "title": "Big questions for the Netherlands: Democracy, coalition formation, and political trust",
+            "description": "Prolonged kabinetsformatie, the rise of populism, and what the Dutch political system needs.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **institutional design** — the formation process, media freedom, and civic trust.",
-            "article_keywords": ["Netherlands elections", "PVV Wilders", "kabinetsformatie", "Dutch democracy", "proportional representation"],
+            "information_body": (
+                "Focus on **institutional design** — the formation process, media freedom, and civic trust. "
+                "Key sources: Montesquieu Institute constitutional research, "
+                "Parlement.com, RSF Press Freedom Index, ODIHR electoral reports on the Netherlands."
+            ),
+            "article_keywords": ["Netherlands proportional representation coalition formation", "kabinetsformatie time limit democratic", "NPO public broadcaster independence", "Dutch constitution rule of law protection", "Netherlands civic education schools"],
             "seeds": [
-                "The Netherlands' proportional representation system produces better policy outcomes than majoritarian alternatives.",
-                "Coalition formation (formatie) taking months undermines democratic accountability and needs time limits.",
-                "Public broadcasters like NPO need stronger independence guarantees against political interference.",
-                "The Dutch constitution should include explicit protection for the rule of law against parliamentary majorities.",
-                "Municipalities should have more financial autonomy from the national government.",
-                "Mandatory civic education at secondary school level would improve democratic participation.",
+                "The Netherlands' proportional representation system produces more representative policy outcomes than majoritarian alternatives.",
+                "Coalition formation taking months undermines democratic accountability and the process should be subject to statutory time limits.",
+                "Public broadcasters like NPO need stronger statutory independence guarantees against political interference.",
+                "The Dutch constitution should include explicit protection for the rule of law that cannot be overridden by parliamentary majorities.",
+                "Municipalities should have substantially greater financial autonomy from the national government.",
+                "Civic and media literacy education should be mandatory core subjects at secondary school level.",
             ],
         },
         {
             "theme": "Society & cohesion",
             "topic": "Society",
             "title": "Big questions for the Netherlands: Immigration, integration, and Dutch identity",
-            "description": "Asylum system pressure, integration policy, and what Dutchness means today.",
+            "description": "Asylum system pressure, integration policy, and what it means to be Dutch today.",
             "information_title": "Before you vote",
-            "information_body": "Vote on **policy design**, not on people's backgrounds or worth.",
-            "article_keywords": ["Netherlands asylum policy", "integration Netherlands", "Dutch identity", "COA asylum"],
+            "information_body": (
+                "Vote on **policy design**, not on people's backgrounds or worth. "
+                "Key sources: CBS Statistics Netherlands migration data, COA (Central Agency for the Reception of Asylum Seekers) reports, "
+                "SCP Netherlands Institute for Social Research integration data, European Court of Justice asylum rulings."
+            ),
+            "article_keywords": ["Netherlands EU asylum obligations distribution", "Dutch integration programme mandatory", "Netherlands housing crisis causes migration", "labour market discrimination Netherlands", "Dutch civic identity democratic values"],
             "seeds": [
-                "The Netherlands must accept its legal obligations under EU asylum rules even when numbers are high.",
-                "Integration programmes should be mandatory, well-funded, and focused on language and employment.",
-                "The Dutch housing crisis is caused by policy failures, not by immigration.",
-                "Discrimination in the Dutch labour and housing market must be actively countered by law enforcement.",
-                "Municipalities should have the right to distribute asylum seekers across the country equitably.",
-                "Dutch civic identity should be based on shared democratic values, not on ethnic heritage.",
+                "The Netherlands must honour its legal obligations under EU asylum rules even when the volume of applications is high.",
+                "Integration programmes should be mandatory, well-funded, and focused on language acquisition and employment from the outset.",
+                "The Dutch housing crisis is caused primarily by inadequate supply and planning failures, not by immigration.",
+                "Discrimination in the Dutch labour and housing market must be actively countered through law enforcement, not just legislation.",
+                "Municipalities should have the right to distribute asylum seekers across the country equitably, rather than concentrating them.",
+                "Dutch civic identity should be grounded in shared democratic values, not ethnic or cultural heritage.",
             ],
         },
         {
             "theme": "Education & future skills",
             "topic": "Education",
-            "title": "Big questions for the Netherlands: MBO, HBO, and preparing for a changing economy",
-            "description": "Skills shortages, MBO prestige, and whether Dutch education is fit for the future.",
+            "title": "Big questions for the Netherlands: MBO, HBO, and education for a changing economy",
+            "description": "Skills shortages, early tracking, and whether Dutch education is fit for the future.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **system design and access** — the MBO-HBO-WO ladder, teacher pay, and early selection.",
-            "article_keywords": ["Dutch education MBO", "Netherlands teacher shortage", "early selection Netherlands", "onderwijs"],
+            "information_body": (
+                "Focus on **system design and access** — the MBO-HBO-WO ladder, teacher pay, and early selection. "
+                "Key sources: Inspectie van het Onderwijs (Education Inspectorate) reports, "
+                "Onderwijsraad (Education Council) policy analyses, CPB education returns research, PISA Netherlands data."
+            ),
+            "article_keywords": ["Netherlands early tracking 12 age inequality", "MBO vocational prestige Netherlands", "Dutch teacher shortage pay", "early childhood education Netherlands disadvantage", "Dutch student finance grant loan"],
             "seeds": [
-                "Early selection at age 12 for secondary school tracks (vmbo/havo/vwo) is too young and reinforces inequality.",
-                "MBO graduates contribute as much to the Dutch economy as university graduates and should be treated as equal.",
-                "Teacher shortages in the Netherlands are the result of wages falling behind other graduate professions.",
-                "The Netherlands should invest more in early childhood education to close disadvantage gaps before age 5.",
-                "Student finance (studielening) should be replaced with a grant for students from lower-income families.",
-                "Dutch schools should teach civic literacy and media literacy as core subjects from primary school.",
+                "Early tracking at age 12 into secondary school streams (vmbo/havo/vwo) entrenches socioeconomic inequality and should be delayed.",
+                "MBO graduates contribute as much to the Dutch economy as university graduates and should be treated as equivalent in terms of public investment.",
+                "Teacher shortages in the Netherlands are the direct result of wages falling behind other graduate professions — pay must rise.",
+                "The Netherlands should invest substantially more in early childhood education and care to close disadvantage gaps before children start primary school.",
+                "The student finance system (studielening) should be replaced with grants for students from lower-income families.",
+                "Civic literacy and media literacy should be mandatory core subjects at primary school level.",
             ],
         },
     ]
@@ -613,119 +749,149 @@ def _curriculum_ie() -> List[dict[str, Any]]:
             "theme": "Climate & planet",
             "topic": "Environment",
             "title": "Big questions for Ireland: Climate action, farming, and the Irish environment",
-            "description": "Can Ireland meet its climate targets while protecting rural livelihoods?",
+            "description": "Can Ireland meet its legally binding climate targets while protecting rural livelihoods?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Irish policy choices** — ag-sector methane, peat bogs, and planning reform.",
-            "article_keywords": ["Ireland climate", "Irish farming emissions", "peat bogs Ireland", "renewable energy Ireland"],
+            "information_body": (
+                "Focus on **Irish policy choices** — agricultural methane, peat bog restoration, and planning reform. "
+                "Key sources: EPA Ireland greenhouse gas inventories, Climate Action Plan 2024, "
+                "IPCC AR6 on agriculture methane, Climate Change Advisory Council annual reviews."
+            ),
+            "article_keywords": ["Ireland cattle herd reduction climate", "Ireland peat bog restoration carbon", "Ireland wind solar planning fast track", "Ireland per capita emissions Europe", "Ireland offshore wind energy export"],
             "seeds": [
-                "Ireland must reduce cattle and dairy herd sizes to meet legally binding climate targets.",
-                "Peat bog restoration should be prioritised over agricultural use even when this displaces farmers.",
-                "Planning for large-scale wind and solar farms in Ireland should be fast-tracked significantly.",
-                "Ireland's per-capita emissions are among Europe's highest and this requires urgent, uncomfortable policy change.",
-                "Community benefit funds from wind farms should go directly to local residents, not just local authorities.",
-                "Ireland should invest in offshore wind at the scale needed to become a net exporter of clean energy.",
+                "Ireland must reduce cattle and dairy herd sizes significantly to meet its legally binding sectoral emission targets under the Climate Action Plan.",
+                "Peat bog restoration should be prioritised over continued agricultural use even where this displaces farmers from traditional land use.",
+                "Planning for large-scale onshore and offshore wind and solar farms should be fast-tracked given Ireland's renewable energy potential.",
+                "Ireland's per-capita emissions are among the highest in the EU and this requires urgent policy change across agriculture, transport, and buildings.",
+                "Community benefit funds from wind farms should flow directly to affected residents, not only to local authorities.",
+                "Ireland should invest in offshore wind at the scale needed to become a net exporter of clean electricity to Europe.",
             ],
         },
         {
             "theme": "AI & technology",
             "topic": "Technology",
-            "title": "Big questions for Ireland: Tech multinationals, data centres, and digital policy",
-            "description": "Is Ireland's dependence on US tech FDI a strength or a structural vulnerability?",
+            "title": "Big questions for Ireland: Tech multinationals, data centres, and digital governance",
+            "description": "Is Ireland's dependence on US tech FDI a strength or a structural economic vulnerability?",
             "information_title": "Before you vote",
-            "information_body": "Consider Ireland's role as **European headquarters** for US tech giants and as home to the DPC.",
-            "article_keywords": ["Ireland tech sector", "Data Protection Commission", "data centres Ireland", "FDI Ireland tech"],
+            "information_body": (
+                "Consider Ireland's role as **European headquarters** for US tech giants and as EU lead supervisor under GDPR. "
+                "Key sources: DPC (Data Protection Commission) enforcement statistics, "
+                "ESRI economic analysis of FDI, EirGrid grid capacity reports, IDA Ireland FDI data."
+            ),
+            "article_keywords": ["Ireland tech FDI concentration risk", "DPC GDPR enforcement resources", "Ireland data centres electricity grid", "Ireland corporation tax rate multinationals", "Irish universities AI computer science"],
             "seeds": [
-                "Ireland relies too heavily on US tech multinationals and needs to diversify its economic base.",
-                "The Data Protection Commission needs significantly more resources to enforce GDPR against Big Tech.",
-                "New data centres in Ireland should not be permitted while the electricity grid is under such strain.",
-                "Ireland benefits enormously from tech FDI and should actively compete to retain these companies.",
-                "Irish universities should invest more in AI and computer science to build domestic tech capacity.",
-                "Tech companies' low effective tax rates in Ireland are unfair to other countries and should end.",
+                "Ireland relies too heavily on a small number of US tech multinationals and needs to actively diversify its economic base.",
+                "The Data Protection Commission needs significantly more resources to enforce GDPR effectively against major tech platforms.",
+                "New data centres in Ireland should not be approved while the national electricity grid faces capacity constraints.",
+                "Ireland benefits substantially from tech FDI and should actively compete to retain these companies while meeting regulatory obligations.",
+                "Irish universities should invest substantially more in AI and computer science to build indigenous domestic tech capacity.",
+                "Tech companies' low effective tax rates in Ireland benefit the exchequer in the short term but are unfair to other EU member states.",
             ],
         },
         {
             "theme": "Economy & work",
             "topic": "Economy",
             "title": "Big questions for Ireland: Housing, cost of living, and the Irish economy",
-            "description": "Ireland's housing emergency, reliance on FDI taxes, and the cost of living crisis.",
+            "description": "Ireland's housing emergency, reliance on corporate tax, and the cost of living crisis.",
             "information_title": "Before you vote",
-            "information_body": "These are **structural questions** about Ireland's economy — housing, tax base, and wages.",
-            "article_keywords": ["Ireland housing crisis", "Irish cost of living", "short-term lets Ireland", "Airbnb Ireland"],
+            "information_body": (
+                "These are **structural questions** about Ireland's economy — housing supply, tax base, and wages. "
+                "Key sources: ESRI housing research, Department of Finance Tax Strategy Group, "
+                "Living Wage Technical Group reports, SCSI property market data."
+            ),
+            "article_keywords": ["Ireland state housing social affordable direct build", "Airbnb short-term let restriction Ireland", "Ireland corporate tax diversification", "Ireland living wage minimum wage", "Ireland planning high density transit"],
             "seeds": [
-                "The state should directly build social and affordable housing at scale rather than relying on the private market.",
-                "Short-term rental platforms like Airbnb should be heavily restricted in areas with housing shortages.",
-                "Ireland should begin reducing its dependence on corporate tax revenues by broadening the tax base.",
-                "The minimum wage in Ireland should rise to a true living wage that covers rent in major cities.",
-                "Planning permission for high-density housing near transport should be granted automatically by default.",
-                "Remote working rights should be enshrined in law to reduce pressure on Dublin's housing market.",
+                "The state should directly build social and affordable housing at substantial scale rather than primarily relying on the private market.",
+                "Short-term rental platforms should be heavily restricted in areas with acute housing shortages.",
+                "Ireland must begin reducing its reliance on corporate tax revenues by broadening the tax base before the next economic shock.",
+                "The minimum wage in Ireland should rise to a rate that covers rent and basic living costs in all major cities.",
+                "Planning permission for high-density housing near public transport should be substantially streamlined.",
+                "Remote working rights should be enshrined in legislation to reduce geographic concentration of employment in Dublin.",
             ],
         },
         {
             "theme": "Health & care",
             "topic": "Healthcare",
             "title": "Big questions for Ireland: Sláintecare, the two-tier system, and mental health",
-            "description": "Can Ireland build the universal health system it voted for?",
+            "description": "Can Ireland build the universal health system it legislated for?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Sláintecare implementation, waiting lists, and the public-private divide** in Irish healthcare.",
-            "article_keywords": ["Sláintecare", "Ireland healthcare", "Irish mental health services", "HSE reform"],
+            "information_body": (
+                "Focus on **Sláintecare implementation, waiting lists, and the public-private divide** in Irish healthcare. "
+                "Key sources: Sláintecare Implementation Advisory Council reports, "
+                "HIQA (Health Information and Quality Authority) analyses, "
+                "Mental Health Commission annual reports, Oireachtas health committee hearings."
+            ),
+            "article_keywords": ["Sláintecare implementation tax increase", "private health insurance public hospital beds Ireland", "mental health spending Ireland budget", "GP fee abolition Ireland", "HSE reform regional health authorities"],
             "seeds": [
-                "Sláintecare should be implemented fully, even if it requires significant tax increases.",
+                "Sláintecare should be implemented in full, even if this requires significant tax increases.",
                 "Private health insurance in Ireland gives those who can afford it unfair priority access to public hospital beds.",
-                "Mental health spending in Ireland is too low as a share of the health budget and should be doubled.",
-                "GP fees should be abolished for all, not just medical card holders, to reduce inequity.",
-                "Consultants with private practices should not be permitted to hold public hospital contracts.",
-                "The HSE is too large and centralised and should be replaced with regional health authorities.",
+                "Mental health spending in Ireland is too low as a share of the overall health budget and should be doubled.",
+                "GP fees should be abolished for all patients, not only medical card holders, to remove a financial barrier to primary care.",
+                "Consultants with private practices should not be permitted to hold public hospital contracts simultaneously.",
+                "The HSE is too large and centralised and should be replaced with empowered regional health authorities with clear accountability.",
             ],
         },
         {
             "theme": "War, peace & security",
             "topic": "Geopolitics",
             "title": "Big questions for Ireland: Neutrality, defence, and Ireland's role in the world",
-            "description": "Should Ireland maintain military neutrality or take more responsibility for European security?",
+            "description": "Should Ireland maintain military neutrality or assume greater responsibility for European security?",
             "information_title": "Before you vote",
-            "information_body": "These are normative questions about **Irish neutrality, UN peacekeeping, and European defence**.",
-            "article_keywords": ["Irish neutrality", "Ireland defence", "Ireland UN peacekeeping", "Irish military", "EU defence"],
+            "information_body": (
+                "These are normative questions about **Irish neutrality, UN peacekeeping, and European defence**. "
+                "Key sources: Government Commission on the Future of Irish Defence Forces (2022), "
+                "Irish Neutrality League, PDFORRA reports, EU Common Security and Defence Policy documents."
+            ),
+            "article_keywords": ["Irish military neutrality reform NATO", "Ireland defence spending increase", "Irish neutrality constitution", "Ireland UN peacekeeping contribution", "EU mutual defence Article 42 Ireland"],
             "seeds": [
-                "Irish military neutrality is outdated and should be replaced by full NATO membership.",
-                "Ireland should increase defence spending significantly even if it requires new taxes.",
-                "Irish neutrality should be enshrined in the constitution to prevent future governments abandoning it.",
-                "Ireland should continue to take a strong pro-Palestinian position at the UN, even at diplomatic cost.",
-                "EU mutual defence commitments already effectively end Irish neutrality in practice.",
-                "Ireland should expand its UN peacekeeping contributions as an expression of its foreign policy values.",
+                "Ireland's policy of military neutrality should be formally reviewed — it no longer reflects the realities of European security.",
+                "Ireland should increase defence spending significantly given the deteriorating European security environment.",
+                "Irish neutrality should be enshrined in the constitution to prevent future governments abandoning it without a public mandate.",
+                "Ireland should maintain a strong position on international humanitarian law and Palestinian civilian protection at the UN.",
+                "EU mutual defence commitments under Article 42.7 already effectively qualify Irish neutrality in practice.",
+                "Ireland should substantially expand its UN peacekeeping contributions as an expression of its foreign policy values.",
             ],
         },
         {
             "theme": "Democracy & institutions",
             "topic": "Politics",
             "title": "Big questions for Ireland: The Dáil, Citizens' Assemblies, and Irish democracy",
-            "description": "Electoral reform, Citizens' Assemblies, and restoring trust in Irish politics.",
+            "description": "Electoral reform, Citizens' Assemblies, and how to restore trust in Irish politics.",
             "information_title": "Before you vote",
-            "information_body": "These are **institutional design questions** — not about any party's current record.",
-            "article_keywords": ["Ireland electoral reform", "Citizens Assembly Ireland", "Dáil reform", "Irish politics"],
+            "information_body": (
+                "These are **institutional design questions** — not about any party's current record. "
+                "Key sources: Electoral Commission Ireland reports, "
+                "Citizens' Assembly Ireland published recommendations, "
+                "Democratic Audit of Ireland, SIPO (Standards in Public Office Commission) reports."
+            ),
+            "article_keywords": ["Ireland Citizens Assembly deliberative democracy", "Dáil reform sitting hours scrutiny", "Seanad abolition reform Ireland", "political donations ban corporations Ireland", "votes abroad Irish citizens Dáil"],
             "seeds": [
-                "Ireland's Citizens' Assemblies have been a genuine democratic innovation and should be used more often.",
+                "Ireland's Citizens' Assemblies have been a genuine democratic innovation and should be used more frequently for complex policy questions.",
                 "Dáil sitting hours should be extended and reformed so TDs spend more time scrutinising legislation.",
-                "Ireland should consider moving to a unicameral parliament by abolishing the Seanad.",
                 "Political donations from corporations and property developers should be banned entirely.",
-                "Voting should be extended to Irish citizens abroad for Dáil elections.",
-                "Lowering the voting age to 16 in all elections, not just referendums, would strengthen democracy.",
+                "Voting in Dáil elections should be extended to Irish citizens resident abroad.",
+                "Lowering the voting age to 16 in all elections would strengthen democratic participation.",
+                "Ireland should consider moving to a unicameral parliament by abolishing or fundamentally reforming the Seanad.",
             ],
         },
         {
             "theme": "Society & cohesion",
             "topic": "Society",
             "title": "Big questions for Ireland: Immigration, identity, and modern Irish society",
-            "description": "Ireland's rapidly changing demographics and what it means to belong.",
+            "description": "Ireland's rapidly changing demographics and what it means to belong in contemporary Ireland.",
             "information_title": "Before you vote",
-            "information_body": "Vote on **policy and values**, not on people's backgrounds or choices.",
-            "article_keywords": ["Ireland immigration", "direct provision Ireland", "homelessness Ireland", "Irish identity"],
+            "information_body": (
+                "Vote on **policy and values**, not on people's backgrounds. "
+                "Key sources: CSO Census 2022 data, ESRI integration research, "
+                "International Protection Act 2024, Report of the Commission on the Irish Diaspora."
+            ),
+            "article_keywords": ["Ireland direct provision abolish housing", "Ireland immigration economic contribution", "Ireland institutional abuse reparations Magdalene", "homelessness Ireland housing policy failure", "Irish diaspora return immigration"],
             "seeds": [
-                "Direct provision for asylum seekers should be abolished and replaced with community housing.",
-                "Ireland's economic success depends on continued immigration and the state should say so clearly.",
-                "Anti-immigration rhetoric in Irish politics is a serious threat to social cohesion.",
-                "The Irish state has a duty to formally apologise and pay reparations for institutional abuse survivors.",
-                "Homelessness in Ireland is a political failure, not an inevitable consequence of market forces.",
-                "Ireland should make it easier for Irish diaspora to return and contribute to the economy.",
+                "Direct provision for asylum seekers should be replaced with community-based housing and support — the International Protection Act 2024 begins this transition.",
+                "Ireland's economic success depends substantially on continued immigration and the state should make this case publicly.",
+                "The Irish state has a duty to formally acknowledge and pay reparations to survivors of institutional abuse.",
+                "Homelessness in Ireland is a political and policy failure, not an inevitable outcome of market conditions.",
+                "Ireland should make it substantially easier for the Irish diaspora to return and contribute to the economy.",
+                "Anti-immigration rhetoric in Irish political discourse poses a serious risk to social cohesion.",
             ],
         },
         {
@@ -734,15 +900,20 @@ def _curriculum_ie() -> List[dict[str, Any]]:
             "title": "Big questions for Ireland: CAO, apprenticeships, and the future of Irish education",
             "description": "The points race, teacher pay, and whether Irish education delivers for all.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **access, the CAO system, and skills** — not individual school performance.",
-            "article_keywords": ["CAO Ireland", "Ireland teacher pay", "apprenticeships Ireland", "Irish schools"],
+            "information_body": (
+                "Focus on **access, the CAO system, and skills** — not individual school performance. "
+                "Key sources: HEA (Higher Education Authority) access reports, "
+                "ESRI 'Learning for Life' education research, "
+                "SOLAS (Further Education and Training Authority), Teaching Council Ireland."
+            ),
+            "article_keywords": ["CAO points race reform Ireland", "Ireland teacher pay graduate comparison", "apprenticeships Ireland funding parity degree", "Irish schools personal finance civic education", "religious schools admission criteria state funding"],
             "seeds": [
-                "The CAO points race puts too much pressure on teenagers and should be reformed significantly.",
-                "Teacher pay in Ireland is too low relative to other graduate professions and must rise.",
-                "Apprenticeships and post-Leaving Cert courses should be funded and respected equally to degrees.",
-                "Irish schools should teach personal finance, civic education, and media literacy as core subjects.",
-                "Religious bodies should have no role in admissions criteria for state-funded schools.",
-                "Third-level fees should be abolished and replaced with a graduate contribution via the tax system.",
+                "The CAO points race places harmful levels of pressure on teenagers and should be fundamentally reformed.",
+                "Teacher pay in Ireland is too low relative to other graduate professions and must rise to attract and retain talent.",
+                "Apprenticeships and further education courses should be funded and socially respected at the same level as academic degrees.",
+                "Irish schools should teach personal finance, civic education, and media literacy as compulsory core subjects.",
+                "Religious bodies should have no role in determining admissions criteria for state-funded schools.",
+                "Third-level fees should be abolished and replaced with a graduate contribution collected through the tax system.",
             ],
         },
     ]
@@ -754,137 +925,172 @@ def _curriculum_de() -> List[dict[str, Any]]:
         {
             "theme": "Climate & planet",
             "topic": "Environment",
-            "title": "Große Fragen für Deutschland: Energiewende, Kohleausstieg und Klimapolitik",
-            "description": "Was kostet die Energiewende — und wer soll dafür bezahlen?",
+            "title": "Big questions for Germany: Energiewende, nuclear, and climate targets",
+            "description": "What does the Energiewende cost, has the nuclear phase-out been a mistake, and can Germany meet its 2045 climate neutrality target?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **German energy policy choices** — the nuclear phase-out, coal exit, and Energiewende costs.",
-            "article_keywords": ["Energiewende", "Germany coal", "German nuclear", "Kohleausstieg", "German climate policy"],
+            "information_body": (
+                "Focus on **German energy policy choices** — the nuclear phase-out, coal exit, Energiewende costs, and 2045 climate neutrality. "
+                "Key sources: Agora Energiewende analysis, Umweltbundesamt (Federal Environment Agency) reports, "
+                "DIW Berlin energy economics, Federal Climate Change Act (KSG) targets."
+            ),
+            "article_keywords": ["Germany nuclear phase-out climate impact", "Kohleausstieg 2030 acceleration", "Energiewende cost electricity prices", "Germany green hydrogen industrial decarbonisation", "Autobahn speed limit emissions"],
             "seeds": [
-                "Germany's decision to phase out nuclear power after Fukushima was a serious mistake for the climate.",
-                "The Kohleausstieg (coal phase-out) should be accelerated to 2030 rather than delayed.",
-                "Germany's Energiewende is a model for other countries despite its costs and implementation problems.",
-                "German households and industry pay too much for electricity due to green energy surcharges.",
-                "Germany should invest heavily in green hydrogen to decarbonise its industrial base.",
-                "Autobahn speed limits should be introduced — Germany is the only major country without them.",
+                "Germany's decision to phase out nuclear power was a strategic error that increased both carbon emissions and energy costs.",
+                "The Kohleausstieg (coal phase-out) should be accelerated to 2030 rather than allowed to slip to 2038.",
+                "Germany's Energiewende demonstrates that large-scale renewable transitions are feasible, despite significant implementation costs.",
+                "German households and industry pay electricity prices among the highest in Europe — this is a serious competitiveness problem.",
+                "Germany should invest heavily in green hydrogen production and infrastructure to decarbonise its industrial base.",
+                "Germany should introduce Autobahn speed limits — it is the only major EU country without permanent motorway speed restrictions.",
             ],
         },
         {
             "theme": "AI & technology",
             "topic": "Technology",
             "title": "Big questions for Germany: Digitalisation, AI, and the Mittelstand",
-            "description": "Can Germany's traditional industrial strengths survive the digital revolution?",
+            "description": "Can Germany's traditional industrial strengths survive the digital revolution, and is the EU AI Act an asset or a handicap?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **German digital policy**, GDPR origins, and the EU AI Act's impact on German industry.",
-            "article_keywords": ["Germany digitalisation", "Mittelstand AI", "German tech policy", "EU AI Act Germany"],
+            "information_body": (
+                "Focus on **German digital policy**, GDPR origins, EU AI Act compliance, and the Mittelstand's digital readiness. "
+                "Key sources: Bitkom digitalisation index, Fraunhofer AI research, "
+                "DIW digital economy analysis, Monopolies Commission on digital markets."
+            ),
+            "article_keywords": ["Germany Mittelstand digitalisation lag", "Germany GDPR data protection AI investment", "Germany national AI strategy US China", "German manufacturing AI automation jobs", "European sovereign cloud Germany"],
             "seeds": [
-                "Germany's Mittelstand is falling dangerously behind in digitalisation and the government must intervene.",
-                "Germany's strong data protection tradition (rooted in GDPR) should not be weakened to attract tech investment.",
-                "Germany needs a national AI strategy that competes with the US and China, not just regulation.",
-                "German manufacturing should embrace AI-driven automation even though it will reduce some jobs.",
-                "Germany should lead in developing European sovereign cloud infrastructure independent of US companies.",
-                "Public services in Germany are too analogue — digital government must become a national priority.",
+                "Germany's Mittelstand is falling dangerously behind in digitalisation and requires active government intervention and investment.",
+                "Germany's strong data protection tradition, which shaped GDPR, should not be weakened to attract tech investment.",
+                "Germany needs a national AI strategy that actively competes with the US and China in capability, not only regulation.",
+                "German manufacturing should embrace AI-driven automation even where it reduces employment in specific sectors.",
+                "Germany should lead in developing European sovereign cloud infrastructure independent of US hyperscale providers.",
+                "Public services in Germany are unacceptably analogue — digital government must become a national strategic priority.",
             ],
         },
         {
             "theme": "Economy & work",
             "topic": "Economy",
-            "title": "Big questions for Germany: Growth, Kurzarbeit, and the German economic model",
-            "description": "Is the German social market economy still fit for purpose?",
+            "title": "Big questions for Germany: Growth, the debt brake, and the German economic model",
+            "description": "Is the social market economy still fit for purpose? What should be done about the Schuldenbremse and industrial subsidies?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **structural economic questions** — the debt brake, Mindestlohn, and industrial subsidies.",
-            "article_keywords": ["Schuldenbremse", "Kurzarbeit", "Mindestlohn Germany", "German economy stagnation"],
+            "information_body": (
+                "Focus on **structural economic questions** — the Schuldenbremse, Mindestlohn, Kurzarbeit, and industrial policy. "
+                "Key sources: Sachverständigenrat (German Council of Economic Experts) annual reports, "
+                "IMF Germany Article IV consultations, DIW and ifo Institute economic analyses."
+            ),
+            "article_keywords": ["Schuldenbremse debt brake reform investment", "Germany Kurzarbeit short-time work scheme", "Mindestlohn 15 euro minimum wage", "Germany automotive industrial dependency", "Eastern Germany structural economic gap"],
             "seeds": [
-                "The Schuldenbremse (debt brake) should be reformed to allow investment in infrastructure and green transition.",
-                "Germany's Kurzarbeit scheme should be made permanent as a model for protecting workers in downturns.",
-                "The Mindestlohn (minimum wage) should rise to €15 and be indexed to living costs.",
-                "Germany's economic model is too dependent on car exports and must diversify urgently.",
-                "German industrial subsidies for the car sector have delayed necessary transformation.",
-                "Eastern Germany still has structural economic disadvantages that require targeted federal support.",
+                "The Schuldenbremse (constitutional debt brake) should be reformed to allow public investment in infrastructure and the green transition.",
+                "Germany's Kurzarbeit scheme should be maintained as a permanent feature of the labour market rather than only an emergency measure.",
+                "The Mindestlohn (minimum wage) should rise to €15 per hour and be indexed to living costs.",
+                "Germany's economic model is dangerously over-dependent on automotive exports and requires active diversification.",
+                "Federal and state industrial subsidies to the car sector have delayed necessary transformation into electric vehicles and clean technology.",
+                "Eastern Germany still faces structural economic disadvantages that require sustained, targeted federal support.",
             ],
         },
         {
             "theme": "Health & care",
             "topic": "Healthcare",
             "title": "Big questions for Germany: The two-tier health system and care for an aging society",
-            "description": "Is Germany's dual public-private health insurance system fair?",
+            "description": "Is Germany's dual public-private health insurance system equitable, and can long-term care be sustainably funded?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **GKV vs PKV, Pflegereform, and care workforce** issues in Germany.",
-            "article_keywords": ["GKV PKV Germany", "German healthcare reform", "Pflegereform", "elderly care Germany"],
+            "information_body": (
+                "Focus on **GKV vs PKV, Pflegereform, and care workforce** issues in Germany. "
+                "Key sources: Barmer GEK health insurance reports, SVR Gesundheit (Advisory Council on Health), "
+                "Bertelsmann Stiftung hospital reform analysis, Federal Ministry of Health data."
+            ),
+            "article_keywords": ["GKV PKV Germany merge single system", "Germany Pflegeversicherung long-term care reform", "German care workers pay shortage", "German hospital reform consolidation", "Germany mental health waiting times"],
             "seeds": [
-                "Germany should merge statutory (GKV) and private (PKV) health insurance into a single system.",
-                "Long-term care insurance (Pflegeversicherung) contributions are too low and must rise significantly.",
-                "Care workers in Germany are underpaid and understaffed — this is a systemic failure.",
+                "Germany should merge its statutory (GKV) and private (PKV) health insurance systems into a single solidarity-based system.",
+                "Long-term care insurance (Pflegeversicherung) contributions are substantially too low and must rise to meet future demographic demand.",
+                "Care workers in Germany are systematically underpaid and understaffed — this constitutes a policy failure requiring urgent remedy.",
                 "Higher earners should not be able to opt out of the statutory health insurance system.",
-                "Germany's hospital system has too many beds and needs consolidation to improve quality.",
-                "Mental health waiting times in Germany are too long and are a public health crisis.",
+                "Germany's hospital system has too many small, underfunded hospitals and needs consolidation to improve quality and efficiency.",
+                "Mental health waiting times in Germany are unacceptably long and constitute a public health crisis.",
             ],
         },
         {
             "theme": "War, peace & security",
             "topic": "Geopolitics",
             "title": "Big questions for Germany: Zeitenwende, Ukraine, and German security policy",
-            "description": "Has Germany turned the page on pacifism? What does the Zeitenwende really mean?",
+            "description": "Has Germany genuinely turned the page on post-WWII pacifism? What does the Zeitenwende require in practice?",
             "information_title": "Before you vote",
-            "information_body": "These are normative questions about **German rearmament, Russia policy, and European security**.",
-            "article_keywords": ["Zeitenwende Germany", "Bundeswehr", "Germany Ukraine weapons", "NATO Germany", "German pacifism"],
+            "information_body": (
+                "These are normative questions about **German rearmament, Russia policy, and European security**. "
+                "Key sources: Stiftung Wissenschaft und Politik (SWP) security analyses, "
+                "Bundeswehr capability assessments, IISS Military Balance Germany, "
+                "Bundestag defence committee reports."
+            ),
+            "article_keywords": ["Germany Zeitenwende defence spending NATO", "Bundeswehr readiness capability", "Germany Nordstream energy dependence Russia mistake", "Germany Taurus Ukraine weapons", "European defence autonomy Germany"],
             "seeds": [
-                "Germany's post-WWII pacifist culture has been a liability for European security and must change.",
-                "Germany should reach NATO's 2% defence spending target by 2025 at the latest.",
-                "Germany made a serious strategic error in its dependence on Russian gas under Nord Stream.",
-                "Germany should supply Taurus cruise missiles to Ukraine as quickly as possible.",
-                "German reunification lessons show that engaging authoritarian states can work — the Russia policy was not simply naive.",
-                "Germany should take a leading role in building a genuinely autonomous European defence capability.",
+                "Germany's post-WWII pacifist strategic culture has been a liability for European security that the Zeitenwende must genuinely change.",
+                "Germany should reach NATO's 2% of GDP defence spending target and sustain it as a floor, not a ceiling.",
+                "Germany made a serious strategic error in allowing its energy dependence on Russian gas to deepen under Nord Stream 1 and 2.",
+                "Germany should supply Taurus cruise missiles to Ukraine — the strategic case for doing so outweighs the risks of escalation.",
+                "Germany's experience of Ostpolitik does not vindicate engagement with authoritarian states as a general model — context matters.",
+                "Germany should take a leading role in building a genuinely autonomous European defence capability within NATO.",
             ],
         },
         {
             "theme": "Democracy & institutions",
             "topic": "Politics",
             "title": "Big questions for Germany: Democracy, the AfD, and German political institutions",
-            "description": "How should Germany respond to the rise of the AfD and democratic backsliding?",
+            "description": "How should Germany respond to the rise of the AfD and strengthen democratic resilience?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **institutional design** — the Basic Law, party bans, and democratic resilience.",
-            "article_keywords": ["AfD Germany ban", "German Basic Law", "Verfassungsschutz", "CDU SPD coalition"],
+            "information_body": (
+                "Focus on **institutional design** — the Basic Law, party bans, and democratic resilience mechanisms. "
+                "Key sources: Bundesverfassungsgericht (Federal Constitutional Court) jurisprudence, "
+                "Verfassungsschutz annual reports, Bertelsmann Transformation Index, "
+                "Venice Commission assessments of Germany."
+            ),
+            "article_keywords": ["AfD ban Article 21 Basic Law unconstitutional", "Bundestag size reform electoral", "AfD firewall coalition CDU SPD", "Federal Constitutional Court independence Germany", "Germany lobbying transparency law"],
             "seeds": [
-                "The AfD should be banned under Article 21 of the Basic Law if it is shown to be anti-constitutional.",
-                "Germany's 5% electoral threshold prevents fragmentation but excludes legitimate minority voices.",
-                "The Bundestag is too large and should be reformed to reduce the number of MPs significantly.",
-                "Germany's firewall against coalition with the AfD is necessary to defend democratic norms.",
-                "The Federal Constitutional Court's independence must be protected against parliamentary majorities.",
-                "Germany needs stronger lobbying transparency laws to reduce corporate influence on legislation.",
+                "The AfD should be subject to a formal ban procedure under Article 21 of the Basic Law if evidence of anti-constitutional activity is established.",
+                "Germany's 5% electoral threshold prevents fragmentation but excludes legitimate minority voices — its level should be reconsidered.",
+                "The Bundestag is too large following recent electoral reforms and should be reduced through a revised electoral law.",
+                "The democratic firewall against coalition with the AfD is necessary to defend constitutional democratic norms.",
+                "The Federal Constitutional Court's independence must be protected against attempts by parliamentary majorities to alter its composition.",
+                "Germany needs substantially stronger lobbying transparency legislation to reduce the undue influence of corporations on legislation.",
             ],
         },
         {
             "theme": "Society & cohesion",
             "topic": "Society",
             "title": "Big questions for Germany: Migration, integration, and German identity",
-            "description": "From Willkommenskultur to Messer-Debatte — where is Germany's migration policy heading?",
+            "description": "From Willkommenskultur to the current debate — where should German migration and integration policy go?",
             "information_title": "Before you vote",
-            "information_body": "Vote on **policy design and values** — not on the character of individuals.",
-            "article_keywords": ["Germany migration", "German integration policy", "Willkommenskultur", "asylum Germany"],
+            "information_body": (
+                "Vote on **policy design and values** — not on individuals' backgrounds. "
+                "Key sources: Sachverständigenrat Migration (Expert Council on Integration and Migration), "
+                "BAMF Federal Office for Migration and Refugees, IAB labour market integration research, "
+                "Bertelsmann Stiftung integration barometer."
+            ),
+            "article_keywords": ["Germany 2015 Willkommenskultur refugee assessment", "Germany integration programme funding", "Germany skilled migration needs pension", "Germany deportation Afghanistan failed asylum", "Germany anti-discrimination enforcement"],
             "seeds": [
-                "Germany's 2015 Willkommenskultur was the right moral and practical response to the refugee crisis.",
-                "Integration programmes in Germany need much more funding and must be completed before status is granted.",
-                "Germany needs significantly more skilled migration to sustain its economy and fund its pensions.",
-                "Deportations of failed asylum seekers to countries like Afghanistan should not be carried out.",
-                "Germany's migration debate has been captured by the right and the government must reframe it.",
-                "Anti-discrimination laws in Germany need stronger enforcement — the gap between law and practice is too wide.",
+                "Germany's 2015 Willkommenskultur was the appropriate moral and legal response to the European refugee crisis.",
+                "Integration programmes in Germany need substantially more funding and must be completed before permanent status is determined.",
+                "Germany needs significantly more skilled migration to sustain its economy, fill labour shortages, and fund its pension system.",
+                "Deportations of failed asylum seekers to conflict-affected countries like Afghanistan should not be carried out.",
+                "Anti-discrimination laws in Germany require significantly stronger enforcement — the gap between legal protection and lived experience is too wide.",
+                "Germany's migration debate has moved too far in the direction of restriction, at the cost of addressing genuine long-term economic needs.",
             ],
         },
         {
             "theme": "Education & future skills",
             "topic": "Education",
-            "title": "Big questions for Germany: Bildung, Gymnasium, and skills for the future",
-            "description": "Does the German education system still serve children from all backgrounds equally?",
+            "title": "Big questions for Germany: Bildung, Gymnasium, and equity in education",
+            "description": "Does the German education system still serve children from all backgrounds equitably?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **system design and equity** — early selection, Gymnasium prestige, and Bildungsföderalismus.",
-            "article_keywords": ["German education Gymnasium", "Fachhochschule prestige", "early selection Germany", "teacher pay Germany"],
+            "information_body": (
+                "Focus on **system design and equity** — early selection, Gymnasium prestige, Ausbildung, and Bildungsföderalismus. "
+                "Key sources: PISA results for Germany, KMK (Standing Conference of the Ministers of Education) data, "
+                "BMBF education reports, Bertelsmann Stiftung Chancenspiegel social mobility research."
+            ),
+            "article_keywords": ["Germany early tracking 10 Gymnasium inequality", "German dual vocational Ausbildung undervalued", "Germany Bildungsföderalismus 16 state systems", "Germany teacher pay national standard", "Germany Ganztagsschule full-day school right"],
             "seeds": [
-                "Germany's early selection at age 10 for Gymnasium/Realschule/Hauptschule tracks harms children from lower-income families.",
-                "The German dual vocational training system (Ausbildung) is undervalued compared to academic routes.",
-                "Germany's Bildungsföderalismus (16 different state school systems) creates unacceptable inequality.",
-                "Teacher pay in Germany should be set at a national level and raised for all states.",
-                "German universities suffer from underfunding and the reintroduction of tuition fees should be discussed.",
-                "All German children should have access to full-day schooling (Ganztagsschule) as a right.",
+                "Germany's early selection at age 10 for Gymnasium, Realschule, or Hauptschule tracks systematically disadvantages children from lower-income families.",
+                "The dual vocational training system (Ausbildung) is undervalued relative to academic routes and should receive equivalent public investment.",
+                "Germany's Bildungsföderalismus — 16 separate state school systems with different curricula — creates unacceptable inequality of educational experience.",
+                "Teacher pay in Germany should be set at a national standard and raised for all states.",
+                "All German children should have access to full-day schooling (Ganztagsschule) as a legal right.",
+                "German universities are significantly underfunded by international comparison and this threatens research quality.",
             ],
         },
     ]
@@ -896,120 +1102,151 @@ def _curriculum_fr() -> List[dict[str, Any]]:
         {
             "theme": "Climate & planet",
             "topic": "Environment",
-            "title": "Grandes questions pour la France : Nucléaire, climat et transition énergétique",
-            "description": "La France peut-elle mener l'Europe sur le nucléaire tout en tenant ses objectifs climatiques ?",
+            "title": "Big questions for France: Nuclear, agriculture, and the energy transition",
+            "description": "Can France lead Europe on nuclear while meeting its climate targets and addressing agricultural emissions?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **French energy choices** — nuclear expansion, REPowerEU, and agricultural emissions.",
-            "article_keywords": ["France nuclear energy", "French climate policy", "EDF", "French agriculture emissions", "COP France"],
+            "information_body": (
+                "Focus on **French energy choices** — nuclear expansion, agricultural methane, and the Loi Climat et Résilience. "
+                "Key sources: Haut Conseil pour le Climat annual reports, RTE energy scenarios, "
+                "ADEME energy transition analyses, EDF corporate reports."
+            ),
+            "article_keywords": ["France nuclear EDF expansion plan", "French agriculture methane emissions reform", "France building insulation renovation", "EDF renationalisation energy sovereignty", "French farmers protests environmental reform"],
             "seeds": [
                 "France was right to maintain and expand nuclear power as the backbone of a low-carbon electricity grid.",
-                "France's agricultural sector must reduce methane emissions even though this threatens traditional farming.",
-                "French households should be required to insulate their homes to reduce energy consumption.",
-                "EDF's renationalisation was necessary to protect French energy sovereignty.",
-                "France should use its nuclear expertise to help other EU countries decarbonise rather than discouraging nuclear.",
-                "French farmers' protests should not delay necessary environmental reforms in agriculture.",
+                "France's agricultural sector must substantially reduce methane emissions even though this threatens some traditional farming practices.",
+                "French households should face binding requirements to insulate their homes as part of the national decarbonisation strategy.",
+                "EDF's renationalisation was necessary to maintain French energy sovereignty and coordinate the nuclear build programme.",
+                "France should use its nuclear expertise to help other EU countries decarbonise rather than discouraging nuclear in European energy policy.",
+                "French farmers' protests should not be used to delay necessary environmental reforms in agricultural policy.",
             ],
         },
         {
             "theme": "AI & technology",
             "topic": "Technology",
-            "title": "Big questions for France: IA, tech sovereignty, and La French Tech",
-            "description": "Can France build a world-class AI sector while defending European digital sovereignty?",
+            "title": "Big questions for France: AI, tech sovereignty, and La French Tech",
+            "description": "Can France build world-class AI while defending European digital sovereignty?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **French tech policy**, the French Tech ecosystem, CNIL, and EU AI governance.",
-            "article_keywords": ["French Tech AI", "CNIL France", "Mistral AI", "French digital sovereignty", "GAFAM France"],
+            "information_body": (
+                "Focus on **French tech policy**, the French Tech ecosystem, CNIL enforcement, and EU AI Act governance. "
+                "Key sources: CNIL annual reports, France Stratégie AI analyses, "
+                "Mistral AI technical papers, Conseil National du Numérique reports."
+            ),
+            "article_keywords": ["France Mistral AI investment sovereign", "CNIL enforcement Big Tech France", "France TikTok ban government devices", "French cultural exception AI generated content", "EU AI copyright training data France"],
             "seeds": [
-                "France should invest significantly more in AI champions like Mistral to challenge US and Chinese dominance.",
-                "The CNIL needs a larger budget and stronger enforcement powers to hold Big Tech accountable.",
-                "France's approach to banning TikTok on government devices should be extended to more official contexts.",
+                "France should invest substantially more in AI companies like Mistral to challenge US and Chinese dominance.",
+                "The CNIL needs a larger budget and stronger enforcement powers to hold major tech platforms accountable under GDPR.",
+                "France's approach to restricting TikTok on government devices should be extended to other contexts where state data security is at risk.",
                 "French cultural exception policies should be extended to AI-generated content and digital platforms.",
-                "France should lead Europe in demanding that AI training data respect copyright and pay creators.",
-                "EU digital sovereignty is best achieved through common European standards, not national protectionism.",
+                "France should lead Europe in requiring that AI training data respects copyright and that rights-holders are compensated.",
+                "European digital sovereignty is best achieved through common European standards and capabilities, not through national protectionism.",
             ],
         },
         {
             "theme": "Economy & work",
             "topic": "Economy",
-            "title": "Big questions for France: Retraites, 35 heures, and the French economic model",
-            "description": "Macron's pension reform, la semaine des 35 heures, and who pays for France's social model.",
+            "title": "Big questions for France: Retraites, the 35-hour week, and the French economic model",
+            "description": "Macron's pension reform, labour market flexibility, and who pays for France's social model.",
             "information_title": "Before you vote",
-            "information_body": "These are **structural policy questions** about the French economic and social model.",
-            "article_keywords": ["French pension reform", "35 heures France", "French unemployment", "CDI CDD France"],
+            "information_body": (
+                "These are **structural policy questions** about the French economic and social model. "
+                "Key sources: Conseil d'Analyse Économique (CAE) research, "
+                "INSEE labour market data, France Stratégie productivity analyses, "
+                "COR (Conseil d'Orientation des Retraites) pension assessments."
+            ),
+            "article_keywords": ["French pension reform 64 retirement age", "35 heures France economic impact", "French labour code CDI CDD rigidity", "French state size public spending GDP", "France youth unemployment structural causes"],
             "seeds": [
-                "Raising the French retirement age to 64 was economically necessary even though socially painful.",
-                "The 35-hour working week has protected French workers without the economic damage critics predicted.",
-                "France's labour code is too rigid and makes companies reluctant to hire on permanent (CDI) contracts.",
-                "The French state is too large as a share of GDP and needs structural reform, not just efficiency savings.",
-                "France needs to invest more in vocational training to reduce youth unemployment.",
-                "High French youth unemployment is primarily a supply-side problem that requires labour market reform.",
+                "Raising the French retirement age to 64 was economically necessary given demographic trends, even though it was politically contested.",
+                "The 35-hour working week has protected French workers' quality of life without the economic damage that critics predicted.",
+                "France's labour code makes companies too cautious about hiring on permanent (CDI) contracts, contributing to high youth unemployment.",
+                "The French state at around 57% of GDP is the highest in the OECD and requires structural reform, not only efficiency savings.",
+                "France needs to invest significantly more in vocational training to reduce chronic youth unemployment.",
+                "The two-tier French labour market — insiders with CDI protection and outsiders on precarious contracts — requires fundamental reform.",
             ],
         },
         {
             "theme": "Health & care",
             "topic": "Healthcare",
             "title": "Big questions for France: Sécurité Sociale, déserts médicaux, and French healthcare",
-            "description": "Is France's acclaimed healthcare system still delivering for everyone?",
+            "description": "Is France's acclaimed universal health system still delivering equitably for everyone?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **access, funding, and the désertification médicale** affecting rural France.",
-            "article_keywords": ["France Sécurité Sociale", "déserts médicaux", "French health system", "hospital reform France"],
+            "information_body": (
+                "Focus on **access, funding, and the désertification médicale** affecting rural France. "
+                "Key sources: DREES health statistics, Cour des Comptes healthcare audits, "
+                "IRDES health economics research, INSEE geographic health access data."
+            ),
+            "article_keywords": ["France Sécurité Sociale universal coverage model", "déserts médicaux rural GP shortage France", "French private clinics public subsidies", "France mental health funding European comparison", "French emergency department A&E waiting times"],
             "seeds": [
-                "France's universal health coverage model is one of its greatest social achievements and must be protected.",
-                "Médecins déserts (areas with too few GPs) in rural France are a public health emergency requiring urgent action.",
+                "France's universal health coverage model is one of its greatest social achievements and must be protected against cuts.",
+                "Medical deserts in rural France constitute a public health emergency requiring mandatory measures, not only financial incentives.",
                 "Private clinics should not receive public subsidies while the public hospital system is underfunded.",
-                "Mental health services in France are severely underfunded relative to other European countries.",
-                "France should introduce a sugar tax on processed food to address rising rates of obesity.",
-                "Waiting times in French accident and emergency departments have become unacceptably long.",
+                "Mental health services in France are severely underfunded relative to other comparable European countries.",
+                "France should introduce a tax on ultra-processed food to address rising rates of obesity and diet-related disease.",
+                "Waiting times in French accident and emergency departments have become unacceptably long and reflect structural workforce failures.",
             ],
         },
         {
             "theme": "War, peace & security",
             "topic": "Geopolitics",
-            "title": "Big questions for France: Nucléaire, Françafrique, and l'autonomie stratégique",
-            "description": "France's nuclear deterrent, Africa policy, and the case for EU strategic autonomy.",
+            "title": "Big questions for France: Nuclear deterrent, Françafrique, and European strategic autonomy",
+            "description": "France's nuclear posture, Africa policy, and Macron's case for EU strategic autonomy.",
             "information_title": "Before you vote",
-            "information_body": "These are normative questions about **French military power and European defence**.",
-            "article_keywords": ["French nuclear deterrent", "Françafrique", "EU strategic autonomy Macron", "France NATO"],
+            "information_body": (
+                "These are normative questions about **French military power, postcolonial obligations, and European defence**. "
+                "Key sources: IRSEM (Institut de Recherche Stratégique de l'École Militaire), "
+                "French Senate defence committee reports, IFRI security analyses, "
+                "French White Paper on Defence and National Security."
+            ),
+            "article_keywords": ["French nuclear deterrent force de frappe", "Françafrique French military Africa withdrawal", "EU strategic autonomy Macron", "France Ukraine military support", "European defence collective funding bonds"],
             "seeds": [
-                "France's independent nuclear deterrent is a cornerstone of European security that should be maintained.",
-                "France's post-colonial military presence in Africa has done more harm than good and should end.",
-                "Macron's push for EU strategic autonomy is correct — Europe cannot rely on the US indefinitely.",
-                "France should contribute more military equipment to Ukraine rather than seeking a negotiated ceasefire.",
-                "France's permanent UN Security Council seat gives it special responsibilities it has not always met.",
-                "European defence should be funded collectively through EU bonds, not just by national defence budgets.",
+                "France's independent nuclear deterrent is an essential contribution to European security and should be maintained.",
+                "France's post-colonial military presence in Africa has done more harm than good and should be ended.",
+                "Macron's push for EU strategic autonomy is strategically correct — Europe cannot remain indefinitely dependent on US security guarantees.",
+                "France should contribute more military equipment to Ukraine, consistent with supporting its right to self-defence.",
+                "France's permanent UN Security Council seat carries special responsibilities it has not consistently met.",
+                "European defence should be funded collectively through EU bonds and common procurement, not only through national defence budgets.",
             ],
         },
         {
             "theme": "Democracy & institutions",
             "topic": "Politics",
-            "title": "Big questions for France: La Ve République, les gilets jaunes, and French democracy",
-            "description": "Is the Fifth Republic's strong presidency a strength or a democratic weakness?",
+            "title": "Big questions for France: La Ve République, gilets jaunes, and democratic reform",
+            "description": "Is the Fifth Republic's strong presidency a democratic strength or a structural weakness?",
             "information_title": "Before you vote",
-            "information_body": "These are **institutional design questions** — the Fifth Republic, referenda, and the National Assembly.",
-            "article_keywords": ["Fifth Republic France", "gilets jaunes", "French electoral reform", "Rassemblement National"],
+            "information_body": (
+                "These are **institutional design questions** — the Fifth Republic's presidential power, referenda, and the National Assembly. "
+                "Key sources: Conseil Constitutionnel jurisprudence, "
+                "Terra Nova policy analyses, CEVIPOF political science research, "
+                "Venice Commission assessments of French constitutional practice."
+            ),
+            "article_keywords": ["Fifth Republic presidential power reform parliamentary", "gilets jaunes economic inequality grievances", "France proportional representation National Assembly", "Article 49.3 parliament bypass France", "Citizens Convention Climate France deliberative"],
             "seeds": [
-                "The Fifth Republic gives the President too much power and should be reformed toward a parliamentary model.",
-                "The gilets jaunes movement exposed legitimate grievances about economic inequality that have not been addressed.",
+                "The Fifth Republic gives the President too much power and should be reformed toward a more genuinely parliamentary model.",
+                "The gilets jaunes movement exposed legitimate grievances about economic inequality and democratic exclusion that have not been structurally addressed.",
                 "France should introduce proportional representation for National Assembly elections.",
-                "Using article 49.3 to bypass parliament on major legislation undermines democratic legitimacy.",
-                "The rise of the Rassemblement National reflects a failure of mainstream parties to address real concerns.",
-                "Citizens' assemblies, as used for the Climate Convention, should become a regular part of French democracy.",
+                "Using Article 49.3 to bypass parliament on major legislation without a democratic emergency undermines legislative legitimacy.",
+                "Citizens' assemblies, as demonstrated by the Convention Citoyenne pour le Climat, should become a regular feature of French democracy.",
+                "The rise of the Rassemblement National reflects failures by mainstream parties to address real economic concerns of peripheral France.",
             ],
         },
         {
             "theme": "Society & cohesion",
             "topic": "Society",
             "title": "Big questions for France: Laïcité, immigration, and French cohesion",
-            "description": "The headscarf, les banlieues, and what French republicanism means in practice.",
+            "description": "The headscarf debate, les banlieues, and what French republicanism means in practice.",
             "information_title": "Before you vote",
-            "information_body": "Vote on **policy design and values** — not on individuals' religious or cultural choices.",
-            "article_keywords": ["French laïcité", "France immigration", "banlieues France", "French integration"],
+            "information_body": (
+                "Vote on **policy design and values** — not on individuals' religious or cultural choices. "
+                "Key sources: Haut Conseil à l'Intégration, INED migration statistics, "
+                "Institut Montaigne banlieues research, CEVIPOF social cohesion surveys."
+            ),
+            "article_keywords": ["French laïcité religious expression limits", "banlieues economic exclusion France", "France immigration integration capacity", "discrimination hiring France Maghreb", "France republican integration model assessment"],
             "seeds": [
-                "Laïcité as enforced in France goes too far in restricting religious expression in public life.",
-                "France's banlieues reflect decades of structural economic exclusion that cannot be solved by policing.",
-                "France receives too many migrants to integrate well — the pace of arrivals should slow.",
-                "Discrimination in hiring and housing against French citizens of immigrant background is a serious ongoing injustice.",
-                "France's model of republican integration — demanding assimilation over multiculturalism — has broadly worked.",
-                "Affirmative action (discrimination positive) targeting disadvantaged zones should be expanded in France.",
+                "Laïcité as applied in France restricts legitimate religious expression in ways that go beyond what secularism requires.",
+                "France's banlieues reflect decades of deliberate economic and geographic exclusion that policing cannot resolve.",
+                "France's integration infrastructure is insufficiently resourced relative to the pace of arrivals, creating real social strain.",
+                "Discrimination in hiring and housing against French citizens of immigrant background is a serious ongoing injustice requiring active enforcement.",
+                "France's republican integration model — prioritising individual assimilation over communitarian recognition — has produced contested outcomes that require honest evaluation.",
+                "Zone-based affirmative action (discrimination positive géographique) targeting disadvantaged urban areas should be expanded.",
             ],
         },
         {
@@ -1018,15 +1255,19 @@ def _curriculum_fr() -> List[dict[str, Any]]:
             "title": "Big questions for France: Grandes écoles, le bac, and French education",
             "description": "Does French elite education perpetuate privilege more than it creates opportunity?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **access and system design** — the grandes écoles, baccalauréat reform, and lycée professionnel.",
-            "article_keywords": ["grandes écoles France", "French baccalaureate reform", "lycée professionnel", "French teacher pay"],
+            "information_body": (
+                "Focus on **access and system design** — the grandes écoles, baccalauréat reform, Parcoursup, and lycée professionnel. "
+                "Key sources: DEPP (Direction de l'Évaluation, de la Prospective et de la Performance) educational statistics, "
+                "Cour des Comptes grandes écoles audit, France Stratégie social mobility research."
+            ),
+            "article_keywords": ["grandes écoles France privilege elite access", "Parcoursup algorithm university admission fairness", "lycée professionnel resources academic parity", "French baccalaureate reform assessment", "teacher pay France graduate comparison"],
             "seeds": [
-                "The grandes écoles system perpetuates elite privilege and should be merged into or opened up through universities.",
-                "Parcoursup's opaque algorithms make university entrance less fair than the previous system.",
-                "Lycée professionnel students receive a second-class education and should have the same resources as academic tracks.",
-                "The French baccalauréat is still the best single credential for assessing secondary achievement.",
-                "Teacher pay in France has fallen too far behind and must be raised significantly.",
-                "Philosophy as a compulsory bac subject is a genuine strength of French education that should be retained.",
+                "The grandes écoles system perpetuates elite social reproduction and should be opened up through reformed admissions and integration with universities.",
+                "Parcoursup's opaque algorithmic allocation makes university entrance less transparent and equitable than the previous system.",
+                "Lycée professionnel students are resourced at a significantly lower level than academic track students and deserve equality of investment.",
+                "The French baccalauréat reform has produced better subject alignment with students' abilities than the previous undifferentiated examination.",
+                "Teacher pay in France has fallen significantly behind other graduate professions and must be raised substantially.",
+                "Philosophy as a compulsory baccalauréat subject is a distinctive strength of French secondary education that should be retained.",
             ],
         },
     ]
@@ -1038,103 +1279,129 @@ def _curriculum_ca() -> List[dict[str, Any]]:
         {
             "theme": "Climate & planet",
             "topic": "Environment",
-            "title": "Big questions for Canada: Oil sands, carbon tax, and climate leadership",
-            "description": "Can Canada claim climate leadership while expanding oil sands production?",
+            "title": "Big questions for Canada: Oil sands, the carbon price, and climate leadership",
+            "description": "Can Canada credibly claim climate leadership while remaining one of the world's largest oil producers?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Canadian policy choices** — Trans Mountain, the carbon price, and Indigenous land rights.",
-            "article_keywords": ["Canada carbon tax", "oil sands Alberta", "Trans Mountain pipeline", "Canada climate policy"],
+            "information_body": (
+                "Focus on **Canadian policy choices** — Trans Mountain, the federal carbon price, and Indigenous land rights. "
+                "Key sources: Environment and Climate Change Canada emissions reports, "
+                "Canadian Net-Zero Emissions Accountability Act, "
+                "NRCAN natural resources data, Pembina Institute energy analysis."
+            ),
+            "article_keywords": ["Canada oil sands expansion climate credibility", "Canada federal carbon price", "Trans Mountain pipeline Indigenous rights", "Canada boreal forest carbon sink", "Canada clean electricity grid 2035"],
             "seeds": [
-                "Canada cannot credibly claim climate leadership while expanding oil sands production.",
-                "The federal carbon price is the right policy instrument even when it is politically unpopular.",
-                "Trans Mountain pipeline expansion should have been cancelled on environmental and Indigenous rights grounds.",
-                "Canada should be a global leader in protecting its boreal forests as a carbon sink.",
-                "Federal and provincial climate policies are too poorly coordinated to achieve Canada's Paris commitments.",
-                "Clean electricity should be 100% of Canada's grid by 2035 — this is achievable and necessary.",
+                "Canada cannot credibly claim climate leadership while continuing to expand oil sands production.",
+                "The federal carbon price is the most cost-effective policy instrument for reducing Canadian emissions, even when it is politically contested.",
+                "The Trans Mountain pipeline expansion should have been cancelled on environmental and Indigenous rights grounds.",
+                "Canada should be a global leader in protecting its boreal forests as a major terrestrial carbon sink.",
+                "Federal and provincial climate policies are insufficiently coordinated to achieve Canada's Paris Agreement commitments.",
+                "Clean electricity should constitute 100% of Canada's grid by 2035 — the resources and technology to achieve this exist.",
             ],
         },
         {
             "theme": "AI & technology",
             "topic": "Technology",
-            "title": "Big questions for Canada: AI leadership, Bill C-11, and the digital economy",
-            "description": "Is Canada doing enough to keep its AI talent and shape digital regulation?",
+            "title": "Big questions for Canada: AI leadership, digital regulation, and the digital economy",
+            "description": "Is Canada doing enough to keep its AI talent at home and shape global digital governance?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Canadian tech policy** — AI research leadership, the Online Streaming Act (C-11), and data governance.",
-            "article_keywords": ["Canada AI policy", "Bill C-11 CRTC", "Canadian tech sector", "brain drain Canada"],
+            "information_body": (
+                "Focus on **Canadian tech policy** — AI research investment, the Online Streaming Act (C-11), and federal AI governance. "
+                "Key sources: CIFAR AI research reports, Canadian Institute for Advanced Research, "
+                "Standing Committee on Industry Science and Technology on AI, OPC (Privacy Commissioner of Canada) reports."
+            ),
+            "article_keywords": ["Canada AI talent retention brain drain US", "Bill C-11 Online Streaming Act CRTC", "Canada federal AI regulation framework", "Canada PIPEDA privacy law reform GDPR", "Canada sovereign cloud computing infrastructure"],
             "seeds": [
-                "Canada is losing too much AI research talent to the US and needs major investment to retain it.",
-                "Bill C-11 (Online Streaming Act) is a legitimate attempt to fund Canadian content in the digital age.",
-                "Canada needs a comprehensive federal AI regulatory framework to protect citizens from algorithmic harm.",
-                "Canadian data privacy law (PIPEDA) is outdated and needs to be strengthened to match GDPR standards.",
-                "Public investment in computing infrastructure for AI research should be treated as strategic national infrastructure.",
-                "Canada should develop its own sovereign cloud capacity rather than relying entirely on US providers.",
+                "Canada is losing too much AI research talent to the United States and needs major sustained investment to retain it.",
+                "The Online Streaming Act (Bill C-11) is a legitimate attempt to ensure platforms fund Canadian cultural content in the digital age.",
+                "Canada needs a comprehensive federal AI regulatory framework to protect citizens from algorithmic discrimination and harm.",
+                "Canada's federal privacy law (PIPEDA) is outdated and needs to be strengthened to reach GDPR-equivalent standards.",
+                "Public investment in computing infrastructure for AI research should be treated as strategic national infrastructure, not discretionary spending.",
+                "Canada should develop sovereign cloud capacity rather than depending entirely on US-headquartered cloud providers for government data.",
             ],
         },
         {
             "theme": "Economy & work",
             "topic": "Economy",
             "title": "Big questions for Canada: Housing, wages, and the Canadian dream",
-            "description": "Toronto and Vancouver housing costs, temporary foreign workers, and generational inequality.",
+            "description": "Toronto and Vancouver housing costs, temporary foreign workers, and generational wealth inequality.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **structural policy** — housing supply, wages, and what Canada owes to workers.",
-            "article_keywords": ["Canada housing crisis", "Toronto Vancouver housing", "Canadian wages", "temporary workers Canada"],
+            "information_body": (
+                "Focus on **structural policy** — housing supply, wages, and what Canada owes to workers. "
+                "Key sources: CMHC housing supply analyses, Bank of Canada housing research, "
+                "Parliamentary Budget Officer reports, Statistics Canada income and wealth data."
+            ),
+            "article_keywords": ["Canada federal housing affordable social direct build", "Canada zoning reform federal funding cities", "temporary foreign worker programme wages", "Canada minimum wage $20 living wage", "Canada immigration housing infrastructure capacity"],
             "seeds": [
-                "The federal government should take a much more active role in building affordable housing, not just funding provinces.",
-                "Zoning reform to allow high-density housing near transit should be mandatory for cities receiving federal funding.",
-                "Canada's temporary foreign worker programmes are being misused to undercut wages for Canadian workers.",
-                "The federal minimum wage should apply across all industries and rise to $20 an hour.",
-                "Canada's immigration levels are too high relative to housing supply and infrastructure capacity.",
-                "Generational inequality in housing wealth is one of the defining challenges of Canadian society today.",
+                "The federal government should take a substantially more active role in directly building affordable housing rather than primarily funding provinces.",
+                "Zoning reform to permit high-density housing near transit should be made mandatory for cities receiving federal infrastructure funding.",
+                "Canada's temporary foreign worker programmes are being misused by some employers to undercut wages for Canadian workers.",
+                "The federal minimum wage should rise to $20 an hour and be indexed to living costs.",
+                "Canada's recent immigration levels have exceeded housing and infrastructure capacity, requiring better coordination of policy.",
+                "Generational inequality in housing wealth — where older Canadians hold assets that younger Canadians cannot access — is a defining social challenge.",
             ],
         },
         {
             "theme": "Health & care",
             "topic": "Healthcare",
             "title": "Big questions for Canada: Wait times, pharmacare, and the future of Medicare",
-            "description": "Is Canadian universal healthcare still delivering on its promise?",
+            "description": "Is Canadian universal healthcare still delivering on its founding promise?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **system design** — wait times, provincial jurisdiction, pharmacare, and dental care.",
-            "article_keywords": ["Canada healthcare wait times", "pharmacare Canada", "provincial health transfers", "dental care Canada"],
+            "information_body": (
+                "Focus on **system design** — wait times, provincial jurisdiction, pharmacare, and dental care. "
+                "Key sources: CIHI (Canadian Institute for Health Information) wait time data, "
+                "Parliamentary Budget Officer pharmacare costing, CMA physician surveys, "
+                "Romanow Commission on the Future of Health Care in Canada."
+            ),
+            "article_keywords": ["Canada universal healthcare wait times underfunding", "Canada pharmacare national programme", "Canada health transfer provinces federal", "Canada private surgical clinics Canada Health Act", "Canada dental pharmacare public coverage"],
             "seeds": [
-                "Canada's universal healthcare system is chronically underfunded and needs major new public investment.",
-                "A national pharmacare programme covering all Canadians is long overdue and affordable.",
-                "Provincial health transfers from the federal government should be increased significantly with strings attached.",
-                "The two-tier option of private surgical clinics alongside the public system violates the Canada Health Act.",
-                "Canada's mental health system is so underfunded that it constitutes a public health emergency.",
-                "Dental care and vision care should be included in universal public coverage as in most comparable countries.",
+                "Canada's universal healthcare system is chronically underfunded and requires major new sustained public investment.",
+                "A national pharmacare programme covering all Canadians is long overdue and fiscally affordable.",
+                "Federal health transfers to provinces should be substantially increased with accountability strings attached.",
+                "Private surgical clinics operating alongside the public system violate the Canada Health Act's prohibition on extra-billing.",
+                "Canada's mental health system is so severely underfunded that it constitutes a public health emergency.",
+                "Dental care and vision care should be included in universal public coverage, as they are in most comparable countries.",
             ],
         },
         {
             "theme": "War, peace & security",
             "topic": "Geopolitics",
             "title": "Big questions for Canada: NATO, Arctic sovereignty, and Canadian defence",
-            "description": "NORAD modernisation, the 2% NATO target, and Arctic security.",
+            "description": "NORAD modernisation, the 2% NATO target, and Canada's obligations in a changing security environment.",
             "information_title": "Before you vote",
-            "information_body": "These are normative questions about **Canadian military obligations and Arctic sovereignty**.",
-            "article_keywords": ["Canada NATO 2%", "NORAD modernisation", "Arctic sovereignty Canada", "Canada Ukraine"],
+            "information_body": (
+                "These are normative questions about **Canadian military obligations, Arctic sovereignty, and alliance commitments**. "
+                "Key sources: Canadian Defence Policy Review, House of Commons National Defence Committee, "
+                "Arctic Council Canada, NORAD Modernization Plan, PBO defence spending analysis."
+            ),
+            "article_keywords": ["Canada NATO 2 percent defence spending commitment", "NORAD modernisation Canada", "Canadian Arctic sovereignty climate", "Canada Ukraine military support", "Canada domestic defence procurement"],
             "seeds": [
-                "Canada should meet NATO's 2% of GDP defence spending commitment rather than free-riding on allies.",
-                "NORAD modernisation is essential for Canadian sovereignty and should be funded without delay.",
-                "Canada has a special obligation to assert Arctic sovereignty given climate-driven ice melt.",
+                "Canada should meet NATO's 2% of GDP defence spending commitment rather than continuing to free-ride on alliance partners.",
+                "NORAD modernisation is essential for Canadian sovereignty and continental defence and should be funded without further delay.",
+                "Canada has a special obligation to assert Arctic sovereignty given accelerating climate-driven access to Arctic waters.",
                 "Canada should increase its military support to Ukraine significantly.",
-                "Canadian defence spending is not just an obligation to NATO but a necessary investment in Canadian sovereignty.",
-                "Canada should build more of its own defence equipment rather than relying entirely on US procurement.",
+                "Canadian defence spending should prioritise domestic procurement and industrial capability, not only purchasing US equipment.",
+                "Canada should expand its UN peacekeeping contributions as an expression of its multilateral values.",
             ],
         },
         {
             "theme": "Democracy & institutions",
             "topic": "Politics",
-            "title": "Big questions for Canada: Electoral reform, Senate, and Canadian democracy",
-            "description": "FPTP vs proportional representation, Senate reform, and trust in Canadian institutions.",
+            "title": "Big questions for Canada: Electoral reform, Senate, and democratic institutions",
+            "description": "FPTP versus proportional representation, Senate reform, and trust in Canadian democratic institutions.",
             "information_title": "Before you vote",
-            "information_body": "These are **institutional design questions** — not claims about any party's record.",
-            "article_keywords": ["Canada electoral reform", "Senate reform Canada", "proportional representation Canada", "Canadian politics"],
+            "information_body": (
+                "These are **institutional design questions** — not claims about any party's record. "
+                "Key sources: Electoral Reform Committee of the House of Commons (2016), "
+                "Senate Modernization Report, Elections Canada data, Samara Centre for Democracy research."
+            ),
+            "article_keywords": ["Canada electoral reform proportional representation 2015 promise", "Senate reform abolish elected Canada", "Supreme Court appointment Parliament confirmation", "PMO power Parliament accountability", "lobbying transparency Canada federal"],
             "seeds": [
-                "Canada should replace first-past-the-post with proportional representation as was promised in 2015.",
-                "The Senate should be abolished or replaced with an elected body representing provinces.",
-                "Supreme Court justices should be confirmed by a parliamentary committee rather than appointed by the PM alone.",
-                "The power of the Prime Minister's Office is excessive and Parliament should claw back more authority.",
-                "Municipal governments need more financial autonomy and tax powers to address urban challenges.",
-                "Canada needs mandatory lobbying transparency so citizens can see who is influencing federal decisions.",
+                "Canada should replace first-past-the-post with a proportional representation system, as was promised in the 2015 federal election.",
+                "The Senate should be abolished or replaced with an elected body with a democratic mandate representing provinces.",
+                "Supreme Court justices should be confirmed by a parliamentary committee rather than appointed solely by the Prime Minister.",
+                "The power of the Prime Minister's Office over the government and Parliament is excessive and requires legislative constraints.",
+                "Municipal governments need substantially more financial autonomy and tax powers to address urban challenges.",
+                "Mandatory lobbying transparency should be strengthened so citizens can see who is influencing federal policy decisions.",
             ],
         },
         {
@@ -1143,32 +1410,42 @@ def _curriculum_ca() -> List[dict[str, Any]]:
             "title": "Big questions for Canada: Reconciliation, immigration, and Canadian identity",
             "description": "Truth and Reconciliation, immigration levels, and what it means to be Canadian.",
             "information_title": "Before you vote",
-            "information_body": "Vote on **policy and values** — not on individual people's backgrounds.",
-            "article_keywords": ["Indigenous reconciliation Canada", "residential schools Canada", "Canada immigration levels"],
+            "information_body": (
+                "Vote on **policy and values** — not on the background of individual people. "
+                "Key sources: Truth and Reconciliation Commission 94 Calls to Action, "
+                "National Inquiry into MMIWG, Statistics Canada demographic projections, "
+                "IRCC immigration levels plan data."
+            ),
+            "article_keywords": ["Canada TRC 94 calls to action implementation", "residential schools reparations Canada", "Canada immigration levels integration capacity", "anti-Asian racism Canada policy response", "Indigenous self-determination land rights Canada"],
             "seeds": [
-                "Canada has a legal and moral obligation to implement all 94 Truth and Reconciliation Commission calls to action.",
-                "Residential school survivors and their families are owed meaningful reparations, not just apologies.",
-                "Canada's current immigration levels are higher than the country can realistically integrate well.",
-                "Anti-Asian and anti-Muslim racism in Canada is a serious ongoing problem that requires active policy responses.",
-                "French-English bilingualism is a genuine strength of Canada that should be actively promoted, not merely preserved.",
-                "Indigenous nations should have genuine self-determination over lands within their traditional territories.",
+                "Canada has a legal and moral obligation to implement all 94 Truth and Reconciliation Commission Calls to Action.",
+                "Residential school survivors and their descendants are owed meaningful reparations, not only formal apologies.",
+                "Canada's recent immigration levels have exceeded what housing and public service infrastructure can support.",
+                "Anti-Asian and anti-Muslim racism in Canada is a serious and ongoing problem that requires active and funded policy responses.",
+                "French-English bilingualism is a genuine institutional strength of Canada that should be actively promoted, not merely preserved.",
+                "Indigenous nations should have genuine self-determination and jurisdiction over lands and resources within their traditional territories.",
             ],
         },
         {
             "theme": "Education & future skills",
             "topic": "Education",
             "title": "Big questions for Canada: Universities, trades, and learning for a changing economy",
-            "description": "Student debt, the trades shortage, and whether Canadian education serves everyone.",
+            "description": "Student debt, the skilled trades shortage, and whether Canadian education serves everyone equitably.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **access and system design** — tuition, apprenticeships, and provincial jurisdiction.",
-            "article_keywords": ["Canada student debt", "trades shortage Canada", "Canada education system", "French immersion access"],
+            "information_body": (
+                "Focus on **access and system design** — tuition levels, apprenticeships, and provincial jurisdiction. "
+                "Key sources: Statistics Canada university tuition data, "
+                "SODES skilled trades shortage research, "
+                "PBO student loan analysis, Canada School Nutrition Programme advocacy."
+            ),
+            "article_keywords": ["Canada university tuition debt federal transfers", "skilled trades shortage Canada apprenticeship", "Canada student loan forgiveness expansion", "French immersion universal access Canada", "Indigenous language education federal funding"],
             "seeds": [
-                "University tuition in Canada is too high and should be significantly reduced through federal transfers.",
-                "Skilled trades are underfunded and undervalued in Canada — this needs to change urgently.",
-                "Federal student loan forgiveness programmes should be expanded significantly.",
-                "French immersion access should be universal in English Canada, not dependent on lottery or geography.",
-                "Indigenous language education should be fully funded by the federal government as part of reconciliation.",
-                "Canada needs a national school nutrition programme — the last G7 country without one.",
+                "University tuition in Canada is too high and should be significantly reduced through increased federal transfers.",
+                "Skilled trades are structurally underfunded and undervalued in Canada — this requires urgent policy change.",
+                "Federal student loan forgiveness programmes should be substantially expanded, particularly for students from lower-income backgrounds.",
+                "French immersion access should be universal across English Canada, not dependent on geography or lottery.",
+                "Indigenous language education should be fully funded by the federal government as a core element of reconciliation.",
+                "Canada needs a national school nutrition programme — it remains the only G7 country without one.",
             ],
         },
     ]
@@ -1181,135 +1458,173 @@ def _curriculum_sg() -> List[dict[str, Any]]:
             "theme": "Climate & planet",
             "topic": "Environment",
             "title": "Big questions for Singapore: Green Plan 2030, regional haze, and sustainability",
-            "description": "Can Singapore lead on sustainability while relying on imports for almost everything?",
+            "description": "Can Singapore lead on sustainability as a small, resource-dependent city-state?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Singapore's Green Plan**, energy imports, and regional deforestation.",
-            "article_keywords": ["Singapore Green Plan", "haze Singapore", "Singapore carbon tax", "Singapore solar energy"],
+            "information_body": (
+                "Focus on **Singapore's Green Plan 2030**, energy imports, and regional deforestation diplomacy. "
+                "Key sources: National Climate Change Secretariat Singapore, "
+                "EMA (Energy Market Authority) statistics, NEA carbon tax reviews, "
+                "ASEAN Agreement on Transboundary Haze Pollution."
+            ),
+            "article_keywords": ["Singapore carbon tax level increase", "Singapore palm oil deforestation trade", "Singapore ASEAN climate leadership", "Singapore Green Plan 2030 ambition", "Singapore natural gas electricity alternative"],
             "seeds": [
-                "Singapore's carbon tax is too low to drive real business change and should be raised significantly.",
-                "Singapore should refuse palm oil from suppliers that engage in deforestation regardless of trade costs.",
-                "As a small island state, Singapore should be doing more to lead global climate diplomacy in ASEAN.",
-                "Singapore's Green Plan 2030 targets are too modest given the country's wealth and capabilities.",
-                "Singapore should invest in regional clean energy imports even if this creates some supply dependency.",
-                "Reducing Singapore's reliance on natural gas for electricity generation should be accelerated.",
+                "Singapore's carbon tax is too low to drive meaningful business behaviour change and should be raised significantly above current levels.",
+                "Singapore should refuse palm oil imports from suppliers that engage in deforestation, regardless of the trade costs.",
+                "As a small but wealthy and well-connected state, Singapore should do more to lead climate diplomacy within ASEAN.",
+                "Singapore's Green Plan 2030 targets are insufficiently ambitious given the country's wealth, technical capacity, and geographic vulnerability.",
+                "Singapore should invest in regional clean electricity imports via undersea cables, even if this creates some supply dependency.",
+                "Singapore should accelerate the reduction of natural gas in its electricity generation mix given its climate commitments.",
             ],
         },
         {
             "theme": "AI & technology",
             "topic": "Technology",
             "title": "Big questions for Singapore: Smart Nation, fintech, and digital governance",
-            "description": "Is Singapore's Smart Nation programme the right model for digital government?",
+            "description": "Is Singapore's Smart Nation programme the right model for digital government, and what are the trade-offs?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Smart Nation, the PDPA, fintech regulation, and surveillance trade-offs**.",
-            "article_keywords": ["Singapore Smart Nation", "PDPA Singapore", "Singapore fintech", "digital identity Singapore"],
+            "information_body": (
+                "Focus on **Smart Nation, the PDPA, fintech regulation, and surveillance trade-offs**. "
+                "Key sources: Smart Nation and Digital Government Office reports, "
+                "PDPC (Personal Data Protection Commission) enforcement data, "
+                "MAS (Monetary Authority of Singapore) fintech frameworks, GovTech annual reports."
+            ),
+            "article_keywords": ["Singapore Smart Nation data privacy", "Singapore fintech regulatory sandbox MAS", "Singapore PDPA privacy GDPR comparison", "facial recognition Singapore surveillance parliament", "Singpass digital identity expansion Singapore"],
             "seeds": [
-                "Singapore's Smart Nation programme collects too much personal data and needs stronger privacy protections.",
-                "Singapore's fintech regulatory sandbox is a global model that balances innovation with consumer protection.",
-                "Singapore should enact a stronger digital personal data protection law aligned with GDPR standards.",
-                "Facial recognition technology in public spaces by government agencies requires parliamentary oversight.",
-                "Singapore's digital identity system (Singpass) should be extended to more government and private services.",
-                "Singapore risks over-relying on US and Chinese tech giants for critical national digital infrastructure.",
+                "Singapore's Smart Nation programme collects too much personal data and requires significantly stronger privacy protections and independent oversight.",
+                "Singapore's fintech regulatory sandbox is a global model that effectively balances innovation with consumer protection.",
+                "Singapore should enact stronger digital personal data protection legislation aligned with international GDPR-standard principles.",
+                "Facial recognition technology in public spaces by government agencies should require parliamentary authorisation and sunset clauses.",
+                "Singapore's Singpass digital identity system should be extended to more government and private services with appropriate consent frameworks.",
+                "Singapore risks excessive dependence on US and Chinese tech companies for critical national digital infrastructure.",
             ],
         },
         {
             "theme": "Economy & work",
             "topic": "Economy",
             "title": "Big questions for Singapore: HDB, foreign workers, and the Singapore social compact",
-            "description": "Housing, foreign labour policy, and whether Singapore's growth model still works for everyone.",
+            "description": "Housing affordability, foreign labour policy, and whether Singapore's growth model still works for everyone.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **structural policy** — HDB affordability, foreign worker levies, and the CPF system.",
-            "article_keywords": ["HDB Singapore", "foreign workers Singapore levy", "CPF Singapore", "cost of living Singapore"],
+            "information_body": (
+                "Focus on **structural policy** — HDB affordability, foreign worker levies, the CPF system, and progressive taxation. "
+                "Key sources: HDB annual reports, MOM (Ministry of Manpower) labour statistics, "
+                "CPF Board data, Singstat income distribution, Budget speeches."
+            ),
+            "article_keywords": ["HDB Singapore affordability young buyers", "Singapore foreign workers wage competition", "CPF retirement savings adequacy Singapore", "Singapore progressive tax wealth inequality", "Singapore cost of living inequality"],
             "seeds": [
-                "HDB flats are too expensive for young Singaporeans entering the property market today.",
-                "Singapore relies too heavily on low-wage foreign workers in ways that undercut wages for Singaporeans.",
-                "The CPF system is a strong model for retirement savings that should be expanded, not weakened.",
-                "Singapore needs a more progressive tax structure where the wealthy contribute more.",
-                "Singapore's inequality, while lower than many cities, is high for its level of development.",
-                "The government should more actively regulate the cost of living, not just manage it through subsidies.",
+                "HDB flats have become too expensive for young Singaporeans entering the property market for the first time.",
+                "Singapore relies too heavily on low-wage foreign workers in ways that suppress wages and conditions for Singaporean workers.",
+                "The CPF system is a strong model for retirement savings that should be strengthened rather than dismantled.",
+                "Singapore needs a more progressive tax structure in which the wealthiest contribute proportionally more.",
+                "Singapore's inequality, while lower than in many comparable cities, remains high relative to its level of human development.",
+                "The government should more actively regulate cost-of-living pressures, not only manage them through targeted subsidies.",
             ],
         },
         {
             "theme": "Health & care",
             "topic": "Healthcare",
-            "title": "Big questions for Singapore: MediShield, eldercare, and an aging population",
-            "description": "Can Singapore's 3M health financing model sustain an aging society?",
+            "title": "Big questions for Singapore: MediShield Life, eldercare, and an aging population",
+            "description": "Can Singapore's 3M health financing model sustain an aging society at scale?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Medisave, MediShield Life, ElderShield, and long-term care access**.",
-            "article_keywords": ["MediShield Singapore", "Singapore eldercare", "aging population Singapore", "mental health Singapore"],
+            "information_body": (
+                "Focus on **Medisave, MediShield Life, CareShield Life, and long-term care access**. "
+                "Key sources: MOH (Ministry of Health Singapore) annual reports, "
+                "AIC (Agency for Integrated Care) eldercare data, "
+                "IMH (Institute of Mental Health) mental health surveys, Lien Foundation eldercare research."
+            ),
+            "article_keywords": ["MediShield Life premiums income affordability", "Singapore eldercare public investment ageing", "Singapore mental health funding stigma", "Singapore 3M healthcare sustainability", "hospital waiting times Singapore public beds"],
             "seeds": [
-                "MediShield Life premiums are too high for lower and middle-income Singaporeans.",
-                "Singapore needs a significantly larger public investment in eldercare as the population ages.",
-                "Mental health services in Singapore are underfunded and carry too much social stigma.",
-                "Singapore's 3M (Medisave, MediShield, Medifund) framework is fundamentally sound but needs updating.",
-                "Long hospital waiting times indicate that Singapore needs more public hospital beds and staff.",
-                "Caregivers — disproportionately women — need financial support from the state for their work.",
+                "MediShield Life premiums are too high for lower- and middle-income Singaporeans and should be more heavily subsidised.",
+                "Singapore needs a substantially larger public investment in eldercare as the population ages faster than the financing system can support.",
+                "Mental health services in Singapore are underfunded and carry too much social stigma — both must change through active policy.",
+                "Singapore's 3M (Medisave, MediShield, Medifund) framework is sound in principle but requires significant updating for an aging society.",
+                "Long hospital waiting times indicate that Singapore needs more public hospital beds and clinical staff.",
+                "Caregivers — disproportionately women — should receive direct financial support from the state for the economic value of their work.",
             ],
         },
         {
             "theme": "War, peace & security",
             "topic": "Geopolitics",
-            "title": "Big questions for Singapore: Regional security, FPDA, and navigating great-power rivalry",
-            "description": "How should Singapore manage US-China competition without choosing sides?",
+            "title": "Big questions for Singapore: Regional security and navigating great-power rivalry",
+            "description": "How should Singapore manage US-China competition while maintaining its strategic autonomy?",
             "information_title": "Before you vote",
-            "information_body": "These are normative questions about **Singapore's strategic position and defence policy**.",
-            "article_keywords": ["Singapore defence", "Five Power Defence", "US China Singapore", "South China Sea Singapore", "conscription Singapore"],
+            "information_body": (
+                "These are normative questions about **Singapore's strategic position and defence policy**. "
+                "Key sources: IISS military balance, RSIS Singapore security analyses, "
+                "FPDA Treaty documentation, Singapore MINDEF defence white paper."
+            ),
+            "article_keywords": ["Singapore US China rivalry strategic autonomy", "Singapore national service conscription", "Singapore cybersecurity defence investment", "Five Power Defence Arrangements FPDA", "Singapore ASEAN dialogue US China mediation"],
             "seeds": [
-                "Singapore should continue its policy of not taking sides between the US and China even under pressure.",
-                "National Service (conscription) remains essential for Singapore's defence and deterrence.",
-                "Singapore should invest more in cybersecurity and non-military security given the nature of modern threats.",
-                "The Five Power Defence Arrangements remain relevant to Singapore's security needs.",
-                "Singapore's defence spending is appropriate given the regional security environment.",
-                "Singapore should play a more active role in facilitating dialogue between US and China in Southeast Asia.",
+                "Singapore should continue its policy of not formally taking sides between the US and China even under increasing bilateral pressure.",
+                "National Service (conscription) remains essential to Singapore's deterrence posture and should be maintained.",
+                "Singapore should invest more in cybersecurity and non-military security capabilities given the nature of contemporary threats.",
+                "The Five Power Defence Arrangements remain a relevant framework for Singapore's regional security.",
+                "Singapore's defence spending is appropriate to its security environment and strategic requirements.",
+                "Singapore should play a more active role in facilitating dialogue between the US and China in Southeast Asia.",
             ],
         },
         {
             "theme": "Democracy & institutions",
             "topic": "Politics",
-            "title": "Big questions for Singapore: GRC system, press freedom, and political openness",
-            "description": "Is Singapore's political system becoming more or less open?",
+            "title": "Big questions for Singapore: The GRC system, press freedom, and political openness",
+            "description": "Is Singapore's political system becoming more open, and what reforms would strengthen democratic accountability?",
             "information_title": "Before you vote",
-            "information_body": "These are **institutional design questions** about Singapore's political structures.",
-            "article_keywords": ["GRC Singapore", "Singapore press freedom", "PAP Singapore", "ISA Singapore", "Workers Party"],
+            "information_body": (
+                "These are **institutional design questions** about Singapore's political structures. "
+                "Key sources: Singapore Elections Department data, "
+                "RSF Press Freedom Index, Freedom House Singapore assessment, "
+                "Parliamentary Hansard, ISA (Internal Security Act) historical usage data."
+            ),
+            "article_keywords": ["GRC group representation constituency reform", "Singapore press freedom ranking RSF", "Singapore Internal Security Act ISA repeal", "Workers Party parliament accountability Singapore", "Singapore Freedom of Information Act transparency"],
             "seeds": [
-                "The Group Representation Constituency (GRC) system should be abolished as it advantages the ruling party.",
-                "Singapore's press freedom ranking is too low for a country of its wealth and should be a national concern.",
-                "The Internal Security Act should be repealed — indefinite detention without trial has no place in modern Singapore.",
-                "A stronger opposition in parliament would make Singapore's government more accountable and effective.",
-                "Defamation laws should not be used against political critics and journalists.",
-                "Singapore needs a Freedom of Information Act to improve government transparency.",
+                "The Group Representation Constituency (GRC) system should be reformed or abolished — its effect on electoral competition warrants independent review.",
+                "Singapore's press freedom ranking is too low for a country of its wealth and development — this represents a governance deficit.",
+                "The Internal Security Act should be repealed — indefinite detention without trial has no place in a modern constitutional state.",
+                "A stronger political opposition in parliament would make Singapore's government more accountable and improve policy outcomes.",
+                "Defamation laws and POFMA should not be used to restrict legitimate political criticism or journalism.",
+                "Singapore needs a Freedom of Information Act to improve government transparency and civic engagement.",
             ],
         },
         {
             "theme": "Society & cohesion",
             "topic": "Society",
             "title": "Big questions for Singapore: Race harmony, foreign talent, and Singaporean identity",
-            "description": "CMIO identity categories, foreign talent policy, and what Singaporean means today.",
+            "description": "The CMIO framework, foreign talent policy, and what Singaporean identity means in a diverse society.",
             "information_title": "Before you vote",
-            "information_body": "Vote on **policy design**, not on individuals' backgrounds.",
-            "article_keywords": ["Singapore racial harmony", "foreign talent Singapore", "CMIO race Singapore", "LGBTQ Singapore 377A"],
+            "information_body": (
+                "Vote on **policy design**, not on individuals' backgrounds. "
+                "Key sources: NUS sociology research on race in Singapore, "
+                "MOM fair employment practices reports, MSF (Ministry of Social and Family Development) data, "
+                "IPS (Institute of Policy Studies) social cohesion surveys."
+            ),
+            "article_keywords": ["Singapore CMIO race framework reform", "Section 377A repeal Singapore LGBTQ", "Singapore foreign talent Singaporeans employment", "Malay Indian discrimination employment Singapore", "Singapore permanent residency citizenship pathways"],
             "seeds": [
-                "Singapore's government-defined CMIO (Chinese/Malay/Indian/Other) racial framework is outdated and should be reformed.",
-                "The repeal of Section 377A was the right decision for an inclusive Singapore.",
-                "Foreign talent in Singapore has contributed enormously to its success and is not a threat to Singaporeans.",
-                "More should be done to address discrimination against Malay and Indian Singaporeans in employment.",
-                "Singapore's social cohesion is one of its greatest assets and requires ongoing active investment.",
-                "Singapore should make it easier for long-term residents to access permanent residency and citizenship.",
+                "Singapore's government-defined CMIO (Chinese/Malay/Indian/Other) racial framework is increasingly outdated and should be reformed.",
+                "The repeal of Section 377A was the right decision for an inclusive and modern Singapore.",
+                "Foreign talent in Singapore has made an essential contribution to its success and should not be characterised as a threat to Singaporeans.",
+                "More needs to be done to address persistent discrimination against Malay and Indian Singaporeans in employment.",
+                "Singapore's social cohesion is a genuine asset that requires ongoing active policy investment.",
+                "Singapore should make it easier for long-term residents who have contributed to the country to access permanent residency and citizenship.",
             ],
         },
         {
             "theme": "Education & future skills",
             "topic": "Education",
             "title": "Big questions for Singapore: PSLE, SkillsFuture, and the tuition arms race",
-            "description": "Is Singapore's education system breeding excellence or anxiety?",
+            "description": "Is Singapore's education system breeding excellence or anxiety, and is SkillsFuture working?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **PSLE reform, tuition industry, SkillsFuture, and what education is for**.",
-            "article_keywords": ["PSLE Singapore", "tuition industry Singapore", "SkillsFuture", "Singapore education reform"],
+            "information_body": (
+                "Focus on **PSLE reform, tuition industry, SkillsFuture effectiveness, and what education is for**. "
+                "Key sources: MOE (Ministry of Education) Singapore PSLE reform papers, "
+                "SkillsFuture Council reports, IPS education research, "
+                "PISA Singapore data, Lien Foundation education surveys."
+            ),
+            "article_keywords": ["PSLE pressure 12 year old Singapore reform", "private tuition industry inequality Singapore regulate", "SkillsFuture credits redesign effectiveness", "Singapore academic achievement character skills balance", "Singapore university expansion knowledge economy"],
             "seeds": [
-                "The pressure of the PSLE on 12-year-olds is causing serious harm to children's wellbeing.",
-                "The private tuition industry in Singapore widens inequality and should be regulated.",
-                "SkillsFuture credits have not been effective enough and need a complete redesign.",
-                "Singapore's school system still places too much emphasis on academic achievement over character and skills.",
-                "University places should be expanded significantly given Singapore's knowledge-economy needs.",
+                "The pressure of the PSLE on 12-year-olds is causing serious and measurable harm to children's wellbeing that outweighs the benefits of early selection.",
+                "The private tuition industry widens educational inequality and should be substantially regulated.",
+                "SkillsFuture credits have not achieved sufficient impact and require a fundamental programme redesign.",
+                "Singapore's school system still places excessive emphasis on academic achievement to the detriment of character development and broader skills.",
+                "University places should be substantially expanded given Singapore's knowledge-economy needs.",
                 "Schools should teach financial literacy and civic education as core subjects from secondary school.",
             ],
         },
@@ -1322,144 +1637,183 @@ def _curriculum_jp() -> List[dict[str, Any]]:
         {
             "theme": "Climate & planet",
             "topic": "Environment",
-            "title": "Big questions for Japan: Nuclear restarts, coal, and Japan's climate commitments",
-            "description": "After Fukushima, can Japan build a credible path to carbon neutrality?",
+            "title": "Big questions for Japan: Nuclear restarts, coal, and the path to carbon neutrality",
+            "description": "After Fukushima, can Japan build a credible path to 2050 carbon neutrality?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Japanese energy choices** — nuclear restarts, coal dependency, and offshore wind.",
-            "article_keywords": ["Japan nuclear restart", "Japan coal power", "Japan climate policy", "Japan carbon neutral 2050"],
+            "information_body": (
+                "Focus on **Japanese energy choices** — nuclear restarts, coal dependency, and the Green Transformation (GX) strategy. "
+                "Key sources: Agency for Natural Resources and Energy (ENECHO) data, "
+                "Japan's GX Promotion Act, Ministry of Environment climate policy, "
+                "ISEP (Institute for Sustainable Energy Policies) research."
+            ),
+            "article_keywords": ["Japan nuclear restart decarbonisation", "Japan coal power new construction climate", "Japan offshore wind investment manufacturing", "Japan 2050 carbon neutrality GX policy", "Japan Fukushima nuclear risk assessment"],
             "seeds": [
-                "Japan was right to restart nuclear power plants as part of its decarbonisation strategy after the energy crisis.",
-                "Japan's continued construction of new coal power plants undermines its own climate commitments.",
+                "Japan was right to restart nuclear power plants as part of its decarbonisation strategy — the climate case outweighs the safety concerns.",
+                "Japan's continued construction and planning of new coal power plants is incompatible with its 2050 carbon neutrality commitment.",
                 "Japan should invest in offshore wind at a scale comparable to its investment in automotive manufacturing.",
-                "Japan's 2050 carbon neutrality target requires policies far more ambitious than those currently in place.",
-                "The Fukushima disaster should not be allowed to prevent a rational assessment of nuclear power's role.",
-                "Japan's island geography gives it enormous potential for tidal and wave energy that is being underexploited.",
+                "Japan's 2050 carbon neutrality target requires energy policies far more ambitious than those currently in place.",
+                "The Fukushima disaster should not prevent a rational, evidence-based reassessment of nuclear power's role in Japan's energy mix.",
+                "Japan's island geography gives it substantial renewable energy potential — tidal, wave, and geothermal — that is being underexploited.",
             ],
         },
         {
             "theme": "AI & technology",
             "topic": "Technology",
             "title": "Big questions for Japan: AI strategy, robotics, and digital transformation",
-            "description": "Can Japan lead in AI and robotics while addressing its digital government failures?",
+            "description": "Can Japan lead in AI and robotics while addressing its well-documented digital government failures?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Japan's AI strategy**, My Number digital ID system, and manufacturing automation.",
-            "article_keywords": ["Japan AI strategy", "Japan digital transformation", "My Number Japan", "Japan semiconductor TSMC"],
+            "information_body": (
+                "Focus on **Japan's AI strategy**, the My Number digital ID system, and the Digital Agency's reform programme. "
+                "Key sources: Japan AI Strategy 2022, Digital Agency annual reports, "
+                "Ministry of Economy, Trade and Industry (METI) digital transformation analyses, "
+                "JEITA semiconductor reports."
+            ),
+            "article_keywords": ["Japan TSMC semiconductor investment strategic", "Japan My Number digital ID reform", "Japan government IT systems digital agency", "Japan robotics AI manufacturing automation", "Japan data protection Act APPI reform"],
             "seeds": [
-                "Japan's investment in attracting TSMC semiconductor production strengthens its strategic position significantly.",
-                "Japan's My Number digital identity system should be accelerated despite privacy concerns.",
-                "Japan needs to fundamentally reform its government IT systems, which are decades behind other advanced economies.",
-                "Japan's strength in robotics means it is well-placed to lead on AI for manufacturing automation.",
-                "Japan should adopt GDPR-equivalent data protection standards to participate fully in global digital trade.",
-                "Japan's tech sector needs more immigration to address skill shortages, particularly in software engineering.",
+                "Japan's investment in attracting TSMC semiconductor production strengthens its strategic position in the global chip supply chain significantly.",
+                "Japan's My Number digital identity system should be accelerated, with stronger privacy protections, to enable modern digital public services.",
+                "Japan needs to fundamentally overhaul its government IT systems, which lag behind other advanced economies by decades.",
+                "Japan's strength in robotics puts it in a strong position to lead on AI-driven manufacturing automation.",
+                "Japan should adopt personal data protection standards fully aligned with international best practice to participate effectively in global digital trade.",
+                "Japan's tech sector needs more inward migration to address severe skill shortages, particularly in software engineering.",
             ],
         },
         {
             "theme": "Economy & work",
             "topic": "Economy",
-            "title": "Big questions for Japan: Deflation, wages, and Kishida's 'new capitalism'",
-            "description": "Japan's lost decades, wage stagnation, and whether Abenomics worked.",
+            "title": "Big questions for Japan: Deflation, wages, and the economic model",
+            "description": "Japan's lost decades, wage stagnation, women's labour force participation, and whether structural reform is finally happening.",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Japanese economic structure** — wage growth, women's participation, and corporate governance.",
-            "article_keywords": ["Japan wage growth", "Abenomics", "Japan deflation", "women workforce Japan", "Japan corporate governance"],
+            "information_body": (
+                "Focus on **Japanese economic structure** — wage growth, women's participation, and corporate governance reform. "
+                "Key sources: Bank of Japan monetary policy assessments, "
+                "Ministry of Health, Labour and Welfare wage statistics, "
+                "JPX (Tokyo Stock Exchange) corporate governance reform guidance, Cabinet Office gender equality data."
+            ),
+            "article_keywords": ["Japan corporate cash holdings investment shareholder", "Japan women workforce participation structural barriers", "Japan minimum wage 1500 yen deflation", "Abenomics assessment structural reform", "Japan seishain regular employment inequality"],
             "seeds": [
-                "Japan's corporations hold too much cash and should be required to either invest it or return it to shareholders.",
-                "Japanese women's labour force participation rates are held back by structural discrimination that requires legal reform.",
-                "Japan's minimum wage should be raised to ¥1,500 per hour nationally to end chronic deflation.",
-                "Abenomics failed to address the structural causes of Japan's economic stagnation.",
-                "Japan needs significant corporate governance reform to make its companies more internationally competitive.",
-                "Japan's reliance on regular employment systems (seishain) entrenches inequality between permanent and temporary workers.",
+                "Japan's corporations hold excessive cash reserves and should be required to invest them or return them to shareholders.",
+                "Japanese women's labour force participation is structurally constrained by discriminatory workplace norms that require legal reform.",
+                "Japan's minimum wage should be raised to ¥1,500 per hour nationally to address chronic wage stagnation.",
+                "Abenomics failed to address the structural causes of Japan's economic stagnation despite its monetary innovation.",
+                "Japan needs significant corporate governance reform to make its major companies internationally competitive.",
+                "Japan's dual labour market — privileged regular employees (seishain) alongside precarious non-regular workers — entrenches deep inequality.",
             ],
         },
         {
             "theme": "Health & care",
             "topic": "Healthcare",
-            "title": "Big questions for Japan: An aging society, universal healthcare, and end-of-life care",
-            "description": "How can Japan sustain its world-class healthcare system as it ages faster than anywhere on earth?",
+            "title": "Big questions for Japan: Universal health insurance, aging, and end-of-life care",
+            "description": "How can Japan sustain its world-class healthcare system as it ages faster than anywhere else on earth?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **Japan's universal health insurance, aging population costs, and workforce**.",
-            "article_keywords": ["Japan universal health insurance", "aging population Japan", "Japan mental health", "healthcare workforce Japan"],
+            "information_body": (
+                "Focus on **Japan's universal health insurance, demographic pressure, and mental health**. "
+                "Key sources: Ministry of Health, Labour and Welfare healthcare data, "
+                "OECD Health at a Glance Japan, Japan Medical Association surveys, "
+                "National Institute of Population and Social Security Research projections."
+            ),
+            "article_keywords": ["Japan universal health insurance sustainability", "Japan doctor nurse shortage aging", "Japan mental health stigma underfunding", "Japan palliative end-of-life care access", "Japan foreign healthcare workers immigration"],
             "seeds": [
-                "Japan's universal health insurance system is one of its greatest social achievements and must be protected.",
-                "Japan needs to train and retain significantly more doctors and nurses to meet future care demands.",
-                "Japan's mental health system is underfunded and highly stigmatised — this must change.",
-                "Japan should expand end-of-life care options, including greater access to palliative care outside hospitals.",
-                "Healthcare premiums for Japan's aging population should be cross-subsidised more from general income taxes.",
-                "Japan should accept more foreign healthcare workers to address its severe staff shortage.",
+                "Japan's universal health insurance system is one of its greatest social achievements and must be protected from cost-cutting.",
+                "Japan needs to train and retain significantly more doctors and nurses to meet the healthcare demands of its aging population.",
+                "Japan's mental health system is underfunded and highly stigmatised — both problems must be addressed through sustained policy.",
+                "Japan should expand access to quality palliative care and end-of-life support outside of hospital settings.",
+                "Healthcare insurance premiums for Japan's aging population should be more substantially cross-subsidised from general income taxation.",
+                "Japan should accept significantly more foreign healthcare workers, with appropriate training and language support, to address its severe workforce shortage.",
             ],
         },
         {
             "theme": "War, peace & security",
             "topic": "Geopolitics",
-            "title": "Big questions for Japan: The pacifist constitution, Taiwan, and Japanese rearmament",
-            "description": "Should Japan revise Article 9 of its constitution and take on greater defence responsibilities?",
+            "title": "Big questions for Japan: Article 9, Taiwan, and Japanese rearmament",
+            "description": "Should Japan formally revise Article 9 of its constitution and assume greater regional defence responsibilities?",
             "information_title": "Before you vote",
-            "information_body": "These are normative questions about **Japan's security posture and Article 9 of the constitution**.",
-            "article_keywords": ["Japan Article 9 constitution", "Japan Taiwan Strait", "Japan defence spending", "Quad Japan", "Japan rearmament"],
+            "information_body": (
+                "These are normative questions about **Japan's security posture, Article 9 of the constitution, and regional alliances**. "
+                "Key sources: Japan's National Security Strategy (2022), "
+                "CSIS Pacific Forum strategic assessments, Quad joint statements, "
+                "Ministry of Defence (Japan) defence white papers."
+            ),
+            "article_keywords": ["Japan Article 9 constitution revision defence", "Japan defence spending 2 percent GDP", "Japan Taiwan Strait security commitment", "Quad Japan India Australia security", "Japan South Korea defence cooperation history"],
             "seeds": [
-                "Japan should formally revise Article 9 of its constitution to reflect its actual defence posture.",
-                "Japan doubling defence spending to 2% of GDP is a necessary and overdue response to regional threats.",
-                "Japan should make explicit security commitments to Taiwan given its strategic importance.",
-                "The Quad (US, Japan, India, Australia) is an important counterbalance to Chinese military expansion.",
-                "Japan's pacifist tradition, even if constitutionally revised, remains an important part of its global identity.",
-                "Japan should develop stronger bilateral defence cooperation with South Korea despite historical tensions.",
+                "Japan should formally revise Article 9 of its constitution to reflect its actual and growing defence posture.",
+                "Japan doubling defence spending to 2% of GDP is a necessary and overdue response to North Korean and Chinese military developments.",
+                "Japan should make clearer security commitments regarding Taiwan given its strategic and economic significance.",
+                "The Quad (US, Japan, India, Australia) is an important counterbalance to Chinese military expansion in the Indo-Pacific.",
+                "Japan's pacifist tradition, even if constitutionally revised, remains an important part of its global diplomatic identity.",
+                "Japan should develop stronger bilateral defence cooperation with South Korea despite unresolved historical tensions.",
             ],
         },
         {
             "theme": "Democracy & institutions",
             "topic": "Politics",
             "title": "Big questions for Japan: LDP dominance, women in parliament, and political reform",
-            "description": "One-party dominance, corruption scandals, and Japan's democratic deficit.",
+            "description": "One-party dominance, political funding scandals, and Japan's democratic deficit.",
             "information_title": "Before you vote",
-            "information_body": "These are **institutional design questions** about Japanese democracy.",
-            "article_keywords": ["LDP Japan dominance", "Japan political reform", "women parliament Japan", "Japan corruption politics"],
+            "information_body": (
+                "These are **institutional design questions** about Japanese democracy. "
+                "Key sources: IPU Women in Parliament data (Japan), "
+                "Political Funds Control Act enforcement data, Electoral Integrity Project, "
+                "Cabinet Legislation Bureau constitutional interpretations."
+            ),
+            "article_keywords": ["LDP Japan dominance accountability democratic", "women parliament Japan IPU ranking", "Nippon Kaigi religious nationalism LDP", "Japan rural urban vote weight malapportionment", "Japan political funding seiji shikin transparency"],
             "seeds": [
-                "Japan's near-permanent LDP dominance undermines effective democratic accountability.",
-                "Japan's proportion of women in parliament is among the lowest in the OECD — this must change through active policy.",
-                "The relationship between the LDP and Nippon Kaigi religious nationalism is a threat to Japan's secular democracy.",
-                "Japan's electoral system creates rural-urban vote weight imbalances that should be corrected by the courts.",
-                "Japan's opaque political funding system (seiji shikin) needs comprehensive transparency reform.",
-                "Japan should make it easier for citizens to recall politicians and hold referendums at the national level.",
+                "Japan's near-permanent LDP dominance weakens democratic accountability and produces policy capture by narrow interests.",
+                "Japan's proportion of women in parliament is among the lowest in the OECD and requires active legislative intervention to change.",
+                "The close relationship between elements of the LDP and organisations advocating nationalist constitutional revision requires public scrutiny.",
+                "Japan's electoral system creates significant rural-urban vote weight imbalances that the courts should correct.",
+                "Japan's political funding system (seiji shikin kisei) requires comprehensive transparency reform after recent donation scandals.",
+                "Japan should make it easier for citizens to use referendums to resolve constitutional questions.",
             ],
         },
         {
             "theme": "Society & cohesion",
             "topic": "Society",
-            "title": "Big questions for Japan: Immigration, the birth rate, and the loneliness epidemic",
-            "description": "Japan's demographic crisis, resistance to immigration, and social isolation.",
+            "title": "Big questions for Japan: Immigration, the birth rate crisis, and social isolation",
+            "description": "Japan's demographic emergency, its ambivalence about immigration, and the loneliness epidemic.",
             "information_title": "Before you vote",
-            "information_body": "Vote on **policy design** — immigration, social supports, and what Japan's future looks like.",
-            "article_keywords": ["Japan immigration", "Japan birth rate", "Japan loneliness", "hikikomori", "Japan population decline"],
+            "information_body": (
+                "Vote on **policy design** — immigration, childcare, and what Japan's future looks like. "
+                "Key sources: National Institute of Population and Social Security Research demographic projections, "
+                "Ministry of Internal Affairs hikikomori survey data, "
+                "OECD fertility and childcare policy comparisons, Immigration Services Agency statistics."
+            ),
+            "article_keywords": ["Japan immigration permanent residence economic", "Japan childcare parental leave birth rate reform", "hikikomori social withdrawal government intervention Japan", "Japan dual nationality ban reform", "Japan same-sex marriage legal recognition"],
             "seeds": [
-                "Japan must accept significantly more permanent immigration to sustain its economy and pensions.",
-                "Japan's childcare and parental leave policies are still not enabling women to have children and careers.",
-                "Hikikomori (social withdrawal) and the loneliness epidemic require active government intervention.",
-                "Discrimination against foreign residents and naturalised citizens must be actively combated by law.",
-                "Japan should allow dual nationality — its current ban is economically and socially harmful.",
-                "Same-sex partnership rights should be legally recognised nationally, not left to individual municipalities.",
+                "Japan must accept significantly more permanent immigration to sustain its economy and pension system.",
+                "Japan's childcare and parental leave policies still do not enable women to have children and pursue careers on equal terms.",
+                "Hikikomori (severe social withdrawal) and the loneliness epidemic require sustained government intervention and destigmatisation.",
+                "Japan should allow dual nationality — the current prohibition imposes unnecessary economic and social costs.",
+                "Discrimination against foreign residents and naturalised citizens must be actively combated through law and enforcement.",
+                "Same-sex partnership rights should be legally recognised at the national level, rather than being left to individual municipalities.",
             ],
         },
         {
             "theme": "Education & future skills",
             "topic": "Education",
-            "title": "Big questions for Japan: Juken, the Gaokao-equivalent pressure, and education reform",
-            "description": "Is Japan's exam-driven education system fit for a creative, innovative economy?",
+            "title": "Big questions for Japan: Juken, entrance exam culture, and education reform",
+            "description": "Is Japan's entrance exam-driven education system fit for a creative, innovative economy?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **system design** — entrance exam pressure, English education, and university reform.",
-            "article_keywords": ["Japan entrance exams", "Japanese education reform", "English education Japan", "juken culture"],
+            "information_body": (
+                "Focus on **system design** — entrance exam culture (juken), the kyōtsū tesuto, English education, and university reform. "
+                "Key sources: MEXT (Ministry of Education, Culture, Sports, Science and Technology) education statistics, "
+                "PISA Japan results, OECD Education at a Glance Japan, Benesse education research."
+            ),
+            "article_keywords": ["Japan juken entrance exam stress reform", "Japan English education reform fluency", "Japan university reform international ranking", "juku tutoring inequality Japan regulate", "Japan liberal arts critical thinking university"],
             "seeds": [
-                "Japan's university entrance exam culture (juken) creates damaging levels of stress without improving outcomes.",
-                "English language education in Japan must be reformed fundamentally — rote grammar does not produce fluent speakers.",
-                "Japan's universities need significant reform to become more internationally competitive.",
-                "Juku (private tutoring schools) widen inequality and the system should be reformed so they are less necessary.",
-                "Japan needs more liberal arts education that builds critical thinking, not just technical specialisation.",
-                "Japanese schools should actively teach students about the country's wartime history in a balanced way.",
+                "Japan's university entrance exam culture (juken) creates damaging levels of stress without producing better long-term learning outcomes.",
+                "English language education in Japan must be fundamentally reformed — the current approach prioritises grammar over communicative competence.",
+                "Japan's universities need significant reform in governance, internationalisation, and funding to become globally competitive.",
+                "Juku (private tutoring schools) widen educational inequality and the exam system should be reformed so they are less necessary.",
+                "Japan needs more liberal arts education that builds critical thinking and adaptability, alongside technical specialisation.",
+                "Japanese schools should actively teach students the full history of the country's actions in the Asia-Pacific war, based on historical evidence.",
             ],
         },
     ]
 
 
 def _curriculum_cn() -> List[dict[str, Any]]:
-    """China/Asia-Pacific big questions covering international debates relevant to Chinese audiences."""
+    """Global big questions framed for international audiences, with particular relevance to Asia-Pacific and China-related debates."""
     return [
         {
             "theme": "Climate & planet",
@@ -1467,66 +1821,84 @@ def _curriculum_cn() -> List[dict[str, Any]]:
             "title": "Big questions: China, Asia, and global climate responsibility",
             "description": "How should the world's largest emitter balance development goals with climate commitments?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **global climate choices** where China's decisions have major international consequences.",
-            "article_keywords": ["China climate policy", "China carbon neutral 2060", "Belt Road green", "China coal overseas"],
+            "information_body": (
+                "Focus on **global climate choices** where China's decisions have major international consequences. "
+                "Key sources: Global Carbon Project, IPCC AR6 Common But Differentiated Responsibilities principle, "
+                "IEA China energy outlook, Climate Action Tracker assessments."
+            ),
+            "article_keywords": ["China 2060 carbon neutrality commitment credibility", "Belt Road Initiative coal overseas financing", "historical emissions responsibility developed developing", "China renewable energy capacity growth", "US China climate cooperation competition"],
             "seeds": [
-                "China's 2060 carbon neutrality commitment is ambitious and deserves international support.",
-                "China's Belt and Road Initiative should stop financing overseas coal power plants entirely.",
-                "Rich developed countries have a greater historical responsibility for climate change than China.",
-                "China's expansion of renewable energy capacity is one of the most important developments in global climate action.",
-                "Developing countries should not be pressured to decarbonise as fast as wealthy nations that industrialised first.",
-                "Climate change cooperation between the US and China should continue even during periods of strategic rivalry.",
+                "China's 2060 carbon neutrality commitment is meaningful but requires substantially more ambitious near-term policies to be credible.",
+                "China's Belt and Road Initiative must stop financing overseas coal power plants — the climate cost cannot be offset by other investments.",
+                "Developed countries bear a greater historical responsibility for cumulative atmospheric carbon than rapidly industrialising nations.",
+                "China's expansion of solar and wind capacity is one of the most consequential developments in global climate action.",
+                "Developing countries should not be pressured to decarbonise at the same pace as wealthy nations that industrialised over two centuries.",
+                "Climate change cooperation between the US and China should be insulated from other elements of strategic rivalry.",
             ],
         },
         {
             "theme": "AI & technology",
             "topic": "Technology",
             "title": "Big questions: AI governance, data sovereignty, and the global tech order",
-            "description": "How should the world govern AI and protect digital rights?",
+            "description": "How should the world govern artificial intelligence and protect digital rights across different political systems?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **global AI governance choices** and competing regulatory models.",
-            "article_keywords": ["AI governance global", "data sovereignty", "technology regulation China", "AI safety standards"],
+            "information_body": (
+                "Focus on **global AI governance choices** and competing regulatory models. "
+                "Key sources: UN Advisory Body on AI (2024), Bletchley AI Safety Declaration, "
+                "GPAI (Global Partnership on AI), EU AI Act, "
+                "OECD AI Principles."
+            ),
+            "article_keywords": ["data localisation sovereignty international", "AI explainability accountability rights", "UN AI governance treaty process", "US China AI decoupling security", "open source AI monopoly prevention global"],
             "seeds": [
-                "Countries should have the right to require that citizens' data is stored and processed domestically.",
-                "Artificial intelligence decisions affecting people's lives should be explainable and open to appeal.",
-                "Global AI safety standards should be agreed through the UN rather than set by any single country or bloc.",
-                "Technology decoupling between the US and China makes everyone less safe from AI risks.",
-                "Open-source AI development benefits all countries by preventing monopolies by a few powerful actors.",
-                "International cooperation on AI safety research should continue regardless of geopolitical tensions.",
+                "Countries should have the right to require that citizens' data is stored and processed domestically — data sovereignty is a legitimate policy goal.",
+                "Artificial intelligence systems that make decisions affecting individuals' rights must be explainable and subject to meaningful appeal.",
+                "Global AI safety standards should be agreed through a UN-level multilateral process, not set unilaterally by any single country or trading bloc.",
+                "Technology decoupling between the US and China makes it harder to coordinate on shared AI safety risks that affect all countries.",
+                "Open-source AI development benefits all countries by preventing technological monopolies from forming around a small number of powerful actors.",
+                "International cooperation on AI safety research should continue regardless of geopolitical tensions between major powers.",
             ],
         },
         {
             "theme": "Economy & work",
             "topic": "Economy",
             "title": "Big questions: Trade, development, and global economic fairness",
-            "description": "Is the global economic order fair to developing countries?",
+            "description": "Is the global economic order fair to developing countries, and how should it be reformed?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **trade rules, development finance, and global economic equity**.",
-            "article_keywords": ["China trade policy", "Belt Road Initiative", "global development finance", "WTO reform"],
+            "information_body": (
+                "Focus on **trade rules, development finance, and global economic equity**. "
+                "Key sources: WTO dispute settlement system, IMF governance reforms, "
+                "World Bank debt sustainability framework, UNCTAD trade development reports."
+            ),
+            "article_keywords": ["WTO reform developing countries fairness", "Belt Road debt sustainability protection", "US China trade tariffs consumer cost", "infant industry protection developing countries", "IMF World Bank governance reform developing"],
             "seeds": [
-                "The WTO rules need fundamental reform to better serve the interests of developing countries.",
-                "Belt and Road Initiative loans should include stronger debt sustainability protections for recipient countries.",
-                "Trade tariffs between the US and China are ultimately paid by ordinary consumers in both countries.",
-                "Developing countries should have the right to protect domestic industries while they build capacity.",
-                "Global supply chain reliance on any single country is a systemic risk that all nations should reduce.",
-                "International financial institutions like the IMF and World Bank should give more voice to developing nations.",
+                "The WTO's rules need fundamental reform to better serve the interests of developing countries, not only established trading powers.",
+                "Belt and Road Initiative loan agreements should include stronger debt sustainability protections for recipient countries.",
+                "Trade tariffs between the US and China are ultimately borne by ordinary consumers and businesses in both countries.",
+                "Developing countries should retain the right to protect domestic industries while they build the capacity to compete internationally.",
+                "Over-reliance on any single country for critical supply chains is a systemic economic and security risk that all nations should reduce.",
+                "International financial institutions like the IMF and World Bank should give substantially more decision-making weight to developing nations.",
             ],
         },
         {
             "theme": "Health & care",
             "topic": "Healthcare",
-            "title": "Big questions: Global health, pandemic lessons, and healthcare equity",
-            "description": "What did the world learn from COVID and are we better prepared?",
+            "title": "Big questions: Global health, pandemic lessons, and health equity",
+            "description": "What did the world learn from COVID-19, and how must global health architecture change?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **global health preparedness, vaccine equity, and international cooperation**.",
-            "article_keywords": ["global pandemic preparedness", "vaccine equity", "WHO reform", "public health China"],
+            "information_body": (
+                "Focus on **global health preparedness, vaccine equity, and international cooperation**. "
+                "Key sources: Independent Panel for Pandemic Preparedness and Response (IPPR) report (2021), "
+                "WHO Pandemic Accord negotiations, Lancet COVID-19 Commission, "
+                "MSF vaccine equity campaign."
+            ),
+            "article_keywords": ["COVID vaccine patent waiver TRIPS", "WHO pandemic treaty stronger powers", "vaccine nationalism preventable deaths COVID", "pandemic preparedness fund permanent financing", "universal health coverage global low income"],
             "seeds": [
-                "Vaccine patents should be waived during pandemics so that all countries can manufacture doses.",
-                "The WHO needs stronger powers to investigate outbreaks quickly without member state obstruction.",
-                "Rich countries' vaccine nationalism during COVID caused preventable deaths globally.",
-                "Pandemic preparedness should be funded by a permanent international mechanism, not charity.",
-                "Traditional and complementary medicine should be evaluated by the same evidence standards as other treatments.",
-                "All countries should invest in universal health coverage regardless of their income level.",
+                "Vaccine patents should be waived during pandemics so that all countries can manufacture doses without licensing barriers.",
+                "The WHO needs substantially stronger powers to investigate outbreaks quickly, without member state obstruction.",
+                "Rich countries' vaccine nationalism during COVID caused preventable deaths and must not be repeated in future pandemics.",
+                "Pandemic preparedness should be funded by a permanent treaty-based international mechanism, not unpredictable discretionary contributions.",
+                "Traditional and complementary medicine claims should be subject to the same evidence standards as other medical treatments.",
+                "Universal health coverage is both achievable and necessary at all income levels — the evidence that it improves health outcomes is strong.",
             ],
         },
         {
@@ -1535,66 +1907,85 @@ def _curriculum_cn() -> List[dict[str, Any]]:
             "title": "Big questions: Asia-Pacific security, Taiwan, and the rules-based order",
             "description": "Can the world avoid great-power conflict and build a more stable international system?",
             "information_title": "Before you vote",
-            "information_body": "These are normative questions about **peace, sovereignty, and international norms**.",
-            "article_keywords": ["Taiwan Strait stability", "South China Sea", "US China rivalry", "Asia Pacific security"],
+            "information_body": (
+                "These are normative questions about **peace, sovereignty, and international law norms**. "
+                "Key sources: UNCLOS, UN Charter Article 2(4), "
+                "IISS Asia-Pacific security assessments, Carnegie Endowment for International Peace, "
+                "SIPRI conflict data."
+            ),
+            "article_keywords": ["US China dialogue prevent escalation Taiwan", "UN Charter territorial integrity force prohibition", "economic interdependence war prevention research", "Asia Pacific multilateral security framework", "sanctions diplomacy geopolitical disputes effectiveness"],
             "seeds": [
-                "Dialogue and diplomacy between the US and China are essential to avoid accidental military escalation.",
-                "The UN Charter's prohibition on changing borders by force must apply equally to all countries.",
-                "Economic interdependence between major powers makes large-scale conflict less likely than in past eras.",
-                "Regional security in Asia-Pacific should be managed through multilateral frameworks, not bilateral deals.",
-                "Sanctions and tariffs are not effective tools for resolving geopolitical disputes in the long run.",
-                "Countries in dispute should use international courts and arbitration rather than unilateral action.",
+                "Active dialogue and diplomacy between the US and China are essential to prevent accidental military escalation in the Asia-Pacific.",
+                "The UN Charter's prohibition on changing borders or political status by force must apply equally to all states.",
+                "Economic interdependence between major powers reduces but does not eliminate the risk of large-scale armed conflict.",
+                "Regional security in the Asia-Pacific should be managed primarily through multilateral frameworks rather than bilateral arrangements.",
+                "Broad economic sanctions are rarely effective tools for resolving geopolitical disputes and often harm civilian populations.",
+                "Countries in territorial or political disputes should use international courts and arbitration rather than unilateral action.",
             ],
         },
         {
             "theme": "Democracy & institutions",
             "topic": "Politics",
             "title": "Big questions: International institutions, governance, and global cooperation",
-            "description": "Are international institutions fit to address the world's challenges?",
+            "description": "Are international institutions fit to address the world's greatest challenges?",
             "information_title": "Before you vote",
-            "information_body": "These are **global governance questions** about international institutions and cooperation.",
-            "article_keywords": ["UN reform", "multilateralism", "global governance", "international law"],
+            "information_body": (
+                "These are **global governance questions** about international institutions, multilateralism, and legitimacy. "
+                "Key sources: UN High-Level Advisory Board on Effective Multilateralism (2023), "
+                "Dag Hammarskjöld Foundation, Freedom House global democracy data, "
+                "Bertelsmann Transformation Index."
+            ),
+            "article_keywords": ["UN Security Council reform permanent membership", "international law compliance powerful states", "global challenges climate pandemic multilateralism", "International Court of Justice ICJ compliance", "multilateralism unilateralism effectiveness evidence"],
             "seeds": [
-                "The UN Security Council's permanent membership needs to be reformed to reflect today's global power.",
-                "International law is only effective when powerful countries choose to follow it — this is a structural problem.",
-                "Global challenges like climate change and pandemics require stronger international institutions, not weaker ones.",
-                "Countries should comply with international court decisions even when they lose.",
-                "A just international order should give equal legal standing to all states regardless of their power.",
-                "Multilateralism works better than unilateralism even when it is slower and more frustrating.",
+                "The UN Security Council's permanent membership should be reformed to reflect the current distribution of global power and population.",
+                "International law is only effective when powerful states choose to follow it — this structural deficiency requires institutional reform.",
+                "Global challenges like climate change and pandemics require stronger international institutions, not a retreat to national unilateralism.",
+                "All countries, including powerful ones, should comply with International Court of Justice rulings.",
+                "A just international order requires giving equal legal standing to all states, regardless of economic or military power.",
+                "Multilateral institutions, despite their slowness and frustration, produce more durable outcomes than unilateral action by dominant powers.",
             ],
         },
         {
             "theme": "Society & cohesion",
             "topic": "Society",
             "title": "Big questions: Migration, urbanisation, and social change in Asia",
-            "description": "How rapidly urbanising societies manage diversity, inequality, and belonging.",
+            "description": "How rapidly urbanising societies manage diversity, inequality, mobility, and belonging.",
             "information_title": "Before you vote",
-            "information_body": "Vote on **policy design** — urbanisation, social mobility, and what societies owe their members.",
-            "article_keywords": ["urbanisation Asia", "social mobility", "inequality Asia", "migration Asia"],
+            "information_body": (
+                "Vote on **policy design** — urbanisation, social mobility, and what societies owe their members. "
+                "Key sources: UN World Urbanization Prospects, World Bank GINI data, "
+                "ILO migration statistics, OECD Social Mobility in East Asia report."
+            ),
+            "article_keywords": ["urbanisation economic development displacement", "social infrastructure cities parks libraries investment", "rural urban inequality Asia defining challenge", "internal migration rights equal treatment", "demographic decline family policy migration"],
             "seeds": [
-                "Rapid urbanisation is good for economic development even when it disrupts traditional communities.",
-                "Cities should invest more in social infrastructure — parks, libraries, community centres — not just transport.",
-                "Greater economic inequality between urban and rural areas is one of the defining problems of our era.",
-                "All people should have the right to move within their country and be treated equally regardless of origin.",
-                "Social mobility in most countries is lower than people believe and requires active policy intervention.",
-                "Demographic decline is better addressed by improving conditions for families than by restricting migration.",
+                "Rapid urbanisation drives economic development but requires substantial public investment in social infrastructure to prevent social fragmentation.",
+                "Cities should invest significantly more in social infrastructure — parks, libraries, community centres — not only transport and commercial development.",
+                "Growing economic inequality between urban and rural areas is one of the defining social problems of the contemporary era.",
+                "All people should have the right to move within their country and receive equal treatment regardless of origin.",
+                "Social mobility in most countries is lower than public perception suggests and requires active, targeted policy intervention.",
+                "Demographic decline is better addressed by improving conditions for families and workers than by restricting migration.",
             ],
         },
         {
             "theme": "Education & future skills",
             "topic": "Education",
             "title": "Big questions: Education, opportunity, and preparing societies for the future",
-            "description": "How can education systems reduce inequality and equip people for a changing world?",
+            "description": "How can education systems reduce inequality and equip people for a rapidly changing world?",
             "information_title": "Before you vote",
-            "information_body": "Focus on **access, system design, and what education is for** in a changing global economy.",
-            "article_keywords": ["education inequality global", "skills future economy", "higher education access"],
+            "information_body": (
+                "Focus on **access, system design, and what education is for** in a changing global economy. "
+                "Key sources: UNESCO Education for All Global Monitoring Report, "
+                "OECD PISA and Education at a Glance, "
+                "World Bank human capital index, Brookings education research."
+            ),
+            "article_keywords": ["education intergenerational poverty reduction evidence", "high pressure exam system creativity innovation", "private tutoring inequality Korea China regulation", "early childhood education return on investment", "higher education public good funding model"],
             "seeds": [
-                "Education is the most powerful tool for reducing intergenerational poverty and governments should fund it generously.",
-                "High-pressure examination systems do not produce the creative and critical thinkers modern economies need.",
-                "Private tutoring industries in high-exam-pressure societies widen inequality and should be regulated.",
-                "Access to quality early childhood education is as important as secondary and tertiary education.",
-                "Higher education should be a public good funded primarily by the state, not primarily by students.",
-                "Schools should explicitly teach students how to identify misinformation and think critically about sources.",
+                "Education is the most powerful policy tool for reducing intergenerational poverty and governments should fund it as a first-order priority.",
+                "High-pressure examination systems do not produce the critical thinking and creative capacity that modern economies need.",
+                "Private tutoring industries in high exam-pressure societies widen educational inequality and should be regulated.",
+                "Access to quality early childhood education produces higher social returns than investment at secondary or tertiary level alone.",
+                "Higher education should be primarily publicly funded as a social good — the evidence that graduate loan systems reduce access is strong.",
+                "Schools should explicitly teach students how to evaluate information sources and identify disinformation.",
             ],
         },
     ]
@@ -1711,6 +2102,8 @@ def seed_guided_journey_programme(variant: str = "global", creator_email: Option
     """
     Idempotent: creates the programme if missing; adds missing discussions per theme.
     Safe to re-run — will not delete any theme that already has votes.
+    On discussions with zero votes, existing seed statements are replaced with the
+    current curriculum so content can be updated by re-running the seeder.
     """
     variant = (variant or "global").lower()
     if variant not in VALID_VARIANTS:
