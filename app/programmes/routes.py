@@ -460,10 +460,28 @@ def journey_reminder_subscribe(slug):
         return jsonify({'success': False, 'error': 'forbidden'}), 403
 
     from app.lib.auth_utils import normalize_email as _normalize
+    from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
     data = request.get_json(silent=True) or {}
     cadence = (data.get('cadence') or '').strip()
     if cadence not in JourneyReminderSubscription.VALID_CADENCES:
         return jsonify({'success': False, 'error': 'invalid_cadence'}), 400
+
+    # Validate timezone — must be a real IANA zone; fall back to UTC silently
+    raw_tz = (data.get('timezone') or 'UTC').strip()[:50]
+    try:
+        ZoneInfo(raw_tz)
+        tz_value = raw_tz
+    except (ZoneInfoNotFoundError, KeyError):
+        tz_value = 'UTC'
+
+    # preferred_hour: 0–23, default 8 (morning)
+    try:
+        preferred_hour = int(data.get('preferred_hour', 8))
+        if not 0 <= preferred_hour <= 23:
+            preferred_hour = 8
+    except (TypeError, ValueError):
+        preferred_hour = 8
 
     if current_user.is_authenticated:
         email = current_user.email
@@ -488,6 +506,8 @@ def journey_reminder_subscribe(slug):
 
         if existing:
             existing.cadence = cadence
+            existing.timezone = tz_value
+            existing.preferred_hour = preferred_hour
             existing.unsubscribed_at = None
             existing.set_next_send_at()
             sub = existing
@@ -497,11 +517,24 @@ def journey_reminder_subscribe(slug):
                 user_id=user_id,
                 email=email,
                 cadence=cadence,
+                timezone=tz_value,
+                preferred_hour=preferred_hour,
             )
             sub.set_next_send_at()
             db.session.add(sub)
 
         db.session.flush()
+
+        # Human-readable cadence labels for emails
+        _cadence_labels = {
+            'weekly': 'once a week',
+            'weekend': 'on Saturday mornings',
+            'twice_weekly': 'twice a week (Tue & Thu)',
+            'commute': 'twice a week (Tue & Thu)',
+        }
+        _time_labels = {8: 'morning', 12: 'lunchtime', 19: 'in the evening'}
+        time_label = _time_labels.get(preferred_hour, f'at {preferred_hour}:00')
+        cadence_label = f"{_cadence_labels.get(cadence, cadence)}, {time_label}"
 
         if not user_id:
             token = sub.generate_resume_token(expires_hours=72)
@@ -515,11 +548,7 @@ def journey_reminder_subscribe(slug):
                 'emails/journey_reminder_confirm.html',
                 programme_name=programme.name,
                 confirm_url=confirm_url,
-                cadence_label={
-                    'weekly': 'once a week',
-                    'weekend': 'on weekends',
-                    'commute': 'on your commute (Tue & Thu mornings)',
-                }.get(cadence, cadence),
+                cadence_label=cadence_label,
                 base_url=base_url,
             )
             email_data = {
@@ -532,7 +561,7 @@ def journey_reminder_subscribe(slug):
         else:
             db.session.commit()
 
-        return jsonify({'success': True, 'cadence': cadence})
+        return jsonify({'success': True, 'cadence': cadence, 'preferred_hour': preferred_hour})
 
     except Exception:
         db.session.rollback()

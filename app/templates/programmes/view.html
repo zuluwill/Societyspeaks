@@ -329,7 +329,7 @@
       </div>
       <div class="flex-1 min-w-0">
         <p class="text-sm font-semibold text-gray-900 mb-0.5">Want a reminder to come back and finish?</p>
-        <p class="text-xs text-gray-500 mb-3">This journey is long — we can send you a nudge so it fits around your life.</p>
+        <p class="text-xs text-gray-500 mb-3">This journey is long — we can nudge you at a time that fits your life, wherever you are.</p>
 
         <div id="journey-reminder-form" class="space-y-3">
           {% if not current_user.is_authenticated %}
@@ -339,20 +339,43 @@
                    autocomplete="email">
           </div>
           {% endif %}
-          <div class="flex flex-wrap gap-2">
-            <button type="button" data-cadence="weekly"
-                    class="journey-cadence-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
-              Weekly
-            </button>
-            <button type="button" data-cadence="weekend"
-                    class="journey-cadence-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
-              Weekends
-            </button>
-            <button type="button" data-cadence="commute"
-                    class="journey-cadence-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
-              On my commute
-            </button>
+
+          <div>
+            <p class="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1.5">How often?</p>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" data-cadence="weekly"
+                      class="journey-cadence-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                Weekly
+              </button>
+              <button type="button" data-cadence="twice_weekly"
+                      class="journey-cadence-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                Twice a week
+              </button>
+              <button type="button" data-cadence="weekend"
+                      class="journey-cadence-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                Weekend mornings
+              </button>
+            </div>
           </div>
+
+          <div>
+            <p class="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1.5">What time?</p>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" data-hour="8"
+                      class="journey-time-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-indigo-400 bg-indigo-50 text-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                Morning
+              </button>
+              <button type="button" data-hour="12"
+                      class="journey-time-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                Lunchtime
+              </button>
+              <button type="button" data-hour="19"
+                      class="journey-time-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                Evening
+              </button>
+            </div>
+          </div>
+
           <p id="journey-reminder-msg" class="text-xs text-gray-400 hidden"></p>
         </div>
       </div>
@@ -364,6 +387,9 @@
     </div>
   </div>
   {% elif journey_reminder_subscription and not journey_reminder_subscription.unsubscribed_at %}
+  {% set _jrs = journey_reminder_subscription %}
+  {% set _cadence_label = {'weekly': 'Weekly', 'weekend': 'Weekend mornings', 'twice_weekly': 'Twice a week', 'commute': 'Twice a week'}[_jrs.cadence] if _jrs.cadence in ('weekly','weekend','twice_weekly','commute') else _jrs.cadence %}
+  {% set _time_label = {8: 'morning', 12: 'lunchtime', 19: 'evening'}[_jrs.preferred_hour] if _jrs.preferred_hour in (8, 12, 19) else ('at ' ~ _jrs.preferred_hour ~ ':00') %}
   <div class="bg-white rounded-xl shadow-sm border border-emerald-100 px-4 sm:px-6 py-3 mb-5">
     <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-2">
@@ -371,8 +397,8 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
         <p class="text-sm text-gray-700">
-          Reminders on:
-          <span class="font-semibold text-gray-900">{% if journey_reminder_subscription.cadence == 'weekly' %}Weekly{% elif journey_reminder_subscription.cadence == 'weekend' %}Weekends{% else %}Commute days{% endif %}</span>
+          Reminders set:
+          <span class="font-semibold text-gray-900">{{ _cadence_label }}, {{ _time_label }} your time</span>
         </p>
       </div>
       <a href="{{ url_for('programmes.journey_reminder_unsubscribe', slug=programme.slug) }}" class="text-xs text-gray-400 hover:text-gray-600 underline">Stop reminders</a>
@@ -532,6 +558,25 @@
   var panel = document.getElementById('journey-reminder-panel');
   var msgEl = document.getElementById('journey-reminder-msg');
 
+  // Detect the user's IANA timezone (e.g. "America/New_York") silently — no prompt.
+  var USER_TZ = 'UTC';
+  try {
+    USER_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  } catch (e) {}
+
+  // Track selected time-of-day (hour in user's local time); default Morning = 8
+  var selectedHour = 8;
+
+  var CADENCE_LABELS = {
+    weekly: 'weekly',
+    twice_weekly: 'twice a week (Tue & Thu)',
+    weekend: 'on weekend mornings'
+  };
+  var TIME_LABELS = { 8: 'morning', 12: 'lunchtime', 19: 'in the evening' };
+
+  var BTN_ACTIVE   = 'border-indigo-400 bg-indigo-50 text-indigo-700';
+  var BTN_INACTIVE = 'border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50';
+
   function showMsg(text, color) {
     if (!msgEl) return;
     msgEl.textContent = text;
@@ -540,6 +585,7 @@
   }
 
   if (panel) {
+    // Dismiss button
     var dismiss = document.getElementById('journey-reminder-dismiss');
     if (dismiss) {
       dismiss.addEventListener('click', function () {
@@ -547,18 +593,29 @@
         try { sessionStorage.setItem('journey_reminder_dismissed', '1'); } catch(e) {}
       });
     }
-
     try {
       if (sessionStorage.getItem('journey_reminder_dismissed') === '1') {
         panel.style.display = 'none';
       }
     } catch(e) {}
 
+    // Time-of-day chip selection (visual only — cadence click triggers the save)
+    document.querySelectorAll('.journey-time-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        selectedHour = parseInt(btn.dataset.hour, 10);
+        document.querySelectorAll('.journey-time-btn').forEach(function (b) {
+          b.className = b.className.replace(BTN_ACTIVE, BTN_INACTIVE);
+        });
+        btn.className = btn.className.replace(BTN_INACTIVE, BTN_ACTIVE);
+      });
+    });
+
+    // Cadence buttons — clicking one saves immediately with current time preference
     document.querySelectorAll('.journey-cadence-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var cadence = btn.dataset.cadence;
         var emailEl = document.getElementById('journey-reminder-email');
-        var payload = { cadence: cadence };
+        var payload = { cadence: cadence, timezone: USER_TZ, preferred_hour: selectedHour };
         if (emailEl) {
           var email = emailEl.value.trim();
           if (!email) { showMsg('Please enter your email address first.', 'red'); emailEl.focus(); return; }
@@ -573,13 +630,16 @@
         .then(function (r) { return r.json(); })
         .then(function (data) {
           if (data.success) {
-            var labels = { weekly: 'weekly', weekend: 'on weekends', commute: 'on commute days' };
+            var cadenceText = CADENCE_LABELS[cadence] || cadence;
+            var timeText = TIME_LABELS[selectedHour] || ('at ' + selectedHour + ':00');
             var form = document.getElementById('journey-reminder-form');
             if (form) {
-              form.innerHTML = '<p class="text-sm text-emerald-600 font-medium">&#10003; Reminders set — we\'ll nudge you ' + (labels[cadence] || cadence) + '.</p>';
+              form.innerHTML =
+                '<p class="text-sm text-emerald-600 font-medium">&#10003; We\'ll remind you ' +
+                cadenceText + ', ' + timeText + ' your local time.</p>';
             }
             if (emailEl) {
-              showMsg('Check your email — we\'ve sent a confirmation with your link to continue.', 'green');
+              showMsg('Check your inbox — we\'ve sent a confirmation with your link to continue.', 'green');
             }
           } else {
             document.querySelectorAll('.journey-cadence-btn').forEach(function (b) { b.disabled = false; });

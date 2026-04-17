@@ -1622,15 +1622,21 @@ class JourneyReminderSubscription(db.Model):
 
     CADENCE_WEEKLY = 'weekly'
     CADENCE_WEEKEND = 'weekend'
-    CADENCE_COMMUTE = 'commute'
-    VALID_CADENCES = (CADENCE_WEEKLY, CADENCE_WEEKEND, CADENCE_COMMUTE)
+    CADENCE_TWICE_WEEKLY = 'twice_weekly'
+    CADENCE_COMMUTE = 'commute'  # legacy alias kept for backward compat
+    VALID_CADENCES = (CADENCE_WEEKLY, CADENCE_WEEKEND, CADENCE_TWICE_WEEKLY, CADENCE_COMMUTE)
     MAX_REMINDERS = 8
+
+    # Preferred local hour for each time-of-day slot
+    TIME_SLOT_HOURS = {'morning': 8, 'lunchtime': 12, 'evening': 19}
 
     id = db.Column(db.Integer, primary_key=True)
     programme_id = db.Column(db.Integer, db.ForeignKey('programme.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=True)
     email = db.Column(db.String(150), nullable=False)
     cadence = db.Column(db.String(20), nullable=False)
+    timezone = db.Column(db.String(50), default='UTC', nullable=False)
+    preferred_hour = db.Column(db.Integer, default=8, nullable=False)
     next_send_at = db.Column(db.DateTime, nullable=True)
     last_sent_at = db.Column(db.DateTime, nullable=True)
     reminder_count = db.Column(db.Integer, default=0, nullable=False)
@@ -1665,27 +1671,48 @@ class JourneyReminderSubscription(db.Model):
         return sub
 
     def set_next_send_at(self, from_dt=None):
-        """Calculate and store next_send_at based on cadence, relative to from_dt."""
+        """
+        Calculate and store next_send_at based on cadence and the user's local timezone
+        and preferred hour.  All scheduling is done in the user's local time and then
+        converted back to UTC (naive) for storage.
+        """
+        from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+        from datetime import timezone as _utc
+
         from_dt = from_dt or utcnow_naive()
-        wd = from_dt.weekday()  # 0=Mon … 6=Sun
+        hour = self.preferred_hour if self.preferred_hour is not None else 8
+
+        try:
+            tz = ZoneInfo(self.timezone or 'UTC')
+        except (ZoneInfoNotFoundError, KeyError):
+            tz = ZoneInfo('UTC')
+
+        # Work in the user's local timezone so we schedule at the right local time.
+        local_dt = from_dt.replace(tzinfo=_utc).astimezone(tz)
+        wd = local_dt.weekday()  # 0=Mon … 6=Sun
+
         if self.cadence == self.CADENCE_WEEKLY:
-            next_dt = (from_dt + timedelta(days=7)).replace(
-                hour=8, minute=0, second=0, microsecond=0
+            next_local = (local_dt + timedelta(days=7)).replace(
+                hour=hour, minute=0, second=0, microsecond=0
             )
         elif self.cadence == self.CADENCE_WEEKEND:
+            # Next Saturday in the user's local calendar
             days_ahead = (5 - wd) % 7 or 7
-            next_dt = (from_dt + timedelta(days=days_ahead)).replace(
-                hour=9, minute=0, second=0, microsecond=0
+            next_local = (local_dt + timedelta(days=days_ahead)).replace(
+                hour=hour, minute=0, second=0, microsecond=0
             )
-        elif self.cadence == self.CADENCE_COMMUTE:
-            commute_days_ahead = {0: 1, 1: 2, 2: 1, 3: 5, 4: 4, 5: 3, 6: 2}
-            next_dt = (from_dt + timedelta(days=commute_days_ahead[wd])).replace(
-                hour=8, minute=0, second=0, microsecond=0
+        elif self.cadence in (self.CADENCE_TWICE_WEEKLY, self.CADENCE_COMMUTE):
+            # Next Tue (1) or Thu (3) — culture-neutral twice-a-week cadence
+            twice_weekly_days = {0: 1, 1: 2, 2: 1, 3: 5, 4: 4, 5: 3, 6: 2}
+            next_local = (local_dt + timedelta(days=twice_weekly_days[wd])).replace(
+                hour=hour, minute=0, second=0, microsecond=0
             )
         else:
             self.next_send_at = None
             return
-        self.next_send_at = next_dt
+
+        # Convert back to naive UTC for storage (matches utcnow_naive convention)
+        self.next_send_at = next_local.astimezone(_utc).replace(tzinfo=None)
 
     @property
     def is_due(self):
