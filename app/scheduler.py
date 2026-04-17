@@ -1024,6 +1024,96 @@ def init_scheduler(app):
         logger.info("Daily question email thread launched, scheduler continuing")
 
 
+    @scheduler.scheduled_job('cron', hour=8, minute=0, id='send_journey_reminders', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    def send_journey_reminders_job():
+        """
+        Send journey reminder emails to subscribers whose next_send_at is due.
+        Runs at 8:00am UTC — optimal for 'weekly', 'commute' (Tue/Thu mornings),
+        and 'weekend' (Saturday morning) cadences.
+        Only sends in production to prevent duplicate emails from dev environments.
+        """
+        if not _is_production_environment():
+            logger.info("Skipping journey reminder emails — development environment")
+            return
+
+        with app.app_context():
+            from app import db
+            from app.models import JourneyReminderSubscription, Programme
+            from app.programmes.journey import (
+                build_journey_progress,
+                is_guided_journey_programme,
+                ordered_journey_discussions,
+            )
+            from app.resend_client import send_journey_reminder_email
+
+            now = utcnow_naive()
+            due = JourneyReminderSubscription.query.filter(
+                JourneyReminderSubscription.unsubscribed_at.is_(None),
+                JourneyReminderSubscription.next_send_at <= now,
+                JourneyReminderSubscription.reminder_count < JourneyReminderSubscription.MAX_REMINDERS,
+            ).all()
+
+            logger.info(f"Journey reminders: {len(due)} subscription(s) due")
+            sent = errors = skipped = 0
+
+            for sub in due:
+                try:
+                    programme = db.session.get(Programme, sub.programme_id)
+                    if not programme or not is_guided_journey_programme(programme):
+                        sub.unsubscribed_at = now
+                        db.session.commit()
+                        skipped += 1
+                        continue
+
+                    ordered = ordered_journey_discussions(programme)
+                    uid = sub.user_id
+                    progress = build_journey_progress(programme, uid, discussions=ordered)
+
+                    if progress.is_journey_complete:
+                        sub.unsubscribed_at = now
+                        db.session.commit()
+                        skipped += 1
+                        continue
+
+                    if not progress.next_item:
+                        skipped += 1
+                        continue
+
+                    theme_checklist = [
+                        {
+                            'name': item.discussion.programme_theme or item.discussion.title,
+                            'is_complete': item.is_complete,
+                        }
+                        for item in progress.theme_items
+                    ]
+
+                    success = send_journey_reminder_email(
+                        subscription=sub,
+                        programme=programme,
+                        next_discussion=progress.next_item.discussion,
+                        theme_checklist=theme_checklist,
+                        completed_themes=progress.completed_themes,
+                        total_themes=progress.total_themes,
+                    )
+
+                    if success:
+                        sub.last_sent_at = now
+                        sub.reminder_count = (sub.reminder_count or 0) + 1
+                        sub.set_next_send_at(from_dt=now)
+                        db.session.commit()
+                        sent += 1
+                    else:
+                        errors += 1
+
+                except Exception as e:
+                    db.session.rollback()
+                    logger.error(f"Error sending journey reminder for subscription {sub.id}: {e}", exc_info=True)
+                    errors += 1
+
+            logger.info(
+                f"Journey reminders complete — sent: {sent}, skipped: {skipped}, errors: {errors}"
+            )
+
     # Weekly digest email sending
     _weekly_digest_in_progress = threading.Event()
     

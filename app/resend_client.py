@@ -1622,3 +1622,88 @@ def send_daily_question_to_all_subscribers() -> int:
     )
 
     return total_sent
+
+
+def send_journey_reminder_email(
+    subscription,
+    programme,
+    next_discussion,
+    theme_checklist: list,
+    completed_themes: int,
+    total_themes: int,
+    base_url: str = None,
+) -> bool:
+    """
+    Send a progress-based journey reminder email.
+
+    Args:
+        subscription: JourneyReminderSubscription instance
+        programme: Programme instance
+        next_discussion: Discussion instance for the next incomplete theme
+        theme_checklist: list of dicts with keys 'name' and 'is_complete'
+        completed_themes: int — how many themes the user has finished
+        total_themes: int — total themes in the journey
+        base_url: override base URL (defaults to client.base_url)
+
+    Returns:
+        bool: True if sent successfully
+    """
+    try:
+        client = get_resend_client()
+        _base = base_url or client.base_url
+
+        resume_token = subscription.generate_resume_token(expires_hours=72)
+        programme_url = f"{_base}/programmes/{programme.slug}"
+        continue_url = (
+            f"{programme_url}?jrt={resume_token}"
+            if not subscription.user_id
+            else f"{_base}/programmes/{programme.slug}"
+        )
+        unsubscribe_url = f"{_base}/programmes/{programme.slug}/journey-reminder/unsubscribe?token={resume_token}"
+
+        pct = int((completed_themes / total_themes * 100)) if total_themes else 0
+        next_theme_name = (
+            getattr(next_discussion, 'programme_theme', None) or next_discussion.title
+        )
+        next_statement_count = getattr(next_discussion, 'statement_count', 7) or 7
+
+        html = render_template(
+            'emails/journey_reminder.html',
+            username=subscription.email.split('@')[0] if not subscription.user_id else (
+                subscription.user.username if subscription.user else subscription.email.split('@')[0]
+            ),
+            programme_name=programme.name,
+            programme_url=programme_url,
+            continue_url=continue_url,
+            unsubscribe_url=unsubscribe_url,
+            completed_themes=completed_themes,
+            total_themes=total_themes,
+            pct=pct,
+            next_theme_name=next_theme_name,
+            next_statement_count=next_statement_count,
+            theme_checklist=theme_checklist,
+            is_anonymous=not subscription.user_id,
+        )
+
+        settings_url = f"{_base}/settings"
+        email_data = {
+            'from': client.from_email,
+            'to': [subscription.email],
+            'subject': f"Continue your journey: {next_theme_name} — Society Speaks",
+            'html': html,
+            'headers': {
+                'List-Unsubscribe': f'<{unsubscribe_url}>',
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            },
+        }
+
+        success = client._send_with_retry(email_data, use_rate_limit=False)
+        if success:
+            logger.info(f"Journey reminder sent to {subscription.email} for {programme.slug}")
+        else:
+            logger.error(f"Failed to send journey reminder to {subscription.email}")
+        return success
+
+    except Exception as e:
+        logger.error(f"Failed to send journey reminder email: {e}", exc_info=True)
+        return False

@@ -12,6 +12,7 @@ from app.models import (
     AnalyticsEvent,
     CompanyProfile,
     Discussion,
+    JourneyReminderSubscription,
     Programme,
     ProgrammeAccessGrant,
     ProgrammeExportJob,
@@ -359,6 +360,15 @@ def view_programme(slug):
             flash('Please log in to access this programme.', 'info')
             return redirect(url_for('auth.login'))
         abort(404)
+
+    jrt = request.args.get('jrt', '').strip() or None
+    if jrt:
+        sub = JourneyReminderSubscription.verify_resume_token(jrt)
+        if sub and sub.programme_id == programme.id:
+            session['journey_resume_sub_id'] = sub.id
+            flash('Welcome back! Pick up where you left off.', 'success')
+        return redirect(url_for('programmes.view_programme', slug=slug))
+
     theme = request.args.get('theme', '').strip() or None
     phase = request.args.get('phase', '').strip() or None
     page = request.args.get('page', 1, type=int)
@@ -375,10 +385,15 @@ def view_programme(slug):
     summary = get_programme_summary(programme.id)
     journey_mode = is_guided_journey_programme(programme)
     journey_progress = None
+    journey_reminder_subscription = None
     if journey_mode:
         uid = current_user.id if current_user.is_authenticated else None
         ordered = ordered_journey_discussions(programme)
         journey_progress = build_journey_progress(programme, uid, discussions=ordered)
+        if uid:
+            journey_reminder_subscription = JourneyReminderSubscription.query.filter_by(
+                programme_id=programme.id, user_id=uid
+            ).first()
     return render_template(
         'programmes/view.html',
         programme=programme,
@@ -390,6 +405,7 @@ def view_programme(slug):
         summary=summary,
         journey_mode=journey_mode,
         journey_progress=journey_progress,
+        journey_reminder_subscription=journey_reminder_subscription,
     )
 
 
@@ -429,6 +445,123 @@ def programme_journey_recap(slug):
         personal_by_discussion=personal_by_discussion,
         recap_share_url=recap_share_url,
     )
+
+
+@programmes_bp.route('/<slug>/journey-reminder', methods=['POST'])
+@limiter.limit("10 per hour")
+def journey_reminder_subscribe(slug):
+    """
+    Save a journey reminder cadence preference for authenticated or anonymous users.
+    Accepts JSON: {cadence: 'weekly'|'weekend'|'commute', email: '...' (anon only)}
+    Returns JSON: {success: true} or {success: false, error: '...'}
+    """
+    programme = Programme.query.filter_by(slug=slug).first_or_404()
+    if not can_view_programme(programme, current_user):
+        return jsonify({'success': False, 'error': 'forbidden'}), 403
+
+    from app.lib.auth_utils import normalize_email as _normalize
+    data = request.get_json(silent=True) or {}
+    cadence = (data.get('cadence') or '').strip()
+    if cadence not in JourneyReminderSubscription.VALID_CADENCES:
+        return jsonify({'success': False, 'error': 'invalid_cadence'}), 400
+
+    if current_user.is_authenticated:
+        email = current_user.email
+        user_id = current_user.id
+    else:
+        raw_email = (data.get('email') or '').strip()
+        email = _normalize(raw_email) if raw_email else None
+        if not email:
+            return jsonify({'success': False, 'error': 'email_required'}), 400
+        user_id = None
+
+    try:
+        existing = None
+        if user_id:
+            existing = JourneyReminderSubscription.query.filter_by(
+                programme_id=programme.id, user_id=user_id
+            ).first()
+        else:
+            existing = JourneyReminderSubscription.query.filter_by(
+                programme_id=programme.id, email=email, user_id=None
+            ).first()
+
+        if existing:
+            existing.cadence = cadence
+            existing.unsubscribed_at = None
+            existing.set_next_send_at()
+            sub = existing
+        else:
+            sub = JourneyReminderSubscription(
+                programme_id=programme.id,
+                user_id=user_id,
+                email=email,
+                cadence=cadence,
+            )
+            sub.set_next_send_at()
+            db.session.add(sub)
+
+        db.session.flush()
+
+        if not user_id:
+            token = sub.generate_resume_token(expires_hours=72)
+            db.session.commit()
+            from app.resend_client import get_resend_client
+            from flask import render_template as _rt
+            client = get_resend_client()
+            base_url = client.base_url
+            confirm_url = f"{base_url}/programmes/{programme.slug}?jrt={token}"
+            html = _rt(
+                'emails/journey_reminder_confirm.html',
+                programme_name=programme.name,
+                confirm_url=confirm_url,
+                cadence_label={
+                    'weekly': 'once a week',
+                    'weekend': 'on weekends',
+                    'commute': 'on your commute (Tue & Thu mornings)',
+                }.get(cadence, cadence),
+                base_url=base_url,
+            )
+            email_data = {
+                'from': client.from_email,
+                'to': [email],
+                'subject': f"Your journey reminders are set — Society Speaks",
+                'html': html,
+            }
+            client._send_with_retry(email_data, use_rate_limit=False)
+        else:
+            db.session.commit()
+
+        return jsonify({'success': True, 'cadence': cadence})
+
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Failed to save journey reminder subscription')
+        return jsonify({'success': False, 'error': 'server_error'}), 500
+
+
+@programmes_bp.route('/<slug>/journey-reminder/unsubscribe', methods=['GET'])
+def journey_reminder_unsubscribe(slug):
+    """One-click unsubscribe from journey reminders via token or login."""
+    programme = Programme.query.filter_by(slug=slug).first_or_404()
+    token = request.args.get('token', '').strip() or None
+
+    sub = None
+    if token:
+        sub = JourneyReminderSubscription.verify_resume_token(token)
+    elif current_user.is_authenticated:
+        sub = JourneyReminderSubscription.query.filter_by(
+            programme_id=programme.id, user_id=current_user.id
+        ).first()
+
+    if sub and sub.programme_id == programme.id:
+        sub.unsubscribed_at = utcnow_naive()
+        db.session.commit()
+        flash('You\'ve been unsubscribed from journey reminders.', 'success')
+    else:
+        flash('Could not find that subscription — it may have already been removed.', 'info')
+
+    return redirect(url_for('programmes.view_programme', slug=slug))
 
 
 @programmes_bp.route('/<slug>/edit', methods=['GET', 'POST'])

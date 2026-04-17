@@ -314,6 +314,73 @@
 
   {% endif %}
 
+  {# ── Journey reminder cadence panel ──────────────────────────────────────
+     Shown when: journey in progress (not complete), user has started (≥1 theme),
+     and no active subscription is set yet.
+  #}
+  {% if journey_mode and journey_progress and not journey_progress.is_journey_complete and journey_progress.completed_themes >= 1 %}
+  {% if not journey_reminder_subscription or journey_reminder_subscription.unsubscribed_at %}
+  <div id="journey-reminder-panel" class="bg-white rounded-xl shadow-sm border border-indigo-100 px-4 sm:px-6 py-4 mb-5">
+    <div class="flex items-start gap-3">
+      <div class="flex-shrink-0 mt-0.5">
+        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold text-gray-900 mb-0.5">Want a reminder to come back and finish?</p>
+        <p class="text-xs text-gray-500 mb-3">This journey is long — we can send you a nudge so it fits around your life.</p>
+
+        <div id="journey-reminder-form" class="space-y-3">
+          {% if not current_user.is_authenticated %}
+          <div>
+            <input type="email" id="journey-reminder-email" placeholder="Your email address"
+                   class="w-full max-w-xs rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+                   autocomplete="email">
+          </div>
+          {% endif %}
+          <div class="flex flex-wrap gap-2">
+            <button type="button" data-cadence="weekly"
+                    class="journey-cadence-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
+              Weekly
+            </button>
+            <button type="button" data-cadence="weekend"
+                    class="journey-cadence-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
+              Weekends
+            </button>
+            <button type="button" data-cadence="commute"
+                    class="journey-cadence-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
+              On my commute
+            </button>
+          </div>
+          <p id="journey-reminder-msg" class="text-xs text-gray-400 hidden"></p>
+        </div>
+      </div>
+      <button type="button" id="journey-reminder-dismiss" class="flex-shrink-0 text-gray-300 hover:text-gray-500 transition-colors" aria-label="Dismiss">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  {% elif journey_reminder_subscription and not journey_reminder_subscription.unsubscribed_at %}
+  <div class="bg-white rounded-xl shadow-sm border border-emerald-100 px-4 sm:px-6 py-3 mb-5">
+    <div class="flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-sm text-gray-700">
+          Reminders on:
+          <span class="font-semibold text-gray-900">{% if journey_reminder_subscription.cadence == 'weekly' %}Weekly{% elif journey_reminder_subscription.cadence == 'weekend' %}Weekends{% else %}Commute days{% endif %}</span>
+        </p>
+      </div>
+      <a href="{{ url_for('programmes.journey_reminder_unsubscribe', slug=programme.slug) }}" class="text-xs text-gray-400 hover:text-gray-600 underline">Stop reminders</a>
+    </div>
+  </div>
+  {% endif %}
+  {% endif %}
+
   {# Theme / phase filter tabs #}
   {% set has_themes = programme.themes and programme.themes|length > 0 %}
   {% set has_phases = programme.phases and programme.phases|length > 0 %}
@@ -458,7 +525,78 @@
 </div>
 
 {% if journey_mode and journey_progress %}
-<script>
+<script nonce="{{ csp_nonce() }}">
+(function () {
+  var REMINDER_URL = {{ url_for('programmes.journey_reminder_subscribe', slug=programme.slug) | tojson }};
+  var CSRF_TOKEN = {{ csrf_token() | tojson }};
+  var panel = document.getElementById('journey-reminder-panel');
+  var msgEl = document.getElementById('journey-reminder-msg');
+
+  function showMsg(text, color) {
+    if (!msgEl) return;
+    msgEl.textContent = text;
+    msgEl.className = 'text-xs ' + (color === 'green' ? 'text-emerald-600' : 'text-red-500');
+    msgEl.classList.remove('hidden');
+  }
+
+  if (panel) {
+    var dismiss = document.getElementById('journey-reminder-dismiss');
+    if (dismiss) {
+      dismiss.addEventListener('click', function () {
+        panel.style.display = 'none';
+        try { sessionStorage.setItem('journey_reminder_dismissed', '1'); } catch(e) {}
+      });
+    }
+
+    try {
+      if (sessionStorage.getItem('journey_reminder_dismissed') === '1') {
+        panel.style.display = 'none';
+      }
+    } catch(e) {}
+
+    document.querySelectorAll('.journey-cadence-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var cadence = btn.dataset.cadence;
+        var emailEl = document.getElementById('journey-reminder-email');
+        var payload = { cadence: cadence };
+        if (emailEl) {
+          var email = emailEl.value.trim();
+          if (!email) { showMsg('Please enter your email address first.', 'red'); emailEl.focus(); return; }
+          payload.email = email;
+        }
+        document.querySelectorAll('.journey-cadence-btn').forEach(function (b) { b.disabled = true; });
+        fetch(REMINDER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+          body: JSON.stringify(payload),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.success) {
+            var labels = { weekly: 'weekly', weekend: 'on weekends', commute: 'on commute days' };
+            var form = document.getElementById('journey-reminder-form');
+            if (form) {
+              form.innerHTML = '<p class="text-sm text-emerald-600 font-medium">&#10003; Reminders set — we\'ll nudge you ' + (labels[cadence] || cadence) + '.</p>';
+            }
+            if (emailEl) {
+              showMsg('Check your email — we\'ve sent a confirmation with your link to continue.', 'green');
+            }
+          } else {
+            document.querySelectorAll('.journey-cadence-btn').forEach(function (b) { b.disabled = false; });
+            showMsg('Something went wrong. Please try again.', 'red');
+          }
+        })
+        .catch(function () {
+          document.querySelectorAll('.journey-cadence-btn').forEach(function (b) { b.disabled = false; });
+          showMsg('Something went wrong. Please try again.', 'red');
+        });
+      });
+    });
+  }
+})();
+</script>
+
+<script nonce="{{ csp_nonce() }}">
 (function () {
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   function animateBar(el, delay) {

@@ -1,0 +1,45 @@
+{% extends "emails/base_email.html" %}
+
+{% block title %}Journey reminders set — Society Speaks{% endblock %}
+
+{% block preheader %}You're all set. We'll remind you {{ cadence_label }} to continue your civic journey.{% endblock %}
+
+{% block content %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+        <td style="background: linear-gradient(135deg, #4338ca 0%, #1d4ed8 100%); padding: 28px 32px 24px; border-radius: 8px 8px 0 0; text-align: center;">
+            <p style="margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #a5b4fc; text-transform: uppercase;">Guided Civic Journey</p>
+            <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #ffffff;">You're all set!</h1>
+            <p style="margin: 10px 0 0; font-size: 14px; color: #c7d2fe; line-height: 1.5;">
+                We'll remind you <strong style="color: #ffffff;">{{ cadence_label }}</strong> to continue the<br>
+                <strong style="color: #ffffff;">{{ programme_name }}</strong> journey.
+            </p>
+        </td>
+    </tr>
+    <tr>
+        <td style="background-color: #ffffff; padding: 28px 32px; text-align: center;">
+            <p style="margin: 0 0 20px; font-size: 15px; color: #374151; line-height: 1.6;">
+                In the meantime, you can continue your journey right now — no account needed.
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                <tr>
+                    <td style="background-color: #4f46e5; border-radius: 8px;">
+                        <a href="{{ confirm_url }}" target="_blank"
+                           style="display: inline-block; padding: 13px 28px; font-size: 15px; font-weight: 700; color: #ffffff; text-decoration: none;">
+                            Continue your journey &rarr;
+                        </a>
+                    </td>
+                </tr>
+            </table>
+            <p style="margin: 16px 0 0; font-size: 12px; color: #9ca3af;">This link works for 72 hours without a login.</p>
+        </td>
+    </tr>
+    <tr>
+        <td style="background-color: #f9fafb; padding: 16px 32px 20px; border-top: 1px solid #e5e7eb; text-align: center; border-radius: 0 0 8px 8px;">
+            <p style="margin: 0; font-size: 12px; color: #9ca3af; line-height: 1.6;">
+                Society Speaks &mdash; <a href="{{ base_url }}" style="color: #9ca3af; text-decoration: underline;">societyspeaks.io</a>
+            </p>
+        </td>
+    </tr>
+</table>
+{% endblock %}

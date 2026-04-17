@@ -1606,6 +1606,96 @@ class ProgrammeExportJob(db.Model):
         return (utcnow_naive() - self.started_at) > timedelta(seconds=max(0, self.timeout_seconds or 0))
 
 
+class JourneyReminderSubscription(db.Model):
+    """
+    Tracks a user's cadence preference for guided journey reminder emails.
+    Supports both authenticated users (user_id set) and anonymous users (email only).
+    Follows the same nullable user_id pattern as DiscussionParticipant.
+    """
+    __tablename__ = 'journey_reminder_subscription'
+    __table_args__ = (
+        db.Index('ix_jrs_programme_id', 'programme_id'),
+        db.Index('ix_jrs_user_id', 'user_id'),
+        db.Index('ix_jrs_next_send_at', 'next_send_at'),
+        db.UniqueConstraint('programme_id', 'user_id', name='uq_jrs_programme_user'),
+    )
+
+    CADENCE_WEEKLY = 'weekly'
+    CADENCE_WEEKEND = 'weekend'
+    CADENCE_COMMUTE = 'commute'
+    VALID_CADENCES = (CADENCE_WEEKLY, CADENCE_WEEKEND, CADENCE_COMMUTE)
+    MAX_REMINDERS = 8
+
+    id = db.Column(db.Integer, primary_key=True)
+    programme_id = db.Column(db.Integer, db.ForeignKey('programme.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=True)
+    email = db.Column(db.String(150), nullable=False)
+    cadence = db.Column(db.String(20), nullable=False)
+    next_send_at = db.Column(db.DateTime, nullable=True)
+    last_sent_at = db.Column(db.DateTime, nullable=True)
+    reminder_count = db.Column(db.Integer, default=0, nullable=False)
+    resume_token = db.Column(db.String(255), nullable=True, unique=True)
+    token_expires_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=utcnow_naive)
+    unsubscribed_at = db.Column(db.DateTime, nullable=True)
+
+    programme = db.relationship('Programme', backref=db.backref('journey_reminder_subscriptions', lazy='dynamic'))
+    user = db.relationship('User', backref=db.backref('journey_reminder_subscriptions', lazy='dynamic'))
+
+    def generate_resume_token(self, expires_hours=72):
+        """Generate a magic-link token so anonymous users can resume their journey.
+        Reuses the same secrets.token_urlsafe pattern as DailyQuestionSubscriber."""
+        import secrets
+        self.resume_token = secrets.token_urlsafe(32)
+        self.token_expires_at = utcnow_naive() + timedelta(hours=expires_hours)
+        return self.resume_token
+
+    @staticmethod
+    def verify_resume_token(token):
+        """Return the subscription if the token is valid and unexpired, else None."""
+        if not token:
+            return None
+        sub = JourneyReminderSubscription.query.filter_by(resume_token=token).first()
+        if not sub:
+            return None
+        if sub.token_expires_at and utcnow_naive() > sub.token_expires_at:
+            return None
+        if sub.unsubscribed_at:
+            return None
+        return sub
+
+    def set_next_send_at(self, from_dt=None):
+        """Calculate and store next_send_at based on cadence, relative to from_dt."""
+        from_dt = from_dt or utcnow_naive()
+        wd = from_dt.weekday()  # 0=Mon … 6=Sun
+        if self.cadence == self.CADENCE_WEEKLY:
+            next_dt = (from_dt + timedelta(days=7)).replace(
+                hour=8, minute=0, second=0, microsecond=0
+            )
+        elif self.cadence == self.CADENCE_WEEKEND:
+            days_ahead = (5 - wd) % 7 or 7
+            next_dt = (from_dt + timedelta(days=days_ahead)).replace(
+                hour=9, minute=0, second=0, microsecond=0
+            )
+        elif self.cadence == self.CADENCE_COMMUTE:
+            commute_days_ahead = {0: 1, 1: 2, 2: 1, 3: 5, 4: 4, 5: 3, 6: 2}
+            next_dt = (from_dt + timedelta(days=commute_days_ahead[wd])).replace(
+                hour=8, minute=0, second=0, microsecond=0
+            )
+        else:
+            self.next_send_at = None
+            return
+        self.next_send_at = next_dt
+
+    @property
+    def is_due(self):
+        return self.next_send_at is not None and utcnow_naive() >= self.next_send_at
+
+    @property
+    def is_active(self):
+        return self.unsubscribed_at is None and self.reminder_count < self.MAX_REMINDERS
+
+
 class AnalyticsEvent(db.Model):
     """Immutable raw analytics event stream for warehouse-style processing."""
     __tablename__ = 'analytics_event'
