@@ -1665,7 +1665,16 @@ def send_journey_reminder_email(
         next_theme_name = (
             getattr(next_discussion, 'programme_theme', None) or next_discussion.title
         )
-        next_statement_count = getattr(next_discussion, 'statement_count', 7) or 7
+        # Count active, approved statements for this discussion rather than using a
+        # non-existent attribute. Falls back to 7 (the seed minimum) if the query fails.
+        try:
+            from app.models import Statement
+            next_statement_count = Statement.query.filter_by(
+                discussion_id=next_discussion.id,
+                is_deleted=False,
+            ).filter(Statement.mod_status >= 0).count() or 7
+        except Exception:
+            next_statement_count = 7
 
         html = render_template(
             'emails/journey_reminder.html',

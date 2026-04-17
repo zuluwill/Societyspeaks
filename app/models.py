@@ -1725,6 +1725,11 @@ class JourneyReminderSubscription(db.Model):
                 hour=hour, minute=minute, second=0, microsecond=0
             )
         else:
+            import logging as _logging
+            _logging.getLogger(__name__).warning(
+                "JourneyReminderSubscription %s has unrecognised cadence %r — next_send_at set to None",
+                self.id, self.cadence,
+            )
             self.next_send_at = None
             return
 
