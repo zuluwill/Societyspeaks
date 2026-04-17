@@ -13,6 +13,8 @@ UNHCR, etc.), and leading policy institutes. Statements are designed to be:
   - Free of rhetorical second clauses or embedded conclusions
   - Accessible to educated non-specialists
 
+Seven statements per discussion ensures the minimum threshold for consensus analysis.
+
 Variant keys and slugs: app/programmes/journey_variants.py
 Run via:
   flask seed-guided-journey --all-variants
@@ -66,6 +68,7 @@ def _curriculum_global() -> List[dict[str, Any]]:
                 "Biodiversity loss is as serious a long-term threat to human welfare as climate change and warrants equivalent policy priority and funding.",
                 "Meeting 1.5°C temperature targets requires major demand-side changes in diet, aviation, and consumption — not only clean energy supply.",
                 "New licensing of fossil fuel extraction should end immediately in countries that have made legally binding net-zero commitments.",
+                "Geoengineering approaches such as solar radiation management should be governed by international treaty before any country deploys them at scale.",
             ],
         },
         {
@@ -87,6 +90,7 @@ def _curriculum_global() -> List[dict[str, Any]]:
                 "AI-driven automation will displace significantly more jobs than it creates this decade, requiring fundamental redesign of social insurance systems.",
                 "Global AI safety governance requires a binding multilateral treaty process, not voluntary national commitments.",
                 "Training AI systems on personal data without explicit opt-in consent should be prohibited under data protection law.",
+                "Generative AI systems capable of producing realistic synthetic media should be required to embed detectable watermarks in their outputs.",
             ],
         },
         {
@@ -108,6 +112,7 @@ def _curriculum_global() -> List[dict[str, Any]]:
                 "International trade agreements must include binding, independently enforceable labour and environmental standards.",
                 "High collective bargaining coverage reduces wage inequality more effectively than minimum wage legislation alone.",
                 "Central banks should formally weight full employment as an equal mandate to price stability, not treat inflation control as the sole objective.",
+                "The 15% global corporate minimum tax agreed through the OECD is necessary but should be raised further to meaningfully reduce profit shifting to tax havens.",
             ],
         },
         {
@@ -129,6 +134,7 @@ def _curriculum_global() -> List[dict[str, Any]]:
                 "Mental health conditions receive a fraction of the clinical and research investment justified by their economic and social burden.",
                 "A permanent international pandemic preparedness fund financed by treaty obligation — not discretionary aid — is necessary after the failures of COVID response.",
                 "Governments should prioritise healthy life expectancy and wellbeing indicators over GDP growth as the primary measures of national progress.",
+                "Antimicrobial resistance is a public health emergency requiring binding international rules on antibiotic use in agriculture and medicine.",
             ],
         },
         {
@@ -150,6 +156,7 @@ def _curriculum_global() -> List[dict[str, Any]]:
                 "Multilateral economic sanctions are rarely sufficient on their own to change the strategic behaviour of authoritarian governments.",
                 "Climate change is a threat multiplier for armed conflict and insecurity and should be formally integrated into national security strategies.",
                 "Autonomous weapons systems that select and engage targets without meaningful human control should be banned by international treaty.",
+                "Private military companies operating outside international humanitarian law represent a growing and largely unaddressed threat to civilian protection.",
             ],
         },
         {
@@ -171,6 +178,7 @@ def _curriculum_global() -> List[dict[str, Any]]:
                 "Term limits for heads of government meaningfully reduce the risk of democratic backsliding and authoritarian consolidation.",
                 "Compulsory voting would substantially increase political equality by eliminating the systematic under-representation of lower-income and younger voters.",
                 "The scale of corporate and industry lobbying distorts democratic representation far beyond what ordinary citizens can counterbalance.",
+                "Ranked-choice preferential voting would produce more representative outcomes than first-past-the-post without requiring full proportional representation.",
             ],
         },
         {
@@ -192,6 +200,7 @@ def _curriculum_global() -> List[dict[str, Any]]:
                 "Hate speech laws targeting incitement to violence are compatible with free expression and necessary to protect vulnerable communities.",
                 "Reducing income inequality through redistribution is more effective at building social trust and cohesion than restricting immigration.",
                 "Governments have a duty to actively enforce prohibitions on racial and ethnic discrimination in employment and housing, not merely legislate them.",
+                "Statelessness — where individuals hold no nationality — represents a critical human rights gap that requires a strengthened international legal remedy.",
             ],
         },
         {
@@ -213,6 +222,7 @@ def _curriculum_global() -> List[dict[str, Any]]:
                 "Digital and critical information literacy should be mandatory core curriculum requirements from primary school alongside reading and numeracy.",
                 "Private schools that select by academic ability or religious faith perpetuate socioeconomic advantage and should not receive public subsidy.",
                 "Teacher quality is the single most important within-school determinant of pupil outcomes, and teacher pay should reflect this.",
+                "Access to reliable internet and digital devices should be recognised as a prerequisite for meaningful participation in education and civic life.",
             ],
         },
     ]
@@ -240,6 +250,7 @@ def _curriculum_uk() -> List[dict[str, Any]]:
                 "The UK's Sixth Carbon Budget requires emissions reductions significantly faster than existing policy will deliver.",
                 "UK farmers should receive direct payments for peatland restoration and habitat recovery, even where this reduces agricultural output.",
                 "Britain's net-zero credibility is undermined by expanding Heathrow airport capacity while rail investment is delayed.",
+                "North Sea windfall tax revenues should be ring-fenced for clean energy infrastructure investment and a just transition fund for affected workers.",
             ],
         },
         {
@@ -261,6 +272,7 @@ def _curriculum_uk() -> List[dict[str, Any]]:
                 "Requiring age verification for social media platforms is justified even if it creates privacy trade-offs.",
                 "UK data protection rules post-Brexit should remain fully equivalent to the EU's GDPR to protect UK-EU data flows.",
                 "Government use of automated decision-making that affects individuals' rights should require mandatory transparency and right of appeal.",
+                "The UK AI Safety Institute should be given independent statutory authority rather than operating purely under government direction.",
             ],
         },
         {
@@ -282,6 +294,7 @@ def _curriculum_uk() -> List[dict[str, Any]]:
                 "London's dominance of the UK economy requires active regional industrial policy — market forces alone will not rebalance it.",
                 "The UK housing crisis requires both more permissive planning reform and a significant expansion of publicly funded housebuilding.",
                 "Inheritance tax reform should prioritise closing agricultural and business property relief loopholes before any reduction in the headline rate.",
+                "The UK needs a sovereign wealth fund to invest North Sea windfall revenues in long-term productive assets for future generations.",
             ],
         },
         {
@@ -303,6 +316,7 @@ def _curriculum_uk() -> List[dict[str, Any]]:
                 "NHS staff pay has declined significantly in real terms since 2010 and requires urgent restoration to recruit and retain the workforce needed.",
                 "Expanded use of independent sector providers, paid at NHS tariff rates, can meaningfully reduce waiting times without compromising NHS principles.",
                 "Prevention — addressing obesity, smoking, and alcohol consumption — would reduce future NHS demand more effectively than efficiency measures alone.",
+                "NHS digital records should be expanded so patients have full access to their own data and can share it seamlessly across different providers.",
             ],
         },
         {
@@ -324,6 +338,7 @@ def _curriculum_uk() -> List[dict[str, Any]]:
                 "Post-Brexit Britain has diminished its diplomatic influence in Europe in ways that damage UK national security interests.",
                 "AUKUS strengthens UK strategic interests in the Indo-Pacific and represents a sound long-term security investment.",
                 "UK overseas development assistance should be restored to 0.7% of GNI as required by the International Development Act.",
+                "Britain's post-Brexit foreign policy lacks sufficient strategic coherence and needs a comprehensive independent review.",
             ],
         },
         {
@@ -345,6 +360,7 @@ def _curriculum_uk() -> List[dict[str, Any]]:
                 "Voter ID requirements introduced in 2023 disenfranchise legitimately entitled voters more than they prevent fraud.",
                 "MP recall should be triggerable directly by constituents through a petition threshold, not only through a parliamentary committee.",
                 "Political donation transparency rules should be substantially tightened to limit the influence of large donors on government policy.",
+                "The minimum voting age should be reduced to 16 for all UK elections, as it already is for Scottish Parliament and Welsh Senedd elections.",
             ],
         },
         {
@@ -366,6 +382,7 @@ def _curriculum_uk() -> List[dict[str, Any]]:
                 "Britain's ethnic and cultural diversity is a long-term economic and social asset that requires sustained public investment in cohesion infrastructure.",
                 "Communities experiencing rapid demographic change require additional targeted public investment to maintain social infrastructure.",
                 "UK citizenship naturalisation requirements should prioritise civic knowledge and democratic values over historical trivia.",
+                "The hostile environment policy has caused documented harm to legal residents and British citizens and should be formally abolished.",
             ],
         },
         {
@@ -387,6 +404,7 @@ def _curriculum_uk() -> List[dict[str, Any]]:
                 "OFSTED single-word judgements create counterproductive high-stakes inspection culture and should be replaced with school improvement support.",
                 "Teacher pay in the UK has fallen significantly behind comparable graduate professions and must be substantially increased.",
                 "State-funded schools that select pupils on religious grounds create social segregation and should transition to open admissions.",
+                "The pupil premium should be substantially increased and its use audited more rigorously to close persistent attainment gaps.",
             ],
         },
     ]
@@ -414,6 +432,7 @@ def _curriculum_us() -> List[dict[str, Any]]:
                 "New federal permits for LNG export terminals should be paused given their long-term lock-in of fossil fuel infrastructure.",
                 "Federal agricultural subsidies should be substantially reoriented toward low-emissions and regenerative farming practices.",
                 "States should not be permitted to block federally authorised clean energy infrastructure on their territory for political rather than technical reasons.",
+                "The federal government should create a carbon border adjustment mechanism to prevent carbon leakage from countries without equivalent climate policies.",
             ],
         },
         {
@@ -435,6 +454,7 @@ def _curriculum_us() -> List[dict[str, Any]]:
                 "Workers displaced by AI automation should be supported by a publicly funded retraining and transition programme.",
                 "Americans' personal data should not be sold to or accessed by foreign governments without explicit consent or a court order.",
                 "The United States should lead in setting global AI governance standards rather than deferring to the EU or avoiding binding international frameworks.",
+                "Social media platforms should be legally required to disclose their algorithmic recommendation systems to independent researchers.",
             ],
         },
         {
@@ -456,6 +476,7 @@ def _curriculum_us() -> List[dict[str, Any]]:
                 "A wealth tax on fortunes above $50 million would raise significant revenue without materially harming productive investment.",
                 "Right-to-work laws weaken collective bargaining and should be repealed at the federal level.",
                 "US trade agreements must include binding, independently enforceable labour and environmental standards.",
+                "The United States needs a federal paid family and medical leave programme — it is the only OECD country without one.",
             ],
         },
         {
@@ -477,6 +498,7 @@ def _curriculum_us() -> List[dict[str, Any]]:
                 "Mental health parity laws should be strictly enforced so that insurers cannot systematically limit mental health claims.",
                 "Employer-based health insurance reduces worker mobility and economic efficiency and should be replaced with portable coverage.",
                 "Reproductive healthcare services should be covered under all federally funded health insurance plans.",
+                "The United States should pass a national paid sick leave requirement — its absence worsens public health and worker wellbeing.",
             ],
         },
         {
@@ -498,6 +520,7 @@ def _curriculum_us() -> List[dict[str, Any]]:
                 "The US defence budget should be subject to rigorous independent efficiency audit before further increases are approved.",
                 "US arms sales to governments that commit systematic human rights violations undermine American values and long-term security interests.",
                 "Sustained engagement with China through international institutions is more effective than economic and technological decoupling as a strategy for managing rivalry.",
+                "The United States should rejoin and strengthen its participation in multilateral institutions rather than continuing to withdraw from them.",
             ],
         },
         {
@@ -520,6 +543,7 @@ def _curriculum_us() -> List[dict[str, Any]]:
                 "Independent redistricting commissions should be required in every state to eliminate partisan gerrymandering.",
                 "Federal automatic voter registration should be introduced to maximise electoral participation without compromising integrity.",
                 "The Citizens United decision should be overturned — unlimited anonymous political spending distorts democratic representation.",
+                "All states should restore full voting rights to people who have completed their criminal sentences.",
             ],
         },
         {
@@ -542,6 +566,7 @@ def _curriculum_us() -> List[dict[str, Any]]:
                 "Federal universal background check legislation for all gun purchases should be passed — the evidence that it reduces gun violence is strong.",
                 "The United States accepts far too few refugees relative to its capacity and international obligations.",
                 "Addressing racial disparities in policing requires structural reform — incremental measures have proved insufficient.",
+                "The United States should significantly increase its refugee resettlement programme — the evidence on refugee economic integration is strongly positive.",
             ],
         },
         {
@@ -563,6 +588,7 @@ def _curriculum_us() -> List[dict[str, Any]]:
                 "Vocational and trades programmes should be funded at the same per-student level as college-preparatory curricula.",
                 "Teacher pay should be set at a nationally competitive professional rate, not left to wide variation across local districts.",
                 "K-12 schools should teach comprehensive and accurate history of slavery and racial violence — this is a requirement of civic literacy.",
+                "Universal free school meals for all K-12 students would reduce food insecurity and improve learning outcomes.",
             ],
         },
     ]
@@ -590,6 +616,7 @@ def _curriculum_nl() -> List[dict[str, Any]]:
                 "The Netherlands should close its remaining coal power stations before 2030 even if this temporarily raises electricity prices.",
                 "Dutch pension funds should be required to fully divest from fossil fuel companies in line with fiduciary duty to beneficiaries.",
                 "Nuclear energy should be part of the Netherlands' long-term electricity mix as part of the clean energy transition.",
+                "Dutch households should face binding minimum energy efficiency standards before 2030, with substantial subsidies to help lower-income households comply.",
             ],
         },
         {
@@ -611,6 +638,7 @@ def _curriculum_nl() -> List[dict[str, Any]]:
                 "The Dutch Data Protection Authority needs significantly larger enforcement budgets to hold Big Tech accountable under GDPR.",
                 "ASML's success demonstrates that the Netherlands should prioritise deep-tech industrial policy over further growth of financial services.",
                 "Citizens' digital identity systems should be built on open-source software under public control, not proprietary commercial platforms.",
+                "The Netherlands should establish a national algorithmic oversight body with investigatory powers and a public register of government AI systems.",
             ],
         },
         {
@@ -632,6 +660,7 @@ def _curriculum_nl() -> List[dict[str, Any]]:
                 "The Netherlands benefits disproportionately from its tax treaty network and should close loopholes exploited by multinationals.",
                 "The wage gap between permanent and temporary workers doing equivalent jobs should be prohibited by law.",
                 "Mortgage interest tax relief (hypotheekrenteaftrek) disproportionately benefits homeowners at the expense of renters and should be phased out.",
+                "The Netherlands should make childcare free or near-free as a universal entitlement, not only for working parents.",
             ],
         },
         {
@@ -653,6 +682,7 @@ def _curriculum_nl() -> List[dict[str, Any]]:
                 "The Dutch compulsory health insurance model achieves broader coverage than fully public systems in comparable countries.",
                 "Preventive public health measures — including taxes on tobacco and ultra-processed food — are justified even where they restrict individual choice.",
                 "GP shortages in rural areas of the Netherlands constitute a serious equity problem that requires targeted government intervention.",
+                "The Netherlands should introduce a sugar tax on soft drinks and ultra-processed food to address rising rates of obesity and diet-related disease.",
             ],
         },
         {
@@ -674,6 +704,7 @@ def _curriculum_nl() -> List[dict[str, Any]]:
                 "Dutch special forces involvement in armed conflicts should require explicit prior parliamentary authorisation.",
                 "The Netherlands should advocate within the EU for a common European defence capability to reduce structural dependence on the US.",
                 "Development aid should not be cut to fund higher defence spending — the two serve different strategic objectives.",
+                "The Netherlands should advocate within NATO and the EU for formal security guarantees for non-NATO states on NATO's eastern border.",
             ],
         },
         {
@@ -695,6 +726,7 @@ def _curriculum_nl() -> List[dict[str, Any]]:
                 "The Dutch constitution should include explicit protection for the rule of law that cannot be overridden by parliamentary majorities.",
                 "Municipalities should have substantially greater financial autonomy from the national government.",
                 "Civic and media literacy education should be mandatory core subjects at secondary school level.",
+                "The Netherlands should introduce binding referendums at national level, with proper information campaigns, as a complement to representative democracy.",
             ],
         },
         {
@@ -716,6 +748,7 @@ def _curriculum_nl() -> List[dict[str, Any]]:
                 "Discrimination in the Dutch labour and housing market must be actively countered through law enforcement, not just legislation.",
                 "Municipalities should have the right to distribute asylum seekers across the country equitably, rather than concentrating them.",
                 "Dutch civic identity should be grounded in shared democratic values, not ethnic or cultural heritage.",
+                "The Netherlands should allow newcomers to vote in local elections after two years of legal residence, as several other EU countries already permit.",
             ],
         },
         {
@@ -737,6 +770,7 @@ def _curriculum_nl() -> List[dict[str, Any]]:
                 "The Netherlands should invest substantially more in early childhood education and care to close disadvantage gaps before children start primary school.",
                 "The student finance system (studielening) should be replaced with grants for students from lower-income families.",
                 "Civic literacy and media literacy should be mandatory core subjects at primary school level.",
+                "The Netherlands should establish a national skills forecasting system so training programmes are aligned with actual labour market needs.",
             ],
         },
     ]
@@ -764,6 +798,7 @@ def _curriculum_ie() -> List[dict[str, Any]]:
                 "Ireland's per-capita emissions are among the highest in the EU and this requires urgent policy change across agriculture, transport, and buildings.",
                 "Community benefit funds from wind farms should flow directly to affected residents, not only to local authorities.",
                 "Ireland should invest in offshore wind at the scale needed to become a net exporter of clean electricity to Europe.",
+                "Ireland should set a binding domestic target to reduce transport emissions by 50% by 2030, backed by investment in rural public transport.",
             ],
         },
         {
@@ -785,6 +820,7 @@ def _curriculum_ie() -> List[dict[str, Any]]:
                 "Ireland benefits substantially from tech FDI and should actively compete to retain these companies while meeting regulatory obligations.",
                 "Irish universities should invest substantially more in AI and computer science to build indigenous domestic tech capacity.",
                 "Tech companies' low effective tax rates in Ireland benefit the exchequer in the short term but are unfair to other EU member states.",
+                "Ireland should use its position as European headquarters for major tech companies to actively shape global AI governance from within.",
             ],
         },
         {
@@ -806,6 +842,7 @@ def _curriculum_ie() -> List[dict[str, Any]]:
                 "The minimum wage in Ireland should rise to a rate that covers rent and basic living costs in all major cities.",
                 "Planning permission for high-density housing near public transport should be substantially streamlined.",
                 "Remote working rights should be enshrined in legislation to reduce geographic concentration of employment in Dublin.",
+                "The Land Development Agency should be given greater powers and a larger capital allocation to directly deliver social and affordable housing at scale.",
             ],
         },
         {
@@ -828,6 +865,7 @@ def _curriculum_ie() -> List[dict[str, Any]]:
                 "GP fees should be abolished for all patients, not only medical card holders, to remove a financial barrier to primary care.",
                 "Consultants with private practices should not be permitted to hold public hospital contracts simultaneously.",
                 "The HSE is too large and centralised and should be replaced with empowered regional health authorities with clear accountability.",
+                "A women's health strategy, including access to IVF and reproductive healthcare, should be a funded priority in every health budget.",
             ],
         },
         {
@@ -849,6 +887,7 @@ def _curriculum_ie() -> List[dict[str, Any]]:
                 "Ireland should maintain a strong position on international humanitarian law and Palestinian civilian protection at the UN.",
                 "EU mutual defence commitments under Article 42.7 already effectively qualify Irish neutrality in practice.",
                 "Ireland should substantially expand its UN peacekeeping contributions as an expression of its foreign policy values.",
+                "Ireland should formally and publicly support Palestinian statehood at the UN and use its Security Council membership to advance that position.",
             ],
         },
         {
@@ -871,6 +910,7 @@ def _curriculum_ie() -> List[dict[str, Any]]:
                 "Voting in Dáil elections should be extended to Irish citizens resident abroad.",
                 "Lowering the voting age to 16 in all elections would strengthen democratic participation.",
                 "Ireland should consider moving to a unicameral parliament by abolishing or fundamentally reforming the Seanad.",
+                "The number of TDs in Dáil Éireann should be increased to improve parliamentary scrutiny as the population and legislative workload grow.",
             ],
         },
         {
@@ -892,6 +932,7 @@ def _curriculum_ie() -> List[dict[str, Any]]:
                 "Homelessness in Ireland is a political and policy failure, not an inevitable outcome of market conditions.",
                 "Ireland should make it substantially easier for the Irish diaspora to return and contribute to the economy.",
                 "Anti-immigration rhetoric in Irish political discourse poses a serious risk to social cohesion.",
+                "Ireland should adopt an active anti-racism strategy with funded enforcement mechanisms and measurable targets.",
             ],
         },
         {
@@ -914,6 +955,7 @@ def _curriculum_ie() -> List[dict[str, Any]]:
                 "Irish schools should teach personal finance, civic education, and media literacy as compulsory core subjects.",
                 "Religious bodies should have no role in determining admissions criteria for state-funded schools.",
                 "Third-level fees should be abolished and replaced with a graduate contribution collected through the tax system.",
+                "All state-funded schools should be required to offer the same curriculum regardless of religious ethos.",
             ],
         },
     ]
@@ -941,6 +983,7 @@ def _curriculum_de() -> List[dict[str, Any]]:
                 "German households and industry pay electricity prices among the highest in Europe — this is a serious competitiveness problem.",
                 "Germany should invest heavily in green hydrogen production and infrastructure to decarbonise its industrial base.",
                 "Germany should introduce Autobahn speed limits — it is the only major EU country without permanent motorway speed restrictions.",
+                "Germany should require all new buildings to meet near-zero energy standards and offer substantial subsidies for retrofitting existing stock.",
             ],
         },
         {
@@ -962,6 +1005,7 @@ def _curriculum_de() -> List[dict[str, Any]]:
                 "German manufacturing should embrace AI-driven automation even where it reduces employment in specific sectors.",
                 "Germany should lead in developing European sovereign cloud infrastructure independent of US hyperscale providers.",
                 "Public services in Germany are unacceptably analogue — digital government must become a national strategic priority.",
+                "Germany should strengthen anti-monopoly measures against US and Chinese digital platforms that dominate German digital markets.",
             ],
         },
         {
@@ -983,6 +1027,7 @@ def _curriculum_de() -> List[dict[str, Any]]:
                 "Germany's economic model is dangerously over-dependent on automotive exports and requires active diversification.",
                 "Federal and state industrial subsidies to the car sector have delayed necessary transformation into electric vehicles and clean technology.",
                 "Eastern Germany still faces structural economic disadvantages that require sustained, targeted federal support.",
+                "Germany should develop active industrial policy to support the Mittelstand's transition to employee ownership and worker co-determination models.",
             ],
         },
         {
@@ -1004,6 +1049,7 @@ def _curriculum_de() -> List[dict[str, Any]]:
                 "Higher earners should not be able to opt out of the statutory health insurance system.",
                 "Germany's hospital system has too many small, underfunded hospitals and needs consolidation to improve quality and efficiency.",
                 "Mental health waiting times in Germany are unacceptably long and constitute a public health crisis.",
+                "Germany should invest substantially more in preventive health programmes targeting obesity, smoking, and alcohol-related disease.",
             ],
         },
         {
@@ -1026,6 +1072,7 @@ def _curriculum_de() -> List[dict[str, Any]]:
                 "Germany should supply Taurus cruise missiles to Ukraine — the strategic case for doing so outweighs the risks of escalation.",
                 "Germany's experience of Ostpolitik does not vindicate engagement with authoritarian states as a general model — context matters.",
                 "Germany should take a leading role in building a genuinely autonomous European defence capability within NATO.",
+                "Germany should take a leadership role in coordinating EU sanctions policy toward Russia rather than lagging behind smaller member states.",
             ],
         },
         {
@@ -1048,6 +1095,7 @@ def _curriculum_de() -> List[dict[str, Any]]:
                 "The democratic firewall against coalition with the AfD is necessary to defend constitutional democratic norms.",
                 "The Federal Constitutional Court's independence must be protected against attempts by parliamentary majorities to alter its composition.",
                 "Germany needs substantially stronger lobbying transparency legislation to reduce the undue influence of corporations on legislation.",
+                "Germany should make naturalisation easier and faster — current citizenship requirements are unnecessarily burdensome for long-term residents.",
             ],
         },
         {
@@ -1070,6 +1118,7 @@ def _curriculum_de() -> List[dict[str, Any]]:
                 "Deportations of failed asylum seekers to conflict-affected countries like Afghanistan should not be carried out.",
                 "Anti-discrimination laws in Germany require significantly stronger enforcement — the gap between legal protection and lived experience is too wide.",
                 "Germany's migration debate has moved too far in the direction of restriction, at the cost of addressing genuine long-term economic needs.",
+                "Germany should increase the proportion of students progressing to university by investing in higher education access, not only in the vocational route.",
             ],
         },
         {
@@ -1091,6 +1140,7 @@ def _curriculum_de() -> List[dict[str, Any]]:
                 "Teacher pay in Germany should be set at a national standard and raised for all states.",
                 "All German children should have access to full-day schooling (Ganztagsschule) as a legal right.",
                 "German universities are significantly underfunded by international comparison and this threatens research quality.",
+                "Germany should require all secondary schools to teach civic literacy and democratic participation as a compulsory subject.",
             ],
         },
     ]
@@ -1118,6 +1168,7 @@ def _curriculum_fr() -> List[dict[str, Any]]:
                 "EDF's renationalisation was necessary to maintain French energy sovereignty and coordinate the nuclear build programme.",
                 "France should use its nuclear expertise to help other EU countries decarbonise rather than discouraging nuclear in European energy policy.",
                 "French farmers' protests should not be used to delay necessary environmental reforms in agricultural policy.",
+                "France should introduce a carbon border adjustment on all imports to complement the EU's CBAM and protect domestic industry from unfair competition.",
             ],
         },
         {
@@ -1139,6 +1190,7 @@ def _curriculum_fr() -> List[dict[str, Any]]:
                 "French cultural exception policies should be extended to AI-generated content and digital platforms.",
                 "France should lead Europe in requiring that AI training data respects copyright and that rights-holders are compensated.",
                 "European digital sovereignty is best achieved through common European standards and capabilities, not through national protectionism.",
+                "France should require that AI training datasets used by French companies comply with EU copyright law and cultural diversity obligations.",
             ],
         },
         {
@@ -1161,6 +1213,7 @@ def _curriculum_fr() -> List[dict[str, Any]]:
                 "The French state at around 57% of GDP is the highest in the OECD and requires structural reform, not only efficiency savings.",
                 "France needs to invest significantly more in vocational training to reduce chronic youth unemployment.",
                 "The two-tier French labour market — insiders with CDI protection and outsiders on precarious contracts — requires fundamental reform.",
+                "France should conduct a formal national reckoning with its colonial history through school curricula reform, museum policy, and official acknowledgement.",
             ],
         },
         {
@@ -1182,6 +1235,7 @@ def _curriculum_fr() -> List[dict[str, Any]]:
                 "Mental health services in France are severely underfunded relative to other comparable European countries.",
                 "France should introduce a tax on ultra-processed food to address rising rates of obesity and diet-related disease.",
                 "Waiting times in French accident and emergency departments have become unacceptably long and reflect structural workforce failures.",
+                "France should expand access to contraception and reproductive health services, which are currently underprovided in rural areas.",
             ],
         },
         {
@@ -1204,6 +1258,7 @@ def _curriculum_fr() -> List[dict[str, Any]]:
                 "France should contribute more military equipment to Ukraine, consistent with supporting its right to self-defence.",
                 "France's permanent UN Security Council seat carries special responsibilities it has not consistently met.",
                 "European defence should be funded collectively through EU bonds and common procurement, not only through national defence budgets.",
+                "France should reintegrate more fully into NATO's integrated military command structure to strengthen European defence coordination.",
             ],
         },
         {
@@ -1226,6 +1281,7 @@ def _curriculum_fr() -> List[dict[str, Any]]:
                 "Using Article 49.3 to bypass parliament on major legislation without a democratic emergency undermines legislative legitimacy.",
                 "Citizens' assemblies, as demonstrated by the Convention Citoyenne pour le Climat, should become a regular feature of French democracy.",
                 "The rise of the Rassemblement National reflects failures by mainstream parties to address real economic concerns of peripheral France.",
+                "France should significantly reduce the maximum term length for local elected officials to prevent entrenched local political oligarchies.",
             ],
         },
         {
@@ -1247,6 +1303,7 @@ def _curriculum_fr() -> List[dict[str, Any]]:
                 "Discrimination in hiring and housing against French citizens of immigrant background is a serious ongoing injustice requiring active enforcement.",
                 "France's republican integration model — prioritising individual assimilation over communitarian recognition — has produced contested outcomes that require honest evaluation.",
                 "Zone-based affirmative action (discrimination positive géographique) targeting disadvantaged urban areas should be expanded.",
+                "France should implement mandatory anti-discrimination training in all public sector hiring and in companies above a minimum size.",
             ],
         },
         {
@@ -1268,6 +1325,7 @@ def _curriculum_fr() -> List[dict[str, Any]]:
                 "The French baccalauréat reform has produced better subject alignment with students' abilities than the previous undifferentiated examination.",
                 "Teacher pay in France has fallen significantly behind other graduate professions and must be raised substantially.",
                 "Philosophy as a compulsory baccalauréat subject is a distinctive strength of French secondary education that should be retained.",
+                "France should make French Sign Language (LSF) a recognised medium of instruction and increase resources for inclusive schooling.",
             ],
         },
     ]
@@ -1296,6 +1354,7 @@ def _curriculum_ca() -> List[dict[str, Any]]:
                 "Canada should be a global leader in protecting its boreal forests as a major terrestrial carbon sink.",
                 "Federal and provincial climate policies are insufficiently coordinated to achieve Canada's Paris Agreement commitments.",
                 "Clean electricity should constitute 100% of Canada's grid by 2035 — the resources and technology to achieve this exist.",
+                "Canada should introduce a moratorium on new oil and gas export permits while the country develops a binding long-term energy transition plan.",
             ],
         },
         {
@@ -1317,6 +1376,7 @@ def _curriculum_ca() -> List[dict[str, Any]]:
                 "Canada's federal privacy law (PIPEDA) is outdated and needs to be strengthened to reach GDPR-equivalent standards.",
                 "Public investment in computing infrastructure for AI research should be treated as strategic national infrastructure, not discretionary spending.",
                 "Canada should develop sovereign cloud capacity rather than depending entirely on US-headquartered cloud providers for government data.",
+                "Canada's federal government should make open-source AI development a national priority and fund public AI infrastructure as a shared public good.",
             ],
         },
         {
@@ -1338,6 +1398,7 @@ def _curriculum_ca() -> List[dict[str, Any]]:
                 "The federal minimum wage should rise to $20 an hour and be indexed to living costs.",
                 "Canada's recent immigration levels have exceeded housing and infrastructure capacity, requiring better coordination of policy.",
                 "Generational inequality in housing wealth — where older Canadians hold assets that younger Canadians cannot access — is a defining social challenge.",
+                "Canada should reform its supply management system in dairy and poultry, which imposes significant costs on Canadian consumers.",
             ],
         },
         {
@@ -1360,6 +1421,7 @@ def _curriculum_ca() -> List[dict[str, Any]]:
                 "Private surgical clinics operating alongside the public system violate the Canada Health Act's prohibition on extra-billing.",
                 "Canada's mental health system is so severely underfunded that it constitutes a public health emergency.",
                 "Dental care and vision care should be included in universal public coverage, as they are in most comparable countries.",
+                "Canada should establish a national long-term care strategy with legally binding minimum standards and sustained federal funding.",
             ],
         },
         {
@@ -1381,6 +1443,7 @@ def _curriculum_ca() -> List[dict[str, Any]]:
                 "Canada should increase its military support to Ukraine significantly.",
                 "Canadian defence spending should prioritise domestic procurement and industrial capability, not only purchasing US equipment.",
                 "Canada should expand its UN peacekeeping contributions as an expression of its multilateral values.",
+                "Canada should develop a specific Arctic defence strategy and invest in Arctic-capable military and coastguard assets.",
             ],
         },
         {
@@ -1402,6 +1465,7 @@ def _curriculum_ca() -> List[dict[str, Any]]:
                 "The power of the Prime Minister's Office over the government and Parliament is excessive and requires legislative constraints.",
                 "Municipal governments need substantially more financial autonomy and tax powers to address urban challenges.",
                 "Mandatory lobbying transparency should be strengthened so citizens can see who is influencing federal policy decisions.",
+                "Canada should introduce fixed federal election dates, removing the Prime Minister's discretionary power to call early elections.",
             ],
         },
         {
@@ -1424,6 +1488,7 @@ def _curriculum_ca() -> List[dict[str, Any]]:
                 "Anti-Asian and anti-Muslim racism in Canada is a serious and ongoing problem that requires active and funded policy responses.",
                 "French-English bilingualism is a genuine institutional strength of Canada that should be actively promoted, not merely preserved.",
                 "Indigenous nations should have genuine self-determination and jurisdiction over lands and resources within their traditional territories.",
+                "Canada should create a dedicated urban Indigenous housing programme, recognising that more than 60% of Indigenous people now live in cities.",
             ],
         },
         {
@@ -1446,6 +1511,7 @@ def _curriculum_ca() -> List[dict[str, Any]]:
                 "French immersion access should be universal across English Canada, not dependent on geography or lottery.",
                 "Indigenous language education should be fully funded by the federal government as a core element of reconciliation.",
                 "Canada needs a national school nutrition programme — it remains the only G7 country without one.",
+                "Canada should establish a national post-secondary education quality framework to ensure credentials are recognised consistently across all provinces.",
             ],
         },
     ]
@@ -1474,6 +1540,7 @@ def _curriculum_sg() -> List[dict[str, Any]]:
                 "Singapore's Green Plan 2030 targets are insufficiently ambitious given the country's wealth, technical capacity, and geographic vulnerability.",
                 "Singapore should invest in regional clean electricity imports via undersea cables, even if this creates some supply dependency.",
                 "Singapore should accelerate the reduction of natural gas in its electricity generation mix given its climate commitments.",
+                "Singapore should seriously investigate nuclear power as part of its long-term clean energy mix, given its severe land constraints.",
             ],
         },
         {
@@ -1496,6 +1563,7 @@ def _curriculum_sg() -> List[dict[str, Any]]:
                 "Facial recognition technology in public spaces by government agencies should require parliamentary authorisation and sunset clauses.",
                 "Singapore's Singpass digital identity system should be extended to more government and private services with appropriate consent frameworks.",
                 "Singapore risks excessive dependence on US and Chinese tech companies for critical national digital infrastructure.",
+                "Singapore should publish a national algorithmic register requiring public sector agencies to disclose AI systems used in decisions affecting citizens.",
             ],
         },
         {
@@ -1517,6 +1585,7 @@ def _curriculum_sg() -> List[dict[str, Any]]:
                 "Singapore needs a more progressive tax structure in which the wealthiest contribute proportionally more.",
                 "Singapore's inequality, while lower than in many comparable cities, remains high relative to its level of human development.",
                 "The government should more actively regulate cost-of-living pressures, not only manage them through targeted subsidies.",
+                "Singapore should introduce a property gains tax to reduce speculative investment in HDB resale and private residential property.",
             ],
         },
         {
@@ -1539,6 +1608,7 @@ def _curriculum_sg() -> List[dict[str, Any]]:
                 "Singapore's 3M (Medisave, MediShield, Medifund) framework is sound in principle but requires significant updating for an aging society.",
                 "Long hospital waiting times indicate that Singapore needs more public hospital beds and clinical staff.",
                 "Caregivers — disproportionately women — should receive direct financial support from the state for the economic value of their work.",
+                "Singapore should introduce mandatory basic mental health screening in primary care as part of routine annual health checks.",
             ],
         },
         {
@@ -1560,6 +1630,7 @@ def _curriculum_sg() -> List[dict[str, Any]]:
                 "The Five Power Defence Arrangements remain a relevant framework for Singapore's regional security.",
                 "Singapore's defence spending is appropriate to its security environment and strategic requirements.",
                 "Singapore should play a more active role in facilitating dialogue between the US and China in Southeast Asia.",
+                "Singapore should develop a comprehensive national cybersecurity strategy with mandatory incident reporting for critical infrastructure operators.",
             ],
         },
         {
@@ -1582,6 +1653,7 @@ def _curriculum_sg() -> List[dict[str, Any]]:
                 "A stronger political opposition in parliament would make Singapore's government more accountable and improve policy outcomes.",
                 "Defamation laws and POFMA should not be used to restrict legitimate political criticism or journalism.",
                 "Singapore needs a Freedom of Information Act to improve government transparency and civic engagement.",
+                "Singapore should hold a national civic conversation on democratic reform, independently chaired, before the next general election.",
             ],
         },
         {
@@ -1604,6 +1676,7 @@ def _curriculum_sg() -> List[dict[str, Any]]:
                 "More needs to be done to address persistent discrimination against Malay and Indian Singaporeans in employment.",
                 "Singapore's social cohesion is a genuine asset that requires ongoing active policy investment.",
                 "Singapore should make it easier for long-term residents who have contributed to the country to access permanent residency and citizenship.",
+                "Singapore should introduce a national eldercare leave entitlement allowing workers to take paid leave to care for aging family members.",
             ],
         },
         {
@@ -1626,6 +1699,7 @@ def _curriculum_sg() -> List[dict[str, Any]]:
                 "Singapore's school system still places excessive emphasis on academic achievement to the detriment of character development and broader skills.",
                 "University places should be substantially expanded given Singapore's knowledge-economy needs.",
                 "Schools should teach financial literacy and civic education as core subjects from secondary school.",
+                "Singapore should pilot portfolio-based university admissions as an alternative to exam-only selection for arts and social science programmes.",
             ],
         },
     ]
@@ -1654,6 +1728,7 @@ def _curriculum_jp() -> List[dict[str, Any]]:
                 "Japan's 2050 carbon neutrality target requires energy policies far more ambitious than those currently in place.",
                 "The Fukushima disaster should not prevent a rational, evidence-based reassessment of nuclear power's role in Japan's energy mix.",
                 "Japan's island geography gives it substantial renewable energy potential — tidal, wave, and geothermal — that is being underexploited.",
+                "Japan should set a more ambitious 2030 emissions reduction target aligned with a 1.5°C pathway, not only its current nationally determined contribution.",
             ],
         },
         {
@@ -1676,6 +1751,7 @@ def _curriculum_jp() -> List[dict[str, Any]]:
                 "Japan's strength in robotics puts it in a strong position to lead on AI-driven manufacturing automation.",
                 "Japan should adopt personal data protection standards fully aligned with international best practice to participate effectively in global digital trade.",
                 "Japan's tech sector needs more inward migration to address severe skill shortages, particularly in software engineering.",
+                "Japan should develop a comprehensive data governance framework governing how AI companies can use data generated by Japanese citizens.",
             ],
         },
         {
@@ -1698,6 +1774,7 @@ def _curriculum_jp() -> List[dict[str, Any]]:
                 "Abenomics failed to address the structural causes of Japan's economic stagnation despite its monetary innovation.",
                 "Japan needs significant corporate governance reform to make its major companies internationally competitive.",
                 "Japan's dual labour market — privileged regular employees (seishain) alongside precarious non-regular workers — entrenches deep inequality.",
+                "Japan should allow more flexible working arrangements and shorten the standard working week to improve productivity and work-life balance.",
             ],
         },
         {
@@ -1720,6 +1797,7 @@ def _curriculum_jp() -> List[dict[str, Any]]:
                 "Japan should expand access to quality palliative care and end-of-life support outside of hospital settings.",
                 "Healthcare insurance premiums for Japan's aging population should be more substantially cross-subsidised from general income taxation.",
                 "Japan should accept significantly more foreign healthcare workers, with appropriate training and language support, to address its severe workforce shortage.",
+                "Japan should establish a national dementia care strategy with adequate public funding for community-based care services.",
             ],
         },
         {
@@ -1742,6 +1820,7 @@ def _curriculum_jp() -> List[dict[str, Any]]:
                 "The Quad (US, Japan, India, Australia) is an important counterbalance to Chinese military expansion in the Indo-Pacific.",
                 "Japan's pacifist tradition, even if constitutionally revised, remains an important part of its global diplomatic identity.",
                 "Japan should develop stronger bilateral defence cooperation with South Korea despite unresolved historical tensions.",
+                "Japan should formally end the longstanding ban on exporting lethal weapons to allies as part of its updated security posture.",
             ],
         },
         {
@@ -1764,6 +1843,7 @@ def _curriculum_jp() -> List[dict[str, Any]]:
                 "Japan's electoral system creates significant rural-urban vote weight imbalances that the courts should correct.",
                 "Japan's political funding system (seiji shikin kisei) requires comprehensive transparency reform after recent donation scandals.",
                 "Japan should make it easier for citizens to use referendums to resolve constitutional questions.",
+                "Japan should establish an independent anti-corruption agency with investigatory powers, given the repeated political funding scandals.",
             ],
         },
         {
@@ -1786,6 +1866,7 @@ def _curriculum_jp() -> List[dict[str, Any]]:
                 "Japan should allow dual nationality — the current prohibition imposes unnecessary economic and social costs.",
                 "Discrimination against foreign residents and naturalised citizens must be actively combated through law and enforcement.",
                 "Same-sex partnership rights should be legally recognised at the national level, rather than being left to individual municipalities.",
+                "Japan should formally prohibit discrimination in employment on the basis of sexual orientation and gender identity at the national level.",
             ],
         },
         {
@@ -1807,6 +1888,7 @@ def _curriculum_jp() -> List[dict[str, Any]]:
                 "Juku (private tutoring schools) widen educational inequality and the exam system should be reformed so they are less necessary.",
                 "Japan needs more liberal arts education that builds critical thinking and adaptability, alongside technical specialisation.",
                 "Japanese schools should actively teach students the full history of the country's actions in the Asia-Pacific war, based on historical evidence.",
+                "Japan should make English medium instruction available in all national universities for at least 20% of degree programmes.",
             ],
         },
     ]
@@ -1834,6 +1916,7 @@ def _curriculum_cn() -> List[dict[str, Any]]:
                 "China's expansion of solar and wind capacity is one of the most consequential developments in global climate action.",
                 "Developing countries should not be pressured to decarbonise at the same pace as wealthy nations that industrialised over two centuries.",
                 "Climate change cooperation between the US and China should be insulated from other elements of strategic rivalry.",
+                "China's domestic coal capacity must begin declining significantly before 2035 if its carbon neutrality pledge is to be credible.",
             ],
         },
         {
@@ -1856,6 +1939,7 @@ def _curriculum_cn() -> List[dict[str, Any]]:
                 "Technology decoupling between the US and China makes it harder to coordinate on shared AI safety risks that affect all countries.",
                 "Open-source AI development benefits all countries by preventing technological monopolies from forming around a small number of powerful actors.",
                 "International cooperation on AI safety research should continue regardless of geopolitical tensions between major powers.",
+                "All countries should establish independent national AI safety bodies with the authority to evaluate and pause high-risk AI deployments.",
             ],
         },
         {
@@ -1877,6 +1961,7 @@ def _curriculum_cn() -> List[dict[str, Any]]:
                 "Developing countries should retain the right to protect domestic industries while they build the capacity to compete internationally.",
                 "Over-reliance on any single country for critical supply chains is a systemic economic and security risk that all nations should reduce.",
                 "International financial institutions like the IMF and World Bank should give substantially more decision-making weight to developing nations.",
+                "International development finance for infrastructure should be coordinated through multilateral development banks rather than bilateral lending arrangements.",
             ],
         },
         {
@@ -1899,6 +1984,7 @@ def _curriculum_cn() -> List[dict[str, Any]]:
                 "Pandemic preparedness should be funded by a permanent treaty-based international mechanism, not unpredictable discretionary contributions.",
                 "Traditional and complementary medicine claims should be subject to the same evidence standards as other medical treatments.",
                 "Universal health coverage is both achievable and necessary at all income levels — the evidence that it improves health outcomes is strong.",
+                "All countries should ratify and implement the Pandemic Accord currently being negotiated under WHO auspices.",
             ],
         },
         {
@@ -1921,6 +2007,7 @@ def _curriculum_cn() -> List[dict[str, Any]]:
                 "Regional security in the Asia-Pacific should be managed primarily through multilateral frameworks rather than bilateral arrangements.",
                 "Broad economic sanctions are rarely effective tools for resolving geopolitical disputes and often harm civilian populations.",
                 "Countries in territorial or political disputes should use international courts and arbitration rather than unilateral action.",
+                "The five permanent members of the UN Security Council should voluntarily commit not to veto resolutions addressing mass atrocities.",
             ],
         },
         {
@@ -1943,6 +2030,7 @@ def _curriculum_cn() -> List[dict[str, Any]]:
                 "All countries, including powerful ones, should comply with International Court of Justice rulings.",
                 "A just international order requires giving equal legal standing to all states, regardless of economic or military power.",
                 "Multilateral institutions, despite their slowness and frustration, produce more durable outcomes than unilateral action by dominant powers.",
+                "International organisations should be held to the same transparency and accountability standards they demand of member governments.",
             ],
         },
         {
@@ -1964,6 +2052,7 @@ def _curriculum_cn() -> List[dict[str, Any]]:
                 "All people should have the right to move within their country and receive equal treatment regardless of origin.",
                 "Social mobility in most countries is lower than public perception suggests and requires active, targeted policy intervention.",
                 "Demographic decline is better addressed by improving conditions for families and workers than by restricting migration.",
+                "All countries should ratify and implement the UN International Covenant on Economic, Social and Cultural Rights.",
             ],
         },
         {
@@ -1986,6 +2075,7 @@ def _curriculum_cn() -> List[dict[str, Any]]:
                 "Access to quality early childhood education produces higher social returns than investment at secondary or tertiary level alone.",
                 "Higher education should be primarily publicly funded as a social good — the evidence that graduate loan systems reduce access is strong.",
                 "Schools should explicitly teach students how to evaluate information sources and identify disinformation.",
+                "International student and academic exchange programmes should be expanded as a tool for building mutual understanding and reducing geopolitical risk.",
             ],
         },
     ]
@@ -2104,6 +2194,8 @@ def seed_guided_journey_programme(variant: str = "global", creator_email: Option
     Safe to re-run — will not delete any theme that already has votes.
     On discussions with zero votes, existing seed statements are replaced with the
     current curriculum so content can be updated by re-running the seeder.
+    Each discussion receives exactly 7 seed statements to meet the minimum threshold
+    for consensus analysis.
     """
     variant = (variant or "global").lower()
     if variant not in VALID_VARIANTS:
