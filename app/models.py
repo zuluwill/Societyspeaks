@@ -1691,7 +1691,9 @@ class JourneyReminderSubscription(db.Model):
         converted back to UTC (naive) for storage.
         """
         from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
-        from datetime import timezone as _utc
+        from datetime import timezone
+
+        UTC = timezone.utc  # concrete instance, not the class
 
         from_dt = from_dt or utcnow_naive()
         hour = self.preferred_hour if self.preferred_hour is not None else 8
@@ -1703,7 +1705,7 @@ class JourneyReminderSubscription(db.Model):
             tz = ZoneInfo('UTC')
 
         # Work in the user's local timezone so we schedule at the right local time.
-        local_dt = from_dt.replace(tzinfo=_utc).astimezone(tz)
+        local_dt = from_dt.replace(tzinfo=UTC).astimezone(tz)
         wd = local_dt.weekday()  # 0=Mon … 6=Sun
 
         if self.cadence == self.CADENCE_WEEKLY:
@@ -1727,7 +1729,7 @@ class JourneyReminderSubscription(db.Model):
             return
 
         # Convert back to naive UTC for storage (matches utcnow_naive convention)
-        self.next_send_at = next_local.astimezone(_utc).replace(tzinfo=None)
+        self.next_send_at = next_local.astimezone(UTC).replace(tzinfo=None)
 
     @property
     def is_due(self):
