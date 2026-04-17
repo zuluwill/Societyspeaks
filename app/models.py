@@ -1637,6 +1637,7 @@ class JourneyReminderSubscription(db.Model):
     cadence = db.Column(db.String(20), nullable=False)
     timezone = db.Column(db.String(50), default='UTC', nullable=False)
     preferred_hour = db.Column(db.Integer, default=8, nullable=False)
+    preferred_minute = db.Column(db.Integer, default=0, nullable=False)
     next_send_at = db.Column(db.DateTime, nullable=True)
     last_sent_at = db.Column(db.DateTime, nullable=True)
     reminder_count = db.Column(db.Integer, default=0, nullable=False)
@@ -1697,6 +1698,7 @@ class JourneyReminderSubscription(db.Model):
 
         from_dt = from_dt or utcnow_naive()
         hour = self.preferred_hour if self.preferred_hour is not None else 8
+        minute = self.preferred_minute if self.preferred_minute is not None else 0
 
         try:
             tz = ZoneInfo(self.timezone or 'UTC')
@@ -1709,19 +1711,19 @@ class JourneyReminderSubscription(db.Model):
 
         if self.cadence == self.CADENCE_WEEKLY:
             next_local = (local_dt + timedelta(days=7)).replace(
-                hour=hour, minute=0, second=0, microsecond=0
+                hour=hour, minute=minute, second=0, microsecond=0
             )
         elif self.cadence == self.CADENCE_WEEKEND:
             # Next Saturday in the user's local calendar
             days_ahead = (5 - wd) % 7 or 7
             next_local = (local_dt + timedelta(days=days_ahead)).replace(
-                hour=hour, minute=0, second=0, microsecond=0
+                hour=hour, minute=minute, second=0, microsecond=0
             )
         elif self.cadence in (self.CADENCE_TWICE_WEEKLY, self.CADENCE_COMMUTE):
             # Next Tue (1) or Thu (3) — culture-neutral twice-a-week cadence
             twice_weekly_days = {0: 1, 1: 2, 2: 1, 3: 5, 4: 4, 5: 3, 6: 2}
             next_local = (local_dt + timedelta(days=twice_weekly_days[wd])).replace(
-                hour=hour, minute=0, second=0, microsecond=0
+                hour=hour, minute=minute, second=0, microsecond=0
             )
         else:
             self.next_send_at = None

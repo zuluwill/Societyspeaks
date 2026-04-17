@@ -481,13 +481,20 @@ def journey_reminder_subscribe(slug):
     except (ZoneInfoNotFoundError, KeyError):
         tz_value = 'UTC'
 
-    # preferred_hour: 0–23, default 8 (morning)
+    # preferred_hour: 0–23, preferred_minute: 0–59 — user's exact local time
     try:
         preferred_hour = int(data.get('preferred_hour', 8))
         if not 0 <= preferred_hour <= 23:
             preferred_hour = 8
     except (TypeError, ValueError):
         preferred_hour = 8
+
+    try:
+        preferred_minute = int(data.get('preferred_minute', 0))
+        if not 0 <= preferred_minute <= 59:
+            preferred_minute = 0
+    except (TypeError, ValueError):
+        preferred_minute = 0
 
     if current_user.is_authenticated:
         email = current_user.email
@@ -514,6 +521,7 @@ def journey_reminder_subscribe(slug):
             existing.cadence = cadence
             existing.timezone = tz_value
             existing.preferred_hour = preferred_hour
+            existing.preferred_minute = preferred_minute
             existing.unsubscribed_at = None
             existing.set_next_send_at()
             sub = existing
@@ -525,6 +533,7 @@ def journey_reminder_subscribe(slug):
                 cadence=cadence,
                 timezone=tz_value,
                 preferred_hour=preferred_hour,
+                preferred_minute=preferred_minute,
             )
             sub.set_next_send_at()
             db.session.add(sub)
@@ -538,8 +547,10 @@ def journey_reminder_subscribe(slug):
             'twice_weekly': 'twice a week (Tue & Thu)',
             'commute': 'twice a week (Tue & Thu)',
         }
-        _time_labels = {8: 'morning', 12: 'lunchtime', 19: 'in the evening'}
-        time_label = _time_labels.get(preferred_hour, f'at {preferred_hour}:00')
+        h12 = preferred_hour % 12 or 12
+        ampm = 'am' if preferred_hour < 12 else 'pm'
+        m_str = f'{preferred_minute:02d}'
+        time_label = f'at {h12}:{m_str}{ampm}'
         cadence_label = f"{_cadence_labels.get(cadence, cadence)}, {time_label}"
 
         if not user_id:

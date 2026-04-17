@@ -359,21 +359,9 @@
           </div>
 
           <div>
-            <p class="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1.5">What time?</p>
-            <div class="flex flex-wrap gap-2">
-              <button type="button" data-hour="8"
-                      class="journey-time-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-indigo-400 bg-indigo-50 text-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                Morning
-              </button>
-              <button type="button" data-hour="12"
-                      class="journey-time-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                Lunchtime
-              </button>
-              <button type="button" data-hour="19"
-                      class="journey-time-btn px-3 py-1.5 rounded-full text-xs font-semibold border border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                Evening
-              </button>
-            </div>
+            <p class="text-xs text-gray-400 uppercase tracking-wide font-semibold mb-1.5">What time? <span class="normal-case font-normal">(your local time)</span></p>
+            <input type="time" id="journey-preferred-time" value="08:00"
+                   class="px-3 py-1.5 rounded-lg text-sm border border-gray-300 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 w-32">
           </div>
 
           <p id="journey-reminder-msg" class="text-xs text-gray-400 hidden"></p>
@@ -389,7 +377,12 @@
   {% elif journey_reminder_subscription and not journey_reminder_subscription.unsubscribed_at %}
   {% set _jrs = journey_reminder_subscription %}
   {% set _cadence_label = {'weekly': 'Weekly', 'weekend': 'Weekend mornings', 'twice_weekly': 'Twice a week', 'commute': 'Twice a week'}[_jrs.cadence] if _jrs.cadence in ('weekly','weekend','twice_weekly','commute') else _jrs.cadence %}
-  {% set _time_label = {8: 'morning', 12: 'lunchtime', 19: 'evening'}[_jrs.preferred_hour] if _jrs.preferred_hour in (8, 12, 19) else ('at ' ~ _jrs.preferred_hour ~ ':00') %}
+  {% set _h = _jrs.preferred_hour %}
+  {% set _m = _jrs.preferred_minute if _jrs.preferred_minute is defined else 0 %}
+  {% set _h12 = (_h % 12) if (_h % 12) != 0 else 12 %}
+  {% set _ampm = 'am' if _h < 12 else 'pm' %}
+  {% set _m_str = ('0' ~ _m) if _m < 10 else (_m|string) %}
+  {% set _time_label = _h12|string ~ ':' ~ _m_str ~ _ampm %}
   <div class="bg-white rounded-xl shadow-sm border border-emerald-100 px-4 sm:px-6 py-3 mb-5">
     <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-2">
@@ -564,18 +557,29 @@
     USER_TZ = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   } catch (e) {}
 
-  // Track selected time-of-day (hour in user's local time); default Morning = 8
-  var selectedHour = 8;
-
   var CADENCE_LABELS = {
     weekly: 'weekly',
     twice_weekly: 'twice a week (Tue & Thu)',
     weekend: 'on weekend mornings'
   };
-  var TIME_LABELS = { 8: 'morning', 12: 'lunchtime', 19: 'in the evening' };
 
-  var BTN_ACTIVE   = 'border-indigo-400 bg-indigo-50 text-indigo-700';
-  var BTN_INACTIVE = 'border-gray-300 text-gray-600 hover:border-indigo-400 hover:text-indigo-700 hover:bg-indigo-50';
+  function getPreferredTime() {
+    var timeInput = document.getElementById('journey-preferred-time');
+    var val = (timeInput && timeInput.value) ? timeInput.value : '08:00';
+    var parts = val.split(':');
+    var h = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10);
+    if (isNaN(h) || h < 0 || h > 23) h = 8;
+    if (isNaN(m) || m < 0 || m > 59) m = 0;
+    return { hour: h, minute: m };
+  }
+
+  function formatTime(h, m) {
+    var h12 = h % 12 || 12;
+    var ampm = h < 12 ? 'am' : 'pm';
+    var mm = m < 10 ? '0' + m : '' + m;
+    return h12 + ':' + mm + ampm;
+  }
 
   function showMsg(text, color) {
     if (!msgEl) return;
@@ -599,23 +603,13 @@
       }
     } catch(e) {}
 
-    // Time-of-day chip selection (visual only — cadence click triggers the save)
-    document.querySelectorAll('.journey-time-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        selectedHour = parseInt(btn.dataset.hour, 10);
-        document.querySelectorAll('.journey-time-btn').forEach(function (b) {
-          b.className = b.className.replace(BTN_ACTIVE, BTN_INACTIVE);
-        });
-        btn.className = btn.className.replace(BTN_INACTIVE, BTN_ACTIVE);
-      });
-    });
-
-    // Cadence buttons — clicking one saves immediately with current time preference
+    // Cadence buttons — clicking one saves immediately with the chosen time
     document.querySelectorAll('.journey-cadence-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var cadence = btn.dataset.cadence;
+        var t = getPreferredTime();
         var emailEl = document.getElementById('journey-reminder-email');
-        var payload = { cadence: cadence, timezone: USER_TZ, preferred_hour: selectedHour };
+        var payload = { cadence: cadence, timezone: USER_TZ, preferred_hour: t.hour, preferred_minute: t.minute };
         if (emailEl) {
           var email = emailEl.value.trim();
           if (!email) { showMsg('Please enter your email address first.', 'red'); emailEl.focus(); return; }
@@ -631,12 +625,12 @@
         .then(function (data) {
           if (data.success) {
             var cadenceText = CADENCE_LABELS[cadence] || cadence;
-            var timeText = TIME_LABELS[selectedHour] || ('at ' + selectedHour + ':00');
+            var timeText = formatTime(t.hour, t.minute);
             var form = document.getElementById('journey-reminder-form');
             if (form) {
               form.innerHTML =
                 '<p class="text-sm text-emerald-600 font-medium">&#10003; We\'ll remind you ' +
-                cadenceText + ', ' + timeText + ' your local time.</p>';
+                cadenceText + ', at ' + timeText + ' your local time.</p>';
             }
             if (emailEl) {
               showMsg('Check your inbox — we\'ve sent a confirmation with your link to continue.', 'green');
