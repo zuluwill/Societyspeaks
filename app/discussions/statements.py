@@ -1225,10 +1225,10 @@ def vote_statement(statement_id):
             current_app.logger.warning(f"PostHog tracking error: {e}")
 
     # PostHog: track journey step completion for guided journey discussions
+    # Fires for both authenticated and anonymous users
     if (
         posthog
         and getattr(posthog, 'project_api_key', None)
-        and current_user.is_authenticated
         and discussion.programme_id
         and discussion.has_native_statements
     ):
@@ -1241,12 +1241,22 @@ def vote_statement(statement_id):
             if _programme and is_guided_journey_programme(_programme):
                 _step_key = f'ph_journey_step_{_programme.id}_{discussion.id}'
                 if not session.get(_step_key):
-                    # Check if the user has now voted on every statement in this discussion
-                    _uid = current_user.id
+                    # Resolve distinct_id and the right vote-count filter —
+                    # mirrors exactly what statement_voted uses above
+                    if current_user.is_authenticated:
+                        _ph_id = str(current_user.id)
+                        _vote_filter = StatementVote.query.filter_by(
+                            discussion_id=discussion.id, user_id=current_user.id
+                        )
+                    else:
+                        _ph_id = get_statement_vote_fingerprint()
+                        _vote_filter = StatementVote.query.filter_by(
+                            discussion_id=discussion.id, session_fingerprint=_ph_id
+                        )
+
                     _total = Statement.query.filter_by(discussion_id=discussion.id).count()
-                    _voted = StatementVote.query.filter_by(
-                        discussion_id=discussion.id, user_id=_uid
-                    ).count()
+                    _voted = _vote_filter.count()
+
                     if _total > 0 and _voted >= _total:
                         _ordered = ordered_journey_discussions(_programme)
                         _step_num = next(
@@ -1257,7 +1267,6 @@ def vote_statement(statement_id):
                             _total_steps = len(_ordered)
                             _is_final = _step_num == _total_steps
                             _jtype = 'global' if getattr(_programme, 'geographic_scope', 'global') == 'global' else 'country'
-                            _ph_id = str(current_user.id)
                             posthog.capture(
                                 distinct_id=_ph_id,
                                 event='journey_step_completed',
@@ -1271,7 +1280,7 @@ def vote_statement(statement_id):
                                     'step_type': 'voting',
                                     'total_steps': _total_steps,
                                     'is_final_step': _is_final,
-                                    'is_authenticated': True,
+                                    'is_authenticated': current_user.is_authenticated,
                                 },
                             )
                             session[_step_key] = True
