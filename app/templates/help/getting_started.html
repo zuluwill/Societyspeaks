@@ -1,4 +1,5 @@
 {# templates/help/getting_started.html #} {% extends "layout.html" %}
+{% from "components/ui_tokens.html" import btn_primary_sm, btn_secondary_sm %}
 
 {% block head %}
 <title>Getting Started - Society Speaks Help | How to Participate in Discussions</title>
@@ -135,7 +136,7 @@
       <div class="mt-4">
         <a
           href="{{ url_for('auth.register') }}"
-          class="inline-block bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700 transition-colors"
+          class="{{ btn_primary_sm() }}"
         >
           Create an Account
         </a>

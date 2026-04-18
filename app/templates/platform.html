@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% from "components/discussion_card.html" import discussion_card %}
+{% from "components/ui_tokens.html" import btn_primary_md, btn_primary_sm, btn_secondary_md, btn_secondary_sm %}
 
 {% block title %}The Platform — Society Speaks{% endblock %}
 {% block meta_description %}Nuanced debate backed by rigorous analysis. Society Speaks discussions and programmes give individuals a voice and organisations the tools to run structured deliberation at any scale — from a single conversation to a national consultation.{% endblock %}
@@ -37,19 +38,19 @@
       <div class="mt-10 flex flex-wrap justify-center gap-4">
         {% if current_user.is_authenticated %}
         <a href="{{ url_for('discussions.search_discussions') }}"
-           class="inline-flex items-center rounded-md bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors">
+           class="{{ btn_primary_md() }}">
           Explore Discussions
           <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
           </svg>
         </a>
         <a href="{{ url_for('programmes.list_programmes') }}"
-           class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+           class="{{ btn_secondary_md() }}">
           Browse Programmes
         </a>
         {% else %}
         <a href="{{ url_for('auth.register') }}"
-           class="inline-flex items-center rounded-md bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors">
+           class="{{ btn_primary_md() }}">
           Get started — it's free
           <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -57,15 +58,15 @@
         </a>
         {% if demo_discussion %}
         <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}"
-           class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-emerald-700 shadow-sm ring-1 ring-inset ring-emerald-300 hover:bg-emerald-50 transition-colors">
-          <svg class="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           class="{{ btn_secondary_md() }}">
+          <svg class="mr-2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zM2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
           </svg>
           Try a Live Demo
         </a>
         {% else %}
         <a href="{{ url_for('discussions.search_discussions') }}"
-           class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+           class="{{ btn_secondary_md() }}">
           Explore Discussions
         </a>
         {% endif %}
@@ -186,16 +187,16 @@
         </div>
 
         {% if demo_discussion %}
-        <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-5">
-          <p class="font-semibold text-emerald-900 text-sm mb-1">Try it yourself — takes 2 minutes</p>
-          <p class="text-xs text-emerald-700 mb-4">Vote on our live demo discussion, then see what the consensus analysis reveals about how opinion clusters.</p>
+        <div class="rounded-xl bg-primary-50 border border-primary-200 p-5">
+          <p class="font-semibold text-primary-900 text-sm mb-1">Try it yourself — takes 2 minutes</p>
+          <p class="text-xs text-primary-700 mb-4">Vote on our live demo discussion, then see what the consensus analysis reveals about how opinion clusters.</p>
           <div class="flex flex-wrap gap-3">
             <a href="{{ url_for('discussions.view_discussion', discussion_id=demo_discussion.id, slug=demo_discussion.slug) }}"
-               class="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">
+               class="{{ btn_primary_sm() }}">
               Vote on the demo
             </a>
             <a href="{{ url_for('consensus.view_results', discussion_id=demo_discussion.id) }}"
-               class="inline-flex items-center rounded-md bg-white border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">
+               class="{{ btn_secondary_sm() }}">
               See the analysis
             </a>
           </div>
@@ -622,11 +623,11 @@
         </ul>
         <div class="flex flex-wrap gap-3">
           <a href="{{ url_for('programmes.list_programmes') }}"
-             class="inline-flex items-center rounded-md bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 transition-colors">
+             class="inline-flex items-center justify-center rounded-lg bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 transition-colors">
             Browse Programmes
           </a>
           <a href="{{ url_for('help.programmes') }}"
-             class="inline-flex items-center rounded-md bg-white border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors">
+             class="{{ btn_secondary_md() }}">
             How Programmes work
           </a>
         </div>
@@ -739,15 +740,15 @@
         </ul>
         <div class="flex flex-wrap gap-3">
           <a href="{{ url_for('discussions.search_discussions') }}"
-             class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors min-h-11">
+             class="{{ btn_primary_sm() }} min-h-11">
             Explore discussions
           </a>
           <a href="{{ url_for('daily.today') }}"
-             class="inline-flex items-center rounded-md bg-white border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors min-h-11">
+             class="{{ btn_secondary_sm() }} min-h-11">
             Today's Question
           </a>
           <a href="{{ url_for('discussions.create_discussion') }}"
-             class="inline-flex items-center rounded-md bg-white border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors min-h-11">
+             class="{{ btn_secondary_sm() }} min-h-11">
             Start a discussion
           </a>
         </div>
@@ -790,11 +791,11 @@
         </div>
         <div class="flex flex-wrap gap-3">
           <a href="{{ url_for('discussions.create_discussion') }}"
-             class="inline-flex items-center rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-700 transition-colors min-h-11">
+             class="{{ btn_primary_sm() }} min-h-11">
             Start a discussion
           </a>
           <a href="{{ url_for('partner.hub') }}"
-             class="inline-flex items-center rounded-md bg-white border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors min-h-11">
+             class="{{ btn_secondary_sm() }} min-h-11">
             Embed on your site
           </a>
         </div>
@@ -834,11 +835,11 @@
         </ul>
         <div class="flex flex-wrap gap-3">
           <a href="{{ url_for('programmes.create_programme') }}"
-             class="inline-flex items-center rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 transition-colors min-h-11">
+             class="inline-flex items-center justify-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 transition-colors min-h-11">
             Create a Programme
           </a>
           <a href="{{ url_for('help.programmes') }}"
-             class="inline-flex items-center rounded-md bg-white border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors min-h-11">
+             class="{{ btn_secondary_sm() }} min-h-11">
             How Programmes work
           </a>
         </div>
@@ -887,11 +888,11 @@
         </div>
         <div class="flex flex-wrap gap-3">
           <a href="{{ url_for('programmes.create_programme') }}"
-             class="inline-flex items-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors min-h-11">
+             class="inline-flex items-center justify-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 transition-colors min-h-11">
             Create a Programme
           </a>
           <a href="mailto:info@societyspeaks.io?subject=Government%20%2F%20national%20consultation%20enquiry"
-             class="inline-flex items-center rounded-md bg-white border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors min-h-11">
+             class="{{ btn_secondary_sm() }} min-h-11">
             Get in touch
           </a>
         </div>
@@ -948,7 +949,7 @@
             </li>
           </ul>
           <a href="{{ url_for('profiles.create_individual_profile') }}"
-             class="inline-flex items-center rounded-md bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors">
+             class="{{ btn_primary_md() }}">
             Create an individual profile
             <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
           </a>
@@ -991,7 +992,7 @@
             </li>
           </ul>
           <a href="{{ url_for('profiles.create_company_profile') }}"
-             class="inline-flex items-center rounded-md bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 transition-colors">
+             class="inline-flex items-center justify-center rounded-lg bg-purple-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 transition-colors">
             Create an organisation profile
             <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
           </a>
@@ -1122,31 +1123,31 @@
     <div class="mt-8 flex flex-wrap justify-center gap-4">
       {% if current_user.is_authenticated %}
       <a href="{{ url_for('discussions.create_discussion') }}"
-         class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-primary-700 shadow-sm hover:bg-blue-50 transition-colors min-h-11">
+         class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-primary-700 shadow-sm hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition-colors min-h-11">
         Start a discussion
         <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
       </a>
       <a href="{{ url_for('programmes.create_programme') }}"
-         class="inline-flex items-center rounded-md bg-blue-500 px-6 py-3 text-sm font-semibold text-white ring-1 ring-white/30 hover:bg-blue-400 transition-colors min-h-11">
+         class="inline-flex items-center justify-center rounded-lg bg-blue-500 px-6 py-3 text-sm font-semibold text-white ring-1 ring-white/30 hover:bg-blue-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors min-h-11">
         Create a Programme
       </a>
       {% else %}
       <a href="{{ url_for('auth.register') }}"
-         class="inline-flex items-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-primary-700 shadow-sm hover:bg-blue-50 transition-colors min-h-11">
+         class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-primary-700 shadow-sm hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition-colors min-h-11">
         Get started — it's free
         <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
         </svg>
       </a>
       <a href="{{ url_for('auth.login') }}"
-         class="inline-flex items-center rounded-md bg-blue-500 px-6 py-3 text-sm font-semibold text-white ring-1 ring-white/30 hover:bg-blue-400 transition-colors min-h-11">
+         class="inline-flex items-center justify-center rounded-lg bg-blue-500 px-6 py-3 text-sm font-semibold text-white ring-1 ring-white/30 hover:bg-blue-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors min-h-11">
         Sign in
       </a>
       {% endif %}
       <a href="{{ url_for('help.help') }}"
-         class="inline-flex items-center rounded-md bg-blue-500 px-6 py-3 text-sm font-semibold text-white ring-1 ring-white/30 hover:bg-blue-400 transition-colors min-h-11">
+         class="inline-flex items-center justify-center rounded-lg bg-blue-500 px-6 py-3 text-sm font-semibold text-white ring-1 ring-white/30 hover:bg-blue-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors min-h-11">
         Read the docs
       </a>
     </div>

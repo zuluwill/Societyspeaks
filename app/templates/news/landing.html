@@ -27,14 +27,14 @@
                     </p>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <a href="{{ url_for('news.dashboard') }}"
-                           class="inline-flex items-center justify-center bg-white text-primary-600 px-6 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors shadow-lg">
+                           class="inline-flex items-center justify-center bg-white text-primary-700 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-800 transition-colors shadow-lg">
                             View Dashboard
                             <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                             </svg>
                         </a>
                         <a href="{{ url_for('brief.today') }}"
-                           class="inline-flex items-center justify-center border-2 border-white text-white px-6 py-3 rounded-lg font-medium hover:bg-white/10 transition-colors">
+                           class="inline-flex items-center justify-center border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-800 transition-colors">
                             Read Today's Brief
                         </a>
                     </div>
@@ -52,10 +52,10 @@
                     <!-- Coverage Balance -->
                     <div class="p-4 border-b">
                         <p class="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Today's Coverage Balance</p>
-                        <div class="w-full h-3 rounded-full overflow-hidden mb-2" style="display: flex; background-color: #e5e7eb;">
-                            <div style="width: 28%; background-color: #3b82f6;"></div>
-                            <div style="width: 44%; background-color: #a855f7;"></div>
-                            <div style="width: 28%; background-color: #ef4444;"></div>
+                        <div class="flex w-full h-3 rounded-full overflow-hidden bg-gray-200 mb-2">
+                            <div class="bg-blue-500" style="width: 28%"></div>
+                            <div class="bg-purple-500" style="width: 44%"></div>
+                            <div class="bg-red-500" style="width: 28%"></div>
                         </div>
                         <div class="flex justify-between text-xs">
                             <span class="text-primary-600 font-medium">28% Left</span>

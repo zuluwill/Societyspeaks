@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% from "components/ui_tokens.html" import btn_primary_md %}
+{% from "components/ui_tokens.html" import btn_primary_md, btn_secondary_md %}
 
 {% block title %}Frequently Asked Questions — Society Speaks{% endblock %}
 {% block meta_description %}Everything you need to know about Society Speaks — the Big Questions Journey, Daily Brief, Daily Question, Personal Briefs, how our machine learning works, privacy, and pricing.{% endblock %}
@@ -424,7 +424,7 @@
                     Email us
                 </a>
                 <a href="{{ url_for('help.help') }}"
-                   class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+                   class="{{ btn_secondary_md() }}">
                     Visit the Help Centre
                     <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>

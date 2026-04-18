@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/ui_tokens.html" import btn_secondary_md %}
 
 {% block title %}Daily Brief - Your 5-Minute Civic Intelligence Upgrade | Society Speaks{% endblock %}
 
@@ -45,8 +46,8 @@
                 </div>
                 
                 <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start mb-4">
-                    <a href="{{ url_for('brief.today') }}" 
-                       class="inline-flex items-center justify-center rounded-md bg-emerald-600 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 transition-colors">
+                    <a href="{{ url_for('brief.today') }}"
+                       class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-700 focus-visible:ring-offset-2 transition-colors">
                         Read Today's Brief
                         <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
@@ -138,7 +139,7 @@
                     </div>
 
                     <!-- Floating callout badges - desktop only -->
-                    <div class="absolute -right-2 top-16 bg-emerald-600 text-white px-3 py-2 rounded-lg shadow-lg text-xs font-bold transform rotate-2 hidden xl:block">
+                    <div class="absolute -right-2 top-16 bg-slate-700 text-white px-3 py-2 rounded-lg shadow-lg text-xs font-bold transform rotate-2 hidden xl:block">
                         ← Multi-source coverage
                     </div>
                     <div class="absolute -left-2 bottom-24 bg-amber-500 text-white px-3 py-2 rounded-lg shadow-lg text-xs font-bold transform -rotate-2 hidden xl:block">
@@ -311,8 +312,8 @@
                     Get complete coverage analysis, verification links to primary sources, 
                     and "So What?" context for each story.
                 </p>
-                <a href="{{ url_for('brief.subscribe') }}" 
-                   class="inline-flex items-center justify-center rounded-md bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 transition-colors">
+                <a href="{{ url_for('brief.subscribe') }}"
+                   class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-700 focus-visible:ring-offset-2 transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
@@ -513,8 +514,8 @@
             <p class="text-blue-200 mb-8">
                 Every reader helps build infrastructure for healthier public discourse.
             </p>
-            <a href="{{ url_for('brief.subscribe') }}" 
-               class="inline-flex items-center justify-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-primary-600 shadow-sm hover:bg-blue-50 transition-colors">
+            <a href="{{ url_for('brief.subscribe') }}"
+               class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-primary-700 shadow-sm hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
@@ -568,8 +569,8 @@
         <div class="max-w-2xl mx-auto text-center">
             <h2 class="text-2xl font-bold text-gray-900 mb-4">Ready to try sense-making over sensationalism?</h2>
             <p class="text-gray-600 mb-8">Join citizens who prefer understanding over outrage.</p>
-            <a href="{{ url_for('brief.subscribe') }}" 
-               class="inline-flex items-center justify-center rounded-md bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-2 transition-colors">
+            <a href="{{ url_for('brief.subscribe') }}"
+               class="inline-flex items-center justify-center rounded-lg bg-slate-700 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-700 focus-visible:ring-offset-2 transition-colors">
                 Sign Up Free
             </a>
             <p class="text-sm text-gray-500 mt-4">100% free, no credit card required</p>

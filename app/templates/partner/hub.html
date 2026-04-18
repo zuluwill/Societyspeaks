@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/ui_tokens.html" import btn_primary_md, btn_primary_sm, btn_secondary_md, btn_secondary_sm %}
 
 {% block title %}For Publishers - Society Speaks{% endblock %}
 
@@ -40,13 +41,13 @@
           </div>
         </div>
         <div class="flex flex-col sm:flex-row gap-3">
-          <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex items-center justify-center rounded-md bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors">
+          <a href="{{ url_for('partner.portal_signup') }}" class="{{ btn_primary_md() }}">
             Get Started Free
             <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </a>
-          <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center justify-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+          <a href="{{ url_for('partner.api_docs') }}" class="{{ btn_secondary_md() }}">
             Read the Docs
           </a>
         </div>
@@ -285,7 +286,7 @@
 <div class="bg-gradient-to-b from-gray-50 to-white border-b">
   <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
     <div class="text-center mb-10">
-      <div class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700 mb-4">
+      <div class="inline-flex rounded-full bg-primary-100 px-3 py-1 text-sm font-semibold text-primary-700 mb-4">
         See it in action
       </div>
       <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -319,7 +320,7 @@
           <p class="text-sm font-medium text-gray-900">Climate Action: Finding Common Ground</p>
           <p class="text-xs text-gray-500 mt-1">20 statements &middot; 400+ votes &middot; Multiple opinion groups</p>
         </div>
-        <a href="/discussions/25/climate-action-finding-common-ground" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-full rounded-md bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors">
+        <a href="/discussions/25/climate-action-finding-common-ground" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-full rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 transition-colors">
           View Live Discussion
           <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
@@ -364,7 +365,7 @@
             </li>
           </ul>
         </div>
-        <a href="/discussions/25/consensus" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-full rounded-md bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 transition-colors">
+        <a href="/discussions/25/consensus" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-center w-full rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-600 focus-visible:ring-offset-2 transition-colors">
           View Consensus Analysis
           <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
@@ -405,7 +406,7 @@
           <li>3) Paste into your CMS</li>
         </ol>
         <div class="mt-4">
-          <a href="{{ url_for('partner.embed_generator') }}" class="inline-flex items-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-500">
+          <a href="{{ url_for('partner.embed_generator') }}" class="{{ btn_primary_sm() }}">
             Open embed generator
           </a>
         </div>
@@ -421,10 +422,10 @@
           <li>3) Store the returned discussion ID and embed URL</li>
         </ol>
         <div class="mt-4 flex flex-wrap gap-3">
-          <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+          <a href="{{ url_for('partner.api_docs') }}" class="{{ btn_secondary_sm() }}">
             Read API docs
           </a>
-          <a href="{{ url_for('partner.api_playground') }}" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+          <a href="{{ url_for('partner.api_playground') }}" class="{{ btn_secondary_sm() }}">
             Try API playground
           </a>
         </div>
@@ -628,7 +629,7 @@
           </li>
         </ul>
         <div class="mt-6">
-          <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex w-full items-center justify-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+          <a href="{{ url_for('partner.portal_signup') }}" class="{{ btn_secondary_md() }} w-full">
             Create free account
           </a>
         </div>
@@ -665,7 +666,7 @@
           </li>
         </ul>
         <div class="mt-6">
-          <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex w-full items-center justify-center rounded-md bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors">
+          <a href="{{ url_for('partner.portal_signup') }}" class="{{ btn_primary_md() }} w-full">
             Get started
           </a>
         </div>
@@ -699,7 +700,7 @@
           </li>
         </ul>
         <div class="mt-6">
-          <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex w-full items-center justify-center rounded-md bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 transition-colors">
+          <a href="{{ url_for('partner.portal_signup') }}" class="{{ btn_primary_md() }} w-full">
             Get started
           </a>
         </div>
@@ -732,7 +733,7 @@
           </li>
         </ul>
         <div class="mt-6">
-          <a href="mailto:info@societyspeaks.io" class="inline-flex w-full items-center justify-center rounded-md bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-100 transition-colors">
+          <a href="mailto:info@societyspeaks.io" class="{{ btn_secondary_md() }} w-full">
             Talk to us
           </a>
         </div>
@@ -1055,13 +1056,13 @@ document.getElementById('roiCPM')?.addEventListener('input', calcROI);
       No credit card. No sales call. No waiting for approval.
     </p>
     <div class="mt-6 flex flex-col sm:flex-row flex-wrap justify-center gap-3">
-      <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex items-center justify-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-primary-700 shadow-sm hover:bg-primary-50 transition-colors">
+      <a href="{{ url_for('partner.portal_signup') }}" class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-semibold text-primary-700 shadow-sm hover:bg-primary-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-600 transition-colors">
         Create Free Account
         <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
         </svg>
       </a>
-      <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center justify-center rounded-md bg-primary-500 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary-400 transition-colors">
+      <a href="{{ url_for('partner.api_docs') }}" class="inline-flex items-center justify-center rounded-lg bg-primary-500 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors">
         Read the Docs
       </a>
     </div>

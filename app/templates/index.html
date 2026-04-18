@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% from "components/discussion_card.html" import discussion_card %}
-{% from "components/ui_tokens.html" import btn_primary_lg, btn_primary_md, btn_primary_sm, link_primary, link_primary_semibold %}
+{% from "components/ui_tokens.html" import btn_primary_lg, btn_primary_md, btn_primary_sm, btn_secondary_lg, btn_secondary_md, link_primary, link_primary_semibold %}
 
 {% block title %}Making Disagreement Useful Again — Society Speaks{% endblock %}
 
@@ -145,7 +145,7 @@
                         </a>
                         <!-- Secondary CTA: Daily Brief -->
                         <a href="{{ url_for('brief.today') }}"
-                           class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3.5 text-base font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 transition-colors">
+                           class="{{ btn_secondary_lg() }}">
                             <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                             </svg>
@@ -164,10 +164,10 @@
             </div>
             <!-- Right column: hero image -->
             <div class="lg:col-span-6">
-                <div class="relative rounded-xl bg-white shadow-xl overflow-hidden">
+                <div class="relative rounded-xl bg-gradient-to-br from-primary-50 to-primary-100 shadow-xl overflow-hidden aspect-[16/10]">
                     <img src="{{ url_for('main.serve_asset', filename='images/hero-optimized.jpg') }}"
                          alt="Discussion visualisation showing opinion clusters and consensus"
-                         class="w-full h-full object-cover"
+                         class="absolute inset-0 w-full h-full object-cover"
                          loading="eager"/>
                 </div>
             </div>
@@ -187,7 +187,7 @@
             </span>
             <span class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-                <strong class="font-semibold text-gray-900">{{ total_discussion_count_display }}</strong> discussions
+                <strong class="font-semibold text-gray-900">{{ total_discussion_count_display or '1,000+' }}</strong> discussions
             </span>
             <span class="flex items-center gap-2">
                 <svg class="w-4 h-4 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
@@ -516,19 +516,37 @@
                 <div class="bg-blue-50 rounded-xl p-4 mb-5 border border-blue-100">
                     <div class="text-xs font-semibold text-primary-600 mb-2">Today's question</div>
                     <p class="text-sm font-medium text-gray-900 leading-snug mb-3">"{{ daily_question.question_text }}"</p>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="flex items-center justify-center py-1.5 px-2 rounded-lg bg-primary-600 text-white font-semibold text-xs">&#10003; Agree</div>
-                        <div class="flex items-center justify-center py-1.5 px-2 rounded-lg bg-red-500 text-white font-semibold text-xs">&#10007; Disagree</div>
-                        <div class="flex items-center justify-center py-1.5 px-2 rounded-lg bg-gray-400 text-white font-semibold text-xs">? Unsure</div>
+                    <div class="grid grid-cols-3 gap-2" aria-hidden="true">
+                        <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-emerald-300 bg-white text-emerald-700 font-semibold text-xs pointer-events-none select-none gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            Agree
+                        </div>
+                        <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-red-300 bg-white text-red-600 font-semibold text-xs pointer-events-none select-none gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Disagree
+                        </div>
+                        <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-amber-300 bg-white text-amber-600 font-semibold text-xs pointer-events-none select-none gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Unsure
+                        </div>
                     </div>
                 </div>
                 {% else %}
                 <div class="bg-blue-50 rounded-xl p-4 mb-5 border border-blue-100">
                     <div class="text-xs font-semibold text-primary-600 mb-3">How you vote</div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div class="flex items-center justify-center py-1.5 px-2 rounded-lg bg-primary-600 text-white font-semibold text-xs">&#10003; Agree</div>
-                        <div class="flex items-center justify-center py-1.5 px-2 rounded-lg bg-red-500 text-white font-semibold text-xs">&#10007; Disagree</div>
-                        <div class="flex items-center justify-center py-1.5 px-2 rounded-lg bg-gray-400 text-white font-semibold text-xs">? Unsure</div>
+                    <div class="grid grid-cols-3 gap-2" aria-hidden="true">
+                        <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-emerald-300 bg-white text-emerald-700 font-semibold text-xs pointer-events-none select-none gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                            Agree
+                        </div>
+                        <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-red-300 bg-white text-red-600 font-semibold text-xs pointer-events-none select-none gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                            Disagree
+                        </div>
+                        <div class="flex flex-col items-center justify-center py-2.5 px-2 rounded-xl border-2 border-amber-300 bg-white text-amber-600 font-semibold text-xs pointer-events-none select-none gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            Unsure
+                        </div>
                     </div>
                 </div>
                 {% endif %}
@@ -539,7 +557,7 @@
                         <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                     <a href="{{ url_for('daily.subscribe') }}"
-                       class="inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+                       class="{{ btn_secondary_md() }}">
                         <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         Get by Email
                     </a>
@@ -626,7 +644,7 @@
                         <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
                     <a href="{{ url_for('brief.subscribe') }}"
-                       class="inline-flex items-center rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+                       class="{{ btn_secondary_md() }}">
                         <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         Get by Email
                     </a>
@@ -814,7 +832,7 @@
                     Start a Discussion
                 </a>
                 <a href="{{ url_for('programmes.list_programmes') }}"
-                   class="inline-flex items-center rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition-colors">
+                   class="{{ btn_secondary_md() }}">
                     Browse Programmes
                     <svg class="ml-1.5 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                 </a>
@@ -826,15 +844,15 @@
 <!-- ═══════════════════════════════════════════════════════
      SECTION 9: FUND THE MISSION (Personal Briefs)
      ═══════════════════════════════════════════════════════ -->
-<div class="bg-slate-900 py-16">
+<div class="bg-primary-700 py-16">
     <div class="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row lg:items-center gap-10">
             <div class="lg:w-1/2">
-                <div class="inline-flex rounded-full bg-blue-800/60 px-3 py-1 text-xs font-semibold text-blue-100 mb-4">Fund the mission</div>
+                <div class="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white mb-4">Fund the mission</div>
                 <h2 class="text-2xl sm:text-3xl font-bold text-white mb-4">
                     Everything is free. It stays that way because of our subscribers.
                 </h2>
-                <p class="text-blue-100 text-base">
+                <p class="text-primary-100 text-base">
                     A Personal Brief subscription funds our open source civic platform — and gives you a custom daily digest from your own sources in return.
                 </p>
             </div>
@@ -842,24 +860,24 @@
                 <div class="bg-white/10 rounded-2xl p-6 border border-white/20">
                     <div class="space-y-3 mb-6">
                         <div class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <svg class="w-5 h-5 text-primary-200 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             <p class="text-white text-sm">Choose your own sources — RSS, Substack, PDFs</p>
                         </div>
                         <div class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <svg class="w-5 h-5 text-primary-200 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             <p class="text-white text-sm">AI synthesis from multiple sources, on your schedule</p>
                         </div>
                         <div class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            <svg class="w-5 h-5 text-primary-200 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             <p class="text-white text-sm">Your subscription directly funds free civic participation for all</p>
                         </div>
                     </div>
                     <a href="{{ url_for('briefing.list_briefings') if current_user.is_authenticated else url_for('briefing.landing') }}"
-                       class="inline-flex w-full items-center justify-center rounded-lg bg-emerald-500 px-6 py-3 text-base font-semibold text-white shadow-sm hover:bg-emerald-400 transition-colors">
+                       class="inline-flex w-full items-center justify-center rounded-lg bg-white px-6 py-3 text-base font-semibold text-primary-700 shadow-sm hover:bg-primary-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700 transition-colors">
                         Start 30-Day Free Trial
                         <svg class="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                     </a>
-                    <p class="text-center text-blue-200 text-xs mt-3">From £4.99/month · No credit card required to trial</p>
+                    <p class="text-center text-primary-200 text-xs mt-3">From £4.99/month · No credit card required to trial</p>
                 </div>
             </div>
         </div>
