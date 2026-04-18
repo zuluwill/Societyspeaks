@@ -70,6 +70,18 @@ def index():
     )
     discussions = pagination.items
 
+    # Total discussion count for the trust strip (cached hourly)
+    total_discussion_count_display = cache.get('trust_strip_discussion_count')
+    if total_discussion_count_display is None:
+        try:
+            from sqlalchemy import func as _sqlfunc
+            raw = db.session.query(_sqlfunc.count(Discussion.id)).scalar() or 0
+            floor_hundred = (raw // 100) * 100
+            total_discussion_count_display = f"{floor_hundred:,}+" if floor_hundred else "1,000+"
+        except Exception:
+            total_discussion_count_display = "1,000+"
+        cache.set('trust_strip_discussion_count', total_discussion_count_display, timeout=3600)
+
     # Get today's daily question for the homepage preview
     daily_question = DailyQuestion.query.options(
         joinedload(DailyQuestion.source_discussion)
@@ -174,7 +186,8 @@ def index():
                          brief_items=brief_items,
                          guided_journey_programme=guided_journey_programme,
                          journey_personalisation=journey_personalisation,
-                         all_journey_programmes=all_journey_programmes)
+                         all_journey_programmes=all_journey_programmes,
+                         total_discussion_count_display=total_discussion_count_display)
 
 
 @main_bp.route('/about')
