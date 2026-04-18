@@ -234,7 +234,20 @@
 
         {# ── Your votes on each statement (signed-in only) ──────────── #}
         {% if current_user.is_authenticated and personal_by_discussion.get(d.id) %}
-        <details class="group border border-gray-200 rounded-xl overflow-hidden">
+        {% set _pv = personal_by_discussion.get(d.id, []) %}
+        {% set _ua = _pv | selectattr('vote_label', 'equalto', 'agree') | list | length %}
+        {% set _ud = _pv | selectattr('vote_label', 'equalto', 'disagree') | list | length %}
+        {% set _uu = _pv | selectattr('vote_label', 'equalto', 'unsure') | list | length %}
+        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs mb-3 px-1">
+          <span class="font-medium text-emerald-700">✓ Agreed: {{ _ua }}</span>
+          <span class="font-medium text-rose-700">✗ Disagreed: {{ _ud }}</span>
+          {% if _uu > 0 %}<span class="text-gray-500">? Unsure: {{ _uu }}</span>{% endif %}
+          {% if total_votes > 0 and _pv | length > 0 %}
+          <span class="text-gray-400">·</span>
+          <span class="text-gray-500">{{ _pv | length }} of {{ row.statement_count }} statements voted</span>
+          {% endif %}
+        </div>
+        <details class="group border border-gray-200 rounded-xl overflow-hidden" {% if row.is_theme_complete %}open{% endif %}>
           <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-between list-none select-none">
             <span class="flex items-center gap-2">
               <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
@@ -280,7 +293,7 @@
   100% { transform: translateY(105vh) rotate(800deg) scale(0.6); opacity: 0; }
 }
 </style>
-<script>
+<script nonce="{{ csp_nonce() }}">
 (function () {
   /* ── Share buttons ──────────────────────────────────────────────────── */
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;

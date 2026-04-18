@@ -1,7 +1,93 @@
 <!-- Native Statement System UI (Phase 1) -->
 <!-- This template is included within view_discussion.html for native discussions -->
 
-<div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+{% if guided_journey_context %}
+{% set _gjc = guided_journey_context %}
+{% set _gjc_prog = _gjc.programme %}
+{% set _gjc_ti = _gjc.theme_item %}
+{% set _gjc_jp = _gjc.progress %}
+{% set _gjc_next = _gjc_jp.next_item %}
+<!-- ── Journey Focused Card (one statement at a time) ──────────────────── -->
+<div id="journey-focused-wrapper" class="mb-4">
+
+  <!-- Statement card -->
+  <div id="journey-focus-card" class="bg-white rounded-xl shadow-lg overflow-hidden border border-indigo-100">
+
+    <!-- Progress header strip -->
+    <div class="bg-gradient-to-r from-indigo-700 to-blue-900 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div id="journey-dots" class="flex gap-1.5" aria-hidden="true"></div>
+        <span class="text-xs font-medium text-indigo-200 whitespace-nowrap">
+          Statement <span id="journey-current-num">—</span> of {{ _gjc_ti.statement_total }}
+        </span>
+      </div>
+      <button type="button" id="journey-see-all-btn"
+              class="text-xs text-indigo-200 hover:text-white underline whitespace-nowrap flex-shrink-0 focus:outline-none focus-visible:ring-1 focus-visible:ring-white rounded">
+        See all ↓
+      </button>
+    </div>
+
+    <!-- Statement text -->
+    <div class="px-6 sm:px-12 py-8 sm:py-10 flex items-center justify-center min-h-[150px]"
+         id="journey-statement-area">
+      <p class="text-xl sm:text-2xl font-medium text-gray-900 leading-relaxed text-center w-full"
+         id="journey-statement-text" aria-live="polite" aria-atomic="true"></p>
+    </div>
+
+    <!-- Vote buttons -->
+    <div class="px-4 sm:px-8 pb-5 sm:pb-6">
+      <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-3" role="group" aria-label="Vote on this statement">
+        <button type="button" id="journey-btn-agree" data-journey-vote="1"
+                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-400 hover:shadow-sm focus-visible:ring-emerald-500">
+          <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+          <span class="text-sm">Agree</span>
+        </button>
+        <button type="button" id="journey-btn-disagree" data-journey-vote="-1"
+                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 hover:border-rose-400 hover:shadow-sm focus-visible:ring-rose-500">
+          <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+          <span class="text-sm">Disagree</span>
+        </button>
+        <button type="button" id="journey-btn-unsure" data-journey-vote="0"
+                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-400 hover:shadow-sm focus-visible:ring-gray-500">
+          <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="text-sm">Unsure</span>
+        </button>
+      </div>
+
+      <div class="flex items-center justify-between">
+        <button type="button" id="journey-skip-btn"
+                class="text-xs text-gray-400 hover:text-gray-600 underline focus:outline-none focus-visible:ring-1 focus-visible:ring-gray-400 rounded">
+          Skip for now
+        </button>
+        <span class="hidden sm:flex items-center gap-1.5 text-xs text-gray-300" aria-hidden="true">
+          <kbd class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 font-mono text-[11px]">A</kbd>
+          <kbd class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 font-mono text-[11px]">D</kbd>
+          <kbd class="px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 font-mono text-[11px]">U</kbd>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme completion card (hidden until all voted) -->
+  <div id="journey-theme-complete"
+       class="hidden bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg text-white px-6 py-8 text-center">
+    <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-9 h-9 text-yellow-300" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+      </svg>
+    </div>
+    <h2 class="text-2xl font-bold mb-2">Theme complete!</h2>
+    <p class="text-emerald-100 text-sm mb-6 max-w-sm mx-auto" id="journey-complete-msg">
+      You've voted on all {{ _gjc_ti.statement_total }} statements in this theme.
+    </p>
+    <div id="journey-complete-actions" class="flex flex-col sm:flex-row gap-3 justify-center"></div>
+  </div>
+
+</div>
+{% endif %}
+
+<div class="bg-white rounded-lg shadow-lg p-6 mb-6" id="journey-native-wrapper">
+  {% if not guided_journey_context %}
   <!-- Header Actions -->
   <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between mb-6 gap-3">
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -114,24 +200,34 @@
           data-search-term="{{ statement_search_term or '' }}"
         >
           <option value="progressive" {% if sort == 'progressive' %}selected{% endif %}>
-            Progressive (Pol.is Style)
+            {% if guided_journey_context %}Recommended journey order{% else %}Progressive (Pol.is style){% endif %}
           </option>
           <option value="best" {% if sort == 'best' %}selected{% endif %}>
-            Best (Most Agreed)
+            {% if guided_journey_context %}Most agreed first{% else %}Best (most agreed){% endif %}
           </option>
           <option value="controversial" {% if sort == 'controversial' %}selected{% endif %}>
-            Controversial
+            {% if guided_journey_context %}Most debated{% else %}Controversial{% endif %}
           </option>
           <option value="recent" {% if sort == 'recent' %}selected{% endif %}>
-            Recent
+            Newest statements
           </option>
           <option value="most_voted" {% if sort == 'most_voted' %}selected{% endif %}>
-            Most Voted
+            Most votes
           </option>
         </select>
       </div>
     </div>
   </div>
+  {% endif %}{# end not guided_journey_context — header actions #}
+
+  {% set _gj_consensus_unlocked = (current_user.is_authenticated and current_user.id == discussion.creator_id) or (user_vote_count|default(0) >= participation_threshold|default(5)) %}
+  {% if guided_journey_context and not _gj_consensus_unlocked %}
+  <div class="mb-4 rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3 text-sm text-indigo-950" role="note">
+    <strong class="font-semibold">Consensus map.</strong>
+    It unlocks after <strong>{{ participation_threshold|default(5) }}</strong> votes in this theme (you’re at {{ user_vote_count|default(0) }}).
+    The map is for <em>this</em> topic only — not a single left–right score across the whole journey.
+  </div>
+  {% endif %}
 
   {% if statement_search_term %}
   <div class="mb-4 text-sm text-gray-500">
@@ -159,6 +255,7 @@
   <div class="mb-4 text-xs text-gray-500">Taking part as: <span class="font-medium text-gray-700">{{ cohort_ns.label }}</span></div>
   {% endif %}
 
+  {% if not guided_journey_context %}
   <!-- Stats Overview with Progress Indicator -->
   {% set c = consensus_thresholds|default({}) %}
   {% set min_participants = c.get('min_participants', 7) %}
@@ -224,7 +321,9 @@
     </div>
   </div>
   {% endif %}
+  {% endif %}{# end not guided_journey_context — stats overview #}
 
+  {% if not guided_journey_context %}
   <!-- Consensus Readiness Progress (Visible to All) -->
   {% set total_votes = statement_metrics.total_votes|default(
       statements|sum(attribute='vote_count_agree') +
@@ -310,7 +409,9 @@
     </div>
   </div>
   {% endif %}
+  {% endif %}{# end not guided_journey_context — consensus readiness #}
 
+  {% if not guided_journey_context %}
   <!-- Anonymous Voter Welcome (Show Once at Top) -->
   {% if not current_user.is_authenticated and statements %}
   <div class="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
@@ -347,6 +448,7 @@
     </div>
   </div>
   {% endif %}
+  {% endif %}{# end not guided_journey_context — anonymous voter welcome #}
 
   <!-- Statements List -->
   {% if statements %}
@@ -418,6 +520,7 @@
   {% endif %}
 </div>
 
+{% if not guided_journey_context %}
 <!-- Help Section -->
 <div class="bg-blue-50 rounded-lg p-6 mb-6 border border-blue-200">
   <div class="flex items-start justify-between">
@@ -449,6 +552,7 @@
     </button>
   </div>
 </div>
+{% endif %}{# end not guided_journey_context — help section #}
 
 <!-- Moderation Link (Owner Only) -->
 {% if current_user.is_authenticated and current_user.id == discussion.creator_id
@@ -476,6 +580,7 @@
 </div>
 {% endif %}
 
+{% if not guided_journey_context %}
 <!-- Donate nudge — shown after user has engaged with the discussion -->
 <div class="rounded-lg border border-slate-200 bg-slate-50 px-5 py-4 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
   <p class="text-sm text-slate-600">
@@ -487,6 +592,7 @@
     class="shrink-0 inline-flex items-center justify-center rounded-full border border-slate-400 px-4 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition whitespace-nowrap"
   >Support us</a>
 </div>
+{% endif %}{# end not guided_journey_context — donate nudge #}
 
 <!-- Animation styles (vote button styles loaded from output.css via input.css @layer) -->
 <style>
@@ -790,6 +896,11 @@
               applyServerCounts(data);
               updateConsensusUiFromServer(data);
 
+              // Notify journey focused card (and any other listeners) of the confirmed vote
+              document.dispatchEvent(new CustomEvent('ss:voteRecorded', {
+                  detail: { statementId: statementId, voteValue: voteValue, wasFirstVote: (previousVote === undefined || previousVote === null) }
+              }));
+
               // Pulse animation to confirm
               clickedButton.style.transform = 'scale(1.05)';
               clickedButton.style.boxShadow = '0 0 0 3px rgba(255, 255, 255, 0.5)';
@@ -1016,3 +1127,262 @@
       document.getElementById('keyboard-overlay').addEventListener('click', dismissKeyboardHelp);
   }
 </script>
+
+{% if guided_journey_context %}
+{% set _gjc2 = guided_journey_context %}
+{% set _gjc2_prog = _gjc2.programme %}
+{% set _gjc2_ti = _gjc2.theme_item %}
+{% set _gjc2_jp = _gjc2.progress %}
+{% set _gjc2_next = _gjc2_jp.next_item %}
+<script nonce="{{ csp_nonce() }}">
+(function () {
+  'use strict';
+
+  // ── Server-seeded config ─────────────────────────────────────────────────
+  var TOTAL_STATEMENTS = {{ _gjc2_ti.statement_total }};
+  var RECAP_URL  = {{ url_for('programmes.programme_journey_recap', slug=_gjc2_prog.slug) | tojson }};
+  {% if _gjc2_next and _gjc2_next.discussion.id != _gjc2_ti.discussion.id %}
+  var NEXT_THEME_URL  = {{ url_for('discussions.view_discussion', discussion_id=_gjc2_next.discussion.id, slug=_gjc2_next.discussion.slug) | tojson }};
+  var NEXT_THEME_NAME = {{ (_gjc2_next.discussion.programme_theme or _gjc2_next.discussion.title) | tojson }};
+  {% else %}
+  var NEXT_THEME_URL  = null;
+  var NEXT_THEME_NAME = null;
+  {% endif %}
+  var IS_JOURNEY_COMPLETE = {{ 'true' if _gjc2_jp.is_journey_complete else 'false' }};
+
+  // ── DOM references ───────────────────────────────────────────────────────
+  var focusCard     = document.getElementById('journey-focus-card');
+  var completeCard  = document.getElementById('journey-theme-complete');
+  var statementEl   = document.getElementById('journey-statement-text');
+  var currentNumEl  = document.getElementById('journey-current-num');
+  var dotsEl        = document.getElementById('journey-dots');
+  var seeAllBtn     = document.getElementById('journey-see-all-btn');
+  var skipBtn       = document.getElementById('journey-skip-btn');
+  var voteButtons   = Array.from(document.querySelectorAll('.journey-vote-btn'));
+  var nativeWrapper = document.getElementById('journey-native-wrapper');
+
+  if (!focusCard || !statementEl) return;
+
+  // ── Build statement queue from rendered DOM ──────────────────────────────
+  var allStatements = Array.from(document.querySelectorAll('[data-statement-id]')).map(function (grid) {
+    var sid = parseInt(grid.getAttribute('data-statement-id'), 10);
+    var wrapper = document.getElementById('statement-' + sid);
+    var textEl  = wrapper ? wrapper.querySelector('.text-lg') : null;
+    return { id: sid, text: textEl ? textEl.textContent.trim() : '' };
+  }).filter(function (s) { return !isNaN(s.id) && s.text; });
+
+  if (!allStatements.length) return;
+
+  var currentIndex = -1;
+
+  // ── Progress dots ────────────────────────────────────────────────────────
+  function renderDots(activeIdx) {
+    if (!dotsEl) return;
+    dotsEl.innerHTML = '';
+    var total = Math.max(allStatements.length, TOTAL_STATEMENTS);
+    for (var i = 0; i < allStatements.length; i++) {
+      var s   = allStatements[i];
+      var voted = window.userVotes && window.userVotes[s.id] !== undefined && window.userVotes[s.id] !== null;
+      var dot = document.createElement('span');
+      dot.style.cssText = 'display:inline-block;border-radius:9999px;transition:all 0.25s;';
+      dot.style.width  = (i === activeIdx) ? '20px' : '8px';
+      dot.style.height = '8px';
+      dot.style.background = voted ? 'rgba(110,231,183,0.9)' : (i === activeIdx ? '#ffffff' : 'rgba(199,210,254,0.4)');
+      dotsEl.appendChild(dot);
+    }
+  }
+
+  // ── Show statement at index ──────────────────────────────────────────────
+  function showStatement(idx) {
+    if (idx < 0 || idx >= allStatements.length) { showComplete(); return; }
+    var stmt = allStatements[idx];
+    currentIndex = idx;
+
+    statementEl.style.cssText = 'opacity:0;transform:translateY(12px);transition:opacity 0.2s ease,transform 0.2s ease;';
+    setTimeout(function () {
+      statementEl.textContent = stmt.text;
+      statementEl.style.cssText = 'opacity:1;transform:translateY(0);transition:opacity 0.2s ease,transform 0.2s ease;';
+    }, 200);
+
+    if (currentNumEl) currentNumEl.textContent = String(idx + 1);
+    renderDots(idx);
+
+    var voted = window.userVotes && window.userVotes[stmt.id] !== undefined && window.userVotes[stmt.id] !== null;
+    var votedVal = voted ? window.userVotes[stmt.id] : null;
+    voteButtons.forEach(function (btn) {
+      var bv = parseInt(btn.getAttribute('data-journey-vote'), 10);
+      var sel = voted && votedVal === bv;
+      btn.style.outline = sel ? '3px solid currentColor' : '';
+      btn.style.outlineOffset = sel ? '2px' : '';
+      btn.disabled = false;
+    });
+  }
+
+  // ── Find next unvoted ────────────────────────────────────────────────────
+  function findNextUnvoted(fromIdx) {
+    for (var i = 0; i < allStatements.length; i++) {
+      var idx = (fromIdx + i) % allStatements.length;
+      var s = allStatements[idx];
+      if (window.userVotes[s.id] === undefined || window.userVotes[s.id] === null) return idx;
+    }
+    return -1;
+  }
+
+  function allVoted() {
+    return allStatements.every(function (s) {
+      return window.userVotes[s.id] !== undefined && window.userVotes[s.id] !== null;
+    });
+  }
+
+  // ── Theme completion ─────────────────────────────────────────────────────
+  function showComplete() {
+    if (!focusCard || !completeCard) return;
+    focusCard.classList.add('hidden');
+    completeCard.classList.remove('hidden');
+    completeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    var actionsEl = document.getElementById('journey-complete-actions');
+    if (actionsEl) {
+      actionsEl.innerHTML = '';
+      var btnClass = 'inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold shadow transition-colors';
+      if (IS_JOURNEY_COMPLETE) {
+        document.getElementById('journey-complete-msg').textContent =
+          "You've completed the entire Big Questions Journey! See how your views compare to everyone else's.";
+        actionsEl.innerHTML =
+          '<a href="' + RECAP_URL + '" class="' + btnClass + ' bg-white text-emerald-800 hover:bg-emerald-50">' +
+          '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>' +
+          'View your full recap</a>';
+      } else if (NEXT_THEME_URL) {
+        actionsEl.innerHTML =
+          '<a href="' + NEXT_THEME_URL + '" class="' + btnClass + ' bg-white text-emerald-800 hover:bg-emerald-50">' +
+          '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 9l3 3-3 3m-5-3h8"/></svg>' +
+          'Next: ' + (NEXT_THEME_NAME || 'Continue') + '</a>' +
+          '<a href="' + RECAP_URL + '" class="' + btnClass + ' bg-white/20 text-white hover:bg-white/30">View progress</a>';
+      } else {
+        actionsEl.innerHTML =
+          '<a href="' + RECAP_URL + '" class="' + btnClass + ' bg-white text-emerald-800 hover:bg-emerald-50">View your recap</a>';
+      }
+    }
+
+    // Confetti burst (respects prefers-reduced-motion)
+    if (!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+      var colors = ['#10b981','#06b6d4','#3b82f6','#f59e0b','#a78bfa','#f97316'];
+      for (var ci = 0; ci < 70; ci++) {
+        (function (n) {
+          setTimeout(function () {
+            var el = document.createElement('div');
+            var sz = (Math.random() * 9 + 5) + 'px';
+            el.style.cssText = [
+              'position:fixed','pointer-events:none','z-index:9999',
+              'width:'+sz,'height:'+sz,'top:-10px',
+              'left:'+(Math.random()*100)+'vw',
+              'background:'+colors[n % colors.length],
+              'border-radius:'+(Math.random()>0.4?'50%':'2px'),
+              'animation:ssConfettiFall '+(1.6+Math.random()*1.8).toFixed(2)+'s ease-in '+(Math.random()*0.5).toFixed(2)+'s forwards'
+            ].join(';');
+            document.body.appendChild(el);
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 4000);
+          }, n * 18);
+        })(ci);
+      }
+    }
+  }
+
+  // ── Journey vote buttons ─────────────────────────────────────────────────
+  voteButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (currentIndex < 0 || currentIndex >= allStatements.length) return;
+      var stmt  = allStatements[currentIndex];
+      var vote  = parseInt(btn.getAttribute('data-journey-vote'), 10);
+      voteButtons.forEach(function (b) { b.disabled = true; });
+      // Optimistic selection highlight
+      voteButtons.forEach(function (b) { b.style.outline = ''; b.style.outlineOffset = ''; });
+      btn.style.outline = '3px solid currentColor';
+      btn.style.outlineOffset = '2px';
+      // Delegate to existing AJAX vote handler
+      if (typeof voteOnStatement === 'function') voteOnStatement(stmt.id, vote);
+    });
+  });
+
+  // ── Auto-advance after confirmed vote ────────────────────────────────────
+  document.addEventListener('ss:voteRecorded', function (e) {
+    var detail = e.detail || {};
+    if (!allStatements[currentIndex] || detail.statementId !== allStatements[currentIndex].id) return;
+    voteButtons.forEach(function (b) { b.disabled = false; });
+    setTimeout(function () {
+      renderDots(currentIndex); // update dot for newly voted statement
+      if (allVoted()) {
+        showComplete();
+      } else {
+        showStatement(findNextUnvoted(currentIndex + 1));
+      }
+      updateRailCounter();
+    }, 550);
+  });
+
+  // ── Skip button ──────────────────────────────────────────────────────────
+  if (skipBtn) {
+    skipBtn.addEventListener('click', function () {
+      if (currentIndex < 0) return;
+      var next = findNextUnvoted(currentIndex + 1);
+      if (next === -1 || next === currentIndex) return; // nowhere to go
+      showStatement(next);
+    });
+  }
+
+  // ── See all statements toggle ────────────────────────────────────────────
+  if (seeAllBtn && nativeWrapper) {
+    seeAllBtn.addEventListener('click', function () {
+      nativeWrapper.classList.remove('hidden');
+      setTimeout(function () {
+        nativeWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    });
+  }
+
+  // ── A / D / U keyboard shortcuts in focused mode ─────────────────────────
+  document.addEventListener('keydown', function (e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+    if (!focusCard || focusCard.classList.contains('hidden')) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var map = { 'a': 1, 'd': -1, 'u': 0 };
+    var k   = e.key.toLowerCase();
+    if (k in map && currentIndex >= 0) {
+      e.preventDefault();
+      var target = voteButtons.find(function (b) { return parseInt(b.getAttribute('data-journey-vote'), 10) === map[k]; });
+      if (target && !target.disabled) target.click();
+    }
+  });
+
+  // ── Update sticky rail counter after each vote ───────────────────────────
+  function updateRailCounter() {
+    var votedCount = allStatements.filter(function (s) {
+      return window.userVotes[s.id] !== undefined && window.userVotes[s.id] !== null;
+    }).length;
+    var remaining = TOTAL_STATEMENTS - votedCount;
+    var bar = document.getElementById('journey-rail-bar');
+    var ctr = document.getElementById('journey-rail-counter');
+    if (bar && TOTAL_STATEMENTS > 0) {
+      bar.style.width = Math.min(100, Math.round(100 * votedCount / TOTAL_STATEMENTS)) + '%';
+      bar.style.background = remaining === 0 ? '#34d399' : '#a5b4fc';
+    }
+    if (ctr) ctr.textContent = remaining > 0 ? (remaining + ' to go') : 'All done ✓';
+  }
+
+  // ── Initialise ───────────────────────────────────────────────────────────
+  function init() {
+    if (nativeWrapper) nativeWrapper.classList.add('hidden');
+    var startIdx = findNextUnvoted(0);
+    if (startIdx === -1) {
+      showComplete();
+    } else {
+      showStatement(startIdx);
+    }
+    updateRailCounter();
+  }
+
+  // Tick to let userVotes hydration complete first
+  setTimeout(init, 60);
+})();
+</script>
+{% endif %}
