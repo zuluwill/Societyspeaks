@@ -1351,6 +1351,8 @@
     setTimeout(function () {
       renderDots(currentIndex);
       if (allVoted()) {
+        // Notify journey-tracking.js so it can send the timing beacon
+        document.dispatchEvent(new CustomEvent('ss:journeyStepComplete'));
         showComplete();
       } else {
         showStatement(findNextUnvoted(currentIndex + 1));
@@ -1423,5 +1425,17 @@
   // Tick to let userVotes hydration complete first
   setTimeout(init, 60);
 })();
+</script>
+
+{# Journey timing + abandon tracking — config seeded server-side, logic in static JS #}
+<script nonce="{{ csp_nonce() }}">
+window.JourneyTrackingCfg = {
+  programmeId:     {{ _gjc2_prog.id }},
+  discussionId:    {{ _gjc2_ti.discussion.id }},
+  stepNumber:      {{ _gjc2.theme_index }},
+  stepName:        {{ (_gjc2_ti.discussion.programme_theme or _gjc2_ti.discussion.slug) | tojson }},
+  totalStatements: {{ _gjc2_ti.statement_total }},
+  totalSteps:      {{ _gjc2_jp.theme_items | length }},
+};
 </script>
 {% endif %}

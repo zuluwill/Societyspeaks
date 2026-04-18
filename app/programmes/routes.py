@@ -8,7 +8,7 @@ from sqlalchemy import distinct, func
 from sqlalchemy.orm import load_only, joinedload
 from io import BytesIO
 
-from app import cache, db, limiter
+from app import cache, csrf, db, limiter
 from app.lib.auth_utils import normalize_email
 from app.lib.time import utcnow_naive
 from app.models import (
@@ -1220,6 +1220,106 @@ def download_export_artifact(token):
         as_attachment=True,
         download_name=job.artifact_filename or f"programme-export-{job.id}.{job.export_format}"
     )
+
+
+@programmes_bp.route('/journey/step-timing', methods=['POST'])
+@csrf.exempt
+@limiter.limit('120 per hour')
+def journey_step_timing():
+    """Receive client-side step timing data and fire a PostHog journey_step_timed event."""
+    if not _posthog or not getattr(_posthog, 'project_api_key', None):
+        return jsonify({'ok': True})
+    try:
+        data = request.get_json(silent=True, force=True) or {}
+        programme_id = data.get('programme_id')
+        discussion_id = data.get('discussion_id')
+        time_on_step_ms = data.get('time_on_step_ms')
+        if not (programme_id and discussion_id and isinstance(time_on_step_ms, (int, float)) and time_on_step_ms > 0):
+            return jsonify({'ok': False}), 400
+        programme = db.session.get(Programme, programme_id)
+        discussion = db.session.get(Discussion, discussion_id)
+        if not programme or not discussion:
+            return jsonify({'ok': False}), 404
+        from app.programmes.journey import is_guided_journey_programme, ordered_journey_discussions
+        if not is_guided_journey_programme(programme):
+            return jsonify({'ok': False}), 400
+        ordered = ordered_journey_discussions(programme)
+        step_num = next((i + 1 for i, d in enumerate(ordered) if d.id == discussion_id), None)
+        if step_num is None:
+            return jsonify({'ok': False}), 404
+        if current_user.is_authenticated:
+            ph_id = str(current_user.id)
+        else:
+            from app.discussions.statements import get_statement_vote_fingerprint
+            ph_id = get_statement_vote_fingerprint()
+        jtype = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
+        _posthog.capture(
+            distinct_id=ph_id,
+            event='journey_step_timed',
+            properties={
+                'journey_id': programme.id,
+                'journey_type': jtype,
+                'journey_slug': programme.slug,
+                'journey_name': programme.name,
+                'step_number': step_num,
+                'step_name': discussion.programme_theme or discussion.slug,
+                'total_steps': len(ordered),
+                'time_on_step_seconds': round(time_on_step_ms / 1000),
+                'is_authenticated': current_user.is_authenticated,
+            },
+        )
+        return jsonify({'ok': True})
+    except Exception as e:
+        current_app.logger.warning(f'PostHog journey_step_timed error: {e}')
+        return jsonify({'ok': False}), 500
+
+
+@programmes_bp.route('/journey/abandon', methods=['POST'])
+@csrf.exempt
+@limiter.limit('120 per hour')
+def journey_abandon():
+    """Receive client-side abandon signal and fire a PostHog journey_abandoned event."""
+    if not _posthog or not getattr(_posthog, 'project_api_key', None):
+        return jsonify({'ok': True})
+    try:
+        data = request.get_json(silent=True, force=True) or {}
+        programme_id = data.get('programme_id')
+        discussion_id = data.get('discussion_id')
+        if not (programme_id and discussion_id):
+            return jsonify({'ok': False}), 400
+        programme = db.session.get(Programme, programme_id)
+        if not programme:
+            return jsonify({'ok': False}), 404
+        from app.programmes.journey import is_guided_journey_programme, ordered_journey_discussions
+        if not is_guided_journey_programme(programme):
+            return jsonify({'ok': False}), 400
+        if current_user.is_authenticated:
+            ph_id = str(current_user.id)
+        else:
+            from app.discussions.statements import get_statement_vote_fingerprint
+            ph_id = get_statement_vote_fingerprint()
+        ordered = ordered_journey_discussions(programme)
+        jtype = 'global' if getattr(programme, 'geographic_scope', 'global') == 'global' else 'country'
+        props = {
+            'journey_id': programme.id,
+            'journey_type': jtype,
+            'journey_slug': programme.slug,
+            'journey_name': programme.name,
+            'step_number': data.get('step_number'),
+            'step_name': data.get('step_name', ''),
+            'total_steps': len(ordered),
+            'votes_cast': int(data.get('votes_cast', 0)),
+            'total_statements': int(data.get('total_statements', 0)),
+            'is_authenticated': current_user.is_authenticated,
+        }
+        time_on_step_ms = data.get('time_on_step_ms')
+        if isinstance(time_on_step_ms, (int, float)) and time_on_step_ms > 0:
+            props['time_on_step_seconds'] = round(time_on_step_ms / 1000)
+        _posthog.capture(distinct_id=ph_id, event='journey_abandoned', properties=props)
+        return jsonify({'ok': True})
+    except Exception as e:
+        current_app.logger.warning(f'PostHog journey_abandoned error: {e}')
+        return jsonify({'ok': False}), 500
 
 
 @programmes_bp.route('/<slug>/nsp-dashboard', methods=['GET'])
