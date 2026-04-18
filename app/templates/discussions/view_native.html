@@ -1214,6 +1214,12 @@
     if (currentNumEl) currentNumEl.textContent = String(idx + 1);
     renderDots(idx);
 
+    // Hide skip when this is the only remaining unvoted statement
+    if (skipBtn) {
+      var nextUnvoted = findNextUnvoted(idx + 1);
+      skipBtn.style.visibility = (nextUnvoted === -1 || nextUnvoted === idx) ? 'hidden' : '';
+    }
+
     var voted = window.userVotes && window.userVotes[stmt.id] !== undefined && window.userVotes[stmt.id] !== null;
     var votedVal = voted ? window.userVotes[stmt.id] : null;
     voteButtons.forEach(function (btn) {
@@ -1252,7 +1258,10 @@
     if (actionsEl) {
       actionsEl.innerHTML = '';
       var btnClass = 'inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold shadow transition-colors';
-      if (IS_JOURNEY_COMPLETE) {
+      // IS_JOURNEY_COMPLETE is baked at page load; also infer completion when this
+      // is the final theme (no next) and all statements are now voted.
+      var journeyNowComplete = IS_JOURNEY_COMPLETE || (!NEXT_THEME_URL && allVoted());
+      if (journeyNowComplete) {
         document.getElementById('journey-complete-msg').textContent =
           "You've completed the entire Big Questions Journey! See how your views compare to everyone else's.";
         actionsEl.innerHTML =
@@ -1322,9 +1331,10 @@
   document.addEventListener('ss:voteRecorded', function (e) {
     var detail = e.detail || {};
     if (!allStatements[currentIndex] || detail.statementId !== allStatements[currentIndex].id) return;
-    voteButtons.forEach(function (b) { b.disabled = false; });
+    // Keep buttons disabled during the transition to prevent double-vote race.
+    // showStatement() re-enables them; showComplete() hides them.
     setTimeout(function () {
-      renderDots(currentIndex); // update dot for newly voted statement
+      renderDots(currentIndex);
       if (allVoted()) {
         showComplete();
       } else {
