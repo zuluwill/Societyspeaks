@@ -1316,6 +1316,7 @@ def journey_abandon():
         if isinstance(time_on_step_ms, (int, float)) and time_on_step_ms > 0:
             props['time_on_step_seconds'] = round(time_on_step_ms / 1000)
         _posthog.capture(distinct_id=ph_id, event='journey_abandoned', properties=props)
+        _posthog.flush()
         return jsonify({'ok': True})
     except Exception as e:
         current_app.logger.warning(f'PostHog journey_abandoned error: {e}')
