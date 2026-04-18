@@ -38,17 +38,17 @@
     <div class="px-4 sm:px-8 pb-5 sm:pb-6">
       <div class="grid grid-cols-3 gap-2 sm:gap-3 mb-3" role="group" aria-label="Vote on this statement">
         <button type="button" id="journey-btn-agree" data-journey-vote="1"
-                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:border-emerald-400 hover:shadow-sm focus-visible:ring-emerald-500">
+                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50 hover:border-emerald-500 hover:shadow-sm focus-visible:ring-emerald-500">
           <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
           <span class="text-sm">Agree</span>
         </button>
         <button type="button" id="journey-btn-disagree" data-journey-vote="-1"
-                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100 hover:border-rose-400 hover:shadow-sm focus-visible:ring-rose-500">
+                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-white text-rose-700 border-rose-300 hover:bg-rose-50 hover:border-rose-500 hover:shadow-sm focus-visible:ring-rose-500">
           <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
           <span class="text-sm">Disagree</span>
         </button>
         <button type="button" id="journey-btn-unsure" data-journey-vote="0"
-                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100 hover:border-gray-400 hover:shadow-sm focus-visible:ring-gray-500">
+                class="journey-vote-btn flex flex-col items-center justify-center gap-2 rounded-xl py-4 sm:py-5 border-2 font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-white text-amber-600 border-amber-300 hover:bg-amber-50 hover:border-amber-500 hover:shadow-sm focus-visible:ring-amber-500">
           <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span class="text-sm">Unsure</span>
         </button>
@@ -623,6 +623,11 @@
     outline-offset: 2px;
     opacity: 0.85;
   }
+
+  /* Journey vote button selected states */
+  #journey-btn-agree[data-journey-selected="1"]    { background-color: rgb(209 250 229); border-color: rgb(16 185 129); }
+  #journey-btn-disagree[data-journey-selected="1"] { background-color: rgb(255 228 230); border-color: rgb(244 63 94); }
+  #journey-btn-unsure[data-journey-selected="1"]   { background-color: rgb(254 243 199); border-color: rgb(217 119 6); }
 </style>
 
 <!-- Seed optimistic vote state for authenticated users -->
@@ -1230,6 +1235,7 @@
     voteButtons.forEach(function (btn) {
       var bv = parseInt(btn.getAttribute('data-journey-vote'), 10);
       var sel = voted && votedVal === bv;
+      btn.setAttribute('data-journey-selected', sel ? '1' : '');
       btn.style.outline = sel ? '3px solid currentColor' : '';
       btn.style.outlineOffset = sel ? '2px' : '';
       btn.disabled = false;
@@ -1317,9 +1323,10 @@
       var vote  = parseInt(btn.getAttribute('data-journey-vote'), 10);
       voteButtons.forEach(function (b) { b.disabled = true; });
       // Optimistic selection highlight
-      voteButtons.forEach(function (b) { b.style.outline = ''; b.style.outlineOffset = ''; });
+      voteButtons.forEach(function (b) { b.style.outline = ''; b.style.outlineOffset = ''; b.setAttribute('data-journey-selected', ''); });
       btn.style.outline = '3px solid currentColor';
       btn.style.outlineOffset = '2px';
+      btn.setAttribute('data-journey-selected', '1');
       // Delegate to existing AJAX vote handler
       if (typeof voteOnStatement === 'function') voteOnStatement(stmt.id, vote);
     });
@@ -1329,7 +1336,7 @@
   document.addEventListener('ss:voteFailed', function (e) {
     var detail = e.detail || {};
     if (!allStatements[currentIndex] || detail.statementId !== allStatements[currentIndex].id) return;
-    voteButtons.forEach(function (b) { b.disabled = false; b.style.outline = ''; b.style.outlineOffset = ''; });
+    voteButtons.forEach(function (b) { b.disabled = false; b.style.outline = ''; b.style.outlineOffset = ''; b.setAttribute('data-journey-selected', ''); });
   });
 
   // ── Auto-advance after confirmed vote ────────────────────────────────────
