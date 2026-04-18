@@ -936,9 +936,11 @@
           } else {
               revertOptimistic();
               showToast(data.error || 'Failed to record vote', 'error');
+              document.dispatchEvent(new CustomEvent('ss:voteFailed', { detail: { statementId: statementId } }));
           }
       } catch (error) {
           revertOptimistic();
+          document.dispatchEvent(new CustomEvent('ss:voteFailed', { detail: { statementId: statementId } }));
           if (error.status === 429) {
               showToast("You're voting too fast. Please wait a moment.", 'warning');
           } else if (error.data && error.data.error === 'discussion_closed') {
@@ -1134,6 +1136,12 @@
 {% set _gjc2_ti = _gjc2.theme_item %}
 {% set _gjc2_jp = _gjc2.progress %}
 {% set _gjc2_next = _gjc2_jp.next_item %}
+<style>
+@keyframes ssConfettiFall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(105vh) rotate(800deg); opacity: 0; }
+}
+</style>
 <script nonce="{{ csp_nonce() }}">
 (function () {
   'use strict';
@@ -1179,7 +1187,6 @@
   function renderDots(activeIdx) {
     if (!dotsEl) return;
     dotsEl.innerHTML = '';
-    var total = Math.max(allStatements.length, TOTAL_STATEMENTS);
     for (var i = 0; i < allStatements.length; i++) {
       var s   = allStatements[i];
       var voted = window.userVotes && window.userVotes[s.id] !== undefined && window.userVotes[s.id] !== null;
@@ -1302,6 +1309,13 @@
       // Delegate to existing AJAX vote handler
       if (typeof voteOnStatement === 'function') voteOnStatement(stmt.id, vote);
     });
+  });
+
+  // ── Re-enable buttons on vote failure ────────────────────────────────────
+  document.addEventListener('ss:voteFailed', function (e) {
+    var detail = e.detail || {};
+    if (!allStatements[currentIndex] || detail.statementId !== allStatements[currentIndex].id) return;
+    voteButtons.forEach(function (b) { b.disabled = false; b.style.outline = ''; b.style.outlineOffset = ''; });
   });
 
   // ── Auto-advance after confirmed vote ────────────────────────────────────
