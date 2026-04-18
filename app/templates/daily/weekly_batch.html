@@ -171,21 +171,21 @@
                     </div>
                     {% else %}
                     <!-- Vote Buttons -->
-                    <div class="vote-buttons grid grid-cols-1 sm:grid-cols-3 gap-3" role="group" aria-label="Vote options">
-                        <button type="button" class="vote-btn py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500"
+                    <div class="vote-buttons vote-buttons-grid" role="group" aria-label="Vote options">
+                        <button type="button" class="vote-btn vote-btn-agree"
                                 data-vote="agree" data-question="{{ q_data.question.id }}"
-                                aria-label="Agree with this statement">
-                            &#10003; Agree
+                                aria-label="Agree with this statement" aria-pressed="false">
+                          <span class="vote-content"><span class="vote-label">Agree</span></span>
                         </button>
-                        <button type="button" class="vote-btn py-3 px-4 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500"
+                        <button type="button" class="vote-btn vote-btn-disagree"
                                 data-vote="disagree" data-question="{{ q_data.question.id }}"
-                                aria-label="Disagree with this statement">
-                            &#10007; Disagree
+                                aria-label="Disagree with this statement" aria-pressed="false">
+                          <span class="vote-content"><span class="vote-label">Disagree</span></span>
                         </button>
-                        <button type="button" class="vote-btn py-3 px-4 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-500"
+                        <button type="button" class="vote-btn vote-btn-unsure"
                                 data-vote="unsure" data-question="{{ q_data.question.id }}"
-                                aria-label="Unsure about this statement">
-                            ? Unsure
+                                aria-label="Unsure about this statement" aria-pressed="false">
+                          <span class="vote-content"><span class="vote-label">Unsure</span></span>
                         </button>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">

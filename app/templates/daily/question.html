@@ -119,23 +119,24 @@
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" id="context_expanded" name="context_expanded" value="0">
                 <input type="hidden" id="source_link_click_count" name="source_link_click_count" value="0">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4" role="group" aria-label="Vote options">
+                <div class="vote-buttons-grid" role="group" aria-label="Vote options">
                     <button type="button" value="agree"
                             aria-label="Agree with this statement"
-                            class="vote-btn py-4 px-6 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-lg transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
-                        &#10003; Agree
+                            class="vote-btn vote-btn-agree"
+                            aria-pressed="false">
+                      <span class="vote-content"><span class="vote-label">Agree</span></span>
                     </button>
-
                     <button type="button" value="disagree"
                             aria-label="Disagree with this statement"
-                            class="vote-btn py-4 px-6 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-lg transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-red-500">
-                        &#10007; Disagree
+                            class="vote-btn vote-btn-disagree"
+                            aria-pressed="false">
+                      <span class="vote-content"><span class="vote-label">Disagree</span></span>
                     </button>
-
                     <button type="button" value="unsure"
                             aria-label="Unsure about this statement"
-                            class="vote-btn py-4 px-6 rounded-lg bg-gray-500 hover:bg-gray-600 text-white font-semibold text-lg transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-gray-500">
-                        ? Unsure
+                            class="vote-btn vote-btn-unsure"
+                            aria-pressed="false">
+                      <span class="vote-content"><span class="vote-label">Unsure</span></span>
                     </button>
                 </div>
 
@@ -194,25 +195,21 @@ document.addEventListener('DOMContentLoaded', function() {
     let sourceLinkClicks = 0;
     let selectedVote = null;
 
-    // Ring color map — matches canonical vote button colors
-    const ringColors = { agree: 'ring-blue-500', disagree: 'ring-red-500', unsure: 'ring-gray-500' };
-
     voteBtns.forEach(btn => {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             selectedVote = this.value;
-            
-            // Clear all selection rings
+
+            // Clear selection state on all buttons
             voteBtns.forEach(b => {
-                b.classList.remove('ring-2', 'ring-offset-2');
-                b.classList.remove(ringColors[b.value]);
+                b.removeAttribute('data-vote-selected');
                 b.setAttribute('aria-pressed', 'false');
             });
-            
-            // Apply selection ring to clicked button
-            this.classList.add('ring-2', 'ring-offset-2', ringColors[this.value]);
+
+            // Mark clicked button as selected
+            this.setAttribute('data-vote-selected', '1');
             this.setAttribute('aria-pressed', 'true');
-            
+
             reasonSection.classList.remove('hidden');
             reasonTextarea.focus();
         });

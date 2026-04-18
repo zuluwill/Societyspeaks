@@ -1,0 +1,48 @@
+{% macro vote_buttons(statement_id, quick_response_url, seeded_vote=none) %}
+{#
+  Shared vote button primitive.
+
+  Deliberation principle: equal visual weight, no aggregate counts visible
+  during the pre-commit phase. The selected state reflects only the user's
+  own choice via [data-vote-selected="1"]; community totals are shown
+  separately in the card footer, gated on the user having already voted.
+
+  Parameters
+  ----------
+  statement_id       : int   — used for data-statement-id and AJAX targeting
+  quick_response_url : str   — AJAX endpoint for this statement
+  seeded_vote        : int|none — user's existing vote (1/-1/0) or none
+#}
+<div class="vote-buttons-grid"
+     role="group"
+     aria-label="Vote options for this statement"
+     data-statement-id="{{ statement_id }}"
+     data-quick-response-url="{{ quick_response_url }}"
+     data-user-vote="{{ seeded_vote if seeded_vote is not none else '' }}">
+
+  {% for opt in [
+    {'value': '1',  'cls': 'vote-btn-agree',    'label': 'Agree',    'aria': 'Agree with this statement'},
+    {'value': '-1', 'cls': 'vote-btn-disagree', 'label': 'Disagree', 'aria': 'Disagree with this statement'},
+    {'value': '0',  'cls': 'vote-btn-unsure',   'label': 'Unsure',   'aria': 'Unsure about this statement'},
+  ] %}
+  {% set is_selected = seeded_vote is not none and seeded_vote|string == opt.value %}
+  <button type="button"
+          class="vote-btn {{ opt.cls }}"
+          data-vote="{{ opt.value }}"
+          {% if is_selected %}data-vote-selected="1"{% endif %}
+          aria-label="{{ opt.aria }}"
+          aria-pressed="{{ 'true' if is_selected else 'false' }}">
+    <span class="vote-loading" aria-hidden="true">
+      <svg style="animation:spin 1s linear infinite;height:20px;width:20px;" fill="none" viewBox="0 0 24 24">
+        <circle style="opacity:.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path style="opacity:.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </span>
+    <span class="vote-content">
+      <span class="vote-label">{{ opt.label }}</span>
+    </span>
+  </button>
+  {% endfor %}
+
+</div>
+{% endmacro %}

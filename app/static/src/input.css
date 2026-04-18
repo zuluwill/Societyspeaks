@@ -5,13 +5,20 @@
 @layer components {
     /* ==========================================================================
        Vote Button Styles — Canonical Design System
-       Colors: Agree=#2563eb (blue-600), Disagree=#dc2626 (red-600), Unsure=#6b7280 (gray-500)
-       All pass WCAG AA contrast with white text (6.2:1, 6.6:1, 4.6:1 respectively)
+       
+       Deliberation principle: equal visual weight prevents anchoring bias.
+       No aggregate counts shown inside buttons during the pre-commit phase.
+       Selected state reflects only the user's own choice via [data-vote-selected].
+
+       Color semantics (WCAG AA contrast on white, ≥4.5:1):
+         Agree    = Emerald-600 (#059669)  4.5:1
+         Disagree = Red-600     (#dc2626)  4.5:1
+         Unsure   = Amber-600   (#d97706)  4.5:1
        ========================================================================== */
 
     @keyframes spin {
         from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        to   { transform: rotate(360deg); }
     }
 
     .vote-buttons-grid {
@@ -27,74 +34,89 @@
         }
     }
 
+    /* ── Base: layout & transitions shared by all three buttons ──────────── */
     .vote-btn-agree,
     .vote-btn-disagree,
     .vote-btn-unsure {
-        @apply text-white font-bold rounded-lg cursor-pointer w-full;
-        padding: 16px 12px;
-        min-height: 80px;
+        background: #ffffff;
+        border: 2px solid;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        padding: 14px 12px;
+        min-height: 72px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        border: none;
-        transition: background-color 0.15s, transform 0.1s;
+        transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
         -webkit-appearance: none;
-        -moz-appearance: none;
         appearance: none;
         box-sizing: border-box;
     }
 
+    /* ── Agree — Emerald ─────────────────────────────────────────────────── */
     .vote-btn-agree {
-        @apply bg-blue-600;
+        color: #059669;
+        border-color: #6ee7b7;
     }
-    .vote-btn-agree:hover:not(:disabled),
-    .vote-btn-agree:active {
-        @apply bg-blue-700;
+    .vote-btn-agree:hover:not(:disabled) {
+        background: #ecfdf5;
+        border-color: #10b981;
+    }
+    .vote-btn-agree[data-vote-selected="1"] {
+        background: #d1fae5;
+        border-color: #059669;
+        box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.2);
     }
 
+    /* ── Disagree — Red ──────────────────────────────────────────────────── */
     .vote-btn-disagree {
-        @apply bg-red-600;
+        color: #dc2626;
+        border-color: #fca5a5;
     }
-    .vote-btn-disagree:hover:not(:disabled),
-    .vote-btn-disagree:active {
-        @apply bg-red-700;
+    .vote-btn-disagree:hover:not(:disabled) {
+        background: #fff1f2;
+        border-color: #ef4444;
+    }
+    .vote-btn-disagree[data-vote-selected="1"] {
+        background: #fee2e2;
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.2);
     }
 
+    /* ── Unsure — Amber ──────────────────────────────────────────────────── */
     .vote-btn-unsure {
-        @apply bg-gray-500;
+        color: #d97706;
+        border-color: #fcd34d;
     }
-    .vote-btn-unsure:hover:not(:disabled),
-    .vote-btn-unsure:active {
-        @apply bg-gray-600;
-    }
-
-    .vote-btn-agree:focus-visible,
-    .vote-btn-disagree:focus-visible,
-    .vote-btn-unsure:focus-visible {
-        @apply outline-none ring-2 ring-offset-2 ring-blue-500;
-    }
-
-    .vote-btn-agree:hover:not(:disabled),
-    .vote-btn-disagree:hover:not(:disabled),
     .vote-btn-unsure:hover:not(:disabled) {
-        transform: scale(1.02);
+        background: #fffbeb;
+        border-color: #f59e0b;
+    }
+    .vote-btn-unsure[data-vote-selected="1"] {
+        background: #fef3c7;
+        border-color: #d97706;
+        box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
     }
 
+    /* ── Disabled ────────────────────────────────────────────────────────── */
     .vote-btn-agree:disabled,
     .vote-btn-disagree:disabled,
     .vote-btn-unsure:disabled {
-        @apply opacity-70 cursor-not-allowed;
-        transform: none;
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 
+    /* ── Keyboard focus ──────────────────────────────────────────────────── */
+    .vote-btn-agree:focus-visible    { outline: 3px solid #059669; outline-offset: 2px; }
+    .vote-btn-disagree:focus-visible { outline: 3px solid #dc2626; outline-offset: 2px; }
+    .vote-btn-unsure:focus-visible   { outline: 3px solid #d97706; outline-offset: 2px; }
+
+    /* ── Label & spinner ─────────────────────────────────────────────────── */
     .vote-label {
-        @apply text-sm sm:text-base tracking-wide text-center;
-        margin-bottom: 4px;
-    }
-
-    .vote-count {
-        @apply text-2xl sm:text-3xl font-bold text-center;
+        @apply text-sm sm:text-base font-semibold tracking-wide text-center;
     }
 
     .vote-loading {

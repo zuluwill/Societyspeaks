@@ -617,13 +617,6 @@
     justify-content: center;
   }
 
-  /* Optimistic selected state shown immediately on click, before server confirms */
-  .vote-btn--optimistic {
-    outline: 3px solid currentColor;
-    outline-offset: 2px;
-    opacity: 0.85;
-  }
-
   /* Journey vote button selected states */
   #journey-btn-agree[data-journey-selected="1"]    { background-color: rgb(209 250 229); border-color: rgb(16 185 129); }
   #journey-btn-disagree[data-journey-selected="1"] { background-color: rgb(255 228 230); border-color: rgb(244 63 94); }
@@ -818,9 +811,10 @@
       const previousVote = window.userVotes ? window.userVotes[statementId] : undefined;
 
       // === Optimistic update: apply counts immediately, no waiting ===
-      // Update selection highlight
-      buttons.forEach(btn => btn.classList.remove('vote-btn--optimistic'));
-      clickedButton.classList.add('vote-btn--optimistic');
+      // Update selection highlight — data-vote-selected drives CSS, no class needed
+      buttons.forEach(btn => { btn.removeAttribute('data-vote-selected'); btn.setAttribute('aria-pressed', 'false'); });
+      clickedButton.setAttribute('data-vote-selected', '1');
+      clickedButton.setAttribute('aria-pressed', 'true');
 
       // Adjust counts only when the vote is changing
       if (previousVote !== voteValue) {
@@ -843,10 +837,10 @@
               if (el) el.textContent = snapshot[type];
           });
           // Restore selection highlight
-          buttons.forEach(btn => btn.classList.remove('vote-btn--optimistic'));
+          buttons.forEach(btn => { btn.removeAttribute('data-vote-selected'); btn.setAttribute('aria-pressed', 'false'); });
           if (previousVote !== undefined && previousVote !== null) {
               const prevBtn = statementDiv.querySelector(`[data-vote="${previousVote}"]`);
-              if (prevBtn) prevBtn.classList.add('vote-btn--optimistic');
+              if (prevBtn) { prevBtn.setAttribute('data-vote-selected', '1'); prevBtn.setAttribute('aria-pressed', 'true'); }
           }
           if (previousVote === undefined || previousVote === null) {
               delete window.userVotes[statementId];
@@ -858,13 +852,19 @@
 
       function applyServerCounts(data) {
           // Reconcile with authoritative server values
-          statementDiv.querySelector('[data-count-type="agree"]').textContent = data.vote_count_agree;
-          statementDiv.querySelector('[data-count-type="disagree"]').textContent = data.vote_count_disagree;
-          statementDiv.querySelector('[data-count-type="unsure"]').textContent = data.vote_count_unsure;
+          // [data-count-type] elements are absent in the new design (counts not shown in buttons)
+          const agreeEl = statementDiv.querySelector('[data-count-type="agree"]');
+          const disagreeEl = statementDiv.querySelector('[data-count-type="disagree"]');
+          const unsureEl = statementDiv.querySelector('[data-count-type="unsure"]');
+          if (agreeEl) agreeEl.textContent = data.vote_count_agree;
+          if (disagreeEl) disagreeEl.textContent = data.vote_count_disagree;
+          if (unsureEl) unsureEl.textContent = data.vote_count_unsure;
 
           const statsContainer = document.querySelector(`#statement-${statementId} .statement-stats`);
           if (statsContainer && data.total_votes !== undefined) {
               const agreementPct = Math.round(data.agreement_rate * 100);
+              // Ensure the container shows the voted state styling (may have been "Vote to see results")
+              statsContainer.className = 'text-gray-600 text-sm statement-stats';
               statsContainer.textContent = '';
               const totalSpan = document.createElement('span');
               totalSpan.className = 'font-semibold total-votes';

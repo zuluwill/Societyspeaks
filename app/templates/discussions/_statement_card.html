@@ -1,3 +1,4 @@
+{% from 'components/vote_buttons.html' import vote_buttons %}
 <div
   class="border border-gray-200 rounded-lg p-5 hover:border-blue-300 transition-colors"
   id="statement-{{ statement.id }}"
@@ -8,6 +9,7 @@
   {% elif user_votes_map is defined %}
     {% set statement_seeded_vote = user_votes_map.get(statement.id) %}
   {% endif %}
+
   <div class="flex items-start justify-between mb-3">
     <div class="flex-1">
       <div class="flex items-center space-x-2 text-sm text-gray-500 mb-2">
@@ -24,47 +26,12 @@
     </div>
   </div>
 
-  <div class="mb-4" style="background: #f8f9fa; padding: 16px; border-radius: 8px">
-    <div class="vote-buttons-grid" role="group" aria-label="Vote options for this statement" data-statement-id="{{ statement.id }}" data-quick-response-url="{{ url_for('statements.quick_response', statement_id=statement.id) }}" data-user-vote="{{ statement_seeded_vote if statement_seeded_vote is not none else '' }}">
-      <button type="button" class="vote-btn vote-btn-agree" data-vote="1" aria-label="Agree with this statement">
-        <span class="vote-loading">
-          <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
-            <circle style="opacity: 0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path style="opacity: 0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </span>
-        <span class="vote-content">
-          <div class="vote-label">&#10003; Agree</div>
-          <div class="vote-count" data-count-type="agree">{{ statement.vote_count_agree }}</div>
-        </span>
-      </button>
-
-      <button type="button" class="vote-btn vote-btn-disagree" data-vote="-1" aria-label="Disagree with this statement">
-        <span class="vote-loading">
-          <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
-            <circle style="opacity: 0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path style="opacity: 0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </span>
-        <span class="vote-content">
-          <div class="vote-label">&#10007; Disagree</div>
-          <div class="vote-count" data-count-type="disagree">{{ statement.vote_count_disagree }}</div>
-        </span>
-      </button>
-
-      <button type="button" class="vote-btn vote-btn-unsure" data-vote="0" aria-label="Unsure about this statement">
-        <span class="vote-loading">
-          <svg style="animation: spin 1s linear infinite; height: 20px; width: 20px;" fill="none" viewBox="0 0 24 24">
-            <circle style="opacity: 0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path style="opacity: 0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        </span>
-        <span class="vote-content">
-          <div class="vote-label">? Unsure</div>
-          <div class="vote-count" data-count-type="unsure">{{ statement.vote_count_unsure }}</div>
-        </span>
-      </button>
-    </div>
+  <div class="mb-4">
+    {{ vote_buttons(
+        statement_id=statement.id,
+        quick_response_url=url_for('statements.quick_response', statement_id=statement.id),
+        seeded_vote=statement_seeded_vote
+    ) }}
   </div>
 
   <div class="flex flex-col sm:flex-row gap-2">
@@ -96,6 +63,7 @@
 
   <div class="mt-3 pt-3 border-t border-gray-100">
     <div class="flex items-center justify-between text-sm">
+      {% if statement_seeded_vote is not none %}
       <div class="text-gray-600 statement-stats" data-statement-id="{{ statement.id }}">
         <span class="font-semibold total-votes">{{ statement.total_votes }}</span>
         total votes {% if statement.total_votes > 0 %} ·
@@ -104,6 +72,11 @@
         <span class="text-red-600 font-semibold">🔥 Controversial</span>
         {% endif %} {% endif %}
       </div>
+      {% else %}
+      <div class="text-gray-400 text-xs italic statement-stats" data-statement-id="{{ statement.id }}">
+        Vote to see results
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>
