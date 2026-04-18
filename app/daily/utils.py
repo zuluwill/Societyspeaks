@@ -8,18 +8,187 @@ from flask import url_for
 from app import db
 
 
+def _coerce_daily_question_delivery_prefs(
+    email_frequency,
+    timezone,
+    preferred_send_day,
+    preferred_send_hour,
+):
+    """Normalise frequency, optional IANA timezone, send day (0–6), hour (0–23)."""
+    from app.models import DailyQuestionSubscriber
+
+    allowed = DailyQuestionSubscriber.VALID_EMAIL_FREQUENCIES
+    if email_frequency not in allowed:
+        email_frequency = 'weekly'
+
+    tz_stripped = (timezone or '').strip() if timezone else ''
+    tz_out = None
+    if tz_stripped:
+        try:
+            import pytz
+            pytz.timezone(tz_stripped)
+            tz_out = tz_stripped
+        except Exception:
+            tz_out = None
+
+    try:
+        day = int(preferred_send_day)
+    except (TypeError, ValueError):
+        day = 1
+    if day < 0 or day > 6:
+        day = 1
+
+    try:
+        hour = int(preferred_send_hour)
+    except (TypeError, ValueError):
+        hour = 9
+    if hour < 0 or hour > 23:
+        hour = 9
+
+    return email_frequency, tz_out, day, hour
+
+
+def format_dq_hour_12h(hour):
+    """Format hour 0–23 as '9:00 am' / '12:00 pm' (matches public subscribe labels)."""
+    try:
+        h = int(hour)
+    except (TypeError, ValueError):
+        h = 9
+    h = max(0, min(23, h))
+    if h == 0:
+        return '12:00 am'
+    if h < 12:
+        return f'{h}:00 am'
+    if h == 12:
+        return '12:00 pm'
+    return f'{h - 12}:00 pm'
+
+
+def daily_question_email_send_window_utc_label():
+    """Fixed daily-email UTC time; must match scheduler `daily_question_email` cron."""
+    from app.daily.constants import (
+        DAILY_QUESTION_EMAIL_SEND_UTC_HOUR,
+        DAILY_QUESTION_EMAIL_SEND_UTC_MINUTE,
+    )
+    h = DAILY_QUESTION_EMAIL_SEND_UTC_HOUR
+    m = DAILY_QUESTION_EMAIL_SEND_UTC_MINUTE
+    return f'{h}:{m:02d} UTC'
+
+
+def monthly_digest_schedule_short():
+    """Plain-language monthly schedule (must match should_receive_monthly_digest_now)."""
+    from app.daily.constants import MONTHLY_DIGEST_DAY_OF_MONTH, MONTHLY_DIGEST_LOCAL_HOUR
+
+    ordinals = {1: '1st', 2: '2nd', 3: '3rd', 21: '21st', 22: '22nd', 23: '23rd', 31: '31st'}
+    day = MONTHLY_DIGEST_DAY_OF_MONTH
+    ordinal = ordinals.get(day, f'{day}th')
+    return f'{ordinal} of each month at {format_dq_hour_12h(MONTHLY_DIGEST_LOCAL_HOUR)} in your time zone'
+
+
+def build_daily_subscribe_recap(subscriber):
+    """
+    Build a JSON-friendly recap dict for the subscribe success page (stored in session).
+    """
+    from app.models import DailyQuestionSubscriber
+
+    if subscriber is None:
+        return None
+    freq = (subscriber.email_frequency or 'weekly').strip().lower()
+    if freq not in DailyQuestionSubscriber.VALID_EMAIL_FREQUENCIES:
+        freq = 'weekly'
+    tz = (subscriber.timezone or '').strip() or None
+    day_name = DailyQuestionSubscriber.SEND_DAYS.get(subscriber.preferred_send_day, 'Tuesday')
+    time_12 = format_dq_hour_12h(subscriber.preferred_send_hour)
+
+    recap = {
+        'frequency': freq,
+        'frequency_label': {'daily': 'Daily', 'weekly': 'Weekly', 'monthly': 'Monthly'}.get(
+            freq, freq.title()
+        ),
+        'timezone': tz,
+        'daily_window_label': daily_question_email_send_window_utc_label(),
+        'monthly_schedule_short': monthly_digest_schedule_short(),
+    }
+    if freq == 'weekly':
+        recap['weekly_day_name'] = day_name
+        recap['weekly_time_label'] = time_12
+    return recap
+
+
+def user_has_active_daily_question_subscription_for_preferences(user):
+    """True if a logged-in user can open daily.manage_preferences without a URL token."""
+    if not user or not getattr(user, 'is_authenticated', False):
+        return False
+    from app.models import DailyQuestionSubscriber
+    from sqlalchemy import or_
+
+    return (
+        DailyQuestionSubscriber.query.filter(
+            or_(
+                DailyQuestionSubscriber.user_id == user.id,
+                DailyQuestionSubscriber.email == user.email,
+            ),
+            DailyQuestionSubscriber.is_active.is_(True),
+        ).first()
+        is not None
+    )
+
+
+def _capture_daily_question_subscribe_posthog(email, subscriber, user, *, track_posthog):
+    if not track_posthog:
+        return
+    try:
+        from flask import request
+        import posthog
+
+        if not posthog or not getattr(posthog, 'project_api_key', None):
+            return
+        ref = request.referrer or ''
+        props = {
+            'subscription_tier': 'free',
+            'plan_name': 'Daily Question',
+            'email': email,
+            'email_frequency': subscriber.email_frequency,
+            'timezone': subscriber.timezone or '',
+            'preferred_send_day': subscriber.preferred_send_day,
+            'preferred_send_hour': subscriber.preferred_send_hour,
+            'source': (
+                'social'
+                if (
+                    'utm_source' in ref
+                    or any(d in ref for d in ['twitter.com', 'x.com', 'bsky.social'])
+                )
+                else 'direct'
+            ),
+            'referrer': request.referrer,
+        }
+        posthog.capture(
+            distinct_id=str(user.id) if user else email,
+            event='daily_question_subscribed',
+            properties=props,
+        )
+        posthog.flush()
+    except Exception as e:
+        from flask import current_app
+        current_app.logger.warning(f'PostHog tracking error: {e}')
+
+
 def process_daily_question_subscription(
     email,
     *,
     email_frequency='weekly',
-    update_frequency_on_reactivate=False,
+    timezone=None,
+    preferred_send_day=None,
+    preferred_send_hour=None,
+    update_delivery_preferences_on_reactivate=False,
     track_posthog=False,
 ):
     """Create/reactivate daily question subscriptions in one shared path."""
     from app.models import DailyQuestionSubscriber, User
 
-    if email_frequency not in ('daily', 'weekly'):
-        email_frequency = 'weekly'
+    fq, tz, day, hr = _coerce_daily_question_delivery_prefs(
+        email_frequency, timezone, preferred_send_day, preferred_send_hour
+    )
 
     user = User.query.filter_by(email=email).first()
     existing = DailyQuestionSubscriber.query.filter_by(email=email).first()
@@ -41,8 +210,11 @@ def process_daily_question_subscription(
             }
 
         existing.is_active = True
-        if update_frequency_on_reactivate:
-            existing.email_frequency = email_frequency
+        if update_delivery_preferences_on_reactivate:
+            existing.email_frequency = fq
+            existing.timezone = tz
+            existing.preferred_send_day = day
+            existing.preferred_send_hour = hr
         existing.generate_magic_token()
         try:
             db.session.commit()
@@ -56,6 +228,7 @@ def process_daily_question_subscription(
                 'message': 'An error occurred. Please try again.',
                 'error': str(e),
             }
+        _capture_daily_question_subscribe_posthog(email, existing, user, track_posthog=track_posthog)
         return {
             'status': 'reactivated',
             'subscriber': existing,
@@ -66,7 +239,10 @@ def process_daily_question_subscription(
         subscriber = DailyQuestionSubscriber(
             email=email,
             user_id=user.id if user else None,
-            email_frequency=email_frequency,
+            email_frequency=fq,
+            timezone=tz,
+            preferred_send_day=day,
+            preferred_send_hour=hr,
         )
         subscriber.generate_magic_token()
         db.session.add(subscriber)
@@ -75,26 +251,7 @@ def process_daily_question_subscription(
         from app.resend_client import send_daily_question_welcome_email
         send_daily_question_welcome_email(subscriber)
 
-        if track_posthog:
-            try:
-                from flask import request, current_app
-                import posthog
-                if posthog and getattr(posthog, 'project_api_key', None):
-                    ref = request.referrer or ''
-                    posthog.capture(
-                        distinct_id=str(user.id) if user else email,
-                        event='daily_question_subscribed',
-                        properties={
-                            'subscription_tier': 'free',
-                            'plan_name': 'Daily Question',
-                            'email': email,
-                            'source': 'social' if ('utm_source' in ref or any(d in ref for d in ['twitter.com', 'x.com', 'bsky.social'])) else 'direct',
-                            'referrer': request.referrer,
-                        }
-                    )
-                    posthog.flush()
-            except Exception as e:
-                current_app.logger.warning(f"PostHog tracking error: {e}")
+        _capture_daily_question_subscribe_posthog(email, subscriber, user, track_posthog=track_posthog)
 
         return {
             'status': 'created',

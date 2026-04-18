@@ -12,7 +12,13 @@ from app.daily.constants import (
 from app import db, limiter
 from app.models import DailyQuestion, DailyQuestionResponse, DailyQuestionResponseFlag, DailyQuestionSubscriber, User, Discussion, DiscussionParticipant
 from app.trending.conversion_tracking import track_social_click
-from app.daily.utils import process_daily_question_subscription
+from app.daily.utils import (
+    build_daily_subscribe_recap,
+    daily_question_email_send_window_utc_label,
+    monthly_digest_schedule_short,
+    process_daily_question_subscription,
+    user_has_active_daily_question_subscription_for_preferences,
+)
 from app.lib.partner_portal_session import sync_partner_portal_session_for_email
 import hashlib
 import re
@@ -803,29 +809,58 @@ def subscribe():
         if not email or not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
             flash('Please enter a valid email address.', 'error')
             return redirect(url_for('daily.subscribe'))
-        
+
+        frequency = request.form.get('email_frequency', 'weekly')
+        timezone_val = request.form.get('timezone', '').strip() or None
+        send_day = request.form.get('preferred_send_day', '1')
+        send_hour = request.form.get('preferred_send_hour', '9')
+
         result = process_daily_question_subscription(
             email,
-            email_frequency='weekly',
-            update_frequency_on_reactivate=False,
+            email_frequency=frequency,
+            timezone=timezone_val,
+            preferred_send_day=send_day,
+            preferred_send_hour=send_hour,
+            update_delivery_preferences_on_reactivate=True,
             track_posthog=True,
         )
         if result['status'] == 'already_active':
-            flash(result['message'], 'info')
-        elif result['status'] in ('reactivated', 'created'):
+            return redirect(url_for('daily.subscribe', already_active=1))
+        if result['status'] in ('reactivated', 'created'):
             flash(result['message'], 'success')
+            sub = result.get('subscriber')
+            if sub:
+                session['daily_subscribe_recap'] = build_daily_subscribe_recap(sub)
         else:
             flash(result['message'], 'error')
             return redirect(url_for('daily.subscribe'))
         return redirect(url_for('daily.subscribe_success'))
-    
-    return render_template('daily/subscribe.html')
+
+    show_already = request.args.get('already_active') not in (None, '', '0', 'false', 'False')
+    return render_template(
+        'daily/subscribe.html',
+        send_days=DailyQuestionSubscriber.SEND_DAYS,
+        daily_send_window_label=daily_question_email_send_window_utc_label(),
+        monthly_schedule_short=monthly_digest_schedule_short(),
+        show_already_subscribed=show_already,
+        can_manage_daily_preferences=user_has_active_daily_question_subscription_for_preferences(
+            current_user
+        ),
+    )
 
 
 @daily_bp.route('/daily/subscribe/success')
 def subscribe_success():
     """Subscription confirmation page"""
-    return render_template('daily/subscribe_success.html')
+    recap = session.pop('daily_subscribe_recap', None)
+    return render_template(
+        'daily/subscribe_success.html',
+        recap=recap,
+        daily_send_window_label=daily_question_email_send_window_utc_label(),
+        can_manage_daily_preferences=user_has_active_daily_question_subscription_for_preferences(
+            current_user
+        ),
+    )
 
 
 @daily_bp.route('/daily/unsubscribe/<token>', methods=['GET', 'POST'])
@@ -1035,11 +1070,14 @@ def manage_preferences():
         return redirect(url_for('daily.manage_preferences', token=effective_token))
 
     # GET: Show current preferences
-    return render_template('daily/preferences.html',
+    return render_template(
+        'daily/preferences.html',
         subscriber=subscriber,
         send_days=send_days,
         frequencies=valid_frequencies,
-        token=effective_token
+        token=effective_token,
+        daily_send_window_label=daily_question_email_send_window_utc_label(),
+        monthly_schedule_short=monthly_digest_schedule_short(),
     )
 
 

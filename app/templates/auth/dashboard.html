@@ -1,6 +1,7 @@
 {# templates/auth/dashboard.html #}
 {% extends "layout.html" %}
 {% from "components/discussion_card.html" import discussion_card %}
+{% from "components/timezone_select.html" import timezone_select %}
 {% block content %}
 
 {# Derive a friendly display name — fall back to username if anything is missing/empty #}
@@ -404,9 +405,7 @@
                 {% if brief_sub and brief_sub.status == 'active' %}
                     <div class="text-xs text-gray-500 space-y-1 mb-3">
                         <p>Delivery: <span class="font-medium text-gray-700">{{ brief_sub.cadence | capitalize }}</span> at
-                            {% if brief_sub.preferred_send_hour == 6 %}6am
-                            {% elif brief_sub.preferred_send_hour == 8 %}8am
-                            {% else %}6pm{% endif %}
+                            {{ brief_sub.preferred_send_hour | dq_hour_12h }}
                             ({{ brief_sub.timezone or 'UTC' }})</p>
                     </div>
                     <a href="{{ url_for('brief.manage_preferences', token=brief_sub.magic_token) }}"
@@ -418,22 +417,32 @@
                     <form action="{{ url_for('auth.dashboard_subscribe') }}" method="post">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="subscription_type" value="brief">
-                        <div class="flex gap-2 mb-3">
-                            <div class="flex-1">
-                                <label class="block text-xs text-gray-500 mb-1">Send time</label>
-                                <select name="preferred_hour" class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400">
-                                    <option value="6">6am</option>
-                                    <option value="8" selected>8am</option>
-                                    <option value="18">6pm</option>
-                                </select>
-                            </div>
-                            <div class="flex-1">
+                        <div class="grid grid-cols-2 gap-2 mb-2">
+                            <div>
                                 <label class="block text-xs text-gray-500 mb-1">Frequency</label>
                                 <select name="cadence" class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400">
                                     <option value="daily" selected>Daily</option>
                                     <option value="weekly">Weekly</option>
                                 </select>
                             </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Send time</label>
+                                <select name="preferred_hour" class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                                    <option value="6">6am</option>
+                                    <option value="7">7am</option>
+                                    <option value="8">8am</option>
+                                    <option value="9">9am</option>
+                                    <option value="12">12pm</option>
+                                    <option value="17">5pm</option>
+                                    <option value="18" selected>6pm</option>
+                                    <option value="19">7pm</option>
+                                    <option value="20">8pm</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-xs text-gray-500 mb-1">Timezone</label>
+                            {{ timezone_select(name='timezone', selected='UTC', css_class='w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400') }}
                         </div>
                         <button type="submit"
                                 class="w-full inline-flex items-center justify-center gap-2 bg-gray-900 text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-gray-700 transition-colors min-h-9">
@@ -460,8 +469,18 @@
                 </div>
 
                 {% if dq_sub and dq_sub.is_active %}
-                    <div class="text-xs text-gray-500 mb-3">
+                    <div class="text-xs text-gray-500 mb-3 space-y-1">
                         <p>Frequency: <span class="font-medium text-gray-700">{{ dq_sub.email_frequency | capitalize }}</span></p>
+                        {% if dq_sub.email_frequency == 'weekly' %}
+                        <p>Weekly digest: <span class="font-medium text-gray-700">{{ dq_send_days.get(dq_sub.preferred_send_day, 'Tuesday') }}s</span> at
+                            <span class="font-medium text-gray-700">{{ dq_sub.preferred_send_hour | dq_hour_12h }}</span>
+                            {% if dq_sub.timezone %}({{ dq_sub.timezone }}){% endif %}
+                        </p>
+                        {% elif dq_sub.email_frequency == 'monthly' %}
+                        <p>Monthly digest: <span class="font-medium text-gray-700">{{ dq_monthly_schedule_short }}</span>{% if dq_sub.timezone %} ({{ dq_sub.timezone }}){% endif %}</p>
+                        {% elif dq_sub.email_frequency == 'daily' %}
+                        <p>Daily emails: <span class="font-medium text-gray-700">around {{ dq_daily_send_window_label }}</span> each day</p>
+                        {% endif %}
                         {% if dq_sub.current_streak and dq_sub.current_streak > 0 %}
                         <p class="mt-1">🔥 Current streak: <span class="font-medium text-gray-700">{{ dq_sub.current_streak }} day{{ 's' if dq_sub.current_streak != 1 }}</span></p>
                         {% endif %}
@@ -472,15 +491,39 @@
                         Manage preferences
                     </a>
                 {% else %}
-                    <form action="{{ url_for('auth.dashboard_subscribe') }}" method="post">
+                    <form action="{{ url_for('auth.dashboard_subscribe') }}" method="post" id="dq-dash-subscribe-form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="subscription_type" value="daily_question">
                         <div class="mb-3">
                             <label class="block text-xs text-gray-500 mb-1">Frequency</label>
-                            <select name="email_frequency" class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                            <select name="email_frequency" id="dq-dash-frequency" class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400">
                                 <option value="weekly" selected>Weekly digest</option>
                                 <option value="daily">Daily</option>
+                                <option value="monthly">Monthly</option>
                             </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-xs text-gray-500 mb-1">Time zone</label>
+                            {% from 'components/timezone_select.html' import timezone_select %}
+                            {{ timezone_select(name='timezone', selected='Europe/London', css_class='w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400') }}
+                        </div>
+                        <div id="dq-dash-weekly-fields" class="grid grid-cols-2 gap-2 mb-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Digest day</label>
+                                <select name="preferred_send_day" data-dq-dash-weekly class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                                    {% for day_value, day_name in dq_send_days.items() %}
+                                    <option value="{{ day_value }}" {% if day_value == 1 %}selected{% endif %}>{{ day_name[:3] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Time</label>
+                                <select name="preferred_send_hour" data-dq-dash-weekly class="w-full text-xs border border-gray-200 rounded-md px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-indigo-400">
+                                    {% for hour in range(24) %}
+                                    <option value="{{ hour }}" {% if hour == 9 %}selected{% endif %}>{{ hour | dq_hour_12h }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
                         <button type="submit"
                                 class="w-full inline-flex items-center justify-center gap-2 bg-gray-900 text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-gray-700 transition-colors min-h-9">
@@ -488,6 +531,21 @@
                             Subscribe to Daily Question
                         </button>
                     </form>
+                    <script nonce="{{ csp_nonce() }}">
+                    (function () {
+                        var sel = document.getElementById('dq-dash-frequency');
+                        var weeklyBox = document.getElementById('dq-dash-weekly-fields');
+                        if (!sel || !weeklyBox) return;
+                        function sync() {
+                            var weekly = sel.value === 'weekly';
+                            weeklyBox.classList.toggle('hidden', !weekly);
+                            weeklyBox.querySelectorAll('[data-dq-dash-weekly]').forEach(function (el) { el.disabled = !weekly; });
+                        }
+                        sel.addEventListener('change', sync);
+                        document.getElementById('dq-dash-subscribe-form').addEventListener('submit', sync);
+                        sync();
+                    })();
+                    </script>
                 {% endif %}
             </div>
 

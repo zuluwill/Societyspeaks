@@ -48,20 +48,8 @@
 
                     <div>
                         <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">Your time zone</label>
-                        <select id="timezone" name="timezone" 
-                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="UTC">UTC</option>
-                            <option value="Europe/London">London (GMT/BST)</option>
-                            <option value="Europe/Paris">Paris (CET)</option>
-                            <option value="Europe/Berlin">Berlin (CET)</option>
-                            <option value="America/New_York">New York (EST)</option>
-                            <option value="America/Chicago">Chicago (CST)</option>
-                            <option value="America/Denver">Denver (MST)</option>
-                            <option value="America/Los_Angeles">Los Angeles (PST)</option>
-                            <option value="Asia/Tokyo">Tokyo (JST)</option>
-                            <option value="Asia/Singapore">Singapore (SGT)</option>
-                            <option value="Australia/Sydney">Sydney (AEST)</option>
-                        </select>
+                        {% from 'components/timezone_select.html' import timezone_select %}
+                        {{ timezone_select(name='timezone', selected='Europe/London', css_class='w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500') }}
                     </div>
 
                     {# Cadence selection #}
@@ -86,43 +74,39 @@
                     {# Weekly day selection (hidden by default) #}
                     <div id="signup-weekly-day" class="hidden">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Delivery day</label>
-                        <select name="preferred_weekly_day" 
+                        <select name="preferred_weekly_day"
                                 class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             <option value="6" selected>Sunday</option>
                             <option value="0">Monday</option>
+                            <option value="1">Tuesday</option>
+                            <option value="2">Wednesday</option>
+                            <option value="3">Thursday</option>
+                            <option value="4">Friday</option>
                             <option value="5">Saturday</option>
                         </select>
                     </div>
 
                     <div>
-                        <label id="signup-delivery-label" class="block text-sm font-medium text-gray-700 mb-2">When should we deliver?</label>
-                        <div class="grid grid-cols-3 gap-2 sm:gap-3">
-                            <label class="relative flex flex-col items-center p-3 sm:p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
-                                <input type="radio" name="preferred_hour" value="6" class="sr-only">
-                                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 mb-1 sm:mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                                <span class="text-base sm:text-lg font-semibold text-gray-900">6am</span>
-                                <span class="text-xs text-gray-500 hidden sm:block">Early bird</span>
-                            </label>
-                            <label class="relative flex flex-col items-center p-3 sm:p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
-                                <input type="radio" name="preferred_hour" value="8" class="sr-only">
-                                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 mb-1 sm:mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <span class="text-base sm:text-lg font-semibold text-gray-900">8am</span>
-                                <span class="text-xs text-gray-500 hidden sm:block">With coffee</span>
-                            </label>
-                            <label class="relative flex flex-col items-center p-3 sm:p-4 border-2 rounded-xl cursor-pointer hover:border-blue-500 has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 transition-all">
-                                <input type="radio" name="preferred_hour" value="18" class="sr-only" checked>
-                                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 mb-1 sm:mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                                </svg>
-                                <span class="text-base sm:text-lg font-semibold text-gray-900">6pm</span>
-                                <span class="text-xs text-gray-500 hidden sm:block">Evening</span>
-                            </label>
-                        </div>
-                        <p class="text-xs text-gray-500 mt-2">Morning options receive yesterday's brief as a catch-up. Evening receives the freshest news.</p>
+                        <label for="preferred_hour" class="block text-sm font-medium text-gray-700 mb-2">When should we deliver?</label>
+                        <select id="preferred_hour" name="preferred_hour"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <optgroup label="Morning — includes yesterday's catch-up">
+                                <option value="6">6:00 am — Early bird</option>
+                                <option value="7">7:00 am</option>
+                                <option value="8">8:00 am — With coffee</option>
+                                <option value="9">9:00 am — Start of day</option>
+                            </optgroup>
+                            <optgroup label="Midday">
+                                <option value="12">12:00 pm — Lunchtime</option>
+                            </optgroup>
+                            <optgroup label="Evening — freshest news, same day">
+                                <option value="17">5:00 pm</option>
+                                <option value="18" selected>6:00 pm — Evening</option>
+                                <option value="19">7:00 pm</option>
+                                <option value="20">8:00 pm</option>
+                            </optgroup>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-2">Morning sends include yesterday's stories as a catch-up; evening sends carry the day's freshest coverage.</p>
                     </div>
 
                     <button type="submit" 

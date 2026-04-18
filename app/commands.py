@@ -396,7 +396,7 @@ def init_commands(app):
     @app.cli.command('create-brief-subscriber')
     @click.argument('email')
     @click.option('--timezone', default='UTC', help='Timezone (e.g., America/New_York)')
-    @click.option('--hour', default=18, help='Preferred send hour (6, 8, or 18)')
+    @click.option('--hour', default=18, help='Preferred send hour (6-9, 12, 17-20)')
     def create_subscriber_cmd(email, timezone, hour):
         """Create a test brief subscriber"""
         try:

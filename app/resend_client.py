@@ -845,7 +845,7 @@ class ResendEmailClient:
         success = self._send_with_retry(email_data)
 
         if success:
-            subscriber.last_weekly_email_sent = utcnow_naive()  # Reuse field for monthly tracking
+            subscriber.last_monthly_email_sent = utcnow_naive()
             subscriber.last_email_sent = utcnow_naive()
             
             # Record analytics event

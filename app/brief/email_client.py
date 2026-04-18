@@ -79,6 +79,9 @@ def acquire_daily_send_lock(target_date=None, ttl_seconds: int = 3500):
     """
     Acquire Redis lock for daily brief sending.
 
+    Weekly brief sends use the same policy: no REDIS_URL or Redis errors
+    mean no send (see BriefEmailScheduler.send_weekly_brief_hourly).
+
     Returns:
         (acquired, redis_client, lock_key, lock_token, reason)
     """
@@ -278,15 +281,17 @@ class ResendClient:
                 )
                 return False
 
-            # Render email HTML
-            html_content = self._render_email(subscriber, brief)
+            # Pre-fetch once — passed to both HTML and plain-text renderers
+            sorted_items = self._get_sorted_brief_items(brief)
 
-            # Build unsubscribe URL using environment config
+            # Build URLs
             base_url = get_base_url()
             magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
             unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
             preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
-            sorted_items = self._get_sorted_brief_items(brief)
+
+            # Render email HTML (sorted_items passed to avoid a second DB query)
+            html_content = self._render_email(subscriber, brief, sorted_items=sorted_items)
 
             # Wrap links for click tracking (tracks clicks in EmailEvent)
             secret = current_app.config.get('SECRET_KEY', '')
@@ -406,7 +411,8 @@ class ResendClient:
     def _render_email(
         self,
         subscriber: DailyBriefSubscriber,
-        brief: DailyBrief
+        brief: DailyBrief,
+        sorted_items=None,
     ) -> str:
         """
         Render email HTML from template.
@@ -414,18 +420,21 @@ class ResendClient:
         Args:
             subscriber: Subscriber info for personalization
             brief: Brief content to render
+            sorted_items: Pre-fetched brief items (avoids a redundant DB query when
+                          called from send_brief which already fetches them for the text renderer)
 
         Returns:
             str: HTML email content
         """
         # Get base URL from config or env
         base_url = get_base_url()
-        
+
         # Build URLs
         magic_link_url = f"{base_url}/brief/m/{subscriber.magic_token}"
         unsubscribe_url = f"{base_url}/brief/unsubscribe/{subscriber.magic_token}"
         preferences_url = f"{base_url}/brief/preferences/{subscriber.magic_token}"
-        sorted_items = self._get_sorted_brief_items(brief)
+        if sorted_items is None:
+            sorted_items = self._get_sorted_brief_items(brief)
 
         # Render template
         # Note: This assumes template exists at templates/emails/daily_brief.html
@@ -773,9 +782,9 @@ class BriefEmailScheduler:
             return {'sent': 0, 'failed': 0, 'errors': []}
 
         try:
-            BRIEF_PUBLISH_HOUR = 18
+            from app.brief.constants import BRIEF_PUBLISH_UTC_HOUR
 
-            if current_hour < BRIEF_PUBLISH_HOUR:
+            if current_hour < BRIEF_PUBLISH_UTC_HOUR:
                 brief_date = today - timedelta(days=1)
                 brief = DailyBrief.get_by_date(brief_date, brief_type='daily')
                 if not brief:
@@ -808,6 +817,10 @@ class BriefEmailScheduler:
         preferred weekly day. Prevents re-sending the same weekly brief
         by checking if the brief was created within the last 7 days.
 
+        **Redis is required** (REDIS_URL): same fail-closed policy as daily brief
+        sends — without a distributed lock, multiple workers could duplicate weekly
+        deliveries. If Redis is down or misconfigured, we skip and log.
+
         Returns:
             dict: Send results, or None if no weekly brief available
         """
@@ -818,15 +831,27 @@ class BriefEmailScheduler:
 
         lock_key = f"brief_send_lock:weekly:{today.isoformat()}:{current_hour}"
         redis_url = os.environ.get('REDIS_URL')
-        if redis_url:
-            try:
-                import redis as redis_lib
-                r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
-                if not r.set(lock_key, os.getpid(), nx=True, ex=3500):
-                    logger.info(f"Weekly brief send already in progress for hour {current_hour} (lock held), skipping")
-                    return {'sent': 0, 'failed': 0, 'errors': []}
-            except Exception as e:
-                logger.warning(f"Could not acquire Redis send lock: {e}, proceeding with send")
+        if not redis_url:
+            logger.error(
+                "REDIS_URL not configured; skipping weekly brief send "
+                "(distributed lock required — same policy as daily brief sends)"
+            )
+            return {'sent': 0, 'failed': 0, 'errors': []}
+
+        try:
+            import redis as redis_lib
+            r = redis_lib.from_url(redis_url, socket_timeout=3, socket_connect_timeout=3)
+            if not r.set(lock_key, os.getpid(), nx=True, ex=3500):
+                logger.info(
+                    f"Weekly brief send already in progress for hour {current_hour} (lock held), skipping"
+                )
+                return {'sent': 0, 'failed': 0, 'errors': []}
+        except Exception as e:
+            logger.error(
+                f"Could not acquire Redis send lock for weekly brief: {e}; "
+                f"skipping send to prevent duplicates"
+            )
+            return {'sent': 0, 'failed': 0, 'errors': []}
 
         # Find the most recent weekly brief
         brief = DailyBrief.query.filter(

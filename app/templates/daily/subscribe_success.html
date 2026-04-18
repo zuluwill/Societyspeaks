@@ -11,37 +11,72 @@
             </svg>
         </div>
 
-        <h1 class="text-3xl font-bold text-gray-900 mb-4">You're Subscribed!</h1>
-        
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <p class="text-gray-600 mb-6">
-                Check your inbox for a welcome email with your personal magic link. 
-                By default, you'll receive 5 questions each week (on Tuesdays at 9am), but you can choose daily or monthly in your preferences.
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">You're subscribed</h1>
+
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6 text-left">
+            <p class="text-gray-600 mb-4 text-center">
+                Check your inbox for a welcome email with your personal magic link.
             </p>
 
-            <div class="bg-blue-50 rounded-lg p-4 text-left">
-                <h3 class="font-semibold text-blue-900 mb-2">What happens next?</h3>
+            {% if recap %}
+            <div class="rounded-lg border border-green-100 bg-green-50/80 p-4 mb-4">
+                <h2 class="text-sm font-semibold text-green-900 mb-2">Your delivery choices</h2>
+                <ul class="text-sm text-green-900/90 space-y-1.5 list-disc list-inside">
+                    <li><span class="font-medium">Frequency:</span> {{ recap.frequency_label }}</li>
+                    {% if recap.timezone %}
+                    <li><span class="font-medium">Time zone:</span> {{ recap.timezone }}</li>
+                    {% else %}
+                    <li><span class="font-medium">Time zone:</span> UTC (default)</li>
+                    {% endif %}
+                    {% if recap.frequency == 'weekly' %}
+                    <li><span class="font-medium">Weekly digest:</span> each {{ recap.weekly_day_name }} at {{ recap.weekly_time_label }}{% if recap.timezone %} ({{ recap.timezone }}){% endif %}</li>
+                    {% elif recap.frequency == 'daily' %}
+                    <li><span class="font-medium">Daily emails:</span> around {{ recap.daily_window_label }} each day (same moment for all daily subscribers)</li>
+                    {% elif recap.frequency == 'monthly' %}
+                    <li><span class="font-medium">Monthly digest:</span> {{ recap.monthly_schedule_short }}{% if recap.timezone %} — using {{ recap.timezone }}{% endif %}</li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <p class="text-sm text-gray-600 mb-4">
+                You can change frequency, day, time, and time zone anytime from the preferences link in any email we send.
+                {% if can_manage_daily_preferences %}
+                If you are logged in, you can also
+                <a href="{{ url_for('daily.manage_preferences') }}" class="text-blue-600 hover:underline font-medium">open preferences now</a>.
+                {% endif %}
+            </p>
+
+            <div class="bg-blue-50 rounded-lg p-4">
+                <h3 class="text-sm font-semibold text-blue-900 mb-2">What happens next?</h3>
                 <ol class="text-sm text-blue-800 space-y-2">
                     <li class="flex items-start">
                         <span class="font-semibold mr-2">1.</span>
-                        Check your email for the welcome message
+                        <span>Check your email for the welcome message</span>
                     </li>
                     <li class="flex items-start">
                         <span class="font-semibold mr-2">2.</span>
-                        You'll receive your first weekly digest (5 questions) on Tuesday at 9am, or choose daily/monthly in preferences
+                        <span>
+                            {% if recap %}
+                            Your first message follows the schedule above
+                            {% if recap.frequency == 'daily' %} (daily sends at {{ recap.daily_window_label }}){% endif %}
+                            {% else %}
+                            Your first message follows the schedule you chose at sign-up
+                            {% endif %}
+                        </span>
                     </li>
                     <li class="flex items-start">
                         <span class="font-semibold mr-2">3.</span>
-                        Click the magic link to vote instantly - no login needed
+                        <span>Click the magic link to vote instantly — no password needed</span>
                     </li>
                 </ol>
             </div>
         </div>
 
         <div class="space-y-3">
-            <a href="{{ url_for('daily.today') }}" 
+            <a href="{{ url_for('daily.today') }}"
                class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
-                Try Today's Question
+                Try today's question
             </a>
             <p class="text-sm text-gray-500">
                 Or <a href="/" class="text-blue-600 hover:underline">explore more discussions</a>

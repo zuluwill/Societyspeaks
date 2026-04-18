@@ -40,7 +40,7 @@ def process_subscription(
     Args:
         email: Subscriber email address.
         timezone: Timezone for email delivery (default UTC).
-        preferred_hour: Preferred send hour — 6, 8, or 18 (default 18).
+        preferred_hour: Preferred send hour (see VALID_SEND_HOURS in brief/routes.py, default 18).
         cadence: 'daily' or 'weekly' (default 'daily').
         preferred_weekly_day: Day of week for weekly delivery 0=Mon, 6=Sun (default 6).
         update_preferences_on_reactivate: Whether to overwrite tz/hour on reactivation.
@@ -57,7 +57,7 @@ def process_subscription(
     """
     if cadence not in ('daily', 'weekly'):
         cadence = 'daily'
-    if preferred_weekly_day not in (0, 5, 6):
+    if not (0 <= preferred_weekly_day <= 6):
         preferred_weekly_day = 6
 
     existing = DailyBriefSubscriber.query.filter_by(email=email).first()

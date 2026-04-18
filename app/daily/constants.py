@@ -105,3 +105,15 @@ VALID_CONFIDENCE_LEVELS = [
     'medium',
     'high'
 ]
+
+# =============================================================================
+# SCHEDULED EMAIL TIMING (keep in sync with app/scheduler.py jobs)
+# =============================================================================
+
+# `daily_question_email` job — fixed UTC send for email_frequency == 'daily'
+DAILY_QUESTION_EMAIL_SEND_UTC_HOUR = 7
+DAILY_QUESTION_EMAIL_SEND_UTC_MINUTE = 30
+
+# Monthly digest local send (must match DailyQuestionSubscriber.should_receive_monthly_digest_now)
+MONTHLY_DIGEST_DAY_OF_MONTH = 1
+MONTHLY_DIGEST_LOCAL_HOUR = 9

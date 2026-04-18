@@ -85,7 +85,7 @@ def index():
         daily_brief = DailyBrief.query.filter_by(status='published').order_by(DailyBrief.date.desc()).first()
     brief_items = []
     if daily_brief:
-        brief_items = daily_brief.items.order_by(db.text('position')).limit(3).all()
+        brief_items = daily_brief.items.order_by(db.text('position')).limit(5).all()
 
     journey_slugs = guided_journey_slug_set()
     _jp_cache_key = "homepage_journey_programmes"

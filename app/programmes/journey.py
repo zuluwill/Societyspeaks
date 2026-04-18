@@ -6,7 +6,7 @@ All recap data is fetched in O(1) batch queries regardless of programme size.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence
 
 from flask import current_app
 from sqlalchemy import func
@@ -36,20 +36,53 @@ def is_guided_journey_programme(programme: Programme) -> bool:
     return programme.slug.lower() in guided_journey_slug_set()
 
 
+def _build_journey_profile_country_codes() -> dict[str, str]:
+    """
+    Map variant keys, full country names, and common aliases → Programme.country (lowercase).
+
+    Keeps profile/edition lookup aligned with VARIANT_METADATA so new country variants
+    only need updating in journey_variants.py plus Accept-Language region maps below.
+    """
+    out: dict[str, str] = {}
+    for vkey, meta in VARIANT_METADATA.items():
+        if not meta.country:
+            continue
+        norm = meta.country.strip().lower()
+        out[vkey] = norm
+        out[norm] = norm
+    if "uk" in out:
+        out["gb"] = out["uk"]
+    if "us" in out:
+        out["usa"] = out["us"]
+    return out
+
+
 # Profile country SelectField values (see app/profiles/forms.py) → Programme.country (lowercase)
-_JOURNEY_PROFILE_COUNTRY_CODES: dict[str, str] = {
-    "uk": "united kingdom",
-    "gb": "united kingdom",
-    "us": "united states",
-    "usa": "united states",
-    "nl": "netherlands",
-    "ie": "ireland",
-    "de": "germany",
-    "fr": "france",
-    "ca": "canada",
-    "sg": "singapore",
-    "jp": "japan",
-    "cn": "china",
+_JOURNEY_PROFILE_COUNTRY_CODES: dict[str, str] = _build_journey_profile_country_codes()
+
+# ISO 3166-1 alpha-2 region subtags → VARIANT_METADATA key (must have meta.country).
+# When adding a country journey, add a row here and confirm tests in test_journey_geo.py.
+_REGION_SUBTAG_TO_VARIANT: dict[str, str] = {
+    "gb": "uk",
+    "uk": "uk",
+    "us": "us",
+    "nl": "nl",
+    "ie": "ie",
+    "de": "de",
+    "fr": "fr",
+    "ca": "ca",
+    "sg": "sg",
+    "jp": "jp",
+    "cn": "cn",
+}
+
+# Primary language subtag → variant key when region match is insufficient.
+_LANG_PRIMARY_TO_VARIANT: dict[str, str] = {
+    "nl": "nl",
+    "de": "de",
+    "fr": "fr",
+    "ga": "ie",
+    "ja": "jp",
 }
 
 
@@ -81,26 +114,10 @@ def infer_journey_country_from_accept_language(header: Optional[str]) -> Optiona
     """
     if not header or not str(header).strip():
         return None
-    region_to_country = {
-        "gb": "united kingdom",
-        "uk": "united kingdom",
-        "us": "united states",
-        "nl": "netherlands",
-        "ie": "ireland",
-        "de": "germany",
-        "fr": "france",
-        "ca": "canada",
-        "sg": "singapore",
-        "jp": "japan",
-        "cn": "china",
-    }
-    lang_to_country = {
-        "nl": "netherlands",
-        "de": "germany",
-        "fr": "france",
-        "ga": "ireland",
-        "ja": "japan",
-    }
+
+    def _country_for_variant_key(vkey: str) -> Optional[str]:
+        return _JOURNEY_PROFILE_COUNTRY_CODES.get(vkey)
+
     for part in header.split(","):
         tag = part.split(";")[0].strip().lower()
         if not tag:
@@ -120,18 +137,24 @@ def infer_journey_country_from_accept_language(header: Optional[str]) -> Optiona
         if region:
             if primary == "zh" and region in ("tw", "hk", "mo"):
                 continue
-            mapped = region_to_country.get(region)
-            if mapped:
-                return mapped
+            vkey = _REGION_SUBTAG_TO_VARIANT.get(region)
+            if vkey:
+                hit = _country_for_variant_key(vkey)
+                if hit:
+                    return hit
         if primary == "zh":
             if region in ("tw", "hk", "mo"):
                 continue
             if region in ("cn", "sg") or len(subtags) == 1:
-                return "china"
+                hit_cn = _country_for_variant_key("cn")
+                if hit_cn:
+                    return hit_cn
             continue
-        hit = lang_to_country.get(primary)
-        if hit:
-            return hit
+        lang_vkey = _LANG_PRIMARY_TO_VARIANT.get(primary)
+        if lang_vkey:
+            hit = _country_for_variant_key(lang_vkey)
+            if hit:
+                return hit
     return None
 
 
@@ -451,3 +474,46 @@ def user_statement_votes_detail_batch(
 def user_statement_votes_detail(user_id: int, discussion_id: int) -> List[dict[str, Any]]:
     """Single-discussion convenience wrapper around the batch version."""
     return user_statement_votes_detail_batch(user_id, [discussion_id]).get(discussion_id, [])
+
+
+def discussion_has_linked_source_articles(discussion: Discussion) -> bool:
+    """True when at least one source-article link resolves (used for accurate optional-context copy)."""
+    links = getattr(discussion, "source_article_links", None) or []
+    return any(getattr(link, "article", None) is not None for link in links)
+
+
+def guided_journey_context_for_discussion(
+    discussion: Discussion,
+    user_id: Optional[int],
+) -> Optional[Dict[str, Any]]:
+    """
+    When a native discussion belongs to a guided flagship programme, return
+    programme-level progress plus this discussion's position in the journey.
+
+    Used for in-discussion orientation (rail UI) and the information-step copy.
+    Dict keys include ``has_source_articles`` (whether linked source articles render
+    above the optional-reading box). Returns None if not applicable.
+    """
+    if not discussion.programme or not discussion.has_native_statements:
+        return None
+    programme = discussion.programme
+    if not is_guided_journey_programme(programme):
+        return None
+    ordered = ordered_journey_discussions(programme)
+    progress = build_journey_progress(programme, user_id, discussions=ordered)
+    theme_item = None
+    theme_index: Optional[int] = None
+    for i, it in enumerate(progress["theme_items"]):
+        if it.discussion.id == discussion.id:
+            theme_item = it
+            theme_index = i + 1
+            break
+    if theme_item is None:
+        return None
+    return {
+        "programme": programme,
+        "progress": progress,
+        "theme_item": theme_item,
+        "theme_index": theme_index,
+        "has_source_articles": discussion_has_linked_source_articles(discussion),
+    }

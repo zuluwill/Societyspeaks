@@ -16,9 +16,51 @@ ALLOWED_INFORMATION_TAGS = [
     "p", "a", "ul", "ol", "li", "strong", "em", "h3", "h4", "br"
 ]
 ALLOWED_INFORMATION_ATTRIBUTES = {
-    "a": ["href", "title", "rel"]
+    "a": ["href", "title", "rel", "target"]
 }
 ALLOWED_INFORMATION_PROTOCOLS = ["http", "https", "mailto"]
+
+_INFORMATION_BLEACH_KWARGS = {
+    "tags": ALLOWED_INFORMATION_TAGS,
+    "attributes": ALLOWED_INFORMATION_ATTRIBUTES,
+    "protocols": ALLOWED_INFORMATION_PROTOCOLS,
+    "strip": True,
+}
+
+
+def _bleach_information_fragment(html: str) -> str:
+    """Single sanitisation pass for discussion information / update Markdown HTML."""
+    if not html or bleach is None:
+        return html or ""
+    return bleach.clean(html, **_INFORMATION_BLEACH_KWARGS)
+
+
+def _apply_external_link_attrs(fragment: str) -> str:
+    """Open http(s) links in a new tab with safe rel= (matches chip-style information_links)."""
+    if not fragment or not fragment.strip():
+        return fragment
+    try:
+        from bs4 import BeautifulSoup
+    except ImportError:  # pragma: no cover - bs4 is a project dependency
+        return fragment
+    soup = BeautifulSoup(fragment, "html.parser")
+    for a in soup.find_all("a", href=True):
+        href = (a.get("href") or "").strip()
+        if not href.startswith(("http://", "https://")):
+            continue
+        a["target"] = "_blank"
+        rel_val = a.get("rel")
+        if isinstance(rel_val, list):
+            parts = [str(x).strip() for x in rel_val if str(x).strip()]
+        elif rel_val:
+            parts = [p for p in str(rel_val).split() if p]
+        else:
+            parts = []
+        for token in ("noopener", "noreferrer"):
+            if token not in parts:
+                parts.append(token)
+        a["rel"] = " ".join(parts)
+    return str(soup)
 
 
 def parse_csv_list(raw_text):
@@ -95,13 +137,9 @@ def render_safe_markdown(markdown_text):
         # Safe fallback if optional packages are unavailable in local/dev environments.
         return str(escape(markdown_text)).replace("\n", "<br>")
     rendered = md.markdown(markdown_text, extensions=["extra", "nl2br"])
-    return bleach.clean(
-        rendered,
-        tags=ALLOWED_INFORMATION_TAGS,
-        attributes=ALLOWED_INFORMATION_ATTRIBUTES,
-        protocols=ALLOWED_INFORMATION_PROTOCOLS,
-        strip=True
-    )
+    cleaned = _bleach_information_fragment(rendered)
+    externalized = _apply_external_link_attrs(cleaned)
+    return _bleach_information_fragment(externalized)
 
 
 def safe_information_links(raw_links):

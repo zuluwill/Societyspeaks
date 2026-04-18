@@ -251,6 +251,12 @@ def init_scheduler(app):
             'misfire_grace_time': 3600  # Allow jobs to run up to 1 hour late
         }
     )
+
+    from app.brief.constants import BRIEF_PUBLISH_UTC_HOUR
+    from app.daily.constants import (
+        DAILY_QUESTION_EMAIL_SEND_UTC_HOUR,
+        DAILY_QUESTION_EMAIL_SEND_UTC_MINUTE,
+    )
     
     # Add jobs with app context
     @scheduler.scheduled_job('interval', hours=6, id='auto_cluster_discussions', max_instances=1, coalesce=True)
@@ -993,11 +999,19 @@ def init_scheduler(app):
             _email_send_in_progress.clear()
             logger.info("Background thread: Daily question email send complete")
     
-    @scheduler.scheduled_job('cron', hour=7, minute=30, id='daily_question_email', max_instances=1, coalesce=True, misfire_grace_time=3600)
+    @scheduler.scheduled_job(
+        'cron',
+        hour=DAILY_QUESTION_EMAIL_SEND_UTC_HOUR,
+        minute=DAILY_QUESTION_EMAIL_SEND_UTC_MINUTE,
+        id='daily_question_email',
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=3600,
+    )
     def daily_question_email():
         """
         Send daily question email to all subscribers.
-        Runs at 7:30am UTC (7am GMT UK morning; question published at 7:00am UTC).
+        Runs at DAILY_QUESTION_EMAIL_SEND_UTC_* (UTC); see app.daily.constants.
         Launches in background thread to not block other scheduled jobs.
         
         IMPORTANT: Only sends in production to prevent duplicate emails from dev environment.
@@ -2788,11 +2802,22 @@ def init_scheduler(app):
                     "See scheduler logs for traceback."
                 )
 
-    @scheduler.scheduled_job('cron', hour=18, minute=0, id='auto_publish_brief', max_instances=1, coalesce=True, misfire_grace_time=10800)
+    @scheduler.scheduled_job(
+        'cron',
+        hour=BRIEF_PUBLISH_UTC_HOUR,
+        minute=0,
+        id='auto_publish_brief',
+        max_instances=1,
+        coalesce=True,
+        misfire_grace_time=10800,
+    )
     def auto_publish_daily_brief():
         """
-        Auto-publish today's briefs at 6:00pm UTC if still in 'ready' status.
+        Auto-publish today's briefs at BRIEF_PUBLISH_UTC_HOUR UTC if still in 'ready' status.
         Handles both daily and weekly briefs. Gives admin 1 hour review window (5pm-6pm).
+
+        Cron hour is imported from app.brief.constants.BRIEF_PUBLISH_UTC_HOUR (same value
+        BriefEmailScheduler uses to decide today's vs yesterday's content for morning sends).
         """
         with app.app_context():
             from app import db

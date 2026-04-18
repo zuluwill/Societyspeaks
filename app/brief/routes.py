@@ -37,6 +37,7 @@ from app.trending.conversion_tracking import track_social_click
 from app.decorators import admin_required
 from app.brief.subscription import process_subscription
 from app.lib.partner_portal_session import sync_partner_portal_session_for_email
+from app.brief.constants import VALID_SEND_HOURS, DEFAULT_SEND_HOUR, WEEKLY_DAY_NAMES
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +46,6 @@ logger = logging.getLogger(__name__)
 # Constants
 # =============================================================================
 
-VALID_SEND_HOURS = [6, 8, 18]
-DEFAULT_SEND_HOUR = 18
 ARCHIVE_PER_PAGE = 30
 PREFERENCES_TOKEN_EXPIRE_HOURS = 168  # 7 days
 
@@ -404,7 +403,9 @@ def subscribe():
         from app.lib.bot_protection import check_bot_submission
         if check_bot_submission():
             flash('You have successfully subscribed!', 'success')
-            return redirect(url_for('brief.subscribe_success'))
+            return redirect(
+                url_for('brief.subscribe_success', cadence='daily', weekly_day=6)
+            )
 
         email = request.form.get('email', '').strip().lower()
         timezone = request.form.get('timezone', 'UTC')
@@ -442,13 +443,13 @@ def subscribe():
         # Handle result
         if result['status'] == 'already_active':
             flash(result['message'], 'info')
-            return redirect(url_for('brief.subscribe_success', cadence=cadence))
+            return redirect(url_for('brief.subscribe_success', cadence=cadence, weekly_day=preferred_weekly_day))
         elif result['status'] == 'reactivated':
             flash(result['message'], 'success')
-            return redirect(url_for('brief.subscribe_success', cadence=cadence))
+            return redirect(url_for('brief.subscribe_success', cadence=cadence, weekly_day=preferred_weekly_day))
         elif result['status'] == 'created':
             flash(result['message'], 'success')
-            return redirect(url_for('brief.subscribe_success', cadence=cadence))
+            return redirect(url_for('brief.subscribe_success', cadence=cadence, weekly_day=preferred_weekly_day))
         else:  # error
             flash(result['message'], 'error')
             return redirect(url_for('brief.subscribe'))
@@ -464,7 +465,18 @@ def subscribe_success():
     cadence = request.args.get('cadence', 'daily')
     if cadence not in ('daily', 'weekly'):
         cadence = 'daily'
-    return render_template('brief/subscribe_success.html', cadence=cadence)
+    try:
+        weekly_day = int(request.args.get('weekly_day', 6))
+        if not (0 <= weekly_day <= 6):
+            weekly_day = 6
+    except (ValueError, TypeError):
+        weekly_day = 6
+    weekly_day_name = WEEKLY_DAY_NAMES.get(weekly_day, 'Sunday')
+    return render_template(
+        'brief/subscribe_success.html',
+        cadence=cadence,
+        weekly_day_name=weekly_day_name,
+    )
 
 
 @brief_bp.route('/brief/subscribe/inline', methods=['POST'])
@@ -713,12 +725,12 @@ def manage_preferences(token):
             new_weekly_day = request.form.get('preferred_weekly_day', '6')
             try:
                 weekly_day = int(new_weekly_day)
-                if weekly_day in (0, 5, 6):
+                if 0 <= weekly_day <= 6:
                     subscriber.preferred_weekly_day = weekly_day
                 else:
-                    subscriber.preferred_weekly_day = 6  # Default to Sunday
+                    subscriber.preferred_weekly_day = 6
             except (ValueError, TypeError):
-                subscriber.preferred_weekly_day = 6  # Default to Sunday
+                subscriber.preferred_weekly_day = 6
 
         # Update send hour
         new_hour = request.form.get('preferred_send_hour', str(DEFAULT_SEND_HOUR))
@@ -740,27 +752,10 @@ def manage_preferences(token):
         flash('Your preferences have been updated.', 'success')
         return redirect(url_for('brief.manage_preferences', token=token))
 
-    # Common timezones for dropdown
-    common_timezones = [
-        ('UTC', 'UTC (Coordinated Universal Time)'),
-        ('America/New_York', 'Eastern Time (US)'),
-        ('America/Chicago', 'Central Time (US)'),
-        ('America/Denver', 'Mountain Time (US)'),
-        ('America/Los_Angeles', 'Pacific Time (US)'),
-        ('Europe/London', 'London (GMT/BST)'),
-        ('Europe/Paris', 'Paris (CET/CEST)'),
-        ('Europe/Berlin', 'Berlin (CET/CEST)'),
-        ('Asia/Tokyo', 'Tokyo (JST)'),
-        ('Asia/Shanghai', 'Shanghai (CST)'),
-        ('Asia/Singapore', 'Singapore (SGT)'),
-        ('Australia/Sydney', 'Sydney (AEST/AEDT)'),
-    ]
-
     return render_template(
         'brief/preferences.html',
         subscriber=subscriber,
         token=token,
-        common_timezones=common_timezones
     )
 
 

@@ -20,6 +20,7 @@ from app.programmes.utils import (
     safe_label_url_links,
     validate_cohort_for_discussion,
 )
+from app.programmes.journey import guided_journey_context_for_discussion
 from app.discussions.sorting import apply_statement_sort
 from app.discussions.query_utils import apply_discussion_visibility
 from app.discussions.follower_notifications import notify_discussion_followers
@@ -747,6 +748,7 @@ def view_discussion(discussion_id, slug):
     # Using selectinload for nested relationships to ensure proper eager loading
     discussion = Discussion.query.options(
         joinedload(Discussion.creator),
+        joinedload(Discussion.programme),
         selectinload(Discussion.source_article_links)
         .joinedload(DiscussionSourceArticle.article)
         .joinedload(NewsArticle.source)
@@ -868,7 +870,14 @@ def view_discussion(discussion_id, slug):
     ]
     is_following = current_user.is_authenticated and current_user.follows_discussion(discussion.id)
     can_manage_updates = _can_manage_discussion_updates(discussion)
-    
+
+    guided_journey_context = None
+    if discussion.has_native_statements:
+        journey_uid = current_user.id if current_user.is_authenticated else None
+        guided_journey_context = guided_journey_context_for_discussion(
+            discussion, journey_uid
+        )
+
     # Render the page
     return render_template('discussions/view_discussion.html',
                          discussion=discussion,
@@ -888,7 +897,8 @@ def view_discussion(discussion_id, slug):
                          can_manage_updates=can_manage_updates,
                          discussion_updates=discussion_updates_rendered,
                          is_following=is_following,
-                         statement_search_term=statement_search_term)
+                         statement_search_term=statement_search_term,
+                         guided_journey_context=guided_journey_context)
 
 
 @discussions_bp.route('/<int:discussion_id>/follow', methods=['POST'])

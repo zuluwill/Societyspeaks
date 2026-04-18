@@ -1,0 +1,12 @@
+{% macro timezone_select(name='timezone', selected='Europe/London', css_class='') -%}
+<select name="{{ name }}" id="{{ name }}"{% if css_class %} class="{{ css_class }}"{% endif %}>
+    <option value="UTC"{% if selected == 'UTC' %} selected{% endif %}>UTC</option>
+    {% for group_name, zones in common_timezones %}
+    <optgroup label="{{ group_name }}">
+        {% for tz_value, tz_label in zones %}
+        <option value="{{ tz_value }}"{% if selected == tz_value %} selected{% endif %}>{{ tz_label }}</option>
+        {% endfor %}
+    </optgroup>
+    {% endfor %}
+</select>
+{%- endmacro %}

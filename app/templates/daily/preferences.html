@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "components/timezone_select.html" import timezone_select %}
 
 {% block title %}Email Preferences - Society Speaks{% endblock %}
 
@@ -37,7 +38,7 @@
                                    {% if subscriber.email_frequency == 'daily' %}checked{% endif %}>
                             <div class="ml-3">
                                 <span class="block font-medium text-gray-900">Daily</span>
-                                <span class="block text-sm text-gray-500">One question each day at your preferred time</span>
+                                <span class="block text-sm text-gray-500">One question each day, sent around {{ daily_send_window_label }} (same moment for all daily subscribers)</span>
                             </div>
                         </label>
 
@@ -58,7 +59,7 @@
                                    {% if subscriber.email_frequency == 'monthly' %}checked{% endif %}>
                             <div class="ml-3">
                                 <span class="block font-medium text-gray-900">Monthly</span>
-                                <span class="block text-sm text-gray-500">A digest of the best questions once per month</span>
+                                <span class="block text-sm text-gray-500">Highlights digest — {{ monthly_schedule_short }}</span>
                             </div>
                         </label>
                     </div>
@@ -105,27 +106,8 @@
                     <!-- Timezone -->
                     <div class="mt-4">
                         <label for="timezone" class="block text-sm font-medium text-gray-700 mb-2">Timezone</label>
-                        <select name="timezone" id="timezone"
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Auto-detect (UTC)</option>
-                            <optgroup label="Europe">
-                                <option value="Europe/London" {% if subscriber.timezone == 'Europe/London' %}selected{% endif %}>London (GMT/BST)</option>
-                                <option value="Europe/Paris" {% if subscriber.timezone == 'Europe/Paris' %}selected{% endif %}>Paris (CET)</option>
-                                <option value="Europe/Berlin" {% if subscriber.timezone == 'Europe/Berlin' %}selected{% endif %}>Berlin (CET)</option>
-                            </optgroup>
-                            <optgroup label="Americas">
-                                <option value="America/New_York" {% if subscriber.timezone == 'America/New_York' %}selected{% endif %}>New York (ET)</option>
-                                <option value="America/Chicago" {% if subscriber.timezone == 'America/Chicago' %}selected{% endif %}>Chicago (CT)</option>
-                                <option value="America/Denver" {% if subscriber.timezone == 'America/Denver' %}selected{% endif %}>Denver (MT)</option>
-                                <option value="America/Los_Angeles" {% if subscriber.timezone == 'America/Los_Angeles' %}selected{% endif %}>Los Angeles (PT)</option>
-                            </optgroup>
-                            <optgroup label="Asia/Pacific">
-                                <option value="Asia/Tokyo" {% if subscriber.timezone == 'Asia/Tokyo' %}selected{% endif %}>Tokyo (JST)</option>
-                                <option value="Asia/Shanghai" {% if subscriber.timezone == 'Asia/Shanghai' %}selected{% endif %}>Shanghai (CST)</option>
-                                <option value="Australia/Sydney" {% if subscriber.timezone == 'Australia/Sydney' %}selected{% endif %}>Sydney (AEST)</option>
-                            </optgroup>
-                        </select>
-                        <p class="mt-1 text-xs text-gray-500">We'll send your digest at your preferred time in this timezone</p>
+                        {{ timezone_select(name='timezone', selected=subscriber.timezone or 'UTC', css_class='w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500') }}
+                        <p class="mt-1 text-xs text-gray-500">Weekly: your chosen day and hour in this time zone. Monthly: {{ monthly_schedule_short }}.</p>
                     </div>
                 </div>
 
@@ -135,16 +117,12 @@
                     <p class="text-sm text-gray-600">
                         <span class="font-medium">{{ subscriber.email }}</span>
                         {% if subscriber.email_frequency == 'weekly' %}
-                            &bull; Weekly on {{ send_days[subscriber.preferred_send_day] }}s at
-                            {% if subscriber.preferred_send_hour == 0 %}12:00 AM
-                            {% elif subscriber.preferred_send_hour < 12 %}{{ subscriber.preferred_send_hour }}:00 AM
-                            {% elif subscriber.preferred_send_hour == 12 %}12:00 PM
-                            {% else %}{{ subscriber.preferred_send_hour - 12 }}:00 PM
-                            {% endif %}
+                            &bull; Weekly on {{ send_days[subscriber.preferred_send_day] }}s at {{ subscriber.preferred_send_hour | dq_hour_12h }}
+                            {% if subscriber.timezone %} ({{ subscriber.timezone }}){% endif %}
                         {% elif subscriber.email_frequency == 'daily' %}
-                            &bull; Daily emails
+                            &bull; Daily — around {{ daily_send_window_label }} each day
                         {% else %}
-                            &bull; Monthly digest
+                            &bull; Monthly — {{ monthly_schedule_short }}{% if subscriber.timezone %} ({{ subscriber.timezone }}){% endif %}
                         {% endif %}
                     </p>
                 </div>

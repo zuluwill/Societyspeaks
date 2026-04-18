@@ -933,7 +933,7 @@ def set_subscriber_cadence(subscriber_id):
     subscriber.cadence = new_cadence
     
     if new_cadence == 'weekly' and preferred_day is not None:
-        if preferred_day in (0, 5, 6):
+        if 0 <= preferred_day <= 6:
             subscriber.preferred_weekly_day = preferred_day
         else:
             subscriber.preferred_weekly_day = 6

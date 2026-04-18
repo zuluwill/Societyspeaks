@@ -456,6 +456,12 @@ def create_app():
     app.jinja_env.filters['strip_markdown'] = strip_markdown
     app.jinja_env.filters['markdown'] = convert_markdown
     app.jinja_env.filters['strip_so_what'] = strip_so_what
+
+    from app.daily.utils import format_dq_hour_12h
+    from app.lib.timezones import COMMON_TIMEZONES
+
+    app.jinja_env.filters['dq_hour_12h'] = format_dq_hour_12h
+    app.jinja_env.globals['common_timezones'] = COMMON_TIMEZONES
     
     # Initialize rate limiter with improved Redis handling
     try:

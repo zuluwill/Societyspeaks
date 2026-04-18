@@ -3686,9 +3686,10 @@ class DailyQuestionSubscriber(db.Model):
     unsubscribe_reason = db.Column(db.String(50), nullable=True)
     unsubscribed_at = db.Column(db.DateTime, nullable=True)
 
-    # Weekly digest email preferences
+    # Email frequency and send timestamps
     email_frequency = db.Column(db.String(20), default='weekly', nullable=False)  # 'daily'|'weekly'|'monthly'
     last_weekly_email_sent = db.Column(db.DateTime, nullable=True)
+    last_monthly_email_sent = db.Column(db.DateTime, nullable=True)
     preferred_send_day = db.Column(db.Integer, default=1, nullable=False)  # 0=Mon, 1=Tue (default), ..., 6=Sun
     preferred_send_hour = db.Column(db.Integer, default=9, nullable=False)  # 0-23, default 9am
     timezone = db.Column(db.String(50), nullable=True)  # e.g., 'Europe/London', 'America/New_York'
@@ -3922,32 +3923,26 @@ class DailyQuestionSubscriber(db.Model):
         return self.last_weekly_email_sent > week_ago
     
     def has_received_monthly_digest_this_month(self):
-        """Check if monthly digest was already sent this calendar month.
-
-        Uses the calendar month (year + month) rather than a rolling 25-day window
-        so that subscribers who recently received a *weekly* digest (because they just
-        switched from weekly to monthly) are not blocked from their first monthly
-        digest.  The rolling-days approach caused a 0–25 day dead-zone after a
-        frequency change.
-        """
-        if not self.last_weekly_email_sent:
+        """Check if a monthly digest was already sent this calendar month."""
+        if not self.last_monthly_email_sent:
             return False
         now = utcnow_naive()
         return (
-            self.last_weekly_email_sent.year == now.year
-            and self.last_weekly_email_sent.month == now.month
+            self.last_monthly_email_sent.year == now.year
+            and self.last_monthly_email_sent.month == now.month
         )
     
     def should_receive_monthly_digest_now(self, utc_now=None):
         """
         Check if this subscriber should receive their monthly digest right now.
-        Monthly digests are sent on the 1st of each month at 9am in subscriber's timezone.
+        Monthly digests are sent on the 1st of each month at the hour in
+        app.daily.constants.MONTHLY_DIGEST_LOCAL_HOUR in the subscriber's timezone.
 
         Args:
             utc_now: Current UTC datetime (optional, defaults to now)
 
         Returns:
-            bool: True if it's the 1st of the month and 9am in the subscriber's timezone
+            bool: True if it's the configured calendar day and local hour in the subscriber's timezone
         """
         import pytz
         from flask import current_app
@@ -3980,11 +3975,15 @@ class DailyQuestionSubscriber(db.Model):
                 )
             local_time = utc_now.replace(tzinfo=pytz.UTC)
 
-        # Check if it's the 1st of the month and 9am (or within the hour)
-        is_first_of_month = local_time.day == 1
-        is_ninth_hour = local_time.hour == 9
+        from app.daily.constants import (
+            MONTHLY_DIGEST_DAY_OF_MONTH,
+            MONTHLY_DIGEST_LOCAL_HOUR,
+        )
 
-        return is_first_of_month and is_ninth_hour
+        is_digest_day = local_time.day == MONTHLY_DIGEST_DAY_OF_MONTH
+        is_digest_hour = local_time.hour == MONTHLY_DIGEST_LOCAL_HOUR
+
+        return is_digest_day and is_digest_hour
 
     def to_dict(self):
         return {

@@ -1,11 +1,29 @@
 <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
   <div class="max-w-3xl mx-auto">
+    {% set guided_journey_context = guided_journey_context | default(None) %}
     {% if discussion.information_title %}
     <h2 class="text-xl font-semibold text-blue-900 mb-3">{{ discussion.information_title }}</h2>
     {% endif %}
 
+    {% if guided_journey_context %}
+    <p class="text-sm text-blue-900/95 mb-3 leading-relaxed border-l-4 border-blue-400 pl-3">
+      {% if guided_journey_context.has_source_articles %}
+      Vote on your <strong>current</strong> views first. <strong>Linked articles</strong> above are optional timely context;
+      the references in this box are further optional background — not a test. We surface more perspectives and analysis
+      <strong>after</strong> you participate (consensus map and journey recap).
+      {% else %}
+      Vote on your <strong>current</strong> views first. The references in this box are optional background — they are not a test,
+      and we surface more perspectives and analysis <strong>after</strong> you participate (consensus map and journey recap).
+      {% endif %}
+    </p>
+    <p class="text-xs text-blue-900/80 mb-3 leading-relaxed max-w-2xl">
+      References aim for <strong>institutional variety</strong> (for example official data, legislatures, international bodies,
+      and independent research). Inclusion is <strong>not</strong> endorsement; external sites set their own editorial standards.
+    </p>
+    {% endif %}
+
     {% if safe_information_html %}
-    <div class="prose max-w-none text-blue-950 mb-4">{{ safe_information_html|safe }}</div>
+    <div class="prose prose-blue max-w-none text-blue-950 mb-4">{{ safe_information_html|safe }}</div>
     {% endif %}
 
     {% if safe_information_links %}
@@ -15,6 +33,7 @@
         href="{{ link.url }}"
         target="_blank"
         rel="noopener noreferrer"
+        title="Opens in a new tab — external site"
         class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-700 bg-white border border-blue-300 rounded-md hover:bg-blue-100"
       >
         {{ link.label }}
@@ -31,8 +50,13 @@
       <button
         type="submit"
         class="inline-flex items-center px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors"
+        {% if guided_journey_context %}
+        aria-label="Continue to voting on statements"
+        {% else %}
+        aria-label="Continue past this information step"
+        {% endif %}
       >
-        I've read this
+        {% if guided_journey_context %}Continue to voting{% else %}Continue{% endif %}
       </button>
     </form>
   </div>

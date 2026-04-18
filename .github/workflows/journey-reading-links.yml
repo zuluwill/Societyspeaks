@@ -1,0 +1,46 @@
+# Probes HTTPS targets in guided-journey optional-reading URLs (global curriculum + country packs).
+# Fails on dead links, TLS errors, and most 4xx/5xx. HTTP 401/403 default to warn
+# (set JOURNEY_READING_LINK_STRICT=1 or --strict-forbidden to fail the job).
+name: Journey reading links
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+  push:
+    paths:
+      - "app/programmes/journey_seed.py"
+      - "app/programmes/journey_reading_enrichment.py"
+      - "app/programmes/journey_reading_url_index.py"
+      - "app/programmes/journey_reading_link_probe.py"
+      - "scripts/verify_journey_reading_links.py"
+      - ".github/workflows/journey-reading-links.yml"
+  pull_request:
+    paths:
+      - "app/programmes/journey_seed.py"
+      - "app/programmes/journey_reading_enrichment.py"
+      - "app/programmes/journey_reading_url_index.py"
+      - "app/programmes/journey_reading_link_probe.py"
+      - "scripts/verify_journey_reading_links.py"
+      - ".github/workflows/journey-reading-links.yml"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Probe journey reading URLs
+        env:
+          PYTHONPATH: .
+        run: python3 scripts/verify_journey_reading_links.py --workers 18 --timeout 28

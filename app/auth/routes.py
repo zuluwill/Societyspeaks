@@ -17,7 +17,12 @@ from app.lib.url_utils import safe_next_url
 # Billing service for invitation handling
 from app.billing.service import accept_invitation, get_active_subscription
 from app.brief.subscription import process_subscription as process_brief_subscription
-from app.daily.utils import process_daily_question_subscription
+from app.brief.constants import VALID_SEND_HOURS as BRIEF_VALID_SEND_HOURS
+from app.daily.utils import (
+    daily_question_email_send_window_utc_label,
+    monthly_digest_schedule_short,
+    process_daily_question_subscription,
+)
 from app.programmes.access import programme_access_labels, query_accessible_programmes, ranked_programme_access_subquery
 from app.programmes.permissions import can_view_programme
 from app.discussions.query_utils import apply_discussion_visibility
@@ -776,6 +781,9 @@ def dashboard():
         continue_url=continue_url,
         continue_label=continue_label,
         continue_summary=continue_summary,
+        dq_send_days=DailyQuestionSubscriber.SEND_DAYS,
+        dq_monthly_schedule_short=monthly_digest_schedule_short(),
+        dq_daily_send_window_label=daily_question_email_send_window_utc_label(),
     )
 
 
@@ -788,21 +796,33 @@ def dashboard_subscribe():
 
     if sub_type == 'brief':
         try:
-            preferred_hour = int(request.form.get('preferred_hour', 8))
+            preferred_hour = int(request.form.get('preferred_hour', 18))
         except (ValueError, TypeError):
-            preferred_hour = 8
+            preferred_hour = 18
+        if preferred_hour not in BRIEF_VALID_SEND_HOURS:
+            preferred_hour = 18
         cadence = request.form.get('cadence', 'daily')
         if cadence not in ('daily', 'weekly'):
             cadence = 'daily'
-        if preferred_hour not in (6, 8, 18):
-            preferred_hour = 8
+        timezone = request.form.get('timezone', 'UTC').strip() or 'UTC'
+        try:
+            import pytz as _pytz
+            _pytz.timezone(timezone)
+        except Exception:
+            timezone = 'UTC'
+        try:
+            preferred_weekly_day = int(request.form.get('preferred_weekly_day', 6))
+            if not (0 <= preferred_weekly_day <= 6):
+                preferred_weekly_day = 6
+        except (ValueError, TypeError):
+            preferred_weekly_day = 6
 
         result = process_brief_subscription(
             email=email,
-            timezone='UTC',
+            timezone=timezone,
             preferred_hour=preferred_hour,
             cadence=cadence,
-            preferred_weekly_day=6,
+            preferred_weekly_day=preferred_weekly_day,
             update_preferences_on_reactivate=True,
             set_session=False,
             track_posthog=False,
@@ -819,13 +839,19 @@ def dashboard_subscribe():
 
     elif sub_type == 'daily_question':
         frequency = request.form.get('email_frequency', 'weekly')
-        if frequency not in ('daily', 'weekly'):
+        if frequency not in DailyQuestionSubscriber.VALID_EMAIL_FREQUENCIES:
             frequency = 'weekly'
+        timezone_val = request.form.get('timezone', '').strip() or None
+        send_day = request.form.get('preferred_send_day', '1')
+        send_hour = request.form.get('preferred_send_hour', '9')
 
         result = process_daily_question_subscription(
             email,
             email_frequency=frequency,
-            update_frequency_on_reactivate=True,
+            timezone=timezone_val,
+            preferred_send_day=send_day,
+            preferred_send_hour=send_hour,
+            update_delivery_preferences_on_reactivate=True,
             track_posthog=False,
         )
         if result['status'] == 'already_active':

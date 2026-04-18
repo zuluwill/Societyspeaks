@@ -7,7 +7,9 @@ big questions; country variants anchor each theme in local reality.
 
 Academic standard: every statement is drawn from live, contested debates in
 peer-reviewed literature, major institutional reports (IPCC, IEA, ILO, OECD, WHO,
-UNHCR, etc.), and leading policy institutes. Statements are designed to be:
+UNHCR, etc.), and leading policy institutes. Optional reading links in the global
+edition point to primary institutions, international organisations, and open data
+where possible; they are not prerequisites for voting. Statements are designed to be:
   - Clearly normative and falsifiable
   - Genuinely contested by informed, reasonable people
   - Free of rhetorical second clauses or embedded conclusions
@@ -16,10 +18,18 @@ UNHCR, etc.), and leading policy institutes. Statements are designed to be:
 Seven statements per discussion ensures the minimum threshold for consensus analysis.
 
 Variant keys and slugs: app/programmes/journey_variants.py
+Country editions: optional-reading Markdown and four curated links per theme are merged in
+get_curriculum() from app/programmes/journey_reading_enrichment.py (global remains inline here).
+
 Run via:
   flask seed-guided-journey --all-variants
   flask seed-guided-journey --variant global
   flask seed-guided-journey --variant uk
+
+Optional link QA (country reading packs): PYTHONPATH=. python3 scripts/verify_journey_reading_links.py
+
+Editorial standards for statements and optional reading:
+  docs/guided-journey-editorial-checklist.md
 """
 from __future__ import annotations
 
@@ -39,7 +49,28 @@ from app.models import (
     StatementVote,
     User,
 )
+from app.programmes.journey_reading_enrichment import merge_reading_enrichment
 from app.programmes.journey_variants import VALID_VARIANTS, VARIANT_METADATA
+
+
+# Prepended on seed/re-seed so users are not primed to believe they must read
+# academic sources before voting. (Existing bodies that already start with this
+# marker are left unchanged to avoid doubling on re-run.)
+_VOTE_FRAMING_PREAMBLE = (
+    "**Your vote records what you think today** — you are **not** expected to read "
+    "the optional references below first. They explain how we frame statements. "
+    "After you vote, use **Consensus analysis** (when it unlocks) and your journey "
+    "**recap** for follow-up reading.\n\n"
+)
+
+
+def _normalize_information_body(raw: Optional[str]) -> Optional[str]:
+    t = (raw or "").strip()
+    if not t:
+        return None
+    if t.startswith("**Your vote records what you think today**"):
+        return t
+    return _VOTE_FRAMING_PREAMBLE + t
 
 
 # ---------------------------------------------------------------------------
@@ -54,12 +85,22 @@ def _curriculum_global() -> List[dict[str, Any]]:
             "topic": "Environment",
             "title": "Big questions: Climate, energy, and our shared environment",
             "description": "How should humanity respond to the climate crisis while managing energy security and fairness?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These statements concern **collective policy choices** — carbon pricing, climate finance, technology — "
-                "not personal habits. Key sources: IPCC Sixth Assessment Report (2021–2022), IEA Net Zero by 2050 (2021), "
-                "UNFCCC Loss and Damage Fund decisions."
+                "not personal habits.\n\n"
+                "**Optional references:** "
+                "[IPCC AR6 synthesis](https://www.ipcc.ch/report/ar6/syr/) · "
+                "[IEA — Net Zero by 2050](https://www.iea.org/reports/net-zero-by-2050) · "
+                "[UNFCCC — loss & damage](https://unfccc.int/topics/loss-and-damage-work-programme) · "
+                "[UN Climate Change — Paris Agreement](https://unfccc.int/process-and-meetings/the-paris-agreement/the-paris-agreement)"
             ),
+            "information_links": [
+                {"label": "IPCC (UN scientific assessments)", "url": "https://www.ipcc.ch/"},
+                {"label": "IEA data & reports", "url": "https://www.iea.org/"},
+                {"label": "UNEP — climate science & policy entry", "url": "https://www.unep.org/explore-topics/climate-change"},
+                {"label": "Climate Action Tracker (independent policy review)", "url": "https://climateactiontracker.org/"},
+            ],
             "article_keywords": ["IPCC report", "carbon pricing", "climate finance developing countries", "net zero policy", "clean energy transition"],
             "seeds": [
                 "Developed countries have not met their $100 billion annual climate finance pledge and owe developing nations substantially more in adaptation and loss-and-damage funding.",
@@ -76,12 +117,22 @@ def _curriculum_global() -> List[dict[str, Any]]:
             "topic": "Technology",
             "title": "Big questions: Artificial intelligence, automation, and governance",
             "description": "Who should control powerful AI systems, and what must be regulated to protect society?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
-                "Focus on **governance and trade-offs**: safety, innovation, jobs, and democratic oversight. "
-                "Key references: EU AI Act (2024), Bletchley AI Safety Declaration (2023), "
-                "Acemoglu 'The Simple Macroeconomics of AI' (2024), UN Advisory Body on AI (2024)."
+                "Focus on **governance and trade-offs**: safety, innovation, jobs, and democratic oversight.\n\n"
+                "**Optional references:** "
+                "[EU AI Act (official text via EUR-Lex)](https://eur-lex.europa.eu/legal-content/EN/TXT/?uri=CELEX:32024R1689) · "
+                "[UK AI Safety Institute](https://www.gov.uk/government/organisations/ai-safety-institute) · "
+                "[OECD.AI policy observatory](https://oecd.ai/en) · "
+                "[UN AI Advisory Body final report](https://www.un.org/en/sg/ai-advisory-body) · "
+                "[Acemoglu — simple macro of AI (NBER working paper)](https://www.nber.org/papers/w32167)"
             ),
+            "information_links": [
+                {"label": "Council of Europe — AI & human rights", "url": "https://www.coe.int/en/web/artificial-intelligence"},
+                {"label": "IEEE Standards Association (AI ethics)", "url": "https://standards.ieee.org/industry-connections/activities/ieee-global-initiative-on-ethics-of-autonomous-and-intelligent-systems/"},
+                {"label": "Partnership on AI", "url": "https://partnershiponai.org/"},
+                {"label": "Global Partnership on AI (GPAI)", "url": "https://gpai.ai/"},
+            ],
             "article_keywords": ["AI regulation frontier safety", "AI liability law", "AI automation jobs displacement", "AI governance treaty", "data protection AI training"],
             "seeds": [
                 "Frontier AI systems capable of causing large-scale harm should be required to pass independent safety evaluations before public deployment.",
@@ -98,12 +149,22 @@ def _curriculum_global() -> List[dict[str, Any]]:
             "topic": "Economy",
             "title": "Big questions: Prosperity, inequality, and the future of work",
             "description": "Taxation, markets, and who bears the costs of economic change.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
-                "These questions concern **systemic design**, not individual spending. "
-                "Key sources: Piketty 'Capital in the 21st Century' (2013), Hsieh & Moretti 'Housing Constraints' (2019), "
-                "OECD 'In It Together' inequality reports, IMF Fiscal Monitor."
+                "These questions concern **systemic design**, not individual spending.\n\n"
+                "**Optional references:** "
+                "[World Bank — poverty & inequality data](https://www.worldbank.org/en/topic/poverty) · "
+                "[OECD — income distribution database](https://www.oecd.org/social/income-distribution-database.htm) · "
+                "[IMF Fiscal Monitor](https://www.imf.org/en/Publications/FM) · "
+                "[Piketty — *Capital* (Harvard University Press)](https://www.hup.harvard.edu/catalog.php?isbn=9780674430006) · "
+                "[Hsieh & Moretti — housing constraints (NBER)](https://www.nber.org/papers/w21154)"
             ),
+            "information_links": [
+                {"label": "ILO — labour standards & wages", "url": "https://www.ilo.org/global/lang--en/index.htm"},
+                {"label": "UNCTAD — trade & development", "url": "https://unctad.org/"},
+                {"label": "WTO — trade rules overview", "url": "https://www.wto.org/english/thewto_e/whatis_e/whatis_e.htm"},
+                {"label": "World Inequality Database", "url": "https://wid.world/"},
+            ],
             "article_keywords": ["wealth tax policy", "universal basic income evidence", "housing zoning reform", "trade labour standards", "collective bargaining inequality"],
             "seeds": [
                 "A direct annual tax on net wealth above a high threshold is necessary to address asset concentration that income taxation alone cannot reach.",
@@ -120,12 +181,22 @@ def _curriculum_global() -> List[dict[str, Any]]:
             "topic": "Healthcare",
             "title": "Big questions: Health systems, prevention, and access",
             "description": "How societies should fund, organise, and prioritise healthcare.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
-                "Vote on **public policy** — access, funding models, prevention — not personal medical choices. "
-                "Key sources: Commonwealth Fund International Health Comparisons, Lancet Commission on Universal Health Coverage (2023), "
-                "WHO Mental Health Action Plan 2013–2030, Stiglitz-Sen-Fitoussi Commission on GDP."
+                "Vote on **public policy** — access, funding models, prevention — not personal medical choices.\n\n"
+                "**Optional references:** "
+                "[WHO — health systems governance](https://www.who.int/teams/health-systems-governance-and-financing) · "
+                "[The Lancet — universal health coverage collection](https://www.thelancet.com/series/universal-health-coverage) · "
+                "[Commonwealth Fund — international health policy comparisons](https://www.commonwealthfund.org/international-health-policy-center) · "
+                "[World Bank — health nutrition & population](https://www.worldbank.org/en/topic/health) · "
+                "[UN — mental health & well-being strategy](https://www.un.org/en/un75/mental-health-and-well-being)"
             ),
+            "information_links": [
+                {"label": "OECD — health at a glance", "url": "https://www.oecd.org/health/health-at-a-glance.htm"},
+                {"label": "PAHO — Americas health data", "url": "https://www.paho.org/en"},
+                {"label": "Africa CDC", "url": "https://africacdc.org/"},
+                {"label": "Wellbeing economy alliance (beyond-GDP framing)", "url": "https://weall.org/"},
+            ],
             "article_keywords": ["universal healthcare outcomes comparison", "drug patent compulsory licensing", "ultra-processed food regulation", "mental health funding gap", "pandemic preparedness fund"],
             "seeds": [
                 "Universal healthcare funded through general taxation achieves better population health outcomes than insurance-based systems at comparable total cost.",
@@ -142,12 +213,22 @@ def _curriculum_global() -> List[dict[str, Any]]:
             "topic": "Geopolitics",
             "title": "Big questions: War, intervention, and international security",
             "description": "When force is justified, how alliances should work, and how to govern new security risks.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
-                "These are **normative** questions about legitimacy and risk; reasonable people disagree sharply. "
-                "Key references: Waltz vs. Sagan nuclear debate, R2P doctrine (ICISS 2001), "
-                "SIPRI Military Expenditure Database, ICRC Autonomous Weapons positions."
+                "These are **normative** questions about legitimacy and risk; reasonable people disagree sharply.\n\n"
+                "**Optional references:** "
+                "[UN — Responsibility to Protect (R2P)](https://www.un.org/en/genocideprevention/responsibility.shtml) · "
+                "[SIPRI — military expenditure database](https://www.sipri.org/databases/milex) · "
+                "[ICRC — autonomous weapons & IHL](https://www.icrc.org/en/warfare/autonomous-weapons) · "
+                "[UN Peacekeeping overview](https://peacekeeping.un.org/en) · "
+                "[Reaching Critical Will — civil society monitoring of disarmament](https://reachingcriticalwill.org/)"
             ),
+            "information_links": [
+                {"label": "UN Digital Library — Charter & Security Council", "url": "https://digitallibrary.un.org/"},
+                {"label": "International Crisis Group", "url": "https://www.crisisgroup.org/"},
+                {"label": "ACLED — conflict data", "url": "https://acleddata.com/"},
+                {"label": "UNODA — Office for Disarmament Affairs", "url": "https://www.un.org/disarmament/"},
+            ],
             "article_keywords": ["nuclear deterrence policy", "humanitarian intervention R2P", "NATO defence spending 2 percent", "sanctions effectiveness authoritarian", "autonomous weapons ban treaty"],
             "seeds": [
                 "Nuclear deterrence remains the primary guarantor of great-power peace, making significant nuclear disarmament strategically premature in current conditions.",
@@ -164,12 +245,22 @@ def _curriculum_global() -> List[dict[str, Any]]:
             "topic": "Politics",
             "title": "Big questions: Democracy, rights, and political institutions",
             "description": "Representation, limits on power, electoral integrity, and civic trust.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
-                "Interpret statements as **institutional design choices**, not party loyalty. "
-                "Key sources: Lijphart 'Patterns of Democracy' (2012), Levitsky & Ziblatt 'How Democracies Die' (2018), "
-                "Electoral Integrity Project, Gilens & Page 'Testing Theories of American Politics' (2014)."
+                "Interpret statements as **institutional design choices**, not party loyalty.\n\n"
+                "**Optional references:** "
+                "[Arend Lijphart — *Patterns of Democracy* (Yale UP)](https://yalebooks.yale.edu/book/9780300172027/patterns-of-democracy/) · "
+                "[Levitsky & Ziblatt — *How Democracies Die* (Penguin Random House)](https://www.penguinrandomhouse.com/books/239538/how-democracies-die-by-steven-levitsky-and-daniel-ziblatt/) · "
+                "[Electoral Integrity Project](https://www.electoralintegrityproject.com/) · "
+                "[V-Dem Institute — democracy reports & data](https://www.v-dem.net/) · "
+                "[Gilens & Page (2014) — testing theories of US politics (DOI)](https://doi.org/10.1017/S1537592714001595)"
             ),
+            "information_links": [
+                {"label": "ACE — Electoral Knowledge Network (comparative systems)", "url": "https://aceproject.org/"},
+                {"label": "IDEA — International Institute for Democracy and Electoral Assistance", "url": "https://www.idea.int/"},
+                {"label": "OECD — building trust / open government", "url": "https://www.oecd.org/gov/trust-in-government/"},
+                {"label": "OHCHR — civil & political rights overview", "url": "https://www.ohchr.org/en/instruments-mechanisms/instruments/international-covenant-on-civil-and-political-rights"},
+            ],
             "article_keywords": ["proportional representation evidence", "judicial independence democracy", "election misinformation platform liability", "term limits democratic backsliding", "compulsory voting turnout"],
             "seeds": [
                 "Proportional representation produces more representative legislative bodies than first-past-the-post electoral systems.",
@@ -186,12 +277,22 @@ def _curriculum_global() -> List[dict[str, Any]]:
             "topic": "Society",
             "title": "Big questions: Migration, identity, and social trust",
             "description": "Pluralism, borders, and what we owe each other in diverse societies.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
-                "Vote on **policy and ethics**; avoid interpreting statements as judgements on individuals. "
-                "Key sources: UNHCR Global Trends, Clemens 'Economics and Emigration' (2011), "
-                "Putnam 'E Pluribus Unum' (2007), Wilkinson & Pickett 'The Spirit Level' (2009)."
+                "Vote on **policy and ethics**; avoid interpreting statements as judgements on individuals.\n\n"
+                "**Optional references:** "
+                "[UNHCR — Global Trends reports](https://www.unhcr.org/refugee-statistics) · "
+                "[IOM — World Migration Report](https://www.iom.int/wmr) · "
+                "[UN DESA — international migration](https://www.un.org/development/desa/pd/content/international-migration) · "
+                "[Clemens (2011) — economics of emigration (CGD working paper)](https://www.cgdev.org/publication/economics-and-emigration-trillion-dollar-bill) · "
+                "[OECD — migration outlook](https://www.oecd.org/migration/mig/)"
             ),
+            "information_links": [
+                {"label": "1951 Refugee Convention text (UNHCR)", "url": "https://www.unhcr.org/about-unhcr/who-we-are/1951-refugee-convention"},
+                {"label": "UN — hate speech vs free speech (UNESCO)", "url": "https://www.unesco.org/en/hate-speech"},
+                {"label": "MPI — Migration Policy Institute", "url": "https://www.migrationpolicy.org/"},
+                {"label": "ICMPD — migration dialogue (Europe & beyond)", "url": "https://www.icmpd.org/"},
+            ],
             "article_keywords": ["high-skilled migration economic evidence", "refugee convention legal obligations", "multiculturalism cohesion research", "hate speech law minority protection", "inequality social trust"],
             "seeds": [
                 "High-income countries should substantially expand legal migration pathways — the fiscal and economic evidence for doing so is strong.",
@@ -208,12 +309,22 @@ def _curriculum_global() -> List[dict[str, Any]]:
             "topic": "Education",
             "title": "Big questions: Education, skills, and opportunity",
             "description": "What every generation should learn, how education systems can reduce inequality, and who pays.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
-                "Focus on **access, curriculum, and funding models**. "
-                "Key sources: OECD 'Education at a Glance', Chetty, Friedman & Rockoff 'Measuring the Impacts of Teachers' (2014), "
-                "Hoxby & Avery 'The Missing One-Offs' (2013), Hanushek & Woessmann on vocational education."
+                "Focus on **access, curriculum, and funding models**.\n\n"
+                "**Optional references:** "
+                "[OECD — Education at a Glance](https://www.oecd.org/education/education-at-a-glance/) · "
+                "[UNESCO — Global Education Monitoring Report](https://www.unesco.org/gem-report/en) · "
+                "[Chetty, Friedman & Rockoff — teacher value-added (*American Economic Review*, DOI)](https://doi.org/10.1093/qje/qjt016) · "
+                "[Hoxby & Avery — the missing ‘one-offs’ (NBER)](https://www.nber.org/papers/w18586) · "
+                "[Hanushek & Woessmann — knowledge capital & growth (NBER)](https://www.nber.org/papers/w22376)"
             ),
+            "information_links": [
+                {"label": "World Bank — education global practice", "url": "https://www.worldbank.org/en/topic/education"},
+                {"label": "UIS — UNESCO Institute for Statistics (education data)", "url": "https://uis.unesco.org/"},
+                {"label": "Education International (global union federation)", "url": "https://www.ei-ie.org/en"},
+                {"label": "UNESCO — right to education", "url": "https://www.unesco.org/en/right-education"},
+            ],
             "article_keywords": ["university tuition fees access inequality", "standardised testing learning outcomes", "vocational education funding parity", "digital literacy curriculum", "private schools inequality public subsidy"],
             "seeds": [
                 "University tuition fees reduce access for students from lower-income households and should be replaced with public funding through progressive taxation.",
@@ -236,10 +347,10 @@ def _curriculum_uk() -> List[dict[str, Any]]:
             "topic": "Environment",
             "title": "Big questions for the UK: Net zero, energy security, and environmental policy",
             "description": "Can Britain decarbonise at the pace required by the Climate Change Act while managing energy costs and rural interests?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These questions concern **UK policy choices** — North Sea licensing, heat pumps, planning reform, and agricultural policy. "
-                "Key sources: Climate Change Committee Sixth Carbon Budget (2020), NESO Clean Power 2030 Action Plan, "
+                "Further reading (optional) — Climate Change Committee Sixth Carbon Budget (2020), NESO Clean Power 2030 Action Plan, "
                 "UK North Sea Transition Deal, UK Net Zero Research Programme."
             ),
             "article_keywords": ["UK North Sea oil gas licence", "UK net zero Climate Change Act", "heat pump grant UK", "UK onshore wind planning", "UK Sixth Carbon Budget"],
@@ -258,10 +369,10 @@ def _curriculum_uk() -> List[dict[str, Any]]:
             "topic": "Technology",
             "title": "Big questions for the UK: AI safety, regulation, and digital governance",
             "description": "Can Britain lead on responsible AI without sacrificing its economic ambitions in the sector?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Consider the UK's position as host of the AI Safety Summit and its **post-Brexit regulatory divergence** from the EU AI Act. "
-                "Key sources: UK AI Safety Institute (AISI) evaluations, Online Safety Act 2023, "
+                "Further reading (optional) — UK AI Safety Institute (AISI) evaluations, Online Safety Act 2023, "
                 "ICO enforcement records, Centre for Long-Term Resilience AI reports."
             ),
             "article_keywords": ["UK AI Safety Institute", "UK AI regulation binding rules", "Online Safety Act 2023", "ICO GDPR enforcement UK", "UK data protection post-Brexit"],
@@ -280,10 +391,10 @@ def _curriculum_uk() -> List[dict[str, Any]]:
             "topic": "Economy",
             "title": "Big questions for the UK: Growth, inequality, and the cost of living",
             "description": "UK productivity stagnation, regional inequality, and the housing crisis.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **structural economic questions** — the productivity puzzle, housing supply, and fiscal choices. "
-                "Key sources: Resolution Foundation, Institute for Fiscal Studies, LSE Centre for Economic Performance, "
+                "Further reading (optional) — Resolution Foundation, Institute for Fiscal Studies, LSE Centre for Economic Performance, "
                 "OBR Fiscal Risks and Sustainability report, ONS Regional Economic Activity data."
             ),
             "article_keywords": ["UK productivity gap OECD", "National Living Wage UK evidence", "UK housing crisis planning", "UK regional inequality levelling up", "UK public investment infrastructure"],
@@ -302,10 +413,10 @@ def _curriculum_uk() -> List[dict[str, Any]]:
             "topic": "Healthcare",
             "title": "Big questions for the UK: The NHS, social care, and public health",
             "description": "Waiting lists, funding models, workforce retention, and whether the NHS can be restored to sustainability.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **NHS structure, funding, and access** — not personal health choices. "
-                "Key sources: NHS England waiting list data (7m+ in 2024), Health Foundation 'NHS at 75' report, "
+                "Further reading (optional) — NHS England waiting list data (7m+ in 2024), Health Foundation 'NHS at 75' report, "
                 "Nuffield Trust social care analyses, King's Fund workforce reports."
             ),
             "article_keywords": ["NHS waiting list funding 2024", "NHS social care elderly funding", "NHS workforce pay retention", "NHS privatisation independent sector", "UK obesity prevention policy"],
@@ -324,10 +435,10 @@ def _curriculum_uk() -> List[dict[str, Any]]:
             "topic": "Geopolitics",
             "title": "Big questions for the UK: Defence, NATO, and Britain's role in the world",
             "description": "Trident, Ukraine, defence spending, and Britain's post-Brexit geopolitical position.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are normative questions about **force, alliances, and Britain's international commitments**. "
-                "Key sources: IISS Military Balance, Budapest Memorandum (1994), "
+                "Further reading (optional) — IISS Military Balance, Budapest Memorandum (1994), "
                 "RUSI defence reviews, House of Commons Defence Committee reports."
             ),
             "article_keywords": ["UK Trident renewal cost", "UK NATO 2 percent defence spending", "UK Ukraine Budapest Memorandum", "AUKUS strategic assessment", "UK overseas development aid 0.7"],
@@ -346,10 +457,10 @@ def _curriculum_uk() -> List[dict[str, Any]]:
             "topic": "Politics",
             "title": "Big questions for the UK: Parliament, voting, and constitutional reform",
             "description": "Lords reform, electoral systems, judicial independence, and the erosion of democratic norms.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are **institutional design questions** — not about any party's current position. "
-                "Key sources: Electoral Reform Society, Constitution Unit UCL, "
+                "Further reading (optional) — Electoral Reform Society, Constitution Unit UCL, "
                 "Supreme Court judgment in Miller (2019), Venice Commission assessments of UK constitutional changes."
             ),
             "article_keywords": ["UK proportional representation evidence", "House of Lords reform elected", "UK Supreme Court independence", "voter ID disenfranchisement UK", "UK political donations transparency"],
@@ -368,10 +479,10 @@ def _curriculum_uk() -> List[dict[str, Any]]:
             "topic": "Society",
             "title": "Big questions for the UK: Immigration, identity, and community",
             "description": "What the UK owes newcomers, and what it takes to build and maintain a cohesive society.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Vote on **policy design**, not on the character or worth of individuals. "
-                "Key sources: Migration Advisory Committee reports, UNHCR UK asylum statistics, "
+                "Further reading (optional) — Migration Advisory Committee reports, UNHCR UK asylum statistics, "
                 "IPPR 'Legitimate Concerns' report, Home Office Migration Transparency Data."
             ),
             "article_keywords": ["UK net migration policy MAC", "UK asylum seeker right to work", "UK offshore processing Rwanda ruling", "UK integration policy evidence", "UK community cohesion investment"],
@@ -390,10 +501,10 @@ def _curriculum_uk() -> List[dict[str, Any]]:
             "topic": "Education",
             "title": "Big questions for the UK: Schools, universities, and preparing for work",
             "description": "Tuition fees, grammar schools, apprenticeships, and whether the system delivers for everyone.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **access, funding models, and what is taught** — not individual school performance. "
-                "Key sources: Institute for Fiscal Studies HE funding analysis, Education Policy Institute, "
+                "Further reading (optional) — Institute for Fiscal Studies HE funding analysis, Education Policy Institute, "
                 "Sutton Trust social mobility research, OFSTED framework reviews."
             ),
             "article_keywords": ["UK university tuition fees graduate debt", "grammar schools inequality evidence", "UK apprenticeships funding parity", "OFSTED inspection reform", "UK teacher pay graduate professions"],
@@ -418,10 +529,10 @@ def _curriculum_us() -> List[dict[str, Any]]:
             "topic": "Environment",
             "title": "Big questions for the US: Climate policy, energy, and the American economy",
             "description": "Can the US lead on climate while protecting jobs and energy security?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **federal policy choices** — the Inflation Reduction Act, EPA authority, and fossil fuel infrastructure. "
-                "Key sources: Rhodium Group US climate progress reports, Resources for the Future, "
+                "Further reading (optional) — Rhodium Group US climate progress reports, Resources for the Future, "
                 "Brookings energy policy analysis, NOAA climate data."
             ),
             "article_keywords": ["Inflation Reduction Act clean energy", "EPA greenhouse gas authority", "US Paris Agreement climate", "US LNG export climate impact", "US agricultural emissions policy"],
@@ -440,10 +551,10 @@ def _curriculum_us() -> List[dict[str, Any]]:
             "topic": "Technology",
             "title": "Big questions for the US: Big Tech, AI, and the digital economy",
             "description": "Section 230, antitrust, and whether Washington can effectively govern Silicon Valley.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **federal regulation and trade-offs** between innovation, safety, and democratic accountability. "
-                "Key sources: FTC antitrust enforcement actions, Senate AI Insight Forum reports, "
+                "Further reading (optional) — FTC antitrust enforcement actions, Senate AI Insight Forum reports, "
                 "Georgetown CSET AI policy analyses, AI Safety Institute (NIST) frameworks."
             ),
             "article_keywords": ["Section 230 reform social media", "Big Tech antitrust FTC", "federal AI safety agency", "AI worker displacement fund", "data sovereignty foreign access"],
@@ -462,10 +573,10 @@ def _curriculum_us() -> List[dict[str, Any]]:
             "topic": "Economy",
             "title": "Big questions for the US: The economy, taxes, and who gets ahead",
             "description": "Minimum wage, student debt, the tax code, and whether the American Dream is accessible.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are **systemic policy questions** — not about individual hard work or personal responsibility. "
-                "Key sources: Congressional Budget Office, Economic Policy Institute, "
+                "Further reading (optional) — Congressional Budget Office, Economic Policy Institute, "
                 "Chetty et al. 'The Fading American Dream' (2017), Tax Policy Center, IZA labour research."
             ),
             "article_keywords": ["federal minimum wage $15 evidence", "student loan forgiveness Biden", "carried interest loophole", "US wealth tax Saez Zucman", "right-to-work laws union membership"],
@@ -484,10 +595,10 @@ def _curriculum_us() -> List[dict[str, Any]]:
             "topic": "Healthcare",
             "title": "Big questions for the US: Healthcare, insurance, and who gets covered",
             "description": "Medicare, the ACA, drug pricing, and why the US spends more and gets less than peers.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **coverage, cost, and system design** — not individual health choices. "
-                "Key sources: Commonwealth Fund US health system analyses, CBO healthcare scoring, "
+                "Further reading (optional) — Commonwealth Fund US health system analyses, CBO healthcare scoring, "
                 "RAND Medicare for All study, Peterson-KFF Health System Tracker."
             ),
             "article_keywords": ["Medicare for All single payer study", "drug price negotiation Medicare", "Medicaid expansion states", "mental health parity enforcement", "employer health insurance mobility"],
@@ -506,10 +617,10 @@ def _curriculum_us() -> List[dict[str, Any]]:
             "topic": "Geopolitics",
             "title": "Big questions for the US: Military power, alliances, and America's global role",
             "description": "NATO burden-sharing, Pentagon spending, and whether US power stabilises or destabilises the world.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are questions about the **costs, legitimacy, and effectiveness of American military power**. "
-                "Key sources: SIPRI US military expenditure data, Congressional Research Service, "
+                "Further reading (optional) — SIPRI US military expenditure data, Congressional Research Service, "
                 "CSIS strategic assessments, War Powers Resolution debate."
             ),
             "article_keywords": ["US NATO commitments burden sharing", "Ukraine US military aid", "Congress war powers authorisation", "Pentagon budget audit", "US arms sales human rights"],
@@ -528,10 +639,10 @@ def _curriculum_us() -> List[dict[str, Any]]:
             "topic": "Politics",
             "title": "Big questions for the US: Democracy, voting rights, and institutional reform",
             "description": "The Electoral College, the filibuster, the Supreme Court, and whether US democracy needs structural reform.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Interpret these as **structural design questions** — not partisan claims. "
-                "Key sources: Electoral Integrity Project, Brennan Center for Justice, "
+                "Further reading (optional) — Electoral Integrity Project, Brennan Center for Justice, "
                 "Levitsky & Ziblatt 'How Democracies Die' (2018), Citizens United v. FEC (2010), "
                 "Campaign Legal Center analyses."
             ),
@@ -551,10 +662,10 @@ def _curriculum_us() -> List[dict[str, Any]]:
             "topic": "Society",
             "title": "Big questions for the US: Immigration, identity, and the American promise",
             "description": "Border policy, DACA, racial justice, and what it means to be American today.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Vote on **policy design**, not the character or worth of individuals. "
-                "Key sources: Migration Policy Institute, American Immigration Council, "
+                "Further reading (optional) — Migration Policy Institute, American Immigration Council, "
                 "SFFA v. Harvard & UNC Supreme Court ruling (2023), Everytown gun violence research, "
                 "National Academy of Sciences 'The Integration of Immigrants into American Society' (2015)."
             ),
@@ -574,10 +685,10 @@ def _curriculum_us() -> List[dict[str, Any]]:
             "topic": "Education",
             "title": "Big questions for the US: Schools, colleges, and the skills gap",
             "description": "School funding equity, student debt, vocational training, and what K-12 students should learn.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **access, funding equity, and curriculum** — not individual school performance. "
-                "Key sources: Education Trust school funding equity research, Chetty et al. on colleges and mobility, "
+                "Further reading (optional) — Education Trust school funding equity research, Chetty et al. on colleges and mobility, "
                 "National Center for Education Statistics, Fordham Institute on curriculum standards."
             ),
             "article_keywords": ["school funding property tax inequality", "school vouchers public education", "SAT ACT admissions income bias", "vocational trades funding college prep", "teacher pay national US districts"],
@@ -602,10 +713,10 @@ def _curriculum_nl() -> List[dict[str, Any]]:
             "topic": "Environment",
             "title": "Big questions for the Netherlands: Nitrogen, energy, and the climate transition",
             "description": "How does the Netherlands balance climate targets with the interests of agriculture, industry, and energy security?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These questions concern **Dutch policy choices** — nitrogen rules, Groningen gas, and coastal adaptation. "
-                "Key sources: Raad van State nitrogen ruling (2019), KNMI climate scenarios, "
+                "Further reading (optional) — Raad van State nitrogen ruling (2019), KNMI climate scenarios, "
                 "PBL Netherlands Environmental Assessment Agency, CBS Statistics Netherlands energy data."
             ),
             "article_keywords": ["Netherlands nitrogen stikstof livestock", "Groningen gas earthquake seismic", "Dutch coal power phase-out", "Netherlands pension fund fossil fuel divestment", "Dutch nuclear energy expansion"],
@@ -624,10 +735,10 @@ def _curriculum_nl() -> List[dict[str, Any]]:
             "topic": "Technology",
             "title": "Big questions for the Netherlands: ASML, AI governance, and digital sovereignty",
             "description": "Can the Netherlands shape global tech policy from its unique position as home to ASML?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Dutch tech policy**, ASML export controls, EU AI Act implementation, and the Dutch DPA. "
-                "Key sources: Dutch DPA (Autoriteit Persoonsgegevens) enforcement reports, "
+                "Further reading (optional) — Dutch DPA (Autoriteit Persoonsgegevens) enforcement reports, "
                 "ASML annual reports, Rathenau Instituut digital society research, EU AI Act (2024)."
             ),
             "article_keywords": ["ASML export controls China chips", "EU AI Act Dutch business compliance", "Dutch DPA GDPR enforcement Big Tech", "Netherlands digital sovereignty cloud", "ASML deep tech innovation Netherlands"],
@@ -646,10 +757,10 @@ def _curriculum_nl() -> List[dict[str, Any]]:
             "topic": "Economy",
             "title": "Big questions for the Netherlands: Housing, flex work, and Dutch prosperity",
             "description": "The housing crisis, flex contracts, pension reform, and whether Dutch prosperity is shared fairly.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **structural economic policy** — housing, labour market reform, pensions, and tax. "
-                "Key sources: CPB Netherlands Bureau for Economic Policy Analysis, "
+                "Further reading (optional) — CPB Netherlands Bureau for Economic Policy Analysis, "
                 "CBS housing data, ABP pension fund reports, SER (Social and Economic Council) reports."
             ),
             "article_keywords": ["Netherlands housing crisis 100000 homes", "flex contract zero hours Netherlands reform", "Dutch pension system defined contribution", "Netherlands tax treaty multinationals", "hypotheekrenteaftrek mortgage interest deduction"],
@@ -668,10 +779,10 @@ def _curriculum_nl() -> List[dict[str, Any]]:
             "topic": "Healthcare",
             "title": "Big questions for the Netherlands: Healthcare access, the eigen risico, and elderly care",
             "description": "Is the Dutch insurance-based healthcare system still working equitably for everyone?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Dutch healthcare access, the eigen risico (deductible), and long-term care**. "
-                "Key sources: RIVM National Institute for Public Health, Zorginstituut Nederland, "
+                "Further reading (optional) — RIVM National Institute for Public Health, Zorginstituut Nederland, "
                 "SCP Netherlands Institute for Social Research on healthcare access, NZa healthcare authority data."
             ),
             "article_keywords": ["Dutch eigen risico healthcare deductible abolish", "Netherlands elderly care underfunding", "mental health waiting times Netherlands", "Dutch GP shortage rural areas", "Dutch preventive health sugar tax"],
@@ -690,10 +801,10 @@ def _curriculum_nl() -> List[dict[str, Any]]:
             "topic": "Geopolitics",
             "title": "Big questions for the Netherlands: Defence, Ukraine, and Dutch foreign policy",
             "description": "F-16s to Ukraine, NATO obligations, MH17, and the Netherlands' role in European security.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are normative questions about **alliances, military support, and international justice**. "
-                "Key sources: IISS on Dutch defence capabilities, Dutch Court of Appeal MH17 damages ruling (2022), "
+                "Further reading (optional) — IISS on Dutch defence capabilities, Dutch Court of Appeal MH17 damages ruling (2022), "
                 "NATO burden-sharing assessments, AIV (Advisory Council on International Affairs) reports."
             ),
             "article_keywords": ["Netherlands F-16 Ukraine transfer", "Netherlands NATO 2 percent defence", "MH17 Russia verdict damages", "Dutch parliamentary defence oversight", "European defence force Netherlands"],
@@ -712,10 +823,10 @@ def _curriculum_nl() -> List[dict[str, Any]]:
             "topic": "Politics",
             "title": "Big questions for the Netherlands: Democracy, coalition formation, and political trust",
             "description": "Prolonged kabinetsformatie, the rise of populism, and what the Dutch political system needs.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **institutional design** — the formation process, media freedom, and civic trust. "
-                "Key sources: Montesquieu Institute constitutional research, "
+                "Further reading (optional) — Montesquieu Institute constitutional research, "
                 "Parlement.com, RSF Press Freedom Index, ODIHR electoral reports on the Netherlands."
             ),
             "article_keywords": ["Netherlands proportional representation coalition formation", "kabinetsformatie time limit democratic", "NPO public broadcaster independence", "Dutch constitution rule of law protection", "Netherlands civic education schools"],
@@ -734,10 +845,10 @@ def _curriculum_nl() -> List[dict[str, Any]]:
             "topic": "Society",
             "title": "Big questions for the Netherlands: Immigration, integration, and Dutch identity",
             "description": "Asylum system pressure, integration policy, and what it means to be Dutch today.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Vote on **policy design**, not on people's backgrounds or worth. "
-                "Key sources: CBS Statistics Netherlands migration data, COA (Central Agency for the Reception of Asylum Seekers) reports, "
+                "Further reading (optional) — CBS Statistics Netherlands migration data, COA (Central Agency for the Reception of Asylum Seekers) reports, "
                 "SCP Netherlands Institute for Social Research integration data, European Court of Justice asylum rulings."
             ),
             "article_keywords": ["Netherlands EU asylum obligations distribution", "Dutch integration programme mandatory", "Netherlands housing crisis causes migration", "labour market discrimination Netherlands", "Dutch civic identity democratic values"],
@@ -756,10 +867,10 @@ def _curriculum_nl() -> List[dict[str, Any]]:
             "topic": "Education",
             "title": "Big questions for the Netherlands: MBO, HBO, and education for a changing economy",
             "description": "Skills shortages, early tracking, and whether Dutch education is fit for the future.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **system design and access** — the MBO-HBO-WO ladder, teacher pay, and early selection. "
-                "Key sources: Inspectie van het Onderwijs (Education Inspectorate) reports, "
+                "Further reading (optional) — Inspectie van het Onderwijs (Education Inspectorate) reports, "
                 "Onderwijsraad (Education Council) policy analyses, CPB education returns research, PISA Netherlands data."
             ),
             "article_keywords": ["Netherlands early tracking 12 age inequality", "MBO vocational prestige Netherlands", "Dutch teacher shortage pay", "early childhood education Netherlands disadvantage", "Dutch student finance grant loan"],
@@ -784,10 +895,10 @@ def _curriculum_ie() -> List[dict[str, Any]]:
             "topic": "Environment",
             "title": "Big questions for Ireland: Climate action, farming, and the Irish environment",
             "description": "Can Ireland meet its legally binding climate targets while protecting rural livelihoods?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Irish policy choices** — agricultural methane, peat bog restoration, and planning reform. "
-                "Key sources: EPA Ireland greenhouse gas inventories, Climate Action Plan 2024, "
+                "Further reading (optional) — EPA Ireland greenhouse gas inventories, Climate Action Plan 2024, "
                 "IPCC AR6 on agriculture methane, Climate Change Advisory Council annual reviews."
             ),
             "article_keywords": ["Ireland cattle herd reduction climate", "Ireland peat bog restoration carbon", "Ireland wind solar planning fast track", "Ireland per capita emissions Europe", "Ireland offshore wind energy export"],
@@ -806,10 +917,10 @@ def _curriculum_ie() -> List[dict[str, Any]]:
             "topic": "Technology",
             "title": "Big questions for Ireland: Tech multinationals, data centres, and digital governance",
             "description": "Is Ireland's dependence on US tech FDI a strength or a structural economic vulnerability?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Consider Ireland's role as **European headquarters** for US tech giants and as EU lead supervisor under GDPR. "
-                "Key sources: DPC (Data Protection Commission) enforcement statistics, "
+                "Further reading (optional) — DPC (Data Protection Commission) enforcement statistics, "
                 "ESRI economic analysis of FDI, EirGrid grid capacity reports, IDA Ireland FDI data."
             ),
             "article_keywords": ["Ireland tech FDI concentration risk", "DPC GDPR enforcement resources", "Ireland data centres electricity grid", "Ireland corporation tax rate multinationals", "Irish universities AI computer science"],
@@ -828,10 +939,10 @@ def _curriculum_ie() -> List[dict[str, Any]]:
             "topic": "Economy",
             "title": "Big questions for Ireland: Housing, cost of living, and the Irish economy",
             "description": "Ireland's housing emergency, reliance on corporate tax, and the cost of living crisis.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are **structural questions** about Ireland's economy — housing supply, tax base, and wages. "
-                "Key sources: ESRI housing research, Department of Finance Tax Strategy Group, "
+                "Further reading (optional) — ESRI housing research, Department of Finance Tax Strategy Group, "
                 "Living Wage Technical Group reports, SCSI property market data."
             ),
             "article_keywords": ["Ireland state housing social affordable direct build", "Airbnb short-term let restriction Ireland", "Ireland corporate tax diversification", "Ireland living wage minimum wage", "Ireland planning high density transit"],
@@ -850,10 +961,10 @@ def _curriculum_ie() -> List[dict[str, Any]]:
             "topic": "Healthcare",
             "title": "Big questions for Ireland: Sláintecare, the two-tier system, and mental health",
             "description": "Can Ireland build the universal health system it legislated for?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Sláintecare implementation, waiting lists, and the public-private divide** in Irish healthcare. "
-                "Key sources: Sláintecare Implementation Advisory Council reports, "
+                "Further reading (optional) — Sláintecare Implementation Advisory Council reports, "
                 "HIQA (Health Information and Quality Authority) analyses, "
                 "Mental Health Commission annual reports, Oireachtas health committee hearings."
             ),
@@ -873,10 +984,10 @@ def _curriculum_ie() -> List[dict[str, Any]]:
             "topic": "Geopolitics",
             "title": "Big questions for Ireland: Neutrality, defence, and Ireland's role in the world",
             "description": "Should Ireland maintain military neutrality or assume greater responsibility for European security?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are normative questions about **Irish neutrality, UN peacekeeping, and European defence**. "
-                "Key sources: Government Commission on the Future of Irish Defence Forces (2022), "
+                "Further reading (optional) — Government Commission on the Future of Irish Defence Forces (2022), "
                 "Irish Neutrality League, PDFORRA reports, EU Common Security and Defence Policy documents."
             ),
             "article_keywords": ["Irish military neutrality reform NATO", "Ireland defence spending increase", "Irish neutrality constitution", "Ireland UN peacekeeping contribution", "EU mutual defence Article 42 Ireland"],
@@ -895,10 +1006,10 @@ def _curriculum_ie() -> List[dict[str, Any]]:
             "topic": "Politics",
             "title": "Big questions for Ireland: The Dáil, Citizens' Assemblies, and Irish democracy",
             "description": "Electoral reform, Citizens' Assemblies, and how to restore trust in Irish politics.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are **institutional design questions** — not about any party's current record. "
-                "Key sources: Electoral Commission Ireland reports, "
+                "Further reading (optional) — Electoral Commission Ireland reports, "
                 "Citizens' Assembly Ireland published recommendations, "
                 "Democratic Audit of Ireland, SIPO (Standards in Public Office Commission) reports."
             ),
@@ -918,10 +1029,10 @@ def _curriculum_ie() -> List[dict[str, Any]]:
             "topic": "Society",
             "title": "Big questions for Ireland: Immigration, identity, and modern Irish society",
             "description": "Ireland's rapidly changing demographics and what it means to belong in contemporary Ireland.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Vote on **policy and values**, not on people's backgrounds. "
-                "Key sources: CSO Census 2022 data, ESRI integration research, "
+                "Further reading (optional) — CSO Census 2022 data, ESRI integration research, "
                 "International Protection Act 2024, Report of the Commission on the Irish Diaspora."
             ),
             "article_keywords": ["Ireland direct provision abolish housing", "Ireland immigration economic contribution", "Ireland institutional abuse reparations Magdalene", "homelessness Ireland housing policy failure", "Irish diaspora return immigration"],
@@ -940,10 +1051,10 @@ def _curriculum_ie() -> List[dict[str, Any]]:
             "topic": "Education",
             "title": "Big questions for Ireland: CAO, apprenticeships, and the future of Irish education",
             "description": "The points race, teacher pay, and whether Irish education delivers for all.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **access, the CAO system, and skills** — not individual school performance. "
-                "Key sources: HEA (Higher Education Authority) access reports, "
+                "Further reading (optional) — HEA (Higher Education Authority) access reports, "
                 "ESRI 'Learning for Life' education research, "
                 "SOLAS (Further Education and Training Authority), Teaching Council Ireland."
             ),
@@ -969,10 +1080,10 @@ def _curriculum_de() -> List[dict[str, Any]]:
             "topic": "Environment",
             "title": "Big questions for Germany: Energiewende, nuclear, and climate targets",
             "description": "What does the Energiewende cost, has the nuclear phase-out been a mistake, and can Germany meet its 2045 climate neutrality target?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **German energy policy choices** — the nuclear phase-out, coal exit, Energiewende costs, and 2045 climate neutrality. "
-                "Key sources: Agora Energiewende analysis, Umweltbundesamt (Federal Environment Agency) reports, "
+                "Further reading (optional) — Agora Energiewende analysis, Umweltbundesamt (Federal Environment Agency) reports, "
                 "DIW Berlin energy economics, Federal Climate Change Act (KSG) targets."
             ),
             "article_keywords": ["Germany nuclear phase-out climate impact", "Kohleausstieg 2030 acceleration", "Energiewende cost electricity prices", "Germany green hydrogen industrial decarbonisation", "Autobahn speed limit emissions"],
@@ -991,10 +1102,10 @@ def _curriculum_de() -> List[dict[str, Any]]:
             "topic": "Technology",
             "title": "Big questions for Germany: Digitalisation, AI, and the Mittelstand",
             "description": "Can Germany's traditional industrial strengths survive the digital revolution, and is the EU AI Act an asset or a handicap?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **German digital policy**, GDPR origins, EU AI Act compliance, and the Mittelstand's digital readiness. "
-                "Key sources: Bitkom digitalisation index, Fraunhofer AI research, "
+                "Further reading (optional) — Bitkom digitalisation index, Fraunhofer AI research, "
                 "DIW digital economy analysis, Monopolies Commission on digital markets."
             ),
             "article_keywords": ["Germany Mittelstand digitalisation lag", "Germany GDPR data protection AI investment", "Germany national AI strategy US China", "German manufacturing AI automation jobs", "European sovereign cloud Germany"],
@@ -1013,10 +1124,10 @@ def _curriculum_de() -> List[dict[str, Any]]:
             "topic": "Economy",
             "title": "Big questions for Germany: Growth, the debt brake, and the German economic model",
             "description": "Is the social market economy still fit for purpose? What should be done about the Schuldenbremse and industrial subsidies?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **structural economic questions** — the Schuldenbremse, Mindestlohn, Kurzarbeit, and industrial policy. "
-                "Key sources: Sachverständigenrat (German Council of Economic Experts) annual reports, "
+                "Further reading (optional) — Sachverständigenrat (German Council of Economic Experts) annual reports, "
                 "IMF Germany Article IV consultations, DIW and ifo Institute economic analyses."
             ),
             "article_keywords": ["Schuldenbremse debt brake reform investment", "Germany Kurzarbeit short-time work scheme", "Mindestlohn 15 euro minimum wage", "Germany automotive industrial dependency", "Eastern Germany structural economic gap"],
@@ -1035,10 +1146,10 @@ def _curriculum_de() -> List[dict[str, Any]]:
             "topic": "Healthcare",
             "title": "Big questions for Germany: The two-tier health system and care for an aging society",
             "description": "Is Germany's dual public-private health insurance system equitable, and can long-term care be sustainably funded?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **GKV vs PKV, Pflegereform, and care workforce** issues in Germany. "
-                "Key sources: Barmer GEK health insurance reports, SVR Gesundheit (Advisory Council on Health), "
+                "Further reading (optional) — Barmer GEK health insurance reports, SVR Gesundheit (Advisory Council on Health), "
                 "Bertelsmann Stiftung hospital reform analysis, Federal Ministry of Health data."
             ),
             "article_keywords": ["GKV PKV Germany merge single system", "Germany Pflegeversicherung long-term care reform", "German care workers pay shortage", "German hospital reform consolidation", "Germany mental health waiting times"],
@@ -1057,10 +1168,10 @@ def _curriculum_de() -> List[dict[str, Any]]:
             "topic": "Geopolitics",
             "title": "Big questions for Germany: Zeitenwende, Ukraine, and German security policy",
             "description": "Has Germany genuinely turned the page on post-WWII pacifism? What does the Zeitenwende require in practice?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are normative questions about **German rearmament, Russia policy, and European security**. "
-                "Key sources: Stiftung Wissenschaft und Politik (SWP) security analyses, "
+                "Further reading (optional) — Stiftung Wissenschaft und Politik (SWP) security analyses, "
                 "Bundeswehr capability assessments, IISS Military Balance Germany, "
                 "Bundestag defence committee reports."
             ),
@@ -1080,10 +1191,10 @@ def _curriculum_de() -> List[dict[str, Any]]:
             "topic": "Politics",
             "title": "Big questions for Germany: Democracy, the AfD, and German political institutions",
             "description": "How should Germany respond to the rise of the AfD and strengthen democratic resilience?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **institutional design** — the Basic Law, party bans, and democratic resilience mechanisms. "
-                "Key sources: Bundesverfassungsgericht (Federal Constitutional Court) jurisprudence, "
+                "Further reading (optional) — Bundesverfassungsgericht (Federal Constitutional Court) jurisprudence, "
                 "Verfassungsschutz annual reports, Bertelsmann Transformation Index, "
                 "Venice Commission assessments of Germany."
             ),
@@ -1103,10 +1214,10 @@ def _curriculum_de() -> List[dict[str, Any]]:
             "topic": "Society",
             "title": "Big questions for Germany: Migration, integration, and German identity",
             "description": "From Willkommenskultur to the current debate — where should German migration and integration policy go?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Vote on **policy design and values** — not on individuals' backgrounds. "
-                "Key sources: Sachverständigenrat Migration (Expert Council on Integration and Migration), "
+                "Further reading (optional) — Sachverständigenrat Migration (Expert Council on Integration and Migration), "
                 "BAMF Federal Office for Migration and Refugees, IAB labour market integration research, "
                 "Bertelsmann Stiftung integration barometer."
             ),
@@ -1126,10 +1237,10 @@ def _curriculum_de() -> List[dict[str, Any]]:
             "topic": "Education",
             "title": "Big questions for Germany: Bildung, Gymnasium, and equity in education",
             "description": "Does the German education system still serve children from all backgrounds equitably?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **system design and equity** — early selection, Gymnasium prestige, Ausbildung, and Bildungsföderalismus. "
-                "Key sources: PISA results for Germany, KMK (Standing Conference of the Ministers of Education) data, "
+                "Further reading (optional) — PISA results for Germany, KMK (Standing Conference of the Ministers of Education) data, "
                 "BMBF education reports, Bertelsmann Stiftung Chancenspiegel social mobility research."
             ),
             "article_keywords": ["Germany early tracking 10 Gymnasium inequality", "German dual vocational Ausbildung undervalued", "Germany Bildungsföderalismus 16 state systems", "Germany teacher pay national standard", "Germany Ganztagsschule full-day school right"],
@@ -1154,10 +1265,10 @@ def _curriculum_fr() -> List[dict[str, Any]]:
             "topic": "Environment",
             "title": "Big questions for France: Nuclear, agriculture, and the energy transition",
             "description": "Can France lead Europe on nuclear while meeting its climate targets and addressing agricultural emissions?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **French energy choices** — nuclear expansion, agricultural methane, and the Loi Climat et Résilience. "
-                "Key sources: Haut Conseil pour le Climat annual reports, RTE energy scenarios, "
+                "Further reading (optional) — Haut Conseil pour le Climat annual reports, RTE energy scenarios, "
                 "ADEME energy transition analyses, EDF corporate reports."
             ),
             "article_keywords": ["France nuclear EDF expansion plan", "French agriculture methane emissions reform", "France building insulation renovation", "EDF renationalisation energy sovereignty", "French farmers protests environmental reform"],
@@ -1176,10 +1287,10 @@ def _curriculum_fr() -> List[dict[str, Any]]:
             "topic": "Technology",
             "title": "Big questions for France: AI, tech sovereignty, and La French Tech",
             "description": "Can France build world-class AI while defending European digital sovereignty?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **French tech policy**, the French Tech ecosystem, CNIL enforcement, and EU AI Act governance. "
-                "Key sources: CNIL annual reports, France Stratégie AI analyses, "
+                "Further reading (optional) — CNIL annual reports, France Stratégie AI analyses, "
                 "Mistral AI technical papers, Conseil National du Numérique reports."
             ),
             "article_keywords": ["France Mistral AI investment sovereign", "CNIL enforcement Big Tech France", "France TikTok ban government devices", "French cultural exception AI generated content", "EU AI copyright training data France"],
@@ -1198,10 +1309,10 @@ def _curriculum_fr() -> List[dict[str, Any]]:
             "topic": "Economy",
             "title": "Big questions for France: Retraites, the 35-hour week, and the French economic model",
             "description": "Macron's pension reform, labour market flexibility, and who pays for France's social model.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are **structural policy questions** about the French economic and social model. "
-                "Key sources: Conseil d'Analyse Économique (CAE) research, "
+                "Further reading (optional) — Conseil d'Analyse Économique (CAE) research, "
                 "INSEE labour market data, France Stratégie productivity analyses, "
                 "COR (Conseil d'Orientation des Retraites) pension assessments."
             ),
@@ -1221,10 +1332,10 @@ def _curriculum_fr() -> List[dict[str, Any]]:
             "topic": "Healthcare",
             "title": "Big questions for France: Sécurité Sociale, déserts médicaux, and French healthcare",
             "description": "Is France's acclaimed universal health system still delivering equitably for everyone?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **access, funding, and the désertification médicale** affecting rural France. "
-                "Key sources: DREES health statistics, Cour des Comptes healthcare audits, "
+                "Further reading (optional) — DREES health statistics, Cour des Comptes healthcare audits, "
                 "IRDES health economics research, INSEE geographic health access data."
             ),
             "article_keywords": ["France Sécurité Sociale universal coverage model", "déserts médicaux rural GP shortage France", "French private clinics public subsidies", "France mental health funding European comparison", "French emergency department A&E waiting times"],
@@ -1243,10 +1354,10 @@ def _curriculum_fr() -> List[dict[str, Any]]:
             "topic": "Geopolitics",
             "title": "Big questions for France: Nuclear deterrent, Françafrique, and European strategic autonomy",
             "description": "France's nuclear posture, Africa policy, and Macron's case for EU strategic autonomy.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are normative questions about **French military power, postcolonial obligations, and European defence**. "
-                "Key sources: IRSEM (Institut de Recherche Stratégique de l'École Militaire), "
+                "Further reading (optional) — IRSEM (Institut de Recherche Stratégique de l'École Militaire), "
                 "French Senate defence committee reports, IFRI security analyses, "
                 "French White Paper on Defence and National Security."
             ),
@@ -1266,10 +1377,10 @@ def _curriculum_fr() -> List[dict[str, Any]]:
             "topic": "Politics",
             "title": "Big questions for France: La Ve République, gilets jaunes, and democratic reform",
             "description": "Is the Fifth Republic's strong presidency a democratic strength or a structural weakness?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are **institutional design questions** — the Fifth Republic's presidential power, referenda, and the National Assembly. "
-                "Key sources: Conseil Constitutionnel jurisprudence, "
+                "Further reading (optional) — Conseil Constitutionnel jurisprudence, "
                 "Terra Nova policy analyses, CEVIPOF political science research, "
                 "Venice Commission assessments of French constitutional practice."
             ),
@@ -1289,10 +1400,10 @@ def _curriculum_fr() -> List[dict[str, Any]]:
             "topic": "Society",
             "title": "Big questions for France: Laïcité, immigration, and French cohesion",
             "description": "The headscarf debate, les banlieues, and what French republicanism means in practice.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Vote on **policy design and values** — not on individuals' religious or cultural choices. "
-                "Key sources: Haut Conseil à l'Intégration, INED migration statistics, "
+                "Further reading (optional) — Haut Conseil à l'Intégration, INED migration statistics, "
                 "Institut Montaigne banlieues research, CEVIPOF social cohesion surveys."
             ),
             "article_keywords": ["French laïcité religious expression limits", "banlieues economic exclusion France", "France immigration integration capacity", "discrimination hiring France Maghreb", "France republican integration model assessment"],
@@ -1311,10 +1422,10 @@ def _curriculum_fr() -> List[dict[str, Any]]:
             "topic": "Education",
             "title": "Big questions for France: Grandes écoles, le bac, and French education",
             "description": "Does French elite education perpetuate privilege more than it creates opportunity?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **access and system design** — the grandes écoles, baccalauréat reform, Parcoursup, and lycée professionnel. "
-                "Key sources: DEPP (Direction de l'Évaluation, de la Prospective et de la Performance) educational statistics, "
+                "Further reading (optional) — DEPP (Direction de l'Évaluation, de la Prospective et de la Performance) educational statistics, "
                 "Cour des Comptes grandes écoles audit, France Stratégie social mobility research."
             ),
             "article_keywords": ["grandes écoles France privilege elite access", "Parcoursup algorithm university admission fairness", "lycée professionnel resources academic parity", "French baccalaureate reform assessment", "teacher pay France graduate comparison"],
@@ -1339,10 +1450,10 @@ def _curriculum_ca() -> List[dict[str, Any]]:
             "topic": "Environment",
             "title": "Big questions for Canada: Oil sands, the carbon price, and climate leadership",
             "description": "Can Canada credibly claim climate leadership while remaining one of the world's largest oil producers?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Canadian policy choices** — Trans Mountain, the federal carbon price, and Indigenous land rights. "
-                "Key sources: Environment and Climate Change Canada emissions reports, "
+                "Further reading (optional) — Environment and Climate Change Canada emissions reports, "
                 "Canadian Net-Zero Emissions Accountability Act, "
                 "NRCAN natural resources data, Pembina Institute energy analysis."
             ),
@@ -1362,10 +1473,10 @@ def _curriculum_ca() -> List[dict[str, Any]]:
             "topic": "Technology",
             "title": "Big questions for Canada: AI leadership, digital regulation, and the digital economy",
             "description": "Is Canada doing enough to keep its AI talent at home and shape global digital governance?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Canadian tech policy** — AI research investment, the Online Streaming Act (C-11), and federal AI governance. "
-                "Key sources: CIFAR AI research reports, Canadian Institute for Advanced Research, "
+                "Further reading (optional) — CIFAR AI research reports, Canadian Institute for Advanced Research, "
                 "Standing Committee on Industry Science and Technology on AI, OPC (Privacy Commissioner of Canada) reports."
             ),
             "article_keywords": ["Canada AI talent retention brain drain US", "Bill C-11 Online Streaming Act CRTC", "Canada federal AI regulation framework", "Canada PIPEDA privacy law reform GDPR", "Canada sovereign cloud computing infrastructure"],
@@ -1384,10 +1495,10 @@ def _curriculum_ca() -> List[dict[str, Any]]:
             "topic": "Economy",
             "title": "Big questions for Canada: Housing, wages, and the Canadian dream",
             "description": "Toronto and Vancouver housing costs, temporary foreign workers, and generational wealth inequality.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **structural policy** — housing supply, wages, and what Canada owes to workers. "
-                "Key sources: CMHC housing supply analyses, Bank of Canada housing research, "
+                "Further reading (optional) — CMHC housing supply analyses, Bank of Canada housing research, "
                 "Parliamentary Budget Officer reports, Statistics Canada income and wealth data."
             ),
             "article_keywords": ["Canada federal housing affordable social direct build", "Canada zoning reform federal funding cities", "temporary foreign worker programme wages", "Canada minimum wage $20 living wage", "Canada immigration housing infrastructure capacity"],
@@ -1406,10 +1517,10 @@ def _curriculum_ca() -> List[dict[str, Any]]:
             "topic": "Healthcare",
             "title": "Big questions for Canada: Wait times, pharmacare, and the future of Medicare",
             "description": "Is Canadian universal healthcare still delivering on its founding promise?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **system design** — wait times, provincial jurisdiction, pharmacare, and dental care. "
-                "Key sources: CIHI (Canadian Institute for Health Information) wait time data, "
+                "Further reading (optional) — CIHI (Canadian Institute for Health Information) wait time data, "
                 "Parliamentary Budget Officer pharmacare costing, CMA physician surveys, "
                 "Romanow Commission on the Future of Health Care in Canada."
             ),
@@ -1429,10 +1540,10 @@ def _curriculum_ca() -> List[dict[str, Any]]:
             "topic": "Geopolitics",
             "title": "Big questions for Canada: NATO, Arctic sovereignty, and Canadian defence",
             "description": "NORAD modernisation, the 2% NATO target, and Canada's obligations in a changing security environment.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are normative questions about **Canadian military obligations, Arctic sovereignty, and alliance commitments**. "
-                "Key sources: Canadian Defence Policy Review, House of Commons National Defence Committee, "
+                "Further reading (optional) — Canadian Defence Policy Review, House of Commons National Defence Committee, "
                 "Arctic Council Canada, NORAD Modernization Plan, PBO defence spending analysis."
             ),
             "article_keywords": ["Canada NATO 2 percent defence spending commitment", "NORAD modernisation Canada", "Canadian Arctic sovereignty climate", "Canada Ukraine military support", "Canada domestic defence procurement"],
@@ -1451,10 +1562,10 @@ def _curriculum_ca() -> List[dict[str, Any]]:
             "topic": "Politics",
             "title": "Big questions for Canada: Electoral reform, Senate, and democratic institutions",
             "description": "FPTP versus proportional representation, Senate reform, and trust in Canadian democratic institutions.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are **institutional design questions** — not claims about any party's record. "
-                "Key sources: Electoral Reform Committee of the House of Commons (2016), "
+                "Further reading (optional) — Electoral Reform Committee of the House of Commons (2016), "
                 "Senate Modernization Report, Elections Canada data, Samara Centre for Democracy research."
             ),
             "article_keywords": ["Canada electoral reform proportional representation 2015 promise", "Senate reform abolish elected Canada", "Supreme Court appointment Parliament confirmation", "PMO power Parliament accountability", "lobbying transparency Canada federal"],
@@ -1473,10 +1584,10 @@ def _curriculum_ca() -> List[dict[str, Any]]:
             "topic": "Society",
             "title": "Big questions for Canada: Reconciliation, immigration, and Canadian identity",
             "description": "Truth and Reconciliation, immigration levels, and what it means to be Canadian.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Vote on **policy and values** — not on the background of individual people. "
-                "Key sources: Truth and Reconciliation Commission 94 Calls to Action, "
+                "Further reading (optional) — Truth and Reconciliation Commission 94 Calls to Action, "
                 "National Inquiry into MMIWG, Statistics Canada demographic projections, "
                 "IRCC immigration levels plan data."
             ),
@@ -1496,10 +1607,10 @@ def _curriculum_ca() -> List[dict[str, Any]]:
             "topic": "Education",
             "title": "Big questions for Canada: Universities, trades, and learning for a changing economy",
             "description": "Student debt, the skilled trades shortage, and whether Canadian education serves everyone equitably.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **access and system design** — tuition levels, apprenticeships, and provincial jurisdiction. "
-                "Key sources: Statistics Canada university tuition data, "
+                "Further reading (optional) — Statistics Canada university tuition data, "
                 "SODES skilled trades shortage research, "
                 "PBO student loan analysis, Canada School Nutrition Programme advocacy."
             ),
@@ -1525,10 +1636,10 @@ def _curriculum_sg() -> List[dict[str, Any]]:
             "topic": "Environment",
             "title": "Big questions for Singapore: Green Plan 2030, regional haze, and sustainability",
             "description": "Can Singapore lead on sustainability as a small, resource-dependent city-state?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Singapore's Green Plan 2030**, energy imports, and regional deforestation diplomacy. "
-                "Key sources: National Climate Change Secretariat Singapore, "
+                "Further reading (optional) — National Climate Change Secretariat Singapore, "
                 "EMA (Energy Market Authority) statistics, NEA carbon tax reviews, "
                 "ASEAN Agreement on Transboundary Haze Pollution."
             ),
@@ -1548,10 +1659,10 @@ def _curriculum_sg() -> List[dict[str, Any]]:
             "topic": "Technology",
             "title": "Big questions for Singapore: Smart Nation, fintech, and digital governance",
             "description": "Is Singapore's Smart Nation programme the right model for digital government, and what are the trade-offs?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Smart Nation, the PDPA, fintech regulation, and surveillance trade-offs**. "
-                "Key sources: Smart Nation and Digital Government Office reports, "
+                "Further reading (optional) — Smart Nation and Digital Government Office reports, "
                 "PDPC (Personal Data Protection Commission) enforcement data, "
                 "MAS (Monetary Authority of Singapore) fintech frameworks, GovTech annual reports."
             ),
@@ -1571,10 +1682,10 @@ def _curriculum_sg() -> List[dict[str, Any]]:
             "topic": "Economy",
             "title": "Big questions for Singapore: HDB, foreign workers, and the Singapore social compact",
             "description": "Housing affordability, foreign labour policy, and whether Singapore's growth model still works for everyone.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **structural policy** — HDB affordability, foreign worker levies, the CPF system, and progressive taxation. "
-                "Key sources: HDB annual reports, MOM (Ministry of Manpower) labour statistics, "
+                "Further reading (optional) — HDB annual reports, MOM (Ministry of Manpower) labour statistics, "
                 "CPF Board data, Singstat income distribution, Budget speeches."
             ),
             "article_keywords": ["HDB Singapore affordability young buyers", "Singapore foreign workers wage competition", "CPF retirement savings adequacy Singapore", "Singapore progressive tax wealth inequality", "Singapore cost of living inequality"],
@@ -1593,10 +1704,10 @@ def _curriculum_sg() -> List[dict[str, Any]]:
             "topic": "Healthcare",
             "title": "Big questions for Singapore: MediShield Life, eldercare, and an aging population",
             "description": "Can Singapore's 3M health financing model sustain an aging society at scale?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Medisave, MediShield Life, CareShield Life, and long-term care access**. "
-                "Key sources: MOH (Ministry of Health Singapore) annual reports, "
+                "Further reading (optional) — MOH (Ministry of Health Singapore) annual reports, "
                 "AIC (Agency for Integrated Care) eldercare data, "
                 "IMH (Institute of Mental Health) mental health surveys, Lien Foundation eldercare research."
             ),
@@ -1616,10 +1727,10 @@ def _curriculum_sg() -> List[dict[str, Any]]:
             "topic": "Geopolitics",
             "title": "Big questions for Singapore: Regional security and navigating great-power rivalry",
             "description": "How should Singapore manage US-China competition while maintaining its strategic autonomy?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are normative questions about **Singapore's strategic position and defence policy**. "
-                "Key sources: IISS military balance, RSIS Singapore security analyses, "
+                "Further reading (optional) — IISS military balance, RSIS Singapore security analyses, "
                 "FPDA Treaty documentation, Singapore MINDEF defence white paper."
             ),
             "article_keywords": ["Singapore US China rivalry strategic autonomy", "Singapore national service conscription", "Singapore cybersecurity defence investment", "Five Power Defence Arrangements FPDA", "Singapore ASEAN dialogue US China mediation"],
@@ -1638,10 +1749,10 @@ def _curriculum_sg() -> List[dict[str, Any]]:
             "topic": "Politics",
             "title": "Big questions for Singapore: The GRC system, press freedom, and political openness",
             "description": "Is Singapore's political system becoming more open, and what reforms would strengthen democratic accountability?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are **institutional design questions** about Singapore's political structures. "
-                "Key sources: Singapore Elections Department data, "
+                "Further reading (optional) — Singapore Elections Department data, "
                 "RSF Press Freedom Index, Freedom House Singapore assessment, "
                 "Parliamentary Hansard, ISA (Internal Security Act) historical usage data."
             ),
@@ -1661,10 +1772,10 @@ def _curriculum_sg() -> List[dict[str, Any]]:
             "topic": "Society",
             "title": "Big questions for Singapore: Race harmony, foreign talent, and Singaporean identity",
             "description": "The CMIO framework, foreign talent policy, and what Singaporean identity means in a diverse society.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Vote on **policy design**, not on individuals' backgrounds. "
-                "Key sources: NUS sociology research on race in Singapore, "
+                "Further reading (optional) — NUS sociology research on race in Singapore, "
                 "MOM fair employment practices reports, MSF (Ministry of Social and Family Development) data, "
                 "IPS (Institute of Policy Studies) social cohesion surveys."
             ),
@@ -1684,10 +1795,10 @@ def _curriculum_sg() -> List[dict[str, Any]]:
             "topic": "Education",
             "title": "Big questions for Singapore: PSLE, SkillsFuture, and the tuition arms race",
             "description": "Is Singapore's education system breeding excellence or anxiety, and is SkillsFuture working?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **PSLE reform, tuition industry, SkillsFuture effectiveness, and what education is for**. "
-                "Key sources: MOE (Ministry of Education) Singapore PSLE reform papers, "
+                "Further reading (optional) — MOE (Ministry of Education) Singapore PSLE reform papers, "
                 "SkillsFuture Council reports, IPS education research, "
                 "PISA Singapore data, Lien Foundation education surveys."
             ),
@@ -1713,10 +1824,10 @@ def _curriculum_jp() -> List[dict[str, Any]]:
             "topic": "Environment",
             "title": "Big questions for Japan: Nuclear restarts, coal, and the path to carbon neutrality",
             "description": "After Fukushima, can Japan build a credible path to 2050 carbon neutrality?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Japanese energy choices** — nuclear restarts, coal dependency, and the Green Transformation (GX) strategy. "
-                "Key sources: Agency for Natural Resources and Energy (ENECHO) data, "
+                "Further reading (optional) — Agency for Natural Resources and Energy (ENECHO) data, "
                 "Japan's GX Promotion Act, Ministry of Environment climate policy, "
                 "ISEP (Institute for Sustainable Energy Policies) research."
             ),
@@ -1736,10 +1847,10 @@ def _curriculum_jp() -> List[dict[str, Any]]:
             "topic": "Technology",
             "title": "Big questions for Japan: AI strategy, robotics, and digital transformation",
             "description": "Can Japan lead in AI and robotics while addressing its well-documented digital government failures?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Japan's AI strategy**, the My Number digital ID system, and the Digital Agency's reform programme. "
-                "Key sources: Japan AI Strategy 2022, Digital Agency annual reports, "
+                "Further reading (optional) — Japan AI Strategy 2022, Digital Agency annual reports, "
                 "Ministry of Economy, Trade and Industry (METI) digital transformation analyses, "
                 "JEITA semiconductor reports."
             ),
@@ -1759,10 +1870,10 @@ def _curriculum_jp() -> List[dict[str, Any]]:
             "topic": "Economy",
             "title": "Big questions for Japan: Deflation, wages, and the economic model",
             "description": "Japan's lost decades, wage stagnation, women's labour force participation, and whether structural reform is finally happening.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Japanese economic structure** — wage growth, women's participation, and corporate governance reform. "
-                "Key sources: Bank of Japan monetary policy assessments, "
+                "Further reading (optional) — Bank of Japan monetary policy assessments, "
                 "Ministry of Health, Labour and Welfare wage statistics, "
                 "JPX (Tokyo Stock Exchange) corporate governance reform guidance, Cabinet Office gender equality data."
             ),
@@ -1782,10 +1893,10 @@ def _curriculum_jp() -> List[dict[str, Any]]:
             "topic": "Healthcare",
             "title": "Big questions for Japan: Universal health insurance, aging, and end-of-life care",
             "description": "How can Japan sustain its world-class healthcare system as it ages faster than anywhere else on earth?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **Japan's universal health insurance, demographic pressure, and mental health**. "
-                "Key sources: Ministry of Health, Labour and Welfare healthcare data, "
+                "Further reading (optional) — Ministry of Health, Labour and Welfare healthcare data, "
                 "OECD Health at a Glance Japan, Japan Medical Association surveys, "
                 "National Institute of Population and Social Security Research projections."
             ),
@@ -1805,10 +1916,10 @@ def _curriculum_jp() -> List[dict[str, Any]]:
             "topic": "Geopolitics",
             "title": "Big questions for Japan: Article 9, Taiwan, and Japanese rearmament",
             "description": "Should Japan formally revise Article 9 of its constitution and assume greater regional defence responsibilities?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are normative questions about **Japan's security posture, Article 9 of the constitution, and regional alliances**. "
-                "Key sources: Japan's National Security Strategy (2022), "
+                "Further reading (optional) — Japan's National Security Strategy (2022), "
                 "CSIS Pacific Forum strategic assessments, Quad joint statements, "
                 "Ministry of Defence (Japan) defence white papers."
             ),
@@ -1828,10 +1939,10 @@ def _curriculum_jp() -> List[dict[str, Any]]:
             "topic": "Politics",
             "title": "Big questions for Japan: LDP dominance, women in parliament, and political reform",
             "description": "One-party dominance, political funding scandals, and Japan's democratic deficit.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are **institutional design questions** about Japanese democracy. "
-                "Key sources: IPU Women in Parliament data (Japan), "
+                "Further reading (optional) — IPU Women in Parliament data (Japan), "
                 "Political Funds Control Act enforcement data, Electoral Integrity Project, "
                 "Cabinet Legislation Bureau constitutional interpretations."
             ),
@@ -1851,10 +1962,10 @@ def _curriculum_jp() -> List[dict[str, Any]]:
             "topic": "Society",
             "title": "Big questions for Japan: Immigration, the birth rate crisis, and social isolation",
             "description": "Japan's demographic emergency, its ambivalence about immigration, and the loneliness epidemic.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Vote on **policy design** — immigration, childcare, and what Japan's future looks like. "
-                "Key sources: National Institute of Population and Social Security Research demographic projections, "
+                "Further reading (optional) — National Institute of Population and Social Security Research demographic projections, "
                 "Ministry of Internal Affairs hikikomori survey data, "
                 "OECD fertility and childcare policy comparisons, Immigration Services Agency statistics."
             ),
@@ -1874,10 +1985,10 @@ def _curriculum_jp() -> List[dict[str, Any]]:
             "topic": "Education",
             "title": "Big questions for Japan: Juken, entrance exam culture, and education reform",
             "description": "Is Japan's entrance exam-driven education system fit for a creative, innovative economy?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **system design** — entrance exam culture (juken), the kyōtsū tesuto, English education, and university reform. "
-                "Key sources: MEXT (Ministry of Education, Culture, Sports, Science and Technology) education statistics, "
+                "Further reading (optional) — MEXT (Ministry of Education, Culture, Sports, Science and Technology) education statistics, "
                 "PISA Japan results, OECD Education at a Glance Japan, Benesse education research."
             ),
             "article_keywords": ["Japan juken entrance exam stress reform", "Japan English education reform fluency", "Japan university reform international ranking", "juku tutoring inequality Japan regulate", "Japan liberal arts critical thinking university"],
@@ -1902,10 +2013,10 @@ def _curriculum_cn() -> List[dict[str, Any]]:
             "topic": "Environment",
             "title": "Big questions: China, Asia, and global climate responsibility",
             "description": "How should the world's largest emitter balance development goals with climate commitments?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **global climate choices** where China's decisions have major international consequences. "
-                "Key sources: Global Carbon Project, IPCC AR6 Common But Differentiated Responsibilities principle, "
+                "Further reading (optional) — Global Carbon Project, IPCC AR6 Common But Differentiated Responsibilities principle, "
                 "IEA China energy outlook, Climate Action Tracker assessments."
             ),
             "article_keywords": ["China 2060 carbon neutrality commitment credibility", "Belt Road Initiative coal overseas financing", "historical emissions responsibility developed developing", "China renewable energy capacity growth", "US China climate cooperation competition"],
@@ -1924,10 +2035,10 @@ def _curriculum_cn() -> List[dict[str, Any]]:
             "topic": "Technology",
             "title": "Big questions: AI governance, data sovereignty, and the global tech order",
             "description": "How should the world govern artificial intelligence and protect digital rights across different political systems?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **global AI governance choices** and competing regulatory models. "
-                "Key sources: UN Advisory Body on AI (2024), Bletchley AI Safety Declaration, "
+                "Further reading (optional) — UN Advisory Body on AI (2024), Bletchley AI Safety Declaration, "
                 "GPAI (Global Partnership on AI), EU AI Act, "
                 "OECD AI Principles."
             ),
@@ -1947,10 +2058,10 @@ def _curriculum_cn() -> List[dict[str, Any]]:
             "topic": "Economy",
             "title": "Big questions: Trade, development, and global economic fairness",
             "description": "Is the global economic order fair to developing countries, and how should it be reformed?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **trade rules, development finance, and global economic equity**. "
-                "Key sources: WTO dispute settlement system, IMF governance reforms, "
+                "Further reading (optional) — WTO dispute settlement system, IMF governance reforms, "
                 "World Bank debt sustainability framework, UNCTAD trade development reports."
             ),
             "article_keywords": ["WTO reform developing countries fairness", "Belt Road debt sustainability protection", "US China trade tariffs consumer cost", "infant industry protection developing countries", "IMF World Bank governance reform developing"],
@@ -1969,10 +2080,10 @@ def _curriculum_cn() -> List[dict[str, Any]]:
             "topic": "Healthcare",
             "title": "Big questions: Global health, pandemic lessons, and health equity",
             "description": "What did the world learn from COVID-19, and how must global health architecture change?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **global health preparedness, vaccine equity, and international cooperation**. "
-                "Key sources: Independent Panel for Pandemic Preparedness and Response (IPPR) report (2021), "
+                "Further reading (optional) — Independent Panel for Pandemic Preparedness and Response (IPPR) report (2021), "
                 "WHO Pandemic Accord negotiations, Lancet COVID-19 Commission, "
                 "MSF vaccine equity campaign."
             ),
@@ -1992,10 +2103,10 @@ def _curriculum_cn() -> List[dict[str, Any]]:
             "topic": "Geopolitics",
             "title": "Big questions: Asia-Pacific security, Taiwan, and the rules-based order",
             "description": "Can the world avoid great-power conflict and build a more stable international system?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are normative questions about **peace, sovereignty, and international law norms**. "
-                "Key sources: UNCLOS, UN Charter Article 2(4), "
+                "Further reading (optional) — UNCLOS, UN Charter Article 2(4), "
                 "IISS Asia-Pacific security assessments, Carnegie Endowment for International Peace, "
                 "SIPRI conflict data."
             ),
@@ -2015,10 +2126,10 @@ def _curriculum_cn() -> List[dict[str, Any]]:
             "topic": "Politics",
             "title": "Big questions: International institutions, governance, and global cooperation",
             "description": "Are international institutions fit to address the world's greatest challenges?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "These are **global governance questions** about international institutions, multilateralism, and legitimacy. "
-                "Key sources: UN High-Level Advisory Board on Effective Multilateralism (2023), "
+                "Further reading (optional) — UN High-Level Advisory Board on Effective Multilateralism (2023), "
                 "Dag Hammarskjöld Foundation, Freedom House global democracy data, "
                 "Bertelsmann Transformation Index."
             ),
@@ -2038,10 +2149,10 @@ def _curriculum_cn() -> List[dict[str, Any]]:
             "topic": "Society",
             "title": "Big questions: Migration, urbanisation, and social change in Asia",
             "description": "How rapidly urbanising societies manage diversity, inequality, mobility, and belonging.",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Vote on **policy design** — urbanisation, social mobility, and what societies owe their members. "
-                "Key sources: UN World Urbanization Prospects, World Bank GINI data, "
+                "Further reading (optional) — UN World Urbanization Prospects, World Bank GINI data, "
                 "ILO migration statistics, OECD Social Mobility in East Asia report."
             ),
             "article_keywords": ["urbanisation economic development displacement", "social infrastructure cities parks libraries investment", "rural urban inequality Asia defining challenge", "internal migration rights equal treatment", "demographic decline family policy migration"],
@@ -2060,10 +2171,10 @@ def _curriculum_cn() -> List[dict[str, Any]]:
             "topic": "Education",
             "title": "Big questions: Education, opportunity, and preparing societies for the future",
             "description": "How can education systems reduce inequality and equip people for a rapidly changing world?",
-            "information_title": "Before you vote",
+            "information_title": "How to read these statements",
             "information_body": (
                 "Focus on **access, system design, and what education is for** in a changing global economy. "
-                "Key sources: UNESCO Education for All Global Monitoring Report, "
+                "Further reading (optional) — UNESCO Education for All Global Monitoring Report, "
                 "OECD PISA and Education at a Glance, "
                 "World Bank human capital index, Brookings education research."
             ),
@@ -2109,7 +2220,9 @@ if set(_CURRICULUM_MAP) != set(VALID_VARIANTS):
 def get_curriculum(variant: str = "global") -> List[dict[str, Any]]:
     variant = (variant or "global").lower()
     fn = _CURRICULUM_MAP.get(variant, _curriculum_global)
-    return fn()
+    curriculum = fn()
+    merge_reading_enrichment(curriculum, variant)
+    return curriculum
 
 
 # ---------------------------------------------------------------------------
@@ -2250,8 +2363,9 @@ def seed_guided_journey_programme(variant: str = "global", creator_email: Option
             d.geographic_scope = gscope
             d.country = country or d.country
             d.information_title = spec.get("information_title")
-            d.information_body = spec.get("information_body")
+            d.information_body = _normalize_information_body(spec.get("information_body"))
             d.programme_phase = phase
+            d.information_links = list(spec.get("information_links", []))
         else:
             d = Discussion(
                 title=spec["title"],
@@ -2266,8 +2380,8 @@ def seed_guided_journey_programme(variant: str = "global", creator_email: Option
                 programme_theme=theme,
                 programme_phase=phase,
                 information_title=spec.get("information_title"),
-                information_body=spec.get("information_body"),
-                information_links=[],
+                information_body=_normalize_information_body(spec.get("information_body")),
+                information_links=list(spec.get("information_links", [])),
             )
             db.session.add(d)
             db.session.flush()

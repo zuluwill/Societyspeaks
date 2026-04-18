@@ -38,6 +38,9 @@
             <p class="text-xs text-gray-500 mt-3">
                 Free forever. Unsubscribe anytime. We respect your inbox.
             </p>
+            <p class="text-xs text-gray-500 mt-2">
+                <a href="{{ url_for('brief.subscribe') }}" class="text-indigo-600 hover:underline">Choose time zone and delivery time</a> on the full sign-up page (this quick box uses sensible defaults).
+            </p>
         </form>
         
         <div class="email-capture-success hidden mt-4">
@@ -75,6 +78,9 @@
                 Subscribe
             </button>
         </form>
+        <p class="text-xs text-gray-500 mt-2 sm:text-right">
+            <a href="{{ url_for('brief.subscribe') }}" class="text-indigo-600 hover:underline">Time zone and send time</a>
+        </p>
     </div>
 </div>
 {% endmacro %}
