@@ -121,7 +121,7 @@
           </button>
         </form>
         {% else %}
-        <div class="flex flex-col items-end gap-1">
+        <div class="flex flex-col items-start gap-0.5">
           <a
             href="{{ url_for('discussions.start_follow_discussion', discussion_id=discussion.id, next=request.full_path.rstrip('?')) }}"
             class="inline-flex items-center px-3 py-2 border rounded-md shadow-sm text-sm font-medium border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
@@ -131,7 +131,7 @@
             </svg>
             Save Discussion
           </a>
-          <p class="text-xs text-gray-500">Sign in to save this discussion and get updates.</p>
+          <p class="text-xs text-gray-400">Sign in to save &amp; get updates.</p>
         </div>
         {% endif %}
 
